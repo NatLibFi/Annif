@@ -1,5 +1,6 @@
 .cache
-.codecov
+.coverage
+.coveralls.yml
 annif_env
 .git
 __pycache__
