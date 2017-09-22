@@ -1,6 +1,7 @@
 # Supported CLI commands in Annif
 
-with REST API equivalents, when applicable
+These are the command line commands of Annif, with REST API equivalents when
+applicable.
 
 Most of These methods take a `projectid` parameter. Projects are
 identified by alphanumeric strings (`A-Za-z0-9_-`).
@@ -26,6 +27,14 @@ REST equivalent:
 
 Show a list of currently defined projects.
 
+### Show project information
+
+    annif show-project <projectid>
+
+REST equivalent:
+
+    GET /projects/<projectid>
+
 ### Create a new project
 
     annif create-project <projectid> --language <lang> --analyzer <analyzer>
@@ -37,6 +46,13 @@ Parameters:
 REST equivalent: 
 
     PUT /projects/<projectid>
+
+If you try to create a project that already exists, the settings will be
+compared with the existing project. Some settings (language and analyzer)
+cannot be changed after the project has been created. If the settings are
+compatible (i.e. the immutable settings have not changed), then the new
+settings will be used. If the settings are incompatible, you will get an
+error instead.
 
 ### Delete a project
 
@@ -64,27 +80,34 @@ REST equivalent:
 
     GET /projects/<projectid>/subjects/<subjectid>
 
-### Create a new subject
+### Create a new subject, or update an existing one
 
-    annif create-subject <projectid> <subjectid>
+    annif create-subject <projectid> <subjectid> <subject.txt
 
 REST equivalent:
 
     PUT /projects/<projectid>/subjects/<subjectid>
 
-This command can also be used to recreate an existing subject. All extra
-information about the subject, such as boost values and learned word
-associations, will be discarded.
+This will create a subject from a text file in the corpus format.
 
-### Update a subject
+If you try to create a subject that already exists, the new subject
+definition will overwrite the existing one. However, training and tuning
+data associated with the subject will be preserved.
 
-    annif update-subject <projectid> <subjectid>
+### Load all subjects from a directory
 
-REST equivalent:
+    annif load <projectid> <directory> [--clear=CLEAR]
 
-    POST /projects/<projectid>/subjects/<subjectid>
+Parameters:
+* `directory`: path to a directory containing text files in the corpus format
+* `clear`: Boolean flag that indicates whether the existing subjects should be
+  removed first. Defaults to false.
 
+This will load all the subjects from the given directory in a single batch
+operation. It is equivalent to executing `create-subject` on each file
+separately.
 
+REST equivalent: N/A
 
 ### Delete a subject
 
@@ -94,7 +117,21 @@ REST equivalent:
 
     DELETE /projects/<projectid>/subjects/<subjectid>
 
-
+This will remove all information about a subject, including training and
+tuning data.
 
 ## Automatic subject indexing
 
+    annif analyze <projectid> [--maxhits=MAX] [--threshold=THRESHOLD] <document.txt
+
+This will read a text document from standard input and suggest subjects for
+it.
+
+Parameters:
+* `maxhits`: maximum number of subjects to return
+* `threshold`: minimum score threshold, expressed as a fraction of highest
+  score, below which results will not be returned
+
+REST equivalent:
+
+    POST /projects/<projectid>/analyze

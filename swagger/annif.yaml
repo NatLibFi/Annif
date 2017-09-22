@@ -67,7 +67,7 @@ paths:
         - Project administration
   '/projects/{projectid}/subjects':
     get:
-      summary: show subjects defined for a project
+      summary: get a list of all subjects defined for a project
       parameters:
         - $ref: '#/parameters/projectidParam'
       responses:
