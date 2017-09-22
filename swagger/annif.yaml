@@ -1,0 +1,165 @@
+swagger: '2.0'
+info:
+  title: Annif REST API
+  version: v1
+schemes:
+  - http
+basePath: /v1/
+parameters:
+  projectidParam:
+    name: projectid
+    in: path
+    description: project identifier
+    required: true
+    type: string
+  conceptidParam:
+    name: conceptid
+    in: path
+    description: concept identifier
+    required: true
+    type: string
+paths:
+  /projects:
+    get:
+      summary: get a list of projects
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: succesful operation
+      tags:
+        - Project administration
+  '/projects/{projectid}':
+    get:
+      summary: show project information
+      parameters:
+        - $ref: '#/parameters/projectidParam'
+      responses:
+        '200':
+          description: succesful operation
+        '404':
+          description: project not found
+      tags:
+        - Project administration
+    put:
+      summary: create or update project
+      parameters:
+        - $ref: '#/parameters/projectidParam'
+      consumes:
+        - application/json
+      responses:
+        '204':
+          description: 'succesful operation, no content returned'
+      tags:
+        - Project administration
+    delete:
+      summary: delete a project
+      parameters:
+        - $ref: '#/parameters/projectidParam'
+      responses:
+        '204':
+          description: 'succesful operation, no content returned'
+        '404':
+          description: project not found
+      tags:
+        - Project administration
+  '/projects/{projectid}/concepts':
+    get:
+      summary: show concepts defined for project
+      parameters:
+        - $ref: '#/parameters/projectidParam'
+      responses:
+        '200':
+          description: succesful operation
+        '404':
+          description: project not found
+      tags:
+        - Index administration
+  '/projects/{projectid}/concepts/{conceptid}':
+    get:
+      summary: show concept information
+      parameters:
+        - $ref: '#/parameters/projectidParam'
+        - $ref: '#/parameters/conceptidParam'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: succesful operation
+        '404':
+          description: project or concept not found
+      tags:
+        - Index administration
+    put:
+      summary: create or update concept information
+      parameters:
+        - $ref: '#/parameters/projectidParam'
+        - $ref: '#/parameters/conceptidParam'
+      consumes:
+        - application/json
+      responses:
+        '204':
+          description: 'succesful operation, no content returned'
+        '404':
+          description: project or concept not found
+      tags:
+        - Index administration
+    post:
+      summary: update concept information
+      parameters:
+        - $ref: '#/parameters/projectidParam'
+        - $ref: '#/parameters/conceptidParam'
+      consumes:
+        - application/json
+      responses:
+        '204':
+          description: 'succesful operation, no content returned'
+        '404':
+          description: project or concept not found
+      tags:
+        - Index administration
+    delete:
+      summary: delete concept information
+      parameters:
+        - $ref: '#/parameters/projectidParam'
+        - $ref: '#/parameters/conceptidParam'
+      responses:
+        '204':
+          description: 'succesful operation, no content returned'
+        '404':
+          description: project or concept not found
+      tags:
+        - Index administration
+  '/projects/{projectid}/analyze':
+    post:
+      summary: suggest subjects for a given text
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - $ref: '#/parameters/projectidParam'
+        - name: text
+          in: formData
+          description: input text
+          required: true
+          type: string
+        - name: maxhits
+          in: formData
+          description: maximum number of results to return
+          required: false
+          type: integer
+          default: 12
+        - name: threshold
+          in: formData
+          description: >-
+            minimum score threshold, expressed as a fraction of highest score,
+            below which results will not be returned
+          required: false
+          type: number
+          default: 0.45
+      responses:
+        '200':
+          description: successful operation
+      tags:
+        - Automatic subject indexing
