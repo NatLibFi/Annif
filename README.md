@@ -1,6 +1,8 @@
 # Annif
 
-[![Build Status](https://travis-ci.org/NatLibFi/Annif.svg?branch=master)](https://travis-ci.org/NatLibFi/Annif)
+[![Build Status](https://travis-ci.org/NatLibFi/Annif.svg?branch=master)](https://travis-ci.org/NatLibFi/Annif?branch=master)
+[![codecov](https://codecov.io/gh/NatLibFi/Annif/branch/master/graph/badge.svg)](https://codecov.io/gh/NatLibFi/Annif)
+[![Coverage Status](https://coveralls.io/repos/github/NatLibFi/Annif/badge.svg?branch=master)](https://coveralls.io/github/NatLibFi/Annif?branch=master)
 
 *ANNotation Infrastructure using Finna: an automatic subject indexing tool using Finna as corpus*.
 
