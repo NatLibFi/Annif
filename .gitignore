@@ -1,4 +1,5 @@
 .cache
+.codecov
 annif_env
 .git
 __pycache__
