@@ -5,6 +5,15 @@ with REST API equivalents, when applicable
 Most of These methods take a `projectid` parameter. Projects are
 identified by alphanumeric strings (`A-Za-z0-9_-`).
 
+## Initialization
+
+### Creating the index structure
+
+    annif init
+
+This will initialize the Elasticsearch index needed for storing information
+about projects.
+
 ## Project administration
 
 ### List available projects
@@ -14,6 +23,8 @@ identified by alphanumeric strings (`A-Za-z0-9_-`).
 REST equivalent: 
 
     GET /projects/
+
+Show a list of currently defined projects.
 
 ### Create a new project
 
@@ -35,7 +46,53 @@ REST equivalent:
 
     DELETE /projects/<projectid>
 
-## Index administration
+## Subject index administration
+
+### Show all subjects for a project
+
+    annif list-subjects <projectid>
+
+REST equivalent:
+
+    GET /projects/<projectid>/subjects
+
+### Show information about a subject
+
+    annif show-subject <projectid> <subjectid>
+
+REST equivalent:
+
+    GET /projects/<projectid>/subjects/<subjectid>
+
+### Create a new subject
+
+    annif create-subject <projectid> <subjectid>
+
+REST equivalent:
+
+    PUT /projects/<projectid>/subjects/<subjectid>
+
+This command can also be used to recreate an existing subject. All extra
+information about the subject, such as boost values and learned word
+associations, will be discarded.
+
+### Update a subject
+
+    annif update-subject <projectid> <subjectid>
+
+REST equivalent:
+
+    POST /projects/<projectid>/subjects/<subjectid>
+
+
+
+### Delete a subject
+
+    annif drop-subject <projectid> <subjectid>
+
+REST equivalent:
+
+    DELETE /projects/<projectid>/subjects/<subjectid>
 
 
 
