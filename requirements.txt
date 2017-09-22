@@ -1,2 +1,2 @@
 Flask==0.12
-connexion=1.1.15
+connexion==1.1.15
