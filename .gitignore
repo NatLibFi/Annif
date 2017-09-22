@@ -1,0 +1,4 @@
+.cache
+annif_env
+.git
+__pycache__
