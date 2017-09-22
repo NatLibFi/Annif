@@ -1,5 +1,7 @@
 # Annif
 
+[![Build Status](https://travis-ci.org/NatLibFi/Annif.svg?branch=master)](https://travis-ci.org/NatLibFi/Annif.svg?branch=master)
+
 *ANNotation Infrastructure using Finna: an automatic subject indexing tool using Finna as corpus*.
 
 This repo contains a rewritten production version of Annif based on the [prototype](https://github.com/osma/annif).
