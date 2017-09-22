@@ -1,0 +1,5 @@
+Flask==0.12
+connexion==1.1.15
+codecov==2.0.9
+python_coveralls==2.9.1
+pytest-cov==2.5.1

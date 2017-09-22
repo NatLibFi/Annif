@@ -1,0 +1,8 @@
+.cache
+.eggs
+annif.egg-info
+.coverage
+.coveralls.yml
+annif_env
+.git
+__pycache__
