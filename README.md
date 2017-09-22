@@ -1,6 +1,6 @@
 # Annif
 
-[![Build Status](https://travis-ci.org/NatLibFi/Annif.svg?branch=master)](https://travis-ci.org/NatLibFi/Annif.svg?branch=master)
+[![Build Status](https://travis-ci.org/NatLibFi/Annif.svg?branch=master)](https://travis-ci.org/NatLibFi/Annif)
 
 *ANNotation Infrastructure using Finna: an automatic subject indexing tool using Finna as corpus*.
 
