@@ -6,7 +6,7 @@ from flask import Flask
 
 annif = Flask(__name__)
 
-annif.config.from_object('config.DevelopmentConfig')
+#annif.config.from_object('config.DevelopmentConfig')
 
 @annif.cli.command()
 def setup():
