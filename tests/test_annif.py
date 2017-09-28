@@ -3,11 +3,14 @@
 import pytest
 import sys
 import os
-
-# Import annif-module from parent directory
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-from annif import app
+from annif import annif
+
 
 # A dummy test for setup purposes
 def test_start():
-    assert app.start() == "Started application"
+    assert annif.start() == "Started application"
+
+
+#def test_listprojects():
+#    assert annif.listprojects() != "jou"
