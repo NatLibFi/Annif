@@ -12,10 +12,10 @@ parameters:
     description: project identifier
     required: true
     type: string
-  conceptidParam:
-    name: conceptid
+  subjectidParam:
+    name: subjectid
     in: path
-    description: concept identifier
+    description: subject identifier
     required: true
     type: string
 paths:
@@ -50,6 +50,8 @@ paths:
       responses:
         '204':
           description: 'succesful operation, no content returned'
+        '409':
+          description: 'the project already exists, with incompatible settings'
       tags:
         - Project administration
     delete:
@@ -63,9 +65,9 @@ paths:
           description: project not found
       tags:
         - Project administration
-  '/projects/{projectid}/concepts':
+  '/projects/{projectid}/subjects':
     get:
-      summary: show concepts defined for project
+      summary: get a list of all subjects defined for a project
       parameters:
         - $ref: '#/parameters/projectidParam'
       responses:
@@ -74,62 +76,48 @@ paths:
         '404':
           description: project not found
       tags:
-        - Index administration
-  '/projects/{projectid}/concepts/{conceptid}':
+        - Subject index administration
+  '/projects/{projectid}/subjects/{subjectid}':
     get:
-      summary: show concept information
+      summary: show subject information
       parameters:
         - $ref: '#/parameters/projectidParam'
-        - $ref: '#/parameters/conceptidParam'
+        - $ref: '#/parameters/subjectidParam'
       produces:
         - application/json
       responses:
         '200':
           description: succesful operation
         '404':
-          description: project or concept not found
+          description: project or subject not found
       tags:
-        - Index administration
+        - Subject index administration
     put:
-      summary: create or update concept information
+      summary: create or update subject information
       parameters:
         - $ref: '#/parameters/projectidParam'
-        - $ref: '#/parameters/conceptidParam'
+        - $ref: '#/parameters/subjectidParam'
       consumes:
         - application/json
       responses:
         '204':
           description: 'succesful operation, no content returned'
         '404':
-          description: project or concept not found
+          description: project or subject not found
       tags:
-        - Index administration
-    post:
-      summary: update concept information
-      parameters:
-        - $ref: '#/parameters/projectidParam'
-        - $ref: '#/parameters/conceptidParam'
-      consumes:
-        - application/json
-      responses:
-        '204':
-          description: 'succesful operation, no content returned'
-        '404':
-          description: project or concept not found
-      tags:
-        - Index administration
+        - Subject index administration
     delete:
-      summary: delete concept information
+      summary: delete subject information
       parameters:
         - $ref: '#/parameters/projectidParam'
-        - $ref: '#/parameters/conceptidParam'
+        - $ref: '#/parameters/subjectidParam'
       responses:
         '204':
           description: 'succesful operation, no content returned'
         '404':
-          description: project or concept not found
+          description: project or subject not found
       tags:
-        - Index administration
+        - Subject index administration
   '/projects/{projectid}/analyze':
     post:
       summary: suggest subjects for a given text
