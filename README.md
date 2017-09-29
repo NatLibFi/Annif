@@ -20,7 +20,7 @@ Python 3.5+ and a locally installed [Elasticsearch](https://www.elastic.co/produ
 
 Clone the repository.
 
-Switch into the repository directory and create a virtualenv environment by running `virtualenv annif_env && source annif_env/bin/activate`.
+Switch into the repository directory and create a virtualenv environment by running `virtualenv -p python3 annif_env && source annif_env/bin/activate`.
 
 Install dependencies by running `pip install -r requirements.txt`.
 
