@@ -30,4 +30,5 @@ Set a shell alias for the applicaton: `alias annif=flask`.
 
 Run with the command `annif run`.
 
-Run tests with the command `pytest`.
+Run tests with the command `pytest`. To have the test watch for changes in code
+and run automatically, use pytest-watch by running `ptw`.
