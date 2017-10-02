@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import click
-import connexion
 from flask import Flask
 from elasticsearch import Elasticsearch
 from elasticsearch.client import IndicesClient
@@ -11,17 +10,6 @@ index = IndicesClient(es)
 
 annif = Flask(__name__)
 
-# annif.config.from_object('config.DevelopmentConfig')
-
-
-def createProjectType(projectId, language, analyzer):
-    return {
-            'projectId': projectId,
-            'language': language,
-            'analyzer': analyzer
-            }
-
-
 INDEX_NAME = 'annif'
 
 
@@ -29,12 +17,12 @@ INDEX_NAME = 'annif'
 def init():
     """
     Generate the Elasticsearch repository for projects.
+
     Usage: annif init
     """
     if index.exists(INDEX_NAME):
         index.delete(INDEX_NAME)
-    response = es.indices.create(index=INDEX_NAME, ignore=400)
-    print(response)
+    return es.indices.create(index=INDEX_NAME, ignore=400)
 
 
 @annif.cli.command('list-projects')
@@ -46,7 +34,8 @@ def listprojects():
 
     REST equivalent: GET /projects/
     """
-    # projs = es.search(index=INDEX_NAME)['hits']
+    projs = es.search(index=INDEX_NAME)['hits']
+    print(projs)
     pass
 
 
@@ -80,7 +69,16 @@ def createProject(projectid, language, analyzer):
 
     PUT /projects/<projectId>
     """
-    pass
+    proj_indexname = "{0}-{1}".format(INDEX_NAME, projectid)
+    project = {'doc': {'projectid': projectid,
+                       'language': language, 'analyzer': analyzer}}
+    index.create(index=proj_indexname)
+    resp = es.update(
+            index=proj_indexname,
+            doc_type='project',
+            id=projectid,
+            body=project)
+    print(resp)
 
 
 @annif.cli.command('drop-project')

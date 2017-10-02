@@ -8,6 +8,7 @@ classes are different configuration profiles overriding default settings.
 class Config(object):
     DEBUG = False
     TESTING = False
+    INDEX_NAME = 'annif'
 
 class DevelopmentConfig(Config):
     DEBUG = True
