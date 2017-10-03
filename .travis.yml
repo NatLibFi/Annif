@@ -6,9 +6,10 @@ install:
   - pip install -r requirements.txt
 services:
   - elasticsearch
+env:
+  - FLASK_APP="annif/annif.py"
 before_script:
   - sleep 15
-  - curl -XGET http://localhost:9200
 script:
   - pytest
 after_success:
