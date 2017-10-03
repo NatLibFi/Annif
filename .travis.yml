@@ -8,6 +8,7 @@ services:
   - elasticsearch
 before_script:
   - sleep 15
+  - curl -XGET http://localhost:9200
 script:
   - pytest
 after_success:
