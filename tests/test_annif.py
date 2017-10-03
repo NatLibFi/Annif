@@ -20,7 +20,6 @@ def test_start():
 
 def test_init():
     result = runner.invoke(annif.init)
-    es.cluster.health(wait_for_status='yellow') # wait for the index to be created
     assert index.exists('annif')  # TODO: read index name from configuration
     assert result.exit_code == 0
 
