@@ -9,8 +9,6 @@ services:
   - elasticsearch
 env:
   - FLASK_APP="annif/annif.py"
-before_script:
-  - sleep 5
 script:
   - pytest
 after_success:
