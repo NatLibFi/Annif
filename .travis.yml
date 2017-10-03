@@ -2,6 +2,7 @@ sudo: false
 language: python
 python:
   - "3.5"
+cache: pip
 install:
   - pip install -r requirements.txt
 services:
@@ -9,7 +10,7 @@ services:
 env:
   - FLASK_APP="annif/annif.py"
 before_script:
-  - sleep 15
+  - sleep 5
 script:
   - pytest
 after_success:
