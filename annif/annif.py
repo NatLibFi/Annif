@@ -10,7 +10,7 @@ index = IndicesClient(es)
 
 annif = Flask(__name__)
 
-INDEX_NAME = 'annif'
+annif.config.from_object('annif.config.Config')
 
 
 @annif.cli.command('init')
@@ -20,9 +20,9 @@ def init():
 
     Usage: annif init
     """
-    if index.exists(INDEX_NAME):
-        index.delete(INDEX_NAME)
-    return es.indices.create(index=INDEX_NAME, ignore=400)
+    if index.exists(annif.config['INDEX_NAME']):
+        index.delete(annif.config['INDEX_NAME'])
+    return es.indices.create(index=annif.config['INDEX_NAME'], ignore=400)
 
 
 @annif.cli.command('list-projects')

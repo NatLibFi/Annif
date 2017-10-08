@@ -20,7 +20,7 @@ def test_start():
 
 def test_init():
     result = runner.invoke(annif.init)
-    assert index.exists('annif')  # TODO: read index name from configuration
+    assert index.exists('annif')
     assert result.exit_code == 0
 
 
