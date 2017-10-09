@@ -8,7 +8,7 @@
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/NatLibFi/Annif/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/NatLibFi/Annif/?branch=master)
 [![codebeat badge](https://codebeat.co/badges/e496f151-93db-4f0e-9e30-bc3339e58ca4)](https://codebeat.co/projects/github-com-natlibfi-annif-master)
 
-*ANNotation Infrastructure using Finna: an automatic subject indexing tool using Finna as corpus*.
+*ANNotation Infrastructure using [Finna](https://finna.fi): an automatic subject indexing tool using Finna as corpus*.
 
 This repo contains a rewritten production version of Annif based on the [prototype](https://github.com/osma/annif).
 A work in progress.
