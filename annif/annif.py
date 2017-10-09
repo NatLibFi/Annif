@@ -3,10 +3,11 @@
 import click
 from flask import Flask
 from elasticsearch import Elasticsearch
-from elasticsearch.client import IndicesClient
+from elasticsearch.client import IndicesClient, CatClient
 
 es = Elasticsearch()
 index = IndicesClient(es)
+cat = CatClient(es)
 
 annif = Flask(__name__)
 
@@ -45,6 +46,17 @@ def init():
     """
     if index.exists(annif.config['INDEX_NAME']):
         index.delete(annif.config['INDEX_NAME'])
+
+    # When the repository is initialized, check also if any orphaned indices
+    # (= indices starting with INDEX_NAME) are found and remove them.
+    indices = [x for x in cat.indices().split('\n') if len(x) > 0]
+    indexNames = list(map(lambda x: x.split()[2], indices))
+    orphanIndices = list(filter(lambda x:
+        x.startswith(annif.config['INDEX_NAME']), indexNames))
+
+    for i in orphanIndices:
+        index.delete(i)
+
     return es.indices.create(index=annif.config['INDEX_NAME'],
                              body=projectIndexConf)
 
@@ -79,7 +91,10 @@ def showProject(projectid):
 
     GET /projects/<projectId>
     """
-    pass
+    result = es.search(index=annif.config['INDEX_NAME'],
+                       doc_type='project',
+                       body={'query': {'match': {'name': projectid}}})
+    print(result)
 
 
 @annif.cli.command('create-project')

@@ -25,7 +25,7 @@ def test_start():
 
 def test_init():
     result = runner.invoke(annif.init)
-    assert index.exists('annif')
+    assert index.exists(annif.annif.config['INDEX_NAME'])
     assert result.exit_code == 0
 
 
@@ -35,21 +35,26 @@ def test_listprojects():
     assert runner.invoke(annif.listprojects, ['moi']).exit_code != 0
     assert runner.invoke(
             annif.listprojects, ['moi', '--debug', 'y']).exit_code != 0
-    output = runner.invoke(annif.listprojects).output
-
-
-def test_showProject():
-    pass
+    result = runner.invoke(annif.listprojects)
 
 
 def test_createProject():
+    assert not index.exists(annif.parseIndexname(TEMP_PROJECT))
     result = runner.invoke(annif.createProject, [TEMP_PROJECT, '--language',
         'en', '--analyzer', 'english'])
+    assert index.exists(annif.parseIndexname(TEMP_PROJECT))
+    assert result.exit_code == 0
+
+
+def test_showProject():
+    result = runner.invoke(annif.showProject, [TEMP_PROJECT])
     assert result.exit_code == 0
 
 
 def test_dropProject():
+    assert index.exists(annif.parseIndexname(TEMP_PROJECT))
     result = runner.invoke(annif.dropProject, [TEMP_PROJECT])
+    assert not index.exists(annif.parseIndexname(TEMP_PROJECT))
     assert result.exit_code == 0
 
 
