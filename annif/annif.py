@@ -13,6 +13,25 @@ annif = Flask(__name__)
 annif.config.from_object('annif.config.Config')
 
 
+projectIndexConf = {
+        'mappings': {
+            'project': {
+                'properties': {
+                    'name': {
+                        'type': 'text'
+                        },
+                    'language': {
+                        'type': 'text'
+                        },
+                    'analyzer': {
+                        'type': 'text'
+                        }
+                    }
+                }
+            }
+        }
+
+
 @annif.cli.command('init')
 def init():
     """
@@ -22,7 +41,8 @@ def init():
     """
     if index.exists(annif.config['INDEX_NAME']):
         index.delete(annif.config['INDEX_NAME'])
-    return es.indices.create(index=annif.config['INDEX_NAME'], ignore=400)
+    return es.indices.create(index=annif.config['INDEX_NAME'],
+                             body=projectIndexConf)
 
 
 @annif.cli.command('list-projects')
@@ -69,7 +89,7 @@ def createProject(projectid, language, analyzer):
 
     PUT /projects/<projectId>
     """
-    proj_indexname = "{0}-{1}".format(INDEX_NAME, projectid)
+    proj_indexname = "{0}-{1}".format(annif.config['INDEX_NAME'], projectid)
     project = {'doc': {'projectid': projectid,
                        'language': language, 'analyzer': analyzer}}
     index.create(index=proj_indexname)
