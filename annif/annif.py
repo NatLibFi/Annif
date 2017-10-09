@@ -32,6 +32,10 @@ projectIndexConf = {
         }
 
 
+def parseIndexname(projectid):
+    return "{0}-{1}".format(annif.config['INDEX_NAME'], projectid)
+
+
 @annif.cli.command('init')
 def init():
     """
@@ -54,9 +58,13 @@ def listprojects():
 
     REST equivalent: GET /projects/
     """
-    projs = es.search(index=INDEX_NAME)['hits']
-    print(projs)
-    pass
+
+    doc = {'size': 1000, 'query': {'match_all': {}}}
+    results = es.search(index=annif.config['INDEX_NAME'], doc_type='project',
+                        body=doc)
+    projects = [x['_source'] for x in results['hits']['hits']]
+    for p in projects:
+        print(p)
 
 
 @annif.cli.command('show-project')
@@ -89,15 +97,16 @@ def createProject(projectid, language, analyzer):
 
     PUT /projects/<projectId>
     """
-    proj_indexname = "{0}-{1}".format(annif.config['INDEX_NAME'], projectid)
-    project = {'doc': {'projectid': projectid,
-                       'language': language, 'analyzer': analyzer}}
+    proj_indexname = parseIndexname(projectid)
+
+    # Create an index for the project
     index.create(index=proj_indexname)
-    resp = es.update(
-            index=proj_indexname,
-            doc_type='project',
-            id=projectid,
-            body=project)
+
+    # Add the details of the new project to the 'master' index
+    resp = es.create(index=annif.config['INDEX_NAME'], doc_type='project',
+                     id=projectid,
+                     body={'name': projectid, 'language': language,
+                           'analyzer': analyzer})
     print(resp)
 
 
@@ -112,7 +121,15 @@ def dropProject(projectid):
 
     DELETE /projects/<projectid>
     """
-    pass
+    # Delete the index from the 'master' index
+    result = es.delete(index=annif.config['INDEX_NAME'],
+                       doc_type='project', id=projectid)
+
+    print(result)
+
+    # Then delete the project index
+    result = index.delete(index=parseIndexname(projectid))
+    print(result)
 
 
 @annif.cli.command('list-subjects')
