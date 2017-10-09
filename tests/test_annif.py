@@ -3,6 +3,7 @@
 import sys
 import os
 import click
+import random
 from elasticsearch import Elasticsearch
 from elasticsearch.client import IndicesClient
 from click.testing import CliRunner
@@ -12,6 +13,9 @@ from annif import annif
 es = Elasticsearch()
 index = IndicesClient(es)
 runner = CliRunner()
+
+# Generate a random project name to use in tests
+TEMP_PROJECT = ''.join(random.choice('abcdefghiklmnopqrstuvwxyz') for _ in range(8))
 
 
 # A dummy test for setup purposes
@@ -39,13 +43,13 @@ def test_showProject():
 
 
 def test_createProject():
-    result = runner.invoke(annif.createProject, ['testproject', '--language',
+    result = runner.invoke(annif.createProject, [TEMP_PROJECT, '--language',
         'en', '--analyzer', 'english'])
     assert result.exit_code == 0
 
 
 def test_dropProject():
-    result = runner.invoke(annif.dropProject, ['testproject'])
+    result = runner.invoke(annif.dropProject, [TEMP_PROJECT])
     assert result.exit_code == 0
 
 

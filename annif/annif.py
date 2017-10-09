@@ -3,11 +3,10 @@
 import click
 from flask import Flask
 from elasticsearch import Elasticsearch
-from elasticsearch.client import IndicesClient, CatClient
+from elasticsearch.client import IndicesClient
 
 es = Elasticsearch()
 index = IndicesClient(es)
-cat = CatClient(es)
 
 annif = Flask(__name__)
 
@@ -33,6 +32,10 @@ projectIndexConf = {
         }
 
 
+def parseIndexname(projectid):
+    return "{0}-{1}".format(annif.config['INDEX_NAME'], projectid)
+
+
 @annif.cli.command('init')
 def init():
     """
@@ -56,23 +59,12 @@ def listprojects():
     REST equivalent: GET /projects/
     """
 
-    doc = {
-            'size': 1000,
-            'query': {
-                'match_all': {}
-                }
-            }
+    doc = {'size': 1000, 'query': {'match_all': {}}}
     results = es.search(index=annif.config['INDEX_NAME'], doc_type='project',
-            body=doc)
+                        body=doc)
     projects = [x['_source'] for x in results['hits']['hits']]
     for p in projects:
         print(p)
-
-    print(projects)
-    report = cat.indices()  # This queries different indices and returns
-    # a report string, if it's needed
-
-    return projects
 
 
 @annif.cli.command('show-project')
@@ -88,11 +80,6 @@ def showProject(projectid):
     GET /projects/<projectId>
     """
     pass
-
-
-
-def parseIndexname(projectid):
-    return "{0}-{1}".format(annif.config['INDEX_NAME'], projectid)
 
 
 @annif.cli.command('create-project')
@@ -136,7 +123,7 @@ def dropProject(projectid):
     """
     # Delete the index from the 'master' index
     result = es.delete(index=annif.config['INDEX_NAME'],
-            doc_type='project', id=projectid)
+                       doc_type='project', id=projectid)
 
     print(result)
 
