@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/NatLibFi/Annif.svg?branch=master)](https://travis-ci.org/NatLibFi/Annif?branch=master)
 [![codecov](https://codecov.io/gh/NatLibFi/Annif/branch/master/graph/badge.svg)](https://codecov.io/gh/NatLibFi/Annif)
-[![Coverage Status](https://coveralls.io/repos/github/NatLibFi/Annif/badge.svg?branch=master)](https://coveralls.io/github/NatLibFi/Annif?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/NatLibFi/Annif/badge.svg)](https://coveralls.io/github/NatLibFi/Annif)
 [![Code Climate](https://codeclimate.com/github/NatLibFi/Annif/badges/gpa.svg)](https://codeclimate.com/github/NatLibFi/Annif)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/NatLibFi/Annif/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/NatLibFi/Annif/?branch=master)
 [![codebeat badge](https://codebeat.co/badges/e496f151-93db-4f0e-9e30-bc3339e58ca4)](https://codebeat.co/projects/github-com-natlibfi-annif-master)

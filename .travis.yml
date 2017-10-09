@@ -13,4 +13,4 @@ script:
   - pytest
 after_success:
   - codecov
-  - pytest --cov=./
+  - coveralls
