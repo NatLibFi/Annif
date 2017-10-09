@@ -32,6 +32,15 @@ projectIndexConf = {
         }
 
 
+# projectType = {
+#         'mappings': {
+#             'project': {
+# 
+#                 }
+#             }
+#         }
+
+
 @annif.cli.command('init')
 def init():
     """
@@ -54,7 +63,7 @@ def listprojects():
 
     REST equivalent: GET /projects/
     """
-    projs = es.search(index=INDEX_NAME)['hits']
+    projs = es.search(index=annif.config['INDEX_NAME'])['hits']
     print(projs)
     pass
 
