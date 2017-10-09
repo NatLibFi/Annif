@@ -6,4 +6,3 @@ pytest-cov==2.5.1
 elasticsearch>=5.0.0,<6.0.0
 pytest-watch>=4.1.0
 pytest-flask>=0.10.0
-configparser>=3.5.0
