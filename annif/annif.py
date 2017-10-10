@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import click
+import sys
 from flask import Flask
 from elasticsearch import Elasticsearch
 from elasticsearch.client import IndicesClient, CatClient
@@ -140,23 +141,24 @@ def createProject(projectid, language, analyzer):
     proj_indexname = parseIndexname(projectid)
 
     if not projectid or not language or not analyzer:
-        print('Usage: annif create-project <projectId> --language <lang>'
+        print('Usage: annif create-project <projectId> --language <lang> '
               '--analyzer <analyzer>')
+        sys.exit(1)
 
-    elif index.exists(proj_indexname):
+    if index.exists(proj_indexname):
         print('Index \'{0}\' already exists.'.format(proj_indexname))
+        sys.exit(1)
 
-    else:
-        # Create an index for the project
-        index.create(index=proj_indexname)
+    # Create an index for the project
+    index.create(index=proj_indexname)
 
-        # Add the details of the new project to the 'master' index
-        resp = es.create(index=annif.config['INDEX_NAME'], doc_type='project',
-                         id=projectid,
-                         body={'name': projectid, 'language': language,
-                               'analyzer': analyzer})
-        if (resp['created']):
-            print('Successfully created project \'{0}\'.'.format(projectid))
+    # Add the details of the new project to the 'master' index
+    resp = es.create(index=annif.config['INDEX_NAME'], doc_type='project',
+                     id=projectid,
+                     body={'name': projectid, 'language': language,
+                           'analyzer': analyzer})
+    if (resp['created']):
+        print('Successfully created project \'{0}\'.'.format(projectid))
 
 
 @annif.cli.command('drop-project')
