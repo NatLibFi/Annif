@@ -28,9 +28,7 @@ paths:
         '200':
           description: succesful operation
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/Project'
+            $ref: '#/definitions/ProjectList'
       tags:
         - Project administration
   '/projects/{projectid}':
@@ -178,3 +176,9 @@ definitions:
       - projectid
       - language
       - analyzer
+  ProjectList:
+    properties:
+      projects:
+        type: array
+        items:
+          $ref: '#/definitions/Project'
