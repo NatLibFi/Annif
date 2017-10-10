@@ -52,11 +52,13 @@ def init():
     indices = [x for x in cat.indices().split('\n') if len(x) > 0]
     indexNames = list(map(lambda x: x.split()[2], indices))
     orphanIndices = list(filter(lambda x:
-        x.startswith(annif.config['INDEX_NAME']), indexNames))
+                         x.startswith(annif.config['INDEX_NAME']), indexNames))
 
     for i in orphanIndices:
         index.delete(i)
 
+    print('Initialized project index \'{0}\'.'.format(
+        annif.config['INDEX_NAME']))
     return es.indices.create(index=annif.config['INDEX_NAME'],
                              body=projectIndexConf)
 
@@ -137,15 +139,24 @@ def createProject(projectid, language, analyzer):
     """
     proj_indexname = parseIndexname(projectid)
 
-    # Create an index for the project
-    index.create(index=proj_indexname)
+    if not projectid or not language or not analyzer:
+        print('Usage: annif create-project <projectId> --language <lang>'
+              '--analyzer <analyzer>')
 
-    # Add the details of the new project to the 'master' index
-    resp = es.create(index=annif.config['INDEX_NAME'], doc_type='project',
-                     id=projectid,
-                     body={'name': projectid, 'language': language,
-                           'analyzer': analyzer})
-    print(resp)
+    elif index.exists(proj_indexname):
+        print('Index \'{0}\' already exists.'.format(proj_indexname))
+
+    else:
+        # Create an index for the project
+        index.create(index=proj_indexname)
+
+        # Add the details of the new project to the 'master' index
+        resp = es.create(index=annif.config['INDEX_NAME'], doc_type='project',
+                         id=projectid,
+                         body={'name': projectid, 'language': language,
+                               'analyzer': analyzer})
+        if (resp['created']):
+            print('Successfully created project \'{0}\'.'.format(projectid))
 
 
 @annif.cli.command('drop-project')
