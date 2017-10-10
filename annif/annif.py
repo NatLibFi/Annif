@@ -93,10 +93,6 @@ def listprojects():
 
 
 def formatResult(result):
-
-    def formatRow(key, value):
-        return str('{:15}'.format("" + key + ":") + str(value) + "\n")
-
     template = "{0:<15}{1}\n"
     content = result['hits']['hits'][0]
     formatted = template.format('Project ID:', content['_source']['name'])
