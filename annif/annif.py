@@ -75,8 +75,10 @@ def listprojects():
     results = es.search(index=annif.config['INDEX_NAME'], doc_type='project',
                         body=doc)
     projects = [x['_source'] for x in results['hits']['hits']]
-    for p in projects:
-        print(p)
+    print("Currently available projects:\n")
+    for i, p in enumerate(projects):
+        print("{0}. {1} (language: {2}, analyzer: {3})"
+               .format(1+i, p['name'], p['language'], p['analyzer']))
 
 
 @annif.cli.command('show-project')
@@ -91,10 +93,25 @@ def showProject(projectid):
 
     GET /projects/<projectId>
     """
+
+    def parseRow(key, value):
+        return str('{:20}'.format("" + key + ":") + str(value) + "\n")
+
     result = es.search(index=annif.config['INDEX_NAME'],
                        doc_type='project',
                        body={'query': {'match': {'name': projectid}}})
-    print(result)
+
+    if (result['hits']['hits']):
+        content = result['hits']['hits'][0]
+        parsed = "details about project \'{0}\':\n\n".format(content['_source']['name'])
+        parsed += parseRow('project name', content['_source']['name'])
+        parsed += parseRow('project language', content['_source']['language'])
+        parsed += parseRow('project analyzer', content['_source']['analyzer'])
+        parsed += parseRow('index', content['_index'])
+        parsed += parseRow('score', content['_score'])
+        print(parsed)
+    else:
+        print("No projects found with id \'{0}\'.".format(projectid))
 
 
 @annif.cli.command('create-project')

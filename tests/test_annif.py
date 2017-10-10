@@ -16,6 +16,11 @@ runner = CliRunner()
 
 # Generate a random project name to use in tests
 TEMP_PROJECT = ''.join(random.choice('abcdefghiklmnopqrstuvwxyz') for _ in range(8))
+TEMP_INDEX = TEMP_PROJECT[:7]
+
+# Set a random name for the project index, so as not to mess up possible
+# production indices.
+annif.annif.config['INDEX_NAME'] = TEMP_INDEX
 
 
 # A dummy test for setup purposes
@@ -48,6 +53,9 @@ def test_createProject():
 
 def test_showProject():
     result = runner.invoke(annif.showProject, [TEMP_PROJECT])
+    assert result.exit_code == 0
+    # Test should not fail even if the user queries for a non-existent project.
+    failed_result = runner.invoke(annif.showProject, ['nonexistent'])
     assert result.exit_code == 0
 
 
