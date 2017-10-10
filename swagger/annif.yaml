@@ -27,6 +27,10 @@ paths:
       responses:
         '200':
           description: succesful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Project'
       tags:
         - Project administration
   '/projects/{projectid}':
@@ -37,6 +41,8 @@ paths:
       responses:
         '200':
           description: succesful operation
+          schema:
+            $ref: '#/definitions/Project'
         '404':
           description: project not found
       tags:
@@ -45,6 +51,11 @@ paths:
       summary: create or update project
       parameters:
         - $ref: '#/parameters/projectidParam'
+        - name: project
+          in: body
+          description: the project to create
+          schema:
+            $ref: '#/definitions/Project'
       consumes:
         - application/json
       responses:
@@ -151,3 +162,19 @@ paths:
           description: successful operation
       tags:
         - Automatic subject indexing
+definitions:
+  Project:
+    properties:
+      projectid:
+        type: string
+        example: my-project
+      language:
+        type: string
+        example: en
+      analyzer:
+        type: string
+        example: english
+    required:
+      - projectid
+      - language
+      - analyzer
