@@ -37,6 +37,11 @@ def parseIndexname(projectid):
     return "{0}-{1}".format(annif.config['INDEX_NAME'], projectid)
 
 
+def listOrphanIndices():
+    indices = [x.split()[2] for x in cat.indices().split('\n') if len(x) > 0]
+    return [x for x in indices if x.startswith(annif.config['INDEX_NAME'])]
+
+
 @annif.cli.command('init')
 def init():
     """
@@ -49,12 +54,8 @@ def init():
 
     # When the repository is initialized, check also if any orphaned indices
     # (= indices starting with INDEX_NAME) are found and remove them.
-    indices = [x for x in cat.indices().split('\n') if len(x) > 0]
-    indexNames = list(map(lambda x: x.split()[2], indices))
-    orphanIndices = list(filter(lambda x:
-                         x.startswith(annif.config['INDEX_NAME']), indexNames))
 
-    for i in orphanIndices:
+    for i in listOrphanIndices():
         index.delete(i)
 
     print('Initialized project index \'{0}\'.'.format(
@@ -91,6 +92,20 @@ def listprojects():
     print(parsed)
 
 
+def parseResult(result):
+
+    def parseRow(key, value):
+        return str('{:15}'.format("" + key + ":") + str(value) + "\n")
+
+    content = result['hits']['hits'][0]
+    parsed = ""
+    parsed += parseRow('Project ID', content['_source']['name'])
+    parsed += parseRow('Language', content['_source']['language'])
+    parsed += parseRow('Analyzer', content['_source']['analyzer'])
+
+    return parsed
+
+
 @annif.cli.command('show-project')
 @click.argument('projectid')
 def showProject(projectid):
@@ -103,21 +118,12 @@ def showProject(projectid):
 
     GET /projects/<projectId>
     """
-
-    def parseRow(key, value):
-        return str('{:15}'.format("" + key + ":") + str(value) + "\n")
-
     result = es.search(index=annif.config['INDEX_NAME'],
                        doc_type='project',
                        body={'query': {'match': {'name': projectid}}})
 
     if (result['hits']['hits']):
-        content = result['hits']['hits'][0]
-        parsed = ""
-        parsed += parseRow('Project ID', content['_source']['name'])
-        parsed += parseRow('Language', content['_source']['language'])
-        parsed += parseRow('Analyzer', content['_source']['analyzer'])
-        print(parsed)
+        print(parseResult(result))
     else:
         print("No projects found with id \'{0}\'.".format(projectid))
 
@@ -137,15 +143,14 @@ def createProject(projectid, language, analyzer):
 
     PUT /projects/<projectId>
     """
+
     proj_indexname = parseIndexname(projectid)
 
     if not projectid or not language or not analyzer:
         print('Usage: annif create-project <projectId> --language <lang> '
               '--analyzer <analyzer>')
-
     elif index.exists(proj_indexname):
         print('Index \'{0}\' already exists.'.format(proj_indexname))
-
     else:
         # Create an index for the project
         index.create(index=proj_indexname)
