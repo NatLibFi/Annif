@@ -6,14 +6,14 @@ schemes:
   - http
 basePath: /v1/
 parameters:
-  projectidParam:
-    name: projectid
+  project_id:
+    name: project_id
     in: path
     description: project identifier
     required: true
     type: string
-  subjectidParam:
-    name: subjectid
+  subject_id:
+    name: subject_id
     in: path
     description: subject identifier
     required: true
@@ -31,11 +31,11 @@ paths:
             $ref: '#/definitions/ProjectList'
       tags:
         - Project administration
-  '/projects/{projectid}':
+  '/projects/{project_id}':
     get:
       summary: show project information
       parameters:
-        - $ref: '#/parameters/projectidParam'
+        - $ref: '#/parameters/project_id'
       responses:
         '200':
           description: succesful operation
@@ -48,7 +48,7 @@ paths:
     put:
       summary: create or update project
       parameters:
-        - $ref: '#/parameters/projectidParam'
+        - $ref: '#/parameters/project_id'
         - name: project
           in: body
           description: the project to create
@@ -66,7 +66,7 @@ paths:
     delete:
       summary: delete a project
       parameters:
-        - $ref: '#/parameters/projectidParam'
+        - $ref: '#/parameters/project_id'
       responses:
         '204':
           description: 'succesful operation, no content returned'
@@ -74,11 +74,11 @@ paths:
           description: project not found
       tags:
         - Project administration
-  '/projects/{projectid}/subjects':
+  '/projects/{project_id}/subjects':
     get:
       summary: get a list of all subjects defined for a project
       parameters:
-        - $ref: '#/parameters/projectidParam'
+        - $ref: '#/parameters/project_id'
       responses:
         '200':
           description: succesful operation
@@ -86,12 +86,12 @@ paths:
           description: project not found
       tags:
         - Subject index administration
-  '/projects/{projectid}/subjects/{subjectid}':
+  '/projects/{project_id}/subjects/{subject_id}':
     get:
       summary: show subject information
       parameters:
-        - $ref: '#/parameters/projectidParam'
-        - $ref: '#/parameters/subjectidParam'
+        - $ref: '#/parameters/project_id'
+        - $ref: '#/parameters/subject_id'
       produces:
         - application/json
       responses:
@@ -104,8 +104,8 @@ paths:
     put:
       summary: create or update subject information
       parameters:
-        - $ref: '#/parameters/projectidParam'
-        - $ref: '#/parameters/subjectidParam'
+        - $ref: '#/parameters/project_id'
+        - $ref: '#/parameters/subject_id'
       consumes:
         - application/json
       responses:
@@ -118,8 +118,8 @@ paths:
     delete:
       summary: delete subject information
       parameters:
-        - $ref: '#/parameters/projectidParam'
-        - $ref: '#/parameters/subjectidParam'
+        - $ref: '#/parameters/project_id'
+        - $ref: '#/parameters/subject_id'
       responses:
         '204':
           description: 'succesful operation, no content returned'
@@ -127,7 +127,7 @@ paths:
           description: project or subject not found
       tags:
         - Subject index administration
-  '/projects/{projectid}/analyze':
+  '/projects/{project_id}/analyze':
     post:
       summary: suggest subjects for a given text
       consumes:
@@ -135,7 +135,7 @@ paths:
       produces:
         - application/json
       parameters:
-        - $ref: '#/parameters/projectidParam'
+        - $ref: '#/parameters/project_id'
         - name: text
           in: formData
           description: input text
@@ -162,6 +162,7 @@ paths:
         - Automatic subject indexing
 definitions:
   Project:
+    description: A project definition
     properties:
       projectid:
         type: string
