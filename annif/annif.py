@@ -33,11 +33,11 @@ projectIndexConf = {
         }
 
 
-def parseIndexname(projectid):
+def parse_indexname(projectid):
     return "{0}-{1}".format(annif.config['INDEX_NAME'], projectid)
 
 
-def listOrphanIndices():
+def list_orphan_indices():
     indices = [x.split()[2] for x in cat.indices().split('\n') if len(x) > 0]
     return [x for x in indices if x.startswith(annif.config['INDEX_NAME'])]
 
@@ -55,7 +55,7 @@ def init():
     # When the repository is initialized, check also if any orphaned indices
     # (= indices starting with INDEX_NAME) are found and remove them.
 
-    for i in listOrphanIndices():
+    for i in list_orphan_indices():
         index.delete(i)
 
     print('Initialized project index \'{0}\'.'.format(
@@ -65,7 +65,7 @@ def init():
 
 
 @annif.cli.command('list-projects')
-def listprojects():
+def list_projects():
     """
     List available projects.
 
@@ -86,13 +86,14 @@ def listprojects():
         doc_type='project',
         body=doc)['hits']['hits']]
 
-    for p in projects:
-        formatted += template.format(p['name'], p['language'], p['analyzer'])
+    for proj in projects:
+        formatted += template.format(proj['name'], proj['language'],
+                                     proj['analyzer'])
 
     print(formatted)
 
 
-def formatResult(result):
+def format_result(result):
     template = "{0:<15}{1}\n"
     content = result['hits']['hits'][0]
     formatted = template.format('Project ID:', content['_source']['name'])
@@ -103,7 +104,7 @@ def formatResult(result):
 
 @annif.cli.command('show-project')
 @click.argument('projectid')
-def showProject(projectid):
+def show_project(projectid):
     """
     Show project information.
 
@@ -118,7 +119,7 @@ def showProject(projectid):
                        body={'query': {'match': {'name': projectid}}})
 
     if (result['hits']['hits']):
-        print(formatResult(result))
+        print(format_result(result))
     else:
         print("No projects found with id \'{0}\'.".format(projectid))
 
@@ -127,7 +128,7 @@ def showProject(projectid):
 @click.argument('projectid')
 @click.option('--language')
 @click.option('--analyzer')
-def createProject(projectid, language, analyzer):
+def create_project(projectid, language, analyzer):
     """
     Create a new project.
 
@@ -139,7 +140,7 @@ def createProject(projectid, language, analyzer):
     PUT /projects/<projectId>
     """
 
-    proj_indexname = parseIndexname(projectid)
+    proj_indexname = parse_indexname(projectid)
 
     if not projectid or not language or not analyzer:
         print('Usage: annif create-project <projectId> --language <lang> '
@@ -160,7 +161,7 @@ def createProject(projectid, language, analyzer):
 
 @annif.cli.command('drop-project')
 @click.argument('projectid')
-def dropProject(projectid):
+def drop_project(projectid):
     """
     Delete a project.
     USAGE: annif drop-project <projectid>
@@ -176,13 +177,13 @@ def dropProject(projectid):
     print(result)
 
     # Then delete the project index
-    result = index.delete(index=parseIndexname(projectid))
+    result = index.delete(index=parse_indexname(projectid))
     print(result)
 
 
 @annif.cli.command('list-subjects')
 @click.argument('projectid')
-def listSubjects(projectid):
+def list_subjects(projectid):
     """
     Show all subjects for a project.
 
@@ -198,7 +199,7 @@ def listSubjects(projectid):
 @annif.cli.command('show-subject')
 @click.argument('projectid')
 @click.argument('subjectid')
-def showSubject(projectid, subjectid):
+def show_subject(projectid, subjectid):
     """
     Show information about a subject.
 
@@ -214,7 +215,7 @@ def showSubject(projectid, subjectid):
 @annif.cli.command('create-subject')
 @click.argument('projectid')
 @click.argument('subjectid')
-def createSubject(projectid, subjectid):
+def create_subject(projectid, subjectid):
     """
     Create a new subject, or update an existing one.
 
@@ -243,7 +244,7 @@ def load(projectid, directory, clear):
 @annif.cli.command('drop-subject')
 @click.argument('projectid')
 @click.argument('subjectid')
-def dropSubject(projectid, subjectid):
+def drop_subject(projectid, subjectid):
     """
     Delete a subject.
 
