@@ -2,7 +2,6 @@
 
 import sys
 import os
-import click
 import random
 from elasticsearch import Elasticsearch
 from elasticsearch.client import IndicesClient
@@ -15,7 +14,8 @@ index = IndicesClient(es)
 runner = CliRunner()
 
 # Generate a random project name to use in tests
-TEMP_PROJECT = ''.join(random.choice('abcdefghiklmnopqrstuvwxyz') for _ in range(8))
+TEMP_PROJECT = ''.join(
+        random.choice('abcdefghiklmnopqrstuvwxyz') for _ in range(8))
 TEMP_INDEX = TEMP_PROJECT[:7]
 
 # Set a random name for the project index, so as not to mess up possible
@@ -41,14 +41,26 @@ def test_listprojects():
     assert runner.invoke(
             annif.listprojects, ['moi', '--debug', 'y']).exit_code != 0
     result = runner.invoke(annif.listprojects)
+    assert result.exit_code == 0
 
 
 def test_createProject():
     assert not index.exists(annif.parseIndexname(TEMP_PROJECT))
-    result = runner.invoke(annif.createProject, [TEMP_PROJECT, '--language',
-        'en', '--analyzer', 'english'])
+    result = runner.invoke(annif.createProject,
+                           [TEMP_PROJECT, '--language', 'en', '--analyzer',
+                            'english'])
     assert index.exists(annif.parseIndexname(TEMP_PROJECT))
     assert result.exit_code == 0
+    # Creating a project should not succeed if an insufficient amount of args
+    # are provided.
+    FAILED_PROJECT = 'wow'
+    assert not index.exists(annif.parseIndexname(FAILED_PROJECT))
+    result = runner.invoke(annif.createProject,
+                           [FAILED_PROJECT, '--language', 'en'])
+    assert not index.exists(annif.parseIndexname(FAILED_PROJECT))
+    result = runner.invoke(annif.createProject,
+                           [FAILED_PROJECT, '--analyzer', 'english'])
+    assert not index.exists(annif.parseIndexname(FAILED_PROJECT))
 
 
 def test_showProject():
@@ -56,7 +68,7 @@ def test_showProject():
     assert result.exit_code == 0
     # Test should not fail even if the user queries for a non-existent project.
     failed_result = runner.invoke(annif.showProject, ['nonexistent'])
-    assert result.exit_code == 0
+    assert failed_result.exit_code == 0
 
 
 def test_dropProject():
