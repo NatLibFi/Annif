@@ -107,8 +107,6 @@ def showProject(projectid):
         parsed += parseRow('project name', content['_source']['name'])
         parsed += parseRow('project language', content['_source']['language'])
         parsed += parseRow('project analyzer', content['_source']['analyzer'])
-        parsed += parseRow('index', content['_index'])
-        parsed += parseRow('score', content['_score'])
         print(parsed)
     else:
         print("No projects found with id \'{0}\'.".format(projectid))
