@@ -75,35 +75,34 @@ def listprojects():
     """
 
     doc = {'size': 1000, 'query': {'match_all': {}}}
-    results = es.search(index=annif.config['INDEX_NAME'], doc_type='project',
-                        body=doc)
 
-    projects = [x['_source'] for x in results['hits']['hits']]
+    template = "{0: <15}{1: <15}{2: <15}\n"
 
-    def formatRow(col1, col2, col3):
-        return "{0: <15}{1: <15}{2: <15}\n".format(col1, col2, col3)
+    formatted = template.format("Project ID", "Language", "Analyzer")
+    formatted += str("-" * len(formatted) + "\n")
 
-    parsed = formatRow("Project ID", "Language", "Analyzer")
-    parsed += str("-" * len(parsed) + "\n")
+    projects = [x['_source'] for x in es.search(
+        index=annif.config['INDEX_NAME'],
+        doc_type='project',
+        body=doc)['hits']['hits']]
 
     for p in projects:
-        parsed += formatRow(p['name'], p['language'], p['analyzer'])
+        formatted += template.format(p['name'], p['language'], p['analyzer'])
 
-    print(parsed)
+    print(formatted)
 
 
-def parseResult(result):
+def formatResult(result):
 
     def formatRow(key, value):
         return str('{:15}'.format("" + key + ":") + str(value) + "\n")
 
+    template = "{0:<15}{1}\n"
     content = result['hits']['hits'][0]
-    parsed = ""
-    parsed += formatRow('Project ID', content['_source']['name'])
-    parsed += formatRow('Language', content['_source']['language'])
-    parsed += formatRow('Analyzer', content['_source']['analyzer'])
-
-    return parsed
+    formatted = template.format('Project ID:', content['_source']['name'])
+    formatted += template.format('Language:', content['_source']['language'])
+    formatted += template.format('Analyzer', content['_source']['analyzer'])
+    return formatted
 
 
 @annif.cli.command('show-project')
@@ -123,7 +122,7 @@ def showProject(projectid):
                        body={'query': {'match': {'name': projectid}}})
 
     if (result['hits']['hits']):
-        print(parseResult(result))
+        print(formatResult(result))
     else:
         print("No projects found with id \'{0}\'.".format(projectid))
 
