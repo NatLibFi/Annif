@@ -15,3 +15,5 @@ after_success:
   - codecov
   - coveralls
   - pytest --cov=./
+notifications:
+  slack: kansalliskirjasto:tyt7yhMrgqceJoKiSNt09nvV
