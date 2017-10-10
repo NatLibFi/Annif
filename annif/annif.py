@@ -80,28 +80,28 @@ def listprojects():
 
     projects = [x['_source'] for x in results['hits']['hits']]
 
-    def parseRow(col1, col2, col3):
+    def formatRow(col1, col2, col3):
         return "{0: <15}{1: <15}{2: <15}\n".format(col1, col2, col3)
 
-    parsed = parseRow("Project ID", "Language", "Analyzer")
+    parsed = formatRow("Project ID", "Language", "Analyzer")
     parsed += str("-" * len(parsed) + "\n")
 
     for p in projects:
-        parsed += parseRow(p['name'], p['language'], p['analyzer'])
+        parsed += formatRow(p['name'], p['language'], p['analyzer'])
 
     print(parsed)
 
 
 def parseResult(result):
 
-    def parseRow(key, value):
+    def formatRow(key, value):
         return str('{:15}'.format("" + key + ":") + str(value) + "\n")
 
     content = result['hits']['hits'][0]
     parsed = ""
-    parsed += parseRow('Project ID', content['_source']['name'])
-    parsed += parseRow('Language', content['_source']['language'])
-    parsed += parseRow('Analyzer', content['_source']['analyzer'])
+    parsed += formatRow('Project ID', content['_source']['name'])
+    parsed += formatRow('Language', content['_source']['language'])
+    parsed += formatRow('Analyzer', content['_source']['analyzer'])
 
     return parsed
 
