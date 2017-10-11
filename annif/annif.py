@@ -100,6 +100,16 @@ def list_projects():
 
 
 def format_result(result):
+    """
+    A helper function for show_project. Takes a dict containing project
+    information as returned by ES client and returns a human-readable
+    string representation formatted as follows:
+
+    Project ID:    testproj
+    Language:      fi
+    Analyzer       finglish
+
+    """
     template = "{0:<15}{1}\n"
     content = result['hits']['hits'][0]
     formatted = template.format('Project ID:', content['_source']['name'])
@@ -152,10 +162,11 @@ def create_project(projectid, language, analyzer):
         print('Usage: annif create-project <projectId> --language <lang> '
               '--analyzer <analyzer>')
     elif index.exists(proj_indexname):
-        print('Index \'{0}\' already exists.'.format(proj_indexname))
+        print('Index \'{0}\' already exists.'
+                .format(format_index_name(projectid)))
     else:
         # Create an index for the project
-        index.create(index=proj_indexname)
+        index.create(index=format_index_name(projectid))
 
         # Add the details of the new project to the 'master' index
         es.create(index=annif.config['INDEX_NAME'],
