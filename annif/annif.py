@@ -7,7 +7,7 @@ from elasticsearch.client import IndicesClient, CatClient
 
 es = Elasticsearch()
 index = IndicesClient(es)
-cat = CatClient(es)
+CAT = CatClient(es)
 
 annif = Flask(__name__)
 
@@ -34,11 +34,17 @@ projectIndexConf = {
 
 
 def parse_indexname(projectid):
+    """
+    Return an index name formatted like annif-project.
+    """
     return "{0}-{1}".format(annif.config['INDEX_NAME'], projectid)
 
 
 def list_orphan_indices():
-    indices = [x.split()[2] for x in cat.indices().split('\n') if len(x) > 0]
+    """
+    Returns a list containing names of orphaned indices.
+    """
+    indices = [x.split()[2] for x in CAT.indices().split('\n') if len(x) > 0]
     return [x for x in indices if x.startswith(annif.config['INDEX_NAME'])]
 
 
@@ -118,7 +124,7 @@ def show_project(projectid):
                        doc_type='project',
                        body={'query': {'match': {'name': projectid}}})
 
-    if (result['hits']['hits']):
+    if result['hits']['hits']:
         print(format_result(result))
     else:
         print("No projects found with id \'{0}\'.".format(projectid))
