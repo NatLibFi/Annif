@@ -140,6 +140,18 @@ def show_project(projectid):
         print("No projects found with id \'{0}\'.".format(projectid))
 
 
+def add_to_master_index(body):
+    """
+    Takes a dict containing project information and adds it as a record
+    in the 'master index'.
+
+    """
+    return es.create(index=annif.config['INDEX_NAME'],
+                     doc_type='project',
+                     id=body['name'],
+                     body=body)
+
+
 @annif.cli.command('create-project')
 @click.argument('projectid')
 @click.option('--language')
@@ -156,21 +168,21 @@ def create_project(projectid, language, analyzer):
     PUT /projects/<projectId>
     """
 
-    if not projectid or not language or not analyzer:
+    proj_indexname = format_index_name(projectid)
+    body = {'name': projectid, 'language': language, 'analyzer': analyzer}
+
+    if not all(body.values()):
         print('Usage: annif create-project <projectId> --language <lang> '
               '--analyzer <analyzer>')
-    elif index.exists(format_index_name(projectid)):
-        print('Index \'{0}\' already exists.'
-                .format(format_index_name(projectid)))
+
+    elif index.exists(proj_indexname):
+        print('Index \'{0}\' already exists.'.format(proj_indexname))
     else:
         # Create an index for the project
-        index.create(index=format_index_name(projectid))
+        index.create(index=proj_indexname)
 
         # Add the details of the new project to the 'master' index
-        es.create(index=annif.config['INDEX_NAME'],
-                  doc_type='project', id=projectid,
-                  body={'name': projectid, 'language': language,
-                        'analyzer': analyzer})
+        add_to_master_index(body)
         print('Successfully created project \'{0}\'.'.format(projectid))
 
 
