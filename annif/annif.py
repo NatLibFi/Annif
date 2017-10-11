@@ -33,7 +33,7 @@ projectIndexConf = {
         }
 
 
-def parse_indexname(projectid):
+def format_index_name(projectid):
     """
     Return an index name formatted like annif-project.
     """
@@ -146,7 +146,7 @@ def create_project(projectid, language, analyzer):
     PUT /projects/<projectId>
     """
 
-    proj_indexname = parse_indexname(projectid)
+    proj_indexname = format_index_name(projectid)
 
     if not projectid or not language or not analyzer:
         print('Usage: annif create-project <projectId> --language <lang> '
@@ -183,7 +183,7 @@ def drop_project(projectid):
     print(result)
 
     # Then delete the project index
-    result = index.delete(index=parse_indexname(projectid))
+    result = index.delete(index=format_index_name(projectid))
     print(result)
 
 
