@@ -27,7 +27,7 @@ Install dependencies by running `pip install -r requirements.txt`.
 
 Set the `FLASK_APP` enviroment variable: `export FLASK_APP=annif/annif.py`.
 
-Set a shell alias for the applicaton: `alias annif=flask`.
+Set a shell alias for the application: `alias annif=flask`.
 
 Run with the command `annif run`.
 
