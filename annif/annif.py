@@ -156,8 +156,6 @@ def create_project(projectid, language, analyzer):
     PUT /projects/<projectId>
     """
 
-    proj_indexname = format_index_name(projectid)
-
     if not projectid or not language or not analyzer:
         print('Usage: annif create-project <projectId> --language <lang> '
               '--analyzer <analyzer>')
