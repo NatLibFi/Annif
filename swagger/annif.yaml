@@ -6,14 +6,14 @@ schemes:
   - http
 basePath: /v1/
 parameters:
-  projectidParam:
-    name: projectid
+  project_id:
+    name: project_id
     in: path
     description: project identifier
     required: true
     type: string
-  subjectidParam:
-    name: subjectid
+  subject_id:
+    name: subject_id
     in: path
     description: subject identifier
     required: true
@@ -27,16 +27,20 @@ paths:
       responses:
         '200':
           description: succesful operation
+          schema:
+            $ref: '#/definitions/ProjectList'
       tags:
         - Project administration
-  '/projects/{projectid}':
+  '/projects/{project_id}':
     get:
       summary: show project information
       parameters:
-        - $ref: '#/parameters/projectidParam'
+        - $ref: '#/parameters/project_id'
       responses:
         '200':
           description: succesful operation
+          schema:
+            $ref: '#/definitions/Project'
         '404':
           description: project not found
       tags:
@@ -44,7 +48,12 @@ paths:
     put:
       summary: create or update project
       parameters:
-        - $ref: '#/parameters/projectidParam'
+        - $ref: '#/parameters/project_id'
+        - name: project
+          in: body
+          description: the project to create
+          schema:
+            $ref: '#/definitions/Project'
       consumes:
         - application/json
       responses:
@@ -57,7 +66,7 @@ paths:
     delete:
       summary: delete a project
       parameters:
-        - $ref: '#/parameters/projectidParam'
+        - $ref: '#/parameters/project_id'
       responses:
         '204':
           description: 'succesful operation, no content returned'
@@ -65,11 +74,11 @@ paths:
           description: project not found
       tags:
         - Project administration
-  '/projects/{projectid}/subjects':
+  '/projects/{project_id}/subjects':
     get:
       summary: get a list of all subjects defined for a project
       parameters:
-        - $ref: '#/parameters/projectidParam'
+        - $ref: '#/parameters/project_id'
       responses:
         '200':
           description: succesful operation
@@ -77,12 +86,12 @@ paths:
           description: project not found
       tags:
         - Subject index administration
-  '/projects/{projectid}/subjects/{subjectid}':
+  '/projects/{project_id}/subjects/{subject_id}':
     get:
       summary: show subject information
       parameters:
-        - $ref: '#/parameters/projectidParam'
-        - $ref: '#/parameters/subjectidParam'
+        - $ref: '#/parameters/project_id'
+        - $ref: '#/parameters/subject_id'
       produces:
         - application/json
       responses:
@@ -95,8 +104,8 @@ paths:
     put:
       summary: create or update subject information
       parameters:
-        - $ref: '#/parameters/projectidParam'
-        - $ref: '#/parameters/subjectidParam'
+        - $ref: '#/parameters/project_id'
+        - $ref: '#/parameters/subject_id'
       consumes:
         - application/json
       responses:
@@ -109,8 +118,8 @@ paths:
     delete:
       summary: delete subject information
       parameters:
-        - $ref: '#/parameters/projectidParam'
-        - $ref: '#/parameters/subjectidParam'
+        - $ref: '#/parameters/project_id'
+        - $ref: '#/parameters/subject_id'
       responses:
         '204':
           description: 'succesful operation, no content returned'
@@ -118,7 +127,7 @@ paths:
           description: project or subject not found
       tags:
         - Subject index administration
-  '/projects/{projectid}/analyze':
+  '/projects/{project_id}/analyze':
     post:
       summary: suggest subjects for a given text
       consumes:
@@ -126,13 +135,13 @@ paths:
       produces:
         - application/json
       parameters:
-        - $ref: '#/parameters/projectidParam'
+        - $ref: '#/parameters/project_id'
         - name: text
           in: formData
-          description: input text
+          description: text to analyze
           required: true
           type: string
-        - name: maxhits
+        - name: limit
           in: formData
           description: maximum number of results to return
           required: false
@@ -141,13 +150,44 @@ paths:
         - name: threshold
           in: formData
           description: >-
-            minimum score threshold, expressed as a fraction of highest score,
-            below which results will not be returned
+            minimum score threshold, expressed as a fraction of highest score
+            (normalized score), below which results will not be returned
           required: false
           type: number
           default: 0.45
+        - name: normalize_scores
+          in: formData
+          description: >-
+            whether to normalize the returned scores to the range [0..1] (true,
+            default) or to return the raw scores (false)
+          required: false
+          type: boolean
+          default: true
       responses:
         '200':
           description: successful operation
       tags:
         - Automatic subject indexing
+definitions:
+  Project:
+    description: A project definition
+    properties:
+      projectid:
+        type: string
+        example: my-project
+      language:
+        type: string
+        example: en
+      analyzer:
+        type: string
+        example: english
+    required:
+      - projectid
+      - language
+      - analyzer
+  ProjectList:
+    properties:
+      projects:
+        type: array
+        items:
+          $ref: '#/definitions/Project'
