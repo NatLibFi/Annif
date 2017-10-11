@@ -159,7 +159,7 @@ def create_project(projectid, language, analyzer):
     if not projectid or not language or not analyzer:
         print('Usage: annif create-project <projectId> --language <lang> '
               '--analyzer <analyzer>')
-    elif index.exists(proj_indexname):
+    elif index.exists(format_index_name(projectid)):
         print('Index \'{0}\' already exists.'
                 .format(format_index_name(projectid)))
     else:
