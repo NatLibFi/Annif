@@ -11,8 +11,8 @@ CAT = CatClient(es)
 
 annif = connexion.App(__name__, specification_dir='swagger/')
 
-annif.app.config['INDEX_NAME'] = 'annif'
-# annif.app.config.from_object('.configModule.Config')
+# annif.app.config['INDEX_NAME'] = 'annif'
+annif.app.config.from_object('annif.config.Config')
 
 
 projectIndexConf = {
@@ -64,8 +64,8 @@ def init():
     for i in list_orphan_indices():
         index.delete(i)
 
+    es.indices.create(index=annif.app.config['INDEX_NAME'], body=projectIndexConf)
     return 'Initialized project index \'{0}\'.'.format(annif.app.config['INDEX_NAME'])
-    # return es.indices.create(index=annif.app.config['INDEX_NAME'], body=projectIndexConf)
 
 
 def list_projects():

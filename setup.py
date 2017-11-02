@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='annif',
+    name='app',
     packages=['annif'],
     include_package_data=True,
     install_requires=[
