@@ -8,7 +8,7 @@ install:
 services:
   - elasticsearch
 env:
-  - FLASK_APP="annif/annif.py"
+  - FLASK_APP="app.py"
 script:
   - pytest
 after_success:
