@@ -44,42 +44,39 @@ def test_list_projects():
     assert result.exit_code == 0
 
 
-def test_create_project():
-    # assert not index.exists(annif.format_index_name(TEMP_PROJECT))
-    # result = runner.invoke(annif.create_project,
-    #                        [TEMP_PROJECT, '--language', 'en', '--analyzer',
-    #                         'english'])
-    # assert index.exists(annif.format_index_name(TEMP_PROJECT))
-    # assert result.exit_code == 0
-    # # Creating a project should not succeed if an insufficient amount of args
-    # # are provided.
-    # FAILED_PROJECT = 'wow'
-    # assert not index.exists(annif.format_index_name(FAILED_PROJECT))
-    # result = runner.invoke(annif.create_project,
-    #                        [FAILED_PROJECT, '--language', 'en'])
-    # assert not index.exists(annif.format_index_name(FAILED_PROJECT))
-    # result = runner.invoke(annif.create_project,
-    #                        [FAILED_PROJECT, '--analyzer', 'english'])
-    # assert not index.exists(annif.format_index_name(FAILED_PROJECT))
-    pass
+def test_run_create_project():
+    assert not index.exists(app.format_index_name(TEMP_PROJECT))
+    result = runner.invoke(app.run_create_project,
+                           [TEMP_PROJECT, '--language', 'en', '--analyzer',
+                            'english'])
+    assert index.exists(app.format_index_name(TEMP_PROJECT))
+    assert result.exit_code == 0
+    # Creating a project should not succeed if an insufficient amount of args
+    # are provided.
+    FAILED_PROJECT = 'wow'
+    assert not index.exists(app.format_index_name(FAILED_PROJECT))
+    result = runner.invoke(app.run_create_project,
+                           [FAILED_PROJECT, '--language', 'en'])
+    assert not index.exists(app.format_index_name(FAILED_PROJECT))
+    result = runner.invoke(app.run_create_project,
+                           [FAILED_PROJECT, '--analyzer', 'english'])
+    assert not index.exists(app.format_index_name(FAILED_PROJECT))
 
 
 def test_show_project():
-    # result = runner.invoke(annif.show_project, [TEMP_PROJECT])
-    # assert result.exit_code == 0
-    # # Test should not fail even if the user queries for a non-existent project.
-    # failed_result = runner.invoke(annif.show_project, ['nonexistent'])
-    # assert failed_result.exit_code == 0
-    pass
+    result = runner.invoke(app.run_show_project, [TEMP_PROJECT])
+    assert result.exit_code == 0
+    # Test should not fail even if the user queries for a non-existent project.
+    failed_result = runner.invoke(app.run_show_project, ['nonexistent'])
+    assert failed_result.exit_code == 0
 
 
 def test_drop_project():
-    # assert index.exists(app.format_index_name(TEMP_PROJECT))
-    # # result = runner.invoke(annif.drop_project, [TEMP_PROJECT])
+    assert index.exists(app.format_index_name(TEMP_PROJECT))
+    result = runner.invoke(app.run_drop_project, [TEMP_PROJECT])
     # result = app.drop_project(TEMP_PROJECT)
-    # assert not index.exists(app.format_index_name(TEMP_PROJECT))
-    # assert result.exit_code == 0
-    pass
+    assert not index.exists(app.format_index_name(TEMP_PROJECT))
+    assert result.exit_code == 0
 
 
 def test_list_subjects():
