@@ -34,19 +34,6 @@ paths:
           description: succesful operation
       tags:
         - Project administration
-  /projects:
-    get:
-      summary: get a list of projects
-      operationId: app.list_projects
-      produces:
-        - application/json
-      responses:
-        '200':
-          description: succesful operation
-          schema:
-            $ref: '#/definitions/ProjectList'
-      tags:
-        - Project administration
 definitions:
   Project:
     description: A project definition

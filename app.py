@@ -11,7 +11,8 @@ CAT = CatClient(es)
 
 annif = connexion.App(__name__, specification_dir='swagger/')
 
-annif.app.config.from_object('annif.config.Config')
+annif.app.config['INDEX_NAME'] = 'annif'
+# annif.app.config.from_object('.configModule.Config')
 
 
 projectIndexConf = {
@@ -78,21 +79,10 @@ def list_projects():
 
     doc = {'size': 1000, 'query': {'match_all': {}}}
 
-    template = "{0: <15}{1: <15}{2: <15}\n"
-
-    formatted = template.format("Project ID", "Language", "Analyzer")
-    formatted += str("-" * len(formatted) + "\n")
-
-    projects = [x['_source'] for x in es.search(
+    return [x['_source'] for x in es.search(
         index=annif.app.config['INDEX_NAME'],
         doc_type='project',
         body=doc)['hits']['hits']]
-
-    for proj in projects:
-        formatted += template.format(proj['name'], proj['language'],
-                                     proj['analyzer'])
-
-    return formatted
 
 
 def format_result(result):
@@ -283,7 +273,16 @@ def run_init():
 
 @annif.app.cli.command('list-projects')
 def run_list_projects():
-    print(list_projects())
+    template = "{0: <15}{1: <15}{2: <15}\n"
+
+    formatted = template.format("Project ID", "Language", "Analyzer")
+    formatted += str("-" * len(formatted) + "\n")
+
+    for proj in list_projects():
+        formatted += template.format(proj['name'], proj['language'],
+                                     proj['analyzer'])
+
+    print(formatted)
 
 
 @annif.app.cli.command('create-project')
