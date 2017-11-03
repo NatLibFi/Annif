@@ -11,7 +11,6 @@ CAT = CatClient(es)
 
 annif = connexion.App(__name__, specification_dir='swagger/')
 
-# annif.app.config['INDEX_NAME'] = 'annif'
 annif.app.config.from_object('annif.config.Config')
 
 
@@ -104,7 +103,7 @@ def format_result(result):
     return formatted
 
 
-def show_project(projectid):
+def show_project(project_id):
     """
     Show project information.
 
@@ -114,14 +113,15 @@ def show_project(projectid):
 
     GET /projects/<projectId>
     """
+    print(project_id)
     result = es.search(index=annif.app.config['INDEX_NAME'],
                        doc_type='project',
-                       body={'query': {'match': {'name': projectid}}})
+                       body={'query': {'match': {'name': project_id}}})
 
     if result['hits']['hits']:
         return format_result(result)
     else:
-        return "No projects found with id \'{0}\'.".format(projectid)
+        return "No projects found with id \'{0}\'.".format(project_id)
 
 
 def add_to_master_index(body):
@@ -263,7 +263,7 @@ def analyze(projectid, maxhits, threshold):
 ##############################################################################
 # COMMAND-LINE INTERFACE
 # Here are the definitions for command-line (Click) commands for invoking
-# the above functions.
+# the above functions and printing the results to console.
 ##############################################################################
 
 @annif.app.cli.command('init')
@@ -296,14 +296,13 @@ def run_create_project(projectid, language, analyzer):
 @annif.app.cli.command('show-project')
 @click.argument('projectid')
 def run_show_project(projectid):
-    print("TODO")
+    print(show_project(projectid))
 
 
 @annif.app.cli.command('drop-project')
 @click.argument('projectid')
 def run_drop_project(projectid):
     print(drop_project(projectid))
-
 
 @annif.app.cli.command('load')
 @click.argument('projectid')

@@ -34,6 +34,19 @@ paths:
           description: succesful operation
       tags:
         - Project administration
+  /projects/{project_id}:
+    get:
+      summary: show project information
+      operationId: app.show_project
+      parameters:
+        - $ref: '#/parameters/project_id'
+      responses:
+        '200':
+          description: succesful operation
+        '404':
+          description: project not found
+      tags:
+        - Project administration
 definitions:
   Project:
     description: A project definition

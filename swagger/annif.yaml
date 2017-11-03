@@ -31,7 +31,7 @@ paths:
             $ref: '#/definitions/ProjectList'
       tags:
         - Project administration
-  '/projects/{project_id}':
+  /projects/{project_id}:
     get:
       summary: show project information
       parameters:
