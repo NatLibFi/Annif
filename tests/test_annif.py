@@ -61,9 +61,8 @@ def test_list_projects():
     assert runner.invoke(annif.run_list_projects, ['moi']).exit_code != 0
     assert runner.invoke(
             annif.run_list_projects, ['moi', '--debug', 'y']).exit_code != 0
-    result = annif.list_projects()
-    # result = runner.invoke(annif.run_list_projects)
-    # assert result.exit_code == 0
+    result = runner.invoke(annif.run_list_projects)
+    assert result.exit_code == 0
 
 
 def test_show_project():

@@ -9,12 +9,12 @@ es = Elasticsearch()
 index = IndicesClient(es)
 CAT = CatClient(es)
 
+# 'annif' here is the Connexion application that has a normal Flask app as a
+# property (annif.app)
+
 annif = connexion.App(__name__, specification_dir='swagger/')
 
 annif.app.config.from_object('config.Config')
-
-# annif.app.config['INDEX_NAME'] = 'annif'
-
 
 projectIndexConf = {
         'mappings': {
@@ -35,11 +35,11 @@ projectIndexConf = {
         }
 
 
-def format_index_name(projectid):
+def format_index_name(project_id):
     """
     Return an index name formatted like annif-project.
     """
-    return "{0}-{1}".format(annif.app.config['INDEX_NAME'], projectid)
+    return "{0}-{1}".format(annif.app.config['INDEX_NAME'], project_id)
 
 
 def list_orphan_indices():
@@ -65,8 +65,10 @@ def init():
     for i in list_orphan_indices():
         index.delete(i)
 
-    es.indices.create(index=annif.app.config['INDEX_NAME'], body=projectIndexConf)
-    return 'Initialized project index \'{0}\'.'.format(annif.app.config['INDEX_NAME'])
+    es.indices.create(index=annif.app.config['INDEX_NAME'],
+                      body=projectIndexConf)
+    return 'Initialized project index \'{0}\'.'.format(
+            annif.app.config['INDEX_NAME'])
 
 
 def list_projects():
@@ -109,11 +111,11 @@ def show_project(project_id):
     """
     Show project information.
 
-    Usage: annif show-project <projectId>
+    Usage: annif show-project <project_id>
 
     REST equivalent:
 
-    GET /projects/<projectId>
+    GET /projects/<project_id>
     """
     result = es.search(index=annif.app.config['INDEX_NAME'],
                        doc_type='project',
@@ -137,23 +139,24 @@ def add_to_master_index(body):
                      body=body)
 
 
-def create_project(projectid, language, analyzer):
+def create_project(project_id, language, analyzer):
     """
     Create a new project.
 
-    Usage: annif create-project <projectId> --language <lang> --analyzer
+    Usage: annif create-project <project_id> --language <lang> --analyzer
     <analyzer>
 
     REST equivalent:
 
-    PUT /projects/<projectId>
+    PUT /projects/<project_id>
     """
 
-    proj_indexname = format_index_name(projectid)
-    body = {'name': projectid, 'language': language, 'analyzer': analyzer}
+    proj_indexname = format_index_name(project_id)
+    body = {'name': project_id, 'language': language, 'analyzer': analyzer}
 
     if not all(body.values()):
-        return 'Usage: annif create-project <projectId> --language <lang> --analyzer <analyzer>'
+        return 'Usage: annif create-project <project_id> --language <lang> ' \
+               '--analyzer <analyzer>'
 
     elif index.exists(proj_indexname):
         return '\'{0}\' already exists.'.format(proj_indexname)
@@ -163,99 +166,99 @@ def create_project(projectid, language, analyzer):
 
         # Add the details of the new project to the 'master' index
         add_to_master_index(body)
-        return 'Successfully created project \'{0}\'.'.format(projectid)
+        return 'Successfully created project \'{0}\'.'.format(project_id)
 
 
-def drop_project(projectid):
+def drop_project(project_id):
     """
     Delete a project.
-    USAGE: annif drop-project <projectid>
+    USAGE: annif drop-project <project_id>
 
     REST equivalent:
 
-    DELETE /projects/<projectid>
+    DELETE /projects/<project_id>
     """
     # Delete the index from the 'master' index
     result = es.delete(index=annif.app.config['INDEX_NAME'],
-                       doc_type='project', id=projectid)
+                       doc_type='project', id=project_id)
 
     print(result)
 
     # Then delete the project index
-    return index.delete(index=format_index_name(projectid))
+    return index.delete(index=format_index_name(project_id))
 
 
-def list_subjects(projectid):
+def list_subjects(project_id):
     """
     Show all subjects for a project.
 
-    USAGE: annif list-subjects <projectid>
+    USAGE: annif list-subjects <project_id>
 
     REST equivalent:
 
-    GET /projects/<projectid>/subjects
+    GET /projects/<project_id>/subjects
     """
     pass
 
 
-def show_subject(projectid, subjectid):
+def show_subject(project_id, subject_id):
     """
     Show information about a subject.
 
-    USAGE: annif show-subject <projectid> <subjectid>
+    USAGE: annif show-subject <project_id> <subject_id>
 
     REST equivalent:
 
-    GET /projects/<projectid>/subjects/<subjectid>
+    GET /projects/<project_id>/subjects/<subject_id>
     """
     pass
 
 
-def create_subject(projectid, subjectid):
+def create_subject(project_id, subject_id):
     """
     Create a new subject, or update an existing one.
 
-    annif create-subject <projectid> <subjectid> <subject.txt
+    annif create-subject <project_id> <subject_id> <subject.txt
 
     REST equivalent:
 
-    PUT /projects/<projectid>/subjects/<subjectid>
+    PUT /projects/<project_id>/subjects/<subject_id>
     """
     pass
 
 
-def load(projectid, directory, clear):
+def load(project_id, directory, clear):
     """
     Load all subjects from a directory.
 
-    USAGE: annif load <projectid> <directory> [--clear=CLEAR]
+    USAGE: annif load <project_id> <directory> [--clear=CLEAR]
     """
     pass
 
 
-def drop_subject(projectid, subjectid):
+def drop_subject(project_id, subject_id):
     """
     Delete a subject.
 
-    USAGE: annif drop-subject <projectid> <subjectid>
+    USAGE: annif drop-subject <project_id> <subject_id>
 
     REST equivalent:
 
-    DELETE /projects/<projectid>/subjects/<subjectid>
+    DELETE /projects/<project_id>/subjects/<subject_id>
 
     """
     pass
 
 
-def analyze(projectid, maxhits, threshold):
+def analyze(project_id, maxhits, threshold):
     """"
     Delete a subject.
 
-    USAGE: annif drop-subject <projectid> <subjectid>
+    USAGE: annif drop-subject <project_id> <subject_id>
 
     REST equivalent:
 
-    DELETE /projects/<projectid>/subjects/<subjectid>
+    DELETE /projects/<project_id>/subjects/<subject_id>
 
     """
     pass
@@ -287,64 +290,65 @@ def run_list_projects():
 
 
 @annif.app.cli.command('create-project')
-@click.argument('projectid')
+@click.argument('project_id')
 @click.option('--language')
 @click.option('--analyzer')
-def run_create_project(projectid, language, analyzer):
-    print(create_project(projectid, language, analyzer))
+def run_create_project(project_id, language, analyzer):
+    print(create_project(project_id, language, analyzer))
 
 
 @annif.app.cli.command('show-project')
-@click.argument('projectid')
-def run_show_project(projectid):
-    print(show_project(projectid))
+@click.argument('project_id')
+def run_show_project(project_id):
+    print(show_project(project_id))
 
 
 @annif.app.cli.command('drop-project')
-@click.argument('projectid')
-def run_drop_project(projectid):
-    print(drop_project(projectid))
+@click.argument('project_id')
+def run_drop_project(project_id):
+    print(drop_project(project_id))
+
 
 @annif.app.cli.command('load')
-@click.argument('projectid')
+@click.argument('project_id')
 @click.argument('directory')
 @click.option('--clear', default=False)
-def run_load(projectid, directory, clear):
+def run_load(project_id, directory, clear):
     print("TODO")
 
 
 @annif.app.cli.command('list-subjects')
-@click.argument('projectid')
+@click.argument('project_id')
 def run_list_subjects():
     print("TODO")
 
 
 @annif.app.cli.command('show-subject')
-@click.argument('projectid')
-@click.argument('subjectid')
-def run_show_subject(projectid, subjectid):
+@click.argument('project_id')
+@click.argument('subject_id')
+def run_show_subject(project_id, subject_id):
     print("TODO")
 
 
 @annif.app.cli.command('create-subject')
-@click.argument('projectid')
-@click.argument('subjectid')
-def run_create_subject(projectid, subjectid):
+@click.argument('project_id')
+@click.argument('subject_id')
+def run_create_subject(project_id, subject_id):
     print("TODO")
 
 
 @annif.app.cli.command('drop-subject')
-@click.argument('projectid')
-@click.argument('subjectid')
-def run_drop_subject(projectid, subjectid):
+@click.argument('project_id')
+@click.argument('subject_id')
+def run_drop_subject(project_id, subject_id):
     print("TODO")
 
 
 @annif.app.cli.command('analyze')
 @click.option('--maxhits', default=20)
 @click.option('--threshold', default=0.9)  # TODO: Check this.
-def run_analyze(projectid, maxhits, threshold):
-    print(analyze(projectid, maxhits, threshold))
+def run_analyze(project_id, maxhits, threshold):
+    print(analyze(project_id, maxhits, threshold))
 
 ##############################################################################
 
