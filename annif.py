@@ -100,7 +100,7 @@ def format_result(result):
 
     """
     template = "{0:<15}{1}\n"
-    content = result['hits']['hits'][0]
+    content = result['hits'][0]
     formatted = template.format('Project ID:', content['_source']['name'])
     formatted += template.format('Language:', content['_source']['language'])
     formatted += template.format('Analyzer', content['_source']['analyzer'])
@@ -122,7 +122,7 @@ def show_project(project_id):
                        body={'query': {'match': {'name': project_id}}})
 
     if result['hits']['hits']:
-        return format_result(result)
+        return result['hits']
     else:
         return "No projects found with id \'{0}\'.".format(project_id)
 
@@ -300,7 +300,7 @@ def run_create_project(project_id, language, analyzer):
 @annif.app.cli.command('show-project')
 @click.argument('project_id')
 def run_show_project(project_id):
-    print(show_project(project_id))
+    print(format_result(show_project(project_id)))
 
 
 @annif.app.cli.command('drop-project')
