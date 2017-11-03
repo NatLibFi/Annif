@@ -88,25 +88,6 @@ def list_projects():
         body=doc)['hits']['hits']]
 
 
-def format_result(result):
-    """
-    A helper function for show_project. Takes a dict containing project
-    information as returned by ES client and returns a human-readable
-    string representation formatted as follows:
-
-    Project ID:    testproj
-    Language:      fi
-    Analyzer       finglish
-
-    """
-    template = "{0:<15}{1}\n"
-    content = result['hits'][0]
-    formatted = template.format('Project ID:', content['_source']['name'])
-    formatted += template.format('Language:', content['_source']['language'])
-    formatted += template.format('Analyzer', content['_source']['analyzer'])
-    return formatted
-
-
 def show_project(project_id):
     """
     Show project information.
@@ -300,7 +281,28 @@ def run_create_project(project_id, language, analyzer):
 @annif.app.cli.command('show-project')
 @click.argument('project_id')
 def run_show_project(project_id):
-    print(format_result(show_project(project_id)))
+    """
+    Takes a dict containing project information as returned by ES client
+    and returns a human-readable string representation formatted as follows:
+
+    Project ID:    testproj
+    Language:      fi
+    Analyzer       finglish
+
+    """
+
+    res = show_project(project_id)
+    if type(res) is not str:
+        formatted = ""
+        template = "{0:<15}{1}\n"
+
+        content = res['hits'][0]
+        formatted = template.format('Project ID:', content['_source']['name'])
+        formatted += template.format('Language:', content['_source']['language'])
+        formatted += template.format('Analyzer', content['_source']['analyzer'])
+        print(formatted)
+    else:
+        print(res)
 
 
 @annif.app.cli.command('drop-project')

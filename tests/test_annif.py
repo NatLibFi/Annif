@@ -35,13 +35,9 @@ def test_init():
 
 def test_run_create_project():
     assert not index.exists(annif.format_index_name(TEMP_PROJECT))
-    # result2 = runner.invoke(annif.run_create_project,
-    #                        [TEMP_PROJECT, '--language', 'en', '--analyzer',
-    #                         'english'])
     result = annif.create_project(TEMP_PROJECT, 'swahili', 'norwegian')
     print(result)
     assert index.exists(annif.format_index_name(TEMP_PROJECT))
-    # assert result2.exit_code == 0
     # Creating a project should not succeed if an insufficient amount of args
     # are provided.
     FAILED_PROJECT = 'wow'
@@ -66,12 +62,11 @@ def test_list_projects():
 
 
 def test_show_project():
-    result = runner.invoke(annif.run_show_project, [TEMP_PROJECT])
-    print(result)
-    assert result.exit_code == 0
+    assert runner.invoke(annif.run_show_project, [TEMP_PROJECT]).exit_code == 0
+    assert annif.show_project(TEMP_PROJECT)
     # Test should not fail even if the user queries for a non-existent project.
     failed_result = runner.invoke(annif.run_show_project, ['nonexistent'])
-    assert not result.exception
+    assert not failed_result.exception
 
 
 def test_drop_project():
