@@ -353,8 +353,7 @@ def run_analyze(project_id, maxhits, threshold):
 ##############################################################################
 
 
-annif.add_api('test.yaml')
-# annif.add_api('annif.yaml')
+annif.add_api('annif.yaml')
 
 application = annif.app
 
