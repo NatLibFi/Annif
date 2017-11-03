@@ -5,6 +5,10 @@ info:
 schemes:
   - http
 basePath: /v1/
+consumes:
+  - application/json
+produces:
+  - application/json
 parameters:
   project_id:
     name: project_id
@@ -22,31 +26,30 @@ paths:
   /projects:
     get:
       summary: get a list of projects
+      operationId: annif.list_projects
       produces:
         - application/json
       responses:
         '200':
           description: succesful operation
-          schema:
-            $ref: '#/definitions/ProjectList'
       tags:
         - Project administration
-  '/projects/{project_id}':
+  /projects/{project_id}:
     get:
       summary: show project information
+      operationId: annif.show_project
       parameters:
         - $ref: '#/parameters/project_id'
       responses:
         '200':
           description: succesful operation
-          schema:
-            $ref: '#/definitions/Project'
         '404':
           description: project not found
       tags:
         - Project administration
     put:
       summary: create or update project
+      operationId: annif.create_project
       parameters:
         - $ref: '#/parameters/project_id'
         - name: project
@@ -65,6 +68,7 @@ paths:
         - Project administration
     delete:
       summary: delete a project
+      operationId: annif.drop_project
       parameters:
         - $ref: '#/parameters/project_id'
       responses:
@@ -74,9 +78,10 @@ paths:
           description: project not found
       tags:
         - Project administration
-  '/projects/{project_id}/subjects':
+  /projects/{project_id}/subjects:
     get:
       summary: get a list of all subjects defined for a project
+      operationId: annif.list_subjects
       parameters:
         - $ref: '#/parameters/project_id'
       responses:
@@ -86,9 +91,10 @@ paths:
           description: project not found
       tags:
         - Subject index administration
-  '/projects/{project_id}/subjects/{subject_id}':
+  /projects/{project_id}/subjects/{subject_id}:
     get:
       summary: show subject information
+      operationId: annif.show_subject
       parameters:
         - $ref: '#/parameters/project_id'
         - $ref: '#/parameters/subject_id'
@@ -103,6 +109,7 @@ paths:
         - Subject index administration
     put:
       summary: create or update subject information
+      operationId: annif.create_subject
       parameters:
         - $ref: '#/parameters/project_id'
         - $ref: '#/parameters/subject_id'
@@ -117,6 +124,7 @@ paths:
         - Subject index administration
     delete:
       summary: delete subject information
+      operationId: annif.drop_subject
       parameters:
         - $ref: '#/parameters/project_id'
         - $ref: '#/parameters/subject_id'
@@ -127,9 +135,10 @@ paths:
           description: project or subject not found
       tags:
         - Subject index administration
-  '/projects/{project_id}/analyze':
+  /projects/{project_id}/analyze:
     post:
       summary: suggest subjects for a given text
+      operationId: annif.analyze
       consumes:
         - application/x-www-form-urlencoded
       produces:
