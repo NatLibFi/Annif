@@ -11,7 +11,9 @@ CAT = CatClient(es)
 
 annif = connexion.App(__name__, specification_dir='swagger/')
 
-annif.app.config.from_object('annif.config.Config')
+# annif.app.config.from_object('config.Config')
+
+annif.app.config['INDEX_NAME'] = 'annif'
 
 
 projectIndexConf = {

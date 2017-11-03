@@ -26,7 +26,7 @@ paths:
   /projects:
     get:
       summary: get a list of projects
-      operationId: app.list_projects
+      operationId: annif.list_projects
       produces:
         - application/json
       responses:
@@ -37,7 +37,7 @@ paths:
   /projects/{project_id}:
     get:
       summary: show project information
-      operationId: app.show_project
+      operationId: annif.show_project
       parameters:
         - $ref: '#/parameters/project_id'
       responses:
