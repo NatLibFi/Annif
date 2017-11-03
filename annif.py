@@ -11,9 +11,9 @@ CAT = CatClient(es)
 
 annif = connexion.App(__name__, specification_dir='swagger/')
 
-# annif.app.config.from_object('config.Config')
+annif.app.config.from_object('config.Config')
 
-annif.app.config['INDEX_NAME'] = 'annif'
+# annif.app.config['INDEX_NAME'] = 'annif'
 
 
 projectIndexConf = {
@@ -115,7 +115,6 @@ def show_project(project_id):
 
     GET /projects/<projectId>
     """
-    print(project_id)
     result = es.search(index=annif.app.config['INDEX_NAME'],
                        doc_type='project',
                        body={'query': {'match': {'name': project_id}}})
