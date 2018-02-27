@@ -10,10 +10,9 @@ services:
 env:
   - FLASK_APP="annif/__init__.py"
 script:
-  - pytest
+  - pytest --cov=./
 after_success:
   - codecov
   - coveralls
-  - pytest --cov=./
 notifications:
   slack: kansalliskirjasto:tyt7yhMrgqceJoKiSNt09nvV
