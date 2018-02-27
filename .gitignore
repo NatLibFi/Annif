@@ -6,3 +6,5 @@ annif.egg-info
 annif_env
 .git
 __pycache__
+.pytest_cache
+*.pyc
