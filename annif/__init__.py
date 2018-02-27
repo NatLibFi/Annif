@@ -358,6 +358,3 @@ def run_analyze(project_id, maxhits, threshold):
 cxapp.add_api('annif.yaml')
 
 application = cxapp.app
-
-if __name__ == "__main__":
-    cxapp.run(port=8080)
