@@ -19,11 +19,11 @@ TEMP_INDEX = TEMP_PROJECT[:7]
 
 # Set a random name for the project index, so as not to mess up possible
 # production indices.
-annif.annif.app.config['INDEX_NAME'] = TEMP_INDEX
+annif.cxapp.app.config['INDEX_NAME'] = TEMP_INDEX
 
 
 def test_init():
-    name = annif.annif.app.config['INDEX_NAME']
+    name = annif.cxapp.app.config['INDEX_NAME']
     # assert runner.invoke(annif.run_init).exit_code == 0
     assert not index.exists(name)
     result = annif.init()

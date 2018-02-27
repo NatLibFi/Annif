@@ -9,12 +9,12 @@ es = Elasticsearch()
 index = IndicesClient(es)
 CAT = CatClient(es)
 
-# 'annif' here is the Connexion application that has a normal Flask app as a
-# property (annif.app)
+# 'cxapp' here is the Connexion application that has a normal Flask app as a
+# property (cxapp.app)
 
-annif = connexion.App(__name__, specification_dir='../swagger/')
+cxapp = connexion.App(__name__, specification_dir='../swagger/')
 
-annif.app.config.from_object('config.Config')
+cxapp.app.config.from_object('config.Config')
 
 projectIndexConf = {
         'mappings': {
@@ -39,7 +39,7 @@ def format_index_name(project_id):
     """
     Return an index name formatted like annif-project.
     """
-    return "{0}-{1}".format(annif.app.config['INDEX_NAME'], project_id)
+    return "{0}-{1}".format(cxapp.app.config['INDEX_NAME'], project_id)
 
 
 def list_orphan_indices():
@@ -47,7 +47,7 @@ def list_orphan_indices():
     Returns a list containing names of orphaned indices.
     """
     indices = [x.split()[2] for x in CAT.indices().split('\n') if len(x) > 0]
-    return [x for x in indices if x.startswith(annif.app.config['INDEX_NAME'])]
+    return [x for x in indices if x.startswith(cxapp.app.config['INDEX_NAME'])]
 
 
 def init():
@@ -56,8 +56,8 @@ def init():
 
     Usage: annif init
     """
-    if index.exists(annif.app.config['INDEX_NAME']):
-        index.delete(annif.app.config['INDEX_NAME'])
+    if index.exists(cxapp.app.config['INDEX_NAME']):
+        index.delete(cxapp.app.config['INDEX_NAME'])
 
     # When the repository is initialized, check also if any orphaned indices
     # (= indices starting with INDEX_NAME) are found and remove them.
@@ -65,10 +65,10 @@ def init():
     for i in list_orphan_indices():
         index.delete(i)
 
-    es.indices.create(index=annif.app.config['INDEX_NAME'],
+    es.indices.create(index=cxapp.app.config['INDEX_NAME'],
                       body=projectIndexConf)
     return 'Initialized project index \'{0}\'.'.format(
-            annif.app.config['INDEX_NAME'])
+            cxapp.app.config['INDEX_NAME'])
 
 
 def list_projects():
@@ -83,7 +83,7 @@ def list_projects():
     doc = {'size': 1000, 'query': {'match_all': {}}}
 
     return [x['_source'] for x in es.search(
-        index=annif.app.config['INDEX_NAME'],
+        index=cxapp.app.config['INDEX_NAME'],
         doc_type='project',
         body=doc)['hits']['hits']]
 
@@ -98,7 +98,7 @@ def show_project(project_id):
 
     GET /projects/<project_id>
     """
-    result = es.search(index=annif.app.config['INDEX_NAME'],
+    result = es.search(index=cxapp.app.config['INDEX_NAME'],
                        doc_type='project',
                        body={'query': {'match': {'name': project_id}}})
 
@@ -114,7 +114,7 @@ def add_to_master_index(body):
     in the 'master index'.
 
     """
-    return es.create(index=annif.app.config['INDEX_NAME'],
+    return es.create(index=cxapp.app.config['INDEX_NAME'],
                      doc_type='project',
                      id=body['name'],
                      body=body)
@@ -160,7 +160,7 @@ def drop_project(project_id):
     DELETE /projects/<project_id>
     """
     # Delete the index from the 'master' index
-    result = es.delete(index=annif.app.config['INDEX_NAME'],
+    result = es.delete(index=cxapp.app.config['INDEX_NAME'],
                        doc_type='project', id=project_id)
 
     print(result)
@@ -251,12 +251,12 @@ def analyze(project_id, maxhits, threshold):
 # the above functions and printing the results to console.
 ##############################################################################
 
-@annif.app.cli.command('init')
+@cxapp.app.cli.command('init')
 def run_init():
     print(init())
 
 
-@annif.app.cli.command('list-projects')
+@cxapp.app.cli.command('list-projects')
 def run_list_projects():
     template = "{0: <15}{1: <15}{2: <15}\n"
 
@@ -270,7 +270,7 @@ def run_list_projects():
     print(formatted)
 
 
-@annif.app.cli.command('create-project')
+@cxapp.app.cli.command('create-project')
 @click.argument('project_id')
 @click.option('--language')
 @click.option('--analyzer')
@@ -278,7 +278,7 @@ def run_create_project(project_id, language, analyzer):
     print(create_project(project_id, language, analyzer))
 
 
-@annif.app.cli.command('show-project')
+@cxapp.app.cli.command('show-project')
 @click.argument('project_id')
 def run_show_project(project_id):
     """
@@ -305,13 +305,13 @@ def run_show_project(project_id):
         print(res)
 
 
-@annif.app.cli.command('drop-project')
+@cxapp.app.cli.command('drop-project')
 @click.argument('project_id')
 def run_drop_project(project_id):
     print(drop_project(project_id))
 
 
-@annif.app.cli.command('load')
+@cxapp.app.cli.command('load')
 @click.argument('project_id')
 @click.argument('directory')
 @click.option('--clear', default=False)
@@ -319,34 +319,34 @@ def run_load(project_id, directory, clear):
     print("TODO")
 
 
-@annif.app.cli.command('list-subjects')
+@cxapp.app.cli.command('list-subjects')
 @click.argument('project_id')
 def run_list_subjects():
     print("TODO")
 
 
-@annif.app.cli.command('show-subject')
+@cxapp.app.cli.command('show-subject')
 @click.argument('project_id')
 @click.argument('subject_id')
 def run_show_subject(project_id, subject_id):
     print("TODO")
 
 
-@annif.app.cli.command('create-subject')
+@cxapp.app.cli.command('create-subject')
 @click.argument('project_id')
 @click.argument('subject_id')
 def run_create_subject(project_id, subject_id):
     print("TODO")
 
 
-@annif.app.cli.command('drop-subject')
+@cxapp.app.cli.command('drop-subject')
 @click.argument('project_id')
 @click.argument('subject_id')
 def run_drop_subject(project_id, subject_id):
     print("TODO")
 
 
-@annif.app.cli.command('analyze')
+@cxapp.app.cli.command('analyze')
 @click.option('--maxhits', default=20)
 @click.option('--threshold', default=0.9)  # TODO: Check this.
 def run_analyze(project_id, maxhits, threshold):
@@ -355,9 +355,9 @@ def run_analyze(project_id, maxhits, threshold):
 ##############################################################################
 
 
-annif.add_api('annif.yaml')
+cxapp.add_api('annif.yaml')
 
-application = annif.app
+application = cxapp.app
 
 if __name__ == "__main__":
-    annif.run(port=8080)
+    cxapp.run(port=8080)
