@@ -6,7 +6,6 @@ import random
 from elasticsearch import Elasticsearch
 from elasticsearch.client import IndicesClient
 from click.testing import CliRunner
-sys.path.insert(1, os.path.join(sys.path[0], '..'))  # Operate from root
 import annif
 
 es = Elasticsearch()

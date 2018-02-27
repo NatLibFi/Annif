@@ -12,7 +12,7 @@ CAT = CatClient(es)
 # 'annif' here is the Connexion application that has a normal Flask app as a
 # property (annif.app)
 
-annif = connexion.App(__name__, specification_dir='swagger/')
+annif = connexion.App(__name__, specification_dir='../swagger/')
 
 annif.app.config.from_object('config.Config')
 

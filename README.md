@@ -25,7 +25,7 @@ Switch into the repository directory and create a virtualenv environment by runn
 
 Install dependencies by running `pip install -r requirements.txt`.
 
-Set the `FLASK_APP` enviroment variable: `export FLASK_APP=annif/annif.py`.
+Set the `FLASK_APP` enviroment variable: `export FLASK_APP=annif/__init__.py`.
 
 Set a shell alias for the application: `alias annif=flask`.
 
