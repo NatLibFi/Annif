@@ -7,6 +7,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.client import IndicesClient
 from click.testing import CliRunner
 import annif
+import annif.operations
 import annif.cli
 
 es = Elasticsearch()
@@ -27,27 +28,27 @@ def test_init():
     name = annif.cxapp.app.config['INDEX_NAME']
     # assert runner.invoke(annif.run_init).exit_code == 0
     assert not index.exists(name)
-    result = annif.init()
+    result = annif.operations.init()
     assert 'Initialized' in result
     # print(es.indices.get_alias("*").keys())
     assert index.exists(name)
 
 
 def test_run_create_project():
-    assert not index.exists(annif.format_index_name(TEMP_PROJECT))
-    result = annif.create_project(TEMP_PROJECT, 'swahili', 'norwegian')
+    assert not index.exists(annif.operations.format_index_name(TEMP_PROJECT))
+    result = annif.operations.create_project(TEMP_PROJECT, 'swahili', 'norwegian')
     print(result)
-    assert index.exists(annif.format_index_name(TEMP_PROJECT))
+    assert index.exists(annif.operations.format_index_name(TEMP_PROJECT))
     # Creating a project should not succeed if an insufficient amount of args
     # are provided.
     FAILED_PROJECT = 'wow'
-    assert not index.exists(annif.format_index_name(FAILED_PROJECT))
+    assert not index.exists(annif.operations.format_index_name(FAILED_PROJECT))
     result = runner.invoke(annif.cli.run_create_project,
                            [FAILED_PROJECT, '--language', 'en'])
-    assert not index.exists(annif.format_index_name(FAILED_PROJECT))
+    assert not index.exists(annif.operations.format_index_name(FAILED_PROJECT))
     result = runner.invoke(annif.cli.run_create_project,
                            [FAILED_PROJECT, '--analyzer', 'english'])
-    assert not index.exists(annif.format_index_name(FAILED_PROJECT))
+    assert not index.exists(annif.operations.format_index_name(FAILED_PROJECT))
     assert not result.exception
 
 
@@ -63,17 +64,17 @@ def test_list_projects():
 
 def test_show_project():
     assert runner.invoke(annif.cli.run_show_project, [TEMP_PROJECT]).exit_code == 0
-    assert annif.show_project(TEMP_PROJECT)
+    assert annif.operations.show_project(TEMP_PROJECT)
     # Test should not fail even if the user queries for a non-existent project.
     failed_result = runner.invoke(annif.cli.run_show_project, ['nonexistent'])
     assert not failed_result.exception
 
 
 def test_drop_project():
-    assert index.exists(annif.format_index_name(TEMP_PROJECT))
+    assert index.exists(annif.operations.format_index_name(TEMP_PROJECT))
     # result = runner.invoke(annif.run_drop_project, [TEMP_PROJECT])
-    result = annif.drop_project(TEMP_PROJECT)
-    assert not index.exists(annif.format_index_name(TEMP_PROJECT))
+    result = annif.operations.drop_project(TEMP_PROJECT)
+    assert not index.exists(annif.operations.format_index_name(TEMP_PROJECT))
 
 
 def test_list_subjects():
