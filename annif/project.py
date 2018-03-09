@@ -10,11 +10,11 @@ import annif.backend
 class AnnifProject:
     """Class representing the configuration of a single Annif project."""
 
-    def __init__(self, project_id, language, analyzer, backends):
+    def __init__(self, project_id, config):
         self.project_id = project_id
-        self.language = language
-        self.analyzer = analyzer
-        self.backends = self._initialize_backends(backends)
+        self.language = config['language']
+        self.analyzer = config['analyzer']
+        self.backends = self._initialize_backends(config['backends'])
 
     def _initialize_backends(self, backends_configuration):
         backends = []
@@ -63,11 +63,7 @@ def get_projects():
     # create AnnifProject objects from the configuration file
     projects = {}
     for project_id in config.sections():
-        projects[project_id] = AnnifProject(
-            project_id,
-            language=config[project_id]['language'],
-            analyzer=config[project_id]['analyzer'],
-            backends=config[project_id]['backends'])
+        projects[project_id] = AnnifProject(project_id, config[project_id])
     return projects
 
 
