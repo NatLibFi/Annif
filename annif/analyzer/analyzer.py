@@ -1,9 +1,12 @@
+"""Common functionality for analyzers."""
+
 import abc
 import nltk.tokenize
 
 class Analyzer(metaclass=abc.ABCMeta):
     """Base class for language-specific analyzers. The non-implemented
-    methods should be overridden in subclasses."""
+    methods should be overridden in subclasses. Tokenize functions may
+    be overridden when necessary."""
     
     name = None
     

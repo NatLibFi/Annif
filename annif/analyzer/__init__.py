@@ -1,13 +1,15 @@
 """Collection of language-specific analyzers and analyzer registry for Annif"""
 
-analyzers = {}
+_analyzers = {}
 
 def register_analyzer(analyzer):
-    analyzers[analyzer.name] = analyzer
+    _analyzers[analyzer.name] = analyzer()
 
 def get_analyzer(analyzer):
     try:
-        return analyzers[analyzer]
+        return _analyzers[analyzer]
     except KeyError:
         raise ValueError("No such analyzer {}".format(analyzer))
 
+from . import english
+register_analyzer(english.EnglishAnalyzer)
