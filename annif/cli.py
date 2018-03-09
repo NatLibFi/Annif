@@ -8,11 +8,6 @@ import annif.operations
 # the above functions and printing the results to console.
 ##############################################################################
 
-@annif.cxapp.app.cli.command('init')
-def run_init():
-    print(init())
-
-
 @annif.cxapp.app.cli.command('list-projects')
 def run_list_projects():
     template = "{0: <15}{1: <15}{2: <15}\n"
