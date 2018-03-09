@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
+"""Unit test module for Annif"""
 
-import sys
-import os
 import random
 from click.testing import CliRunner
 import annif
@@ -12,7 +10,7 @@ runner = CliRunner()
 
 # Generate a random project name to use in tests
 TEMP_PROJECT = ''.join(
-random.choice('abcdefghiklmnopqrstuvwxyz') for _ in range(8))
+    random.choice('abcdefghiklmnopqrstuvwxyz') for _ in range(8))
 
 def test_list_projects():
     # The listprojects function does not accept any arguments, it should fail
