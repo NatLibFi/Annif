@@ -44,7 +44,7 @@ def run_show_project(project_id):
     """
 
     proj = annif.operations.show_project(project_id)
-    if type(proj) is not str:
+    if not isinstance(proj, str):
         formatted = ""
         template = "{0:<15}{1}\n"
 
