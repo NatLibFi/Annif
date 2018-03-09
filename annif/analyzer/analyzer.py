@@ -24,4 +24,4 @@ class Analyzer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def normalize_word(self, word):
         """Normalize (stem or lemmatize) a word form into a normal form."""
-        raise NotImplemented
+        pass
