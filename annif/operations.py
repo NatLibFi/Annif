@@ -25,10 +25,9 @@ def show_project(project_id):
     GET /projects/<project_id>
     """
 
-    projects = annif.project.get_projects()
-    if project_id in projects:
-        return projects[project_id]
-    else:
+    try:
+        return annif.project.get_project(project_id)
+    except ValueError:
         return "No projects found with id \'{0}\'.".format(project_id)
 
 

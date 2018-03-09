@@ -28,3 +28,12 @@ def get_projects():
             language=config[project_id]['language'],
             analyzer=config[project_id]['analyzer'])
     return projects
+
+
+def get_project(project_id):
+    """return the definition of a single Project by project_id"""
+    projects = get_projects()
+    try:
+        return projects[project_id]
+    except KeyError:
+        raise ValueError("No such project {}".format(project_id))
