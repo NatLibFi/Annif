@@ -1,67 +1,5 @@
-from elasticsearch import Elasticsearch
-from elasticsearch.client import IndicesClient, CatClient
 import annif
 import annif.project
-
-es = Elasticsearch()
-index = IndicesClient(es)
-CAT = CatClient(es)
-
-
-projectIndexConf = {
-        'mappings': {
-            'project': {
-                'properties': {
-                    'name': {
-                        'type': 'text'
-                        },
-                    'language': {
-                        'type': 'text'
-                        },
-                    'analyzer': {
-                        'type': 'text'
-                        }
-                    }
-                }
-            }
-        }
-
-
-def format_index_name(project_id):
-    """
-    Return an index name formatted like annif-project.
-    """
-    return "{0}-{1}".format(annif.cxapp.app.config['INDEX_NAME'], project_id)
-
-
-def list_orphan_indices():
-    """
-    Returns a list containing names of orphaned indices.
-    """
-    indices = [x.split()[2] for x in CAT.indices().split('\n') if len(x) > 0]
-    return [x for x in indices if x.startswith(annif.cxapp.app.config['INDEX_NAME'])]
-
-
-def init():
-    """
-    Generate the Elasticsearch repository for projects.
-
-    Usage: annif init
-    """
-    if index.exists(annif.cxapp.app.config['INDEX_NAME']):
-        index.delete(annif.cxapp.app.config['INDEX_NAME'])
-
-    # When the repository is initialized, check also if any orphaned indices
-    # (= indices starting with INDEX_NAME) are found and remove them.
-
-    for i in list_orphan_indices():
-        index.delete(i)
-
-    es.indices.create(index=annif.cxapp.app.config['INDEX_NAME'],
-                      body=projectIndexConf)
-    return 'Initialized project index \'{0}\'.'.format(
-            annif.cxapp.app.config['INDEX_NAME'])
-
 
 def list_projects():
     """
@@ -91,48 +29,6 @@ def show_project(project_id):
         return projects[project_id]
     else:
         return "No projects found with id \'{0}\'.".format(project_id)
-
-
-def add_to_master_index(body):
-    """
-    Takes a dict containing project information and adds it as a record
-    in the 'master index'.
-
-    """
-    return es.create(index=annif.cxapp.app.config['INDEX_NAME'],
-                     doc_type='project',
-                     id=body['name'],
-                     body=body)
-
-
-def create_project(project_id, language, analyzer):
-    """
-    Create a new project.
-
-    Usage: annif create-project <project_id> --language <lang> --analyzer
-    <analyzer>
-
-    REST equivalent:
-
-    PUT /projects/<project_id>
-    """
-
-    proj_indexname = format_index_name(project_id)
-    body = {'name': project_id, 'language': language, 'analyzer': analyzer}
-
-    if not all(body.values()):
-        return 'Usage: annif create-project <project_id> --language <lang> ' \
-               '--analyzer <analyzer>'
-
-    elif index.exists(proj_indexname):
-        return '\'{0}\' already exists.'.format(proj_indexname)
-    else:
-        # Create an index for the project
-        index.create(index=proj_indexname)
-
-        # Add the details of the new project to the 'master' index
-        add_to_master_index(body)
-        return 'Successfully created project \'{0}\'.'.format(project_id)
 
 
 def list_subjects(project_id):

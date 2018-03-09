@@ -6,15 +6,6 @@ applicable.
 Most of These methods take a `projectid` parameter. Projects are
 identified by alphanumeric strings (`A-Za-z0-9_-`).
 
-## Initialization
-
-### Creating the index structure
-
-    annif init
-
-This will initialize the Elasticsearch index needed for storing information
-about projects.
-
 ## Project administration
 
 ### List available projects
@@ -25,7 +16,8 @@ REST equivalent:
 
     GET /projects/
 
-Show a list of currently defined projects.
+Show a list of currently defined projects. Projects are defined in a
+configuration file, normally called `projects.cfg`.
 
 ### Show project information
 
@@ -34,25 +26,6 @@ Show a list of currently defined projects.
 REST equivalent:
 
     GET /projects/<projectid>
-
-### Create a new project
-
-    annif create-project <projectid> --language <lang> --analyzer <analyzer>
-
-Parameters:
-* `lang`: language of text, expressed as ISO 639-1 code, e.g. `en`
-* `analyzer`: Elasticsearch analyzer to use, e.g. `english`
-
-REST equivalent: 
-
-    PUT /projects/<projectid>
-
-If you try to create a project that already exists, the settings will be
-compared with the existing project. Some settings (language and analyzer)
-cannot be changed after the project has been created. If the settings are
-compatible (i.e. the immutable settings have not changed), then the new
-settings will be used. If the settings are incompatible, you will get an
-error instead.
 
 ## Subject index administration
 

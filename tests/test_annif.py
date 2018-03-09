@@ -3,54 +3,16 @@
 import sys
 import os
 import random
-from elasticsearch import Elasticsearch
-from elasticsearch.client import IndicesClient
 from click.testing import CliRunner
 import annif
 import annif.operations
 import annif.cli
 
-es = Elasticsearch()
-index = IndicesClient(es)
 runner = CliRunner()
 
 # Generate a random project name to use in tests
 TEMP_PROJECT = ''.join(
-        random.choice('abcdefghiklmnopqrstuvwxyz') for _ in range(8))
-TEMP_INDEX = TEMP_PROJECT[:7]
-
-# Set a random name for the project index, so as not to mess up possible
-# production indices.
-annif.cxapp.app.config['INDEX_NAME'] = TEMP_INDEX
-
-
-def test_init():
-    name = annif.cxapp.app.config['INDEX_NAME']
-    # assert runner.invoke(annif.run_init).exit_code == 0
-    assert not index.exists(name)
-    result = annif.operations.init()
-    assert 'Initialized' in result
-    # print(es.indices.get_alias("*").keys())
-    assert index.exists(name)
-
-
-def test_run_create_project():
-    assert not index.exists(annif.operations.format_index_name(TEMP_PROJECT))
-    result = annif.operations.create_project(TEMP_PROJECT, 'swahili', 'norwegian')
-    print(result)
-    assert index.exists(annif.operations.format_index_name(TEMP_PROJECT))
-    # Creating a project should not succeed if an insufficient amount of args
-    # are provided.
-    FAILED_PROJECT = 'wow'
-    assert not index.exists(annif.operations.format_index_name(FAILED_PROJECT))
-    result = runner.invoke(annif.cli.run_create_project,
-                           [FAILED_PROJECT, '--language', 'en'])
-    assert not index.exists(annif.operations.format_index_name(FAILED_PROJECT))
-    result = runner.invoke(annif.cli.run_create_project,
-                           [FAILED_PROJECT, '--analyzer', 'english'])
-    assert not index.exists(annif.operations.format_index_name(FAILED_PROJECT))
-    assert not result.exception
-
+random.choice('abcdefghiklmnopqrstuvwxyz') for _ in range(8))
 
 def test_list_projects():
     # The listprojects function does not accept any arguments, it should fail

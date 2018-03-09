@@ -47,25 +47,6 @@ paths:
           description: project not found
       tags:
         - Project administration
-    put:
-      summary: create or update project
-      operationId: annif.operations.create_project
-      parameters:
-        - $ref: '#/parameters/project_id'
-        - name: project
-          in: body
-          description: the project to create
-          schema:
-            $ref: '#/definitions/Project'
-      consumes:
-        - application/json
-      responses:
-        '204':
-          description: 'succesful operation, no content returned'
-        '409':
-          description: 'the project already exists, with incompatible settings'
-      tags:
-        - Project administration
   /projects/{project_id}/subjects:
     get:
       summary: get a list of all subjects defined for a project
