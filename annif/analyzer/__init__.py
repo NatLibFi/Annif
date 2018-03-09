@@ -16,3 +16,6 @@ register_analyzer(english.EnglishAnalyzer)
 
 from . import swedish
 register_analyzer(swedish.SwedishAnalyzer)
+
+from . import finnish
+register_analyzer(finnish.FinnishAnalyzer)
