@@ -30,9 +30,10 @@ Create a virtual environment by running:
     python3 -m venv annif_env
     source annif_env/bin/activate
 
-Install dependencies:
+Install dependencies and download NLTK data:
 
     pip install -r requirements.txt
+    python -m nltk.downloader punkt
 
 Set the `FLASK_APP` enviroment variable:
 
