@@ -2,15 +2,30 @@
 
 import configparser
 import annif
+import annif.backend
 
 
 class AnnifProject:
     """Class representing the configuration of a single Annif project."""
 
-    def __init__(self, project_id, language, analyzer):
+    def __init__(self, project_id, language, analyzer, backends):
         self.project_id = project_id
         self.language = language
         self.analyzer = analyzer
+        self.backends = self._initialize_backends(backends)
+
+    def _initialize_backends(self, backends_configuration):
+        backends = []
+        for backenddef in backends_configuration.split(','):
+            bedefs = backenddef.strip().split(':')
+            backend_id = bedefs[0]
+            if len(bedefs) > 1:
+                weight = float(bedefs[1])
+            else:
+                weight = 1.0
+            backend = annif.backend.get_backend(backend_id)
+            backends.append((backend, weight))
+        return backends
 
 
 def get_projects():
@@ -26,7 +41,8 @@ def get_projects():
         projects[project_id] = AnnifProject(
             project_id,
             language=config[project_id]['language'],
-            analyzer=config[project_id]['analyzer'])
+            analyzer=config[project_id]['analyzer'],
+            backends=config[project_id]['backends'])
     return projects
 
 
