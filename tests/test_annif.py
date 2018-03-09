@@ -70,13 +70,6 @@ def test_show_project():
     assert not failed_result.exception
 
 
-def test_drop_project():
-    assert index.exists(annif.operations.format_index_name(TEMP_PROJECT))
-    # result = runner.invoke(annif.run_drop_project, [TEMP_PROJECT])
-    result = annif.operations.drop_project(TEMP_PROJECT)
-    assert not index.exists(annif.operations.format_index_name(TEMP_PROJECT))
-
-
 def test_list_subjects():
     pass
 

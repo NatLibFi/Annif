@@ -62,12 +62,6 @@ def run_show_project(project_id):
         print(res)
 
 
-@annif.cxapp.app.cli.command('drop-project')
-@click.argument('project_id')
-def run_drop_project(project_id):
-    print(annif.operations.drop_project(project_id))
-
-
 @annif.cxapp.app.cli.command('load')
 @click.argument('project_id')
 @click.argument('directory')

@@ -141,25 +141,6 @@ def create_project(project_id, language, analyzer):
         return 'Successfully created project \'{0}\'.'.format(project_id)
 
 
-def drop_project(project_id):
-    """
-    Delete a project.
-    USAGE: annif drop-project <project_id>
-
-    REST equivalent:
-
-    DELETE /projects/<project_id>
-    """
-    # Delete the index from the 'master' index
-    result = es.delete(index=annif.cxapp.app.config['INDEX_NAME'],
-                       doc_type='project', id=project_id)
-
-    print(result)
-
-    # Then delete the project index
-    return index.delete(index=format_index_name(project_id))
-
-
 def list_subjects(project_id):
     """
     Show all subjects for a project.

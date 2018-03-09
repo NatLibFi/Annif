@@ -54,14 +54,6 @@ compatible (i.e. the immutable settings have not changed), then the new
 settings will be used. If the settings are incompatible, you will get an
 error instead.
 
-### Delete a project
-
-    annif drop-project <projectid>
-
-REST equivalent: 
-
-    DELETE /projects/<projectid>
-
 ## Subject index administration
 
 ### Show all subjects for a project
