@@ -11,6 +11,7 @@ class Config(object):
     TESTING = False
     INDEX_NAME = 'annif'
     PROJECTS_FILE = 'projects.cfg'
+    BACKENDS_FILE = 'backends.cfg'
 
 
 class DevelopmentConfig(Config):
