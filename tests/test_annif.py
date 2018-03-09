@@ -1,4 +1,4 @@
-"""Unit test module for Annif"""
+"""Unit test module for Annif basic commands"""
 
 import random
 from click.testing import CliRunner
