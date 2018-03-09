@@ -1,7 +1,11 @@
-import annif
+"""Project management functionality for Annif"""
+
 import configparser
+import annif
 
 class AnnifProject:
+    """Class representing the configuration of a single Annif project."""
+
     def __init__(self, project_id, language, analyzer):
         self.project_id = project_id
         self.language = language
@@ -12,8 +16,8 @@ def get_projects():
     """return the available projects as a dict of project_id -> AnnifProject"""
     projects_file = annif.cxapp.app.config['PROJECTS_FILE']
     config = configparser.ConfigParser()
-    with open(projects_file) as f:
-        config.read_file(f)
+    with open(projects_file) as projf:
+        config.read_file(projf)
 
     # create AnnifProject objects from the configuration file
     projects = {}
