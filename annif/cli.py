@@ -22,14 +22,6 @@ def run_list_projects():
     print(formatted)
 
 
-@annif.cxapp.app.cli.command('create-project')
-@click.argument('project_id')
-@click.option('--language')
-@click.option('--analyzer')
-def run_create_project(project_id, language, analyzer):
-    print(annif.operations.create_project(project_id, language, analyzer))
-
-
 @annif.cxapp.app.cli.command('show-project')
 @click.argument('project_id')
 def run_show_project(project_id):
