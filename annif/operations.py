@@ -1,6 +1,7 @@
 import annif
 import annif.project
 
+
 def list_projects():
     """
     List available projects.

@@ -3,6 +3,7 @@
 import configparser
 import annif
 
+
 class AnnifProject:
     """Class representing the configuration of a single Annif project."""
 
@@ -22,7 +23,8 @@ def get_projects():
     # create AnnifProject objects from the configuration file
     projects = {}
     for project_id in config.sections():
-        projects[project_id] = AnnifProject(project_id,
-                                            language=config[project_id]['language'],
-                                            analyzer=config[project_id]['analyzer'])
+        projects[project_id] = AnnifProject(
+            project_id,
+            language=config[project_id]['language'],
+            analyzer=config[project_id]['analyzer'])
     return projects

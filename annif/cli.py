@@ -1,12 +1,11 @@
+"""Definitions for command-line (Click) commands for invoking Annif
+operations and printing the results to console."""
+
+
 import click
 import annif
 import annif.operations
 
-##############################################################################
-# COMMAND-LINE INTERFACE
-# Here are the definitions for command-line (Click) commands for invoking
-# the above functions and printing the results to console.
-##############################################################################
 
 @annif.cxapp.app.cli.command('list-projects')
 def run_list_projects():
@@ -88,5 +87,3 @@ def run_drop_subject(project_id, subject_id):
 @click.option('--threshold', default=0.9)  # TODO: Check this.
 def run_analyze(project_id, maxhits, threshold):
     print(annif.operations.analyze(project_id, maxhits, threshold))
-
-##############################################################################
