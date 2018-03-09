@@ -13,3 +13,6 @@ def get_analyzer(analyzer):
 
 from . import english
 register_analyzer(english.EnglishAnalyzer)
+
+from . import swedish
+register_analyzer(swedish.SwedishAnalyzer)

@@ -7,7 +7,7 @@ def test_get_analyzer_nonexistent():
     with pytest.raises(ValueError):
         annif.analyzer.get_analyzer("nonexistent")
 
-def test_english_analyzer():
+def test_english_analyzer_normalize_word():
     analyzer = annif.analyzer.get_analyzer("english")
     assert analyzer.normalize_word("running") == "run"
     assert analyzer.normalize_word("words") == "word"
@@ -41,4 +41,8 @@ def test_english_tokenize_words():
     words = analyzer.tokenize_words(text)
     assert len(words) == 23
 
-    
+def test_swedish_analyzer_normalize_word():
+    analyzer = annif.analyzer.get_analyzer("swedish")
+    assert analyzer.normalize_word("gamla") == "gaml"
+    assert analyzer.normalize_word("hundar") == "hund"
+
