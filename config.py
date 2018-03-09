@@ -10,6 +10,7 @@ class Config(object):
     DEBUG = False
     TESTING = False
     INDEX_NAME = 'annif'
+    PROJECTS_FILE = 'projects.cfg'
 
 
 class DevelopmentConfig(Config):

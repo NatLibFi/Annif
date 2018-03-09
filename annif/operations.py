@@ -1,6 +1,7 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.client import IndicesClient, CatClient
 import annif
+import annif.project
 
 es = Elasticsearch()
 index = IndicesClient(es)
@@ -71,12 +72,7 @@ def list_projects():
     REST equivalent: GET /projects/
     """
 
-    doc = {'size': 1000, 'query': {'match_all': {}}}
-
-    return [x['_source'] for x in es.search(
-        index=annif.cxapp.app.config['INDEX_NAME'],
-        doc_type='project',
-        body=doc)['hits']['hits']]
+    return annif.project.get_projects().values()
 
 
 def show_project(project_id):
@@ -89,12 +85,10 @@ def show_project(project_id):
 
     GET /projects/<project_id>
     """
-    result = es.search(index=annif.cxapp.app.config['INDEX_NAME'],
-                       doc_type='project',
-                       body={'query': {'match': {'name': project_id}}})
 
-    if result['hits']['hits']:
-        return result['hits']
+    projects = annif.project.get_projects()
+    if project_id in projects:
+        return projects[project_id]
     else:
         return "No projects found with id \'{0}\'.".format(project_id)
 

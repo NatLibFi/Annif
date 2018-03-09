@@ -21,8 +21,8 @@ def run_list_projects():
     formatted += str("-" * len(formatted) + "\n")
 
     for proj in annif.operations.list_projects():
-        formatted += template.format(proj['name'], proj['language'],
-                                     proj['analyzer'])
+        formatted += template.format(proj.project_id, proj.language,
+                                     proj.analyzer)
 
     print(formatted)
 
@@ -48,18 +48,17 @@ def run_show_project(project_id):
 
     """
 
-    res = annif.operations.show_project(project_id)
-    if type(res) is not str:
+    proj = annif.operations.show_project(project_id)
+    if type(proj) is not str:
         formatted = ""
         template = "{0:<15}{1}\n"
 
-        content = res['hits'][0]
-        formatted = template.format('Project ID:', content['_source']['name'])
-        formatted += template.format('Language:', content['_source']['language'])
-        formatted += template.format('Analyzer', content['_source']['analyzer'])
+        formatted = template.format('Project ID:', proj.project_id)
+        formatted += template.format('Language:', proj.language)
+        formatted += template.format('Analyzer', proj.analyzer)
         print(formatted)
     else:
-        print(res)
+        print(proj)
 
 
 @annif.cxapp.app.cli.command('load')
