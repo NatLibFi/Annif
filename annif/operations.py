@@ -1,3 +1,7 @@
+"""Operations supported by Annif, regardless of whether they are executed
+via the CLI or the REST API."""
+
+import sys
 import annif
 import annif.project
 
@@ -93,15 +97,12 @@ def drop_subject(project_id, subject_id):
     pass
 
 
-def analyze(project_id, maxhits, threshold):
-    """"
-    Delete a subject.
+def analyze(project_id, text, limit, threshold):
+    """Analyze a document and return a list of AnalysisHit objects."""
 
-    USAGE: annif drop-subject <project_id> <subject_id>
+    try:
+        project = annif.project.get_project(project_id)
+    except ValueError:
+        return "No projects found with id \'{0}\'.".format(project_id)
 
-    REST equivalent:
-
-    DELETE /projects/<project_id>/subjects/<subject_id>
-
-    """
-    pass
+    return project.analyze(text, limit, threshold)

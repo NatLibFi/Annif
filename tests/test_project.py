@@ -28,3 +28,9 @@ def test_get_project_fi():
 def test_get_project_nonexistent():
     with pytest.raises(ValueError):
         annif.project.get_project('nonexistent')
+
+
+def test_project_analyze():
+    project = annif.project.get_project('myproject-en')
+    hits = project.analyze('this is some text', limit=10, threshold=0.0)
+    assert len(hits) == 0

@@ -1,7 +1,9 @@
 """Project management functionality for Annif"""
 
+import collections
 import configparser
 import annif
+import annif.hit
 import annif.backend
 
 
@@ -26,6 +28,29 @@ class AnnifProject:
             backend = annif.backend.get_backend(backend_id)
             backends.append((backend, weight))
         return backends
+
+    def analyze(self, text, limit=10, threshold=0.0):
+        """Analyze the given text by passing it to backends and joining the
+        results. Returns a list of AnalysisHit objects ordered by decreasing
+        score. The limit parameter defines the maximum number of hits to return.
+        Only hits whose score is over the threshold are returned."""
+
+        hits_by_uri = collections.defaultdict(list)
+        for backend, weight in self.backends:
+            hits = backend.analyze(text)
+            for hit in hits:
+                hits_by_uri[hit.uri].append((hit.score * weight, hit))
+
+        merged_hits = []
+        for score_hits in hits_by_uri.values():
+            total = sum([sh[0] for sh in score_hits])
+            hit = annif.hit.AnalysisHit(
+                score_hits[0].uri, score_hits[0].label, total)
+            merged_hits.append(hit)
+
+        merged_hits.sort(key=lambda hit: hit.score, reverse=True)
+        merged_hits = merged_hits[:limit]
+        return [hit for hit in merged_hits if hit.score > threshold]
 
 
 def get_projects():

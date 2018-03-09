@@ -2,6 +2,7 @@
 operations and printing the results to console."""
 
 
+import sys
 import click
 import annif
 import annif.operations
@@ -83,7 +84,22 @@ def run_drop_subject(project_id, subject_id):
 
 
 @annif.cxapp.app.cli.command('analyze')
-@click.option('--maxhits', default=20)
-@click.option('--threshold', default=0.9)  # TODO: Check this.
-def run_analyze(project_id, maxhits, threshold):
-    print(annif.operations.analyze(project_id, maxhits, threshold))
+@click.argument('project_id')
+@click.option('--limit', default=10)
+@click.option('--threshold', default=0.0)
+def run_analyze(project_id, limit, threshold):
+    """"
+    Analyze a document.
+
+    USAGE: annif analyze <project_id> [--limit=N] [--threshold=N] <document.txt
+
+    REST equivalent:
+
+    POST /projects/<project_id>/analyze
+
+    """
+    text = sys.stdin.read()
+    hits = annif.operations.analyze(project_id, text, limit, threshold)
+
+    for hit in hits:
+        print("{}\t{}\t{}".format(hit.score, hit.uri, hit.label))

@@ -124,23 +124,14 @@ paths:
           description: maximum number of results to return
           required: false
           type: integer
-          default: 12
+          default: 10
         - name: threshold
           in: formData
           description: >-
-            minimum score threshold, expressed as a fraction of highest score
-            (normalized score), below which results will not be returned
+            minimum score threshold, below which results will not be returned
           required: false
           type: number
-          default: 0.45
-        - name: normalize_scores
-          in: formData
-          description: >-
-            whether to normalize the returned scores to the range [0..1] (true,
-            default) or to return the raw scores (false)
-          required: false
-          type: boolean
-          default: true
+          default: 0.0
       responses:
         '200':
           description: successful operation

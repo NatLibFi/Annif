@@ -87,15 +87,14 @@ tuning data.
 
 ## Automatic subject indexing
 
-    annif analyze <projectid> [--maxhits=MAX] [--threshold=THRESHOLD] <document.txt
+    annif analyze <projectid> [--limit=MAX] [--threshold=THRESHOLD] <document.txt
 
 This will read a text document from standard input and suggest subjects for
 it.
 
 Parameters:
-* `maxhits`: maximum number of subjects to return
-* `threshold`: minimum score threshold, expressed as a fraction of highest
-  score, below which results will not be returned
+* `limit`: maximum number of subjects to return
+* `threshold`: minimum score threshold, below which results will not be returned
 
 REST equivalent:
 

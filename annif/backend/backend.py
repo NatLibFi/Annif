@@ -3,15 +3,6 @@
 import abc
 
 
-class BackendAnalysisHit:
-    """A single hit from a backend resulting from analysis."""
-
-    def __init__(self, uri, label, score):
-        self.uri = uri
-        self.label = label
-        self.score = score
-
-
 class AnnifBackend(metaclass=abc.ABCMeta):
     """Base class for Annif backends that perform analysis. The
     non-implemented methods should be overridden in subclasses."""
@@ -27,5 +18,5 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def analyze(self, text):
         """Analyze some input text and return a list of subjects represented
-        as a list of BackendAnalysisHit objects."""
+        as a list of AnalysisHit objects."""
         pass
