@@ -52,6 +52,15 @@ class AnnifProject:
         merged_hits = merged_hits[:limit]
         return [hit for hit in merged_hits if hit.score > threshold]
 
+    def dump(self):
+        """return this project as a dict"""
+        return {'project_id': self.project_id,
+                'language': self.language,
+                'analyzer': self.analyzer,
+                'backends': [{'backend_id': be[0].backend_id,
+                              'weight': be[1]} for be in self.backends]
+                }
+
 
 def get_projects():
     """return the available projects as a dict of project_id -> AnnifProject"""
