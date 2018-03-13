@@ -1,4 +1,5 @@
-"""HTTP/REST client backend that makes calles to a web service and returns the results"""
+"""HTTP/REST client backend that makes calls to a web service
+and returns the results"""
 
 
 import requests
