@@ -21,6 +21,9 @@ def get_backend_type(backend_type):
 from . import dummy
 register_backend_type(dummy.DummyBackend)
 
+from . import http
+register_backend_type(http.HTTPBackend)
+
 
 def get_backends():
     """return all backends defined in the backend configuration file"""
