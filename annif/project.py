@@ -45,7 +45,7 @@ class AnnifProject:
         for score_hits in hits_by_uri.values():
             total = sum([sh[0] for sh in score_hits])
             hit = annif.hit.AnalysisHit(
-                score_hits[0].uri, score_hits[0].label, total)
+                score_hits[0][1].uri, score_hits[0][1].label, total)
             merged_hits.append(hit)
 
         merged_hits.sort(key=lambda hit: hit.score, reverse=True)

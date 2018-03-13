@@ -32,5 +32,8 @@ def test_get_project_nonexistent():
 
 def test_project_analyze():
     project = annif.project.get_project('myproject-en')
-    hits = project.analyze('this is some text', limit=10, threshold=0.0)
-    assert len(hits) == 0
+    result = project.analyze('this is some text', limit=10, threshold=0.0)
+    assert len(result) == 1
+    assert result[0].uri == 'http://example.org/dummy'
+    assert result[0].label == 'dummy'
+    assert result[0].score == 0.5
