@@ -6,7 +6,8 @@ import annif.backend.http
 
 def test_http_analyze():
     with unittest.mock.patch('requests.post') as mock_request:
-        # create a mock response whose .json() method returns the list that we define here
+        # create a mock response whose .json() method returns the list that we
+        # define here
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = [
             {'uri': 'http://example.org/http', 'label': 'http', 'score': 1.0}]
@@ -14,7 +15,9 @@ def test_http_analyze():
 
         http_type = annif.backend.get_backend_type("http")
         http = http_type(
-            config={'endpoint': 'http://api.example.org/analyze', 'project': 'dummy'})
+            config={
+                'endpoint': 'http://api.example.org/analyze',
+                'project': 'dummy'})
         result = http.analyze('this is some text')
         assert len(result) == 1
         assert result[0].uri == 'http://example.org/http'
