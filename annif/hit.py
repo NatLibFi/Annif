@@ -8,3 +8,7 @@ class AnalysisHit:
         self.uri = uri
         self.label = label
         self.score = score
+
+    def dump(self):
+        """return this object as a dict"""
+        return {'uri': self.uri, 'label': self.label, 'score': self.score}

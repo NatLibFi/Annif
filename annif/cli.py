@@ -102,4 +102,4 @@ def run_analyze(project_id, limit, threshold):
     hits = annif.operations.analyze(project_id, text, limit, threshold)
 
     for hit in hits:
-        print("{}\t{}\t{}".format(hit.score, hit.uri, hit.label))
+        print("{}\t{}\t{}".format(hit['score'], hit['uri'], hit['label']))

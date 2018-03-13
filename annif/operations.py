@@ -105,4 +105,4 @@ def analyze(project_id, text, limit, threshold):
     except ValueError:
         return "No projects found with id \'{0}\'.".format(project_id)
 
-    return project.analyze(text, limit, threshold)
+    return [hit.dump() for hit in project.analyze(text, limit, threshold)]
