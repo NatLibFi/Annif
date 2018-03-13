@@ -16,8 +16,8 @@ def run_list_projects():
     formatted += str("-" * len(formatted) + "\n")
 
     for proj in annif.operations.list_projects():
-        formatted += template.format(proj.project_id, proj.language,
-                                     proj.analyzer)
+        formatted += template.format(proj['project_id'], proj['language'],
+                                     proj['analyzer'])
 
     print(formatted)
 
@@ -40,9 +40,9 @@ def run_show_project(project_id):
         formatted = ""
         template = "{0:<15}{1}\n"
 
-        formatted = template.format('Project ID:', proj.project_id)
-        formatted += template.format('Language:', proj.language)
-        formatted += template.format('Analyzer', proj.analyzer)
+        formatted = template.format('Project ID:', proj['project_id'])
+        formatted += template.format('Language:', proj['language'])
+        formatted += template.format('Analyzer', proj['analyzer'])
         print(formatted)
     else:
         print(proj)

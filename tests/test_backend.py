@@ -11,7 +11,7 @@ def test_get_backend_nonexistent():
 
 def test_get_backend_type_dummy():
     dummy_type = annif.backend.get_backend_type("dummy")
-    dummy = dummy_type(config={})
+    dummy = dummy_type(backend_id='dummy', config={})
     result = dummy.analyze('this is some text')
     assert len(result) == 1
     assert result[0].uri == 'http://example.org/dummy'

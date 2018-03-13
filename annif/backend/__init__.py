@@ -37,7 +37,7 @@ def get_backends():
     for backend_id in config.sections():
         betype_id = config[backend_id]['type']
         beclass = get_backend_type(betype_id)
-        backends[backend_id] = beclass(config=config[backend_id])
+        backends[backend_id] = beclass(backend_id, config=config[backend_id])
     return backends
 
 

@@ -25,6 +25,20 @@ def test_get_project_fi():
     assert project.backends[0][1] == 1.0
 
 
+def test_get_project_fi_dump():
+    project = annif.project.get_project('myproject-fi')
+    pdump = project.dump()
+    assert pdump == {
+        'project_id': 'myproject-fi',
+        'language': 'fi',
+        'analyzer': 'finnish',
+        'backends': [{
+            'backend_id': 'dummy',
+            'weight': 1.0
+        }]
+    }
+
+
 def test_get_project_nonexistent():
     with pytest.raises(ValueError):
         annif.project.get_project('nonexistent')

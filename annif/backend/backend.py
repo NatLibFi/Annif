@@ -9,10 +9,11 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     name = None
 
-    def __init__(self, config):
+    def __init__(self, backend_id, config):
         """Initialize backend with a specific configuration. The
         configuration is a dict. Keys and values depend on the specific
         backend type."""
+        self.backend_id = backend_id
         self.config = config
 
     @abc.abstractmethod

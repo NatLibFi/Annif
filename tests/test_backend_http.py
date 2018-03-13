@@ -15,6 +15,7 @@ def test_http_analyze():
 
         http_type = annif.backend.get_backend_type("http")
         http = http_type(
+            backend_id='http',
             config={
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'})
