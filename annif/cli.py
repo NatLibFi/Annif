@@ -5,17 +5,23 @@ operations and printing the results to console."""
 import sys
 import click
 import annif
-import annif.operations
+import annif.project
 
 
 @annif.cxapp.app.cli.command('list-projects')
 def run_list_projects():
+    """
+    List available projects.
+
+    Usage: annif list-projects
+    """
+
     template = "{0: <15}{1: <15}{2: <15}\n"
 
     formatted = template.format("Project ID", "Language", "Analyzer")
     formatted += str("-" * len(formatted) + "\n")
 
-    for proj in annif.operations.list_projects():
+    for proj in annif.project.get_projects().values():
         formatted += template.format(proj.project_id, proj.language,
                                      proj.analyzer)
 
@@ -26,27 +32,30 @@ def run_list_projects():
 @click.argument('project_id')
 def run_show_project(project_id):
     """
-    Takes a dict containing project information as returned by ES client
-    and returns a human-readable string representation formatted as follows:
+    Show project information.
+
+    Usage: annif show-project <project_id>
+
+    Outputs a human-readable string representation formatted as follows:
 
     Project ID:    testproj
     Language:      fi
     Analyzer       finglish
-
     """
 
-    proj = annif.operations.show_project(project_id)
-    if proj is not None:
-        formatted = ""
-        template = "{0:<15}{1}\n"
-
-        formatted = template.format('Project ID:', proj.project_id)
-        formatted += template.format('Language:', proj.language)
-        formatted += template.format('Analyzer', proj.analyzer)
-        print(formatted)
-    else:
+    try:
+        proj = annif.project.get_project(project_id)
+    except ValueError:
         print("No projects found with id \'{0}\'.".format(project_id))
         sys.exit(1)
+
+    formatted = ""
+    template = "{0:<15}{1}\n"
+
+    formatted = template.format('Project ID:', proj.project_id)
+    formatted += template.format('Language:', proj.language)
+    formatted += template.format('Analyzer', proj.analyzer)
+    print(formatted)
 
 
 @annif.cxapp.app.cli.command('load')
@@ -99,12 +108,14 @@ def run_analyze(project_id, limit, threshold):
     POST /projects/<project_id>/analyze
 
     """
-    text = sys.stdin.read()
-    hits = annif.operations.analyze(project_id, text, limit, threshold)
-
-    if hits is None:
+    try:
+        project = annif.project.get_project(project_id)
+    except ValueError:
         print("No projects found with id \'{0}\'.".format(project_id))
         sys.exit(1)
 
+    text = sys.stdin.read()
+
+    hits = project.analyze(text, limit, threshold)
     for hit in hits:
         print("{}\t<{}>\t{}".format(hit.score, hit.uri, hit.label))
