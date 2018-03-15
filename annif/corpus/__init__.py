@@ -5,7 +5,9 @@ class SubjectSet:
     def __init__(self, subj_data):
         self.subject_uris = set()
         self.subject_labels = set()
+        self._parse(subj_data)
 
+    def _parse(self, subj_data):
         for line in subj_data.splitlines():
             vals = line.split("\t")
             for val in vals:
