@@ -142,16 +142,8 @@ def run_eval(project_id, subject_file, limit, threshold):
     with open(subject_file) as subjfile:
         gold_subjects = annif.corpus.SubjectSet(subjfile.read())
 
-    if gold_subjects.has_uris():
-        selected = set([hit.uri for hit in hits])
-        gold_set = gold_subjects.subject_uris
-    else:
-        selected = set([hit.label for hit in hits])
-        gold_set = gold_subjects.subject_labels
-
     template = "{0:<10}\t{1}"
-
-    for metric, result in annif.eval.evaluate(selected, gold_set):
+    for metric, result in annif.eval.evaluate_hits(hits, gold_subjects):
         print(template.format(metric + ":", result))
 
 
@@ -184,14 +176,7 @@ def run_evaldir(project_id, directory, limit, threshold):
         with open(keyfilename) as subjfile:
             gold_subjects = annif.corpus.SubjectSet(subjfile.read())
 
-        if gold_subjects.has_uris():
-            selected = set([hit.uri for hit in hits])
-            gold_set = gold_subjects.subject_uris
-        else:
-            selected = set([hit.label for hit in hits])
-            gold_set = gold_subjects.subject_labels
-
-        for metric, result in annif.eval.evaluate(selected, gold_set):
+        for metric, result in annif.eval.evaluate_hits(hits, gold_subjects):
             measures.setdefault(metric, [])
             measures[metric].append(result)
 

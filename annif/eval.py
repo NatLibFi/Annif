@@ -29,3 +29,15 @@ def evaluate(selected, gold):
         ('Recall', recall(selected, gold)),
         ('F-measure', f_measure(selected, gold))
     ]
+
+
+def evaluate_hits(hits, gold_subjects):
+    """evaluate a list of AnalysisHit objects against a SubjectSet, returning evaluation metrics"""
+    if gold_subjects.has_uris():
+        selected = set([hit.uri for hit in hits])
+        gold_set = gold_subjects.subject_uris
+    else:
+        selected = set([hit.label for hit in hits])
+        gold_set = gold_subjects.subject_labels
+
+    return evaluate(selected, gold_set)
