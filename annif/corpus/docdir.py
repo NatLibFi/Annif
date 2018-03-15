@@ -19,7 +19,7 @@ class DocumentDirectory:
         for filename in glob.glob(os.path.join(self.path, '*.txt')):
             keyfilename = re.sub(r'\.txt$', '.key', filename)
             if not os.path.exists(keyfilename):
-                if self.require_keyfile:
-                    continue
                 keyfilename = None
+            if keyfilename is None and self.require_keyfile:
+                continue
             yield (filename, keyfilename)
