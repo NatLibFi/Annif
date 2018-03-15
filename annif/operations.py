@@ -15,7 +15,7 @@ def list_projects():
     REST equivalent: GET /projects/
     """
 
-    return [proj.dump() for proj in annif.project.get_projects().values()]
+    return annif.project.get_projects().values()
 
 
 def show_project(project_id):
@@ -30,9 +30,9 @@ def show_project(project_id):
     """
 
     try:
-        return annif.project.get_project(project_id).dump()
+        return annif.project.get_project(project_id)
     except ValueError:
-        return "No projects found with id \'{0}\'.".format(project_id)
+        return None
 
 
 def list_subjects(project_id):
@@ -103,6 +103,6 @@ def analyze(project_id, text, limit, threshold):
     try:
         project = annif.project.get_project(project_id)
     except ValueError:
-        return "No projects found with id \'{0}\'.".format(project_id)
+        return None
 
-    return [hit.dump() for hit in project.analyze(text, limit, threshold)]
+    return project.analyze(text, limit, threshold)

@@ -27,7 +27,7 @@ def test_show_project():
     assert runner.invoke(
         annif.cli.run_show_project,
         [TEMP_PROJECT]).exit_code == 0
-    assert annif.operations.show_project(TEMP_PROJECT)
+    assert annif.operations.show_project(TEMP_PROJECT) is None
     # Test should not fail even if the user queries for a non-existent project.
     failed_result = runner.invoke(annif.cli.run_show_project, ['nonexistent'])
     assert not failed_result.exception
