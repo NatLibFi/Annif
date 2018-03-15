@@ -25,3 +25,21 @@ def test_subjectset_labels():
     assert len(sset.subject_labels) == 2
     assert "dummy" in sset.subject_labels
     assert "another" in sset.subject_labels
+
+
+def test_docdir(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('key1')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('key2')
+    tmpdir.join('doc3.txt').write('doc3')
+
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir))
+    files = sorted(list(docdir))
+    assert len(files) == 3
+    assert files[0][0] == str(tmpdir.join('doc1.txt'))
+    assert files[0][1] == str(tmpdir.join('doc1.key'))
+    assert files[1][0] == str(tmpdir.join('doc2.txt'))
+    assert files[1][1] == str(tmpdir.join('doc2.key'))
+    assert files[2][0] == str(tmpdir.join('doc3.txt'))
+    assert files[2][1] is None

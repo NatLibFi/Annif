@@ -21,3 +21,6 @@ class SubjectSet:
     def has_uris(self):
         """returns True if the URIs for all subjects are known"""
         return len(self.subject_uris) == len(self.subject_labels)
+
+
+from .docdir import DocumentDirectory
