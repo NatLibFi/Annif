@@ -12,6 +12,15 @@ import annif.eval
 import annif.project
 
 
+def get_project(project_id):
+    """Helper function to get a project by ID and bail out if it doesn't exist"""
+    try:
+        return annif.project.get_project(project_id)
+    except ValueError:
+        print("No projects found with id \'{0}\'.".format(project_id))
+        sys.exit(1)
+
+
 @annif.cxapp.app.cli.command('list-projects')
 def run_list_projects():
     """
@@ -47,11 +56,7 @@ def run_show_project(project_id):
     Analyzer       finglish
     """
 
-    try:
-        proj = annif.project.get_project(project_id)
-    except ValueError:
-        print("No projects found with id \'{0}\'.".format(project_id))
-        sys.exit(1)
+    proj = get_project(project_id)
 
     formatted = ""
     template = "{0:<15}{1}\n"
@@ -107,14 +112,8 @@ def run_analyze(project_id, limit, threshold):
 
     USAGE: annif analyze <project_id> [--limit=N] [--threshold=N] <document.txt
     """
-    try:
-        project = annif.project.get_project(project_id)
-    except ValueError:
-        print("No projects found with id \'{0}\'.".format(project_id))
-        sys.exit(1)
-
+    project = get_project(project_id)
     text = sys.stdin.read()
-
     hits = project.analyze(text, limit, threshold)
     for hit in hits:
         print("{}\t<{}>\t{}".format(hit.score, hit.uri, hit.label))
@@ -133,12 +132,7 @@ def run_eval(project_id, subject_file, limit, threshold):
     USAGE: annif eval <project_id> <subject_file> [--limit=N]
            [--threshold=N] <document.txt
     """
-    try:
-        project = annif.project.get_project(project_id)
-    except ValueError:
-        print("No projects found with id \'{0}\'.".format(project_id))
-        sys.exit(1)
-
+    project = get_project(project_id)
     text = sys.stdin.read()
     hits = project.analyze(text, limit, threshold)
     with open(subject_file) as subjfile:
@@ -162,14 +156,9 @@ def run_evaldir(project_id, directory, limit, threshold):
     USAGE: annif evaldir <project_id> <directory> [--limit=N]
            [--threshold=N]
     """
-    try:
-        project = annif.project.get_project(project_id)
-    except ValueError:
-        print("No projects found with id \'{0}\'.".format(project_id))
-        sys.exit(1)
+    project = get_project(project_id)
 
     measures = collections.OrderedDict()
-
     for docfilename, keyfilename in annif.corpus.DocumentDirectory(directory):
         print("evaluating", docfilename, keyfilename)
         if keyfilename is None:
