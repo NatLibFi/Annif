@@ -11,8 +11,9 @@ class DocumentDirectory:
         self.path = path
 
     def __iter__(self):
-        """Iterate through the directory, yielding tuples of (docfile, keyfile) containing file paths.
-        If there is no key file, the keyfile will be None."""
+        """Iterate through the directory, yielding tuples of (docfile,
+        keyfile) containing file paths. If there is no key file, the keyfile
+        will be None."""
 
         for filename in glob.glob(os.path.join(self.path, '*.txt')):
             keyfilename = re.sub(r'\.txt$', '.key', filename)

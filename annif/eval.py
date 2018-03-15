@@ -2,14 +2,16 @@
 
 
 def precision(selected, relevant):
-    """return the precision, i.e. the fraction of selected instances that are relevant"""
+    """return the precision, i.e. the fraction of selected instances that
+    are relevant"""
     if len(selected) == 0:
         return 0.0  # avoid division by zero
     return len(selected & relevant) / len(selected)
 
 
 def recall(selected, relevant):
-    """return the recall, i.e. the fraction of relevant instances that were selected"""
+    """return the recall, i.e. the fraction of relevant instances that were
+    selected"""
     if len(relevant) == 0:
         return 0.0  # avoid division by zero
     return len(selected & relevant) / len(relevant)
@@ -23,7 +25,8 @@ def f_measure(setA, setB):
 
 
 def evaluate(selected, gold):
-    """evaluate a set of selected subject against a gold standard using different metrics"""
+    """evaluate a set of selected subject against a gold standard using
+    different metrics"""
     return [
         ('Precision', precision(selected, gold)),
         ('Recall', recall(selected, gold)),
@@ -32,7 +35,8 @@ def evaluate(selected, gold):
 
 
 def evaluate_hits(hits, gold_subjects):
-    """evaluate a list of AnalysisHit objects against a SubjectSet, returning evaluation metrics"""
+    """evaluate a list of AnalysisHit objects against a SubjectSet,
+    returning evaluation metrics"""
     if gold_subjects.has_uris():
         selected = set([hit.uri for hit in hits])
         gold_set = gold_subjects.subject_uris

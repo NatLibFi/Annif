@@ -127,9 +127,11 @@ def run_analyze(project_id, limit, threshold):
 @click.option('--threshold', default=0.0)
 def run_eval(project_id, subject_file, limit, threshold):
     """"
-    Evaluate the analysis result for a document against a gold standard given in a subject file.
+    Evaluate the analysis result for a document against a gold standard
+    given in a subject file.
 
-    USAGE: annif eval <project_id> <subject_file> [--limit=N] [--threshold=N] <document.txt
+    USAGE: annif eval <project_id> <subject_file> [--limit=N]
+           [--threshold=N] <document.txt
     """
     try:
         project = annif.project.get_project(project_id)
@@ -154,9 +156,11 @@ def run_eval(project_id, subject_file, limit, threshold):
 @click.option('--threshold', default=0.0)
 def run_evaldir(project_id, directory, limit, threshold):
     """"
-    Evaluate the analysis results for a directory with documents against a gold standard given in subject files.
+    Evaluate the analysis results for a directory with documents against a
+    gold standard given in subject files.
 
-    USAGE: annif evaldir <project_id> <directory> [--limit=N] [--threshold=N]
+    USAGE: annif evaldir <project_id> <directory> [--limit=N]
+           [--threshold=N]
     """
     try:
         project = annif.project.get_project(project_id)
