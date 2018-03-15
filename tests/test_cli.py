@@ -104,10 +104,30 @@ def test_eval_uri(tmpdir):
     assert result.exit_code == 0
 
     precision = re.search('Precision:\s+(\d.\d+)', result.output)
-    print(precision.group(1))
     assert float(precision.group(1)) == 1.0
     recall = re.search('Recall:\s+(\d.\d+)', result.output)
     assert float(recall.group(1)) == 0.5
     f_measure = re.search('F-measure:\s+(\d.\d+)', result.output)
     assert float(f_measure.group(1)) > 0.66
     assert float(f_measure.group(1)) < 0.67
+
+
+def test_evaldir(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    tmpdir.join('doc3.txt').write('doc3')
+
+    result = runner.invoke(
+        annif.cli.run_evaldir, [
+            'myproject-en', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    precision = re.search('Precision:\s+(\d.\d+)', result.output)
+    assert float(precision.group(1)) == 0.5
+    recall = re.search('Recall:\s+(\d.\d+)', result.output)
+    assert float(recall.group(1)) == 0.5
+    f_measure = re.search('F-measure:\s+(\d.\d+)', result.output)
+    assert float(f_measure.group(1)) == 0.5

@@ -2,6 +2,7 @@
 operations and printing the results to console."""
 
 
+import statistics
 import sys
 import click
 import annif
@@ -157,3 +158,51 @@ def run_eval(project_id, subject_file, limit, threshold):
 
     f_measure = annif.eval.f_measure(selected, gold_set)
     print(template.format("F-measure:", f_measure))
+
+
+@annif.cxapp.app.cli.command('evaldir')
+@click.argument('project_id')
+@click.argument('directory')
+@click.option('--limit', default=10)
+@click.option('--threshold', default=0.0)
+def run_evaldir(project_id, directory, limit, threshold):
+    """"
+    Evaluate the analysis results for a directory with documents against a gold standard given in subject files.
+
+    USAGE: annif evaldir <project_id> <directory> [--limit=N] [--threshold=N]
+    """
+    try:
+        project = annif.project.get_project(project_id)
+    except ValueError:
+        print("No projects found with id \'{0}\'.".format(project_id))
+        sys.exit(1)
+
+    precisions = []
+    recalls = []
+    f_measures = []
+
+    for docfilename, keyfilename in annif.corpus.DocumentDirectory(directory):
+        print("evaluating", docfilename, keyfilename)
+        if keyfilename is None:
+            continue
+        with open(docfilename) as docfile:
+            text = docfile.read()
+        hits = project.analyze(text, limit, threshold)
+        with open(keyfilename) as subjfile:
+            gold_subjects = annif.corpus.SubjectSet(subjfile.read())
+
+        if gold_subjects.has_uris():
+            selected = set([hit.uri for hit in hits])
+            gold_set = gold_subjects.subject_uris
+        else:
+            selected = set([hit.label for hit in hits])
+            gold_set = gold_subjects.subject_labels
+
+        precisions.append(annif.eval.precision(selected, gold_set))
+        recalls.append(annif.eval.recall(selected, gold_set))
+        f_measures.append(annif.eval.f_measure(selected, gold_set))
+
+    template = "{0:<10}\t{1}"
+    print(template.format("Precision:", statistics.mean(precisions)))
+    print(template.format("Recall:", statistics.mean(recalls)))
+    print(template.format("F-measure:", statistics.mean(f_measures)))
