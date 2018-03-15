@@ -9,16 +9,19 @@ class SubjectSet:
 
     def _parse(self, subj_data):
         for line in subj_data.splitlines():
-            vals = line.split("\t")
-            for val in vals:
-                val = val.strip()
-                if val == '':
-                    continue
-                if val.startswith('<') and val.endswith('>'):  # URI
-                    self.subject_uris.add(val[1:-1])
-                    continue
-                self.subject_labels.add(val)
-                break
+            self._parse_line(line)
+
+    def _parse_line(self, line):
+        vals = line.split("\t")
+        for val in vals:
+            val = val.strip()
+            if val == '':
+                continue
+            if val.startswith('<') and val.endswith('>'):  # URI
+                self.subject_uris.add(val[1:-1])
+                continue
+            self.subject_labels.add(val)
+            return
 
     def has_uris(self):
         """returns True if the URIs for all subjects are known"""
