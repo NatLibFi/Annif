@@ -159,10 +159,9 @@ def run_evaldir(project_id, directory, limit, threshold):
     project = get_project(project_id)
 
     measures = collections.OrderedDict()
-    for docfilename, keyfilename in annif.corpus.DocumentDirectory(directory):
+    for docfilename, keyfilename in annif.corpus.DocumentDirectory(
+            directory, require_keyfile=True):
         print("evaluating", docfilename, keyfilename)
-        if keyfilename is None:
-            continue
         with open(docfilename) as docfile:
             text = docfile.read()
         hits = project.analyze(text, limit, threshold)
