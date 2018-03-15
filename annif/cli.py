@@ -2,10 +2,23 @@
 operations and printing the results to console."""
 
 
+import collections
+import statistics
 import sys
 import click
 import annif
+import annif.corpus
+import annif.eval
 import annif.project
+
+
+def get_project(project_id):
+    """Helper function to get a project by ID and bail out if it doesn't exist"""
+    try:
+        return annif.project.get_project(project_id)
+    except ValueError:
+        print("No projects found with id \'{0}\'.".format(project_id))
+        sys.exit(1)
 
 
 @annif.cxapp.app.cli.command('list-projects')
@@ -43,11 +56,7 @@ def run_show_project(project_id):
     Analyzer       finglish
     """
 
-    try:
-        proj = annif.project.get_project(project_id)
-    except ValueError:
-        print("No projects found with id \'{0}\'.".format(project_id))
-        sys.exit(1)
+    proj = get_project(project_id)
 
     formatted = ""
     template = "{0:<15}{1}\n"
@@ -102,20 +111,67 @@ def run_analyze(project_id, limit, threshold):
     Analyze a document.
 
     USAGE: annif analyze <project_id> [--limit=N] [--threshold=N] <document.txt
-
-    REST equivalent:
-
-    POST /projects/<project_id>/analyze
-
     """
-    try:
-        project = annif.project.get_project(project_id)
-    except ValueError:
-        print("No projects found with id \'{0}\'.".format(project_id))
-        sys.exit(1)
-
+    project = get_project(project_id)
     text = sys.stdin.read()
-
     hits = project.analyze(text, limit, threshold)
     for hit in hits:
         print("{}\t<{}>\t{}".format(hit.score, hit.uri, hit.label))
+
+
+@annif.cxapp.app.cli.command('eval')
+@click.argument('project_id')
+@click.argument('subject_file')
+@click.option('--limit', default=10)
+@click.option('--threshold', default=0.0)
+def run_eval(project_id, subject_file, limit, threshold):
+    """"
+    Evaluate the analysis result for a document against a gold standard
+    given in a subject file.
+
+    USAGE: annif eval <project_id> <subject_file> [--limit=N]
+           [--threshold=N] <document.txt
+    """
+    project = get_project(project_id)
+    text = sys.stdin.read()
+    hits = project.analyze(text, limit, threshold)
+    with open(subject_file) as subjfile:
+        gold_subjects = annif.corpus.SubjectSet(subjfile.read())
+
+    template = "{0:<10}\t{1}"
+    for metric, result in annif.eval.evaluate_hits(hits, gold_subjects):
+        print(template.format(metric + ":", result))
+
+
+@annif.cxapp.app.cli.command('evaldir')
+@click.argument('project_id')
+@click.argument('directory')
+@click.option('--limit', default=10)
+@click.option('--threshold', default=0.0)
+def run_evaldir(project_id, directory, limit, threshold):
+    """"
+    Evaluate the analysis results for a directory with documents against a
+    gold standard given in subject files.
+
+    USAGE: annif evaldir <project_id> <directory> [--limit=N]
+           [--threshold=N]
+    """
+    project = get_project(project_id)
+
+    measures = collections.OrderedDict()
+    for docfilename, keyfilename in annif.corpus.DocumentDirectory(
+            directory, require_keyfile=True):
+        print("evaluating", docfilename, keyfilename)
+        with open(docfilename) as docfile:
+            text = docfile.read()
+        hits = project.analyze(text, limit, threshold)
+        with open(keyfilename) as subjfile:
+            gold_subjects = annif.corpus.SubjectSet(subjfile.read())
+
+        for metric, result in annif.eval.evaluate_hits(hits, gold_subjects):
+            measures.setdefault(metric, [])
+            measures[metric].append(result)
+
+    template = "{0:<10}\t{1}"
+    for metric, results in measures.items():
+        print(template.format(metric + ":", statistics.mean(results)))
