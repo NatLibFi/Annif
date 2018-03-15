@@ -26,7 +26,7 @@ paths:
   /projects:
     get:
       summary: get a list of projects
-      operationId: annif.operations.list_projects
+      operationId: annif.rest.list_projects
       produces:
         - application/json
       responses:
@@ -37,7 +37,7 @@ paths:
   /projects/{project_id}:
     get:
       summary: show project information
-      operationId: annif.operations.show_project
+      operationId: annif.rest.show_project
       parameters:
         - $ref: '#/parameters/project_id'
       responses:
@@ -50,7 +50,7 @@ paths:
   /projects/{project_id}/subjects:
     get:
       summary: get a list of all subjects defined for a project
-      operationId: annif.operations.list_subjects
+      operationId: annif.rest.list_subjects
       parameters:
         - $ref: '#/parameters/project_id'
       responses:
@@ -63,7 +63,7 @@ paths:
   /projects/{project_id}/subjects/{subject_id}:
     get:
       summary: show subject information
-      operationId: annif.operations.show_subject
+      operationId: annif.rest.show_subject
       parameters:
         - $ref: '#/parameters/project_id'
         - $ref: '#/parameters/subject_id'
@@ -78,7 +78,7 @@ paths:
         - Subject index administration
     put:
       summary: create or update subject information
-      operationId: annif.operations.create_subject
+      operationId: annif.rest.create_subject
       parameters:
         - $ref: '#/parameters/project_id'
         - $ref: '#/parameters/subject_id'
@@ -93,7 +93,7 @@ paths:
         - Subject index administration
     delete:
       summary: delete subject information
-      operationId: annif.operations.drop_subject
+      operationId: annif.rest.drop_subject
       parameters:
         - $ref: '#/parameters/project_id'
         - $ref: '#/parameters/subject_id'
@@ -107,7 +107,7 @@ paths:
   /projects/{project_id}/analyze:
     post:
       summary: suggest subjects for a given text
-      operationId: annif.operations.analyze
+      operationId: annif.rest.analyze
       consumes:
         - application/x-www-form-urlencoded
       produces:

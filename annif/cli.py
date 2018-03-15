@@ -16,8 +16,8 @@ def run_list_projects():
     formatted += str("-" * len(formatted) + "\n")
 
     for proj in annif.operations.list_projects():
-        formatted += template.format(proj['project_id'], proj['language'],
-                                     proj['analyzer'])
+        formatted += template.format(proj.project_id, proj.language,
+                                     proj.analyzer)
 
     print(formatted)
 
@@ -36,16 +36,17 @@ def run_show_project(project_id):
     """
 
     proj = annif.operations.show_project(project_id)
-    if not isinstance(proj, str):
+    if proj is not None:
         formatted = ""
         template = "{0:<15}{1}\n"
 
-        formatted = template.format('Project ID:', proj['project_id'])
-        formatted += template.format('Language:', proj['language'])
-        formatted += template.format('Analyzer', proj['analyzer'])
+        formatted = template.format('Project ID:', proj.project_id)
+        formatted += template.format('Language:', proj.language)
+        formatted += template.format('Analyzer', proj.analyzer)
         print(formatted)
     else:
-        print(proj)
+        print("No projects found with id \'{0}\'.".format(project_id))
+        sys.exit(1)
 
 
 @annif.cxapp.app.cli.command('load')
@@ -101,5 +102,9 @@ def run_analyze(project_id, limit, threshold):
     text = sys.stdin.read()
     hits = annif.operations.analyze(project_id, text, limit, threshold)
 
+    if hits is None:
+        print("No projects found with id \'{0}\'.".format(project_id))
+        sys.exit(1)
+
     for hit in hits:
-        print("{}\t{}\t{}".format(hit['score'], hit['uri'], hit['label']))
+        print("{}\t<{}>\t{}".format(hit.score, hit.uri, hit.label))
