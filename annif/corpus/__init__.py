@@ -1,6 +1,9 @@
 """Annif corpus operations"""
 
 
+from .docdir import DocumentDirectory
+
+
 class SubjectSet:
     def __init__(self, subj_data):
         self.subject_uris = set()
@@ -26,6 +29,3 @@ class SubjectSet:
     def has_uris(self):
         """returns True if the URIs for all subjects are known"""
         return len(self.subject_uris) == len(self.subject_labels)
-
-
-from .docdir import DocumentDirectory
