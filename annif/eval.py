@@ -20,3 +20,12 @@ def f_measure(setA, setB):
     if len(setA) == 0 or len(setB) == 0:
         return 0.0  # shortcut, avoid division by zero
     return 2.0 * len(setA & setB) / (len(setA) + len(setB))
+
+
+def evaluate(selected, gold):
+    """evaluate a set of selected subject against a gold standard using different metrics"""
+    return [
+        ('Precision', precision(selected, gold)),
+        ('Recall', recall(selected, gold)),
+        ('F-measure', f_measure(selected, gold))
+    ]

@@ -2,6 +2,7 @@
 operations and printing the results to console."""
 
 
+import collections
 import statistics
 import sys
 import click
@@ -150,14 +151,8 @@ def run_eval(project_id, subject_file, limit, threshold):
 
     template = "{0:<10}\t{1}"
 
-    precision = annif.eval.precision(selected, gold_set)
-    print(template.format("Precision:", precision))
-
-    recall = annif.eval.recall(selected, gold_set)
-    print(template.format("Recall:", recall))
-
-    f_measure = annif.eval.f_measure(selected, gold_set)
-    print(template.format("F-measure:", f_measure))
+    for metric, result in annif.eval.evaluate(selected, gold_set):
+        print(template.format(metric + ":", result))
 
 
 @annif.cxapp.app.cli.command('evaldir')
@@ -177,9 +172,7 @@ def run_evaldir(project_id, directory, limit, threshold):
         print("No projects found with id \'{0}\'.".format(project_id))
         sys.exit(1)
 
-    precisions = []
-    recalls = []
-    f_measures = []
+    measures = collections.OrderedDict()
 
     for docfilename, keyfilename in annif.corpus.DocumentDirectory(directory):
         print("evaluating", docfilename, keyfilename)
@@ -198,11 +191,10 @@ def run_evaldir(project_id, directory, limit, threshold):
             selected = set([hit.label for hit in hits])
             gold_set = gold_subjects.subject_labels
 
-        precisions.append(annif.eval.precision(selected, gold_set))
-        recalls.append(annif.eval.recall(selected, gold_set))
-        f_measures.append(annif.eval.f_measure(selected, gold_set))
+        for metric, result in annif.eval.evaluate(selected, gold_set):
+            measures.setdefault(metric, [])
+            measures[metric].append(result)
 
     template = "{0:<10}\t{1}"
-    print(template.format("Precision:", statistics.mean(precisions)))
-    print(template.format("Recall:", statistics.mean(recalls)))
-    print(template.format("F-measure:", statistics.mean(f_measures)))
+    for metric, results in measures.items():
+        print(template.format(metric + ":", statistics.mean(results)))
