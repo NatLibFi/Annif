@@ -1,6 +1,7 @@
 """Unit test module for Annif CLI commands"""
 
 import random
+import re
 from click.testing import CliRunner
 import annif.cli
 
@@ -69,3 +70,44 @@ def test_analyze_nonexistent():
     assert result.output == "No projects found with id '{}'.\n".format(
         TEMP_PROJECT)
     assert result.exit_code != 0
+
+
+def test_eval_label(tmpdir):
+    keyfile = tmpdir.join('dummy.key')
+    keyfile.write("dummy\nanother\n")
+
+    result = runner.invoke(
+        annif.cli.run_eval, [
+            'myproject-en', str(keyfile)], input='nothing special')
+    assert not result.exception
+    assert result.exit_code == 0
+
+    precision = re.search('Precision:\s+(\d.\d+)', result.output)
+    print(precision.group(1))
+    assert float(precision.group(1)) == 1.0
+    recall = re.search('Recall:\s+(\d.\d+)', result.output)
+    assert float(recall.group(1)) == 0.5
+    f_measure = re.search('F-measure:\s+(\d.\d+)', result.output)
+    assert float(f_measure.group(1)) > 0.66
+    assert float(f_measure.group(1)) < 0.67
+
+
+def test_eval_uri(tmpdir):
+    keyfile = tmpdir.join('dummy.key')
+    keyfile.write(
+        "<http://example.org/one>\tone\n<http://example.org/dummy>\tdummy\n")
+
+    result = runner.invoke(
+        annif.cli.run_eval, [
+            'myproject-en', str(keyfile)], input='nothing special')
+    assert not result.exception
+    assert result.exit_code == 0
+
+    precision = re.search('Precision:\s+(\d.\d+)', result.output)
+    print(precision.group(1))
+    assert float(precision.group(1)) == 1.0
+    recall = re.search('Recall:\s+(\d.\d+)', result.output)
+    assert float(recall.group(1)) == 0.5
+    f_measure = re.search('F-measure:\s+(\d.\d+)', result.output)
+    assert float(f_measure.group(1)) > 0.66
+    assert float(f_measure.group(1)) < 0.67

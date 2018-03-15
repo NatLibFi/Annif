@@ -5,6 +5,8 @@ operations and printing the results to console."""
 import sys
 import click
 import annif
+import annif.corpus
+import annif.eval
 import annif.project
 
 
@@ -102,11 +104,6 @@ def run_analyze(project_id, limit, threshold):
     Analyze a document.
 
     USAGE: annif analyze <project_id> [--limit=N] [--threshold=N] <document.txt
-
-    REST equivalent:
-
-    POST /projects/<project_id>/analyze
-
     """
     try:
         project = annif.project.get_project(project_id)
@@ -119,3 +116,44 @@ def run_analyze(project_id, limit, threshold):
     hits = project.analyze(text, limit, threshold)
     for hit in hits:
         print("{}\t<{}>\t{}".format(hit.score, hit.uri, hit.label))
+
+
+@annif.cxapp.app.cli.command('eval')
+@click.argument('project_id')
+@click.argument('subject_file')
+@click.option('--limit', default=10)
+@click.option('--threshold', default=0.0)
+def run_eval(project_id, subject_file, limit, threshold):
+    """"
+    Evaluate the analysis result for a document against a gold standard given in a subject file.
+
+    USAGE: annif eval <project_id> <subject_file> [--limit=N] [--threshold=N] <document.txt
+    """
+    try:
+        project = annif.project.get_project(project_id)
+    except ValueError:
+        print("No projects found with id \'{0}\'.".format(project_id))
+        sys.exit(1)
+
+    text = sys.stdin.read()
+    hits = project.analyze(text, limit, threshold)
+    with open(subject_file) as subjfile:
+        gold_subjects = annif.corpus.SubjectSet(subjfile.read())
+
+    if gold_subjects.has_uris():
+        selected = set([hit.uri for hit in hits])
+        gold_set = gold_subjects.subject_uris
+    else:
+        selected = set([hit.label for hit in hits])
+        gold_set = gold_subjects.subject_labels
+
+    template = "{0:<10}\t{1}"
+
+    precision = annif.eval.precision(selected, gold_set)
+    print(template.format("Precision:", precision))
+
+    recall = annif.eval.recall(selected, gold_set)
+    print(template.format("Recall:", recall))
+
+    f_measure = annif.eval.f_measure(selected, gold_set)
+    print(template.format("F-measure:", f_measure))
