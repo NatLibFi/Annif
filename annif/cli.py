@@ -46,6 +46,7 @@ def run_show_project(project_id):
         print(formatted)
     else:
         print("No projects found with id \'{0}\'.".format(project_id))
+        sys.exit(1)
 
 
 @annif.cxapp.app.cli.command('load')
@@ -103,7 +104,7 @@ def run_analyze(project_id, limit, threshold):
 
     if hits is None:
         print("No projects found with id \'{0}\'.".format(project_id))
-        return
+        sys.exit(1)
 
     for hit in hits:
-        print("{}\t{}\t{}".format(hit.score, hit.uri, hit.label))
+        print("{}\t<{}>\t{}".format(hit.score, hit.uri, hit.label))
