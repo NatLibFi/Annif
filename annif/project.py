@@ -50,7 +50,7 @@ class AnnifProject:
 
         merged_hits.sort(key=lambda hit: hit.score, reverse=True)
         merged_hits = merged_hits[:limit]
-        return [hit for hit in merged_hits if hit.score > threshold]
+        return [hit for hit in merged_hits if hit.score >= threshold]
 
     def dump(self):
         """return this project as a dict"""
