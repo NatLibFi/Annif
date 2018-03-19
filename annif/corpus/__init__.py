@@ -2,6 +2,7 @@
 
 
 from .docdir import DocumentDirectory
+from .subject import Subject, SubjectDirectory
 
 
 class SubjectSet:
