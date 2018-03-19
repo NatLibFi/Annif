@@ -7,19 +7,23 @@ import re
 
 
 class DocumentDirectory:
-    def __init__(self, path, require_keyfile=False):
+    def __init__(self, path, require_subjects=False):
         self.path = path
-        self.require_keyfile = require_keyfile
+        self.require_subjects = require_subjects
 
     def __iter__(self):
         """Iterate through the directory, yielding tuples of (docfile,
-        keyfile) containing file paths. If there is no key file and
-        require_keyfile is False, the keyfile will be returned as None."""
+        subjectfile) containing file paths. If there is no key file and
+        require_subjects is False, the subjectfile will be returned as None."""
 
         for filename in glob.glob(os.path.join(self.path, '*.txt')):
-            keyfilename = re.sub(r'\.txt$', '.key', filename)
-            if not os.path.exists(keyfilename):
-                keyfilename = None
-            if keyfilename is None and self.require_keyfile:
+            tsvfilename = re.sub(r'\.txt$', '.tsv', filename)
+            if os.path.exists(tsvfilename):
+                yield (filename, tsvfilename)
                 continue
-            yield (filename, keyfilename)
+            keyfilename = re.sub(r'\.txt$', '.key', filename)
+            if os.path.exists(keyfilename):
+                yield (filename, keyfilename)
+                continue
+            if not self.require_subjects:
+                yield (filename, None)
