@@ -159,13 +159,13 @@ def run_evaldir(project_id, directory, limit, threshold):
     project = get_project(project_id)
 
     measures = collections.OrderedDict()
-    for docfilename, keyfilename in annif.corpus.DocumentDirectory(
-            directory, require_keyfile=True):
-        print("evaluating", docfilename, keyfilename)
+    for docfilename, subjectfilename in annif.corpus.DocumentDirectory(
+            directory, require_subjects=True):
+        print("evaluating", docfilename, subjectfilename)
         with open(docfilename) as docfile:
             text = docfile.read()
         hits = project.analyze(text, limit, threshold)
-        with open(keyfilename) as subjfile:
+        with open(subjectfilename) as subjfile:
             gold_subjects = annif.corpus.SubjectSet(subjfile.read())
 
         for metric, result in annif.eval.evaluate_hits(hits, gold_subjects):
