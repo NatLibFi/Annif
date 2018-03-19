@@ -1,5 +1,6 @@
 """Unit tests for corpus functionality in Annif"""
 
+import annif.analyzer
 import annif.corpus
 
 
@@ -118,3 +119,22 @@ def test_subjdir(tmpdir):
     assert subjects[2].uri == 'http://example.org/subj3'
     assert subjects[2].label == 'subject three'
     assert 'third' in subjects[2].text
+
+
+def test_subjdir_texts(tmpdir):
+    tmpdir.join('subj1.txt').write("""http://example.org/subj1 subject one
+        first subject
+        this is the first thing we know about""")
+    tmpdir.join('subj2.txt').write("""http://example.org/subj2 subject two
+        second subject
+        this is the second thing we know about""")
+    tmpdir.join('subj3.txt').write("""http://example.org/subj3 subject three
+        third subject
+        this is the third thing we know about""")
+
+    subjdir = annif.corpus.SubjectDirectory(str(tmpdir))
+    analyzer = annif.analyzer.get_analyzer('snowball(english)')
+    tokens = list(subjdir.tokens(analyzer))
+    assert 'first' in tokens[0]
+    assert 'second' in tokens[1]
+    assert 'third' in tokens[2]
