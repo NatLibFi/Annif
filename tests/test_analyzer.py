@@ -9,14 +9,19 @@ def test_get_analyzer_nonexistent():
         annif.analyzer.get_analyzer("nonexistent")
 
 
+def test_get_analyzer_badspec():
+    with pytest.raises(ValueError):
+        annif.analyzer.get_analyzer("()")
+
+
 def test_english_analyzer_normalize_word():
-    analyzer = annif.analyzer.get_analyzer("english")
+    analyzer = annif.analyzer.get_analyzer("snowball(english)")
     assert analyzer.normalize_word("running") == "run"
     assert analyzer.normalize_word("words") == "word"
 
 
 def test_english_tokenize_sentences():
-    analyzer = annif.analyzer.get_analyzer("english")
+    analyzer = annif.analyzer.get_analyzer("snowball(english)")
 
     text = """But I must explain to you how all this mistaken idea of
     denouncing pleasure and praising pain was born and I will give you a
@@ -39,7 +44,7 @@ def test_english_tokenize_sentences():
 
 
 def test_english_tokenize_words():
-    analyzer = annif.analyzer.get_analyzer("english")
+    analyzer = annif.analyzer.get_analyzer("snowball(english)")
     text = """To take a trivial example, which of us ever undertakes
     laborious physical exercise, except to obtain some advantage from it?"""
     words = analyzer.tokenize_words(text)
@@ -47,12 +52,12 @@ def test_english_tokenize_words():
 
 
 def test_swedish_analyzer_normalize_word():
-    analyzer = annif.analyzer.get_analyzer("swedish")
+    analyzer = annif.analyzer.get_analyzer("snowball(swedish)")
     assert analyzer.normalize_word("gamla") == "gaml"
     assert analyzer.normalize_word("hundar") == "hund"
 
 
 def test_finnish_analyzer_normalize_word():
-    analyzer = annif.analyzer.get_analyzer("finnish")
+    analyzer = annif.analyzer.get_analyzer("snowball(finnish)")
     assert analyzer.normalize_word("vanhat") == "vanh"
     assert analyzer.normalize_word("koirien") == "koir"
