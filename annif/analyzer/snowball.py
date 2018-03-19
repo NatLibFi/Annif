@@ -11,4 +11,4 @@ class SnowballAnalyzer(analyzer.Analyzer):
         self.stemmer = nltk.stem.snowball.SnowballStemmer(param)
 
     def normalize_word(self, word):
-        return self.stemmer.stem(word)
+        return self.stemmer.stem(word.lower())
