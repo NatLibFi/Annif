@@ -32,6 +32,10 @@ class AnnifBackend(metaclass=abc.ABCMeta):
                 os.makedirs(self._datadir)
         return self._datadir
 
+    def load_subjects(self, subjects, analyzer):
+        """load the given subjects analyzed using the given analyzer"""
+        pass  # default is to do nothing, subclasses may override
+
     @abc.abstractmethod
     def analyze(self, text):
         """Analyze some input text and return a list of subjects represented

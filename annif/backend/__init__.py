@@ -24,6 +24,9 @@ register_backend_type(dummy.DummyBackend)
 from . import http
 register_backend_type(http.HTTPBackend)
 
+from . import tfidf
+register_backend_type(tfidf.TFIDFBackend)
+
 
 def get_backends():
     """return all backends defined in the backend configuration file"""

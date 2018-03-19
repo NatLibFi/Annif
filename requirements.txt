@@ -7,3 +7,4 @@ pytest-flask>=0.10.0
 coverage>=4.4.1
 nltk
 requests
+gensim
