@@ -93,3 +93,28 @@ def test_docdir_tsv_require_subjects(tmpdir):
     assert files[0][1] == str(tmpdir.join('doc1.tsv'))
     assert files[1][0] == str(tmpdir.join('doc2.txt'))
     assert files[1][1] == str(tmpdir.join('doc2.tsv'))
+
+
+def test_subjdir(tmpdir):
+    tmpdir.join('subj1.txt').write("""http://example.org/subj1 subject one
+        first subject
+        this is the first thing we know about""")
+    tmpdir.join('subj2.txt').write("""http://example.org/subj2 subject two
+        second subject
+        this is the second thing we know about""")
+    tmpdir.join('subj3.txt').write("""http://example.org/subj3 subject three
+        third subject
+        this is the third thing we know about""")
+
+    subjdir = annif.corpus.SubjectDirectory(str(tmpdir))
+    subjects = sorted(list(subjdir), key=lambda subj: subj.uri)
+    assert len(subjects) == 3
+    assert subjects[0].uri == 'http://example.org/subj1'
+    assert subjects[0].label == 'subject one'
+    assert 'first' in subjects[0].text
+    assert subjects[1].uri == 'http://example.org/subj2'
+    assert subjects[1].label == 'subject two'
+    assert 'second' in subjects[1].text
+    assert subjects[2].uri == 'http://example.org/subj3'
+    assert subjects[2].label == 'subject three'
+    assert 'third' in subjects[2].text
