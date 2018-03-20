@@ -5,7 +5,21 @@ import os
 import os.path
 import tempfile
 import gensim.corpora
+import gensim.models
 from . import backend
+
+
+class VectorCorpus:
+    """A class that wraps a text corpus so it can be iterated as lists of
+    vectors, by using a dictionary to map words to integers."""
+
+    def __init__(self, corpus, dictionary):
+        self.corpus = corpus
+        self.dictionary = dictionary
+
+    def __iter__(self):
+        for doc in self.corpus:
+            yield self.dictionary.doc2bow(doc)
 
 
 class TFIDFBackend(backend.AnnifBackend):
@@ -21,6 +35,9 @@ class TFIDFBackend(backend.AnnifBackend):
         corpus = subjects.tokens(analyzer)
         dictionary = gensim.corpora.Dictionary(corpus)
         self._atomic_save(dictionary, self._get_datadir(), 'dictionary')
+        veccorpus = VectorCorpus(corpus, dictionary)
+        tfidf = gensim.models.TfidfModel(veccorpus)
+        self._atomic_save(tfidf, self._get_datadir(), 'tfidf')
 
     def analyze(self, text):
         return []  # TODO

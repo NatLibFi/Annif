@@ -23,3 +23,5 @@ def test_tfidf_load_subjects(tmpdir):
     tfidf.load_subjects(subjects, analyzer)
     assert tmpdir.join('backends/tfidf/dictionary').exists()
     assert tmpdir.join('backends/tfidf/dictionary').size() > 0
+    assert tmpdir.join('backends/tfidf/tfidf').exists()
+    assert tmpdir.join('backends/tfidf/tfidf').size() > 0
