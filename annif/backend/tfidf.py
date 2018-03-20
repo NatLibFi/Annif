@@ -28,7 +28,8 @@ class VectorCorpus:
         derived from subjects using the given analyzer and dictionary."""
 
         for subject in self.corpus:
-            yield self.dictionary.doc2bow(self.analyzer.tokenize_words(subject.text))
+            yield self.dictionary.doc2bow(
+                self.analyzer.tokenize_words(subject.text))
 
 
 class SubjectIndex:
@@ -128,7 +129,8 @@ class TFIDFBackend(backend.AnnifBackend):
         self._atomic_save(self._subjects, self._get_datadir(), 'subjects')
         self._initialize_analyzer()
         self._dictionary = gensim.corpora.Dictionary(
-            (self._analyzer.tokenize_words(subject.text) for subject in subjects))
+            (self._analyzer.tokenize_words(subject.text)
+             for subject in subjects))
         self._atomic_save(self._dictionary, self._get_datadir(), 'dictionary')
         veccorpus = VectorCorpus(subjects, self._dictionary, self._analyzer)
         self._tfidf = gensim.models.TfidfModel(veccorpus)
