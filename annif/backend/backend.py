@@ -12,12 +12,12 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     name = None
 
-    def __init__(self, backend_id, config):
-        """Initialize backend with a specific configuration. The
-        configuration is a dict. Keys and values depend on the specific
+    def __init__(self, backend_id, params):
+        """Initialize backend with specific parameters. The
+        parameters are a dict. Keys and values depend on the specific
         backend type."""
         self.backend_id = backend_id
-        self.config = config
+        self.params = params
         self._datadir = None
 
     def _get_datadir(self):

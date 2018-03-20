@@ -11,7 +11,7 @@ def test_tfidf_load_subjects(tmpdir):
     tfidf_type = annif.backend.get_backend_type("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
-        config={})
+        params={})
 
     subjdir = os.path.join(
         os.path.dirname(__file__),
