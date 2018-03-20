@@ -29,14 +29,13 @@ def run_list_projects():
     Usage: annif list-projects
     """
 
-    template = "{0: <15}{1: <15}{2: <15}\n"
+    template = "{0: <15}{1: <15}\n"
 
-    formatted = template.format("Project ID", "Language", "Analyzer")
+    formatted = template.format("Project ID", "Language")
     formatted += str("-" * len(formatted) + "\n")
 
     for proj in annif.project.get_projects().values():
-        formatted += template.format(proj.project_id, proj.language,
-                                     proj.analyzer)
+        formatted += template.format(proj.project_id, proj.language)
 
     print(formatted)
 
@@ -53,7 +52,6 @@ def run_show_project(project_id):
 
     Project ID:    testproj
     Language:      fi
-    Analyzer       finglish
     """
 
     proj = get_project(project_id)
@@ -63,7 +61,6 @@ def run_show_project(project_id):
 
     formatted = template.format('Project ID:', proj.project_id)
     formatted += template.format('Language:', proj.language)
-    formatted += template.format('Analyzer', proj.analyzer)
     print(formatted)
 
 

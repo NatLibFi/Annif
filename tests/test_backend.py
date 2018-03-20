@@ -30,6 +30,16 @@ def test_get_backend_dummy():
     assert result[0].score == 1.0
 
 
+def test_get_backend_tfidf_fi():
+    tfidf_fi = annif.backend.get_backend("tfidf-fi")
+    assert tfidf_fi.params["analyzer"] == "snowball(finnish)"
+
+
+def test_get_backend_tfidf_en():
+    tfidf_en = annif.backend.get_backend("tfidf-en")
+    assert tfidf_en.params["analyzer"] == "snowball(english)"
+
+
 def test_project_datadir(tmpdir):
     annif.cxapp.app.config['DATADIR'] = str(tmpdir)
     dummy = annif.backend.get_backend('dummy')
