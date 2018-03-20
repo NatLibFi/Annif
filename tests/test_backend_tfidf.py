@@ -20,12 +20,12 @@ def test_tfidf_load_subjects(tmpdir):
         'subjects')
     subjects = annif.corpus.SubjectDirectory(subjdir)
     tfidf.load_subjects(subjects)
+    assert len(tfidf._subjects) == 125
     assert len(tfidf._dictionary) > 0
-    print(tfidf._dictionary)
     assert tfidf._tfidf is not None
-    print(tfidf._tfidf)
     assert len(tfidf._index) > 0
-    print(tfidf._index)
+    assert tmpdir.join('backends/tfidf/subjects').exists()
+    assert tmpdir.join('backends/tfidf/subjects').size() > 0
     assert tmpdir.join('backends/tfidf/dictionary').exists()
     assert tmpdir.join('backends/tfidf/dictionary').size() > 0
     assert tmpdir.join('backends/tfidf/tfidf').exists()

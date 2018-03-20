@@ -43,6 +43,9 @@ class SubjectIndex:
             self._uris.append(subject.uri)
             self._labels.append(subject.label)
 
+    def __len__(self):
+        return len(self._uris)
+
     def __getitem__(self, subject_id):
         return (self._uris[subject_id], self._labels[subject_id])
 
@@ -50,7 +53,7 @@ class SubjectIndex:
         """Save this subject index into a file."""
 
         with open(path, 'w') as subjfile:
-            for subject_id in range(len(self._uris)):
+            for subject_id in range(len(self)):
                 line = "<{}>\t{}".format(
                     self._uris[subject_id], self._labels[subject_id])
                 print(line, file=subjfile)
