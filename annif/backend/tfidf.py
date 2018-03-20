@@ -26,6 +26,11 @@ class VectorCorpus:
 class TFIDFBackend(backend.AnnifBackend):
     name = "tfidf"
 
+    # defaults for uninitialized instances
+    _dictionary = None
+    _tfidf = None
+    _index = None
+
     def _atomic_save(self, obj, dirname, filename):
         tempfd, tempfilename = tempfile.mkstemp(prefix=filename, dir=dirname)
         os.close(tempfd)
@@ -34,14 +39,14 @@ class TFIDFBackend(backend.AnnifBackend):
 
     def load_subjects(self, subjects, analyzer):
         corpus = subjects.tokens(analyzer)
-        dictionary = gensim.corpora.Dictionary(corpus)
-        self._atomic_save(dictionary, self._get_datadir(), 'dictionary')
-        veccorpus = VectorCorpus(corpus, dictionary)
-        tfidf = gensim.models.TfidfModel(veccorpus)
-        self._atomic_save(tfidf, self._get_datadir(), 'tfidf')
-        index = gensim.similarities.SparseMatrixSimilarity(
-            tfidf[veccorpus], num_features=len(dictionary))
-        self._atomic_save(index, self._get_datadir(), 'index')
+        self._dictionary = gensim.corpora.Dictionary(corpus)
+        self._atomic_save(self._dictionary, self._get_datadir(), 'dictionary')
+        veccorpus = VectorCorpus(corpus, self._dictionary)
+        self._tfidf = gensim.models.TfidfModel(veccorpus)
+        self._atomic_save(self._tfidf, self._get_datadir(), 'tfidf')
+        self._index = gensim.similarities.SparseMatrixSimilarity(
+            self._tfidf[veccorpus], num_features=len(self._dictionary))
+        self._atomic_save(self._index, self._get_datadir(), 'index')
 
     def analyze(self, text):
         return []  # TODO
