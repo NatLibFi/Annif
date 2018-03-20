@@ -6,6 +6,7 @@ import os.path
 import tempfile
 import gensim.corpora
 import gensim.models
+import gensim.similarities
 from . import backend
 
 
@@ -38,6 +39,9 @@ class TFIDFBackend(backend.AnnifBackend):
         veccorpus = VectorCorpus(corpus, dictionary)
         tfidf = gensim.models.TfidfModel(veccorpus)
         self._atomic_save(tfidf, self._get_datadir(), 'tfidf')
+        index = gensim.similarities.SparseMatrixSimilarity(
+            tfidf[veccorpus], num_features=len(dictionary))
+        self._atomic_save(index, self._get_datadir(), 'index')
 
     def analyze(self, text):
         return []  # TODO
