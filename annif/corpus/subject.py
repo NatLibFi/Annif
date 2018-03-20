@@ -16,11 +16,12 @@ class Subject:
 class SubjectDirectory:
     def __init__(self, path):
         self.path = path
+        self._filenames = sorted(glob.glob(os.path.join(path, '*.txt')))
 
     def __iter__(self):
-        """Iterate through the directory, yielding Subject objects."""
+        """Iterate through the subject directory, yielding Subject objects."""
 
-        for filename in glob.glob(os.path.join(self.path, '*.txt')):
+        for filename in self._filenames:
             with open(filename) as subjfile:
                 uri, label = subjfile.readline().strip().split(' ', 1)
                 text = ' '.join(subjfile.readlines())

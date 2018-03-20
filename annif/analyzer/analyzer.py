@@ -1,6 +1,7 @@
 """Common functionality for analyzers."""
 
 import abc
+import unicodedata
 import nltk.tokenize
 
 
@@ -10,6 +11,7 @@ class Analyzer(metaclass=abc.ABCMeta):
     be overridden when necessary."""
 
     name = None
+    TOKEN_MIN_LENGTH = 3
 
     def __init__(self, name):
         self.name = name
@@ -18,9 +20,21 @@ class Analyzer(metaclass=abc.ABCMeta):
         """Tokenize a piece of text (e.g. a document) into sentences."""
         return nltk.tokenize.sent_tokenize(text)
 
+    def is_valid_token(self, word):
+        """Return True if the word is an acceptable token."""
+        if len(word) < self.TOKEN_MIN_LENGTH:
+            return False
+        for char in word:
+            category = unicodedata.category(char)
+            if category[0] == 'L':  # letter
+                return True
+        return False
+
     def tokenize_words(self, text):
         """Tokenize a piece of text (e.g. a sentence) into words."""
-        return nltk.tokenize.word_tokenize(text)
+        return [self.normalize_word(word)
+                for word in nltk.tokenize.word_tokenize(text)
+                if self.is_valid_token(word)]
 
     @abc.abstractmethod
     def normalize_word(self, word):

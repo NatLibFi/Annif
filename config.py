@@ -9,9 +9,9 @@ classes are different configuration profiles overriding default settings.
 class Config(object):
     DEBUG = False
     TESTING = False
-    INDEX_NAME = 'annif'
     PROJECTS_FILE = 'projects.cfg'
     BACKENDS_FILE = 'backends.cfg'
+    DATADIR = 'data'
 
 
 class DevelopmentConfig(Config):

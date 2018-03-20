@@ -13,7 +13,6 @@ class AnnifProject:
     def __init__(self, project_id, config):
         self.project_id = project_id
         self.language = config['language']
-        self.analyzer = config['analyzer']
         self.backends = self._initialize_backends(config['backends'])
 
     def _initialize_backends(self, backends_configuration):
@@ -52,11 +51,14 @@ class AnnifProject:
         merged_hits = merged_hits[:limit]
         return [hit for hit in merged_hits if hit.score >= threshold]
 
+    def load_subjects(self, subjects):
+        for backend, weight in self.backends:
+            backend.load_subjects(subjects)
+
     def dump(self):
         """return this project as a dict"""
         return {'project_id': self.project_id,
                 'language': self.language,
-                'analyzer': self.analyzer,
                 'backends': [{'backend_id': be[0].backend_id,
                               'weight': be[1]} for be in self.backends]
                 }

@@ -2,6 +2,7 @@
 
 import random
 import re
+import os.path
 from click.testing import CliRunner
 import annif.cli
 
@@ -43,8 +44,24 @@ def test_show_subject():
     pass
 
 
-def test_load():
-    pass
+def test_load(tmpdir):
+    annif.cxapp.app.config['DATADIR'] = str(tmpdir)
+    subjdir = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'subjects')
+    result = runner.invoke(annif.cli.run_load, ['tfidf-fi', subjdir])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert tmpdir.join('backends/tfidf-fi/subjects').exists()
+    assert tmpdir.join('backends/tfidf-fi/subjects').size() > 0
+    assert tmpdir.join('backends/tfidf-fi/dictionary').exists()
+    assert tmpdir.join('backends/tfidf-fi/dictionary').size() > 0
+    assert tmpdir.join('backends/tfidf-fi/tfidf').exists()
+    assert tmpdir.join('backends/tfidf-fi/tfidf').size() > 0
+    assert tmpdir.join('backends/tfidf-fi/index').exists()
+    assert tmpdir.join('backends/tfidf-fi/index').size() > 0
 
 
 def test_drop_subject():
