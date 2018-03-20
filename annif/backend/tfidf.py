@@ -66,6 +66,7 @@ class SubjectIndex:
             with open(path) as subjfile:
                 for line in subjfile:
                     uri, label = line.strip().split(None, 1)
+                    uri = uri[1:-1]
                     yield annif.corpus.Subject(uri, label, None)
 
         return cls(file_as_corpus(path))
@@ -78,6 +79,7 @@ class TFIDFBackend(backend.AnnifBackend):
     MAX_CHUNK_SUBJECTS = 100
 
     # defaults for uninitialized instances
+    _subjects = None
     _analyzer = None
     _dictionary = None
     _tfidf = None

@@ -67,9 +67,10 @@ def run_show_project(project_id):
 @annif.cxapp.app.cli.command('load')
 @click.argument('project_id')
 @click.argument('directory')
-@click.option('--clear', default=False)
-def run_load(project_id, directory, clear):
-    print("TODO")
+def run_load(project_id, directory):
+    proj = get_project(project_id)
+    subjects = annif.corpus.SubjectDirectory(directory)
+    proj.load_subjects(subjects)
 
 
 @annif.cxapp.app.cli.command('list-subjects')

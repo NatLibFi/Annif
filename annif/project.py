@@ -51,6 +51,10 @@ class AnnifProject:
         merged_hits = merged_hits[:limit]
         return [hit for hit in merged_hits if hit.score >= threshold]
 
+    def load_subjects(self, subjects):
+        for backend, weight in self.backends:
+            backend.load_subjects(subjects)
+
     def dump(self):
         """return this project as a dict"""
         return {'project_id': self.project_id,

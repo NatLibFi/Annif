@@ -8,3 +8,4 @@ annif_env
 __pycache__
 .pytest_cache
 *.pyc
+data
