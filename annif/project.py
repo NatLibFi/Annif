@@ -2,9 +2,11 @@
 
 import collections
 import configparser
+import logging
 import annif
 import annif.hit
 import annif.backend
+from annif import logger
 
 
 class AnnifProject:
@@ -34,9 +36,14 @@ class AnnifProject:
         score. The limit parameter defines the maximum number of hits to return.
         Only hits whose score is over the threshold are returned."""
 
+        logger.debug('Analyzing text "{}..." (len={})'.format(
+            text[:20], len(text)))
         hits_by_uri = collections.defaultdict(list)
         for backend, weight in self.backends:
             hits = backend.analyze(text)
+            logger.debug(
+                'Got {} hits from backend {}'.format(
+                    len(hits), backend.backend_id))
             for hit in hits:
                 hits_by_uri[hit.uri].append((hit.score * weight, hit))
 
@@ -47,12 +54,23 @@ class AnnifProject:
                 score_hits[0][1].uri, score_hits[0][1].label, total)
             merged_hits.append(hit)
 
+        logger.debug('{} hits after merging'.format(len(merged_hits)))
         merged_hits.sort(key=lambda hit: hit.score, reverse=True)
         merged_hits = merged_hits[:limit]
-        return [hit for hit in merged_hits if hit.score >= threshold]
+        logger.debug(
+            '{} hits after applying limit {}'.format(
+                len(merged_hits), limit))
+        merged_hits = [hit for hit in merged_hits if hit.score >= threshold]
+        logger.debug(
+            '{} hits after applying threshold {}'.format(
+                len(merged_hits), threshold))
+        return merged_hits
 
     def load_subjects(self, subjects):
         for backend, weight in self.backends:
+            logger.debug(
+                'Loading subjects for backend {}'.format(
+                    backend.backend_id))
             backend.load_subjects(subjects)
 
     def dump(self):
