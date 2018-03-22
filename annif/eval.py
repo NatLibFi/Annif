@@ -1,6 +1,7 @@
 """Evaluation metrics for Annif"""
 
 import statistics
+import numpy
 
 
 def precision(selected, relevant):
@@ -56,6 +57,26 @@ def false_negatives(selected, relevant):
     return len(rel - sel)
 
 
+def dcg(selected, relevant):
+    """return the discounted cumulative gain (DCG) score for the selected
+    instances vs. relevant instances"""
+    if len(selected) == 0 or len(relevant) == 0:
+        return 0.0
+    scores = numpy.array([int(item in relevant) for item in selected])
+    weights = numpy.log2(numpy.arange(2, scores.size + 2))
+    return numpy.sum(scores / weights)
+
+
+def normalized_dcg(selected, relevant):
+    """return the normalized discounted cumulative gain (nDCG) score for the
+    selected instances vs. relevant instances"""
+    dcg_val = dcg(selected, relevant)
+    dcg_max = dcg(relevant, relevant)
+    if dcg_max == 0.0:
+        return 0.0
+    return dcg_val / dcg_max
+
+
 def evaluate(selected, gold):
     """evaluate a set of selected subject against a gold standard using
     different metrics"""
@@ -63,6 +84,7 @@ def evaluate(selected, gold):
         ('Precision', precision(selected, gold), statistics.mean),
         ('Recall', recall(selected, gold), statistics.mean),
         ('F-measure', f_measure(selected, gold), statistics.mean),
+        ('Normalized DCG', normalized_dcg(selected, gold), statistics.mean),
         ('Precision@1', precision(selected[:1], gold), statistics.mean),
         ('Precision@3', precision(selected[:3], gold), statistics.mean),
         ('Precision@5', precision(selected[:5], gold), statistics.mean),

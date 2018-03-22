@@ -47,6 +47,28 @@ def test_f_measure():
     assert f_measure < 0.58
 
 
+def test_ndcg():
+    selected = ['A', 'B', 'C', 'D', 'E']
+    gold = ['A', 'E', 'I', 'O', 'U']
+    ndcg = annif.eval.normalized_dcg(selected, gold)
+    assert ndcg > 0.47
+    assert ndcg < 0.48
+
+
+def test_ndcg_empty():
+    selected = []
+    gold = ['A', 'E', 'I', 'O', 'U']
+    ndcg = annif.eval.normalized_dcg(selected, gold)
+    assert ndcg == 0
+
+
+def test_ndcg_empty2():
+    selected = ['A', 'B', 'C', 'D', 'E']
+    gold = []
+    ndcg = annif.eval.normalized_dcg(selected, gold)
+    assert ndcg == 0
+
+
 def test_true_positives():
     selected = ['A', 'B', 'C']
     gold = ['A', 'C', 'E', 'F', 'G']
