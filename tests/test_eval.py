@@ -45,3 +45,24 @@ def test_f_measure():
     f_measure = annif.eval.f_measure(selected, gold)
     assert f_measure > 0.57
     assert f_measure < 0.58
+
+
+def test_true_positives():
+    selected = ['A', 'B', 'C']
+    gold = ['A', 'C', 'E', 'F', 'G']
+    true_positives = annif.eval.true_positives(selected, gold)
+    assert true_positives == 2
+
+
+def test_false_positives():
+    selected = ['A', 'B', 'C']
+    gold = ['A', 'C', 'E', 'F', 'G']
+    false_positives = annif.eval.false_positives(selected, gold)
+    assert false_positives == 1
+
+
+def test_false_negatives():
+    selected = ['A', 'B', 'C']
+    gold = ['A', 'C', 'E', 'F', 'G']
+    false_negatives = annif.eval.false_negatives(selected, gold)
+    assert false_negatives == 3
