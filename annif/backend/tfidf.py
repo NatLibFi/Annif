@@ -2,6 +2,7 @@
 TF-IDF normalized bag-of-words vector space"""
 
 import collections
+import glob
 import os
 import os.path
 import tempfile
@@ -90,7 +91,9 @@ class TFIDFBackend(backend.AnnifBackend):
         tempfd, tempfilename = tempfile.mkstemp(prefix=filename, dir=dirname)
         os.close(tempfd)
         obj.save(tempfilename)
-        os.rename(tempfilename, os.path.join(dirname, filename))
+        for fn in glob.glob(tempfilename + '*'):
+            newname = fn.replace(tempfilename, os.path.join(dirname, filename))
+            os.rename(fn, newname)
 
     def _initialize_subjects(self):
         if self._subjects is None:
