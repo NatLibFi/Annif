@@ -1,24 +1,24 @@
 """Evaluation metrics for Annif"""
 
 
-def precision(sel, rel):
+def precision(selected, relevant):
     """return the precision, i.e. the fraction of selected instances that
     are relevant"""
-    selected = set(sel)
-    relevant = set(rel)
-    if len(selected) == 0:
+    sel = set(selected)
+    rel = set(relevant)
+    if len(sel) == 0:
         return 0.0  # avoid division by zero
-    return len(selected & relevant) / len(selected)
+    return len(sel & rel) / len(sel)
 
 
-def recall(sel, rel):
+def recall(selected, relevant):
     """return the recall, i.e. the fraction of relevant instances that were
     selected"""
-    selected = set(sel)
-    relevant = set(rel)
-    if len(relevant) == 0:
+    sel = set(selected)
+    rel = set(relevant)
+    if len(rel) == 0:
         return 0.0  # avoid division by zero
-    return len(selected & relevant) / len(relevant)
+    return len(sel & rel) / len(rel)
 
 
 def f_measure(A, B):
