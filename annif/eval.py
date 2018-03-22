@@ -1,24 +1,30 @@
 """Evaluation metrics for Annif"""
 
 
-def precision(selected, relevant):
+def precision(sel, rel):
     """return the precision, i.e. the fraction of selected instances that
     are relevant"""
+    selected = set(sel)
+    relevant = set(rel)
     if len(selected) == 0:
         return 0.0  # avoid division by zero
     return len(selected & relevant) / len(selected)
 
 
-def recall(selected, relevant):
+def recall(sel, rel):
     """return the recall, i.e. the fraction of relevant instances that were
     selected"""
+    selected = set(sel)
+    relevant = set(rel)
     if len(relevant) == 0:
         return 0.0  # avoid division by zero
     return len(selected & relevant) / len(relevant)
 
 
-def f_measure(setA, setB):
+def f_measure(A, B):
     """return the F-measure similarity of two sets"""
+    setA = set(A)
+    setB = set(B)
     if len(setA) == 0 or len(setB) == 0:
         return 0.0  # shortcut, avoid division by zero
     return 2.0 * len(setA & setB) / (len(setA) + len(setB))
@@ -30,7 +36,10 @@ def evaluate(selected, gold):
     return [
         ('Precision', precision(selected, gold)),
         ('Recall', recall(selected, gold)),
-        ('F-measure', f_measure(selected, gold))
+        ('F-measure', f_measure(selected, gold)),
+        ('Precision@1', precision(selected[:1], gold)),
+        ('Precision@3', precision(selected[:3], gold)),
+        ('Precision@5', precision(selected[:5], gold))
     ]
 
 
@@ -38,10 +47,10 @@ def evaluate_hits(hits, gold_subjects):
     """evaluate a list of AnalysisHit objects against a SubjectSet,
     returning evaluation metrics"""
     if gold_subjects.has_uris():
-        selected = set([hit.uri for hit in hits])
+        selected = [hit.uri for hit in hits]
         gold_set = gold_subjects.subject_uris
     else:
-        selected = set([hit.label for hit in hits])
+        selected = [hit.label for hit in hits]
         gold_set = gold_subjects.subject_labels
 
     return evaluate(selected, gold_set)

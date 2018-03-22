@@ -107,6 +107,15 @@ def test_eval_label(tmpdir):
     f_measure = re.search('F-measure:\s+(\d.\d+)', result.output)
     assert float(f_measure.group(1)) > 0.66
     assert float(f_measure.group(1)) < 0.67
+    precision1 = re.search('Precision@1:\s+(\d.\d+)', result.output)
+    print(precision1.group(1))
+    assert float(precision1.group(1)) == 1.0
+    precision3 = re.search('Precision@3:\s+(\d.\d+)', result.output)
+    print(precision3.group(1))
+    assert float(precision3.group(1)) == 1.0
+    precision5 = re.search('Precision@5:\s+(\d.\d+)', result.output)
+    print(precision5.group(1))
+    assert float(precision5.group(1)) == 1.0
 
 
 def test_eval_uri(tmpdir):
@@ -127,6 +136,15 @@ def test_eval_uri(tmpdir):
     f_measure = re.search('F-measure:\s+(\d.\d+)', result.output)
     assert float(f_measure.group(1)) > 0.66
     assert float(f_measure.group(1)) < 0.67
+    precision1 = re.search('Precision@1:\s+(\d.\d+)', result.output)
+    print(precision1.group(1))
+    assert float(precision1.group(1)) == 1.0
+    precision3 = re.search('Precision@3:\s+(\d.\d+)', result.output)
+    print(precision3.group(1))
+    assert float(precision3.group(1)) == 1.0
+    precision5 = re.search('Precision@5:\s+(\d.\d+)', result.output)
+    print(precision5.group(1))
+    assert float(precision5.group(1)) == 1.0
 
 
 def test_evaldir(tmpdir):
@@ -148,3 +166,12 @@ def test_evaldir(tmpdir):
     assert float(recall.group(1)) == 0.5
     f_measure = re.search('F-measure:\s+(\d.\d+)', result.output)
     assert float(f_measure.group(1)) == 0.5
+    precision1 = re.search('Precision@1:\s+(\d.\d+)', result.output)
+    print(precision1.group(1))
+    assert float(precision1.group(1)) == 0.5
+    precision3 = re.search('Precision@3:\s+(\d.\d+)', result.output)
+    print(precision3.group(1))
+    assert float(precision3.group(1)) == 0.5
+    precision5 = re.search('Precision@5:\s+(\d.\d+)', result.output)
+    print(precision5.group(1))
+    assert float(precision5.group(1)) == 0.5
