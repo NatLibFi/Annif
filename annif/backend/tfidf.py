@@ -90,14 +90,17 @@ class TFIDFBackend(backend.AnnifBackend):
     def _atomic_save(self, obj, dirname, filename):
         tempfd, tempfilename = tempfile.mkstemp(prefix=filename, dir=dirname)
         os.close(tempfd)
+        self.debug('saving {} to temporary file {}'.format(obj, tempfilename))
         obj.save(tempfilename)
         for fn in glob.glob(tempfilename + '*'):
             newname = fn.replace(tempfilename, os.path.join(dirname, filename))
+            self.debug('renaming temporary file {} to {}'.format(fn, newname))
             os.rename(fn, newname)
 
     def _initialize_subjects(self):
         if self._subjects is None:
             path = os.path.join(self._get_datadir(), 'subjects')
+            self.debug('loading subjects from {}'.format(path))
             self._subjects = SubjectIndex.load(path)
 
     def _initialize_analyzer(self):
@@ -108,16 +111,19 @@ class TFIDFBackend(backend.AnnifBackend):
     def _initialize_dictionary(self):
         if self._dictionary is None:
             path = os.path.join(self._get_datadir(), 'dictionary')
+            self.debug('loading dictionary from {}'.format(path))
             self._dictionary = gensim.corpora.Dictionary.load(path)
 
     def _initialize_tfidf(self):
         if self._tfidf is None:
             path = os.path.join(self._get_datadir(), 'tfidf')
+            self.debug('loading TF-IDF model from {}'.format(path))
             self._tfidf = gensim.models.TfidfModel.load(path)
 
     def _initialize_index(self):
         if self._index is None:
             path = os.path.join(self._get_datadir(), 'index')
+            self.debug('loading similarity index from {}'.format(path))
             self._index = gensim.similarities.SparseMatrixSimilarity.load(path)
 
     def initialize(self):
@@ -128,16 +134,20 @@ class TFIDFBackend(backend.AnnifBackend):
         self._initialize_index()
 
     def load_subjects(self, subjects):
+        self.info('Backend {}: creating subject index'.format(self.backend_id))
         self._subjects = SubjectIndex(subjects)
         self._atomic_save(self._subjects, self._get_datadir(), 'subjects')
         self._initialize_analyzer()
+        self.info('creating dictionary')
         self._dictionary = gensim.corpora.Dictionary(
             (self._analyzer.tokenize_words(subject.text)
              for subject in subjects))
         self._atomic_save(self._dictionary, self._get_datadir(), 'dictionary')
         veccorpus = VectorCorpus(subjects, self._dictionary, self._analyzer)
+        self.info('creating TF-IDF model')
         self._tfidf = gensim.models.TfidfModel(veccorpus)
         self._atomic_save(self._tfidf, self._get_datadir(), 'tfidf')
+        self.info('creating similarity index')
         self._index = gensim.similarities.SparseMatrixSimilarity(
             self._tfidf[veccorpus], num_features=len(self._dictionary))
         self._atomic_save(self._index, self._get_datadir(), 'index')
@@ -175,7 +185,10 @@ class TFIDFBackend(backend.AnnifBackend):
 
     def analyze(self, text):
         self.initialize()
+        self.debug('Analyzing text "{}..." (len={})'.format(
+            text[:20], len(text)))
         sentences = self._analyzer.tokenize_sentences(text)
+        self.debug('Found {} sentences'.format(len(sentences)))
         chunksize = int(self.params['chunksize'])
         chunks = []  # chunks represented as TF-IDF normalized vectors
         for i in range(0, len(sentences), chunksize):
@@ -183,5 +196,6 @@ class TFIDFBackend(backend.AnnifBackend):
             chunkbow = self._dictionary.doc2bow(
                 self._analyzer.tokenize_words(chunktext))
             chunks.append(self._tfidf[chunkbow])
+        self.debug('Split sentences into {} chunks'.format(len(chunks)))
         chunk_results = self._analyze_chunks(chunks)
         return self._merge_chunk_results(chunk_results)

@@ -4,6 +4,7 @@ import abc
 import os
 import os.path
 import annif
+from annif import logger
 
 
 class AnnifBackend(metaclass=abc.ABCMeta):
@@ -41,3 +42,15 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         """Analyze some input text and return a list of subjects represented
         as a list of AnalysisHit objects."""
         pass
+
+    def debug(self, message):
+        """Log a debug message from this backend"""
+        logger.debug("Backend {}: {}".format(self.backend_id, message))
+
+    def info(self, message):
+        """Log an info message from this backend"""
+        logger.info("Backend {}: {}".format(self.backend_id, message))
+
+    def warning(self, message):
+        """Log a warning message from this backend"""
+        logger.warning("Backend {}: {}".format(self.backend_id, message))
