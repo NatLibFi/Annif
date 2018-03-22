@@ -14,4 +14,5 @@ class HTTPBackend(backend.AnnifBackend):
         data = {'text': text, 'project': self.params['project']}
         req = requests.post(self.params['endpoint'], data=data)
         return [AnalysisHit(h['uri'], h['label'], h['score'])
-                for h in req.json()]
+                for h in req.json()
+                if h['score'] > 0.0]

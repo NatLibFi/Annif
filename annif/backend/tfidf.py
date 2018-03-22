@@ -174,6 +174,8 @@ class TFIDFBackend(backend.AnnifBackend):
         limit = int(self.params['limit'])
         results = []
         for score, subject_id in best_subjects[:limit]:
+            if score <= 0.0:
+                continue
             subject = self._subjects[subject_id]
             results.append(
                 AnalysisHit(

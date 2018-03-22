@@ -58,3 +58,15 @@ def test_tfidf_analyze(datadir):
     assert 'http://www.yso.fi/onto/yso/p1265' in [
         result.uri for result in results]
     assert 'arkeologia' in [result.label for result in results]
+
+
+def test_tfidf_analyze_unknown(datadir):
+    annif.cxapp.app.config['DATADIR'] = str(datadir)
+    tfidf_type = annif.backend.get_backend_type("tfidf")
+    tfidf = tfidf_type(
+        backend_id='tfidf',
+        params={'analyzer': 'snowball(finnish)', 'chunksize': 1, 'limit': 10})
+
+    results = tfidf.analyze("abcdefghijk")  # unknown word
+
+    assert len(results) == 0
