@@ -7,7 +7,7 @@ import os.path
 import pytest
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def datadir(tmpdir_factory):
     return tmpdir_factory.mktemp('data')
 
