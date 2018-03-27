@@ -13,24 +13,19 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     name = None
 
-    def __init__(self, backend_id, params):
+    def __init__(self, backend_id, params, datadir):
         """Initialize backend with specific parameters. The
         parameters are a dict. Keys and values depend on the specific
         backend type."""
         self.backend_id = backend_id
         self.params = params
-        self._datadir = None
+        self._datadir = os.path.join(datadir, 'backends', self.backend_id)
 
     def _get_datadir(self):
         """return the path of the directory where this backend can store its
         data files"""
-        if self._datadir is None:
-            self._datadir = os.path.join(
-                annif.cxapp.app.config['DATADIR'],
-                'backends',
-                self.backend_id)
-            if not os.path.exists(self._datadir):
-                os.makedirs(self._datadir)
+        if not os.path.exists(self._datadir):
+            os.makedirs(self._datadir)
         return self._datadir
 
     def load_subjects(self, subjects, analyzer):

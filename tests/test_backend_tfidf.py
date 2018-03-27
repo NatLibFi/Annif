@@ -13,11 +13,11 @@ def datadir(tmpdir_factory):
 
 
 def test_tfidf_load_subjects(datadir):
-    annif.cxapp.app.config['DATADIR'] = str(datadir)
     tfidf_type = annif.backend.get_backend_type("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
-        params={'analyzer': 'snowball(finnish)', 'chunksize': 10, 'limit': 10})
+        params={'analyzer': 'snowball(finnish)', 'chunksize': 10, 'limit': 10},
+        datadir=str(datadir))
 
     subjdir = os.path.join(
         os.path.dirname(__file__),
@@ -41,11 +41,11 @@ def test_tfidf_load_subjects(datadir):
 
 
 def test_tfidf_analyze(datadir):
-    annif.cxapp.app.config['DATADIR'] = str(datadir)
     tfidf_type = annif.backend.get_backend_type("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
-        params={'analyzer': 'snowball(finnish)', 'chunksize': 1, 'limit': 10})
+        params={'analyzer': 'snowball(finnish)', 'chunksize': 1, 'limit': 10},
+        datadir=str(datadir))
 
     results = tfidf.analyze("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
@@ -61,11 +61,11 @@ def test_tfidf_analyze(datadir):
 
 
 def test_tfidf_analyze_unknown(datadir):
-    annif.cxapp.app.config['DATADIR'] = str(datadir)
     tfidf_type = annif.backend.get_backend_type("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
-        params={'analyzer': 'snowball(finnish)', 'chunksize': 1, 'limit': 10})
+        params={'analyzer': 'snowball(finnish)', 'chunksize': 1, 'limit': 10},
+        datadir=str(datadir))
 
     results = tfidf.analyze("abcdefghijk")  # unknown word
 

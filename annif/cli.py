@@ -7,6 +7,7 @@ import logging
 import sys
 import click
 import click_log
+from flask.cli import FlaskGroup
 import annif
 import annif.corpus
 import annif.eval
@@ -14,6 +15,8 @@ import annif.project
 from annif import logger
 
 click_log.basic_config(logger)
+
+cli = FlaskGroup(create_app=annif.create_app)
 
 
 def get_project(project_id):
@@ -27,7 +30,7 @@ def get_project(project_id):
         sys.exit(1)
 
 
-@annif.cxapp.app.cli.command('list-projects')
+@cli.command('list-projects')
 def run_list_projects():
     """
     List available projects.
@@ -45,7 +48,7 @@ def run_list_projects():
         click.echo(template.format(proj.project_id, proj.language))
 
 
-@annif.cxapp.app.cli.command('show-project')
+@cli.command('show-project')
 @click.argument('project_id')
 def run_show_project(project_id):
     """
@@ -67,7 +70,7 @@ def run_show_project(project_id):
     click.echo(template.format('Language:', proj.language))
 
 
-@annif.cxapp.app.cli.command('load')
+@cli.command('load')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('directory')
@@ -77,34 +80,34 @@ def run_load(project_id, directory):
     proj.load_subjects(subjects)
 
 
-@annif.cxapp.app.cli.command('list-subjects')
+@cli.command('list-subjects')
 @click.argument('project_id')
 def run_list_subjects():
     click.echo("TODO")
 
 
-@annif.cxapp.app.cli.command('show-subject')
+@cli.command('show-subject')
 @click.argument('project_id')
 @click.argument('subject_id')
 def run_show_subject(project_id, subject_id):
     click.echo("TODO")
 
 
-@annif.cxapp.app.cli.command('create-subject')
+@cli.command('create-subject')
 @click.argument('project_id')
 @click.argument('subject_id')
 def run_create_subject(project_id, subject_id):
     click.echo("TODO")
 
 
-@annif.cxapp.app.cli.command('drop-subject')
+@cli.command('drop-subject')
 @click.argument('project_id')
 @click.argument('subject_id')
 def run_drop_subject(project_id, subject_id):
     click.echo("TODO")
 
 
-@annif.cxapp.app.cli.command('analyze')
+@cli.command('analyze')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.option('--limit', default=10)
@@ -122,7 +125,7 @@ def run_analyze(project_id, limit, threshold):
         click.echo("{}\t<{}>\t{}".format(hit.score, hit.uri, hit.label))
 
 
-@annif.cxapp.app.cli.command('eval')
+@cli.command('eval')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('subject_file')
@@ -148,7 +151,7 @@ def run_eval(project_id, subject_file, limit, threshold):
         click.echo(template.format(metric + ":", result))
 
 
-@annif.cxapp.app.cli.command('evaldir')
+@cli.command('evaldir')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('directory')
@@ -184,3 +187,7 @@ def run_evaldir(project_id, directory, limit, threshold):
     for metric, results in measures.items():
         result = merge_functions[metric](results)
         click.echo(template.format(metric + ":", result))
+
+
+if __name__ == '__main__':
+    cli()

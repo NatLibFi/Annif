@@ -20,3 +20,4 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
+    DATADIR = 'tests/data'

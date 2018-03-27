@@ -3,6 +3,7 @@
 import collections
 import configparser
 import logging
+from flask import current_app
 import annif
 import annif.hit
 import annif.backend
@@ -84,7 +85,7 @@ class AnnifProject:
 
 def get_projects():
     """return the available projects as a dict of project_id -> AnnifProject"""
-    projects_file = annif.cxapp.app.config['PROJECTS_FILE']
+    projects_file = current_app.config['PROJECTS_FILE']
     config = configparser.ConfigParser()
     with open(projects_file) as projf:
         config.read_file(projf)

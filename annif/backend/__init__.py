@@ -1,7 +1,7 @@
 """Registry of backend types for Annif"""
 
 import configparser
-import annif
+from flask import current_app
 
 
 _backend_types = {}
@@ -28,9 +28,12 @@ from . import tfidf
 register_backend_type(tfidf.TFIDFBackend)
 
 
-def get_backends():
-    """return all backends defined in the backend configuration file"""
-    backends_file = annif.cxapp.app.config['BACKENDS_FILE']
+def create_backends(app, backend_types):
+    return backends
+
+
+def init_backends(app):
+    backends_file = app.config['BACKENDS_FILE']
     config = configparser.ConfigParser()
     with open(backends_file) as bef:
         config.read_file(bef)
@@ -39,16 +42,27 @@ def get_backends():
     backends = {}
     for backend_id in config.sections():
         betype_id = config[backend_id]['type']
-        beclass = get_backend_type(betype_id)
-        backends[backend_id] = beclass(backend_id, params=config[backend_id])
-    return backends
+        try:
+            beclass = get_backend_type(betype_id)
+        except KeyError:
+            raise ValueError("No such backend type {}".format(backend_type))
+        backends[backend_id] = beclass(
+            backend_id,
+            params=config[backend_id],
+            datadir=app.config['DATADIR'])
+
+    app.annif_backends = backends
+
+
+def get_backends():
+    """return all backends defined in the backend configuration file"""
+    return current_app.annif_backends
 
 
 def get_backend(backend_id):
     """return a single backend by ID"""
 
-    backends = get_backends()
     try:
-        return backends[backend_id]
+        return current_app.annif_backends[backend_id]
     except KeyError:
         raise ValueError("No such backend {}".format(backend_id))

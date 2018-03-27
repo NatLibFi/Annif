@@ -3,6 +3,7 @@
 import random
 import re
 import os.path
+import py.path
 from click.testing import CliRunner
 import annif.cli
 
@@ -14,7 +15,7 @@ TEMP_PROJECT = ''.join(
 
 
 def test_list_projects():
-    result = runner.invoke(annif.cli.run_list_projects)
+    result = runner.invoke(annif.cli.cli, ["list-projects"])
     assert not result.exception
     assert result.exit_code == 0
 
@@ -22,17 +23,21 @@ def test_list_projects():
 def test_list_projects_bad_arguments():
     # The listprojects function does not accept any arguments, it should fail
     # if such are provided.
-    assert runner.invoke(annif.cli.run_list_projects, ['moi']).exit_code != 0
+    assert runner.invoke(
+        annif.cli.cli, [
+            'list-projects', 'moi']).exit_code != 0
     assert runner.invoke(
         annif.cli.run_list_projects, ['moi', '--debug', 'y']).exit_code != 0
 
 
 def test_show_project():
     assert runner.invoke(
-        annif.cli.run_show_project,
-        [TEMP_PROJECT]).exit_code != 0
+        annif.cli.cli,
+        ['show-project', TEMP_PROJECT]).exit_code != 0
     # Test should not fail even if the user queries for a non-existent project.
-    failed_result = runner.invoke(annif.cli.run_show_project, ['nonexistent'])
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'show-project', 'nonexistent'])
     assert failed_result.exception
 
 
@@ -44,24 +49,25 @@ def test_show_subject():
     pass
 
 
-def test_load(tmpdir):
-    annif.cxapp.app.config['DATADIR'] = str(tmpdir)
+def test_load(app):
+    with app.app_context():
+        datadir = py.path.local(app.config['DATADIR'])
     subjdir = os.path.join(
         os.path.dirname(__file__),
         'corpora',
         'archaeology',
         'subjects')
-    result = runner.invoke(annif.cli.run_load, ['tfidf-fi', subjdir])
+    result = runner.invoke(annif.cli.cli, ['load', 'tfidf-fi', subjdir])
     assert not result.exception
     assert result.exit_code == 0
-    assert tmpdir.join('backends/tfidf-fi/subjects').exists()
-    assert tmpdir.join('backends/tfidf-fi/subjects').size() > 0
-    assert tmpdir.join('backends/tfidf-fi/dictionary').exists()
-    assert tmpdir.join('backends/tfidf-fi/dictionary').size() > 0
-    assert tmpdir.join('backends/tfidf-fi/tfidf').exists()
-    assert tmpdir.join('backends/tfidf-fi/tfidf').size() > 0
-    assert tmpdir.join('backends/tfidf-fi/index').exists()
-    assert tmpdir.join('backends/tfidf-fi/index').size() > 0
+    assert datadir.join('backends/tfidf-fi/subjects').exists()
+    assert datadir.join('backends/tfidf-fi/subjects').size() > 0
+    assert datadir.join('backends/tfidf-fi/dictionary').exists()
+    assert datadir.join('backends/tfidf-fi/dictionary').size() > 0
+    assert datadir.join('backends/tfidf-fi/tfidf').exists()
+    assert datadir.join('backends/tfidf-fi/tfidf').size() > 0
+    assert datadir.join('backends/tfidf-fi/index').exists()
+    assert datadir.join('backends/tfidf-fi/index').size() > 0
 
 
 def test_drop_subject():
