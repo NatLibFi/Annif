@@ -8,3 +8,4 @@ import annif
 def app():
     app = annif.create_app(config_name='config.TestingConfig')
     return app
+
