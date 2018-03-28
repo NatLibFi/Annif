@@ -8,5 +8,6 @@ from . import backend
 class DummyBackend(backend.AnnifBackend):
     name = "dummy"
 
-    def analyze(self, text):
-        return [AnalysisHit('http://example.org/dummy', 'dummy', 1.0)]
+    def _analyze(self, text, params):
+        score = float(params.get('score', 1.0))
+        return [AnalysisHit('http://example.org/dummy', 'dummy', score)]

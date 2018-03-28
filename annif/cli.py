@@ -30,6 +30,17 @@ def get_project(project_id):
         sys.exit(1)
 
 
+def parse_backend_params(backend_param):
+    """Parse a list of backend parameters given with the --backend-param
+    option into a nested dict structure"""
+    backend_params = collections.defaultdict(dict)
+    for beparam in backend_param:
+        backend, param = beparam.split('.', 1)
+        key, val = param.split('=', 1)
+        backend_params[backend][key] = val
+    return backend_params
+
+
 @cli.command('list-projects')
 def run_list_projects():
     """
@@ -112,7 +123,8 @@ def run_drop_subject(project_id, subject_id):
 @click.argument('project_id')
 @click.option('--limit', default=10)
 @click.option('--threshold', default=0.0)
-def run_analyze(project_id, limit, threshold):
+@click.option('--backend-param', '-b', multiple=True)
+def run_analyze(project_id, limit, threshold, backend_param):
     """"
     Analyze a document.
 
@@ -120,7 +132,8 @@ def run_analyze(project_id, limit, threshold):
     """
     project = get_project(project_id)
     text = sys.stdin.read()
-    hits = project.analyze(text, limit, threshold)
+    backend_params = parse_backend_params(backend_param)
+    hits = project.analyze(text, limit, threshold, backend_params)
     for hit in hits:
         click.echo("{}\t<{}>\t{}".format(hit.score, hit.uri, hit.label))
 
@@ -131,7 +144,8 @@ def run_analyze(project_id, limit, threshold):
 @click.argument('subject_file')
 @click.option('--limit', default=10)
 @click.option('--threshold', default=0.0)
-def run_eval(project_id, subject_file, limit, threshold):
+@click.option('--backend-param', '-b', multiple=True)
+def run_eval(project_id, subject_file, limit, threshold, backend_param):
     """"
     Evaluate the analysis result for a document against a gold standard
     given in a subject file.
@@ -141,7 +155,8 @@ def run_eval(project_id, subject_file, limit, threshold):
     """
     project = get_project(project_id)
     text = sys.stdin.read()
-    hits = project.analyze(text, limit, threshold)
+    backend_params = parse_backend_params(backend_param)
+    hits = project.analyze(text, limit, threshold, backend_params)
     with open(subject_file) as subjfile:
         gold_subjects = annif.corpus.SubjectSet(subjfile.read())
 
@@ -157,7 +172,8 @@ def run_eval(project_id, subject_file, limit, threshold):
 @click.argument('directory')
 @click.option('--limit', default=10)
 @click.option('--threshold', default=0.0)
-def run_evaldir(project_id, directory, limit, threshold):
+@click.option('--backend-param', '-b', multiple=True)
+def run_evaldir(project_id, directory, limit, threshold, backend_param):
     """"
     Evaluate the analysis results for a directory with documents against a
     gold standard given in subject files.
@@ -166,6 +182,7 @@ def run_evaldir(project_id, directory, limit, threshold):
            [--threshold=N]
     """
     project = get_project(project_id)
+    backend_params = parse_backend_params(backend_param)
 
     measures = collections.OrderedDict()
     merge_functions = {}
@@ -173,7 +190,7 @@ def run_evaldir(project_id, directory, limit, threshold):
             directory, require_subjects=True):
         with open(docfilename) as docfile:
             text = docfile.read()
-        hits = project.analyze(text, limit, threshold)
+        hits = project.analyze(text, limit, threshold, backend_params)
         with open(subjectfilename) as subjfile:
             gold_subjects = annif.corpus.SubjectSet(subjfile.read())
 

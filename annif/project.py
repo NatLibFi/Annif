@@ -31,7 +31,45 @@ class AnnifProject:
             backends.append((backend, weight))
         return backends
 
-    def analyze(self, text, limit=10, threshold=0.0):
+    def _analyze_with_backends(self, text, backend_params):
+        if backend_params is None:
+            backend_params = {}
+        hits_by_uri = collections.defaultdict(list)
+        for backend, weight in self.backends:
+            beparams = backend_params.get(backend.backend_id, {})
+            hits = [hit for hit in backend.analyze(text, params=beparams)
+                    if hit.score > 0.0]
+            logger.debug(
+                'Got {} hits from backend {}'.format(
+                    len(hits), backend.backend_id))
+            for hit in hits:
+                hits_by_uri[hit.uri].append((hit.score * weight, hit))
+        return hits_by_uri
+
+    @classmethod
+    def _merge_hits(cls, hits_by_uri):
+        merged_hits = []
+        for score_hits in hits_by_uri.values():
+            total = sum([sh[0] for sh in score_hits])
+            hit = annif.hit.AnalysisHit(
+                score_hits[0][1].uri, score_hits[0][1].label, total)
+            merged_hits.append(hit)
+        return merged_hits
+
+    @classmethod
+    def _filter_hits(cls, hits, limit, threshold):
+        hits.sort(key=lambda hit: hit.score, reverse=True)
+        hits = hits[:limit]
+        logger.debug(
+            '{} hits after applying limit {}'.format(
+                len(hits), limit))
+        hits = [hit for hit in hits if hit.score >= threshold]
+        logger.debug(
+            '{} hits after applying threshold {}'.format(
+                len(hits), threshold))
+        return hits
+
+    def analyze(self, text, limit=10, threshold=0.0, backend_params=None):
         """Analyze the given text by passing it to backends and joining the
         results. Returns a list of AnalysisHit objects ordered by decreasing
         score. The limit parameter defines the maximum number of hits to return.
@@ -39,33 +77,10 @@ class AnnifProject:
 
         logger.debug('Analyzing text "{}..." (len={})'.format(
             text[:20], len(text)))
-        hits_by_uri = collections.defaultdict(list)
-        for backend, weight in self.backends:
-            hits = backend.analyze(text)
-            logger.debug(
-                'Got {} hits from backend {}'.format(
-                    len(hits), backend.backend_id))
-            for hit in hits:
-                hits_by_uri[hit.uri].append((hit.score * weight, hit))
-
-        merged_hits = []
-        for score_hits in hits_by_uri.values():
-            total = sum([sh[0] for sh in score_hits])
-            hit = annif.hit.AnalysisHit(
-                score_hits[0][1].uri, score_hits[0][1].label, total)
-            merged_hits.append(hit)
-
+        hits_by_uri = self._analyze_with_backends(text, backend_params)
+        merged_hits = self._merge_hits(hits_by_uri)
         logger.debug('{} hits after merging'.format(len(merged_hits)))
-        merged_hits.sort(key=lambda hit: hit.score, reverse=True)
-        merged_hits = merged_hits[:limit]
-        logger.debug(
-            '{} hits after applying limit {}'.format(
-                len(merged_hits), limit))
-        merged_hits = [hit for hit in merged_hits if hit.score >= threshold]
-        logger.debug(
-            '{} hits after applying threshold {}'.format(
-                len(merged_hits), threshold))
-        return merged_hits
+        return self._filter_hits(merged_hits, limit, threshold)
 
     def load_subjects(self, subjects):
         for backend, weight in self.backends:

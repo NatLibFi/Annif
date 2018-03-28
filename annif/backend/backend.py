@@ -33,10 +33,18 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         pass  # default is to do nothing, subclasses may override
 
     @abc.abstractmethod
-    def analyze(self, text):
+    def _analyze(self, text, params):
+        """This method should implemented by backends. It implements
+        the analyze functionality, with pre-processed parameters."""
+        pass
+
+    def analyze(self, text, params=None):
         """Analyze some input text and return a list of subjects represented
         as a list of AnalysisHit objects."""
-        pass
+        beparams = dict(self.params)
+        if params is not None:
+            beparams.update(params)
+        return self._analyze(text, params=beparams)
 
     def debug(self, message):
         """Log a debug message from this backend"""
