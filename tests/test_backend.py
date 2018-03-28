@@ -6,6 +6,22 @@ import annif
 import annif.backend
 
 
+def test_get_backend_nonexistent():
+    with pytest.raises(ValueError):
+        annif.backend.get_backend_type("nonexistent")
+
+
+def test_get_backend_type_dummy(app):
+    dummy_type = annif.backend.get_backend_type("dummy")
+    dummy = dummy_type(backend_id='dummy', params={},
+                       datadir=app.config['DATADIR'])
+    result = dummy.analyze('this is some text')
+    assert len(result) == 1
+    assert result[0].uri == 'http://example.org/dummy'
+    assert result[0].label == 'dummy'
+    assert result[0].score == 1.0
+
+
 def test_get_backend_dummy(app):
     with app.app_context():
         dummy = annif.backend.get_backend("dummy")
