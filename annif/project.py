@@ -55,7 +55,7 @@ class AnnifProject:
                 score_hits[0][1].uri, score_hits[0][1].label, total)
             merged_hits.append(hit)
         return merged_hits
-    
+
     @classmethod
     def _filter_hits(cls, hits, limit, threshold):
         hits.sort(key=lambda hit: hit.score, reverse=True)
