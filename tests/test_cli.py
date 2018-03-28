@@ -217,7 +217,7 @@ def test_evaldir(tmpdir):
     assert int(false_negatives.group(1)) == 1
 
 
-def test_evaldir(tmpdir):
+def test_evaldir_param(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('dummy')
     tmpdir.join('doc2.txt').write('doc2')
