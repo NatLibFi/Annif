@@ -31,14 +31,7 @@ class AnnifProject:
             backends.append((backend, weight))
         return backends
 
-    def analyze(self, text, limit=10, threshold=0.0, backend_params={}):
-        """Analyze the given text by passing it to backends and joining the
-        results. Returns a list of AnalysisHit objects ordered by decreasing
-        score. The limit parameter defines the maximum number of hits to return.
-        Only hits whose score is over the threshold are returned."""
-
-        logger.debug('Analyzing text "{}..." (len={})'.format(
-            text[:20], len(text)))
+    def _analyze_with_backends(self, text, backend_params):
         hits_by_uri = collections.defaultdict(list)
         for backend, weight in self.backends:
             beparams = backend_params.get(backend.backend_id, {})
@@ -49,13 +42,27 @@ class AnnifProject:
                     len(hits), backend.backend_id))
             for hit in hits:
                 hits_by_uri[hit.uri].append((hit.score * weight, hit))
-
+        return hits_by_uri
+    
+    def _merge_hits(self, hits_by_uri):
         merged_hits = []
         for score_hits in hits_by_uri.values():
             total = sum([sh[0] for sh in score_hits])
             hit = annif.hit.AnalysisHit(
                 score_hits[0][1].uri, score_hits[0][1].label, total)
             merged_hits.append(hit)
+        return merged_hits
+    
+    def analyze(self, text, limit=10, threshold=0.0, backend_params={}):
+        """Analyze the given text by passing it to backends and joining the
+        results. Returns a list of AnalysisHit objects ordered by decreasing
+        score. The limit parameter defines the maximum number of hits to return.
+        Only hits whose score is over the threshold are returned."""
+
+        logger.debug('Analyzing text "{}..." (len={})'.format(
+            text[:20], len(text)))
+        hits_by_uri = self._analyze_with_backends(text, backend_params)
+        merged_hits = self._merge_hits(hits_by_uri)
 
         logger.debug('{} hits after merging'.format(len(merged_hits)))
         merged_hits.sort(key=lambda hit: hit.score, reverse=True)
