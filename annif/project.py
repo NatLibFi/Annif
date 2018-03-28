@@ -55,6 +55,19 @@ class AnnifProject:
                 score_hits[0][1].uri, score_hits[0][1].label, total)
             merged_hits.append(hit)
         return merged_hits
+    
+    @classmethod
+    def _filter_hits(cls, hits, limit, threshold):
+        hits.sort(key=lambda hit: hit.score, reverse=True)
+        hits = hits[:limit]
+        logger.debug(
+            '{} hits after applying limit {}'.format(
+                len(hits), limit))
+        hits = [hit for hit in hits if hit.score >= threshold]
+        logger.debug(
+            '{} hits after applying threshold {}'.format(
+                len(hits), threshold))
+        return hits
 
     def analyze(self, text, limit=10, threshold=0.0, backend_params=None):
         """Analyze the given text by passing it to backends and joining the
@@ -66,18 +79,8 @@ class AnnifProject:
             text[:20], len(text)))
         hits_by_uri = self._analyze_with_backends(text, backend_params)
         merged_hits = self._merge_hits(hits_by_uri)
-
         logger.debug('{} hits after merging'.format(len(merged_hits)))
-        merged_hits.sort(key=lambda hit: hit.score, reverse=True)
-        merged_hits = merged_hits[:limit]
-        logger.debug(
-            '{} hits after applying limit {}'.format(
-                len(merged_hits), limit))
-        merged_hits = [hit for hit in merged_hits if hit.score >= threshold]
-        logger.debug(
-            '{} hits after applying threshold {}'.format(
-                len(merged_hits), threshold))
-        return merged_hits
+        return self._filter_hits(merged_hits, limit, threshold)
 
     def load_subjects(self, subjects):
         for backend, weight in self.backends:
