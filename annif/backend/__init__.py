@@ -28,12 +28,7 @@ from . import tfidf
 register_backend_type(tfidf.TFIDFBackend)
 
 
-def create_backends(app, backend_types):
-    return backends
-
-
-def init_backends(app):
-    backends_file = app.config['BACKENDS_FILE']
+def _create_backends(backends_file, datadir):
     config = configparser.ConfigParser()
     with open(backends_file) as bef:
         config.read_file(bef)
@@ -49,9 +44,14 @@ def init_backends(app):
         backends[backend_id] = beclass(
             backend_id,
             params=config[backend_id],
-            datadir=app.config['DATADIR'])
+            datadir=datadir)
+    return backends
 
-    app.annif_backends = backends
+
+def init_backends(app):
+    backends_file = app.config['BACKENDS_FILE']
+    datadir = app.config['DATADIR']
+    app.annif_backends = _create_backends(backends_file, datadir)
 
 
 def get_backends():
