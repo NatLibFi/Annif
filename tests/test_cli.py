@@ -100,6 +100,16 @@ def test_analyze_nonexistent():
     assert result.exit_code != 0
 
 
+def test_analyze_param():
+    result = runner.invoke(
+        annif.cli.cli,
+        ['analyze', '--backend-param', 'dummy.score=0.8', 'dummy-fi'],
+        input='kissa')
+    assert not result.exception
+    assert result.output == "0.8\t<http://example.org/dummy>\tdummy\n"
+    assert result.exit_code == 0
+
+
 def test_eval_label(tmpdir):
     keyfile = tmpdir.join('dummy.key')
     keyfile.write("dummy\nanother\n")
@@ -127,6 +137,19 @@ def test_eval_label(tmpdir):
     assert int(false_positives.group(1)) == 0
     false_negatives = re.search('False negatives:\s+(\d+)', result.output)
     assert int(false_negatives.group(1)) == 1
+
+
+def test_eval_param(tmpdir):
+    keyfile = tmpdir.join('dummy.key')
+    keyfile.write("dummy\nanother\n")
+
+    result = runner.invoke(annif.cli.cli, ['eval', '--backend-param', 'dummy.score=0.0', 'dummy-en', str(keyfile)], input='nothing special')
+    assert not result.exception
+    assert result.exit_code == 0
+
+    # since zero scores were set with the parameter, there should be no hits at all
+    recall = re.search('Recall:\s+(\d.\d+)', result.output)
+    assert float(recall.group(1)) == 0.0
 
 
 def test_eval_uri(tmpdir):
@@ -192,3 +215,19 @@ def test_evaldir(tmpdir):
     assert int(false_positives.group(1)) == 1
     false_negatives = re.search('False negatives:\s+(\d+)', result.output)
     assert int(false_negatives.group(1)) == 1
+
+
+def test_evaldir(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    tmpdir.join('doc3.txt').write('doc3')
+
+    result = runner.invoke(annif.cli.cli, ['evaldir', '--backend-param', 'dummy.score=0.0', 'dummy-en', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    # since zero scores were set with the parameter, there should be no hits at all
+    recall = re.search('Recall:\s+(\d.\d+)', result.output)
+    assert float(recall.group(1)) == 0.0

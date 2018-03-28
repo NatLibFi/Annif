@@ -33,7 +33,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         pass  # default is to do nothing, subclasses may override
 
     @abc.abstractmethod
-    def analyze(self, text):
+    def analyze(self, text, params={}):
         """Analyze some input text and return a list of subjects represented
         as a list of AnalysisHit objects."""
         pass

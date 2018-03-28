@@ -185,13 +185,13 @@ class TFIDFBackend(backend.AnnifBackend):
                     len(chunk_results)))
         return results
 
-    def analyze(self, text):
+    def analyze(self, text, params={}):
         self.initialize()
         self.debug('Analyzing text "{}..." (len={})'.format(
             text[:20], len(text)))
         sentences = self._analyzer.tokenize_sentences(text)
         self.debug('Found {} sentences'.format(len(sentences)))
-        chunksize = int(self.params['chunksize'])
+        chunksize = int(params.get('chunksize', self.params['chunksize']))
         chunks = []  # chunks represented as TF-IDF normalized vectors
         for i in range(0, len(sentences), chunksize):
             chunktext = ' '.join(sentences[i:i + chunksize])
