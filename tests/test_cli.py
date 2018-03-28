@@ -82,7 +82,7 @@ def test_drop_subject():
 def test_analyze():
     result = runner.invoke(
         annif.cli.cli,
-        ['analyze', 'myproject-fi'],
+        ['analyze', 'dummy-fi'],
         input='kissa')
     assert not result.exception
     assert result.output == "1.0\t<http://example.org/dummy>\tdummy\n"
@@ -104,7 +104,7 @@ def test_eval_label(tmpdir):
     keyfile = tmpdir.join('dummy.key')
     keyfile.write("dummy\nanother\n")
 
-    result = runner.invoke(annif.cli.cli, ['eval', 'myproject-en', str(keyfile)], input='nothing special')
+    result = runner.invoke(annif.cli.cli, ['eval', 'dummy-en', str(keyfile)], input='nothing special')
     assert not result.exception
     assert result.exit_code == 0
 
@@ -135,7 +135,7 @@ def test_eval_uri(tmpdir):
         "<http://example.org/one>\tone\n<http://example.org/dummy>\tdummy\n")
 
     result = runner.invoke(
-        annif.cli.cli, ['eval', 'myproject-en', str(keyfile)], input='nothing special')
+        annif.cli.cli, ['eval', 'dummy-en', str(keyfile)], input='nothing special')
     assert not result.exception
     assert result.exit_code == 0
 
@@ -167,7 +167,7 @@ def test_evaldir(tmpdir):
     tmpdir.join('doc2.key').write('none')
     tmpdir.join('doc3.txt').write('doc3')
 
-    result = runner.invoke(annif.cli.cli, ['evaldir', 'myproject-en', str(tmpdir)])
+    result = runner.invoke(annif.cli.cli, ['evaldir', 'dummy-en', str(tmpdir)])
     assert not result.exception
     assert result.exit_code == 0
 
