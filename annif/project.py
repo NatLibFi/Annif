@@ -32,6 +32,8 @@ class AnnifProject:
         return backends
 
     def _analyze_with_backends(self, text, backend_params):
+        if backend_params is None:
+            backend_params = {}
         hits_by_uri = collections.defaultdict(list)
         for backend, weight in self.backends:
             beparams = backend_params.get(backend.backend_id, {})
@@ -54,7 +56,7 @@ class AnnifProject:
             merged_hits.append(hit)
         return merged_hits
 
-    def analyze(self, text, limit=10, threshold=0.0, backend_params={}):
+    def analyze(self, text, limit=10, threshold=0.0, backend_params=None):
         """Analyze the given text by passing it to backends and joining the
         results. Returns a list of AnalysisHit objects ordered by decreasing
         score. The limit parameter defines the maximum number of hits to return.
