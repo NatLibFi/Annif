@@ -1,5 +1,6 @@
 """Unit tests for backends in Annif"""
 
+import py.path
 import pytest
 import annif
 import annif.backend
@@ -10,9 +11,10 @@ def test_get_backend_nonexistent():
         annif.backend.get_backend_type("nonexistent")
 
 
-def test_get_backend_type_dummy():
+def test_get_backend_type_dummy(app):
     dummy_type = annif.backend.get_backend_type("dummy")
-    dummy = dummy_type(backend_id='dummy', params={})
+    dummy = dummy_type(backend_id='dummy', params={},
+                       datadir=app.config['DATADIR'])
     result = dummy.analyze('this is some text')
     assert len(result) == 1
     assert result[0].uri == 'http://example.org/dummy'
@@ -20,8 +22,9 @@ def test_get_backend_type_dummy():
     assert result[0].score == 1.0
 
 
-def test_get_backend_dummy():
-    dummy = annif.backend.get_backend("dummy")
+def test_get_backend_dummy(app):
+    with app.app_context():
+        dummy = annif.backend.get_backend("dummy")
     assert dummy.params["key"] == "value"
     result = dummy.analyze('this is some text')
     assert len(result) == 1
@@ -30,20 +33,23 @@ def test_get_backend_dummy():
     assert result[0].score == 1.0
 
 
-def test_get_backend_tfidf_fi():
-    tfidf_fi = annif.backend.get_backend("tfidf-fi")
+def test_get_backend_tfidf_fi(app):
+    with app.app_context():
+        tfidf_fi = annif.backend.get_backend("tfidf-fi")
     assert tfidf_fi.params["analyzer"] == "snowball(finnish)"
 
 
-def test_get_backend_tfidf_en():
-    tfidf_en = annif.backend.get_backend("tfidf-en")
+def test_get_backend_tfidf_en(app):
+    with app.app_context():
+        tfidf_en = annif.backend.get_backend("tfidf-en")
     assert tfidf_en.params["analyzer"] == "snowball(english)"
 
 
-def test_project_datadir(tmpdir):
-    annif.cxapp.app.config['DATADIR'] = str(tmpdir)
-    dummy = annif.backend.get_backend('dummy')
-    datadir = dummy._get_datadir()
-    assert datadir == tmpdir.join('backends/dummy')
-    assert tmpdir.join('backends').exists()
-    assert tmpdir.join('backends/dummy').exists()
+def test_backend_datadir(app):
+    with app.app_context():
+        dummy = annif.backend.get_backend('dummy')
+    datadir = py.path.local(app.config['DATADIR'])
+    bedatadir = dummy._get_datadir()
+    assert str(datadir.join('backends/dummy')) == str(py.path.local(bedatadir))
+    assert datadir.join('backends').exists()
+    assert datadir.join('backends/dummy').exists()

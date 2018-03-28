@@ -41,7 +41,7 @@ Set the `FLASK_APP` enviroment variable:
 
 Set a shell alias for the application: 
 
-    alias annif=flask
+    alias annif="python -m annif.cli"
 
 Start up the application
 

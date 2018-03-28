@@ -4,7 +4,7 @@ import unittest.mock
 import annif.backend.http
 
 
-def test_http_analyze():
+def test_http_analyze(app):
     with unittest.mock.patch('requests.post') as mock_request:
         # create a mock response whose .json() method returns the list that we
         # define here
@@ -18,7 +18,8 @@ def test_http_analyze():
             backend_id='http',
             params={
                 'endpoint': 'http://api.example.org/analyze',
-                'project': 'dummy'})
+                'project': 'dummy'},
+            datadir=app.config['DATADIR'])
         result = http.analyze('this is some text')
         assert len(result) == 1
         assert result[0].uri == 'http://example.org/http'
@@ -26,7 +27,7 @@ def test_http_analyze():
         assert result[0].score == 1.0
 
 
-def test_http_analyze_zero_score():
+def test_http_analyze_zero_score(app):
     with unittest.mock.patch('requests.post') as mock_request:
         # create a mock response whose .json() method returns the list that we
         # define here
@@ -40,6 +41,7 @@ def test_http_analyze_zero_score():
             backend_id='http',
             params={
                 'endpoint': 'http://api.example.org/analyze',
-                'project': 'dummy'})
+                'project': 'dummy'},
+            datadir=app.config['DATADIR'])
         result = http.analyze('this is some text')
         assert len(result) == 0

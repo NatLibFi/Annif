@@ -3,18 +3,26 @@
 import random
 import re
 import os.path
+import py.path
+import pytest
 from click.testing import CliRunner
 import annif.cli
 
-runner = CliRunner()
+runner = CliRunner(env={'ANNIF_CONFIG': 'config.TestingConfig'})
 
 # Generate a random project name to use in tests
 TEMP_PROJECT = ''.join(
     random.choice('abcdefghiklmnopqrstuvwxyz') for _ in range(8))
 
+@pytest.fixture(scope='session')
+def datadir(app):
+    with app.app_context():
+        dir = py.path.local(app.config['DATADIR'])
+    return dir
+
 
 def test_list_projects():
-    result = runner.invoke(annif.cli.run_list_projects)
+    result = runner.invoke(annif.cli.cli, ["list-projects"])
     assert not result.exception
     assert result.exit_code == 0
 
@@ -22,17 +30,21 @@ def test_list_projects():
 def test_list_projects_bad_arguments():
     # The listprojects function does not accept any arguments, it should fail
     # if such are provided.
-    assert runner.invoke(annif.cli.run_list_projects, ['moi']).exit_code != 0
+    assert runner.invoke(
+        annif.cli.cli, [
+            'list-projects', 'moi']).exit_code != 0
     assert runner.invoke(
         annif.cli.run_list_projects, ['moi', '--debug', 'y']).exit_code != 0
 
 
 def test_show_project():
     assert runner.invoke(
-        annif.cli.run_show_project,
-        [TEMP_PROJECT]).exit_code != 0
+        annif.cli.cli,
+        ['show-project', TEMP_PROJECT]).exit_code != 0
     # Test should not fail even if the user queries for a non-existent project.
-    failed_result = runner.invoke(annif.cli.run_show_project, ['nonexistent'])
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'show-project', 'nonexistent'])
     assert failed_result.exception
 
 
@@ -44,24 +56,23 @@ def test_show_subject():
     pass
 
 
-def test_load(tmpdir):
-    annif.cxapp.app.config['DATADIR'] = str(tmpdir)
+def test_load(datadir):
     subjdir = os.path.join(
         os.path.dirname(__file__),
         'corpora',
         'archaeology',
         'subjects')
-    result = runner.invoke(annif.cli.run_load, ['tfidf-fi', subjdir])
+    result = runner.invoke(annif.cli.cli, ['load', 'tfidf-fi', subjdir])
     assert not result.exception
     assert result.exit_code == 0
-    assert tmpdir.join('backends/tfidf-fi/subjects').exists()
-    assert tmpdir.join('backends/tfidf-fi/subjects').size() > 0
-    assert tmpdir.join('backends/tfidf-fi/dictionary').exists()
-    assert tmpdir.join('backends/tfidf-fi/dictionary').size() > 0
-    assert tmpdir.join('backends/tfidf-fi/tfidf').exists()
-    assert tmpdir.join('backends/tfidf-fi/tfidf').size() > 0
-    assert tmpdir.join('backends/tfidf-fi/index').exists()
-    assert tmpdir.join('backends/tfidf-fi/index').size() > 0
+    assert datadir.join('backends/tfidf-fi/subjects').exists()
+    assert datadir.join('backends/tfidf-fi/subjects').size() > 0
+    assert datadir.join('backends/tfidf-fi/dictionary').exists()
+    assert datadir.join('backends/tfidf-fi/dictionary').size() > 0
+    assert datadir.join('backends/tfidf-fi/tfidf').exists()
+    assert datadir.join('backends/tfidf-fi/tfidf').size() > 0
+    assert datadir.join('backends/tfidf-fi/index').exists()
+    assert datadir.join('backends/tfidf-fi/index').size() > 0
 
 
 def test_drop_subject():
@@ -70,8 +81,8 @@ def test_drop_subject():
 
 def test_analyze():
     result = runner.invoke(
-        annif.cli.run_analyze,
-        ['myproject-fi'],
+        annif.cli.cli,
+        ['analyze', 'dummy-fi'],
         input='kissa')
     assert not result.exception
     assert result.output == "1.0\t<http://example.org/dummy>\tdummy\n"
@@ -80,8 +91,8 @@ def test_analyze():
 
 def test_analyze_nonexistent():
     result = runner.invoke(
-        annif.cli.run_analyze,
-        [TEMP_PROJECT],
+        annif.cli.cli,
+        ['analyze', TEMP_PROJECT],
         input='kissa')
     assert result.exception
     assert result.output == "No projects found with id '{}'.\n".format(
@@ -93,9 +104,7 @@ def test_eval_label(tmpdir):
     keyfile = tmpdir.join('dummy.key')
     keyfile.write("dummy\nanother\n")
 
-    result = runner.invoke(
-        annif.cli.run_eval, [
-            'myproject-en', str(keyfile)], input='nothing special')
+    result = runner.invoke(annif.cli.cli, ['eval', 'dummy-en', str(keyfile)], input='nothing special')
     assert not result.exception
     assert result.exit_code == 0
 
@@ -126,8 +135,7 @@ def test_eval_uri(tmpdir):
         "<http://example.org/one>\tone\n<http://example.org/dummy>\tdummy\n")
 
     result = runner.invoke(
-        annif.cli.run_eval, [
-            'myproject-en', str(keyfile)], input='nothing special')
+        annif.cli.cli, ['eval', 'dummy-en', str(keyfile)], input='nothing special')
     assert not result.exception
     assert result.exit_code == 0
 
@@ -159,9 +167,7 @@ def test_evaldir(tmpdir):
     tmpdir.join('doc2.key').write('none')
     tmpdir.join('doc3.txt').write('doc3')
 
-    result = runner.invoke(
-        annif.cli.run_evaldir, [
-            'myproject-en', str(tmpdir)])
+    result = runner.invoke(annif.cli.cli, ['evaldir', 'dummy-en', str(tmpdir)])
     assert not result.exception
     assert result.exit_code == 0
 

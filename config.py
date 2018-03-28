@@ -20,3 +20,6 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
+    PROJECTS_FILE = 'tests/projects.cfg'
+    BACKENDS_FILE = 'tests/backends.cfg'
+    DATADIR = 'tests/data'

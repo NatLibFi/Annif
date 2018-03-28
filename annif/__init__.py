@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
 
+import os
 import connexion
 import logging
 
-# 'cxapp' here is the Connexion application that has a normal Flask app as a
-# property (cxapp.app)
+logger = logging.getLogger('annif')
 
-cxapp = connexion.App(__name__, specification_dir='../swagger/')
+import annif.backend
 
-cxapp.app.config.from_object('config.Config')
 
-# make the Flask logger easily available to the rest of the app
-logger = cxapp.app.logger
+def create_app(script_info=None, config_name=None):
+    # 'cxapp' here is the Connexion application that has a normal Flask app
+    # as a property (cxapp.app)
 
-# initialize CLI commands
-import annif.cli
+    cxapp = connexion.App(__name__, specification_dir='../swagger/')
+    if config_name is None:
+        config_name = os.environ.get('ANNIF_CONFIG') or 'config.Config'
+    cxapp.app.config.from_object(config_name)
+    cxapp.app.config.from_envvar('ANNIF_SETTINGS', silent=True)
 
-cxapp.add_api('annif.yaml')
+    cxapp.add_api('annif.yaml')
 
-application = cxapp.app
+    annif.backend.init_backends(cxapp.app)
+
+    # return the Flask app
+    return cxapp.app
