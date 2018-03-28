@@ -44,7 +44,8 @@ class AnnifProject:
                 hits_by_uri[hit.uri].append((hit.score * weight, hit))
         return hits_by_uri
 
-    def _merge_hits(self, hits_by_uri):
+    @classmethod
+    def _merge_hits(cls, hits_by_uri):
         merged_hits = []
         for score_hits in hits_by_uri.values():
             total = sum([sh[0] for sh in score_hits])
