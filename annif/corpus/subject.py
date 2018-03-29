@@ -67,3 +67,21 @@ class SubjectIndex:
                     yield Subject(uri, label, None)
 
         return cls(file_as_corpus(path))
+
+
+class VectorCorpus:
+    """A class that wraps a subject corpus so it can be iterated as lists of
+    vectors, by using a dictionary to map words to integers."""
+
+    def __init__(self, corpus, dictionary, analyzer):
+        self.corpus = corpus
+        self.dictionary = dictionary
+        self.analyzer = analyzer
+
+    def __iter__(self):
+        """Iterate through the subject directory, yielding vectors that are
+        derived from subjects using the given analyzer and dictionary."""
+
+        for subject in self.corpus:
+            yield self.dictionary.doc2bow(
+                self.analyzer.tokenize_words(subject.text))

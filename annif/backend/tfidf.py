@@ -3,30 +3,11 @@ TF-IDF normalized bag-of-words vector space"""
 
 import collections
 import os.path
-import gensim.models
 import gensim.similarities
 import annif.corpus
 import annif.util
 from annif.hit import AnalysisHit
 from . import backend
-
-
-class VectorCorpus:
-    """A class that wraps a subject corpus so it can be iterated as lists of
-    vectors, by using a dictionary to map words to integers."""
-
-    def __init__(self, corpus, dictionary, analyzer):
-        self.corpus = corpus
-        self.dictionary = dictionary
-        self.analyzer = analyzer
-
-    def __iter__(self):
-        """Iterate through the subject directory, yielding vectors that are
-        derived from subjects using the given analyzer and dictionary."""
-
-        for subject in self.corpus:
-            yield self.dictionary.doc2bow(
-                self.analyzer.tokenize_words(subject.text))
 
 
 class TFIDFBackend(backend.AnnifBackend):
@@ -36,35 +17,21 @@ class TFIDFBackend(backend.AnnifBackend):
     MAX_CHUNK_SUBJECTS = 100
 
     # defaults for uninitialized instances
-    _tfidf = None
     _index = None
 
-    def _initialize_tfidf(self):
-        if self._tfidf is None:
-            path = os.path.join(self._get_datadir(), 'tfidf')
-            self.debug('loading TF-IDF model from {}'.format(path))
-            self._tfidf = gensim.models.TfidfModel.load(path)
-
-    def _initialize_index(self):
+    def initialize(self):
         if self._index is None:
             path = os.path.join(self._get_datadir(), 'index')
             self.debug('loading similarity index from {}'.format(path))
             self._index = gensim.similarities.SparseMatrixSimilarity.load(path)
 
-    def initialize(self):
-        self._initialize_tfidf()
-        self._initialize_index()
-
     def load_subjects(self, subjects, project):
-        veccorpus = VectorCorpus(subjects,
-                                 project.dictionary,
-                                 project.analyzer)
-        self.info('creating TF-IDF model')
-        self._tfidf = gensim.models.TfidfModel(veccorpus)
-        annif.util.atomic_save(self._tfidf, self._get_datadir(), 'tfidf')
         self.info('creating similarity index')
+        veccorpus = annif.corpus.VectorCorpus(subjects,
+                                              project.dictionary,
+                                              project.analyzer)
         self._index = gensim.similarities.SparseMatrixSimilarity(
-            self._tfidf[veccorpus], num_features=len(project.dictionary))
+            project.tfidf[veccorpus], num_features=len(project.dictionary))
         annif.util.atomic_save(self._index, self._get_datadir(), 'index')
 
     def _analyze_chunks(self, chunks):
@@ -112,7 +79,7 @@ class TFIDFBackend(backend.AnnifBackend):
             chunktext = ' '.join(sentences[i:i + chunksize])
             chunkbow = project.dictionary.doc2bow(
                 project.analyzer.tokenize_words(chunktext))
-            chunks.append(self._tfidf[chunkbow])
+            chunks.append(project.tfidf[chunkbow])
         self.debug('Split sentences into {} chunks'.format(len(chunks)))
         chunk_results = self._analyze_chunks(chunks)
         return self._merge_chunk_results(chunk_results, project)

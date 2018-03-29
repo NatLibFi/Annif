@@ -5,6 +5,7 @@ import configparser
 import logging
 import os.path
 import gensim.corpora
+import gensim.models
 from flask import current_app
 import annif
 import annif.analyzer
@@ -21,6 +22,7 @@ class AnnifProject:
     _analyzer = None
     _subjects = None
     _dictionary = None
+    _tfidf = None
 
     def __init__(self, project_id, config, datadir, all_backends):
         self.project_id = project_id
@@ -113,6 +115,14 @@ class AnnifProject:
             self._dictionary = gensim.corpora.Dictionary.load(path)
         return self._dictionary
 
+    @property
+    def tfidf(self):
+        if self._tfidf is None:
+            path = os.path.join(self._get_datadir(), 'tfidf')
+            logger.debug('loading TF-IDF model from {}'.format(path))
+            self._tfidf = gensim.models.TfidfModel.load(path)
+        return self._tfidf
+
     def analyze(self, text, limit=10, threshold=0.0, backend_params=None):
         """Analyze the given text by passing it to backends and joining the
         results. Returns a list of AnalysisHit objects ordered by decreasing
@@ -138,6 +148,12 @@ class AnnifProject:
             self._dictionary,
             self._get_datadir(),
             'dictionary')
+        veccorpus = annif.corpus.VectorCorpus(subjects,
+                                              self.dictionary,
+                                              self.analyzer)
+        logger.info('creating TF-IDF model')
+        self._tfidf = gensim.models.TfidfModel(veccorpus)
+        annif.util.atomic_save(self._tfidf, self._get_datadir(), 'tfidf')
 
         for backend, weight in self.backends:
             logger.debug(

@@ -5,6 +5,7 @@ import annif.backend
 import annif.corpus
 import os.path
 import gensim.corpora
+import gensim.models
 import pytest
 import unittest.mock
 
@@ -32,6 +33,10 @@ def project(subject_corpus):
     proj.dictionary = gensim.corpora.Dictionary(
         (proj.analyzer.tokenize_words(subject.text)
          for subject in subject_corpus))
+    veccorpus = annif.corpus.VectorCorpus(subject_corpus,
+                                          proj.dictionary,
+                                          proj.analyzer)
+    proj.tfidf = gensim.models.TfidfModel(veccorpus)
     return proj
 
 
@@ -43,10 +48,7 @@ def test_tfidf_load_subjects(datadir, subject_corpus, project):
         datadir=str(datadir))
 
     tfidf.load_subjects(subject_corpus, project)
-    assert tfidf._tfidf is not None
     assert len(tfidf._index) > 0
-    assert datadir.join('backends/tfidf/tfidf').exists()
-    assert datadir.join('backends/tfidf/tfidf').size() > 0
     assert datadir.join('backends/tfidf/index').exists()
     assert datadir.join('backends/tfidf/index').size() > 0
 
