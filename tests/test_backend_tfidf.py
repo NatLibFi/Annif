@@ -5,6 +5,7 @@ import annif.backend
 import annif.corpus
 import os.path
 import pytest
+import unittest.mock
 
 
 @pytest.fixture(scope='module')
@@ -12,11 +13,18 @@ def datadir(tmpdir_factory):
     return tmpdir_factory.mktemp('data')
 
 
-def test_tfidf_load_subjects(datadir):
+@pytest.fixture(scope='module')
+def project():
+    proj = unittest.mock.Mock()
+    proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
+    return proj
+
+
+def test_tfidf_load_subjects(datadir, project):
     tfidf_type = annif.backend.get_backend_type("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
-        params={'analyzer': 'snowball(finnish)', 'chunksize': 10, 'limit': 10},
+        params={'chunksize': 10, 'limit': 10},
         datadir=str(datadir))
 
     subjdir = os.path.join(
@@ -25,7 +33,7 @@ def test_tfidf_load_subjects(datadir):
         'archaeology',
         'subjects')
     subjects = annif.corpus.SubjectDirectory(subjdir)
-    tfidf.load_subjects(subjects)
+    tfidf.load_subjects(subjects, project)
     assert len(tfidf._subjects) == 125
     assert len(tfidf._dictionary) > 0
     assert tfidf._tfidf is not None
@@ -40,11 +48,11 @@ def test_tfidf_load_subjects(datadir):
     assert datadir.join('backends/tfidf/index').size() > 0
 
 
-def test_tfidf_analyze(datadir):
+def test_tfidf_analyze(datadir, project):
     tfidf_type = annif.backend.get_backend_type("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
-        params={'analyzer': 'snowball(finnish)', 'chunksize': 1, 'limit': 10},
+        params={'chunksize': 1, 'limit': 10},
         datadir=str(datadir))
 
     results = tfidf.analyze("""Arkeologiaa sanotaan joskus myös
@@ -52,7 +60,7 @@ def test_tfidf_analyze(datadir):
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
-        pohjaan.""")
+        pohjaan.""", project)
 
     assert len(results) == 10
     assert 'http://www.yso.fi/onto/yso/p1265' in [
@@ -60,13 +68,13 @@ def test_tfidf_analyze(datadir):
     assert 'arkeologia' in [result.label for result in results]
 
 
-def test_tfidf_analyze_unknown(datadir):
+def test_tfidf_analyze_unknown(datadir, project):
     tfidf_type = annif.backend.get_backend_type("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
         params={'analyzer': 'snowball(finnish)', 'chunksize': 1, 'limit': 10},
         datadir=str(datadir))
 
-    results = tfidf.analyze("abcdefghijk")  # unknown word
+    results = tfidf.analyze("abcdefghijk", project)  # unknown word
 
     assert len(results) == 0

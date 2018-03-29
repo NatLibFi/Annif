@@ -10,7 +10,7 @@ from . import backend
 class HTTPBackend(backend.AnnifBackend):
     name = "http"
 
-    def _analyze(self, text, params):
+    def _analyze(self, text, project, params):
         data = {'text': text, 'project': params['project']}
         req = requests.post(params['endpoint'], data=data)
         return [AnalysisHit(h['uri'], h['label'], h['score'])

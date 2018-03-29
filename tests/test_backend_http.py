@@ -20,7 +20,7 @@ def test_http_analyze(app):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             datadir=app.config['DATADIR'])
-        result = http.analyze('this is some text')
+        result = http.analyze('this is some text', project=None)
         assert len(result) == 1
         assert result[0].uri == 'http://example.org/http'
         assert result[0].label == 'http'
@@ -43,5 +43,5 @@ def test_http_analyze_zero_score(app):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             datadir=app.config['DATADIR'])
-        result = http.analyze('this is some text')
+        result = http.analyze('this is some text', project=None)
         assert len(result) == 0

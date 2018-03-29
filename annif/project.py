@@ -5,6 +5,7 @@ import configparser
 import logging
 from flask import current_app
 import annif
+import annif.analyzer
 import annif.hit
 import annif.backend
 from annif import logger
@@ -13,12 +14,15 @@ from annif import logger
 class AnnifProject:
     """Class representing the configuration of a single Annif project."""
 
-    def __init__(self, project_id, config):
+    def __init__(self, project_id, config, all_backends):
         self.project_id = project_id
         self.language = config['language']
-        self.backends = self._initialize_backends(config['backends'])
+        self.analyzer_spec = config['analyzer']
+        self.backends = self._initialize_backends(config['backends'],
+                                                  all_backends)
+        self._analyzer = None
 
-    def _initialize_backends(self, backends_configuration):
+    def _initialize_backends(self, backends_configuration, all_backends):
         backends = []
         for backenddef in backends_configuration.split(','):
             bedefs = backenddef.strip().split(':')
@@ -27,7 +31,7 @@ class AnnifProject:
                 weight = float(bedefs[1])
             else:
                 weight = 1.0
-            backend = annif.backend.get_backend(backend_id)
+            backend = all_backends[backend_id]
             backends.append((backend, weight))
         return backends
 
@@ -37,8 +41,11 @@ class AnnifProject:
         hits_by_uri = collections.defaultdict(list)
         for backend, weight in self.backends:
             beparams = backend_params.get(backend.backend_id, {})
-            hits = [hit for hit in backend.analyze(text, params=beparams)
-                    if hit.score > 0.0]
+            hits = [
+                hit for hit in backend.analyze(
+                    text,
+                    project=self,
+                    params=beparams) if hit.score > 0.0]
             logger.debug(
                 'Got {} hits from backend {}'.format(
                     len(hits), backend.backend_id))
@@ -69,6 +76,12 @@ class AnnifProject:
                 len(hits), threshold))
         return hits
 
+    @property
+    def analyzer(self):
+        if self._analyzer is None:
+            self._analyzer = annif.analyzer.get_analyzer(self.analyzer_spec)
+        return self._analyzer
+
     def analyze(self, text, limit=10, threshold=0.0, backend_params=None):
         """Analyze the given text by passing it to backends and joining the
         results. Returns a list of AnalysisHit objects ordered by decreasing
@@ -87,7 +100,7 @@ class AnnifProject:
             logger.debug(
                 'Loading subjects for backend {}'.format(
                     backend.backend_id))
-            backend.load_subjects(subjects)
+            backend.load_subjects(subjects, project=self)
 
     def dump(self):
         """return this project as a dict"""
@@ -98,9 +111,7 @@ class AnnifProject:
                 }
 
 
-def get_projects():
-    """return the available projects as a dict of project_id -> AnnifProject"""
-    projects_file = current_app.config['PROJECTS_FILE']
+def _create_projects(projects_file, backends):
     config = configparser.ConfigParser()
     with open(projects_file) as projf:
         config.read_file(projf)
@@ -108,8 +119,19 @@ def get_projects():
     # create AnnifProject objects from the configuration file
     projects = {}
     for project_id in config.sections():
-        projects[project_id] = AnnifProject(project_id, config[project_id])
+        projects[project_id] = AnnifProject(project_id,
+                                            config[project_id], backends)
     return projects
+
+
+def init_projects(app, backends):
+    projects_file = app.config['PROJECTS_FILE']
+    app.annif_projects = _create_projects(projects_file, backends)
+
+
+def get_projects():
+    """return the available projects as a dict of project_id -> AnnifProject"""
+    return current_app.annif_projects
 
 
 def get_project(project_id):

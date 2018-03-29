@@ -13,9 +13,6 @@ class Analyzer(metaclass=abc.ABCMeta):
     name = None
     TOKEN_MIN_LENGTH = 3
 
-    def __init__(self, name):
-        self.name = name
-
     def tokenize_sentences(self, text):
         """Tokenize a piece of text (e.g. a document) into sentences."""
         return nltk.tokenize.sent_tokenize(text)
