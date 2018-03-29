@@ -2,25 +2,41 @@
 
 import collections
 import configparser
-import logging
+import os.path
+import gensim.corpora
+import gensim.models
 from flask import current_app
 import annif
 import annif.analyzer
 import annif.hit
 import annif.backend
+import annif.util
 from annif import logger
 
 
 class AnnifProject:
     """Class representing the configuration of a single Annif project."""
 
-    def __init__(self, project_id, config, all_backends):
+    # defaults for unitialized instances
+    _analyzer = None
+    _subjects = None
+    _dictionary = None
+    _tfidf = None
+
+    def __init__(self, project_id, config, datadir, all_backends):
         self.project_id = project_id
         self.language = config['language']
         self.analyzer_spec = config['analyzer']
         self.backends = self._initialize_backends(config['backends'],
                                                   all_backends)
-        self._analyzer = None
+        self._datadir = os.path.join(datadir, 'projects', self.project_id)
+
+    def _get_datadir(self):
+        """return the path of the directory where this project can store its
+        data files"""
+        if not os.path.exists(self._datadir):
+            os.makedirs(self._datadir)
+        return self._datadir
 
     def _initialize_backends(self, backends_configuration, all_backends):
         backends = []
@@ -47,8 +63,8 @@ class AnnifProject:
                     project=self,
                     params=beparams) if hit.score > 0.0]
             logger.debug(
-                'Got {} hits from backend {}'.format(
-                    len(hits), backend.backend_id))
+                'Got %d hits from backend %s',
+                len(hits), backend.backend_id)
             for hit in hits:
                 hits_by_uri[hit.uri].append((hit.score * weight, hit))
         return hits_by_uri
@@ -68,12 +84,12 @@ class AnnifProject:
         hits.sort(key=lambda hit: hit.score, reverse=True)
         hits = hits[:limit]
         logger.debug(
-            '{} hits after applying limit {}'.format(
-                len(hits), limit))
+            '%d hits after applying limit %d',
+            len(hits), limit)
         hits = [hit for hit in hits if hit.score >= threshold]
         logger.debug(
-            '{} hits after applying threshold {}'.format(
-                len(hits), threshold))
+            '%d hits after applying threshold %f',
+            len(hits), threshold)
         return hits
 
     @property
@@ -82,24 +98,75 @@ class AnnifProject:
             self._analyzer = annif.analyzer.get_analyzer(self.analyzer_spec)
         return self._analyzer
 
+    @property
+    def subjects(self):
+        if self._subjects is None:
+            path = os.path.join(self._get_datadir(), 'subjects')
+            logger.debug('loading subjects from %s', path)
+            self._subjects = annif.corpus.SubjectIndex.load(path)
+        return self._subjects
+
+    @property
+    def dictionary(self):
+        if self._dictionary is None:
+            path = os.path.join(self._get_datadir(), 'dictionary')
+            logger.debug('loading dictionary from %s', path)
+            self._dictionary = gensim.corpora.Dictionary.load(path)
+        return self._dictionary
+
+    @property
+    def tfidf(self):
+        if self._tfidf is None:
+            path = os.path.join(self._get_datadir(), 'tfidf')
+            logger.debug('loading TF-IDF model from %s', path)
+            self._tfidf = gensim.models.TfidfModel.load(path)
+        return self._tfidf
+
     def analyze(self, text, limit=10, threshold=0.0, backend_params=None):
         """Analyze the given text by passing it to backends and joining the
         results. Returns a list of AnalysisHit objects ordered by decreasing
         score. The limit parameter defines the maximum number of hits to
         return. Only hits whose score is over the threshold are returned."""
 
-        logger.debug('Analyzing text "{}..." (len={})'.format(
-            text[:20], len(text)))
+        logger.debug('Analyzing text "%s..." (len=%d)',
+                     text[:20], len(text))
         hits_by_uri = self._analyze_with_backends(text, backend_params)
         merged_hits = self._merge_hits(hits_by_uri)
-        logger.debug('{} hits after merging'.format(len(merged_hits)))
+        logger.debug('%d hits after merging', len(merged_hits))
         return self._filter_hits(merged_hits, limit, threshold)
 
+    def _create_subject_index(self, subjects):
+        logger.info('creating subject index')
+        self._subjects = annif.corpus.SubjectIndex(subjects)
+        annif.util.atomic_save(self._subjects, self._get_datadir(), 'subjects')
+
+    def _create_dictionary(self, subjects):
+        logger.info('creating dictionary')
+        self._dictionary = gensim.corpora.Dictionary(
+            (self.analyzer.tokenize_words(subject.text)
+             for subject in subjects))
+        annif.util.atomic_save(
+            self._dictionary,
+            self._get_datadir(),
+            'dictionary')
+
+    def _create_tfidf(self, subjects):
+        veccorpus = annif.corpus.VectorCorpus(subjects,
+                                              self.dictionary,
+                                              self.analyzer)
+        logger.info('creating TF-IDF model')
+        self._tfidf = gensim.models.TfidfModel(veccorpus)
+        annif.util.atomic_save(self._tfidf, self._get_datadir(), 'tfidf')
+
     def load_subjects(self, subjects):
+        self._create_subject_index(subjects)
+        self._create_dictionary(subjects)
+        self._create_tfidf(subjects)
+
         for backend, weight in self.backends:
             logger.debug(
-                'Loading subjects for backend {}'.format(
-                    backend.backend_id))
+                'Loading subjects for backend %s',
+                backend.backend_id)
             backend.load_subjects(subjects, project=self)
 
     def dump(self):
@@ -111,7 +178,7 @@ class AnnifProject:
                 }
 
 
-def _create_projects(projects_file, backends):
+def _create_projects(projects_file, datadir, backends):
     config = configparser.ConfigParser()
     with open(projects_file) as projf:
         config.read_file(projf)
@@ -120,13 +187,16 @@ def _create_projects(projects_file, backends):
     projects = {}
     for project_id in config.sections():
         projects[project_id] = AnnifProject(project_id,
-                                            config[project_id], backends)
+                                            config[project_id],
+                                            datadir,
+                                            backends)
     return projects
 
 
 def init_projects(app, backends):
     projects_file = app.config['PROJECTS_FILE']
-    app.annif_projects = _create_projects(projects_file, backends)
+    datadir = app.config['DATADIR']
+    app.annif_projects = _create_projects(projects_file, datadir, backends)
 
 
 def get_projects():

@@ -66,12 +66,12 @@ def test_load(datadir):
     result = runner.invoke(annif.cli.cli, ['load', 'tfidf-fi', subjdir])
     assert not result.exception
     assert result.exit_code == 0
-    assert datadir.join('backends/tfidf-fi/subjects').exists()
-    assert datadir.join('backends/tfidf-fi/subjects').size() > 0
-    assert datadir.join('backends/tfidf-fi/dictionary').exists()
-    assert datadir.join('backends/tfidf-fi/dictionary').size() > 0
-    assert datadir.join('backends/tfidf-fi/tfidf').exists()
-    assert datadir.join('backends/tfidf-fi/tfidf').size() > 0
+    assert datadir.join('projects/tfidf-fi/subjects').exists()
+    assert datadir.join('projects/tfidf-fi/subjects').size() > 0
+    assert datadir.join('projects/tfidf-fi/dictionary').exists()
+    assert datadir.join('projects/tfidf-fi/dictionary').size() > 0
+    assert datadir.join('projects/tfidf-fi/tfidf').exists()
+    assert datadir.join('projects/tfidf-fi/tfidf').size() > 0
     assert datadir.join('backends/tfidf-fi/index').exists()
     assert datadir.join('backends/tfidf-fi/index').size() > 0
 
