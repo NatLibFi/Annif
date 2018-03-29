@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger('annif')
 
-import annif.backend
+import annif.backend  # noqa
 
 
 def create_app(script_info=None, config_name=None):

@@ -2,6 +2,9 @@
 
 import configparser
 from flask import current_app
+from . import dummy
+from . import http
+from . import tfidf
 
 
 _backend_types = {}
@@ -18,13 +21,8 @@ def get_backend_type(backend_type):
         raise ValueError("No such backend type {}".format(backend_type))
 
 
-from . import dummy
 register_backend_type(dummy.DummyBackend)
-
-from . import http
 register_backend_type(http.HTTPBackend)
-
-from . import tfidf
 register_backend_type(tfidf.TFIDFBackend)
 
 
