@@ -2,7 +2,6 @@
 
 import collections
 import configparser
-import logging
 import os.path
 import gensim.corpora
 import gensim.models
