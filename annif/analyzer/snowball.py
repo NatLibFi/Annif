@@ -8,7 +8,7 @@ from . import analyzer
 class SnowballAnalyzer(analyzer.Analyzer):
     name = "snowball"
 
-    def __init__(self, name, param):
+    def __init__(self, param):
         self.param = param
         self.stemmer = nltk.stem.snowball.SnowballStemmer(param)
 

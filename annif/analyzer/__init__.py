@@ -23,7 +23,7 @@ def get_analyzer(analyzerspec):
         param = None
 
     try:
-        return _analyzers[analyzer](analyzer, param)
+        return _analyzers[analyzer](param)
     except KeyError:
         raise ValueError("No such analyzer {}".format(analyzer))
 
