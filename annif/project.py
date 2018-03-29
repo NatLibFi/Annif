@@ -136,10 +136,12 @@ class AnnifProject:
         logger.debug('{} hits after merging'.format(len(merged_hits)))
         return self._filter_hits(merged_hits, limit, threshold)
 
-    def load_subjects(self, subjects):
+    def _create_subject_index(self, subjects):
         logger.info('creating subject index')
         self._subjects = annif.corpus.SubjectIndex(subjects)
         annif.util.atomic_save(self._subjects, self._get_datadir(), 'subjects')
+
+    def _create_dictionary(self, subjects):
         logger.info('creating dictionary')
         self._dictionary = gensim.corpora.Dictionary(
             (self.analyzer.tokenize_words(subject.text)
@@ -148,12 +150,19 @@ class AnnifProject:
             self._dictionary,
             self._get_datadir(),
             'dictionary')
+
+    def _create_tfidf(self, subjects):
         veccorpus = annif.corpus.VectorCorpus(subjects,
                                               self.dictionary,
                                               self.analyzer)
         logger.info('creating TF-IDF model')
         self._tfidf = gensim.models.TfidfModel(veccorpus)
         annif.util.atomic_save(self._tfidf, self._get_datadir(), 'tfidf')
+
+    def load_subjects(self, subjects):
+        self._create_subject_index(subjects)
+        self._create_dictionary(subjects)
+        self._create_tfidf(subjects)
 
         for backend, weight in self.backends:
             logger.debug(
