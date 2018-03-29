@@ -4,6 +4,7 @@ import annif
 import annif.backend
 import annif.corpus
 import os.path
+import gensim.corpora
 import pytest
 import unittest.mock
 
@@ -28,6 +29,9 @@ def project(subject_corpus):
     proj = unittest.mock.Mock()
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
     proj.subjects = annif.corpus.SubjectIndex(subject_corpus)
+    proj.dictionary = gensim.corpora.Dictionary(
+        (proj.analyzer.tokenize_words(subject.text)
+         for subject in subject_corpus))
     return proj
 
 
@@ -39,11 +43,8 @@ def test_tfidf_load_subjects(datadir, subject_corpus, project):
         datadir=str(datadir))
 
     tfidf.load_subjects(subject_corpus, project)
-    assert len(tfidf._dictionary) > 0
     assert tfidf._tfidf is not None
     assert len(tfidf._index) > 0
-    assert datadir.join('backends/tfidf/dictionary').exists()
-    assert datadir.join('backends/tfidf/dictionary').size() > 0
     assert datadir.join('backends/tfidf/tfidf').exists()
     assert datadir.join('backends/tfidf/tfidf').size() > 0
     assert datadir.join('backends/tfidf/index').exists()

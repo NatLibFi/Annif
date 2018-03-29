@@ -4,6 +4,7 @@ import collections
 import configparser
 import logging
 import os.path
+import gensim.corpora
 from flask import current_app
 import annif
 import annif.analyzer
@@ -16,14 +17,17 @@ from annif import logger
 class AnnifProject:
     """Class representing the configuration of a single Annif project."""
 
+    # defaults for unitialized instances
+    _analyzer = None
+    _subjects = None
+    _dictionary = None
+
     def __init__(self, project_id, config, datadir, all_backends):
         self.project_id = project_id
         self.language = config['language']
         self.analyzer_spec = config['analyzer']
         self.backends = self._initialize_backends(config['backends'],
                                                   all_backends)
-        self._analyzer = None
-        self._subjects = None
         self._datadir = os.path.join(datadir, 'projects', self.project_id)
 
     def _get_datadir(self):
@@ -97,9 +101,17 @@ class AnnifProject:
     def subjects(self):
         if self._subjects is None:
             path = os.path.join(self._get_datadir(), 'subjects')
-            self.debug('loading subjects from {}'.format(path))
+            logger.debug('loading subjects from {}'.format(path))
             self._subjects = annif.corpus.SubjectIndex.load(path)
         return self._subjects
+
+    @property
+    def dictionary(self):
+        if self._dictionary is None:
+            path = os.path.join(self._get_datadir(), 'dictionary')
+            logger.debug('loading dictionary from {}'.format(path))
+            self._dictionary = gensim.corpora.Dictionary.load(path)
+        return self._dictionary
 
     def analyze(self, text, limit=10, threshold=0.0, backend_params=None):
         """Analyze the given text by passing it to backends and joining the
@@ -118,6 +130,14 @@ class AnnifProject:
         logger.info('creating subject index')
         self._subjects = annif.corpus.SubjectIndex(subjects)
         annif.util.atomic_save(self._subjects, self._get_datadir(), 'subjects')
+        logger.info('creating dictionary')
+        self._dictionary = gensim.corpora.Dictionary(
+            (self.analyzer.tokenize_words(subject.text)
+             for subject in subjects))
+        annif.util.atomic_save(
+            self._dictionary,
+            self._get_datadir(),
+            'dictionary')
 
         for backend, weight in self.backends:
             logger.debug(

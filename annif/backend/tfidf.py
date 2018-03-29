@@ -3,7 +3,6 @@ TF-IDF normalized bag-of-words vector space"""
 
 import collections
 import os.path
-import gensim.corpora
 import gensim.models
 import gensim.similarities
 import annif.corpus
@@ -37,15 +36,8 @@ class TFIDFBackend(backend.AnnifBackend):
     MAX_CHUNK_SUBJECTS = 100
 
     # defaults for uninitialized instances
-    _dictionary = None
     _tfidf = None
     _index = None
-
-    def _initialize_dictionary(self):
-        if self._dictionary is None:
-            path = os.path.join(self._get_datadir(), 'dictionary')
-            self.debug('loading dictionary from {}'.format(path))
-            self._dictionary = gensim.corpora.Dictionary.load(path)
 
     def _initialize_tfidf(self):
         if self._tfidf is None:
@@ -60,26 +52,19 @@ class TFIDFBackend(backend.AnnifBackend):
             self._index = gensim.similarities.SparseMatrixSimilarity.load(path)
 
     def initialize(self):
-        self._initialize_dictionary()
         self._initialize_tfidf()
         self._initialize_index()
 
     def load_subjects(self, subjects, project):
-        self.info('creating dictionary')
-        self._dictionary = gensim.corpora.Dictionary(
-            (project.analyzer.tokenize_words(subject.text)
-             for subject in subjects))
-        annif.util.atomic_save(
-            self._dictionary,
-            self._get_datadir(),
-            'dictionary')
-        veccorpus = VectorCorpus(subjects, self._dictionary, project.analyzer)
+        veccorpus = VectorCorpus(subjects,
+                                 project.dictionary,
+                                 project.analyzer)
         self.info('creating TF-IDF model')
         self._tfidf = gensim.models.TfidfModel(veccorpus)
         annif.util.atomic_save(self._tfidf, self._get_datadir(), 'tfidf')
         self.info('creating similarity index')
         self._index = gensim.similarities.SparseMatrixSimilarity(
-            self._tfidf[veccorpus], num_features=len(self._dictionary))
+            self._tfidf[veccorpus], num_features=len(project.dictionary))
         annif.util.atomic_save(self._index, self._get_datadir(), 'index')
 
     def _analyze_chunks(self, chunks):
@@ -125,7 +110,7 @@ class TFIDFBackend(backend.AnnifBackend):
         chunks = []  # chunks represented as TF-IDF normalized vectors
         for i in range(0, len(sentences), chunksize):
             chunktext = ' '.join(sentences[i:i + chunksize])
-            chunkbow = self._dictionary.doc2bow(
+            chunkbow = project.dictionary.doc2bow(
                 project.analyzer.tokenize_words(chunktext))
             chunks.append(self._tfidf[chunkbow])
         self.debug('Split sentences into {} chunks'.format(len(chunks)))
