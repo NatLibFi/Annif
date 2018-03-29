@@ -14,6 +14,7 @@ runner = CliRunner(env={'ANNIF_CONFIG': 'config.TestingConfig'})
 TEMP_PROJECT = ''.join(
     random.choice('abcdefghiklmnopqrstuvwxyz') for _ in range(8))
 
+
 @pytest.fixture(scope='session')
 def datadir(app):
     with app.app_context():
@@ -114,7 +115,9 @@ def test_eval_label(tmpdir):
     keyfile = tmpdir.join('dummy.key')
     keyfile.write("dummy\nanother\n")
 
-    result = runner.invoke(annif.cli.cli, ['eval', 'dummy-en', str(keyfile)], input='nothing special')
+    result = runner.invoke(
+        annif.cli.cli, [
+            'eval', 'dummy-en', str(keyfile)], input='nothing special')
     assert not result.exception
     assert result.exit_code == 0
 
@@ -143,11 +146,18 @@ def test_eval_param(tmpdir):
     keyfile = tmpdir.join('dummy.key')
     keyfile.write("dummy\nanother\n")
 
-    result = runner.invoke(annif.cli.cli, ['eval', '--backend-param', 'dummy.score=0.0', 'dummy-en', str(keyfile)], input='nothing special')
+    result = runner.invoke(annif.cli.cli,
+                           ['eval',
+                            '--backend-param',
+                            'dummy.score=0.0',
+                            'dummy-en',
+                            str(keyfile)],
+                           input='nothing special')
     assert not result.exception
     assert result.exit_code == 0
 
-    # since zero scores were set with the parameter, there should be no hits at all
+    # since zero scores were set with the parameter, there should be no hits
+    # at all
     recall = re.search('Recall:\s+(\d.\d+)', result.output)
     assert float(recall.group(1)) == 0.0
 
@@ -158,7 +168,8 @@ def test_eval_uri(tmpdir):
         "<http://example.org/one>\tone\n<http://example.org/dummy>\tdummy\n")
 
     result = runner.invoke(
-        annif.cli.cli, ['eval', 'dummy-en', str(keyfile)], input='nothing special')
+        annif.cli.cli, [
+            'eval', 'dummy-en', str(keyfile)], input='nothing special')
     assert not result.exception
     assert result.exit_code == 0
 
@@ -224,10 +235,13 @@ def test_evaldir_param(tmpdir):
     tmpdir.join('doc2.key').write('none')
     tmpdir.join('doc3.txt').write('doc3')
 
-    result = runner.invoke(annif.cli.cli, ['evaldir', '--backend-param', 'dummy.score=0.0', 'dummy-en', str(tmpdir)])
+    result = runner.invoke(
+        annif.cli.cli, [
+            'evaldir', '--backend-param', 'dummy.score=0.0', 'dummy-en', str(tmpdir)])
     assert not result.exception
     assert result.exit_code == 0
 
-    # since zero scores were set with the parameter, there should be no hits at all
+    # since zero scores were set with the parameter, there should be no hits
+    # at all
     recall = re.search('Recall:\s+(\d.\d+)', result.output)
     assert float(recall.group(1)) == 0.0
