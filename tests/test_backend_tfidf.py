@@ -14,32 +14,34 @@ def datadir(tmpdir_factory):
 
 
 @pytest.fixture(scope='module')
-def project():
+def subject_corpus():
+    subjdir = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'subjects')
+    return annif.corpus.SubjectDirectory(subjdir)
+
+
+@pytest.fixture(scope='module')
+def project(subject_corpus):
     proj = unittest.mock.Mock()
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
+    proj.subjects = annif.corpus.SubjectIndex(subject_corpus)
     return proj
 
 
-def test_tfidf_load_subjects(datadir, project):
+def test_tfidf_load_subjects(datadir, subject_corpus, project):
     tfidf_type = annif.backend.get_backend_type("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
         params={'chunksize': 10, 'limit': 10},
         datadir=str(datadir))
 
-    subjdir = os.path.join(
-        os.path.dirname(__file__),
-        'corpora',
-        'archaeology',
-        'subjects')
-    subjects = annif.corpus.SubjectDirectory(subjdir)
-    tfidf.load_subjects(subjects, project)
-    assert len(tfidf._subjects) == 125
+    tfidf.load_subjects(subject_corpus, project)
     assert len(tfidf._dictionary) > 0
     assert tfidf._tfidf is not None
     assert len(tfidf._index) > 0
-    assert datadir.join('backends/tfidf/subjects').exists()
-    assert datadir.join('backends/tfidf/subjects').size() > 0
     assert datadir.join('backends/tfidf/dictionary').exists()
     assert datadir.join('backends/tfidf/dictionary').size() > 0
     assert datadir.join('backends/tfidf/tfidf').exists()

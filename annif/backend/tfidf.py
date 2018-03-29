@@ -2,14 +2,12 @@
 TF-IDF normalized bag-of-words vector space"""
 
 import collections
-import glob
-import os
 import os.path
-import tempfile
 import gensim.corpora
 import gensim.models
 import gensim.similarities
 import annif.corpus
+import annif.util
 from annif.hit import AnalysisHit
 from . import backend
 
@@ -39,26 +37,9 @@ class TFIDFBackend(backend.AnnifBackend):
     MAX_CHUNK_SUBJECTS = 100
 
     # defaults for uninitialized instances
-    _subjects = None
     _dictionary = None
     _tfidf = None
     _index = None
-
-    def _atomic_save(self, obj, dirname, filename):
-        tempfd, tempfilename = tempfile.mkstemp(prefix=filename, dir=dirname)
-        os.close(tempfd)
-        self.debug('saving {} to temporary file {}'.format(obj, tempfilename))
-        obj.save(tempfilename)
-        for fn in glob.glob(tempfilename + '*'):
-            newname = fn.replace(tempfilename, os.path.join(dirname, filename))
-            self.debug('renaming temporary file {} to {}'.format(fn, newname))
-            os.rename(fn, newname)
-
-    def _initialize_subjects(self):
-        if self._subjects is None:
-            path = os.path.join(self._get_datadir(), 'subjects')
-            self.debug('loading subjects from {}'.format(path))
-            self._subjects = annif.corpus.SubjectIndex.load(path)
 
     def _initialize_dictionary(self):
         if self._dictionary is None:
@@ -79,28 +60,27 @@ class TFIDFBackend(backend.AnnifBackend):
             self._index = gensim.similarities.SparseMatrixSimilarity.load(path)
 
     def initialize(self):
-        self._initialize_subjects()
         self._initialize_dictionary()
         self._initialize_tfidf()
         self._initialize_index()
 
     def load_subjects(self, subjects, project):
-        self.info('Backend {}: creating subject index'.format(self.backend_id))
-        self._subjects = annif.corpus.SubjectIndex(subjects)
-        self._atomic_save(self._subjects, self._get_datadir(), 'subjects')
         self.info('creating dictionary')
         self._dictionary = gensim.corpora.Dictionary(
             (project.analyzer.tokenize_words(subject.text)
              for subject in subjects))
-        self._atomic_save(self._dictionary, self._get_datadir(), 'dictionary')
+        annif.util.atomic_save(
+            self._dictionary,
+            self._get_datadir(),
+            'dictionary')
         veccorpus = VectorCorpus(subjects, self._dictionary, project.analyzer)
         self.info('creating TF-IDF model')
         self._tfidf = gensim.models.TfidfModel(veccorpus)
-        self._atomic_save(self._tfidf, self._get_datadir(), 'tfidf')
+        annif.util.atomic_save(self._tfidf, self._get_datadir(), 'tfidf')
         self.info('creating similarity index')
         self._index = gensim.similarities.SparseMatrixSimilarity(
             self._tfidf[veccorpus], num_features=len(self._dictionary))
-        self._atomic_save(self._index, self._get_datadir(), 'index')
+        annif.util.atomic_save(self._index, self._get_datadir(), 'index')
 
     def _analyze_chunks(self, chunks):
         results = []
@@ -112,7 +92,7 @@ class TFIDFBackend(backend.AnnifBackend):
             results.append(sims[:self.MAX_CHUNK_SUBJECTS])
         return results
 
-    def _merge_chunk_results(self, chunk_results):
+    def _merge_chunk_results(self, chunk_results, project):
         subject_scores = collections.defaultdict(float)
         for result in chunk_results:
             for subject_id, score in result:
@@ -126,7 +106,7 @@ class TFIDFBackend(backend.AnnifBackend):
         for score, subject_id in best_subjects[:limit]:
             if score <= 0.0:
                 continue
-            subject = self._subjects[subject_id]
+            subject = project.subjects[subject_id]
             results.append(
                 AnalysisHit(
                     subject[0],
@@ -150,4 +130,4 @@ class TFIDFBackend(backend.AnnifBackend):
             chunks.append(self._tfidf[chunkbow])
         self.debug('Split sentences into {} chunks'.format(len(chunks)))
         chunk_results = self._analyze_chunks(chunks)
-        return self._merge_chunk_results(chunk_results)
+        return self._merge_chunk_results(chunk_results, project)

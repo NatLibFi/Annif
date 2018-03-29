@@ -3,24 +3,35 @@
 import collections
 import configparser
 import logging
+import os.path
 from flask import current_app
 import annif
 import annif.analyzer
 import annif.hit
 import annif.backend
+import annif.util
 from annif import logger
 
 
 class AnnifProject:
     """Class representing the configuration of a single Annif project."""
 
-    def __init__(self, project_id, config, all_backends):
+    def __init__(self, project_id, config, datadir, all_backends):
         self.project_id = project_id
         self.language = config['language']
         self.analyzer_spec = config['analyzer']
         self.backends = self._initialize_backends(config['backends'],
                                                   all_backends)
         self._analyzer = None
+        self._subjects = None
+        self._datadir = os.path.join(datadir, 'projects', self.project_id)
+
+    def _get_datadir(self):
+        """return the path of the directory where this project can store its
+        data files"""
+        if not os.path.exists(self._datadir):
+            os.makedirs(self._datadir)
+        return self._datadir
 
     def _initialize_backends(self, backends_configuration, all_backends):
         backends = []
@@ -82,6 +93,14 @@ class AnnifProject:
             self._analyzer = annif.analyzer.get_analyzer(self.analyzer_spec)
         return self._analyzer
 
+    @property
+    def subjects(self):
+        if self._subjects is None:
+            path = os.path.join(self._get_datadir(), 'subjects')
+            self.debug('loading subjects from {}'.format(path))
+            self._subjects = annif.corpus.SubjectIndex.load(path)
+        return self._subjects
+
     def analyze(self, text, limit=10, threshold=0.0, backend_params=None):
         """Analyze the given text by passing it to backends and joining the
         results. Returns a list of AnalysisHit objects ordered by decreasing
@@ -96,6 +115,10 @@ class AnnifProject:
         return self._filter_hits(merged_hits, limit, threshold)
 
     def load_subjects(self, subjects):
+        logger.info('creating subject index')
+        self._subjects = annif.corpus.SubjectIndex(subjects)
+        annif.util.atomic_save(self._subjects, self._get_datadir(), 'subjects')
+
         for backend, weight in self.backends:
             logger.debug(
                 'Loading subjects for backend {}'.format(
@@ -111,7 +134,7 @@ class AnnifProject:
                 }
 
 
-def _create_projects(projects_file, backends):
+def _create_projects(projects_file, datadir, backends):
     config = configparser.ConfigParser()
     with open(projects_file) as projf:
         config.read_file(projf)
@@ -120,13 +143,16 @@ def _create_projects(projects_file, backends):
     projects = {}
     for project_id in config.sections():
         projects[project_id] = AnnifProject(project_id,
-                                            config[project_id], backends)
+                                            config[project_id],
+                                            datadir,
+                                            backends)
     return projects
 
 
 def init_projects(app, backends):
     projects_file = app.config['PROJECTS_FILE']
-    app.annif_projects = _create_projects(projects_file, backends)
+    datadir = app.config['DATADIR']
+    app.annif_projects = _create_projects(projects_file, datadir, backends)
 
 
 def get_projects():
