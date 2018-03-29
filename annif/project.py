@@ -72,8 +72,8 @@ class AnnifProject:
     def analyze(self, text, limit=10, threshold=0.0, backend_params=None):
         """Analyze the given text by passing it to backends and joining the
         results. Returns a list of AnalysisHit objects ordered by decreasing
-        score. The limit parameter defines the maximum number of hits to return.
-        Only hits whose score is over the threshold are returned."""
+        score. The limit parameter defines the maximum number of hits to
+        return. Only hits whose score is over the threshold are returned."""
 
         logger.debug('Analyzing text "{}..." (len={})'.format(
             text[:20], len(text)))

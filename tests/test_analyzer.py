@@ -53,7 +53,8 @@ def test_english_tokenize_words():
 
 def test_english_filter_words():
     analyzer = annif.analyzer.get_analyzer("snowball(english)")
-    text = """Since 2000, 3D printing can be used to print 3 kinds of objects."""
+    text = """Since 2000, 3D printing can be used to print
+    3 kinds of objects."""
     words = analyzer.tokenize_words(text)
     assert len(words) == 7
     assert '2000' not in words

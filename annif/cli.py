@@ -20,7 +20,8 @@ cli = FlaskGroup(create_app=annif.create_app)
 
 
 def get_project(project_id):
-    """Helper function to get a project by ID and bail out if it doesn't exist"""
+    """
+    Helper function to get a project by ID and bail out if it doesn't exist"""
     try:
         return annif.project.get_project(project_id)
     except ValueError:

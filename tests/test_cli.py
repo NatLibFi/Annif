@@ -237,7 +237,8 @@ def test_evaldir_param(tmpdir):
 
     result = runner.invoke(
         annif.cli.cli, [
-            'evaldir', '--backend-param', 'dummy.score=0.0', 'dummy-en', str(tmpdir)])
+            'evaldir', '--backend-param', 'dummy.score=0.0', 'dummy-en',
+            str(tmpdir)])
     assert not result.exception
     assert result.exit_code == 0
 
