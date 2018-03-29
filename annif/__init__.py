@@ -21,7 +21,8 @@ def create_app(script_info=None, config_name=None):
 
     cxapp.add_api('annif.yaml')
 
-    annif.backend.init_backends(cxapp.app)
+    backends = annif.backend.init_backends(cxapp.app)
+    annif.project.init_projects(cxapp.app, backends)
 
     # return the Flask app
     return cxapp.app

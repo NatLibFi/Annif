@@ -9,6 +9,7 @@ class SnowballAnalyzer(analyzer.Analyzer):
     name = "snowball"
 
     def __init__(self, name, param):
+        self.param = param
         self.stemmer = nltk.stem.snowball.SnowballStemmer(param)
 
     @functools.lru_cache(maxsize=500000)

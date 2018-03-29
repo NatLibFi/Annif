@@ -28,23 +28,23 @@ class AnnifBackend(metaclass=abc.ABCMeta):
             os.makedirs(self._datadir)
         return self._datadir
 
-    def load_subjects(self, subjects, analyzer):
-        """load the given subjects analyzed using the given analyzer"""
+    def load_subjects(self, subjects, project):
+        """load the given subjects"""
         pass  # default is to do nothing, subclasses may override
 
     @abc.abstractmethod
-    def _analyze(self, text, params):
+    def _analyze(self, text, project, params):
         """This method should implemented by backends. It implements
         the analyze functionality, with pre-processed parameters."""
         pass
 
-    def analyze(self, text, params=None):
+    def analyze(self, text, project, params=None):
         """Analyze some input text and return a list of subjects represented
         as a list of AnalysisHit objects."""
         beparams = dict(self.params)
         if params is not None:
             beparams.update(params)
-        return self._analyze(text, params=beparams)
+        return self._analyze(text, project, params=beparams)
 
     def debug(self, message):
         """Log a debug message from this backend"""

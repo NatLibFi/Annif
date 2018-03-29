@@ -50,6 +50,7 @@ def init_backends(app):
     backends_file = app.config['BACKENDS_FILE']
     datadir = app.config['DATADIR']
     app.annif_backends = _create_backends(backends_file, datadir)
+    return app.annif_backends
 
 
 def get_backends():

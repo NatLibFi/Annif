@@ -9,7 +9,6 @@ import tempfile
 import gensim.corpora
 import gensim.models
 import gensim.similarities
-import annif.analyzer
 import annif.corpus
 from annif.hit import AnalysisHit
 from . import backend
@@ -82,7 +81,6 @@ class TFIDFBackend(backend.AnnifBackend):
 
     # defaults for uninitialized instances
     _subjects = None
-    _analyzer = None
     _dictionary = None
     _tfidf = None
     _index = None
@@ -102,11 +100,6 @@ class TFIDFBackend(backend.AnnifBackend):
             path = os.path.join(self._get_datadir(), 'subjects')
             self.debug('loading subjects from {}'.format(path))
             self._subjects = SubjectIndex.load(path)
-
-    def _initialize_analyzer(self):
-        if self._analyzer is None:
-            self._analyzer = annif.analyzer.get_analyzer(
-                self.params['analyzer'])
 
     def _initialize_dictionary(self):
         if self._dictionary is None:
@@ -128,22 +121,20 @@ class TFIDFBackend(backend.AnnifBackend):
 
     def initialize(self):
         self._initialize_subjects()
-        self._initialize_analyzer()
         self._initialize_dictionary()
         self._initialize_tfidf()
         self._initialize_index()
 
-    def load_subjects(self, subjects):
+    def load_subjects(self, subjects, project):
         self.info('Backend {}: creating subject index'.format(self.backend_id))
         self._subjects = SubjectIndex(subjects)
         self._atomic_save(self._subjects, self._get_datadir(), 'subjects')
-        self._initialize_analyzer()
         self.info('creating dictionary')
         self._dictionary = gensim.corpora.Dictionary(
-            (self._analyzer.tokenize_words(subject.text)
+            (project.analyzer.tokenize_words(subject.text)
              for subject in subjects))
         self._atomic_save(self._dictionary, self._get_datadir(), 'dictionary')
-        veccorpus = VectorCorpus(subjects, self._dictionary, self._analyzer)
+        veccorpus = VectorCorpus(subjects, self._dictionary, project.analyzer)
         self.info('creating TF-IDF model')
         self._tfidf = gensim.models.TfidfModel(veccorpus)
         self._atomic_save(self._tfidf, self._get_datadir(), 'tfidf')
@@ -185,18 +176,18 @@ class TFIDFBackend(backend.AnnifBackend):
                     len(chunk_results)))
         return results
 
-    def _analyze(self, text, params):
+    def _analyze(self, text, project, params):
         self.initialize()
         self.debug('Analyzing text "{}..." (len={})'.format(
             text[:20], len(text)))
-        sentences = self._analyzer.tokenize_sentences(text)
+        sentences = project.analyzer.tokenize_sentences(text)
         self.debug('Found {} sentences'.format(len(sentences)))
         chunksize = int(params['chunksize'])
         chunks = []  # chunks represented as TF-IDF normalized vectors
         for i in range(0, len(sentences), chunksize):
             chunktext = ' '.join(sentences[i:i + chunksize])
             chunkbow = self._dictionary.doc2bow(
-                self._analyzer.tokenize_words(chunktext))
+                project.analyzer.tokenize_words(chunktext))
             chunks.append(self._tfidf[chunkbow])
         self.debug('Split sentences into {} chunks'.format(len(chunks)))
         chunk_results = self._analyze_chunks(chunks)
