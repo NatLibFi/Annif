@@ -13,9 +13,9 @@ def atomic_save(obj, dirname, filename):
 
     tempfd, tempfilename = tempfile.mkstemp(prefix=filename, dir=dirname)
     os.close(tempfd)
-    logger.debug('saving % to temporary file %', obj, tempfilename)
+    logger.debug('saving %s to temporary file %s', str(obj), tempfilename)
     obj.save(tempfilename)
     for fn in glob.glob(tempfilename + '*'):
         newname = fn.replace(tempfilename, os.path.join(dirname, filename))
-        logger.debug('renaming temporary file % to %', fn, newname)
+        logger.debug('renaming temporary file %s to %s', fn, newname)
         os.rename(fn, newname)

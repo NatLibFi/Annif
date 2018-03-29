@@ -63,7 +63,7 @@ class AnnifProject:
                     project=self,
                     params=beparams) if hit.score > 0.0]
             logger.debug(
-                'Got % hits from backend %',
+                'Got %d hits from backend %s',
                 len(hits), backend.backend_id)
             for hit in hits:
                 hits_by_uri[hit.uri].append((hit.score * weight, hit))
@@ -84,11 +84,11 @@ class AnnifProject:
         hits.sort(key=lambda hit: hit.score, reverse=True)
         hits = hits[:limit]
         logger.debug(
-            '% hits after applying limit %',
+            '%d hits after applying limit %d',
             len(hits), limit)
         hits = [hit for hit in hits if hit.score >= threshold]
         logger.debug(
-            '% hits after applying threshold %',
+            '%d hits after applying threshold %f',
             len(hits), threshold)
         return hits
 
@@ -102,7 +102,7 @@ class AnnifProject:
     def subjects(self):
         if self._subjects is None:
             path = os.path.join(self._get_datadir(), 'subjects')
-            logger.debug('loading subjects from %', path)
+            logger.debug('loading subjects from %s', path)
             self._subjects = annif.corpus.SubjectIndex.load(path)
         return self._subjects
 
@@ -110,7 +110,7 @@ class AnnifProject:
     def dictionary(self):
         if self._dictionary is None:
             path = os.path.join(self._get_datadir(), 'dictionary')
-            logger.debug('loading dictionary from %', path)
+            logger.debug('loading dictionary from %s', path)
             self._dictionary = gensim.corpora.Dictionary.load(path)
         return self._dictionary
 
@@ -118,7 +118,7 @@ class AnnifProject:
     def tfidf(self):
         if self._tfidf is None:
             path = os.path.join(self._get_datadir(), 'tfidf')
-            logger.debug('loading TF-IDF model from %', path)
+            logger.debug('loading TF-IDF model from %s', path)
             self._tfidf = gensim.models.TfidfModel.load(path)
         return self._tfidf
 
@@ -128,11 +128,11 @@ class AnnifProject:
         score. The limit parameter defines the maximum number of hits to
         return. Only hits whose score is over the threshold are returned."""
 
-        logger.debug('Analyzing text "%..." (len=%)',
+        logger.debug('Analyzing text "%s..." (len=%d)',
                      text[:20], len(text))
         hits_by_uri = self._analyze_with_backends(text, backend_params)
         merged_hits = self._merge_hits(hits_by_uri)
-        logger.debug('% hits after merging', len(merged_hits))
+        logger.debug('%d hits after merging', len(merged_hits))
         return self._filter_hits(merged_hits, limit, threshold)
 
     def _create_subject_index(self, subjects):
@@ -165,7 +165,7 @@ class AnnifProject:
 
         for backend, weight in self.backends:
             logger.debug(
-                'Loading subjects for backend %',
+                'Loading subjects for backend %s',
                 backend.backend_id)
             backend.load_subjects(subjects, project=self)
 
