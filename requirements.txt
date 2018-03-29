@@ -5,6 +5,7 @@ python_coveralls==2.9.1
 pytest-cov==2.5.1
 pytest-watch>=4.1.0
 pytest-flask>=0.10.0
+pytest-pep8
 coverage>=4.4.1
 nltk
 requests
