@@ -4,8 +4,7 @@ import annif
 import annif.backend
 import annif.corpus
 import os.path
-import gensim.corpora
-import gensim.models
+from sklearn.feature_extraction.text import TfidfVectorizer
 import pytest
 import unittest.mock
 
@@ -30,13 +29,8 @@ def project(subject_corpus):
     proj = unittest.mock.Mock()
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
     proj.subjects = annif.corpus.SubjectIndex(subject_corpus)
-    proj.dictionary = gensim.corpora.Dictionary(
-        (proj.analyzer.tokenize_words(subject.text)
-         for subject in subject_corpus))
-    veccorpus = annif.corpus.VectorCorpus(subject_corpus,
-                                          proj.dictionary,
-                                          proj.analyzer)
-    proj.tfidf = gensim.models.TfidfModel(veccorpus)
+    proj.vectorizer = TfidfVectorizer(tokenizer=proj.analyzer.tokenize_words)
+    proj.vectorizer.fit([subj.text for subj in subject_corpus])
     return proj
 
 

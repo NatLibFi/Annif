@@ -68,10 +68,8 @@ def test_load(datadir):
     assert result.exit_code == 0
     assert datadir.join('projects/tfidf-fi/subjects').exists()
     assert datadir.join('projects/tfidf-fi/subjects').size() > 0
-    assert datadir.join('projects/tfidf-fi/dictionary').exists()
-    assert datadir.join('projects/tfidf-fi/dictionary').size() > 0
-    assert datadir.join('projects/tfidf-fi/tfidf').exists()
-    assert datadir.join('projects/tfidf-fi/tfidf').size() > 0
+    assert datadir.join('projects/tfidf-fi/vectorizer').exists()
+    assert datadir.join('projects/tfidf-fi/vectorizer').size() > 0
     assert datadir.join('backends/tfidf-fi/index').exists()
     assert datadir.join('backends/tfidf-fi/index').size() > 0
 
@@ -212,13 +210,10 @@ def test_evaldir(tmpdir):
     f_measure = re.search('F-measure:\s+(\d.\d+)', result.output)
     assert float(f_measure.group(1)) == 0.5
     precision1 = re.search('Precision@1:\s+(\d.\d+)', result.output)
-    print(precision1.group(1))
     assert float(precision1.group(1)) == 0.5
     precision3 = re.search('Precision@3:\s+(\d.\d+)', result.output)
-    print(precision3.group(1))
     assert float(precision3.group(1)) == 0.5
     precision5 = re.search('Precision@5:\s+(\d.\d+)', result.output)
-    print(precision5.group(1))
     assert float(precision5.group(1)) == 0.5
     true_positives = re.search('True positives:\s+(\d+)', result.output)
     assert int(true_positives.group(1)) == 1

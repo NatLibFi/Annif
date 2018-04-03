@@ -3,8 +3,8 @@
 import collections
 import configparser
 import os.path
-import gensim.corpora
-import gensim.models
+from sklearn.externals import joblib
+from sklearn.feature_extraction.text import TfidfVectorizer
 from flask import current_app
 import annif
 import annif.analyzer
@@ -20,8 +20,7 @@ class AnnifProject:
     # defaults for unitialized instances
     _analyzer = None
     _subjects = None
-    _dictionary = None
-    _tfidf = None
+    _vectorizer = None
 
     def __init__(self, project_id, config, datadir, all_backends):
         self.project_id = project_id
@@ -107,20 +106,12 @@ class AnnifProject:
         return self._subjects
 
     @property
-    def dictionary(self):
-        if self._dictionary is None:
-            path = os.path.join(self._get_datadir(), 'dictionary')
-            logger.debug('loading dictionary from %s', path)
-            self._dictionary = gensim.corpora.Dictionary.load(path)
-        return self._dictionary
-
-    @property
-    def tfidf(self):
-        if self._tfidf is None:
-            path = os.path.join(self._get_datadir(), 'tfidf')
-            logger.debug('loading TF-IDF model from %s', path)
-            self._tfidf = gensim.models.TfidfModel.load(path)
-        return self._tfidf
+    def vectorizer(self):
+        if self._vectorizer is None:
+            path = os.path.join(self._get_datadir(), 'vectorizer')
+            logger.debug('loading vectorizer from %s', path)
+            self._vectorizer = joblib.load(path)
+        return self._vectorizer
 
     def analyze(self, text, limit=10, threshold=0.0, backend_params=None):
         """Analyze the given text by passing it to backends and joining the
@@ -140,28 +131,20 @@ class AnnifProject:
         self._subjects = annif.corpus.SubjectIndex(subjects)
         annif.util.atomic_save(self._subjects, self._get_datadir(), 'subjects')
 
-    def _create_dictionary(self, subjects):
-        logger.info('creating dictionary')
-        self._dictionary = gensim.corpora.Dictionary(
-            (self.analyzer.tokenize_words(subject.text)
-             for subject in subjects))
+    def _create_vectorizer(self, subjects):
+        logger.info('creating vectorizer')
+        self._vectorizer = TfidfVectorizer(
+            tokenizer=self.analyzer.tokenize_words)
+        self._vectorizer.fit((subj.text for subj in subjects))
         annif.util.atomic_save(
-            self._dictionary,
+            self._vectorizer,
             self._get_datadir(),
-            'dictionary')
-
-    def _create_tfidf(self, subjects):
-        veccorpus = annif.corpus.VectorCorpus(subjects,
-                                              self.dictionary,
-                                              self.analyzer)
-        logger.info('creating TF-IDF model')
-        self._tfidf = gensim.models.TfidfModel(veccorpus)
-        annif.util.atomic_save(self._tfidf, self._get_datadir(), 'tfidf')
+            'vectorizer',
+            method=joblib.dump)
 
     def load_subjects(self, subjects):
         self._create_subject_index(subjects)
-        self._create_dictionary(subjects)
-        self._create_tfidf(subjects)
+        self._create_vectorizer(subjects)
 
         for backend, weight in self.backends:
             logger.debug(
