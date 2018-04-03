@@ -4,7 +4,7 @@ TF-IDF normalized bag-of-words vector space"""
 import collections
 import os.path
 import gensim.similarities
-import annif.corpus
+from gensim.matutils import Sparse2Corpus
 import annif.util
 from annif.hit import AnalysisHit
 from . import backend
@@ -27,16 +27,20 @@ class TFIDFBackend(backend.AnnifBackend):
 
     def load_subjects(self, subjects, project):
         self.info('creating similarity index')
-        veccorpus = annif.corpus.VectorCorpus(subjects,
-                                              project.dictionary,
-                                              project.analyzer)
+        veccorpus = project.vectorizer.transform(
+            (subj.text for subj in subjects))
+        gscorpus = Sparse2Corpus(veccorpus, documents_columns=False)
         self._index = gensim.similarities.SparseMatrixSimilarity(
-            project.tfidf[veccorpus], num_features=len(project.dictionary))
+            gscorpus, num_features=len(project.vectorizer.vocabulary_))
         annif.util.atomic_save(self._index, self._get_datadir(), 'index')
 
     def _analyze_chunks(self, chunks):
         results = []
         for docsim in self._index[chunks]:
+            if isinstance(docsim, float):
+                # gensim returns a single value when given only one document
+                # - we need to convert that back to an iterable
+                docsim = [docsim]
             sims = sorted(
                 enumerate(docsim),
                 key=lambda item: item[1],
@@ -74,12 +78,12 @@ class TFIDFBackend(backend.AnnifBackend):
         sentences = project.analyzer.tokenize_sentences(text)
         self.debug('Found {} sentences'.format(len(sentences)))
         chunksize = int(params['chunksize'])
-        chunks = []  # chunks represented as TF-IDF normalized vectors
+        chunktexts = []
         for i in range(0, len(sentences), chunksize):
             chunktext = ' '.join(sentences[i:i + chunksize])
-            chunkbow = project.dictionary.doc2bow(
-                project.analyzer.tokenize_words(chunktext))
-            chunks.append(project.tfidf[chunkbow])
-        self.debug('Split sentences into {} chunks'.format(len(chunks)))
+            chunktexts.append(chunktext)
+        # chunks represented as TF-IDF normalized vectors
+        chunks = project.vectorizer.transform(chunktexts)
+        self.debug('Split sentences into {} chunks'.format(len(chunktexts)))
         chunk_results = self._analyze_chunks(chunks)
         return self._merge_chunk_results(chunk_results, project)

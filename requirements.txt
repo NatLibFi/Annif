@@ -10,3 +10,4 @@ coverage>=4.4.1
 nltk
 requests
 gensim
+sklearn

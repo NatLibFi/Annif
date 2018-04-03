@@ -2,7 +2,7 @@
 
 
 from .docdir import DocumentDirectory
-from .subject import Subject, SubjectDirectory, SubjectIndex, VectorCorpus
+from .subject import Subject, SubjectDirectory, SubjectIndex
 
 
 class SubjectSet:
