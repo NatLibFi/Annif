@@ -36,11 +36,8 @@ class TFIDFBackend(backend.AnnifBackend):
 
     def _analyze_chunks(self, chunks):
         results = []
-        for docsim in self._index[chunks]:
-            if isinstance(docsim, float):
-                # gensim returns a single value when given only one document
-                # - we need to convert that back to an iterable
-                docsim = [docsim]
+        for chunk in chunks:
+            docsim = self._index[chunk]
             sims = sorted(
                 enumerate(docsim),
                 key=lambda item: item[1],
