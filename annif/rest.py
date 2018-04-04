@@ -40,4 +40,4 @@ def analyze(project_id, text, limit, threshold):
         return "Project '{}' not found".format(project_id), 404
 
     hits = project.analyze(text, limit, threshold)
-    return [hit.dump() for hit in hits]
+    return [hit._asdict() for hit in hits]
