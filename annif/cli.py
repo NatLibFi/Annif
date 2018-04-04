@@ -188,9 +188,8 @@ def run_evaldir(project_id, directory, limit, threshold, backend_param):
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
 
-    measures = collections.OrderedDict()
     hit_filter = HitFilter(limit=limit, threshold=threshold)
-    merge_functions = {}
+    eval_batch = annif.eval.EvaluationBatch()
     for docfilename, subjectfilename in annif.corpus.DocumentDirectory(
             directory, require_subjects=True):
         with open(docfilename) as docfile:
@@ -198,17 +197,11 @@ def run_evaldir(project_id, directory, limit, threshold, backend_param):
         hits = hit_filter(project.analyze(text, backend_params))
         with open(subjectfilename) as subjfile:
             gold_subjects = annif.corpus.SubjectSet(subjfile.read())
-
-        for metric, result, merge_function in annif.eval.evaluate_hits(
-                hits, gold_subjects):
-            measures.setdefault(metric, [])
-            measures[metric].append(result)
-            merge_functions[metric] = merge_function
+        eval_batch.evaluate(hits, gold_subjects)
 
     template = "{0:<20}\t{1}"
-    for metric, results in measures.items():
-        result = merge_functions[metric](results)
-        click.echo(template.format(metric + ":", result))
+    for metric, score in eval_batch.results().items():
+        click.echo(template.format(metric + ":", score))
 
 
 if __name__ == '__main__':
