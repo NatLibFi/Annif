@@ -38,7 +38,7 @@ def test_tfidf_load_subjects(datadir, subject_corpus, project):
     tfidf_type = annif.backend.get_backend_type("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
-        params={'chunksize': 10, 'limit': 10},
+        params={'limit': 10},
         datadir=str(datadir))
 
     tfidf.load_subjects(subject_corpus, project)
@@ -51,7 +51,7 @@ def test_tfidf_analyze(datadir, project):
     tfidf_type = annif.backend.get_backend_type("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
-        params={'chunksize': 1, 'limit': 10},
+        params={'limit': 10},
         datadir=str(datadir))
 
     results = tfidf.analyze("""Arkeologiaa sanotaan joskus myös
@@ -71,7 +71,7 @@ def test_tfidf_analyze_unknown(datadir, project):
     tfidf_type = annif.backend.get_backend_type("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
-        params={'analyzer': 'snowball(finnish)', 'chunksize': 1, 'limit': 10},
+        params={'limit': 10},
         datadir=str(datadir))
 
     results = tfidf.analyze("abcdefghijk", project)  # unknown word

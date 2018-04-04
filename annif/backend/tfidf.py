@@ -13,9 +13,6 @@ from . import backend
 class TFIDFBackend(backend.AnnifBackend):
     name = "tfidf"
 
-    # top K subjects per chunk to consider
-    MAX_CHUNK_SUBJECTS = 100
-
     # defaults for uninitialized instances
     _index = None
 
@@ -34,29 +31,15 @@ class TFIDFBackend(backend.AnnifBackend):
             gscorpus, num_features=len(project.vectorizer.vocabulary_))
         annif.util.atomic_save(self._index, self._get_datadir(), 'index')
 
-    def _analyze_chunks(self, chunks):
+    def _analyze_vector(self, vector, project):
+        docsim = self._index[vector]
+        sims = sorted(
+            enumerate(docsim),
+            key=lambda item: item[1],
+            reverse=True)
         results = []
-        for chunk in chunks:
-            docsim = self._index[chunk]
-            sims = sorted(
-                enumerate(docsim),
-                key=lambda item: item[1],
-                reverse=True)
-            results.append(sims[:self.MAX_CHUNK_SUBJECTS])
-        return results
-
-    def _merge_chunk_results(self, chunk_results, project):
-        subject_scores = collections.defaultdict(float)
-        for result in chunk_results:
-            for subject_id, score in result:
-                subject_scores[subject_id] += score
-        best_subjects = sorted([(score,
-                                 subject_id) for subject_id,
-                                score in subject_scores.items()],
-                               reverse=True)
         limit = int(self.params['limit'])
-        results = []
-        for score, subject_id in best_subjects[:limit]:
+        for subject_id, score in sims[:limit]:
             if score <= 0.0:
                 continue
             subject = project.subjects[subject_id]
@@ -64,22 +47,12 @@ class TFIDFBackend(backend.AnnifBackend):
                 AnalysisHit(
                     uri=subject[0],
                     label=subject[1],
-                    score=score / len(chunk_results)))
+                    score=score))
         return results
 
     def _analyze(self, text, project, params):
         self.initialize()
         self.debug('Analyzing text "{}..." (len={})'.format(
             text[:20], len(text)))
-        sentences = project.analyzer.tokenize_sentences(text)
-        self.debug('Found {} sentences'.format(len(sentences)))
-        chunksize = int(params['chunksize'])
-        chunktexts = []
-        for i in range(0, len(sentences), chunksize):
-            chunktext = ' '.join(sentences[i:i + chunksize])
-            chunktexts.append(chunktext)
-        # chunks represented as TF-IDF normalized vectors
-        chunks = project.vectorizer.transform(chunktexts)
-        self.debug('Split sentences into {} chunks'.format(len(chunktexts)))
-        chunk_results = self._analyze_chunks(chunks)
-        return self._merge_chunk_results(chunk_results, project)
+        vectors = project.vectorizer.transform([text])
+        return self._analyze_vector(vectors[0], project)
