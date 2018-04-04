@@ -4,7 +4,6 @@
 import collections
 import glob
 import os.path
-import re
 
 
 Subject = collections.namedtuple('Subject', 'uri label text')
