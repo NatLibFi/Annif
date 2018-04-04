@@ -7,8 +7,6 @@ cache: pip
 install:
   - pip install -r requirements.txt
   - travis_wait 30 python -m nltk.downloader punkt
-env:
-  - FLASK_APP="annif/__init__.py"
 script:
   - pytest --cov=./
 after_success:

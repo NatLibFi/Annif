@@ -35,10 +35,6 @@ Install dependencies and download NLTK data:
     pip install -r requirements.txt
     python -m nltk.downloader punkt
 
-Set the `FLASK_APP` enviroment variable:
-
-    export FLASK_APP=annif/__init__.py
-
 Set a shell alias for the application: 
 
     alias annif="python -m annif.cli"
