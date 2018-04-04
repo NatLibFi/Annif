@@ -1,6 +1,8 @@
 """Unit tests for evaluation metrics in Annif"""
 
+import annif.corpus
 import annif.eval
+import annif.hit
 
 
 def test_precision():
@@ -98,3 +100,27 @@ def test_false_negatives():
     gold = ['A', 'C', 'E', 'F', 'G']
     false_negatives = annif.eval.false_negatives(selected, gold)
     assert false_negatives == 3
+
+
+def test_evaluation_batch():
+    batch = annif.eval.EvaluationBatch()
+
+    gold_set = annif.corpus.SubjectSet('<http://example.org/s1>\tsubject 1')
+    hits1 = [
+        annif.hit.AnalysisHit(
+            uri='http://example.org/s1',
+            label='subject 1',
+            score=1.0)]
+    batch.evaluate(hits1, gold_set)
+    hits2 = [
+        annif.hit.AnalysisHit(
+            uri='http://example.org/s2',
+            label='subject 2',
+            score=1.0)]
+    batch.evaluate(hits2, gold_set)
+    results = batch.results()
+    assert results['Precision'] == 0.5
+    assert results['Recall'] == 0.5
+    assert results['True positives'] == 1
+    assert results['False positives'] == 1
+    assert results['False negatives'] == 1

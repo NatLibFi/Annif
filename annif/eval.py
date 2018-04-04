@@ -1,5 +1,6 @@
 """Evaluation metrics for Annif"""
 
+import collections
 import statistics
 import numpy
 
@@ -107,3 +108,29 @@ def evaluate_hits(hits, gold_subjects):
         gold_set = gold_subjects.subject_labels
 
     return evaluate(selected, gold_set)
+
+
+class EvaluationBatch:
+    """A class for evaluating batches of results using all available metrics.
+    The evaluate() method is called once per document in the batch.
+    Final results can be queried using the results() method."""
+
+    def __init__(self):
+        self._results = []
+
+    def evaluate(self, hits, gold_subjects):
+        self._results.append(evaluate_hits(hits, gold_subjects))
+
+    def results(self):
+        measures = collections.OrderedDict()
+        merge_functions = {}
+        for result in self._results:
+            for metric, score, merge_function in result:
+                measures.setdefault(metric, [])
+                measures[metric].append(score)
+                merge_functions[metric] = merge_function
+        final_results = collections.OrderedDict()
+        for metric, results in measures.items():
+            score = merge_functions[metric](results)
+            final_results[metric] = score
+        return final_results

@@ -241,3 +241,24 @@ def test_evaldir_param(tmpdir):
     # at all
     recall = re.search('Recall:\s+(\d.\d+)', result.output)
     assert float(recall.group(1)) == 0.0
+
+
+def test_optimize(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    tmpdir.join('doc3.txt').write('doc3')
+
+    result = runner.invoke(
+        annif.cli.cli, [
+            'optimize', 'dummy-en', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    precision = re.search('Best Precision:\s+(\d.\d+)', result.output)
+    assert float(precision.group(1)) == 0.5
+    recall = re.search('Best Recall:\s+(\d.\d+)', result.output)
+    assert float(recall.group(1)) == 0.5
+    f_measure = re.search('Best F-measure:\s+(\d.\d+)', result.output)
+    assert float(f_measure.group(1)) == 0.5

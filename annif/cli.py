@@ -12,6 +12,7 @@ import annif
 import annif.corpus
 import annif.eval
 import annif.project
+from annif.hit import HitFilter
 from annif import logger
 
 click_log.basic_config(logger)
@@ -40,6 +41,16 @@ def parse_backend_params(backend_param):
         key, val = param.split('=', 1)
         backend_params[backend][key] = val
     return backend_params
+
+
+def generate_filter_batches():
+    filter_batches = collections.OrderedDict()
+    for limit in range(1, 16):
+        for threshold in [i * 0.05 for i in range(20)]:
+            hit_filter = HitFilter(limit, threshold)
+            batch = annif.eval.EvaluationBatch()
+            filter_batches[(limit, threshold)] = (hit_filter, batch)
+    return filter_batches
 
 
 @cli.command('list-projects')
@@ -134,7 +145,8 @@ def run_analyze(project_id, limit, threshold, backend_param):
     project = get_project(project_id)
     text = sys.stdin.read()
     backend_params = parse_backend_params(backend_param)
-    hits = project.analyze(text, limit, threshold, backend_params)
+    hit_filter = HitFilter(limit, threshold)
+    hits = hit_filter(project.analyze(text, backend_params))
     for hit in hits:
         click.echo("{}\t<{}>\t{}".format(hit.score, hit.uri, hit.label))
 
@@ -157,7 +169,8 @@ def run_eval(project_id, subject_file, limit, threshold, backend_param):
     project = get_project(project_id)
     text = sys.stdin.read()
     backend_params = parse_backend_params(backend_param)
-    hits = project.analyze(text, limit, threshold, backend_params)
+    hit_filter = HitFilter(limit=limit, threshold=threshold)
+    hits = hit_filter(project.analyze(text, backend_params))
     with open(subject_file) as subjfile:
         gold_subjects = annif.corpus.SubjectSet(subjfile.read())
 
@@ -185,26 +198,80 @@ def run_evaldir(project_id, directory, limit, threshold, backend_param):
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
 
-    measures = collections.OrderedDict()
-    merge_functions = {}
+    hit_filter = HitFilter(limit=limit, threshold=threshold)
+    eval_batch = annif.eval.EvaluationBatch()
     for docfilename, subjectfilename in annif.corpus.DocumentDirectory(
             directory, require_subjects=True):
         with open(docfilename) as docfile:
             text = docfile.read()
-        hits = project.analyze(text, limit, threshold, backend_params)
+        hits = hit_filter(project.analyze(text, backend_params))
         with open(subjectfilename) as subjfile:
             gold_subjects = annif.corpus.SubjectSet(subjfile.read())
-
-        for metric, result, merge_function in annif.eval.evaluate_hits(
-                hits, gold_subjects):
-            measures.setdefault(metric, [])
-            measures[metric].append(result)
-            merge_functions[metric] = merge_function
+        eval_batch.evaluate(hits, gold_subjects)
 
     template = "{0:<20}\t{1}"
-    for metric, results in measures.items():
-        result = merge_functions[metric](results)
-        click.echo(template.format(metric + ":", result))
+    for metric, score in eval_batch.results().items():
+        click.echo(template.format(metric + ":", score))
+
+
+@cli.command('optimize')
+@click_log.simple_verbosity_option(logger)
+@click.argument('project_id')
+@click.argument('directory')
+@click.option('--backend-param', '-b', multiple=True)
+def run_optimize(project_id, directory, backend_param):
+    """"
+    Evaluate the analysis results for a directory with documents against a
+    gold standard given in subject files. Test different limit/threshold
+    values and report the precision, recall and F-measure of each combination
+    of settings.
+
+    USAGE: annif optimize <project_id> <directory>
+    """
+    project = get_project(project_id)
+    backend_params = parse_backend_params(backend_param)
+
+    filter_batches = generate_filter_batches()
+
+    for docfilename, subjectfilename in annif.corpus.DocumentDirectory(
+            directory, require_subjects=True):
+        with open(docfilename) as docfile:
+            text = docfile.read()
+        hits = project.analyze(text, backend_params)
+        with open(subjectfilename) as subjfile:
+            gold_subjects = annif.corpus.SubjectSet(subjfile.read())
+        for hit_filter, batch in filter_batches.values():
+            batch.evaluate(hit_filter(hits), gold_subjects)
+
+    click.echo("\t".join(('Limit', 'Thresh.', 'Prec.', 'Rec.', 'F-meas.')))
+
+    best_scores = collections.defaultdict(float)
+    best_params = {}
+
+    template = "{:d}\t{:.02f}\t{:.04f}\t{:.04f}\t{:.04f}"
+    for params, filter_batch in filter_batches.items():
+        results = filter_batch[1].results()
+        for metric, score in results.items():
+            if score > best_scores[metric]:
+                best_scores[metric] = score
+                best_params[metric] = params
+        click.echo(
+            template.format(
+                params[0],
+                params[1],
+                results['Precision'],
+                results['Recall'],
+                results['F-measure']))
+
+    click.echo()
+    template2 = "Best {}:\t{:.04f}\tLimit: {:d}\tThreshold: {:.02f}"
+    for metric in ('Precision', 'Recall', 'F-measure', 'NDCG@5', 'NDCG@10'):
+        click.echo(
+            template2.format(
+                metric,
+                best_scores[metric],
+                best_params[metric][0],
+                best_params[metric][1]))
 
 
 if __name__ == '__main__':

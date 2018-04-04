@@ -99,18 +99,17 @@ class AnnifProject:
             self._vectorizer = joblib.load(path)
         return self._vectorizer
 
-    def analyze(self, text, limit=10, threshold=0.0, backend_params=None):
+    def analyze(self, text, backend_params=None):
         """Analyze the given text by passing it to backends and joining the
         results. Returns a list of AnalysisHit objects ordered by decreasing
-        score. The limit parameter defines the maximum number of hits to
-        return. Only hits whose score is over the threshold are returned."""
+        score."""
 
         logger.debug('Analyzing text "%s..." (len=%d)',
                      text[:20], len(text))
         hits_by_uri = self._analyze_with_backends(text, backend_params)
         merged_hits = self._merge_hits(hits_by_uri)
         logger.debug('%d hits after merging', len(merged_hits))
-        return list(annif.hit.HitFilter(merged_hits, limit, threshold))
+        return merged_hits
 
     def _create_subject_index(self, subjects):
         logger.info('creating subject index')

@@ -7,19 +7,15 @@ AnalysisHit = collections.namedtuple('AnalysisHit', 'uri label score')
 
 
 class HitFilter:
-    """A class that represents a filtered collection of hits.
-    The original hits are given in the constructor along with parameters
-    used for filtering. The collection can then be iterated."""
+    """A reusable filter for filtering AnalysisHit objects."""
 
-    def __init__(self, hits, limit=None, threshold=0.0):
-        self._hits = hits
+    def __init__(self, limit=None, threshold=0.0):
         self._limit = limit
         self._threshold = threshold
 
-    def __iter__(self):
-        hits = sorted(self._hits, key=lambda hit: hit.score, reverse=True)
+    def __call__(self, orighits):
+        hits = sorted(orighits, key=lambda hit: hit.score, reverse=True)
         if self._limit is not None:
             hits = hits[:self._limit]
-        for hit in hits:
-            if hit.score >= self._threshold and hit.score > 0.0:
-                yield hit
+        return [hit for hit in hits
+                if hit.score >= self._threshold and hit.score > 0.0]
