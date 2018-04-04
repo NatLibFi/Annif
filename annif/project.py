@@ -110,7 +110,7 @@ class AnnifProject:
         hits_by_uri = self._analyze_with_backends(text, backend_params)
         merged_hits = self._merge_hits(hits_by_uri)
         logger.debug('%d hits after merging', len(merged_hits))
-        return list(annif.hit.HitFilter(merged_hits, limit, threshold))
+        return annif.hit.HitFilter(limit, threshold)(merged_hits)
 
     def _create_subject_index(self, subjects):
         logger.info('creating subject index')
