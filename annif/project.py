@@ -77,19 +77,6 @@ class AnnifProject:
             merged_hits.append(hit)
         return merged_hits
 
-    @classmethod
-    def _filter_hits(cls, hits, limit, threshold):
-        hits.sort(key=lambda hit: hit.score, reverse=True)
-        hits = hits[:limit]
-        logger.debug(
-            '%d hits after applying limit %d',
-            len(hits), limit)
-        hits = [hit for hit in hits if hit.score >= threshold]
-        logger.debug(
-            '%d hits after applying threshold %f',
-            len(hits), threshold)
-        return hits
-
     @property
     def analyzer(self):
         if self._analyzer is None:
@@ -123,7 +110,7 @@ class AnnifProject:
         hits_by_uri = self._analyze_with_backends(text, backend_params)
         merged_hits = self._merge_hits(hits_by_uri)
         logger.debug('%d hits after merging', len(merged_hits))
-        return self._filter_hits(merged_hits, limit, threshold)
+        return list(annif.hit.HitFilter(merged_hits, limit, threshold))
 
     def _create_subject_index(self, subjects):
         logger.info('creating subject index')
