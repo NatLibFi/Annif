@@ -10,4 +10,5 @@ class DummyBackend(backend.AnnifBackend):
 
     def _analyze(self, text, project, params):
         score = float(params.get('score', 1.0))
-        return [AnalysisHit('http://example.org/dummy', 'dummy', score)]
+        return [AnalysisHit(uri='http://example.org/dummy',
+                            label='dummy', score=score)]

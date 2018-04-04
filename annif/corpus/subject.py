@@ -1,16 +1,12 @@
 """A directory of files as a subject corpus"""
 
 
+import collections
 import glob
 import os.path
-import re
 
 
-class Subject:
-    def __init__(self, uri, label, text):
-        self.uri = uri
-        self.label = label
-        self.text = text
+Subject = collections.namedtuple('Subject', 'uri label text')
 
 
 class SubjectDirectory:
@@ -25,7 +21,7 @@ class SubjectDirectory:
             with open(filename) as subjfile:
                 uri, label = subjfile.readline().strip().split(' ', 1)
                 text = ' '.join(subjfile.readlines())
-                yield Subject(uri, label, text)
+                yield Subject(uri=uri, label=label, text=text)
 
 
 class SubjectIndex:
@@ -64,6 +60,6 @@ class SubjectIndex:
                 for line in subjfile:
                     uri, label = line.strip().split(None, 1)
                     uri = uri[1:-1]
-                    yield Subject(uri, label, None)
+                    yield Subject(uri=uri, label=label, text=None)
 
         return cls(file_as_corpus(path))

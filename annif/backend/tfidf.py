@@ -62,10 +62,9 @@ class TFIDFBackend(backend.AnnifBackend):
             subject = project.subjects[subject_id]
             results.append(
                 AnalysisHit(
-                    subject[0],
-                    subject[1],
-                    score /
-                    len(chunk_results)))
+                    uri=subject[0],
+                    label=subject[1],
+                    score=score / len(chunk_results)))
         return results
 
     def _analyze(self, text, project, params):

@@ -13,6 +13,6 @@ class HTTPBackend(backend.AnnifBackend):
     def _analyze(self, text, project, params):
         data = {'text': text, 'project': params['project']}
         req = requests.post(params['endpoint'], data=data)
-        return [AnalysisHit(h['uri'], h['label'], h['score'])
+        return [AnalysisHit(uri=h['uri'], label=h['label'], score=h['score'])
                 for h in req.json()
                 if h['score'] > 0.0]

@@ -73,8 +73,7 @@ class AnnifProject:
         merged_hits = []
         for score_hits in hits_by_uri.values():
             total = sum([sh[0] for sh in score_hits])
-            hit = annif.hit.AnalysisHit(
-                score_hits[0][1].uri, score_hits[0][1].label, total)
+            hit = score_hits[0][1]._replace(score=total)
             merged_hits.append(hit)
         return merged_hits
 
