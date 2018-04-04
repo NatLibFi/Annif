@@ -204,5 +204,70 @@ def run_evaldir(project_id, directory, limit, threshold, backend_param):
         click.echo(template.format(metric + ":", score))
 
 
+@cli.command('optimize')
+@click_log.simple_verbosity_option(logger)
+@click.argument('project_id')
+@click.argument('directory')
+@click.option('--backend-param', '-b', multiple=True)
+def run_optimize(project_id, directory, backend_param):
+    """"
+    Evaluate the analysis results for a directory with documents against a
+    gold standard given in subject files. Test different limit/threshold
+    values and report the precision, recall and F-measure of each combination
+    of settings.
+
+    USAGE: annif optimize <project_id> <directory>
+    """
+    project = get_project(project_id)
+    backend_params = parse_backend_params(backend_param)
+
+    filter_batches = collections.OrderedDict()
+    for limit in range(1, 16):
+        for threshold in [i * 0.05 for i in range(20)]:
+            hit_filter = HitFilter(limit, threshold)
+            batch = annif.eval.EvaluationBatch()
+            filter_batches[(limit, threshold)] = (hit_filter, batch)
+
+    for docfilename, subjectfilename in annif.corpus.DocumentDirectory(
+            directory, require_subjects=True):
+        with open(docfilename) as docfile:
+            text = docfile.read()
+        hits = project.analyze(text, backend_params)
+        with open(subjectfilename) as subjfile:
+            gold_subjects = annif.corpus.SubjectSet(subjfile.read())
+        for hit_filter, batch in filter_batches.values():
+            batch.evaluate(hit_filter(hits), gold_subjects)
+
+    click.echo("\t".join(('Limit', 'Thresh.', 'Prec.', 'Rec.', 'F-meas.')))
+
+    best_scores = collections.defaultdict(float)
+    best_params = {}
+
+    template = "{:d}\t{:.02f}\t{:.04f}\t{:.04f}\t{:.04f}"
+    for params, filter_batch in filter_batches.items():
+        results = filter_batch[1].results()
+        for metric, score in results.items():
+            if score > best_scores[metric]:
+                best_scores[metric] = score
+                best_params[metric] = params
+        click.echo(
+            template.format(
+                params[0],
+                params[1],
+                results['Precision'],
+                results['Recall'],
+                results['F-measure']))
+
+    click.echo()
+    template2 = "Best {}:\t{:.04f}\tLimit: {:d}\tThreshold: {:.02f}"
+    for metric in ('Precision', 'Recall', 'F-measure', 'NDCG@5', 'NDCG@10'):
+        click.echo(
+            template2.format(
+                metric,
+                best_scores[metric],
+                best_params[metric][0],
+                best_params[metric][1]))
+
+
 if __name__ == '__main__':
     cli()
