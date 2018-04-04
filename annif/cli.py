@@ -43,6 +43,16 @@ def parse_backend_params(backend_param):
     return backend_params
 
 
+def generate_filter_batches():
+    filter_batches = collections.OrderedDict()
+    for limit in range(1, 16):
+        for threshold in [i * 0.05 for i in range(20)]:
+            hit_filter = HitFilter(limit, threshold)
+            batch = annif.eval.EvaluationBatch()
+            filter_batches[(limit, threshold)] = (hit_filter, batch)
+    return filter_batches
+
+
 @cli.command('list-projects')
 def run_list_projects():
     """
@@ -221,12 +231,7 @@ def run_optimize(project_id, directory, backend_param):
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
 
-    filter_batches = collections.OrderedDict()
-    for limit in range(1, 16):
-        for threshold in [i * 0.05 for i in range(20)]:
-            hit_filter = HitFilter(limit, threshold)
-            batch = annif.eval.EvaluationBatch()
-            filter_batches[(limit, threshold)] = (hit_filter, batch)
+    filter_batches = generate_filter_batches()
 
     for docfilename, subjectfilename in annif.corpus.DocumentDirectory(
             directory, require_subjects=True):
