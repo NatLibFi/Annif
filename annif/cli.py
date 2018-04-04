@@ -12,6 +12,7 @@ import annif
 import annif.corpus
 import annif.eval
 import annif.project
+from annif.hit import HitFilter
 from annif import logger
 
 click_log.basic_config(logger)
@@ -134,7 +135,8 @@ def run_analyze(project_id, limit, threshold, backend_param):
     project = get_project(project_id)
     text = sys.stdin.read()
     backend_params = parse_backend_params(backend_param)
-    hits = project.analyze(text, limit, threshold, backend_params)
+    hit_filter = HitFilter(limit, threshold)
+    hits = hit_filter(project.analyze(text, backend_params))
     for hit in hits:
         click.echo("{}\t<{}>\t{}".format(hit.score, hit.uri, hit.label))
 
@@ -157,7 +159,8 @@ def run_eval(project_id, subject_file, limit, threshold, backend_param):
     project = get_project(project_id)
     text = sys.stdin.read()
     backend_params = parse_backend_params(backend_param)
-    hits = project.analyze(text, limit, threshold, backend_params)
+    hit_filter = HitFilter(limit=limit, threshold=threshold)
+    hits = hit_filter(project.analyze(text, backend_params))
     with open(subject_file) as subjfile:
         gold_subjects = annif.corpus.SubjectSet(subjfile.read())
 
@@ -186,12 +189,13 @@ def run_evaldir(project_id, directory, limit, threshold, backend_param):
     backend_params = parse_backend_params(backend_param)
 
     measures = collections.OrderedDict()
+    hit_filter = HitFilter(limit=limit, threshold=threshold)
     merge_functions = {}
     for docfilename, subjectfilename in annif.corpus.DocumentDirectory(
             directory, require_subjects=True):
         with open(docfilename) as docfile:
             text = docfile.read()
-        hits = project.analyze(text, limit, threshold, backend_params)
+        hits = hit_filter(project.analyze(text, backend_params))
         with open(subjectfilename) as subjfile:
             gold_subjects = annif.corpus.SubjectSet(subjfile.read())
 

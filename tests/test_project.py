@@ -52,7 +52,7 @@ def test_get_project_nonexistent(app):
 def test_project_analyze(app):
     with app.app_context():
         project = annif.project.get_project('dummy-en')
-    result = project.analyze('this is some text', limit=10, threshold=0.0)
+    result = project.analyze('this is some text')
     assert len(result) == 1
     assert result[0].uri == 'http://example.org/dummy'
     assert result[0].label == 'dummy'
