@@ -62,7 +62,7 @@ class FastTextBackend(backend.AnnifBackend):
     def _normalize_text(cls, project, text):
         return ' '.join(project.analyzer.tokenize_words(text))
 
-    def load_subjects(self, subjects, project):
+    def _create_train_file(self, subjects, project):
         self.info('creating fastText training file')
 
         doc_subjects = collections.defaultdict(set)
@@ -81,6 +81,7 @@ class FastTextBackend(backend.AnnifBackend):
                                'train.txt',
                                method=self._write_train_file)
 
+    def _create_model(self):
         self.info('creating fastText model')
         trainpath = os.path.join(self._get_datadir(), 'train.txt')
         modelpath = os.path.join(self._get_datadir(), 'model')
@@ -88,26 +89,14 @@ class FastTextBackend(backend.AnnifBackend):
                   if param in self.FASTTEXT_PARAMS}
         self._model = fasttext.supervised(trainpath, modelpath, **params)
 
-    def _analyze(self, text, project, params):
-        self.initialize()
-        self.debug('Analyzing text "{}..." (len={})'.format(
-            text[:20], len(text)))
+    def load_subjects(self, subjects, project):
+        self._create_train_file(subjects, project)
+        self._create_model()
 
-        sentences = project.analyzer.tokenize_sentences(text)
-        self.debug('Found {} sentences'.format(len(sentences)))
-        chunksize = int(params['chunksize'])
-        chunktexts = []
-        for i in range(0, len(sentences), chunksize):
-            chunktext = ' '.join(sentences[i:i + chunksize])
-            normalized = self._normalize_text(project, chunktext)
-            if normalized != '':
-                chunktexts.append(normalized)
-        self.debug('Split sentences into {} chunks'.format(len(chunktexts)))
+    def _analyze_chunks(self, chunktexts, project):
         limit = int(self.params['limit'])
         ft_results = self._model.predict_proba(chunktexts, limit)
-
         label_scores = collections.defaultdict(float)
-
         for label, score in ft_results[0]:
             label_scores[label] += score
         best_labels = sorted([(score, label)
@@ -122,3 +111,20 @@ class FastTextBackend(backend.AnnifBackend):
                 label=subject[1],
                 score=score / len(chunktexts)))
         return results
+
+    def _analyze(self, text, project, params):
+        self.initialize()
+        self.debug('Analyzing text "{}..." (len={})'.format(
+            text[:20], len(text)))
+        sentences = project.analyzer.tokenize_sentences(text)
+        self.debug('Found {} sentences'.format(len(sentences)))
+        chunksize = int(params['chunksize'])
+        chunktexts = []
+        for i in range(0, len(sentences), chunksize):
+            chunktext = ' '.join(sentences[i:i + chunksize])
+            normalized = self._normalize_text(project, chunktext)
+            if normalized != '':
+                chunktexts.append(normalized)
+        self.debug('Split sentences into {} chunks'.format(len(chunktexts)))
+
+        return self._analyze_chunks(chunktexts, project)
