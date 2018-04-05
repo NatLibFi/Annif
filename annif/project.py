@@ -128,8 +128,10 @@ class AnnifProject:
             method=joblib.dump)
 
     def load_subjects(self, subjects):
-        self._create_subject_index(subjects)
-        self._create_vectorizer(subjects)
+        if True in [be[0].needs_subject_index for be in self.backends]:
+            self._create_subject_index(subjects)
+        if True in [be[0].needs_subject_vectorizer for be in self.backends]:
+            self._create_vectorizer(subjects)
 
         for backend, weight in self.backends:
             logger.debug(

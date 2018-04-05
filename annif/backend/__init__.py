@@ -5,6 +5,7 @@ from flask import current_app
 from . import dummy
 from . import http
 from . import tfidf
+from . import fasttext
 
 
 _backend_types = {}
@@ -24,6 +25,7 @@ def get_backend_type(backend_type):
 register_backend_type(dummy.DummyBackend)
 register_backend_type(http.HTTPBackend)
 register_backend_type(tfidf.TFIDFBackend)
+register_backend_type(fasttext.FastTextBackend)
 
 
 def _create_backends(backends_file, datadir):

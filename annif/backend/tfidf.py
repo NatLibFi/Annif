@@ -11,6 +11,8 @@ from . import backend
 
 class TFIDFBackend(backend.AnnifBackend):
     name = "tfidf"
+    needs_subject_index = True
+    needs_subject_vectorizer = True
 
     # defaults for uninitialized instances
     _index = None

@@ -32,6 +32,7 @@ Create a virtual environment by running:
 
 Install dependencies and download NLTK data:
 
+    pip install cython  # needed by fasttext, has to be installed first
     pip install -r requirements.txt
     python -m nltk.downloader punkt
 
