@@ -12,6 +12,23 @@ class FastTextBackend(backend.AnnifBackend):
     name = "fasttext"
     needs_subject_index = True
 
+    FASTTEXT_PARAMS = (
+        'lr',
+        'lr_update_rate',
+        'dim',
+        'ws',
+        'epoch',
+        'min_count',
+        'neg',
+        'word_ngrams',
+        'loss',
+        'bucket',
+        'minn',
+        'maxn',
+        'thread',
+        't'
+    )
+
     # defaults for uninitialized instances
     _model = None
 
@@ -66,14 +83,9 @@ class FastTextBackend(backend.AnnifBackend):
         self.info('creating fastText model')
         trainpath = os.path.join(self._get_datadir(), 'train.txt')
         modelpath = os.path.join(self._get_datadir(), 'model')
-        self._model = fasttext.supervised(
-            trainpath,
-            modelpath,
-            dim=300,
-            epoch=20,
-            lr=0.25,
-            min_count=3,
-            loss='hs')
+        params = {param: val for param, val in self.params.items()
+                  if param in self.FASTTEXT_PARAMS}
+        self._model = fasttext.supervised(trainpath, modelpath, **params)
 
     def _analyze(self, text, project, params):
         self.initialize()
@@ -82,7 +94,7 @@ class FastTextBackend(backend.AnnifBackend):
         normalized_text = self._normalize_text(project, text)
         if normalized_text == '':
             return []
-        ft_results = self._model.predict_proba([text], 10)
+        ft_results = self._model.predict_proba([text], self.params['limit'])
         results = []
         for label, score in ft_results[0]:
             subject = self._label_to_subject(project, label)

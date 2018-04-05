@@ -36,7 +36,12 @@ def test_fasttext_load_subjects(datadir, subject_corpus, project):
     fasttext_type = annif.backend.get_backend_type("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
-        params={'limit': 10},
+        params={
+            'limit': 20,
+            'dim': 100,
+            'lr': 0.25,
+            'epoch': 20,
+            'loss': 'hs'},
         datadir=str(datadir))
 
     fasttext.load_subjects(subject_corpus, project)
@@ -49,7 +54,12 @@ def test_fasttext_analyze(datadir, project):
     fasttext_type = annif.backend.get_backend_type("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
-        params={'limit': 10},
+        params={
+            'limit': 20,
+            'dim': 100,
+            'lr': 0.25,
+            'epoch': 20,
+            'loss': 'hs'},
         datadir=str(datadir))
 
     results = fasttext.analyze("""Arkeologiaa sanotaan joskus myös
@@ -59,7 +69,7 @@ def test_fasttext_analyze(datadir, project):
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan.""", project)
 
-    assert len(results) == 10
+    assert len(results) == 20
     assert 'http://www.yso.fi/onto/yso/p1265' in [
         result.uri for result in results]
     assert 'arkeologia' in [result.label for result in results]
