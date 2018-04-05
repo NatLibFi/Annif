@@ -37,6 +37,10 @@ class FastTextBackend(backend.AnnifBackend):
             path = os.path.join(self._get_datadir(), 'model.bin')
             self.debug('loading fastText model from {}'.format(path))
             self._model = fasttext.load_model(path)
+            self.debug('loaded model {}'.format(str(self._model)))
+            self.debug('dim: {}'.format(self._model.dim))
+            self.debug('epoch: {}'.format(self._model.epoch))
+            self.debug('loss_name: {}'.format(self._model.loss_name))
 
     @classmethod
     def _id_to_label(cls, subject_id):
@@ -94,7 +98,8 @@ class FastTextBackend(backend.AnnifBackend):
         normalized_text = self._normalize_text(project, text)
         if normalized_text == '':
             return []
-        ft_results = self._model.predict_proba([text], self.params['limit'])
+        limit = int(self.params['limit'])
+        ft_results = self._model.predict_proba([text], limit)
         results = []
         for label, score in ft_results[0]:
             subject = self._label_to_subject(project, label)
