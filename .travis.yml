@@ -5,6 +5,7 @@ python:
   - "3.6"
 cache: pip
 install:
+  - pip install cython
   - pip install -r requirements.txt
   - travis_wait 30 python -m nltk.downloader punkt
 script:

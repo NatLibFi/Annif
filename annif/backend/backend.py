@@ -12,6 +12,8 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     non-implemented methods should be overridden in subclasses."""
 
     name = None
+    needs_subject_index = False
+    needs_subject_vectorizer = False
 
     def __init__(self, backend_id, params, datadir):
         """Initialize backend with specific parameters. The
