@@ -95,16 +95,31 @@ class FastTextBackend(backend.AnnifBackend):
         self.initialize()
         self.debug('Analyzing text "{}..." (len={})'.format(
             text[:20], len(text)))
-        normalized_text = self._normalize_text(project, text)
-        if normalized_text == '':
-            return []
+
+        sentences = project.analyzer.tokenize_sentences(text)
+        self.debug('Found {} sentences'.format(len(sentences)))
+        chunksize = int(params['chunksize'])
+        chunktexts = []
+        for i in range(0, len(sentences), chunksize):
+            chunktext = ' '.join(sentences[i:i + chunksize])
+            chunktexts.append(self._normalize_text(project, chunktext))
+        self.debug('Split sentences into {} chunks'.format(len(chunktexts)))
         limit = int(self.params['limit'])
-        ft_results = self._model.predict_proba([text], limit)
-        results = []
+        ft_results = self._model.predict_proba(chunktexts, limit)
+
+        label_scores = collections.defaultdict(float)
+
         for label, score in ft_results[0]:
+            label_scores[label] += score
+        best_labels = sorted([(score, label)
+                              for label, score in label_scores.items()],
+                             reverse=True)
+
+        results = []
+        for score, label in best_labels[:limit]:
             subject = self._label_to_subject(project, label)
             results.append(AnalysisHit(
                 uri=subject[0],
                 label=subject[1],
-                score=score))
+                score=score / len(chunktexts)))
         return results

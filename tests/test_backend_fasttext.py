@@ -56,6 +56,7 @@ def test_fasttext_analyze(datadir, project):
         backend_id='fasttext',
         params={
             'limit': 50,
+            'chunksize': 1,
             'dim': 100,
             'lr': 0.25,
             'epoch': 20,
