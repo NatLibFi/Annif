@@ -42,6 +42,13 @@ class SubjectIndex:
     def __getitem__(self, subject_id):
         return (self._uris[subject_id], self._labels[subject_id])
 
+    def by_label(self, label):
+        try:
+            subject_id = self._labels.index(label)
+            return self[subject_id]
+        except ValueError:
+            return None
+
     def save(self, path):
         """Save this subject index into a file."""
 

@@ -6,6 +6,7 @@ from . import dummy
 from . import http
 from . import tfidf
 from . import fasttext
+from . import mauidir
 
 
 _backend_types = {}
@@ -26,6 +27,7 @@ register_backend_type(dummy.DummyBackend)
 register_backend_type(http.HTTPBackend)
 register_backend_type(tfidf.TFIDFBackend)
 register_backend_type(fasttext.FastTextBackend)
+register_backend_type(mauidir.MauiDirBackend)
 
 
 def _create_backends(backends_file, datadir):
