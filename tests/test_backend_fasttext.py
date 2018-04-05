@@ -37,7 +37,7 @@ def test_fasttext_load_subjects(datadir, subject_corpus, project):
     fasttext = fasttext_type(
         backend_id='fasttext',
         params={
-            'limit': 20,
+            'limit': 50,
             'dim': 100,
             'lr': 0.25,
             'epoch': 20,
@@ -55,7 +55,7 @@ def test_fasttext_analyze(datadir, project):
     fasttext = fasttext_type(
         backend_id='fasttext',
         params={
-            'limit': 20,
+            'limit': 50,
             'dim': 100,
             'lr': 0.25,
             'epoch': 20,
@@ -69,7 +69,7 @@ def test_fasttext_analyze(datadir, project):
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan.""", project)
 
-    assert len(results) == 20
+    assert len(results) == 50
     assert 'http://www.yso.fi/onto/yso/p1265' in [
         result.uri for result in results]
     assert 'arkeologia' in [result.label for result in results]
