@@ -9,6 +9,8 @@ from . import backend
 
 
 class FastTextBackend(backend.AnnifBackend):
+    """fastText backend for Annif"""
+
     name = "fasttext"
     needs_subject_index = True
 
@@ -71,10 +73,10 @@ class FastTextBackend(backend.AnnifBackend):
                 doc_subjects[line].add(subject_id)
 
         doc_subjects_normalized = {}
-        for doc, subjects in doc_subjects.items():
+        for doc, subjs in doc_subjects.items():
             text = self._normalize_text(project, doc)
             if text != '':
-                doc_subjects_normalized[text] = subjects
+                doc_subjects_normalized[text] = subjs
 
         annif.util.atomic_save(doc_subjects_normalized,
                                self._get_datadir(),
