@@ -99,7 +99,9 @@ class FastTextBackend(backend.AnnifBackend):
         chunktexts = []
         for i in range(0, len(sentences), chunksize):
             chunktext = ' '.join(sentences[i:i + chunksize])
-            chunktexts.append(self._normalize_text(project, chunktext))
+            normalized = self._normalize_text(project, chunktext)
+            if normalized != '':
+                chunktexts.append(normalized)
         self.debug('Split sentences into {} chunks'.format(len(chunktexts)))
         limit = int(self.params['limit'])
         ft_results = self._model.predict_proba(chunktexts, limit)
