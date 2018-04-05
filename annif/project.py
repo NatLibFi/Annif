@@ -112,11 +112,19 @@ class AnnifProject:
         return merged_hits
 
     def _create_subject_index(self, subjects):
+        if True not in [be[0].needs_subject_index for be in self.backends]:
+            logger.debug(
+                'not creating subject index: not needed by any backend')
+            return
         logger.info('creating subject index')
         self._subjects = annif.corpus.SubjectIndex(subjects)
         annif.util.atomic_save(self._subjects, self._get_datadir(), 'subjects')
 
     def _create_vectorizer(self, subjects):
+        if True not in [
+                be[0].needs_subject_vectorizer for be in self.backends]:
+            logger.debug('not creating vectorizer: not needed by any backend')
+            return
         logger.info('creating vectorizer')
         self._vectorizer = TfidfVectorizer(
             tokenizer=self.analyzer.tokenize_words)
@@ -128,10 +136,8 @@ class AnnifProject:
             method=joblib.dump)
 
     def load_subjects(self, subjects):
-        if True in [be[0].needs_subject_index for be in self.backends]:
-            self._create_subject_index(subjects)
-        if True in [be[0].needs_subject_vectorizer for be in self.backends]:
-            self._create_vectorizer(subjects)
+        self._create_subject_index(subjects)
+        self._create_vectorizer(subjects)
 
         for backend, weight in self.backends:
             logger.debug(
