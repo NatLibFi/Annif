@@ -67,11 +67,8 @@ class FastTextBackend(backend.AnnifBackend):
 
         doc_subjects = collections.defaultdict(set)
         for subject_id, subj in enumerate(subjects):
-            self.debug("Subject:" + str(subj))
-            self.debug("Subject id:" + str(subject_id))
             for line in subj.text.splitlines():
                 doc_subjects[line].add(subject_id)
-                self.debug(line)
 
         doc_subjects_normalized = {}
         for doc, subjects in doc_subjects.items():
