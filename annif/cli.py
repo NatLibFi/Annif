@@ -162,14 +162,8 @@ def run_analyze(project_id, limit, threshold, backend_param):
 @click.option('--limit', default=10)
 @click.option('--threshold', default=0.0)
 @click.option('--backend-param', '-b', multiple=True)
-def run_analyzedir(
-        project_id,
-        directory,
-        suffix,
-        force,
-        limit,
-        threshold,
-        backend_param):
+def run_analyzedir(project_id, directory, suffix, force,
+                   limit, threshold, backend_param):
     """"
     Analyze a directory with documents. Write the results in TSV files
     with the given suffix.
