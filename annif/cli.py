@@ -4,6 +4,8 @@ operations and printing the results to console."""
 
 import collections
 import logging
+import os.path
+import re
 import sys
 import click
 import click_log
@@ -149,6 +151,44 @@ def run_analyze(project_id, limit, threshold, backend_param):
     hits = hit_filter(project.analyze(text, backend_params))
     for hit in hits:
         click.echo("{}\t<{}>\t{}".format(hit.score, hit.uri, hit.label))
+
+
+@cli.command('analyzedir')
+@click_log.simple_verbosity_option(logger)
+@click.argument('project_id')
+@click.argument('directory')
+@click.option('--suffix', default='.annif')
+@click.option('--force/--no-force', default=False)
+@click.option('--limit', default=10)
+@click.option('--threshold', default=0.0)
+@click.option('--backend-param', '-b', multiple=True)
+def run_analyzedir(project_id, directory, suffix, force,
+                   limit, threshold, backend_param):
+    """"
+    Analyze a directory with documents. Write the results in TSV files
+    with the given suffix.
+
+    USAGE: annif analyzedir <project_id> <directory> [--suffix=SUFFIX]
+                            [--force=FORCE] [--limit=N] [--threshold=N]
+    """
+    project = get_project(project_id)
+    backend_params = parse_backend_params(backend_param)
+    hit_filter = HitFilter(limit, threshold)
+
+    for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
+            directory, require_subjects=False):
+        with open(docfilename) as docfile:
+            text = docfile.read()
+        subjectfilename = re.sub(r'\.txt$', suffix, docfilename)
+        if os.path.exists(subjectfilename) and not force:
+            click.echo(
+                "Not overwriting {} (use --force to override)".format(
+                    subjectfilename))
+            continue
+        with open(subjectfilename, 'w') as subjfile:
+            for hit in hit_filter(project.analyze(text, backend_params)):
+                line = "<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score)
+                click.echo(line, file=subjfile)
 
 
 @cli.command('eval')
