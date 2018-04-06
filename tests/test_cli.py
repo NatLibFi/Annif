@@ -109,6 +109,19 @@ def test_analyze_param():
     assert result.exit_code == 0
 
 
+def test_analyzedir(tmpdir):
+    tmpdir.join('doc1.txt').write('nothing special')
+
+    result = runner.invoke(
+        annif.cli.cli, ['analyzedir', 'dummy-en', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    assert tmpdir.join('doc1.annif').exists()
+    assert tmpdir.join('doc1.annif').read_text(
+        'utf-8') == "<http://example.org/dummy>\tdummy\t0.5\n"
+
+
 def test_eval_label(tmpdir):
     keyfile = tmpdir.join('dummy.key')
     keyfile.write("dummy\nanother\n")
