@@ -158,7 +158,7 @@ def run_analyze(project_id, limit, threshold, backend_param):
 @click.argument('project_id')
 @click.argument('directory')
 @click.option('--suffix', default='.annif')
-@click.option('--force', default=False)
+@click.option('--force/--no-force', default=False)
 @click.option('--limit', default=10)
 @click.option('--threshold', default=0.0)
 @click.option('--backend-param', '-b', multiple=True)
