@@ -121,6 +121,13 @@ def test_analyzedir(tmpdir):
     assert tmpdir.join('doc1.annif').read_text(
         'utf-8') == "<http://example.org/dummy>\tdummy\t0.5\n"
 
+    # make sure that preexisting subject files are not overwritten
+    result = runner.invoke(
+        annif.cli.cli, ['analyzedir', 'dummy-en', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Not overwriting" in result.output
+
 
 def test_eval_label(tmpdir):
     keyfile = tmpdir.join('dummy.key')
