@@ -109,6 +109,34 @@ def test_analyze_param():
     assert result.exit_code == 0
 
 
+def test_analyzedir(tmpdir):
+    tmpdir.join('doc1.txt').write('nothing special')
+
+    result = runner.invoke(
+        annif.cli.cli, ['analyzedir', 'dummy-en', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    assert tmpdir.join('doc1.annif').exists()
+    assert tmpdir.join('doc1.annif').read_text(
+        'utf-8') == "<http://example.org/dummy>\tdummy\t0.5\n"
+
+    # make sure that preexisting subject files are not overwritten
+    result = runner.invoke(
+        annif.cli.cli, ['analyzedir', 'dummy-en', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Not overwriting" in result.output
+
+    # check that the --force parameter forces overwriting
+    result = runner.invoke(
+        annif.cli.cli, ['analyzedir', 'dummy-fi', '--force', str(tmpdir)])
+    assert tmpdir.join('doc1.annif').exists()
+    assert "Not overwriting" not in result.output
+    assert tmpdir.join('doc1.annif').read_text(
+        'utf-8') == "<http://example.org/dummy>\tdummy\t1.0\n"
+
+
 def test_eval_label(tmpdir):
     keyfile = tmpdir.join('dummy.key')
     keyfile.write("dummy\nanother\n")
