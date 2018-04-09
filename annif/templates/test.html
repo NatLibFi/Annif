@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style type="text/css">
+textarea {
+  float: left;
+  margin-right: 2em;
+}
+#results {
+  min-height: 20em;
+  margin-left: 3em;
+  list-style-type: none;
+
+}
+</style>
+<script type="text/javascript">
+
+var backend_url = '/cgi-bin/autoindex.cgi';
+
+function clearResults() {
+    $('#results').empty();
+}
+
+function autoindex() {
+    $.ajax({
+        url: backend_url,
+        method: 'POST',
+        data: { 
+          text: $('#text').val(),
+          project: $('#project').val()
+        },
+        success: function(data) {
+            $.each(data, function(idx, value) {
+                $('#results').append(
+                    $('<li>').append(
+                        $('<input type="checkbox" name="uri">').attr('value', value.uri),
+                        $('<a>').attr('href',value.uri).append(value.label)
+                    )
+                );
+            });
+        }
+    });
+}
+
+function teach() {
+    $.each($('input:checked'), function() {
+        $(this).prop('checked', false);
+        $.ajax({
+            url: backend_url,
+            method: 'POST',
+            data: { uri: $(this).val() },
+            success: function(data) {
+                console.log(data);
+            }
+        });
+    });
+}
+
+$(document).ready(function() {
+    $('#submit').click(function() {
+        clearResults();
+        autoindex();
+    });
+    $('#teach').click(function() {
+        teach();
+        clearResults();
+        // reanalyze after 1 second, to give the backend time to adjust
+        setTimeout(autoindex, 1000);
+    });
+});
+
+</script>
+{% endblock %}
+
+{% block content %}
+<h1>Annif</h1>
+<p>Welcome!</p>
+
+<h2>Try it!</h2>
+
+<label for="text">Text to analyze:</label><br>
+<textarea rows="30" cols="100" name="text" id="text">
+
+</textarea>
+<div>
+<label for="project">Language/Project:</label>
+<select name="project" id="project">
+  <option value="tfidf-fi">TF-IDF Finnish (YSO)</option>
+</select>
+
+<input type="submit" name="submit" id="submit" value="Analyze">
+
+</div>
+<h2>Results</h2>
+<ul id="results">
+</ul>
+{% endblock %}
