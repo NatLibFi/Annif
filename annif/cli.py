@@ -63,14 +63,14 @@ def run_list_projects():
     Usage: annif list-projects
     """
 
-    template = "{0: <15}{1: <15}"
+    template = "{0: <15}{1: <20}{2: <15}"
 
-    header = template.format("Project ID", "Language")
+    header = template.format("Project ID", "Project Name", "Language")
     click.echo(header)
     click.echo("-" * len(header))
 
     for proj in annif.project.get_projects().values():
-        click.echo(template.format(proj.project_id, proj.language))
+        click.echo(template.format(proj.project_id, proj.name, proj.language))
 
 
 @cli.command('show-project')
@@ -89,9 +89,10 @@ def run_show_project(project_id):
 
     proj = get_project(project_id)
 
-    template = "{0:<15}{1}"
+    template = "{0:<20}{1}"
 
     click.echo(template.format('Project ID:', proj.project_id))
+    click.echo(template.format('Project Name:', proj.project_id))
     click.echo(template.format('Language:', proj.language))
 
 
