@@ -56,7 +56,7 @@ def test_project_analyze(app):
     assert len(result) == 1
     assert result[0].uri == 'http://example.org/dummy'
     assert result[0].label == 'dummy'
-    assert result[0].score == 0.5
+    assert result[0].score == 1.0
 
 
 def test_project_analyze_combine(app):

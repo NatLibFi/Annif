@@ -71,7 +71,8 @@ class AnnifProject:
     def _merge_hits(self, hits_by_uri):
         merged_hits = []
         for score_hits in hits_by_uri.values():
-            total = sum([sh[0] for sh in score_hits]) / len(self.backends)
+            totalweight = sum((be[1] for be in self.backends))
+            total = sum([sh[0] for sh in score_hits]) / totalweight
             hit = score_hits[0][1]._replace(score=total)
             merged_hits.append(hit)
         return merged_hits
