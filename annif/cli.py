@@ -150,7 +150,7 @@ def run_analyze(project_id, limit, threshold, backend_param):
     hit_filter = HitFilter(limit, threshold)
     hits = hit_filter(project.analyze(text, backend_params))
     for hit in hits:
-        click.echo("{}\t<{}>\t{}".format(hit.score, hit.uri, hit.label))
+        click.echo("<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score))
 
 
 @cli.command('analyzedir')
