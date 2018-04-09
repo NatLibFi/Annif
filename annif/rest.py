@@ -2,6 +2,7 @@
 methods defined in the Swagger specification."""
 
 import annif.project
+from annif.hit import HitFilter
 
 
 def list_projects():
@@ -39,5 +40,6 @@ def analyze(project_id, text, limit, threshold):
     except ValueError:
         return "Project '{}' not found".format(project_id), 404
 
-    hits = project.analyze(text, limit, threshold)
+    hit_filter = HitFilter(limit, threshold)
+    hits = hit_filter(project.analyze(text))
     return [hit._asdict() for hit in hits]
