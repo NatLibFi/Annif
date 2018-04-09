@@ -84,7 +84,7 @@ def test_analyze():
         ['analyze', 'dummy-fi'],
         input='kissa')
     assert not result.exception
-    assert result.output == "1.0\t<http://example.org/dummy>\tdummy\n"
+    assert result.output == "<http://example.org/dummy>\tdummy\t1.0\n"
     assert result.exit_code == 0
 
 
@@ -105,7 +105,7 @@ def test_analyze_param():
         ['analyze', '--backend-param', 'dummy.score=0.8', 'dummy-fi'],
         input='kissa')
     assert not result.exception
-    assert result.output == "0.8\t<http://example.org/dummy>\tdummy\n"
+    assert result.output == "<http://example.org/dummy>\tdummy\t0.8\n"
     assert result.exit_code == 0
 
 
