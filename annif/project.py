@@ -24,6 +24,7 @@ class AnnifProject:
 
     def __init__(self, project_id, config, datadir, all_backends):
         self.project_id = project_id
+        self.name = config['name']
         self.language = config['language']
         self.analyzer_spec = config['analyzer']
         self.backends = self._initialize_backends(config['backends'],
@@ -148,6 +149,7 @@ class AnnifProject:
     def dump(self):
         """return this project as a dict"""
         return {'project_id': self.project_id,
+                'name': self.name,
                 'language': self.language,
                 'backends': [{'backend_id': be[0].backend_id,
                               'weight': be[1]} for be in self.backends]

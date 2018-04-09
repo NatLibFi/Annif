@@ -35,6 +35,7 @@ def test_get_project_fi_dump(app):
     pdump = project.dump()
     assert pdump == {
         'project_id': 'dummy-fi',
+        'name': 'Dummy Finnish',
         'language': 'fi',
         'backends': [{
             'backend_id': 'dummy',
