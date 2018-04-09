@@ -46,3 +46,9 @@ Start up the application
 
 Run tests with the command `pytest`. To have the test watch for changes in code
 and run automatically, use pytest-watch by running `ptw`.
+
+# License
+
+The code in this repository is licensed under Apache License 2.0, except for the
+dependencies included under `annif/static/css` and `annif/static/js`,
+which have their own licenses. See the file headers for details.
