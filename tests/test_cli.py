@@ -119,7 +119,7 @@ def test_analyzedir(tmpdir):
 
     assert tmpdir.join('doc1.annif').exists()
     assert tmpdir.join('doc1.annif').read_text(
-        'utf-8') == "<http://example.org/dummy>\tdummy\t0.5\n"
+        'utf-8') == "<http://example.org/dummy>\tdummy\t1.0\n"
 
     # make sure that preexisting subject files are not overwritten
     result = runner.invoke(
