@@ -17,32 +17,36 @@ This repo contains a rewritten production version of Annif based on the
 
 ### Dependencies
 
-Python 3.5+. Using `venv` for setting up an isolated environment is
-encouraged. Other dependencies are listed in `requirements.txt`.
+Python 3.5+. [Pipenv](https://docs.pipenv.org/) is used for managing
+dependencies.
 
 ### Installation and setup
 
 Clone the repository.
 
 Switch into the repository directory.
-Create a virtual environment by running:
+Install pipenv if you don't have it:
 
-    python3 -m venv annif_env
-    source annif_env/bin/activate
+    pip install pipenv  # or pip3 install pipenv
 
 Install dependencies and download NLTK data:
 
-    pip install cython  # needed by fasttext, has to be installed first
-    pip install -r requirements.txt
+    pipenv install  # use --dev if you want to run tests etc.
     python -m nltk.downloader punkt
 
 Set a shell alias for the application: 
 
-    alias annif="python -m annif.cli"
+    alias annif="pipenv run python -m annif.cli"
 
 Start up the application
 
     annif run
 
-Run tests with the command `pytest`. To have the test watch for changes in code
-and run automatically, use pytest-watch by running `ptw`.
+### Unit tests
+
+Run tests with the command `pipenv run pytest`. To have the test watch for
+changes in code and run automatically, use pytest-watch by running `pipenv
+run ptw`. 
+
+You can also run `pipenv shell` to enter the virtual environment and then
+use `pytest` or `ptw` commands directly.
