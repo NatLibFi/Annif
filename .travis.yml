@@ -6,7 +6,7 @@ python:
 cache: pip
 install:
   - pip install pipenv
-  - pipenv install --dev
+  - PIPENV_IGNORE_VIRTUALENVS=1 pipenv install --dev
   - travis_wait 30 python -m nltk.downloader punkt
 script:
   - pytest --cov=./
