@@ -17,5 +17,7 @@ click-log = "*"
 nltk = "*"
 gensim = "*"
 sklearn = "*"
+fasttext = "*"
+cython = "*"
 
 [requires]
