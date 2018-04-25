@@ -1,0 +1,23 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+name = "pypi"
+verify_ssl = true
+
+[dev-packages]
+codecov = "*"
+python-coveralls = "*"
+pytest-cov = "*"
+pytest-watch = "*"
+pytest-flask = "*"
+"pytest-pep8" = "*"
+
+[packages]
+connexion = "*"
+click-log = "*"
+nltk = "*"
+gensim = "*"
+sklearn = "*"
+fasttext = "*"
+cython = "*"
+
+[requires]

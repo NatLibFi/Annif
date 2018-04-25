@@ -26,7 +26,7 @@ class AnnifProject:
         self.project_id = project_id
         self.name = config['name']
         self.language = config['language']
-        self.analyzer_spec = config['analyzer']
+        self.analyzer_spec = config.get('analyzer', None)
         self.backends = self._initialize_backends(config['backends'],
                                                   all_backends)
         self._datadir = os.path.join(datadir, 'projects', self.project_id)

@@ -3,9 +3,9 @@
 annif.egg-info
 .coverage
 .coveralls.yml
-annif_env
 .git
 __pycache__
 .pytest_cache
 *.pyc
 data
+Pipfile.lock
