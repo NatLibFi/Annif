@@ -162,7 +162,7 @@ def _create_projects(projects_file, datadir, backends):
         config.read_file(projf)
 
     # create AnnifProject objects from the configuration file
-    projects = {}
+    projects = collections.OrderedDict()
     for project_id in config.sections():
         projects[project_id] = AnnifProject(project_id,
                                             config[project_id],

@@ -15,12 +15,12 @@ a statistical automated indexing tool that used metadata from the
 This repo contains a rewritten production version of Annif based on the
 [prototype](https://github.com/osma/annif). It is a work in progress.
 
-### Dependencies
+## Dependencies
 
 Python 3.5+. [Pipenv](https://docs.pipenv.org/) is used for managing
 dependencies.
 
-### Installation and setup
+## Installation and setup
 
 Clone the repository.
 
@@ -42,7 +42,7 @@ Start up the application
 
     annif run
 
-### Unit tests
+## Unit tests
 
 Run tests with the command `pipenv run pytest`. To have the test watch for
 changes in code and run automatically, use pytest-watch by running `pipenv
@@ -50,3 +50,9 @@ run ptw`.
 
 You can also run `pipenv shell` to enter the virtual environment and then
 use `pytest` or `ptw` commands directly.
+
+## License
+
+The code in this repository is licensed under Apache License 2.0, except for the
+dependencies included under `annif/static/css` and `annif/static/js`,
+which have their own licenses. See the file headers for details.
