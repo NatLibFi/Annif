@@ -31,6 +31,8 @@ Install pipenv if you don't have it:
 
 Install dependencies and download NLTK data:
 
+    pipenv --three
+    pipenv run pip install cython  # Cython must be installed before others
     pipenv install  # use --dev if you want to run tests etc.
     python -m nltk.downloader punkt
 
