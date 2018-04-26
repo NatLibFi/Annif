@@ -63,7 +63,7 @@ def run_list_projects():
     Usage: annif list-projects
     """
 
-    template = "{0: <15}{1: <20}{2: <15}"
+    template = "{0: <15}{1: <30}{2: <15}"
 
     header = template.format("Project ID", "Project Name", "Language")
     click.echo(header)
