@@ -8,6 +8,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from flask import current_app
 import annif
 import annif.analyzer
+import annif.corpus
 import annif.hit
 import annif.backend
 import annif.util
