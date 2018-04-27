@@ -73,3 +73,8 @@ def test_finnish_analyzer_normalize_word():
     analyzer = annif.analyzer.get_analyzer("snowball(finnish)")
     assert analyzer.normalize_word("vanhat") == "vanh"
     assert analyzer.normalize_word("koirien") == "koir"
+
+
+def test_simple_analyzer():
+    analyzer = annif.analyzer.get_analyzer("simple")
+    assert analyzer.normalize_word("Big") == "big"
