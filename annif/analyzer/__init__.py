@@ -1,6 +1,7 @@
 """Collection of language-specific analyzers and analyzer registry for Annif"""
 
 import re
+from . import simple
 from . import snowball
 
 _analyzers = {}
@@ -28,4 +29,5 @@ def get_analyzer(analyzerspec):
         raise ValueError("No such analyzer {}".format(analyzer))
 
 
+register_analyzer(simple.SimpleAnalyzer)
 register_analyzer(snowball.SnowballAnalyzer)
