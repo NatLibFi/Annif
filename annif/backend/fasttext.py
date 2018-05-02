@@ -4,7 +4,7 @@ import collections
 import os.path
 import annif.util
 from annif.hit import AnalysisHit
-import fasttext
+import fastText
 from . import backend
 
 
@@ -14,35 +14,33 @@ class FastTextBackend(backend.AnnifBackend):
     name = "fasttext"
     needs_subject_index = True
 
-    FASTTEXT_PARAMS = (
-        'lr',
-        'lr_update_rate',
-        'dim',
-        'ws',
-        'epoch',
-        'min_count',
-        'neg',
-        'word_ngrams',
-        'loss',
-        'bucket',
-        'minn',
-        'maxn',
-        'thread',
-        't'
-    )
+    FASTTEXT_PARAMS = {
+        'lr': float,
+        'lrUpdateRate': int,
+        'dim': int,
+        'ws': int,
+        'epoch': int,
+        'minCount': int,
+        'neg': int,
+        'wordNgrams': int,
+        'loss': str,
+        'bucket': int,
+        'minn': int,
+        'maxn': int,
+        'thread': int,
+        't': float
+    }
 
     # defaults for uninitialized instances
     _model = None
 
     def initialize(self):
         if self._model is None:
-            path = os.path.join(self._get_datadir(), 'model.bin')
+            path = os.path.join(self._get_datadir(), 'model')
             self.debug('loading fastText model from {}'.format(path))
-            self._model = fasttext.load_model(path)
+            self._model = fastText.load_model(path)
             self.debug('loaded model {}'.format(str(self._model)))
-            self.debug('dim: {}'.format(self._model.dim))
-            self.debug('epoch: {}'.format(self._model.epoch))
-            self.debug('loss_name: {}'.format(self._model.loss_name))
+            self.debug('dim: {}'.format(self._model.get_dimension()))
 
     @classmethod
     def _id_to_label(cls, subject_id):
@@ -87,9 +85,11 @@ class FastTextBackend(backend.AnnifBackend):
         self.info('creating fastText model')
         trainpath = os.path.join(self._get_datadir(), 'train.txt')
         modelpath = os.path.join(self._get_datadir(), 'model')
-        params = {param: val for param, val in self.params.items()
+        params = {param: self.FASTTEXT_PARAMS[param](val)
+                  for param, val in self.params.items()
                   if param in self.FASTTEXT_PARAMS}
-        self._model = fasttext.supervised(trainpath, modelpath, **params)
+        self._model = fastText.train_supervised(trainpath, **params)
+        self._model.save_model(modelpath)
 
     def load_subjects(self, subjects, project):
         self._create_train_file(subjects, project)
@@ -97,10 +97,11 @@ class FastTextBackend(backend.AnnifBackend):
 
     def _analyze_chunks(self, chunktexts, project):
         limit = int(self.params['limit'])
-        ft_results = self._model.predict_proba(chunktexts, limit)
+        chunklabels, chunkscores = self._model.predict(chunktexts, limit)
         label_scores = collections.defaultdict(float)
-        for label, score in ft_results[0]:
-            label_scores[label] += score
+        for labels, scores in zip(chunklabels, chunkscores):
+            for label, score in zip(labels, scores):
+                label_scores[label] += score
         best_labels = sorted([(score, label)
                               for label, score in label_scores.items()],
                              reverse=True)

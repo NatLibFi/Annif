@@ -3,6 +3,11 @@ url = "https://pypi.python.org/simple"
 name = "pypi"
 verify_ssl = true
 
+[[source]]
+url = "https://testpypi.python.org/pypi"
+verify_ssl = true
+name = "test"
+
 [dev-packages]
 codecov = "*"
 python-coveralls = "*"
@@ -17,7 +22,6 @@ click-log = "*"
 nltk = "*"
 gensim = "*"
 sklearn = "*"
-fasttext = "*"
-cython = "*"
+fasttext = {version="*", index="test"}
 
 [requires]
