@@ -34,7 +34,7 @@ paths:
           description: succesful operation
       tags:
         - Project administration
-  /projects/{project_id}:
+  '/projects/{project_id}':
     get:
       summary: show project information
       operationId: annif.rest.show_project
@@ -47,64 +47,7 @@ paths:
           description: project not found
       tags:
         - Project administration
-  /projects/{project_id}/subjects:
-    get:
-      summary: get a list of all subjects defined for a project
-      operationId: annif.rest.list_subjects
-      parameters:
-        - $ref: '#/parameters/project_id'
-      responses:
-        '200':
-          description: succesful operation
-        '404':
-          description: project not found
-      tags:
-        - Subject index administration
-  /projects/{project_id}/subjects/{subject_id}:
-    get:
-      summary: show subject information
-      operationId: annif.rest.show_subject
-      parameters:
-        - $ref: '#/parameters/project_id'
-        - $ref: '#/parameters/subject_id'
-      produces:
-        - application/json
-      responses:
-        '200':
-          description: succesful operation
-        '404':
-          description: project or subject not found
-      tags:
-        - Subject index administration
-    put:
-      summary: create or update subject information
-      operationId: annif.rest.create_subject
-      parameters:
-        - $ref: '#/parameters/project_id'
-        - $ref: '#/parameters/subject_id'
-      consumes:
-        - application/json
-      responses:
-        '204':
-          description: 'succesful operation, no content returned'
-        '404':
-          description: project or subject not found
-      tags:
-        - Subject index administration
-    delete:
-      summary: delete subject information
-      operationId: annif.rest.drop_subject
-      parameters:
-        - $ref: '#/parameters/project_id'
-        - $ref: '#/parameters/subject_id'
-      responses:
-        '204':
-          description: 'succesful operation, no content returned'
-        '404':
-          description: project or subject not found
-      tags:
-        - Subject index administration
-  /projects/{project_id}/analyze:
+  '/projects/{project_id}/analyze':
     post:
       summary: suggest subjects for a given text
       operationId: annif.rest.analyze
@@ -127,11 +70,10 @@ paths:
           default: 10
         - name: threshold
           in: formData
-          description: >-
-            minimum score threshold, below which results will not be returned
+          description: 'minimum score threshold, below which results will not be returned'
           required: false
           type: number
-          default: 0.0
+          default: 0
       responses:
         '200':
           description: successful operation
