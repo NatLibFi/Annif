@@ -30,7 +30,7 @@ function analyze() {
           text: $('#text').val(),
         },
         success: function(data) {
-            $.each(data, function(idx, value) {
+            $.each(data.results, function(idx, value) {
                 $('#results').append(
                     $('<li>').append(
                         $('<a>').attr('href',value.uri).append(value.label)
@@ -55,6 +55,10 @@ $(document).ready(function() {
 {% block content %}
 <h1>Annif</h1>
 <p>Welcome!</p>
+
+<h2>REST API</h2>
+
+<p>See the <a href="v1/ui/">Swagger documentation</a> for API specification.</p>
 
 <h2>Try it!</h2>
 
