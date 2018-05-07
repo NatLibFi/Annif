@@ -42,4 +42,4 @@ def analyze(project_id, text, limit, threshold):
 
     hit_filter = HitFilter(limit, threshold)
     hits = hit_filter(project.analyze(text))
-    return [hit._asdict() for hit in hits]
+    return {'results': [hit._asdict() for hit in hits]}
