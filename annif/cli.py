@@ -106,33 +106,6 @@ def run_load(project_id, directory):
     proj.load_subjects(subjects)
 
 
-@cli.command('list-subjects')
-@click.argument('project_id')
-def run_list_subjects():
-    click.echo("TODO")
-
-
-@cli.command('show-subject')
-@click.argument('project_id')
-@click.argument('subject_id')
-def run_show_subject(project_id, subject_id):
-    click.echo("TODO")
-
-
-@cli.command('create-subject')
-@click.argument('project_id')
-@click.argument('subject_id')
-def run_create_subject(project_id, subject_id):
-    click.echo("TODO")
-
-
-@cli.command('drop-subject')
-@click.argument('project_id')
-@click.argument('subject_id')
-def run_drop_subject(project_id, subject_id):
-    click.echo("TODO")
-
-
 @cli.command('analyze')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')

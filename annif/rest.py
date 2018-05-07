@@ -18,22 +18,6 @@ def show_project(project_id):
     return project.dump()
 
 
-def list_subjects(project_id):
-    return annif.operations.list_subjects(project_id)
-
-
-def show_subject(project_id, subject_id):
-    return annif.operations.show_subjects(project_id, subject_id)
-
-
-def create_subject(project_id, subject_id):
-    return annif.operations.create_subject(project_id, subject_id)
-
-
-def drop_subject(project_id, subject_id):
-    return annif.operations.drop_subject(project_id, subject_id)
-
-
 def analyze(project_id, text, limit, threshold):
     try:
         project = annif.project.get_project(project_id)
