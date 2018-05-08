@@ -46,40 +46,40 @@ paths:
           description: project not found
       tags:
         - Project administration
-#  '/projects/{project_id}/analyze':
-#    post:
-#      summary: suggest subjects for a given text
-#      operationId: annif.rest.analyze
-#      consumes:
-#        - application/x-www-form-urlencoded
-#      produces:
-#        - application/json
-#      parameters:
-#        - $ref: '#/parameters/project_id'
-#        - name: text
-#          in: formData
-#          description: text to analyze
-#          required: true
-#          type: string
-#        - name: limit
-#          in: formData
-#          description: maximum number of results to return
-#          required: false
-#          type: integer
-#          default: 10
-#        - name: threshold
-#          in: formData
-#          description: 'minimum score threshold, below which results will not be returned'
-#          required: false
-#          type: number
-#          default: 0
-#      responses:
-#        '200':
-#          description: successful operation
-#          schema:
-#            $ref: '#/definitions/AnalysisResultList'
-#      tags:
-#        - Automatic subject indexing
+  '/projects/{project_id}/analyze':
+    post:
+      summary: suggest subjects for a given text
+      operationId: annif.rest.analyze
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - $ref: '#/parameters/project_id'
+        - name: text
+          in: formData
+          description: text to analyze
+          required: true
+          type: string
+        - name: limit
+          in: formData
+          description: maximum number of results to return
+          required: false
+          type: integer
+          default: 10
+        - name: threshold
+          in: formData
+          description: 'minimum score threshold, below which results will not be returned'
+          required: false
+          type: number
+          default: 0
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/AnalysisResultList'
+      tags:
+        - Automatic subject indexing
 definitions:
   ProjectBackend:
     description: A backend of a project
