@@ -80,6 +80,10 @@ paths:
           description: successful operation
           schema:
             $ref: '#/definitions/AnalysisResultList'
+        '404':
+          description: Project not found
+          schema:
+            $ref: '#/definitions/Problem'
       tags:
         - Automatic subject indexing
 definitions:
