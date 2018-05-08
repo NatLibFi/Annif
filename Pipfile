@@ -15,6 +15,7 @@ pytest-cov = "*"
 pytest-watch = "*"
 pytest-flask = "*"
 "pytest-pep8" = "*"
+swagger-tester = "*"
 
 [packages]
 connexion = "*"

@@ -6,7 +6,8 @@ from annif.hit import HitFilter
 
 
 def list_projects():
-    return [proj.dump() for proj in annif.project.get_projects().values()]
+    return {'projects': [proj.dump()
+                         for proj in annif.project.get_projects().values()]}
 
 
 def show_project(project_id):

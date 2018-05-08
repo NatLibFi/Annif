@@ -12,7 +12,7 @@ function fetch_projects() {
         url: "/v1/projects",
         method: 'GET',
         success: function(data) {
-            $.each(data, function(idx, value) {
+            $.each(data.projects, function(idx, value) {
                 $('#project').append(
                     $('<option>').attr('value',value.project_id).append(value.name)
                 );

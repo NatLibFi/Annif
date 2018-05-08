@@ -4,7 +4,7 @@ info:
   version: v1
 schemes:
   - http
-basePath: /v1/
+basePath: /v1
 consumes:
   - application/json
 produces:
@@ -16,12 +16,7 @@ parameters:
     description: project identifier
     required: true
     type: string
-  subject_id:
-    name: subject_id
-    in: path
-    description: subject identifier
-    required: true
-    type: string
+    x-example: dummy-fi
 paths:
   /projects:
     get:
@@ -32,6 +27,8 @@ paths:
       responses:
         '200':
           description: succesful operation
+          schema:
+            $ref: '#/definitions/ProjectList'
       tags:
         - Project administration
   '/projects/{project_id}':
@@ -44,62 +41,79 @@ paths:
         '200':
           description: succesful operation
           schema:
-            $ref: '#/definitions/ProjectList'
+            $ref: '#/definitions/Project'
         '404':
           description: project not found
       tags:
         - Project administration
-  '/projects/{project_id}/analyze':
-    post:
-      summary: suggest subjects for a given text
-      operationId: annif.rest.analyze
-      consumes:
-        - application/x-www-form-urlencoded
-      produces:
-        - application/json
-      parameters:
-        - $ref: '#/parameters/project_id'
-        - name: text
-          in: formData
-          description: text to analyze
-          required: true
-          type: string
-        - name: limit
-          in: formData
-          description: maximum number of results to return
-          required: false
-          type: integer
-          default: 10
-        - name: threshold
-          in: formData
-          description: 'minimum score threshold, below which results will not be returned'
-          required: false
-          type: number
-          default: 0
-      responses:
-        '200':
-          description: successful operation
-          schema:
-            $ref: '#/definitions/AnalysisResultList'
-      tags:
-        - Automatic subject indexing
+#  '/projects/{project_id}/analyze':
+#    post:
+#      summary: suggest subjects for a given text
+#      operationId: annif.rest.analyze
+#      consumes:
+#        - application/x-www-form-urlencoded
+#      produces:
+#        - application/json
+#      parameters:
+#        - $ref: '#/parameters/project_id'
+#        - name: text
+#          in: formData
+#          description: text to analyze
+#          required: true
+#          type: string
+#        - name: limit
+#          in: formData
+#          description: maximum number of results to return
+#          required: false
+#          type: integer
+#          default: 10
+#        - name: threshold
+#          in: formData
+#          description: 'minimum score threshold, below which results will not be returned'
+#          required: false
+#          type: number
+#          default: 0
+#      responses:
+#        '200':
+#          description: successful operation
+#          schema:
+#            $ref: '#/definitions/AnalysisResultList'
+#      tags:
+#        - Automatic subject indexing
 definitions:
+  ProjectBackend:
+    description: A backend of a project
+    properties:
+      backend_id:
+        type: string
+        example: my-backend
+      weight:
+        type: number
+        example: 1.0
+    required:
+      - backend_id
+      - weight
   Project:
     description: A project definition
     properties:
-      projectid:
+      project_id:
         type: string
         example: my-project
+      name:
+        type: string
+        example: My Project
       language:
         type: string
         example: en
-      analyzer:
-        type: string
-        example: english
+      backends:
+        type: array
+        items:
+          $ref: '#/definitions/ProjectBackend'
     required:
-      - projectid
+      - project_id
+      - name
       - language
-      - analyzer
+      - backends
   ProjectList:
     description: A list of projects
     properties:
