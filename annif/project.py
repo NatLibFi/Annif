@@ -183,7 +183,7 @@ def _create_projects(projects_file, datadir, init_projects):
     return projects
 
 
-def init_projects(app):
+def initialize_projects(app):
     projects_file = app.config['PROJECTS_FILE']
     datadir = app.config['DATADIR']
     init_projects = app.config['INITIALIZE_PROJECTS']

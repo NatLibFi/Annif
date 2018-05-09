@@ -27,7 +27,7 @@ def create_app(script_info=None, config_name=None):
 
     cxapp.add_api('annif.yaml')
 
-    annif.project.init_projects(cxapp.app)
+    annif.project.initialize_projects(cxapp.app)
 
     # register the views via blueprints
     from annif.views import bp
