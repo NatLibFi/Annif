@@ -31,22 +31,21 @@ Install pipenv if you don't have it:
 
 Install dependencies and download NLTK data:
 
-    pipenv --three
     pipenv install  # use --dev if you want to run tests etc.
     python -m nltk.downloader punkt
 
-Start up the application
+Start up the application:
 
-    annif run
+    annif
+
+See [Getting Started](https://github.com/NatLibFi/Annif/wiki/Getting-started)
+in the wiki for more details.
 
 ## Unit tests
 
-Run tests with the command `pipenv run pytest`. To have the test watch for
-changes in code and run automatically, use pytest-watch by running `pipenv
-run ptw`. 
-
-You can also run `pipenv shell` to enter the virtual environment and then
-use `pytest` or `ptw` commands directly.
+Run `pipenv shell` to enter the virtual environment and then run `pytest`.
+To have the test suite watch for changes in code and run automatically, use
+pytest-watch by running `ptw`.
 
 ## License
 
