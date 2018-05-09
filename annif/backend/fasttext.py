@@ -31,12 +31,15 @@ class FastTextBackend(backend.AnnifBackend):
         't': float
     }
 
+    MODEL_FILE = 'fasttext-model'
+    TRAIN_FILE = 'fasttext-train.txt'
+
     # defaults for uninitialized instances
     _model = None
 
     def initialize(self):
         if self._model is None:
-            path = os.path.join(self._get_datadir(), 'model')
+            path = os.path.join(self._get_datadir(), self.MODEL_FILE)
             self.debug('loading fastText model from {}'.format(path))
             self._model = fastText.load_model(path)
             self.debug('loaded model {}'.format(str(self._model)))
@@ -78,13 +81,13 @@ class FastTextBackend(backend.AnnifBackend):
 
         annif.util.atomic_save(doc_subjects_normalized,
                                self._get_datadir(),
-                               'train.txt',
+                               self.TRAIN_FILE,
                                method=self._write_train_file)
 
     def _create_model(self):
         self.info('creating fastText model')
-        trainpath = os.path.join(self._get_datadir(), 'train.txt')
-        modelpath = os.path.join(self._get_datadir(), 'model')
+        trainpath = os.path.join(self._get_datadir(), self.TRAIN_FILE)
+        modelpath = os.path.join(self._get_datadir(), self.MODEL_FILE)
         params = {param: self.FASTTEXT_PARAMS[param](val)
                   for param, val in self.params.items()
                   if param in self.FASTTEXT_PARAMS}

@@ -28,8 +28,8 @@ class AnnifProject:
         self.name = config['name']
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
-        self.backends = self._initialize_backends(config, datadir)
         self._datadir = os.path.join(datadir, 'projects', self.project_id)
+        self.backends = self._initialize_backends(config, datadir)
 
     def _get_datadir(self):
         """return the path of the directory where this project can store its
@@ -48,7 +48,10 @@ class AnnifProject:
             else:
                 weight = 1.0
             backend_type = annif.backend.get_backend(backend_id)
-            backend = backend_type(backend_id, params=config, datadir=datadir)
+            backend = backend_type(
+                backend_id,
+                params=config,
+                datadir=self._datadir)
             backends.append((backend, weight))
         return backends
 

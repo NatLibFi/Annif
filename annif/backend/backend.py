@@ -21,7 +21,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         backend type."""
         self.backend_id = backend_id
         self.params = params
-        self._datadir = os.path.join(datadir, 'backends', self.backend_id)
+        self._datadir = datadir
 
     def _get_datadir(self):
         """return the path of the directory where this backend can store its

@@ -46,8 +46,8 @@ def test_fasttext_load_subjects(datadir, subject_corpus, project):
 
     fasttext.load_subjects(subject_corpus, project)
     assert fasttext._model is not None
-    assert datadir.join('backends/fasttext/model').exists()
-    assert datadir.join('backends/fasttext/model').size() > 0
+    assert datadir.join('fasttext-model').exists()
+    assert datadir.join('fasttext-model').size() > 0
 
 
 def test_fasttext_analyze(datadir, project):

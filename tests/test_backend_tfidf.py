@@ -43,8 +43,8 @@ def test_tfidf_load_subjects(datadir, subject_corpus, project):
 
     tfidf.load_subjects(subject_corpus, project)
     assert len(tfidf._index) > 0
-    assert datadir.join('backends/tfidf/index').exists()
-    assert datadir.join('backends/tfidf/index').size() > 0
+    assert datadir.join('tfidf-index').exists()
+    assert datadir.join('tfidf-index').size() > 0
 
 
 def test_tfidf_analyze(datadir, project):

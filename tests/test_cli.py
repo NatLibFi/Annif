@@ -73,8 +73,8 @@ def test_load(datadir):
     assert datadir.join('projects/tfidf-fi/subjects').size() > 0
     assert datadir.join('projects/tfidf-fi/vectorizer').exists()
     assert datadir.join('projects/tfidf-fi/vectorizer').size() > 0
-    assert datadir.join('backends/tfidf-fi/index').exists()
-    assert datadir.join('backends/tfidf-fi/index').size() > 0
+    assert datadir.join('projects/tfidf-fi/tfidf-index').exists()
+    assert datadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
 def test_drop_subject():
