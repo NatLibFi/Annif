@@ -35,10 +35,6 @@ Install dependencies and download NLTK data:
     pipenv install  # use --dev if you want to run tests etc.
     python -m nltk.downloader punkt
 
-Set a shell alias for the application: 
-
-    alias annif="pipenv run python -m annif.cli"
-
 Start up the application
 
     annif run

@@ -3,4 +3,5 @@ build:
         python: 3.6.3
     dependencies:
         before:
-            - pip install cython
+            - pip install pipenv
+            - pipenv install --dev --skip-lock
