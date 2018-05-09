@@ -3,6 +3,7 @@
 import random
 import re
 import os.path
+import shutil
 import py.path
 import pytest
 from click.testing import CliRunner
@@ -19,6 +20,8 @@ TEMP_PROJECT = ''.join(
 def datadir(app):
     with app.app_context():
         dir = py.path.local(app.config['DATADIR'])
+    # clean up previous state of datadir
+    shutil.rmtree(str(dir), ignore_errors=True)
     return dir
 
 
