@@ -16,6 +16,7 @@ pytest-watch = "*"
 pytest-flask = "*"
 "pytest-pep8" = "*"
 swagger-tester = "*"
+bumpversion = "*"
 
 [packages]
 connexion = "*"
