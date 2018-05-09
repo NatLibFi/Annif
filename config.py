@@ -11,6 +11,7 @@ class Config(object):
     TESTING = False
     PROJECTS_FILE = 'projects.cfg'
     DATADIR = 'data'
+    INITIALIZE_PROJECTS = False
 
 
 class DevelopmentConfig(Config):
@@ -21,3 +22,7 @@ class TestingConfig(Config):
     TESTING = True
     PROJECTS_FILE = 'tests/projects.cfg'
     DATADIR = 'tests/data'
+
+
+class ProductionConfig(Config):
+    INITIALIZE_PROJECTS = True
