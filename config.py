@@ -10,8 +10,12 @@ class Config(object):
     DEBUG = False
     TESTING = False
     PROJECTS_FILE = 'projects.cfg'
-    BACKENDS_FILE = 'backends.cfg'
     DATADIR = 'data'
+    INITIALIZE_PROJECTS = False
+
+
+class ProductionConfig(Config):
+    INITIALIZE_PROJECTS = True
 
 
 class DevelopmentConfig(Config):
@@ -21,5 +25,8 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     PROJECTS_FILE = 'tests/projects.cfg'
-    BACKENDS_FILE = 'tests/backends.cfg'
     DATADIR = 'tests/data'
+
+
+class TestingInitializeConfig(TestingConfig):
+    INITIALIZE_PROJECTS = True

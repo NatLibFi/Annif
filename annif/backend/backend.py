@@ -34,6 +34,11 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         """load the given subjects"""
         pass  # default is to do nothing, subclasses may override
 
+    def initialize(self):
+        """This method can be overridden by backends. It should cause the
+        backend to pre-load all data it needs during operation."""
+        pass
+
     @abc.abstractmethod
     def _analyze(self, text, project, params):
         """This method should implemented by backends. It implements

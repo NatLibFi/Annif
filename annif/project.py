@@ -55,6 +55,13 @@ class AnnifProject:
             backends.append((backend, weight))
         return backends
 
+    def initialize(self):
+        """initialize all backends of this project so that they are ready to
+        analyze"""
+        logger.debug("Initializing backends of project '%s'", self.project_id)
+        for backend, weight in self.backends:
+            backend.initialize()
+
     def _analyze_with_backends(self, text, backend_params):
         if backend_params is None:
             backend_params = {}
@@ -160,7 +167,7 @@ class AnnifProject:
                 }
 
 
-def _create_projects(projects_file, datadir):
+def _create_projects(projects_file, datadir, init_projects):
     config = configparser.ConfigParser()
     with open(projects_file) as projf:
         config.read_file(projf)
@@ -171,13 +178,17 @@ def _create_projects(projects_file, datadir):
         projects[project_id] = AnnifProject(project_id,
                                             config[project_id],
                                             datadir)
+        if init_projects:
+            projects[project_id].initialize()
     return projects
 
 
-def init_projects(app):
+def initialize_projects(app):
     projects_file = app.config['PROJECTS_FILE']
     datadir = app.config['DATADIR']
-    app.annif_projects = _create_projects(projects_file, datadir)
+    init_projects = app.config['INITIALIZE_PROJECTS']
+    app.annif_projects = _create_projects(
+        projects_file, datadir, init_projects)
 
 
 def get_projects():

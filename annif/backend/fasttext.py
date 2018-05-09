@@ -41,9 +41,12 @@ class FastTextBackend(backend.AnnifBackend):
         if self._model is None:
             path = os.path.join(self._get_datadir(), self.MODEL_FILE)
             self.debug('loading fastText model from {}'.format(path))
-            self._model = fastText.load_model(path)
-            self.debug('loaded model {}'.format(str(self._model)))
-            self.debug('dim: {}'.format(self._model.get_dimension()))
+            if os.path.exists(path):
+                self._model = fastText.load_model(path)
+                self.debug('loaded model {}'.format(str(self._model)))
+                self.debug('dim: {}'.format(self._model.get_dimension()))
+            else:
+                self.warning('load failed, model {} not found!'.format(path))
 
     @classmethod
     def _id_to_label(cls, subject_id):
