@@ -18,9 +18,11 @@ class TFIDFBackend(backend.AnnifBackend):
     # defaults for uninitialized instances
     _index = None
 
+    INDEX_FILE = 'tfidf-index'
+
     def initialize(self):
         if self._index is None:
-            path = os.path.join(self._get_datadir(), 'index')
+            path = os.path.join(self._get_datadir(), self.INDEX_FILE)
             self.debug('loading similarity index from {}'.format(path))
             self._index = gensim.similarities.SparseMatrixSimilarity.load(path)
 
@@ -31,7 +33,10 @@ class TFIDFBackend(backend.AnnifBackend):
         gscorpus = Sparse2Corpus(veccorpus, documents_columns=False)
         self._index = gensim.similarities.SparseMatrixSimilarity(
             gscorpus, num_features=len(project.vectorizer.vocabulary_))
-        annif.util.atomic_save(self._index, self._get_datadir(), 'index')
+        annif.util.atomic_save(
+            self._index,
+            self._get_datadir(),
+            self.INDEX_FILE)
 
     def _analyze_vector(self, vector, project):
         docsim = self._index[vector]

@@ -3,6 +3,7 @@
 import random
 import re
 import os.path
+import shutil
 import py.path
 import pytest
 from click.testing import CliRunner
@@ -19,6 +20,8 @@ TEMP_PROJECT = ''.join(
 def datadir(app):
     with app.app_context():
         dir = py.path.local(app.config['DATADIR'])
+    # clean up previous state of datadir
+    shutil.rmtree(str(dir), ignore_errors=True)
     return dir
 
 
@@ -70,8 +73,8 @@ def test_load(datadir):
     assert datadir.join('projects/tfidf-fi/subjects').size() > 0
     assert datadir.join('projects/tfidf-fi/vectorizer').exists()
     assert datadir.join('projects/tfidf-fi/vectorizer').size() > 0
-    assert datadir.join('backends/tfidf-fi/index').exists()
-    assert datadir.join('backends/tfidf-fi/index').size() > 0
+    assert datadir.join('projects/tfidf-fi/tfidf-index').exists()
+    assert datadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
 def test_drop_subject():

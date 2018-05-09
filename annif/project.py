@@ -23,14 +23,13 @@ class AnnifProject:
     _subjects = None
     _vectorizer = None
 
-    def __init__(self, project_id, config, datadir, all_backends):
+    def __init__(self, project_id, config, datadir):
         self.project_id = project_id
         self.name = config['name']
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
-        self.backends = self._initialize_backends(config['backends'],
-                                                  all_backends)
         self._datadir = os.path.join(datadir, 'projects', self.project_id)
+        self.backends = self._initialize_backends(config)
 
     def _get_datadir(self):
         """return the path of the directory where this project can store its
@@ -39,16 +38,20 @@ class AnnifProject:
             os.makedirs(self._datadir)
         return self._datadir
 
-    def _initialize_backends(self, backends_configuration, all_backends):
+    def _initialize_backends(self, config):
         backends = []
-        for backenddef in backends_configuration.split(','):
+        for backenddef in config['backends'].split(','):
             bedefs = backenddef.strip().split(':')
             backend_id = bedefs[0]
             if len(bedefs) > 1:
                 weight = float(bedefs[1])
             else:
                 weight = 1.0
-            backend = all_backends[backend_id]
+            backend_type = annif.backend.get_backend(backend_id)
+            backend = backend_type(
+                backend_id,
+                params=config,
+                datadir=self._datadir)
             backends.append((backend, weight))
         return backends
 
@@ -157,7 +160,7 @@ class AnnifProject:
                 }
 
 
-def _create_projects(projects_file, datadir, backends):
+def _create_projects(projects_file, datadir):
     config = configparser.ConfigParser()
     with open(projects_file) as projf:
         config.read_file(projf)
@@ -167,15 +170,14 @@ def _create_projects(projects_file, datadir, backends):
     for project_id in config.sections():
         projects[project_id] = AnnifProject(project_id,
                                             config[project_id],
-                                            datadir,
-                                            backends)
+                                            datadir)
     return projects
 
 
-def init_projects(app, backends):
+def init_projects(app):
     projects_file = app.config['PROJECTS_FILE']
     datadir = app.config['DATADIR']
-    app.annif_projects = _create_projects(projects_file, datadir, backends)
+    app.annif_projects = _create_projects(projects_file, datadir)
 
 
 def get_projects():

@@ -13,7 +13,7 @@ def test_http_analyze(app):
             {'uri': 'http://example.org/http', 'label': 'http', 'score': 1.0}]
         mock_request.return_value = mock_response
 
-        http_type = annif.backend.get_backend_type("http")
+        http_type = annif.backend.get_backend("http")
         http = http_type(
             backend_id='http',
             params={
@@ -36,7 +36,7 @@ def test_http_analyze_with_results(app):
             {'uri': 'http://example.org/http', 'label': 'http', 'score': 1.0}]}
         mock_request.return_value = mock_response
 
-        http_type = annif.backend.get_backend_type("http")
+        http_type = annif.backend.get_backend("http")
         http = http_type(
             backend_id='http',
             params={
@@ -59,7 +59,7 @@ def test_http_analyze_zero_score(app):
             {'uri': 'http://example.org/http', 'label': 'http', 'score': 0.0}]
         mock_request.return_value = mock_response
 
-        http_type = annif.backend.get_backend_type("http")
+        http_type = annif.backend.get_backend("http")
         http = http_type(
             backend_id='http',
             params={

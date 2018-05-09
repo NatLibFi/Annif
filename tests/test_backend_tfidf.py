@@ -35,7 +35,7 @@ def project(subject_corpus):
 
 
 def test_tfidf_load_subjects(datadir, subject_corpus, project):
-    tfidf_type = annif.backend.get_backend_type("tfidf")
+    tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
         params={'limit': 10},
@@ -43,12 +43,12 @@ def test_tfidf_load_subjects(datadir, subject_corpus, project):
 
     tfidf.load_subjects(subject_corpus, project)
     assert len(tfidf._index) > 0
-    assert datadir.join('backends/tfidf/index').exists()
-    assert datadir.join('backends/tfidf/index').size() > 0
+    assert datadir.join('tfidf-index').exists()
+    assert datadir.join('tfidf-index').size() > 0
 
 
 def test_tfidf_analyze(datadir, project):
-    tfidf_type = annif.backend.get_backend_type("tfidf")
+    tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
         params={'limit': 10},
@@ -68,7 +68,7 @@ def test_tfidf_analyze(datadir, project):
 
 
 def test_tfidf_analyze_unknown(datadir, project):
-    tfidf_type = annif.backend.get_backend_type("tfidf")
+    tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
         params={'limit': 10},
