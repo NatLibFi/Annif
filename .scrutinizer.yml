@@ -3,4 +3,4 @@ build:
         python: 3.6.3
     dependencies:
         before:
-            - pip install cython
+            - pipenv install
