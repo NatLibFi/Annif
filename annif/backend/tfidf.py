@@ -24,7 +24,12 @@ class TFIDFBackend(backend.AnnifBackend):
         if self._index is None:
             path = os.path.join(self._get_datadir(), self.INDEX_FILE)
             self.debug('loading similarity index from {}'.format(path))
-            self._index = gensim.similarities.SparseMatrixSimilarity.load(path)
+            if os.path.exists(path):
+                self._index = gensim.similarities.SparseMatrixSimilarity.load(
+                    path)
+            else:
+                self.warning(
+                    'load failed, similarity index {} not found!'.format(path))
 
     def load_subjects(self, subjects, project):
         self.info('creating similarity index')

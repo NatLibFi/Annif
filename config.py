@@ -14,6 +14,10 @@ class Config(object):
     INITIALIZE_PROJECTS = False
 
 
+class ProductionConfig(Config):
+    INITIALIZE_PROJECTS = True
+
+
 class DevelopmentConfig(Config):
     DEBUG = True
 
@@ -24,5 +28,5 @@ class TestingConfig(Config):
     DATADIR = 'tests/data'
 
 
-class ProductionConfig(Config):
+class TestingInitializeConfig(TestingConfig):
     INITIALIZE_PROJECTS = True

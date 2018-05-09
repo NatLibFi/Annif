@@ -68,3 +68,17 @@ def test_project_analyze_combine(app):
     assert result[0].uri == 'http://example.org/dummy'
     assert result[0].label == 'dummy'
     assert result[0].score == 1.0
+
+
+def test_project_not_initialized(app):
+    with app.app_context():
+        project = annif.project.get_project('dummy-en')
+    dummy = project.backends[0][0]
+    assert not dummy.initialized
+
+
+def test_project_initialized(app_with_initialize):
+    with app_with_initialize.app_context():
+        project = annif.project.get_project('dummy-en')
+    dummy = project.backends[0][0]
+    assert dummy.initialized
