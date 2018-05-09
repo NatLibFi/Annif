@@ -33,7 +33,7 @@ def project(subject_corpus):
 
 
 def test_fasttext_load_subjects(datadir, subject_corpus, project):
-    fasttext_type = annif.backend.get_backend_type("fasttext")
+    fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
         params={
@@ -51,7 +51,7 @@ def test_fasttext_load_subjects(datadir, subject_corpus, project):
 
 
 def test_fasttext_analyze(datadir, project):
-    fasttext_type = annif.backend.get_backend_type("fasttext")
+    fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
         params={
