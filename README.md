@@ -34,6 +34,10 @@ Install dependencies and download NLTK data:
     pipenv install  # use --dev if you want to run tests etc.
     python -m nltk.downloader punkt
 
+Enter the virtual environment:
+
+    pipenv shell
+
 Start up the application:
 
     annif
