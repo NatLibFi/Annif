@@ -21,6 +21,7 @@ def create_app(script_info=None, config_name=None):
             config_name = 'config.Config'
         else:
             config_name = 'config.ProductionConfig'
+    logger.debug('creating app with configuration %s', config_name)
     cxapp.app.config.from_object(config_name)
     cxapp.app.config.from_envvar('ANNIF_SETTINGS', silent=True)
 

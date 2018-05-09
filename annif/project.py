@@ -58,6 +58,7 @@ class AnnifProject:
     def initialize(self):
         """initialize all backends of this project so that they are ready to
         analyze"""
+        logger.debug("Initializing backends of project '%s'", self.project_id)
         for backend, weight in self.backends:
             backend.initialize()
 
