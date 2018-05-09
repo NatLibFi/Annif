@@ -29,7 +29,7 @@ class AnnifProject:
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
         self._datadir = os.path.join(datadir, 'projects', self.project_id)
-        self.backends = self._initialize_backends(config, datadir)
+        self.backends = self._initialize_backends(config)
 
     def _get_datadir(self):
         """return the path of the directory where this project can store its
@@ -38,7 +38,7 @@ class AnnifProject:
             os.makedirs(self._datadir)
         return self._datadir
 
-    def _initialize_backends(self, config, datadir):
+    def _initialize_backends(self, config):
         backends = []
         for backenddef in config['backends'].split(','):
             bedefs = backenddef.strip().split(':')
