@@ -4,4 +4,4 @@ build:
     dependencies:
         before:
             - pip install pipenv
-            - pipenv install
+            - pipenv install --dev --skip-lock
