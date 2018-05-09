@@ -15,6 +15,12 @@ setup(
     description='Automated subject indexing and classification tool',
     long_description=read('README.md'),
     packages=find_packages(),
-    install_requires=[],
+    install_requires=[
+        'connexion',
+        'click-log',
+        'nltk',
+        'gensim',
+        'sklearn',
+        'fasttext'],
     entry_points={
         'console_scripts': ['annif=annif.cli:cli']})
