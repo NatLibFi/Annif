@@ -12,7 +12,7 @@ setup(
     url='https://github.com/NatLibFi/Annif',
     author='Osma Suominen',
     author_email='osma.suominen@helsinki.fi',
-    description='Statistical automated subject indexing and classification tool',
+    description='Automated subject indexing and classification tool',
     long_description=read('README.md'),
     packages=find_packages(),
     install_requires=[],
