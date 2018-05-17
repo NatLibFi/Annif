@@ -1,5 +1,6 @@
 """Unit test module for Annif CLI commands"""
 
+import contextlib
 import random
 import re
 import os.path
@@ -52,15 +53,24 @@ def test_show_project():
     assert failed_result.exception
 
 
-def test_list_subjects():
-    pass
-
-
-def test_show_subject():
-    pass
+def test_loadvoc_tsv(datadir):
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(datadir.join('projects/tfidf-fi/subjects')))
+    subjectfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'subjects.tsv')
+    result = runner.invoke(annif.cli.cli, ['loadvoc', 'tfidf-fi', subjectfile])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert datadir.join('projects/tfidf-fi/subjects').exists()
+    assert datadir.join('projects/tfidf-fi/subjects').size() > 0
 
 
 def test_load(datadir):
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(datadir.join('projects/tfidf-fi/subjects')))
     subjdir = os.path.join(
         os.path.dirname(__file__),
         'corpora',
@@ -75,10 +85,6 @@ def test_load(datadir):
     assert datadir.join('projects/tfidf-fi/vectorizer').size() > 0
     assert datadir.join('projects/tfidf-fi/tfidf-index').exists()
     assert datadir.join('projects/tfidf-fi/tfidf-index').size() > 0
-
-
-def test_drop_subject():
-    pass
 
 
 def test_analyze():
