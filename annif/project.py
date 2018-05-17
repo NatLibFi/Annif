@@ -113,7 +113,7 @@ class AnnifProject:
         return self._analyzer
 
     @property
-    def subjects(self, warn_if_missing=True):
+    def subjects(self):
         if self._subjects is None:
             path = os.path.join(self._get_datadir(), 'subjects')
             if os.path.exists(path):
@@ -124,7 +124,7 @@ class AnnifProject:
         return self._subjects
 
     @property
-    def vectorizer(self, warn_if_missing=True):
+    def vectorizer(self):
         if self._vectorizer is None:
             path = os.path.join(self._get_datadir(), 'vectorizer')
             if os.path.exists(path):
