@@ -2,7 +2,8 @@
 
 
 from .docdir import DocumentDirectory
-from .subject import Subject, SubjectDirectory, SubjectIndex, SubjectIndexSKOS
+from .subject import Subject, SubjectDirectory, SubjectIndex
+from .skos import SubjectIndexSKOS
 
 
 class SubjectSet:
