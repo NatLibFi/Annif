@@ -152,7 +152,10 @@ class AnnifProject:
                 'not creating subject index: not needed by any backend')
             return
         logger.info('creating subject index')
-        self._subjects = annif.corpus.SubjectIndex(subjects)
+        if isinstance(subjects, annif.corpus.SubjectIndex):
+            self._subjects = subjects
+        else:
+            self._subjects = annif.corpus.SubjectIndex(subjects)
         annif.util.atomic_save(self._subjects, self._get_datadir(), 'subjects')
 
     def _create_vectorizer(self, subjects):
@@ -179,6 +182,9 @@ class AnnifProject:
                 'Loading subjects for backend %s',
                 backend.backend_id)
             backend.load_subjects(subjects, project=self)
+
+    def load_vocabulary(self, subjects):
+        self._create_subject_index(subjects)
 
     def dump(self):
         """return this project as a dict"""

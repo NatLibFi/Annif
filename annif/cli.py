@@ -96,6 +96,16 @@ def run_show_project(project_id):
     click.echo(template.format('Language:', proj.language))
 
 
+@cli.command('loadvoc')
+@click_log.simple_verbosity_option(logger)
+@click.argument('project_id')
+@click.argument('subjectfile')
+def run_loadvoc(project_id, subjectfile):
+    proj = get_project(project_id)
+    subjects = annif.corpus.SubjectIndex.load(subjectfile)
+    proj.load_vocabulary(subjects)
+
+
 @cli.command('load')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
