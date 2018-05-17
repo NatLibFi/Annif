@@ -21,6 +21,7 @@ setup(
         'nltk',
         'gensim',
         'sklearn',
-        'fasttext'],
+        'fasttext',
+        'rdflib'],
     entry_points={
         'console_scripts': ['annif=annif.cli:cli']})

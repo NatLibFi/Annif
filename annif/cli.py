@@ -102,7 +102,13 @@ def run_show_project(project_id):
 @click.argument('subjectfile')
 def run_loadvoc(project_id, subjectfile):
     proj = get_project(project_id)
-    subjects = annif.corpus.SubjectIndex.load(subjectfile)
+    if annif.corpus.SubjectIndexSKOS.is_rdf_file(subjectfile):
+        # SKOS/RDF file supported by rdflib
+        subjects = annif.corpus.SubjectIndexSKOS.load(
+            subjectfile, proj.language)
+    else:
+        # probably a TSV file
+        subjects = annif.corpus.SubjectIndex.load(subjectfile)
     proj.load_vocabulary(subjects)
 
 

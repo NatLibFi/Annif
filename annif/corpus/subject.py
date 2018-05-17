@@ -1,5 +1,4 @@
-"""A directory of files as a subject corpus"""
-
+"""Classes for supporting subject corpora expressed as directories or files"""
 
 import collections
 import glob
