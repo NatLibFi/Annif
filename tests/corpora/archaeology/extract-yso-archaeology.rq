@@ -1,0 +1,18 @@
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+CONSTRUCT {
+  ?c a skos:Concept .
+  ?c skos:prefLabel ?prefLabel .
+  ?c skos:altLabel ?altLabel .
+  ?c ?rel ?c2 .
+}
+WHERE {
+  ?c a skos:Concept .
+  <http://www.yso.fi/onto/yso/p26593> skos:member ?c .
+  ?c skos:prefLabel ?prefLabel .
+  OPTIONAL { ?c skos:altLabel ?altLabel }
+  OPTIONAL {
+    VALUES ?rel { skos:broader skos:narrower skos:related } 
+    ?c ?rel ?c2 .
+    <http://www.yso.fi/onto/yso/p26593> skos:member ?c2 .   
+  }
+} 

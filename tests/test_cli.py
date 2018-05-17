@@ -68,6 +68,21 @@ def test_loadvoc_tsv(datadir):
     assert datadir.join('projects/tfidf-fi/subjects').size() > 0
 
 
+def test_loadvoc_rdf(datadir):
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(datadir.join('projects/tfidf-fi/subjects')))
+    subjectfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'yso-archaeology.rdf')
+    result = runner.invoke(annif.cli.cli, ['loadvoc', 'tfidf-fi', subjectfile])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert datadir.join('projects/tfidf-fi/subjects').exists()
+    assert datadir.join('projects/tfidf-fi/subjects').size() > 0
+
+
 def test_load(datadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(datadir.join('projects/tfidf-fi/subjects')))

@@ -19,12 +19,13 @@ swagger-tester = "*"
 bumpversion = "*"
 
 [packages]
+"e1839a8" = {editable = true, path = "."}
 connexion = "*"
 click-log = "*"
 nltk = "*"
 gensim = "*"
 sklearn = "*"
 fasttext = {version="*", index="test"}
-"e1839a8" = {editable = true, path = "."}
+rdflib = "*"
 
 [requires]
