@@ -2,7 +2,7 @@
 
 import rdflib
 import rdflib.util
-from rdflib.namespace import SKOS, RDF
+from rdflib.namespace import SKOS, RDF, OWL
 from .subject import SubjectIndex, Subject
 
 
@@ -26,9 +26,12 @@ class SubjectIndexSKOS (SubjectIndex):
             format = rdflib.util.guess_format(path)
             graph.load(path, format=format)
             for concept in graph.subjects(RDF.type, SKOS.Concept):
+                if (concept, OWL.deprecated, rdflib.Literal(True)) in graph:
+                    continue
                 labels = graph.preferredLabel(concept, lang=language)
-                if len(labels) > 0:
-                    label = labels[0][1]
-                    yield Subject(uri=str(concept), label=label, text=None)
+                if len(labels) == 0:
+                    continue
+                label = str(labels[0][1])
+                yield Subject(uri=str(concept), label=label, text=None)
 
         return cls(skos_file_as_corpus(path, language))
