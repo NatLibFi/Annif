@@ -13,13 +13,13 @@ def skos_file_as_corpus(path, language):
         if (concept, OWL.deprecated, rdflib.Literal(True)) in graph:
             continue
         labels = graph.preferredLabel(concept, lang=language)
-        if len(labels) == 0:
+        if not labels:
             continue
         label = str(labels[0][1])
         yield Subject(uri=str(concept), label=label, text=None)
 
 
-class SubjectIndexSKOS (SubjectIndex):
+class SubjectIndexSKOS(SubjectIndex):
     """A subject index that uses SKOS files instead of TSV files"""
 
     @classmethod
@@ -27,8 +27,8 @@ class SubjectIndexSKOS (SubjectIndex):
         """return True if the path looks like an RDF file that can be loaded
         as SKOS"""
 
-        format = rdflib.util.guess_format(path)
-        return format is not None
+        fmt = rdflib.util.guess_format(path)
+        return fmt is not None
 
     @classmethod
     def load(cls, path, language):
