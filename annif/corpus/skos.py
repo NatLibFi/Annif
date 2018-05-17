@@ -10,6 +10,14 @@ class SubjectIndexSKOS (SubjectIndex):
     """A subject index that uses SKOS files instead of TSV files"""
 
     @classmethod
+    def is_rdf_file(cls, path):
+        """return True if the path looks like an RDF file that can be loaded
+        as SKOS"""
+
+        format = rdflib.util.guess_format(path)
+        return format is not None
+
+    @classmethod
     def load(cls, path, language):
         """Load subjects from a SKOS file and return a subject index."""
 

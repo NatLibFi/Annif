@@ -10,7 +10,6 @@ import sys
 import click
 import click_log
 from flask.cli import FlaskGroup
-import rdflib.util
 import annif
 import annif.corpus
 import annif.eval
@@ -103,9 +102,8 @@ def run_show_project(project_id):
 @click.argument('subjectfile')
 def run_loadvoc(project_id, subjectfile):
     proj = get_project(project_id)
-    format = rdflib.util.guess_format(subjectfile)
-    if format is not None:
-        # RDF file supported by rdflib
+    if annif.corpus.SubjectIndexSKOS.is_rdf_file(subjectfile):
+        # SKOS/RDF file supported by rdflib
         subjects = annif.corpus.SubjectIndexSKOS.load(
             subjectfile, proj.language)
     else:
