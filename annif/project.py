@@ -22,6 +22,7 @@ class AnnifProject:
     _analyzer = None
     _subjects = None
     _vectorizer = None
+    initialized = False
 
     def __init__(self, project_id, config, datadir):
         self.project_id = project_id
@@ -56,11 +57,27 @@ class AnnifProject:
         return backends
 
     def initialize(self):
-        """initialize all backends of this project so that they are ready to
+        """initialize this project and all backends so that they are ready to
         analyze"""
-        logger.debug("Initializing backends of project '%s'", self.project_id)
+        logger.debug("Initializing project '%s'", self.project_id)
+        analyzer = self.analyzer
+        logger.debug("Project '%s': initialized analyzer: %s",
+                     self.project_id,
+                     str(analyzer))
+        subjects = self.subjects
+        logger.debug("Project '%s': initialized subjects: %s",
+                     self.project_id,
+                     str(subjects))
+        vectorizer = self.vectorizer
+        logger.debug("Project '%s': initialized vectorizer: %s",
+                     self.project_id,
+                     str(vectorizer))
+
+        logger.debug("Project '%s': initializing backends", self.project_id)
         for backend, weight in self.backends:
             backend.initialize()
+
+        self.initialized = True
 
     def _analyze_with_backends(self, text, backend_params):
         if backend_params is None:
@@ -99,16 +116,22 @@ class AnnifProject:
     def subjects(self):
         if self._subjects is None:
             path = os.path.join(self._get_datadir(), 'subjects')
-            logger.debug('loading subjects from %s', path)
-            self._subjects = annif.corpus.SubjectIndex.load(path)
+            if os.path.exists(path):
+                logger.debug('loading subjects from %s', path)
+                self._subjects = annif.corpus.SubjectIndex.load(path)
+            else:
+                logger.warning("subject file '%s' not found", path)
         return self._subjects
 
     @property
     def vectorizer(self):
         if self._vectorizer is None:
             path = os.path.join(self._get_datadir(), 'vectorizer')
-            logger.debug('loading vectorizer from %s', path)
-            self._vectorizer = joblib.load(path)
+            if os.path.exists(path):
+                logger.debug('loading vectorizer from %s', path)
+                self._vectorizer = joblib.load(path)
+            else:
+                logger.warning("vectorizer file '%s' not found", path)
         return self._vectorizer
 
     def analyze(self, text, backend_params=None):
