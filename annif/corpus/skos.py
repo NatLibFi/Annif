@@ -8,8 +8,7 @@ from .subject import SubjectIndex, Subject
 
 def skos_file_as_corpus(path, language):
     graph = rdflib.Graph()
-    format = rdflib.util.guess_format(path)
-    graph.load(path, format=format)
+    graph.load(path, format=rdflib.util.guess_format(path))
     for concept in graph.subjects(RDF.type, SKOS.Concept):
         if (concept, OWL.deprecated, rdflib.Literal(True)) in graph:
             continue
