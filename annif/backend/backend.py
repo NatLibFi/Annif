@@ -36,7 +36,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         """load the given subjects"""
         pass  # default is to do nothing, subclasses may override
 
-    def load_documents(self, subjects, project):
+    def load_documents(self, documents, project):
         """load the given training documents"""
         pass  # default is to do nothing, subclasses may override
 
