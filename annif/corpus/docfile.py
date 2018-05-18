@@ -10,6 +10,8 @@ def cleanup_uri(uri):
 
 
 class DocumentFile:
+    """A TSV file as a corpus of documents with subjects"""
+
     def __init__(self, path):
         self.path = path
 
