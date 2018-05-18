@@ -112,6 +112,16 @@ def run_loadvoc(project_id, subjectfile):
     proj.load_vocabulary(subjects)
 
 
+@cli.command('loaddocs')
+@click_log.simple_verbosity_option(logger)
+@click.argument('project_id')
+@click.argument('docfile')
+def run_load(project_id, docfile):
+    proj = get_project(project_id)
+    documents = annif.corpus.DocumentFile(docfile)
+    proj.load_documents(documents)
+
+
 @cli.command('load')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')

@@ -181,6 +181,8 @@ class AnnifProject:
         self._create_vectorizer(subjects)
 
         for backend, weight in self.backends:
+            if not backend.can_load_subjects:
+                continue
             logger.debug(
                 'Loading subjects for backend %s',
                 backend.backend_id)
@@ -190,6 +192,17 @@ class AnnifProject:
         """load only subjects from a subject index"""
 
         self._create_subject_index(subjects)
+
+    def load_documents(self, documents):
+        """load training documents from a metadata source"""
+
+        for backend, weight in self.backends:
+            if not backend.can_load_documents:
+                continue
+            logger.debug(
+                'Loading documents for backend %s',
+                backend.backend_id)
+            backend.load_documents(documents, project=self)
 
     def dump(self):
         """return this project as a dict"""

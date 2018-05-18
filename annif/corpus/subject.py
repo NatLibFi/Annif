@@ -31,15 +31,21 @@ class SubjectIndex:
         """Initialize the subject index from a subject corpus."""
         self._uris = []
         self._labels = []
+        self._uri_idx = {}
         for subject_id, subject in enumerate(corpus):
             self._uris.append(subject.uri)
             self._labels.append(subject.label)
+            self._uri_idx[subject.uri] = subject_id
 
     def __len__(self):
         return len(self._uris)
 
     def __getitem__(self, subject_id):
         return (self._uris[subject_id], self._labels[subject_id])
+
+    def by_uri(self, uri):
+        """return the subject index of a subject by its URI"""
+        return self._uri_idx.get(uri, None)
 
     def save(self, path):
         """Save this subject index into a file."""

@@ -83,9 +83,28 @@ def test_loadvoc_rdf(datadir):
     assert datadir.join('projects/tfidf-fi/subjects').size() > 0
 
 
+def test_loaddocs(datadir):
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents.tsv')
+    result = runner.invoke(annif.cli.cli, ['loaddocs', 'tfidf-fi', docfile])
+    assert not result.exception
+    assert result.exit_code == 0
+#    assert datadir.join('projects/tfidf-fi/vectorizer').exists()
+#    assert datadir.join('projects/tfidf-fi/vectorizer').size() > 0
+#    assert datadir.join('projects/tfidf-fi/tfidf-index').exists()
+#    assert datadir.join('projects/tfidf-fi/tfidf-index').size() > 0
+
+
 def test_load(datadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(datadir.join('projects/tfidf-fi/subjects')))
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(datadir.join('projects/tfidf-fi/vectorizer')))
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(datadir.join('projects/tfidf-fi/tfidf-index')))
     subjdir = os.path.join(
         os.path.dirname(__file__),
         'corpora',
