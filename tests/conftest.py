@@ -30,3 +30,13 @@ def subject_corpus():
         'archaeology',
         'subjects')
     return annif.corpus.SubjectDirectory(subjdir)
+
+
+@pytest.fixture(scope='module')
+def document_corpus():
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents.tsv')
+    return annif.corpus.DocumentFile(docfile)
