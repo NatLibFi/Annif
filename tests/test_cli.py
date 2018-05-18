@@ -5,7 +5,6 @@ import random
 import re
 import os.path
 import shutil
-import py.path
 import pytest
 from click.testing import CliRunner
 import annif.cli
@@ -15,15 +14,6 @@ runner = CliRunner(env={'ANNIF_CONFIG': 'config.TestingConfig'})
 # Generate a random project name to use in tests
 TEMP_PROJECT = ''.join(
     random.choice('abcdefghiklmnopqrstuvwxyz') for _ in range(8))
-
-
-@pytest.fixture(scope='session')
-def datadir(app):
-    with app.app_context():
-        dir = py.path.local(app.config['DATADIR'])
-    # clean up previous state of datadir
-    shutil.rmtree(str(dir), ignore_errors=True)
-    return dir
 
 
 def test_list_projects():
@@ -53,9 +43,9 @@ def test_show_project():
     assert failed_result.exception
 
 
-def test_loadvoc_tsv(datadir):
+def test_loadvoc_tsv(testdatadir):
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(datadir.join('projects/tfidf-fi/subjects')))
+        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
     subjectfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
@@ -64,13 +54,13 @@ def test_loadvoc_tsv(datadir):
     result = runner.invoke(annif.cli.cli, ['loadvoc', 'tfidf-fi', subjectfile])
     assert not result.exception
     assert result.exit_code == 0
-    assert datadir.join('projects/tfidf-fi/subjects').exists()
-    assert datadir.join('projects/tfidf-fi/subjects').size() > 0
+    assert testdatadir.join('projects/tfidf-fi/subjects').exists()
+    assert testdatadir.join('projects/tfidf-fi/subjects').size() > 0
 
 
-def test_loadvoc_rdf(datadir):
+def test_loadvoc_rdf(testdatadir):
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(datadir.join('projects/tfidf-fi/subjects')))
+        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
     subjectfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
@@ -79,13 +69,32 @@ def test_loadvoc_rdf(datadir):
     result = runner.invoke(annif.cli.cli, ['loadvoc', 'tfidf-fi', subjectfile])
     assert not result.exception
     assert result.exit_code == 0
-    assert datadir.join('projects/tfidf-fi/subjects').exists()
-    assert datadir.join('projects/tfidf-fi/subjects').size() > 0
+    assert testdatadir.join('projects/tfidf-fi/subjects').exists()
+    assert testdatadir.join('projects/tfidf-fi/subjects').size() > 0
 
 
-def test_load(datadir):
+def test_loaddocs(testdatadir):
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents.tsv')
+    result = runner.invoke(annif.cli.cli, ['loaddocs', 'tfidf-fi', docfile])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert testdatadir.join('projects/tfidf-fi/vectorizer').exists()
+    assert testdatadir.join('projects/tfidf-fi/vectorizer').size() > 0
+    assert testdatadir.join('projects/tfidf-fi/tfidf-index').exists()
+    assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
+
+
+def test_load(testdatadir):
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(datadir.join('projects/tfidf-fi/subjects')))
+        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('projects/tfidf-fi/vectorizer')))
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('projects/tfidf-fi/tfidf-index')))
     subjdir = os.path.join(
         os.path.dirname(__file__),
         'corpora',
@@ -94,12 +103,12 @@ def test_load(datadir):
     result = runner.invoke(annif.cli.cli, ['load', 'tfidf-fi', subjdir])
     assert not result.exception
     assert result.exit_code == 0
-    assert datadir.join('projects/tfidf-fi/subjects').exists()
-    assert datadir.join('projects/tfidf-fi/subjects').size() > 0
-    assert datadir.join('projects/tfidf-fi/vectorizer').exists()
-    assert datadir.join('projects/tfidf-fi/vectorizer').size() > 0
-    assert datadir.join('projects/tfidf-fi/tfidf-index').exists()
-    assert datadir.join('projects/tfidf-fi/tfidf-index').size() > 0
+    assert testdatadir.join('projects/tfidf-fi/subjects').exists()
+    assert testdatadir.join('projects/tfidf-fi/subjects').size() > 0
+    assert testdatadir.join('projects/tfidf-fi/vectorizer').exists()
+    assert testdatadir.join('projects/tfidf-fi/vectorizer').size() > 0
+    assert testdatadir.join('projects/tfidf-fi/tfidf-index').exists()
+    assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
 def test_analyze():

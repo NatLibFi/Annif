@@ -14,6 +14,8 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     name = None
     needs_subject_index = False
     needs_subject_vectorizer = False
+    can_load_subjects = False
+    can_load_documents = False
 
     def __init__(self, backend_id, params, datadir):
         """Initialize backend with specific parameters. The
@@ -32,6 +34,10 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     def load_subjects(self, subjects, project):
         """load the given subjects"""
+        pass  # default is to do nothing, subclasses may override
+
+    def load_documents(self, documents, project):
+        """load the given training documents"""
         pass  # default is to do nothing, subclasses may override
 
     def initialize(self):

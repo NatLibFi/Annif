@@ -13,6 +13,8 @@ class FastTextBackend(backend.AnnifBackend):
 
     name = "fasttext"
     needs_subject_index = True
+    can_load_documents = True
+    can_load_subjects = True
 
     FASTTEXT_PARAMS = {
         'lr': float,
@@ -68,8 +70,8 @@ class FastTextBackend(backend.AnnifBackend):
     def _normalize_text(cls, project, text):
         return ' '.join(project.analyzer.tokenize_words(text))
 
-    def _create_train_file(self, subjects, project):
-        self.info('creating fastText training file')
+    def _create_train_file_from_subjects(self, subjects, project):
+        self.info('creating fastText training file from subjects')
 
         doc_subjects = collections.defaultdict(set)
         for subject_id, subj in enumerate(subjects):
@@ -87,6 +89,23 @@ class FastTextBackend(backend.AnnifBackend):
                                self.TRAIN_FILE,
                                method=self._write_train_file)
 
+    def _create_train_file_from_documents(self, documents, project):
+        self.info('creating fastText training file from documents')
+
+        doc_subjects = collections.defaultdict(set)
+
+        for rawtext, subjects in documents:
+            text = self._normalize_text(project, rawtext)
+            if text == '':
+                continue
+            doc_subjects[text] = [project.subjects.by_uri(uri)
+                                  for uri in subjects]
+
+        annif.util.atomic_save(doc_subjects,
+                               self._get_datadir(),
+                               self.TRAIN_FILE,
+                               method=self._write_train_file)
+
     def _create_model(self):
         self.info('creating fastText model')
         trainpath = os.path.join(self._get_datadir(), self.TRAIN_FILE)
@@ -98,7 +117,11 @@ class FastTextBackend(backend.AnnifBackend):
         self._model.save_model(modelpath)
 
     def load_subjects(self, subjects, project):
-        self._create_train_file(subjects, project)
+        self._create_train_file_from_subjects(subjects, project)
+        self._create_model()
+
+    def load_documents(self, documents, project):
+        self._create_train_file_from_documents(documents, project)
         self._create_model()
 
     def _analyze_chunks(self, chunktexts, project):

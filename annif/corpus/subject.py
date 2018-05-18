@@ -2,7 +2,10 @@
 
 import collections
 import glob
+import os
 import os.path
+import shutil
+import annif.util
 
 
 Subject = collections.namedtuple('Subject', 'uri label text')
@@ -22,6 +25,30 @@ class SubjectDirectory:
                 text = ' '.join(subjfile.readlines())
                 yield Subject(uri=uri, label=label, text=text)
 
+    @classmethod
+    def _add_subject(cls, uri, text, subjectdir, subject_index):
+        filename = '{}.txt'.format(annif.util.localname(uri))
+        path = os.path.join(subjectdir, filename)
+        if not os.path.exists(path):
+            subject_id = subject_index.by_uri(uri)
+            label = subject_index[subject_id][1]
+            with open(path, 'w') as subjfile:
+                print("{} {}".format(uri, label), file=subjfile)
+        with open(path, 'a') as subjfile:
+            print(text, file=subjfile)
+
+    @classmethod
+    def from_documents(cls, subjectdir, docfile, subject_index):
+        # clear the subject directory
+        shutil.rmtree(subjectdir, ignore_errors=True)
+        os.makedirs(subjectdir)
+
+        for text, uris in docfile:
+            for uri in uris:
+                cls._add_subject(uri, text, subjectdir, subject_index)
+
+        return SubjectDirectory(subjectdir)
+
 
 class SubjectIndex:
     """A class that remembers the associations between integers subject IDs
@@ -31,15 +58,21 @@ class SubjectIndex:
         """Initialize the subject index from a subject corpus."""
         self._uris = []
         self._labels = []
+        self._uri_idx = {}
         for subject_id, subject in enumerate(corpus):
             self._uris.append(subject.uri)
             self._labels.append(subject.label)
+            self._uri_idx[subject.uri] = subject_id
 
     def __len__(self):
         return len(self._uris)
 
     def __getitem__(self, subject_id):
         return (self._uris[subject_id], self._labels[subject_id])
+
+    def by_uri(self, uri):
+        """return the subject index of a subject by its URI"""
+        return self._uri_idx.get(uri, None)
 
     def save(self, path):
         """Save this subject index into a file."""

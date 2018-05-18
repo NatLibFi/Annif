@@ -181,6 +181,8 @@ class AnnifProject:
         self._create_vectorizer(subjects)
 
         for backend, weight in self.backends:
+            if not backend.can_load_subjects:
+                continue
             logger.debug(
                 'Loading subjects for backend %s',
                 backend.backend_id)
@@ -190,6 +192,34 @@ class AnnifProject:
         """load only subjects from a subject index"""
 
         self._create_subject_index(subjects)
+
+    def _load_documents_to_backends(self, documents, subjects):
+        for backend, weight in self.backends:
+            if backend.can_load_documents:
+                logger.debug(
+                    'Loading documents for backend %s',
+                    backend.backend_id)
+                backend.load_documents(documents, project=self)
+            elif backend.can_load_subjects:
+                logger.debug(
+                    'Loading subjects extracted from documents for backend %s',
+                    backend.backend_id)
+                backend.load_subjects(subjects, project=self)
+
+    def load_documents(self, documents):
+        """load training documents from a metadata source"""
+
+        subjects = None
+        # check if we have a backend that requires subjects
+        if True in [be[0].can_load_subjects and not be[0].can_load_documents
+                    for be in self.backends]:
+            subjects = annif.corpus.SubjectDirectory.from_documents(
+                os.path.join(self._datadir, 'docsubjects'),
+                documents,
+                self.subjects)
+            self._create_vectorizer(subjects)
+
+        self._load_documents_to_backends(documents, subjects)
 
     def dump(self):
         """return this project as a dict"""

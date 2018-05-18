@@ -3,25 +3,9 @@
 import annif
 import annif.backend
 import annif.corpus
-import os.path
 from sklearn.feature_extraction.text import TfidfVectorizer
 import pytest
 import unittest.mock
-
-
-@pytest.fixture(scope='module')
-def datadir(tmpdir_factory):
-    return tmpdir_factory.mktemp('data')
-
-
-@pytest.fixture(scope='module')
-def subject_corpus():
-    subjdir = os.path.join(
-        os.path.dirname(__file__),
-        'corpora',
-        'archaeology',
-        'subjects')
-    return annif.corpus.SubjectDirectory(subjdir)
 
 
 @pytest.fixture(scope='module')
@@ -45,6 +29,24 @@ def test_fasttext_load_subjects(datadir, subject_corpus, project):
         datadir=str(datadir))
 
     fasttext.load_subjects(subject_corpus, project)
+    assert fasttext._model is not None
+    assert datadir.join('fasttext-model').exists()
+    assert datadir.join('fasttext-model').size() > 0
+
+
+def test_fasttext_load_documents(datadir, document_corpus, project):
+    fasttext_type = annif.backend.get_backend("fasttext")
+    fasttext = fasttext_type(
+        backend_id='fasttext',
+        params={
+            'limit': 50,
+            'dim': 100,
+            'lr': 0.25,
+            'epoch': 20,
+            'loss': 'hs'},
+        datadir=str(datadir))
+
+    fasttext.load_documents(document_corpus, project)
     assert fasttext._model is not None
     assert datadir.join('fasttext-model').exists()
     assert datadir.join('fasttext-model').size() > 0

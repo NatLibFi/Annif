@@ -2,6 +2,7 @@
 
 
 from .docdir import DocumentDirectory
+from .docfile import DocumentFile
 from .subject import Subject, SubjectDirectory, SubjectIndex
 from .skos import SubjectIndexSKOS
 

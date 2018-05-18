@@ -7,6 +7,8 @@ import re
 
 
 class DocumentDirectory:
+    """A directory of files as a full text document corpus"""
+
     def __init__(self, path, require_subjects=False):
         self.path = path
         self.require_subjects = require_subjects
