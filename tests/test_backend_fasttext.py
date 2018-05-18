@@ -3,25 +3,9 @@
 import annif
 import annif.backend
 import annif.corpus
-import os.path
 from sklearn.feature_extraction.text import TfidfVectorizer
 import pytest
 import unittest.mock
-
-
-@pytest.fixture(scope='module')
-def datadir(tmpdir_factory):
-    return tmpdir_factory.mktemp('data')
-
-
-@pytest.fixture(scope='module')
-def subject_corpus():
-    subjdir = os.path.join(
-        os.path.dirname(__file__),
-        'corpora',
-        'archaeology',
-        'subjects')
-    return annif.corpus.SubjectDirectory(subjdir)
 
 
 @pytest.fixture(scope='module')
