@@ -92,10 +92,10 @@ def test_loaddocs(datadir):
     result = runner.invoke(annif.cli.cli, ['loaddocs', 'tfidf-fi', docfile])
     assert not result.exception
     assert result.exit_code == 0
-#    assert datadir.join('projects/tfidf-fi/vectorizer').exists()
-#    assert datadir.join('projects/tfidf-fi/vectorizer').size() > 0
-#    assert datadir.join('projects/tfidf-fi/tfidf-index').exists()
-#    assert datadir.join('projects/tfidf-fi/tfidf-index').size() > 0
+    assert datadir.join('projects/tfidf-fi/vectorizer').exists()
+    assert datadir.join('projects/tfidf-fi/vectorizer').size() > 0
+    assert datadir.join('projects/tfidf-fi/tfidf-index').exists()
+    assert datadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
 def test_load(datadir):

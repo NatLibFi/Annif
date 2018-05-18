@@ -23,3 +23,10 @@ def atomic_save(obj, dirname, filename, method=None):
         newname = fn.replace(tempfilename, os.path.join(dirname, filename))
         logger.debug('renaming temporary file %s to %s', fn, newname)
         os.rename(fn, newname)
+
+
+def localname(uri):
+    """return the local name extracted from a URI, i.e. the part after the
+    last slash or hash character"""
+
+    return uri.split('/')[-1].split('#')[-1]
