@@ -30,3 +30,10 @@ def localname(uri):
     last slash or hash character"""
 
     return uri.split('/')[-1].split('#')[-1]
+
+
+def cleanup_uri(uri):
+    """remove angle brackets from a URI, if any"""
+    if uri.startswith('<') and uri.endswith('>'):
+        return uri[1:-1]
+    return uri
