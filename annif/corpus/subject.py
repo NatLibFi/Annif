@@ -91,7 +91,8 @@ class SubjectIndex:
             with open(path) as subjfile:
                 for line in subjfile:
                     uri, label = line.strip().split(None, 1)
-                    uri = uri[1:-1]
+                    if uri.startswith('<') and uri.endswith('>'):
+                        uri = uri[1:-1]
                     yield Subject(uri=uri, label=label, text=None)
 
         return cls(file_as_corpus(path))
