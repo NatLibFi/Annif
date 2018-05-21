@@ -6,6 +6,7 @@ import os
 import os.path
 import shutil
 import annif.util
+from annif import logger
 
 
 Subject = collections.namedtuple('Subject', 'uri label text')
@@ -72,7 +73,11 @@ class SubjectIndex:
 
     def by_uri(self, uri):
         """return the subject index of a subject by its URI"""
-        return self._uri_idx.get(uri, None)
+        try:
+            return self._uri_idx[uri]
+        except KeyError:
+            logger.warning('Unknown subject URI <%s>', uri)
+            return None
 
     def save(self, path):
         """Save this subject index into a file."""

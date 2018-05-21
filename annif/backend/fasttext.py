@@ -56,15 +56,19 @@ class FastTextBackend(backend.AnnifBackend):
 
     @classmethod
     def _label_to_subject(cls, project, label):
-        subject_id = int(label.replace('__label__', ''))
+        labelnum = label.replace('__label__', '')
+        subject_id = int(labelnum)
         return project.subjects[subject_id]
 
-    @classmethod
-    def _write_train_file(cls, doc_subjects, filename):
+    def _write_train_file(self, doc_subjects, filename):
         with open(filename, 'w') as trainfile:
             for doc, subject_ids in doc_subjects.items():
-                labels = [cls._id_to_label(sid) for sid in subject_ids]
-                print(' '.join(labels), doc, file=trainfile)
+                labels = [self._id_to_label(sid) for sid in subject_ids
+                          if sid is not None]
+                if labels:
+                    print(' '.join(labels), doc, file=trainfile)
+                else:
+                    self.warning('no labels for document "{}"'.format(doc))
 
     @classmethod
     def _normalize_text(cls, project, text):
