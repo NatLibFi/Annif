@@ -25,6 +25,7 @@ class SubjectCorpus(metaclass=abc.ABCMeta):
 
 class SubjectDirectory(SubjectCorpus):
     """A subject corpus in the form of a directory with .txt files."""
+
     def __init__(self, path):
         self.path = path
         self._filenames = sorted(glob.glob(os.path.join(path, '*.txt')))
@@ -73,9 +74,8 @@ class SubjectFileTSV(SubjectCorpus):
         with open(self.path) as subjfile:
             for line in subjfile:
                 uri, label = line.strip().split(None, 1)
-                if uri.startswith('<') and uri.endswith('>'):
-                    uri = uri[1:-1]
-                yield Subject(uri=uri, label=label, text=None)
+                clean_uri = annif.util.cleanup_uri(uri)
+                yield Subject(uri=clean_uri, label=label, text=None)
 
 
 class SubjectIndex:

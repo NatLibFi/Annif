@@ -1,12 +1,7 @@
 """A TSV file as a corpus of documents (usually only their titles) with
 subjects"""
 
-
-def cleanup_uri(uri):
-    """remove angle brackets from a URI, if any"""
-    if uri.startswith('<') and uri.endswith('>'):
-        return uri[1:-1]
-    return uri
+import annif.util
 
 
 class DocumentFile:
@@ -22,5 +17,6 @@ class DocumentFile:
         with open(self.path) as tsvfile:
             for line in tsvfile:
                 text, uris = line.split('\t', maxsplit=1)
-                subjects = [cleanup_uri(uri) for uri in uris.split()]
+                subjects = [annif.util.cleanup_uri(uri)
+                            for uri in uris.split()]
                 yield (text, subjects)
