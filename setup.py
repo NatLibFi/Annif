@@ -8,7 +8,7 @@ def read(fname):
 
 setup(
     name='Annif',
-    version='0.26.0',
+    version='0.27.0',
     url='https://github.com/NatLibFi/Annif',
     author='Osma Suominen',
     author_email='osma.suominen@helsinki.fi',
