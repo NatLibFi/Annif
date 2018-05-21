@@ -1,9 +1,24 @@
-"""A directory of files as a full text document corpus"""
+"""Clases for supporting document corpora"""
 
-
+import abc
+import collections
 import glob
 import os.path
 import re
+import annif.util
+
+
+Document = collections.namedtuple('Document', 'text uris')
+
+
+class DocumentCorpus(metaclass=abc.ABCMeta):
+    """Abstract base class for document corpora"""
+
+    @property
+    @abc.abstractmethod
+    def documents(self):
+        """Iterate through the document corpus, yielding Document objects."""
+        pass
 
 
 class DocumentDirectory:
@@ -29,3 +44,19 @@ class DocumentDirectory:
                 continue
             if not self.require_subjects:
                 yield (filename, None)
+
+
+class DocumentFile(DocumentCorpus):
+    """A TSV file as a corpus of documents with subjects"""
+
+    def __init__(self, path):
+        self.path = path
+
+    @property
+    def documents(self):
+        with open(self.path) as tsvfile:
+            for line in tsvfile:
+                text, uris = line.split('\t', maxsplit=1)
+                subjects = [annif.util.cleanup_uri(uri)
+                            for uri in uris.split()]
+                yield Document(text=text, uris=subjects)

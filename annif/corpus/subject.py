@@ -51,12 +51,12 @@ class SubjectDirectory(SubjectCorpus):
             print(text, file=subjfile)
 
     @classmethod
-    def from_documents(cls, subjectdir, docfile, subject_index):
+    def from_documents(cls, subjectdir, documentcorpus, subject_index):
         # clear the subject directory
         shutil.rmtree(subjectdir, ignore_errors=True)
         os.makedirs(subjectdir)
 
-        for text, uris in docfile:
+        for text, uris in documentcorpus.documents:
             for uri in uris:
                 cls._add_subject(uri, text, subjectdir, subject_index)
 

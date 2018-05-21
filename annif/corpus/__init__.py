@@ -1,8 +1,7 @@
 """Annif corpus operations"""
 
 
-from .docdir import DocumentDirectory
-from .docfile import DocumentFile
+from .document import DocumentDirectory, DocumentFile
 from .subject import Subject, SubjectDirectory, SubjectFileTSV, SubjectIndex
 from .skos import SubjectFileSKOS
 
