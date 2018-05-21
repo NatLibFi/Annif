@@ -24,6 +24,7 @@ class SubjectCorpus(metaclass=abc.ABCMeta):
 
 
 class SubjectDirectory(SubjectCorpus):
+    """A subject corpus in the form of a directory with .txt files."""
     def __init__(self, path):
         self.path = path
         self._filenames = sorted(glob.glob(os.path.join(path, '*.txt')))
@@ -62,8 +63,7 @@ class SubjectDirectory(SubjectCorpus):
 
 
 class SubjectFileTSV(SubjectCorpus):
-    """A class that represents a collection of subjects stored in a TSV
-    file."""
+    """A subject corpus stored in a TSV file."""
 
     def __init__(self, path):
         self.path = path
@@ -79,7 +79,7 @@ class SubjectFileTSV(SubjectCorpus):
 
 
 class SubjectIndex:
-    """A class that remembers the associations between integers subject IDs
+    """An index that remembers the associations between integers subject IDs
     and their URIs and labels."""
 
     def __init__(self, corpus):
