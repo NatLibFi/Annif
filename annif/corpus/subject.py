@@ -1,5 +1,6 @@
 """Classes for supporting subject corpora expressed as directories or files"""
 
+import abc
 import collections
 import glob
 import os
@@ -12,15 +13,23 @@ from annif import logger
 Subject = collections.namedtuple('Subject', 'uri label text')
 
 
-class SubjectDirectory:
+class SubjectCorpus(metaclass=abc.ABCMeta):
+    """Abstract base class for subject corpora"""
+
+    @property
+    @abc.abstractmethod
+    def subjects(self):
+        """Iterate through the subject corpus, yielding Subject objects."""
+        pass
+
+
+class SubjectDirectory(SubjectCorpus):
     def __init__(self, path):
         self.path = path
         self._filenames = sorted(glob.glob(os.path.join(path, '*.txt')))
 
     @property
     def subjects(self):
-        """Iterate through the subject directory, yielding Subject objects."""
-
         for filename in self._filenames:
             with open(filename) as subjfile:
                 uri, label = subjfile.readline().strip().split(' ', 1)
