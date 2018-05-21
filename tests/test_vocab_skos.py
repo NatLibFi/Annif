@@ -1,27 +1,27 @@
 """Unit tests for SKOS vocabulary functionality in Annif"""
 
 
-from annif.corpus.skos import SubjectIndexSKOS
+from annif.corpus.skos import SubjectFileSKOS
 
 
 def test_recognize_turtle():
-    assert SubjectIndexSKOS.is_rdf_file('subjects.ttl')
+    assert SubjectFileSKOS.is_rdf_file('subjects.ttl')
 
 
 def test_recognize_rdfxml():
-    assert SubjectIndexSKOS.is_rdf_file('subjects.rdf')
+    assert SubjectFileSKOS.is_rdf_file('subjects.rdf')
 
 
 def test_recognize_nt():
-    assert SubjectIndexSKOS.is_rdf_file('subjects.nt')
+    assert SubjectFileSKOS.is_rdf_file('subjects.nt')
 
 
 def test_recognize_tsv():
-    assert not SubjectIndexSKOS.is_rdf_file('subjects.tsv')
+    assert not SubjectFileSKOS.is_rdf_file('subjects.tsv')
 
 
 def test_recognize_noext():
-    assert not SubjectIndexSKOS.is_rdf_file('subjects')
+    assert not SubjectFileSKOS.is_rdf_file('subjects')
 
 
 def test_load_turtle(tmpdir):
@@ -44,6 +44,8 @@ yso:p9285
         "neolitisk tid"@sv .
     """)
 
-    index = SubjectIndexSKOS.load(str(tmpfile), 'fi')
-    assert len(index) == 1  # one of the concepts was deprecated
-    assert index[0] == ('http://www.yso.fi/onto/yso/p8993', 'hylyt')
+    corpus = SubjectFileSKOS(str(tmpfile), 'fi')
+    subjects = list(corpus.subjects)
+    assert len(subjects) == 1  # one of the concepts was deprecated
+    assert subjects[0].uri == 'http://www.yso.fi/onto/yso/p8993'
+    assert subjects[0].label == 'hylyt'

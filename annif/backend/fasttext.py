@@ -74,11 +74,11 @@ class FastTextBackend(backend.AnnifBackend):
     def _normalize_text(cls, project, text):
         return ' '.join(project.analyzer.tokenize_words(text))
 
-    def _create_train_file_from_subjects(self, subjects, project):
+    def _create_train_file_from_subjects(self, subjectcorpus, project):
         self.info('creating fastText training file from subjects')
 
         doc_subjects = collections.defaultdict(set)
-        for subject_id, subj in enumerate(subjects):
+        for subject_id, subj in enumerate(subjectcorpus.subjects):
             for line in subj.text.splitlines():
                 doc_subjects[line].add(subject_id)
 
@@ -120,8 +120,8 @@ class FastTextBackend(backend.AnnifBackend):
         self._model = fastText.train_supervised(trainpath, **params)
         self._model.save_model(modelpath)
 
-    def load_subjects(self, subjects, project):
-        self._create_train_file_from_subjects(subjects, project)
+    def load_subjects(self, subjectcorpus, project):
+        self._create_train_file_from_subjects(subjectcorpus, project)
         self._create_model()
 
     def load_documents(self, documents, project):

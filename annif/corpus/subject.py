@@ -17,7 +17,8 @@ class SubjectDirectory:
         self.path = path
         self._filenames = sorted(glob.glob(os.path.join(path, '*.txt')))
 
-    def __iter__(self):
+    @property
+    def subjects(self):
         """Iterate through the subject directory, yielding Subject objects."""
 
         for filename in self._filenames:
@@ -51,6 +52,23 @@ class SubjectDirectory:
         return SubjectDirectory(subjectdir)
 
 
+class SubjectFileTSV:
+    """A class that represents a collection of subjects stored in a TSV
+    file."""
+
+    def __init__(self, path):
+        self.path = path
+
+    @property
+    def subjects(self):
+        with open(self.path) as subjfile:
+            for line in subjfile:
+                uri, label = line.strip().split(None, 1)
+                if uri.startswith('<') and uri.endswith('>'):
+                    uri = uri[1:-1]
+                yield Subject(uri=uri, label=label, text=None)
+
+
 class SubjectIndex:
     """A class that remembers the associations between integers subject IDs
     and their URIs and labels."""
@@ -60,7 +78,7 @@ class SubjectIndex:
         self._uris = []
         self._labels = []
         self._uri_idx = {}
-        for subject_id, subject in enumerate(corpus):
+        for subject_id, subject in enumerate(corpus.subjects):
             self._uris.append(subject.uri)
             self._labels.append(subject.label)
             self._uri_idx[subject.uri] = subject_id
@@ -90,14 +108,7 @@ class SubjectIndex:
 
     @classmethod
     def load(cls, path):
-        """Load a subject index from a file and return it."""
+        """Load a subject index from a TSV file and return it."""
 
-        def file_as_corpus(path):
-            with open(path) as subjfile:
-                for line in subjfile:
-                    uri, label = line.strip().split(None, 1)
-                    if uri.startswith('<') and uri.endswith('>'):
-                        uri = uri[1:-1]
-                    yield Subject(uri=uri, label=label, text=None)
-
-        return cls(file_as_corpus(path))
+        corpus = SubjectFileTSV(path)
+        return cls(corpus)

@@ -107,7 +107,7 @@ def test_subjdir(tmpdir):
         this is the third thing we know about""")
 
     subjdir = annif.corpus.SubjectDirectory(str(tmpdir))
-    subjects = sorted(list(subjdir), key=lambda subj: subj.uri)
+    subjects = sorted(list(subjdir.subjects), key=lambda subj: subj.uri)
     assert len(subjects) == 3
     assert subjects[0].uri == 'http://example.org/subj1'
     assert subjects[0].label == 'subject one'
