@@ -3,10 +3,10 @@
 import rdflib
 import rdflib.util
 from rdflib.namespace import SKOS, RDF, OWL
-from .subject import Subject
+from .subject import Subject, SubjectCorpus
 
 
-class SubjectFileSKOS:
+class SubjectFileSKOS(SubjectCorpus):
     """A subject corpus that uses SKOS files"""
 
     def __init__(self, path, language):

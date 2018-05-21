@@ -61,7 +61,7 @@ class SubjectDirectory(SubjectCorpus):
         return SubjectDirectory(subjectdir)
 
 
-class SubjectFileTSV:
+class SubjectFileTSV(SubjectCorpus):
     """A class that represents a collection of subjects stored in a TSV
     file."""
 
