@@ -1,5 +1,6 @@
 """Classes for supporting subject corpora expressed as directories or files"""
 
+import abc
 import collections
 import glob
 import os
@@ -12,14 +13,24 @@ from annif import logger
 Subject = collections.namedtuple('Subject', 'uri label text')
 
 
-class SubjectDirectory:
+class SubjectCorpus(metaclass=abc.ABCMeta):
+    """Abstract base class for subject corpora"""
+
+    @property
+    @abc.abstractmethod
+    def subjects(self):
+        """Iterate through the subject corpus, yielding Subject objects."""
+        pass
+
+
+class SubjectDirectory(SubjectCorpus):
+    """A subject corpus in the form of a directory with .txt files."""
     def __init__(self, path):
         self.path = path
         self._filenames = sorted(glob.glob(os.path.join(path, '*.txt')))
 
-    def __iter__(self):
-        """Iterate through the subject directory, yielding Subject objects."""
-
+    @property
+    def subjects(self):
         for filename in self._filenames:
             with open(filename) as subjfile:
                 uri, label = subjfile.readline().strip().split(' ', 1)
@@ -51,8 +62,24 @@ class SubjectDirectory:
         return SubjectDirectory(subjectdir)
 
 
+class SubjectFileTSV(SubjectCorpus):
+    """A subject corpus stored in a TSV file."""
+
+    def __init__(self, path):
+        self.path = path
+
+    @property
+    def subjects(self):
+        with open(self.path) as subjfile:
+            for line in subjfile:
+                uri, label = line.strip().split(None, 1)
+                if uri.startswith('<') and uri.endswith('>'):
+                    uri = uri[1:-1]
+                yield Subject(uri=uri, label=label, text=None)
+
+
 class SubjectIndex:
-    """A class that remembers the associations between integers subject IDs
+    """An index that remembers the associations between integers subject IDs
     and their URIs and labels."""
 
     def __init__(self, corpus):
@@ -60,7 +87,7 @@ class SubjectIndex:
         self._uris = []
         self._labels = []
         self._uri_idx = {}
-        for subject_id, subject in enumerate(corpus):
+        for subject_id, subject in enumerate(corpus.subjects):
             self._uris.append(subject.uri)
             self._labels.append(subject.label)
             self._uri_idx[subject.uri] = subject_id
@@ -90,14 +117,7 @@ class SubjectIndex:
 
     @classmethod
     def load(cls, path):
-        """Load a subject index from a file and return it."""
+        """Load a subject index from a TSV file and return it."""
 
-        def file_as_corpus(path):
-            with open(path) as subjfile:
-                for line in subjfile:
-                    uri, label = line.strip().split(None, 1)
-                    if uri.startswith('<') and uri.endswith('>'):
-                        uri = uri[1:-1]
-                    yield Subject(uri=uri, label=label, text=None)
-
-        return cls(file_as_corpus(path))
+        corpus = SubjectFileTSV(path)
+        return cls(corpus)

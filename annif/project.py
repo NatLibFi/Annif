@@ -158,7 +158,7 @@ class AnnifProject:
             self._subjects = annif.corpus.SubjectIndex(subjects)
         annif.util.atomic_save(self._subjects, self._get_datadir(), 'subjects')
 
-    def _create_vectorizer(self, subjects):
+    def _create_vectorizer(self, subjectcorpus):
         if True not in [
                 be[0].needs_subject_vectorizer for be in self.backends]:
             logger.debug('not creating vectorizer: not needed by any backend')
@@ -166,7 +166,7 @@ class AnnifProject:
         logger.info('creating vectorizer')
         self._vectorizer = TfidfVectorizer(
             tokenizer=self.analyzer.tokenize_words)
-        self._vectorizer.fit((subj.text for subj in subjects))
+        self._vectorizer.fit((subj.text for subj in subjectcorpus.subjects))
         annif.util.atomic_save(
             self._vectorizer,
             self._get_datadir(),

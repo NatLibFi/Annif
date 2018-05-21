@@ -3,8 +3,8 @@
 
 from .docdir import DocumentDirectory
 from .docfile import DocumentFile
-from .subject import Subject, SubjectDirectory, SubjectIndex
-from .skos import SubjectIndexSKOS
+from .subject import Subject, SubjectDirectory, SubjectFileTSV, SubjectIndex
+from .skos import SubjectFileSKOS
 
 
 class SubjectSet:

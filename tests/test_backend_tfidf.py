@@ -14,7 +14,7 @@ def project(subject_corpus):
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
     proj.subjects = annif.corpus.SubjectIndex(subject_corpus)
     proj.vectorizer = TfidfVectorizer(tokenizer=proj.analyzer.tokenize_words)
-    proj.vectorizer.fit([subj.text for subj in subject_corpus])
+    proj.vectorizer.fit([subj.text for subj in subject_corpus.subjects])
     return proj
 
 
