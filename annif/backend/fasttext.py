@@ -93,17 +93,17 @@ class FastTextBackend(backend.AnnifBackend):
                                self.TRAIN_FILE,
                                method=self._write_train_file)
 
-    def _create_train_file_from_documents(self, documents, project):
+    def _create_train_file_from_documents(self, documentcorpus, project):
         self.info('creating fastText training file from documents')
 
         doc_subjects = collections.defaultdict(set)
 
-        for rawtext, subjects in documents:
-            text = self._normalize_text(project, rawtext)
+        for doc in documentcorpus.documents:
+            text = self._normalize_text(project, doc.text)
             if text == '':
                 continue
             doc_subjects[text] = [project.subjects.by_uri(uri)
-                                  for uri in subjects]
+                                  for uri in doc.uris]
 
         annif.util.atomic_save(doc_subjects,
                                self._get_datadir(),
@@ -124,8 +124,8 @@ class FastTextBackend(backend.AnnifBackend):
         self._create_train_file_from_subjects(subjectcorpus, project)
         self._create_model()
 
-    def load_documents(self, documents, project):
-        self._create_train_file_from_documents(documents, project)
+    def load_documents(self, documentcorpus, project):
+        self._create_train_file_from_documents(documentcorpus, project)
         self._create_model()
 
     def _analyze_chunks(self, chunktexts, project):
