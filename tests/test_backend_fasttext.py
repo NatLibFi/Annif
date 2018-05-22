@@ -28,7 +28,7 @@ def test_fasttext_load_subjects(datadir, subject_corpus, project):
             'loss': 'hs'},
         datadir=str(datadir))
 
-    fasttext.load_subjects(subject_corpus, project)
+    fasttext.load_corpus(subject_corpus, project)
     assert fasttext._model is not None
     assert datadir.join('fasttext-model').exists()
     assert datadir.join('fasttext-model').size() > 0
@@ -51,7 +51,7 @@ def test_fasttext_load_documents_unknown_subject(tmpdir, datadir, project):
                   "arkeologia\thttp://www.yso.fi/onto/yso/p1265")
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
-    fasttext.load_documents(document_corpus, project)
+    fasttext.load_corpus(document_corpus, project)
     assert fasttext._model is not None
     assert datadir.join('fasttext-model').exists()
     assert datadir.join('fasttext-model').size() > 0
@@ -69,7 +69,7 @@ def test_fasttext_load_documents(datadir, document_corpus, project):
             'loss': 'hs'},
         datadir=str(datadir))
 
-    fasttext.load_documents(document_corpus, project)
+    fasttext.load_corpus(document_corpus, project)
     assert fasttext._model is not None
     assert datadir.join('fasttext-model').exists()
     assert datadir.join('fasttext-model').size() > 0

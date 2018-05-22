@@ -1,9 +1,10 @@
 """Mixin classes for converting between SubjectCorpus and DocumentCorpus"""
 
+import collections
 import os.path
 import tempfile
 import annif.util
-from .subject import SubjectCorpus, SubjectDirectory
+from .types import Document, DocumentCorpus, SubjectCorpus
 
 
 class DocumentToSubjectCorpusMixin(SubjectCorpus):
@@ -43,4 +44,24 @@ class DocumentToSubjectCorpusMixin(SubjectCorpus):
             for uri in uris:
                 self._add_subject(uri, text)
 
+        from .subject import SubjectDirectory
         self._subject_corpus = SubjectDirectory(self._temp_directory.name)
+
+
+class SubjectToDocumentCorpusMixin(DocumentCorpus):
+    """Mixin class for enabling a SubjectCorpus to act as a DocumentCorpus"""
+
+    _document_subjects = None
+
+    @property
+    def documents(self):
+        if self._document_subjects is None:
+            self._generate_corpus_from_subjects()
+        for text, uris in self._document_subjects.items():
+            yield Document(text=text, uris=uris)
+
+    def _generate_corpus_from_subjects(self):
+        self._document_subjects = collections.defaultdict(set)
+        for subj in self.subjects:
+            for line in subj.text.splitlines():
+                self._document_subjects[line].add(subj.uri)

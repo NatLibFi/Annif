@@ -25,7 +25,7 @@ def test_tfidf_load_subjects(datadir, subject_corpus, project):
         params={'limit': 10},
         datadir=str(datadir))
 
-    tfidf.load_subjects(subject_corpus, project)
+    tfidf.load_corpus(subject_corpus, project)
     assert len(tfidf._index) > 0
     assert datadir.join('tfidf-index').exists()
     assert datadir.join('tfidf-index').size() > 0
