@@ -146,16 +146,8 @@ class AnnifProject:
         logger.debug('%d hits after merging', len(merged_hits))
         return merged_hits
 
-    def _create_subject_index(self, subjects):
-        if True not in [be[0].needs_subject_index for be in self.backends]:
-            logger.debug(
-                'not creating subject index: not needed by any backend')
-            return
-        logger.info('creating subject index')
-        if isinstance(subjects, annif.corpus.SubjectIndex):
-            self._subjects = subjects
-        else:
-            self._subjects = annif.corpus.SubjectIndex(subjects)
+    def _create_subject_index(self, subject_corpus):
+        self._subjects = annif.corpus.SubjectIndex(subject_corpus)
         annif.util.atomic_save(self._subjects, self._get_datadir(), 'subjects')
 
     def _create_vectorizer(self, subjectcorpus):
@@ -188,38 +180,30 @@ class AnnifProject:
                 backend.backend_id)
             backend.load_subjects(subjects, project=self)
 
-    def load_vocabulary(self, subjects):
+    def load_vocabulary(self, subject_corpus):
         """load only subjects from a subject index"""
 
-        self._create_subject_index(subjects)
+        self._create_subject_index(subject_corpus)
 
-    def _load_documents_to_backends(self, documents, subjects):
+    def _load_documents_to_backends(self, corpus):
         for backend, weight in self.backends:
             if backend.can_load_documents:
                 logger.debug(
                     'Loading documents for backend %s',
                     backend.backend_id)
-                backend.load_documents(documents, project=self)
+                backend.load_documents(corpus, project=self)
             elif backend.can_load_subjects:
                 logger.debug(
                     'Loading subjects extracted from documents for backend %s',
                     backend.backend_id)
-                backend.load_subjects(subjects, project=self)
+                backend.load_subjects(corpus, project=self)
 
-    def load_documents(self, documents):
+    def load_documents(self, corpus):
         """load training documents from a metadata source"""
 
-        subjects = None
-        # check if we have a backend that requires subjects
-        if True in [be[0].can_load_subjects and not be[0].can_load_documents
-                    for be in self.backends]:
-            subjects = annif.corpus.SubjectDirectory.from_documents(
-                os.path.join(self._datadir, 'docsubjects'),
-                documents,
-                self.subjects)
-            self._create_vectorizer(subjects)
-
-        self._load_documents_to_backends(documents, subjects)
+        corpus.set_subject_index(self.subjects)
+        self._create_vectorizer(corpus)
+        self._load_documents_to_backends(corpus)
 
     def dump(self):
         """return this project as a dict"""

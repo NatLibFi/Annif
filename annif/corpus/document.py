@@ -6,6 +6,7 @@ import glob
 import os.path
 import re
 import annif.util
+from .convert import DocumentToSubjectCorpusMixin
 
 
 Document = collections.namedtuple('Document', 'text uris')
@@ -46,7 +47,7 @@ class DocumentDirectory:
                 yield (filename, None)
 
 
-class DocumentFile(DocumentCorpus):
+class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
     """A TSV file as a corpus of documents with subjects"""
 
     def __init__(self, path):
