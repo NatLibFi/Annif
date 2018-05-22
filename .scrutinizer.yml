@@ -3,7 +3,8 @@ build:
         python: 3.6.3
     dependencies:
         override:
-            - true
+            - pip install pipenv
+            - pipenv install --dev --skip-lock
     tests:
         override:
             - true
