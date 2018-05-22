@@ -32,10 +32,10 @@ class TFIDFBackend(backend.AnnifBackend):
                 self.warning(
                     'load failed, similarity index {} not found!'.format(path))
 
-    def load_subjects(self, subjectcorpus, project):
+    def load_corpus(self, corpus, project):
         self.info('creating similarity index')
         veccorpus = project.vectorizer.transform(
-            (subj.text for subj in subjectcorpus.subjects))
+            (subj.text for subj in corpus.subjects))
         gscorpus = Sparse2Corpus(veccorpus, documents_columns=False)
         self._index = gensim.similarities.SparseMatrixSimilarity(
             gscorpus, num_features=len(project.vectorizer.vocabulary_))

@@ -165,45 +165,29 @@ class AnnifProject:
             'vectorizer',
             method=joblib.dump)
 
-    def load_subjects(self, subjects):
+    def load_subjects(self, subject_corpus):
         """load subjects (vocabulary and text) from a subject corpus (e.g.
         SubjectDirectory)"""
 
-        self._create_subject_index(subjects)
-        self._create_vectorizer(subjects)
+        self._create_subject_index(subject_corpus)
+        self._create_vectorizer(subject_corpus)
 
         for backend, weight in self.backends:
-            if not backend.can_load_subjects:
-                continue
-            logger.debug(
-                'Loading subjects for backend %s',
-                backend.backend_id)
-            backend.load_subjects(subjects, project=self)
+            backend.load_corpus(subject_corpus, project=self)
 
     def load_vocabulary(self, subject_corpus):
         """load only subjects from a subject index"""
 
         self._create_subject_index(subject_corpus)
 
-    def _load_documents_to_backends(self, corpus):
-        for backend, weight in self.backends:
-            if backend.can_load_documents:
-                logger.debug(
-                    'Loading documents for backend %s',
-                    backend.backend_id)
-                backend.load_documents(corpus, project=self)
-            elif backend.can_load_subjects:
-                logger.debug(
-                    'Loading subjects extracted from documents for backend %s',
-                    backend.backend_id)
-                backend.load_subjects(corpus, project=self)
-
     def load_documents(self, corpus):
         """load training documents from a metadata source"""
 
         corpus.set_subject_index(self.subjects)
         self._create_vectorizer(corpus)
-        self._load_documents_to_backends(corpus)
+
+        for backend, weight in self.backends:
+            backend.load_corpus(corpus, project=self)
 
     def dump(self):
         """return this project as a dict"""

@@ -1,25 +1,11 @@
 """Clases for supporting document corpora"""
 
-import abc
-import collections
 import glob
 import os.path
 import re
 import annif.util
+from .types import Document, DocumentCorpus
 from .convert import DocumentToSubjectCorpusMixin
-
-
-Document = collections.namedtuple('Document', 'text uris')
-
-
-class DocumentCorpus(metaclass=abc.ABCMeta):
-    """Abstract base class for document corpora"""
-
-    @property
-    @abc.abstractmethod
-    def documents(self):
-        """Iterate through the document corpus, yielding Document objects."""
-        pass
 
 
 class DocumentDirectory:

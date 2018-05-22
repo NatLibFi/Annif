@@ -32,12 +32,8 @@ class AnnifBackend(metaclass=abc.ABCMeta):
             os.makedirs(self._datadir)
         return self._datadir
 
-    def load_subjects(self, subjectcorpus, project):
-        """load the given subjects"""
-        pass  # default is to do nothing, subclasses may override
-
-    def load_documents(self, documentcorpus, project):
-        """load the given training documents"""
+    def load_corpus(self, corpus, project):
+        """load the given document or subject corpus"""
         pass  # default is to do nothing, subclasses may override
 
     def initialize(self):

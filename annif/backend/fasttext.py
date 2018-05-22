@@ -74,31 +74,12 @@ class FastTextBackend(backend.AnnifBackend):
     def _normalize_text(cls, project, text):
         return ' '.join(project.analyzer.tokenize_words(text))
 
-    def _create_train_file_from_subjects(self, subjectcorpus, project):
-        self.info('creating fastText training file from subjects')
-
-        doc_subjects = collections.defaultdict(set)
-        for subject_id, subj in enumerate(subjectcorpus.subjects):
-            for line in subj.text.splitlines():
-                doc_subjects[line].add(subject_id)
-
-        doc_subjects_normalized = {}
-        for doc, subjs in doc_subjects.items():
-            text = self._normalize_text(project, doc)
-            if text != '':
-                doc_subjects_normalized[text] = subjs
-
-        annif.util.atomic_save(doc_subjects_normalized,
-                               self._get_datadir(),
-                               self.TRAIN_FILE,
-                               method=self._write_train_file)
-
-    def _create_train_file_from_documents(self, documentcorpus, project):
-        self.info('creating fastText training file from documents')
+    def _create_train_file(self, corpus, project):
+        self.info('creating fastText training file')
 
         doc_subjects = collections.defaultdict(set)
 
-        for doc in documentcorpus.documents:
+        for doc in corpus.documents:
             text = self._normalize_text(project, doc.text)
             if text == '':
                 continue
@@ -120,12 +101,8 @@ class FastTextBackend(backend.AnnifBackend):
         self._model = fastText.train_supervised(trainpath, **params)
         self._model.save_model(modelpath)
 
-    def load_subjects(self, subjectcorpus, project):
-        self._create_train_file_from_subjects(subjectcorpus, project)
-        self._create_model()
-
-    def load_documents(self, documentcorpus, project):
-        self._create_train_file_from_documents(documentcorpus, project)
+    def load_corpus(self, corpus, project):
+        self._create_train_file(corpus, project)
         self._create_model()
 
     def _analyze_chunks(self, chunktexts, project):
