@@ -187,7 +187,7 @@ class AnnifProject:
         self._create_vectorizer(corpus)
 
         for backend, weight in self.backends:
-                backend.load_corpus(corpus, project=self)
+            backend.load_corpus(corpus, project=self)
 
     def dump(self):
         """return this project as a dict"""
