@@ -1,6 +1,5 @@
 """Clases for supporting document corpora"""
 
-import collections
 import glob
 import os.path
 import re
