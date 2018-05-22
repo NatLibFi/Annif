@@ -5,4 +5,6 @@ build:
         before:
             - pip install pipenv
             - pipenv install --dev --skip-lock
-            - pipenv shell
+    tests:
+        override:
+            - pipenv run pytest
