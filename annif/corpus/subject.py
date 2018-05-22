@@ -3,9 +3,7 @@
 import abc
 import collections
 import glob
-import os
 import os.path
-import shutil
 import annif.util
 from annif import logger
 
@@ -37,30 +35,6 @@ class SubjectDirectory(SubjectCorpus):
                 uri, label = subjfile.readline().strip().split(' ', 1)
                 text = ' '.join(subjfile.readlines())
                 yield Subject(uri=uri, label=label, text=text)
-
-    @classmethod
-    def _add_subject(cls, uri, text, subjectdir, subject_index):
-        filename = '{}.txt'.format(annif.util.localname(uri))
-        path = os.path.join(subjectdir, filename)
-        if not os.path.exists(path):
-            subject_id = subject_index.by_uri(uri)
-            label = subject_index[subject_id][1]
-            with open(path, 'w') as subjfile:
-                print("{} {}".format(uri, label), file=subjfile)
-        with open(path, 'a') as subjfile:
-            print(text, file=subjfile)
-
-    @classmethod
-    def from_documents(cls, subjectdir, documentcorpus, subject_index):
-        # clear the subject directory
-        shutil.rmtree(subjectdir, ignore_errors=True)
-        os.makedirs(subjectdir)
-
-        for text, uris in documentcorpus.documents:
-            for uri in uris:
-                cls._add_subject(uri, text, subjectdir, subject_index)
-
-        return SubjectDirectory(subjectdir)
 
 
 class SubjectFileTSV(SubjectCorpus):

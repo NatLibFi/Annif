@@ -62,4 +62,4 @@ def vocabulary():
         'corpora',
         'archaeology',
         'subjects.tsv')
-    return annif.corpus.SubjectIndex.load(docfile)
+    return annif.corpus.SubjectFileTSV(docfile)
