@@ -108,7 +108,7 @@ class AnnifProject:
 
     @property
     def analyzer(self):
-        if self._analyzer is None:
+        if self._analyzer is None and self.analyzer_spec:
             self._analyzer = annif.analyzer.get_analyzer(self.analyzer_spec)
         return self._analyzer
 
