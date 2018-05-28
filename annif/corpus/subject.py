@@ -86,6 +86,7 @@ class SubjectIndex:
 
 class SubjectSet:
     """Represents a set of subjects for a document."""
+
     def __init__(self, subj_data):
         self.subject_uris = set()
         self.subject_labels = set()
