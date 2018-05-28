@@ -41,13 +41,7 @@ class AnnifProject:
 
     def _initialize_backends(self, config):
         backends = []
-        for backenddef in config['backends'].split(','):
-            bedefs = backenddef.strip().split(':')
-            backend_id = bedefs[0]
-            if len(bedefs) > 1:
-                weight = float(bedefs[1])
-            else:
-                weight = 1.0
+        for backend_id, weight in annif.util.parse_sources(config['backends']):
             backend_type = annif.backend.get_backend(backend_id)
             backend = backend_type(
                 backend_id,

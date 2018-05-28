@@ -7,26 +7,14 @@ import annif.util
 from . import backend
 
 
-def parse_sources(sources_string):
-    sources = []
-    for srcdef in sources_string.strip().split(','):
-        srcval = srcdef.strip().split(':')
-        src_id = srcval[0]
-        if len(srcval) > 1:
-            weight = float(srcval[1])
-        else:
-            weight = 1.0
-        project = annif.project.get_project(src_id)
-        sources.append((project, weight))
-    return sources
-
-
 class EnsembleBackend(backend.AnnifBackend):
+    """Ensemble backend that combines results from multiple projects"""
     name = "ensemble"
 
     def _analyze_with_sources(self, text, sources):
         hits_from_sources = []
-        for project, weight in sources:
+        for project_id, weight in sources:
+            project = annif.project.get_project(project_id)
             hits = [hit for hit in project.analyze(text) if hit.score > 0.0]
             self.debug(
                 'Got {} hits from project {}'.format(
@@ -37,7 +25,7 @@ class EnsembleBackend(backend.AnnifBackend):
         return hits_from_sources
 
     def _analyze(self, text, project, params):
-        sources = parse_sources(params['sources'])
+        sources = annif.util.parse_sources(params['sources'])
         hits_from_sources = self._analyze_with_sources(text, sources)
         merged_hits = annif.util.merge_hits(hits_from_sources)
         self.debug('{} hits after merging'.format(len(merged_hits)))

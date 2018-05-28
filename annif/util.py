@@ -55,3 +55,19 @@ def merge_hits(weighted_hits):
         total = sum([hit.score for hit in hits]) / totalweight
         merged_hits.append(hits[0]._replace(score=total))
     return merged_hits
+
+
+def parse_sources(sourcedef):
+    """parse a source definition such as 'src1:1.0,src2' into a sequence of
+    tuples (src_id, weight)"""
+
+    sources = []
+    for srcdef in sourcedef.strip().split(','):
+        srcval = srcdef.strip().split(':')
+        src_id = srcval[0]
+        if len(srcval) > 1:
+            weight = float(srcval[1])
+        else:
+            weight = 1.0
+        sources.append((src_id, weight))
+    return sources
