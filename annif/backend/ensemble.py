@@ -1,8 +1,9 @@
 """Ensemble backend that combines results from multiple projects"""
 
 
-import collections
+import annif.hit
 import annif.project
+import annif.util
 from . import backend
 
 
@@ -24,28 +25,20 @@ class EnsembleBackend(backend.AnnifBackend):
     name = "ensemble"
 
     def _analyze_with_sources(self, text, sources):
-        hits_by_uri = collections.defaultdict(list)
+        hits_from_sources = []
         for project, weight in sources:
             hits = [hit for hit in project.analyze(text) if hit.score > 0.0]
             self.debug(
                 'Got {} hits from project {}'.format(
                     len(hits), project.project_id))
-            for hit in hits:
-                hits_by_uri[hit.uri].append((hit.score * weight, hit))
-        return hits_by_uri
-
-    def _merge_hits(self, hits_by_uri, totalweight):
-        merged_hits = []
-        for score_hits in hits_by_uri.values():
-            total = sum([sh[0] for sh in score_hits]) / totalweight
-            hit = score_hits[0][1]._replace(score=total)
-            merged_hits.append(hit)
-        return merged_hits
+            hits_from_sources.append(
+                annif.hit.WeightedHits(
+                    hits=hits, weight=weight))
+        return hits_from_sources
 
     def _analyze(self, text, project, params):
         sources = parse_sources(params['sources'])
-        totalweight = sum((src[1] for src in sources))
-        hits_by_uri = self._analyze_with_sources(text, sources)
-        merged_hits = self._merge_hits(hits_by_uri, totalweight)
+        hits_from_sources = self._analyze_with_sources(text, sources)
+        merged_hits = annif.util.merge_hits(hits_from_sources)
         self.debug('{} hits after merging'.format(len(merged_hits)))
         return merged_hits

@@ -1,5 +1,6 @@
 """Utility functions for Annif"""
 
+import collections
 import glob
 import os
 import tempfile
@@ -37,3 +38,20 @@ def cleanup_uri(uri):
     if uri.startswith('<') and uri.endswith('>'):
         return uri[1:-1]
     return uri
+
+
+def merge_hits(weighted_hits):
+    """Merge hits from multiple sources. Input is a sequence of WeightedHits
+    objects"""
+    hits_by_uri = collections.defaultdict(list)
+    totalweight = 0.0
+    for whit in weighted_hits:
+        totalweight += whit.weight
+        for hit in whit.hits:
+            new_hit = hit._replace(score=hit.score * whit.weight)
+            hits_by_uri[hit.uri].append(new_hit)
+    merged_hits = []
+    for hits in hits_by_uri.values():
+        total = sum([hit.score for hit in hits]) / totalweight
+        merged_hits.append(hits[0]._replace(score=total))
+    return merged_hits
