@@ -114,10 +114,14 @@ def run_loadvoc(project_id, subjectfile):
 @cli.command('loaddocs')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
-@click.argument('docfile')
+@click.argument('docfile', nargs=-1)
 def run_loaddocs(project_id, docfile):
     proj = get_project(project_id)
-    documents = annif.corpus.DocumentFile(docfile)
+    if len(docfile) > 1:
+        corpora = [annif.corpus.DocumentFile(docfn) for docfn in docfile]
+        documents = annif.corpus.CombinedCorpus(corpora)
+    else:
+        documents = annif.corpus.DocumentFile(docfile[0])
     proj.load_documents(documents)
 
 

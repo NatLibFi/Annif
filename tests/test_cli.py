@@ -88,6 +88,22 @@ def test_loaddocs(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
+def test_loaddocs_multiple(testdatadir):
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents.tsv')
+    result = runner.invoke(annif.cli.cli,
+                           ['loaddocs', 'tfidf-fi', docfile, docfile])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert testdatadir.join('projects/tfidf-fi/vectorizer').exists()
+    assert testdatadir.join('projects/tfidf-fi/vectorizer').size() > 0
+    assert testdatadir.join('projects/tfidf-fi/tfidf-index').exists()
+    assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
+
+
 def test_load(testdatadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
