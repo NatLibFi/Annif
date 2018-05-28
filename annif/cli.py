@@ -99,7 +99,7 @@ def run_show_project(project_id):
 @cli.command('loadvoc')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
-@click.argument('subjectfile')
+@click.argument('subjectfile', type=click.Path(dir_okay=False))
 def run_loadvoc(project_id, subjectfile):
     proj = get_project(project_id)
     if annif.corpus.SubjectFileSKOS.is_rdf_file(subjectfile):
@@ -114,7 +114,7 @@ def run_loadvoc(project_id, subjectfile):
 @cli.command('loaddocs')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
-@click.argument('docfile', nargs=-1)
+@click.argument('docfile', type=click.Path(dir_okay=False), nargs=-1)
 def run_loaddocs(project_id, docfile):
     proj = get_project(project_id)
     if len(docfile) > 1:
@@ -128,7 +128,7 @@ def run_loaddocs(project_id, docfile):
 @cli.command('load')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
-@click.argument('directory')
+@click.argument('directory', type=click.Path(file_okay=False))
 def run_load(project_id, directory):
     proj = get_project(project_id)
     subjects = annif.corpus.SubjectDirectory(directory)
@@ -159,7 +159,7 @@ def run_analyze(project_id, limit, threshold, backend_param):
 @cli.command('analyzedir')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
-@click.argument('directory')
+@click.argument('directory', type=click.Path(file_okay=False))
 @click.option('--suffix', default='.annif')
 @click.option('--force/--no-force', default=False)
 @click.option('--limit', default=10)
@@ -197,7 +197,7 @@ def run_analyzedir(project_id, directory, suffix, force,
 @cli.command('eval')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
-@click.argument('subject_file')
+@click.argument('subject_file', type=click.Path(dir_okay=False))
 @click.option('--limit', default=10)
 @click.option('--threshold', default=0.0)
 @click.option('--backend-param', '-b', multiple=True)
@@ -226,7 +226,7 @@ def run_eval(project_id, subject_file, limit, threshold, backend_param):
 @cli.command('evaldir')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
-@click.argument('directory')
+@click.argument('directory', type=click.Path(file_okay=True))
 @click.option('--limit', default=10)
 @click.option('--threshold', default=0.0)
 @click.option('--backend-param', '-b', multiple=True)
@@ -260,7 +260,7 @@ def run_evaldir(project_id, directory, limit, threshold, backend_param):
 @cli.command('optimize')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
-@click.argument('directory')
+@click.argument('directory', type=click.Path(file_okay=False))
 @click.option('--backend-param', '-b', multiple=True)
 def run_optimize(project_id, directory, backend_param):
     """"
