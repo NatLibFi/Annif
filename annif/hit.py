@@ -4,6 +4,7 @@ import collections
 
 
 AnalysisHit = collections.namedtuple('AnalysisHit', 'uri label score')
+WeightedHits = collections.namedtuple('WeightedHits', 'hits weight')
 
 
 class HitFilter:

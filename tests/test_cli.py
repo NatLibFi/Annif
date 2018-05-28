@@ -158,6 +158,16 @@ def test_analyze_param():
     assert result.exit_code == 0
 
 
+def test_analyze_ensemble():
+    result = runner.invoke(
+        annif.cli.cli,
+        ['analyze', 'ensemble'],
+        input='the cat sat on the mat')
+    assert not result.exception
+    assert result.output == "<http://example.org/dummy>\tdummy\t1.0\n"
+    assert result.exit_code == 0
+
+
 def test_analyzedir(tmpdir):
     tmpdir.join('doc1.txt').write('nothing special')
 
