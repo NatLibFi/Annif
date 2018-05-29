@@ -187,6 +187,7 @@ class AnnifProject:
 
 def _create_projects(projects_file, datadir, init_projects):
     config = configparser.ConfigParser()
+    config.optionxform = lambda option: option
     with open(projects_file) as projf:
         config.read_file(projf)
 
