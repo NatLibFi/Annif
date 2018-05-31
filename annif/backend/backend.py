@@ -3,7 +3,6 @@
 import abc
 import os
 import os.path
-import annif
 from annif import logger
 
 

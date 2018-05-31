@@ -3,7 +3,6 @@ operations and printing the results to console."""
 
 
 import collections
-import logging
 import os.path
 import re
 import sys
