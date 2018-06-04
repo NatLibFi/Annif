@@ -9,3 +9,4 @@ __pycache__
 *.pyc
 data
 Pipfile.lock
+projects.cfg
