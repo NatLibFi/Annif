@@ -1,4 +1,4 @@
-"""Class representing a single hit from analysis."""
+"""Representing hits from analysis."""
 
 import collections
 
@@ -20,3 +20,16 @@ class HitFilter:
             hits = hits[:self._limit]
         return [hit for hit in hits
                 if hit.score >= self._threshold and hit.score > 0.0]
+
+
+class AnalysisHits:
+    """A sequence of hits returned by an analysis operation."""
+
+    def __init__(self, hits):
+        self._hits = hits
+
+    def __len__(self):
+        return len(self._hits)
+
+    def __getitem__(self, idx):
+        return self._hits[idx]
