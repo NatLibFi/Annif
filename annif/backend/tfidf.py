@@ -5,7 +5,7 @@ import os.path
 import gensim.similarities
 from gensim.matutils import Sparse2Corpus
 import annif.util
-from annif.hit import AnalysisHit
+from annif.hit import AnalysisHit, AnalysisResult
 from . import backend
 
 
@@ -44,28 +44,12 @@ class TFIDFBackend(backend.AnnifBackend):
             self._get_datadir(),
             self.INDEX_FILE)
 
-    def _analyze_vector(self, vector, project):
-        docsim = self._index[vector]
-        sims = sorted(
-            enumerate(docsim),
-            key=lambda item: item[1],
-            reverse=True)
-        results = []
-        limit = int(self.params['limit'])
-        for subject_id, score in sims[:limit]:
-            if score <= 0.0:
-                continue
-            subject = project.subjects[subject_id]
-            results.append(
-                AnalysisHit(
-                    uri=subject[0],
-                    label=subject[1],
-                    score=score))
-        return results
-
     def _analyze(self, text, project, params):
         self.initialize()
         self.debug('Analyzing text "{}..." (len={})'.format(
             text[:20], len(text)))
         vectors = project.vectorizer.transform([text])
-        return self._analyze_vector(vectors[0], project)
+        docsim = self._index[vectors[0]]
+        return AnalysisResult.from_vector(docsim,
+                                          self.params['limit'],
+                                          project.subjects)
