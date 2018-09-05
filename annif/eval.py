@@ -136,14 +136,6 @@ def transform_sample(sample):
     return (selected, gold_set)
 
 
-def evaluate_hits(samples):
-    """evaluate a list of samples with hits and gold standard subjects,
-       returning evaluation metrics"""
-
-    transformed_samples = [transform_sample(sample) for sample in samples]
-    return evaluate(transformed_samples)
-
-
 class EvaluationBatch:
     """A class for evaluating batches of results using all available metrics.
     The evaluate() method is called once per document in the batch.
@@ -156,4 +148,6 @@ class EvaluationBatch:
         self._samples.append((hits, gold_subjects))
 
     def results(self):
-        return evaluate_hits(self._samples)
+        transformed_samples = [transform_sample(sample)
+                               for sample in self._samples]
+        return evaluate(transformed_samples)
