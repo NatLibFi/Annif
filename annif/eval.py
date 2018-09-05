@@ -1,6 +1,7 @@
 """Evaluation metrics for Annif"""
 
 import collections
+import functools
 import statistics
 import numpy
 import warnings
@@ -18,22 +19,12 @@ def sklearn_metric_score(selected, relevant, metric_fn):
         return metric_fn(y_true, y_pred, average='samples')
 
 
-def precision(selected, relevant):
+def precision(selected, relevant, at_k=None):
     """return the precision, i.e. the fraction of selected instances that
     are relevant"""
+    if at_k is not None:
+        selected = [subjs[:at_k] for subjs in selected]
     return sklearn_metric_score(selected, relevant, precision_score)
-
-
-def precision_1(selected, relevant):
-    return precision([subjs[:1] for subjs in selected], relevant)
-
-
-def precision_3(selected, relevant):
-    return precision([subjs[:3] for subjs in selected], relevant)
-
-
-def precision_5(selected, relevant):
-    return precision([subjs[:5] for subjs in selected], relevant)
 
 
 def recall(selected, relevant):
@@ -106,14 +97,6 @@ def normalized_dcg(selected, relevant, at_k):
     return statistics.mean(scores)
 
 
-def normalized_dcg_5(selected, relevant):
-    return normalized_dcg(selected, relevant, 5)
-
-
-def normalized_dcg_10(selected, relevant):
-    return normalized_dcg(selected, relevant, 10)
-
-
 def evaluate(samples):
     """evaluate a set of selected subject against a gold standard using
     different metrics"""
@@ -122,11 +105,11 @@ def evaluate(samples):
         ('Precision', precision),
         ('Recall', recall),
         ('F-measure', f_measure),
-        ('NDCG@5', normalized_dcg_5),
-        ('NDCG@10', normalized_dcg_10),
-        ('Precision@1', precision_1),
-        ('Precision@3', precision_3),
-        ('Precision@5', precision_5),
+        ('NDCG@5', functools.partial(normalized_dcg, at_k=5)),
+        ('NDCG@10', functools.partial(normalized_dcg, at_k=10)),
+        ('Precision@1', functools.partial(precision, at_k=1)),
+        ('Precision@3', functools.partial(precision, at_k=3)),
+        ('Precision@5', functools.partial(precision, at_k=5)),
         ('True positives', true_positives),
         ('False positives', false_positives),
         ('False negatives', false_negatives)
