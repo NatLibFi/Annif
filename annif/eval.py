@@ -5,7 +5,7 @@ import statistics
 import numpy
 import warnings
 from sklearn.preprocessing import MultiLabelBinarizer
-from sklearn.metrics import precision_score
+from sklearn.metrics import precision_score, recall_score
 
 
 def precision(selected, relevant):
@@ -35,15 +35,13 @@ def precision_5(selected, relevant):
 def recall(selected, relevant):
     """return the recall, i.e. the fraction of relevant instances that were
     selected"""
-    scores = []
-    for ssubj, rsubj in zip(selected, relevant):
-        sel = set(ssubj)
-        rel = set(rsubj)
-        if len(rel) == 0:
-            scores.append(0.0)  # avoid division by zero
-        else:
-            scores.append(len(sel & rel) / len(rel))
-    return statistics.mean(scores)
+    mlb = MultiLabelBinarizer()
+    mlb.fit(list(relevant) + list(selected))
+    y_true = mlb.transform(relevant)
+    y_pred = mlb.transform(selected)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        return recall_score(y_true, y_pred, average='samples')
 
 
 def f_measure(A, B):
