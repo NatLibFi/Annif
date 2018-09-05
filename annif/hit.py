@@ -23,7 +23,7 @@ class HitFilter:
                 if hit.score >= self._threshold and hit.score > 0.0]
 
 
-class AnalysisHits:
+class AnalysisResult:
     """A sequence of hits returned by an analysis operation."""
 
     def __init__(self, hits):

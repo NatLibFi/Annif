@@ -5,7 +5,7 @@ import glob
 import os
 import tempfile
 from annif import logger
-from annif.hit import AnalysisHits
+from annif.hit import AnalysisResult
 
 
 def atomic_save(obj, dirname, filename, method=None):
@@ -55,7 +55,7 @@ def merge_hits(weighted_hits):
     for hits in hits_by_uri.values():
         total = sum([hit.score for hit in hits]) / totalweight
         merged_hits.append(hits[0]._replace(score=total))
-    return AnalysisHits(merged_hits)
+    return AnalysisResult(merged_hits)
 
 
 def parse_sources(sourcedef):

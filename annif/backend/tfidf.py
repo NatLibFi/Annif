@@ -5,7 +5,7 @@ import os.path
 import gensim.similarities
 from gensim.matutils import Sparse2Corpus
 import annif.util
-from annif.hit import AnalysisHit, AnalysisHits
+from annif.hit import AnalysisHit, AnalysisResult
 from . import backend
 
 
@@ -61,7 +61,7 @@ class TFIDFBackend(backend.AnnifBackend):
                     uri=subject[0],
                     label=subject[1],
                     score=score))
-        return AnalysisHits(results)
+        return AnalysisResult(results)
 
     def _analyze(self, text, project, params):
         self.initialize()

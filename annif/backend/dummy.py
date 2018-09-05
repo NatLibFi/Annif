@@ -1,7 +1,7 @@
 """Dummy backend for testing basic interaction of projects and backends"""
 
 
-from annif.hit import AnalysisHit, AnalysisHits
+from annif.hit import AnalysisHit, AnalysisResult
 from . import backend
 
 
@@ -14,5 +14,5 @@ class DummyBackend(backend.AnnifBackend):
 
     def _analyze(self, text, project, params):
         score = float(params.get('score', 1.0))
-        return AnalysisHits([AnalysisHit(uri='http://example.org/dummy',
-                                         label='dummy', score=score)])
+        return AnalysisResult([AnalysisHit(uri='http://example.org/dummy',
+                                           label='dummy', score=score)])

@@ -3,7 +3,7 @@
 import collections
 import os.path
 import annif.util
-from annif.hit import AnalysisHit, AnalysisHits
+from annif.hit import AnalysisHit, AnalysisResult
 import fastText
 from . import backend
 
@@ -123,7 +123,7 @@ class FastTextBackend(backend.AnnifBackend):
                 uri=subject[0],
                 label=subject[1],
                 score=score / len(chunktexts)))
-        return AnalysisHits(results)
+        return AnalysisResult(results)
 
     def _analyze(self, text, project, params):
         self.initialize()
