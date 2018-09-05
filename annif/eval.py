@@ -15,6 +15,18 @@ def precision(selected, relevant):
     return len(sel & rel) / len(sel)
 
 
+def precision_1(selected, relevant):
+    return precision(selected[:1], relevant)
+
+
+def precision_3(selected, relevant):
+    return precision(selected[:3], relevant)
+
+
+def precision_5(selected, relevant):
+    return precision(selected[:5], relevant)
+
+
 def recall(selected, relevant):
     """return the recall, i.e. the fraction of relevant instances that were
     selected"""
@@ -79,6 +91,14 @@ def normalized_dcg(selected, relevant, at_k):
     return dcg_val / dcg_max
 
 
+def normalized_dcg_5(selected, relevant):
+    return normalized_dcg(selected, relevant, 5)
+
+
+def normalized_dcg_10(selected, relevant):
+    return normalized_dcg(selected, relevant, 10)
+
+
 def evaluate(selected, gold):
     """evaluate a set of selected subject against a gold standard using
     different metrics"""
@@ -86,11 +106,11 @@ def evaluate(selected, gold):
         ('Precision', precision(selected, gold), statistics.mean),
         ('Recall', recall(selected, gold), statistics.mean),
         ('F-measure', f_measure(selected, gold), statistics.mean),
-        ('NDCG@5', normalized_dcg(selected, gold, 5), statistics.mean),
-        ('NDCG@10', normalized_dcg(selected, gold, 10), statistics.mean),
-        ('Precision@1', precision(selected[:1], gold), statistics.mean),
-        ('Precision@3', precision(selected[:3], gold), statistics.mean),
-        ('Precision@5', precision(selected[:5], gold), statistics.mean),
+        ('NDCG@5', normalized_dcg_5(selected, gold), statistics.mean),
+        ('NDCG@10', normalized_dcg_10(selected, gold), statistics.mean),
+        ('Precision@1', precision_1(selected, gold), statistics.mean),
+        ('Precision@3', precision_3(selected, gold), statistics.mean),
+        ('Precision@5', precision_5(selected, gold), statistics.mean),
         ('True positives', true_positives(selected, gold), sum),
         ('False positives', false_positives(selected, gold), sum),
         ('False negatives', false_negatives(selected, gold), sum)
