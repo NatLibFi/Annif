@@ -3,20 +3,21 @@
 import collections
 import statistics
 import numpy
+import warnings
+from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.metrics import precision_score
 
 
 def precision(selected, relevant):
     """return the precision, i.e. the fraction of selected instances that
     are relevant"""
-    scores = []
-    for ssubj, rsubj in zip(selected, relevant):
-        sel = set(ssubj)
-        rel = set(rsubj)
-        if len(sel) == 0:
-            scores.append(0.0)  # avoid division by zero
-        else:
-            scores.append(len(sel & rel) / len(sel))
-    return statistics.mean(scores)
+    mlb = MultiLabelBinarizer()
+    mlb.fit(list(relevant) + list(selected))
+    y_true = mlb.transform(relevant)
+    y_pred = mlb.transform(selected)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        return precision_score(y_true, y_pred, average='samples')
 
 
 def precision_1(selected, relevant):
