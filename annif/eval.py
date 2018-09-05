@@ -5,7 +5,7 @@ import statistics
 import numpy
 import warnings
 from sklearn.preprocessing import MultiLabelBinarizer
-from sklearn.metrics import precision_score, recall_score
+from sklearn.metrics import precision_score, recall_score, f1_score
 
 
 def precision(selected, relevant):
@@ -44,17 +44,15 @@ def recall(selected, relevant):
         return recall_score(y_true, y_pred, average='samples')
 
 
-def f_measure(A, B):
+def f_measure(selected, relevant):
     """return the F-measure similarity of two sets"""
-    scores = []
-    for asubj, bsubj in zip(A, B):
-        setA = set(asubj)
-        setB = set(bsubj)
-        if len(setA) == 0 or len(setB) == 0:
-            scores.append(0.0)  # shortcut, avoid division by zero
-        else:
-            scores.append(2.0 * len(setA & setB) / (len(setA) + len(setB)))
-    return statistics.mean(scores)
+    mlb = MultiLabelBinarizer()
+    mlb.fit(list(relevant) + list(selected))
+    y_true = mlb.transform(relevant)
+    y_pred = mlb.transform(selected)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        return f1_score(y_true, y_pred, average='samples')
 
 
 def true_positives(selected, relevant):
