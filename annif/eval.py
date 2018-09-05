@@ -97,17 +97,31 @@ def evaluate(selected, gold):
     ]
 
 
-def evaluate_hits(hits, gold_subjects):
-    """evaluate a list of AnalysisHit objects against a SubjectSet,
-    returning evaluation metrics"""
-    if gold_subjects.has_uris():
-        selected = [hit.uri for hit in hits]
-        gold_set = gold_subjects.subject_uris
-    else:
-        selected = [hit.label for hit in hits]
-        gold_set = gold_subjects.subject_labels
+def evaluate_hits(samples):
+    """evaluate a list of samples with hits and gold standard subjects,
+       returning evaluation metrics"""
 
-    return evaluate(selected, gold_set)
+    results = []
+    for hits, gold_subjects in samples:
+        if gold_subjects.has_uris():
+            selected = [hit.uri for hit in hits]
+            gold_set = gold_subjects.subject_uris
+        else:
+            selected = [hit.label for hit in hits]
+            gold_set = gold_subjects.subject_labels
+        results.append(evaluate(selected, gold_set))
+    measures = collections.OrderedDict()
+    merge_functions = {}
+    for result in results:
+        for metric, score, merge_function in result:
+            measures.setdefault(metric, [])
+            measures[metric].append(score)
+            merge_functions[metric] = merge_function
+    final_results = collections.OrderedDict()
+    for metric, results in measures.items():
+        score = merge_functions[metric](results)
+        final_results[metric] = score
+    return final_results
 
 
 class EvaluationBatch:
@@ -122,17 +136,4 @@ class EvaluationBatch:
         self._samples.append((hits, gold_subjects))
 
     def results(self):
-        results = [evaluate_hits(hits, gold_subjects)
-                   for hits, gold_subjects in self._samples]
-        measures = collections.OrderedDict()
-        merge_functions = {}
-        for result in results:
-            for metric, score, merge_function in result:
-                measures.setdefault(metric, [])
-                measures[metric].append(score)
-                merge_functions[metric] = merge_function
-        final_results = collections.OrderedDict()
-        for metric, results in measures.items():
-            score = merge_functions[metric](results)
-            final_results[metric] = score
-        return final_results
+        return evaluate_hits(self._samples)
