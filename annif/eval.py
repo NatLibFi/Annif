@@ -97,18 +97,24 @@ def evaluate(selected, gold):
     ]
 
 
+def transform_sample(sample):
+    hits, gold_subjects = sample
+    if gold_subjects.has_uris():
+        selected = [hit.uri for hit in hits]
+        gold_set = gold_subjects.subject_uris
+    else:
+        selected = [hit.label for hit in hits]
+        gold_set = gold_subjects.subject_labels
+    return (selected, gold_set)
+
+
 def evaluate_hits(samples):
     """evaluate a list of samples with hits and gold standard subjects,
        returning evaluation metrics"""
 
     results = []
-    for hits, gold_subjects in samples:
-        if gold_subjects.has_uris():
-            selected = [hit.uri for hit in hits]
-            gold_set = gold_subjects.subject_uris
-        else:
-            selected = [hit.label for hit in hits]
-            gold_set = gold_subjects.subject_labels
+    transformed_samples = [transform_sample(sample) for sample in samples]
+    for selected, gold_set in transformed_samples:
         results.append(evaluate(selected, gold_set))
     measures = collections.OrderedDict()
     merge_functions = {}
