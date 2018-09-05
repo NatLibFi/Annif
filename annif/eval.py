@@ -3,13 +3,15 @@
 import collections
 import functools
 import statistics
-import numpy
 import warnings
+import numpy
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.metrics import precision_score, recall_score, f1_score
 
 
 def sklearn_metric_score(selected, relevant, metric_fn):
+    """call a sklearn metric function, converting the selected and relevant
+       subjects into the multilabel indicator arrays expected by sklearn"""
     mlb = MultiLabelBinarizer()
     mlb.fit(list(relevant) + list(selected))
     y_true = mlb.transform(relevant)
@@ -123,6 +125,9 @@ def evaluate(samples):
 
 
 def transform_sample(sample):
+    """transform a single document (sample) with predicted and gold standard
+       subjects into either sequences of URIs (if available) or sequences of
+       labels"""
     hits, gold_subjects = sample
     if gold_subjects.has_uris():
         selected = [hit.uri for hit in hits]
