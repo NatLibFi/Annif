@@ -99,22 +99,30 @@ def normalized_dcg_10(selected, relevant):
     return normalized_dcg(selected, relevant, 10)
 
 
-def evaluate(selected, gold):
+def evaluate(samples):
     """evaluate a set of selected subject against a gold standard using
     different metrics"""
-    return [
-        ('Precision', precision(selected, gold), statistics.mean),
-        ('Recall', recall(selected, gold), statistics.mean),
-        ('F-measure', f_measure(selected, gold), statistics.mean),
-        ('NDCG@5', normalized_dcg_5(selected, gold), statistics.mean),
-        ('NDCG@10', normalized_dcg_10(selected, gold), statistics.mean),
-        ('Precision@1', precision_1(selected, gold), statistics.mean),
-        ('Precision@3', precision_3(selected, gold), statistics.mean),
-        ('Precision@5', precision_5(selected, gold), statistics.mean),
-        ('True positives', true_positives(selected, gold), sum),
-        ('False positives', false_positives(selected, gold), sum),
-        ('False negatives', false_negatives(selected, gold), sum)
+
+    metrics = [
+        ('Precision', precision, statistics.mean),
+        ('Recall', recall, statistics.mean),
+        ('F-measure', f_measure, statistics.mean),
+        ('NDCG@5', normalized_dcg_5, statistics.mean),
+        ('NDCG@10', normalized_dcg_10, statistics.mean),
+        ('Precision@1', precision_1, statistics.mean),
+        ('Precision@3', precision_3, statistics.mean),
+        ('Precision@5', precision_5, statistics.mean),
+        ('True positives', true_positives, sum),
+        ('False positives', false_positives, sum),
+        ('False negatives', false_negatives, sum)
     ]
+
+    results = collections.OrderedDict()
+    for metric_name, metric_fn, merge_fn in metrics:
+        scores = [metric_fn(selected, gold)
+                  for selected, gold in samples]
+        results[metric_name] = merge_fn(scores)
+    return results
 
 
 def transform_sample(sample):
@@ -132,22 +140,8 @@ def evaluate_hits(samples):
     """evaluate a list of samples with hits and gold standard subjects,
        returning evaluation metrics"""
 
-    results = []
     transformed_samples = [transform_sample(sample) for sample in samples]
-    for selected, gold_set in transformed_samples:
-        results.append(evaluate(selected, gold_set))
-    measures = collections.OrderedDict()
-    merge_functions = {}
-    for result in results:
-        for metric, score, merge_function in result:
-            measures.setdefault(metric, [])
-            measures[metric].append(score)
-            merge_functions[metric] = merge_function
-    final_results = collections.OrderedDict()
-    for metric, results in measures.items():
-        score = merge_functions[metric](results)
-        final_results[metric] = score
-    return final_results
+    return evaluate(transformed_samples)
 
 
 class EvaluationBatch:
