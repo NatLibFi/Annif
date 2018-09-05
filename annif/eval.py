@@ -8,16 +8,20 @@ from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.metrics import precision_score, recall_score, f1_score
 
 
-def precision(selected, relevant):
-    """return the precision, i.e. the fraction of selected instances that
-    are relevant"""
+def sklearn_metric_score(selected, relevant, metric_fn):
     mlb = MultiLabelBinarizer()
     mlb.fit(list(relevant) + list(selected))
     y_true = mlb.transform(relevant)
     y_pred = mlb.transform(selected)
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        return precision_score(y_true, y_pred, average='samples')
+        return metric_fn(y_true, y_pred, average='samples')
+
+
+def precision(selected, relevant):
+    """return the precision, i.e. the fraction of selected instances that
+    are relevant"""
+    return sklearn_metric_score(selected, relevant, precision_score)
 
 
 def precision_1(selected, relevant):
@@ -35,24 +39,12 @@ def precision_5(selected, relevant):
 def recall(selected, relevant):
     """return the recall, i.e. the fraction of relevant instances that were
     selected"""
-    mlb = MultiLabelBinarizer()
-    mlb.fit(list(relevant) + list(selected))
-    y_true = mlb.transform(relevant)
-    y_pred = mlb.transform(selected)
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        return recall_score(y_true, y_pred, average='samples')
+    return sklearn_metric_score(selected, relevant, recall_score)
 
 
 def f_measure(selected, relevant):
     """return the F-measure similarity of two sets"""
-    mlb = MultiLabelBinarizer()
-    mlb.fit(list(relevant) + list(selected))
-    y_true = mlb.transform(relevant)
-    y_pred = mlb.transform(selected)
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        return f1_score(y_true, y_pred, average='samples')
+    return sklearn_metric_score(selected, relevant, f1_score)
 
 
 def true_positives(selected, relevant):
