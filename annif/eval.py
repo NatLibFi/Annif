@@ -8,66 +8,87 @@ import numpy
 def precision(selected, relevant):
     """return the precision, i.e. the fraction of selected instances that
     are relevant"""
-    sel = set(selected)
-    rel = set(relevant)
-    if len(sel) == 0:
-        return 0.0  # avoid division by zero
-    return len(sel & rel) / len(sel)
+    scores = []
+    for ssubj, rsubj in zip(selected, relevant):
+        sel = set(ssubj)
+        rel = set(rsubj)
+        if len(sel) == 0:
+            scores.append(0.0)  # avoid division by zero
+        else:
+            scores.append(len(sel & rel) / len(sel))
+    return statistics.mean(scores)
 
 
 def precision_1(selected, relevant):
-    return precision(selected[:1], relevant)
+    return precision([subjs[:1] for subjs in selected], relevant)
 
 
 def precision_3(selected, relevant):
-    return precision(selected[:3], relevant)
+    return precision([subjs[:3] for subjs in selected], relevant)
 
 
 def precision_5(selected, relevant):
-    return precision(selected[:5], relevant)
+    return precision([subjs[:5] for subjs in selected], relevant)
 
 
 def recall(selected, relevant):
     """return the recall, i.e. the fraction of relevant instances that were
     selected"""
-    sel = set(selected)
-    rel = set(relevant)
-    if len(rel) == 0:
-        return 0.0  # avoid division by zero
-    return len(sel & rel) / len(rel)
+    scores = []
+    for ssubj, rsubj in zip(selected, relevant):
+        sel = set(ssubj)
+        rel = set(rsubj)
+        if len(rel) == 0:
+            scores.append(0.0)  # avoid division by zero
+        else:
+            scores.append(len(sel & rel) / len(rel))
+    return statistics.mean(scores)
 
 
 def f_measure(A, B):
     """return the F-measure similarity of two sets"""
-    setA = set(A)
-    setB = set(B)
-    if len(setA) == 0 or len(setB) == 0:
-        return 0.0  # shortcut, avoid division by zero
-    return 2.0 * len(setA & setB) / (len(setA) + len(setB))
+    scores = []
+    for asubj, bsubj in zip(A, B):
+        setA = set(asubj)
+        setB = set(bsubj)
+        if len(setA) == 0 or len(setB) == 0:
+            scores.append(0.0)  # shortcut, avoid division by zero
+        else:
+            scores.append(2.0 * len(setA & setB) / (len(setA) + len(setB)))
+    return statistics.mean(scores)
 
 
 def true_positives(selected, relevant):
     """return the number of true positives, i.e. how many selected instances
     were relevant"""
-    sel = set(selected)
-    rel = set(relevant)
-    return len(sel & rel)
+    count = 0
+    for ssubj, rsubj in zip(selected, relevant):
+        sel = set(ssubj)
+        rel = set(rsubj)
+        count += len(sel & rel)
+    return count
 
 
 def false_positives(selected, relevant):
     """return the number of false positives, i.e. how many selected instances
     were not relevant"""
-    sel = set(selected)
-    rel = set(relevant)
-    return len(sel - rel)
+    count = 0
+    for ssubj, rsubj in zip(selected, relevant):
+        sel = set(ssubj)
+        rel = set(rsubj)
+        count += len(sel - rel)
+    return count
 
 
 def false_negatives(selected, relevant):
     """return the number of false negaives, i.e. how many relevant instances
     were not selected"""
-    sel = set(selected)
-    rel = set(relevant)
-    return len(rel - sel)
+    count = 0
+    for ssubj, rsubj in zip(selected, relevant):
+        sel = set(ssubj)
+        rel = set(rsubj)
+        count += len(rel - sel)
+    return count
 
 
 def dcg(selected, relevant, at_k):
@@ -84,11 +105,16 @@ def dcg(selected, relevant, at_k):
 def normalized_dcg(selected, relevant, at_k):
     """return the normalized discounted cumulative gain (nDCG) score for the
     selected instances vs. relevant instances"""
-    dcg_val = dcg(selected, relevant, at_k)
-    dcg_max = dcg(relevant, relevant, at_k)
-    if dcg_max == 0.0:
-        return 0.0
-    return dcg_val / dcg_max
+
+    scores = []
+    for ssubj, rsubj in zip(selected, relevant):
+        dcg_val = dcg(ssubj, rsubj, at_k)
+        dcg_max = dcg(rsubj, rsubj, at_k)
+        if dcg_max == 0.0:
+            scores.append(0.0)
+        else:
+            scores.append(dcg_val / dcg_max)
+    return statistics.mean(scores)
 
 
 def normalized_dcg_5(selected, relevant):
@@ -104,24 +130,23 @@ def evaluate(samples):
     different metrics"""
 
     metrics = [
-        ('Precision', precision, statistics.mean),
-        ('Recall', recall, statistics.mean),
-        ('F-measure', f_measure, statistics.mean),
-        ('NDCG@5', normalized_dcg_5, statistics.mean),
-        ('NDCG@10', normalized_dcg_10, statistics.mean),
-        ('Precision@1', precision_1, statistics.mean),
-        ('Precision@3', precision_3, statistics.mean),
-        ('Precision@5', precision_5, statistics.mean),
-        ('True positives', true_positives, sum),
-        ('False positives', false_positives, sum),
-        ('False negatives', false_negatives, sum)
+        ('Precision', precision),
+        ('Recall', recall),
+        ('F-measure', f_measure),
+        ('NDCG@5', normalized_dcg_5),
+        ('NDCG@10', normalized_dcg_10),
+        ('Precision@1', precision_1),
+        ('Precision@3', precision_3),
+        ('Precision@5', precision_5),
+        ('True positives', true_positives),
+        ('False positives', false_positives),
+        ('False negatives', false_negatives)
     ]
 
     results = collections.OrderedDict()
-    for metric_name, metric_fn, merge_fn in metrics:
-        scores = [metric_fn(selected, gold)
-                  for selected, gold in samples]
-        results[metric_name] = merge_fn(scores)
+    for metric_name, metric_fn in metrics:
+        hits, gold_subjects = zip(*samples)
+        results[metric_name] = metric_fn(hits, gold_subjects)
     return results
 
 
