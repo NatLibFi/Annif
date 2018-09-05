@@ -217,9 +217,10 @@ def run_eval(project_id, subject_file, limit, threshold, backend_param):
         gold_subjects = annif.corpus.SubjectSet(subjfile.read())
 
     template = "{0:<20}\t{1}"
-    for metric, result, merge_function in annif.eval.evaluate_hits(
-            hits, gold_subjects):
-        click.echo(template.format(metric + ":", result))
+    eval_batch = annif.eval.EvaluationBatch()
+    eval_batch.evaluate(hits, gold_subjects)
+    for metric, score in eval_batch.results().items():
+        click.echo(template.format(metric + ":", score))
 
 
 @cli.command('evaldir')
