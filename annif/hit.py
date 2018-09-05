@@ -29,6 +29,27 @@ class AnalysisResult:
     def __init__(self, hits):
         self._hits = hits
 
+    @classmethod
+    def from_vector(cls, vector, limit, subject_index):
+        """Create an AnalysisResult from a one-dimensional score vector
+        where the indexes match the given subject index. Keep only the
+        number of results specified by the limit parameter."""
+
+        top_scores = sorted(enumerate(vector),
+                            key=lambda id_score: id_score[1],
+                            reverse=True)
+        hits = []
+        for subject_id, score in top_scores[:limit]:
+            if score <= 0.0:
+                continue
+            subject = subject_index[subject_id]
+            hits.append(
+                AnalysisHit(
+                    uri=subject[0],
+                    label=subject[1],
+                    score=score))
+        return AnalysisResult(hits)
+
     def __len__(self):
         return len(self._hits)
 
@@ -38,6 +59,7 @@ class AnalysisResult:
     def as_vector(self, subject_index):
         """Return the hits as a one-dimensional NumPy array of scores, using a
            subject index as the source of subjects."""
+
         vector = np.zeros(len(subject_index))
         for hit in self._hits:
             subject_id = subject_index.by_uri(hit.uri)
