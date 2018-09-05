@@ -116,15 +116,17 @@ class EvaluationBatch:
     Final results can be queried using the results() method."""
 
     def __init__(self):
-        self._results = []
+        self._samples = []
 
     def evaluate(self, hits, gold_subjects):
-        self._results.append(evaluate_hits(hits, gold_subjects))
+        self._samples.append((hits, gold_subjects))
 
     def results(self):
+        results = [evaluate_hits(hits, gold_subjects)
+                   for hits, gold_subjects in self._samples]
         measures = collections.OrderedDict()
         merge_functions = {}
-        for result in self._results:
+        for result in results:
             for metric, score, merge_function in result:
                 measures.setdefault(metric, [])
                 measures[metric].append(score)
