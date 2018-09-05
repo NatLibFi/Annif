@@ -2,6 +2,7 @@
 
 from annif.hit import AnalysisHit, AnalysisHits, HitFilter
 from annif.corpus import SubjectIndex
+import numpy as np
 
 
 def generate_hits(n):
@@ -39,7 +40,9 @@ def test_analysishits_as_vector(subject_corpus):
                                      label='viikingit', score=0.5)
                          ])
     vector = hits.as_vector(subjects)
+    assert isinstance(vector, np.ndarray)
     assert len(vector) == len(subjects)
+    assert vector.sum() == 1.5
     for subject_id, score in enumerate(vector):
         if subjects[subject_id][1] == 'sinetit':
             assert score == 1.0

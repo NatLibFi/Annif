@@ -1,6 +1,7 @@
 """Representing hits from analysis."""
 
 import collections
+import numpy as np
 
 
 AnalysisHit = collections.namedtuple('AnalysisHit', 'uri label score')
@@ -35,11 +36,10 @@ class AnalysisHits:
         return self._hits[idx]
 
     def as_vector(self, subject_index):
-        """Return the hits as a one-dimensional vector of scores, using a
+        """Return the hits as a one-dimensional NumPy array of scores, using a
            subject index as the source of subjects."""
-        score_by_uri = {}
+        vector = np.zeros(len(subject_index))
         for hit in self._hits:
-            score_by_uri[hit.uri] = hit.score
-        vector = [score_by_uri.get(uri, 0.0)
-                  for uri, label in subject_index]
+            subject_id = subject_index.by_uri(hit.uri)
+            vector[subject_id] = hit.score
         return vector
