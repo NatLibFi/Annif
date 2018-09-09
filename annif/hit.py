@@ -19,8 +19,9 @@ class HitFilter:
         hits = sorted(orighits, key=lambda hit: hit.score, reverse=True)
         if self._limit is not None:
             hits = hits[:self._limit]
-        return [hit for hit in hits
-                if hit.score >= self._threshold and hit.score > 0.0]
+        return AnalysisResult([hit for hit in hits
+                               if hit.score >= self._threshold and
+                               hit.score > 0.0])
 
 
 class AnalysisResult:
