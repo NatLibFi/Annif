@@ -40,37 +40,40 @@ def f_measure(selected, relevant):
     return sklearn_metric_score(selected, relevant, f1_score)
 
 
+def true_positives_bitwise(y_true, y_pred, average):
+    """calculate the number of true positives using bitwise operations,
+    emulating the way sklearn evaluation metric functions work"""
+    return (y_true & y_pred).sum()
+
+
 def true_positives(selected, relevant):
     """return the number of true positives, i.e. how many selected instances
     were relevant"""
-    count = 0
-    for ssubj, rsubj in zip(selected, relevant):
-        sel = set(ssubj)
-        rel = set(rsubj)
-        count += len(sel & rel)
-    return count
+    return sklearn_metric_score(selected, relevant, true_positives_bitwise)
+
+
+def false_positives_bitwise(y_true, y_pred, average):
+    """calculate the number of false positives using bitwise operations,
+    emulating the way sklearn evaluation metric functions work"""
+    return (~y_true & y_pred).sum()
 
 
 def false_positives(selected, relevant):
     """return the number of false positives, i.e. how many selected instances
     were not relevant"""
-    count = 0
-    for ssubj, rsubj in zip(selected, relevant):
-        sel = set(ssubj)
-        rel = set(rsubj)
-        count += len(sel - rel)
-    return count
+    return sklearn_metric_score(selected, relevant, false_positives_bitwise)
+
+
+def false_negatives_bitwise(y_true, y_pred, average):
+    """calculate the number of false negatives using bitwise operations,
+    emulating the way sklearn evaluation metric functions work"""
+    return (y_true & ~y_pred).sum()
 
 
 def false_negatives(selected, relevant):
     """return the number of false negaives, i.e. how many relevant instances
     were not selected"""
-    count = 0
-    for ssubj, rsubj in zip(selected, relevant):
-        sel = set(ssubj)
-        rel = set(rsubj)
-        count += len(rel - sel)
-    return count
+    return sklearn_metric_score(selected, relevant, false_negatives_bitwise)
 
 
 def dcg(selected, relevant, at_k):
