@@ -1,7 +1,6 @@
 """Evaluation metrics for Annif"""
 
 import collections
-import functools
 import statistics
 import warnings
 import numpy
@@ -110,23 +109,20 @@ def evaluate(samples):
                            for sample in samples]
     hits, gold_subjects = zip(*transformed_samples)
 
-    metrics = [
-        ('Precision', precision),
-        ('Recall', recall),
-        ('F-measure', f_measure),
-        ('NDCG@5', functools.partial(normalized_dcg, at_k=5)),
-        ('NDCG@10', functools.partial(normalized_dcg, at_k=10)),
-        ('Precision@1', functools.partial(precision, at_k=1)),
-        ('Precision@3', functools.partial(precision, at_k=3)),
-        ('Precision@5', functools.partial(precision, at_k=5)),
-        ('True positives', true_positives),
-        ('False positives', false_positives),
-        ('False negatives', false_negatives)
-    ]
+    results = collections.OrderedDict([
+        ('Precision', precision(hits, gold_subjects)),
+        ('Recall', recall(hits, gold_subjects)),
+        ('F-measure', f_measure(hits, gold_subjects)),
+        ('NDCG@5', normalized_dcg(hits, gold_subjects, at_k=5)),
+        ('NDCG@10', normalized_dcg(hits, gold_subjects, at_k=10)),
+        ('Precision@1', precision(hits, gold_subjects, at_k=1)),
+        ('Precision@3', precision(hits, gold_subjects, at_k=3)),
+        ('Precision@5', precision(hits, gold_subjects, at_k=5)),
+        ('True positives', true_positives(hits, gold_subjects)),
+        ('False positives', false_positives(hits, gold_subjects)),
+        ('False negatives', false_negatives(hits, gold_subjects))
+    ])
 
-    results = collections.OrderedDict()
-    for metric_name, metric_fn in metrics:
-        results[metric_name] = metric_fn(hits, gold_subjects)
     return results
 
 
