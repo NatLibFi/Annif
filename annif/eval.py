@@ -106,6 +106,10 @@ def evaluate(samples):
     """evaluate a set of selected subject against a gold standard using
     different metrics"""
 
+    transformed_samples = [transform_sample(sample)
+                           for sample in samples]
+    hits, gold_subjects = zip(*transformed_samples)
+
     metrics = [
         ('Precision', precision),
         ('Recall', recall),
@@ -122,7 +126,6 @@ def evaluate(samples):
 
     results = collections.OrderedDict()
     for metric_name, metric_fn in metrics:
-        hits, gold_subjects = zip(*samples)
         results[metric_name] = metric_fn(hits, gold_subjects)
     return results
 
@@ -153,6 +156,4 @@ class EvaluationBatch:
         self._samples.append((hits, gold_subjects))
 
     def results(self):
-        transformed_samples = [transform_sample(sample)
-                               for sample in self._samples]
-        return evaluate(transformed_samples)
+        return evaluate(self._samples)
