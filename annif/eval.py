@@ -20,11 +20,11 @@ def sklearn_metric_score(selected, relevant, metric_fn):
         return metric_fn(y_true, y_pred, average='samples')
 
 
-def precision(selected, relevant, at_k=None):
+def precision(selected, relevant, limit=None):
     """return the precision, i.e. the fraction of selected instances that
     are relevant"""
-    if at_k is not None:
-        selected = [subjs[:at_k] for subjs in selected]
+    if limit is not None:
+        selected = [subjs[:limit] for subjs in selected]
     return sklearn_metric_score(selected, relevant, precision_score)
 
 
@@ -75,25 +75,25 @@ def false_negatives(selected, relevant):
     return sklearn_metric_score(selected, relevant, false_negatives_bitwise)
 
 
-def dcg(selected, relevant, at_k):
+def dcg(selected, relevant, limit):
     """return the discounted cumulative gain (DCG) score for the selected
     instances vs. relevant instances"""
     if len(selected) == 0 or len(relevant) == 0:
         return 0.0
     scores = numpy.array([int(item in relevant)
-                          for item in list(selected)[:at_k]])
+                          for item in list(selected)[:limit]])
     weights = numpy.log2(numpy.arange(2, scores.size + 2))
     return numpy.sum(scores / weights)
 
 
-def normalized_dcg(selected, relevant, at_k):
+def normalized_dcg(selected, relevant, limit):
     """return the normalized discounted cumulative gain (nDCG) score for the
     selected instances vs. relevant instances"""
 
     scores = []
     for ssubj, rsubj in zip(selected, relevant):
-        dcg_val = dcg(ssubj, rsubj, at_k)
-        dcg_max = dcg(rsubj, rsubj, at_k)
+        dcg_val = dcg(ssubj, rsubj, limit)
+        dcg_max = dcg(rsubj, rsubj, limit)
         if dcg_max == 0.0:
             scores.append(0.0)
         else:
@@ -113,11 +113,11 @@ def evaluate(samples):
         ('Precision', precision(hits, gold_subjects)),
         ('Recall', recall(hits, gold_subjects)),
         ('F-measure', f_measure(hits, gold_subjects)),
-        ('NDCG@5', normalized_dcg(hits, gold_subjects, at_k=5)),
-        ('NDCG@10', normalized_dcg(hits, gold_subjects, at_k=10)),
-        ('Precision@1', precision(hits, gold_subjects, at_k=1)),
-        ('Precision@3', precision(hits, gold_subjects, at_k=3)),
-        ('Precision@5', precision(hits, gold_subjects, at_k=5)),
+        ('NDCG@5', normalized_dcg(hits, gold_subjects, limit=5)),
+        ('NDCG@10', normalized_dcg(hits, gold_subjects, limit=10)),
+        ('Precision@1', precision(hits, gold_subjects, limit=1)),
+        ('Precision@3', precision(hits, gold_subjects, limit=3)),
+        ('Precision@5', precision(hits, gold_subjects, limit=5)),
         ('True positives', true_positives(hits, gold_subjects)),
         ('False positives', false_positives(hits, gold_subjects)),
         ('False negatives', false_negatives(hits, gold_subjects))
