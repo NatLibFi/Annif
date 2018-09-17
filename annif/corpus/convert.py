@@ -26,7 +26,7 @@ class DocumentToSubjectCorpusMixin(SubjectCorpus):
 
         self._subject_index = subject_index
 
-    def _add_subject(self, uri, text):
+    def _add_subject(self, subject_id, uri, text):
         filename = '{}.txt'.format(annif.util.localname(uri))
         path = os.path.join(self._temp_directory.name, filename)
         if not os.path.exists(path):
@@ -42,7 +42,10 @@ class DocumentToSubjectCorpusMixin(SubjectCorpus):
 
         for text, uris in self.documents:
             for uri in uris:
-                self._add_subject(uri, text)
+                subject_id = self._subject_index.by_uri(uri)
+                if subject_id is None:
+                    continue
+                self._add_subject(subject_id, uri, text)
 
         from .subject import SubjectDirectory
         self._subject_corpus = SubjectDirectory(self._temp_directory.name)
