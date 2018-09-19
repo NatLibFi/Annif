@@ -26,26 +26,33 @@ class DocumentToSubjectCorpusMixin(SubjectCorpus):
 
         self._subject_index = subject_index
 
-    def _add_subject(self, subject_id, uri, text):
-        filename = '{}.txt'.format(annif.util.localname(uri))
-        path = os.path.join(self._temp_directory.name, filename)
-        if not os.path.exists(path):
-            subject_id = self._subject_index.by_uri(uri)
-            label = self._subject_index[subject_id][1]
-            with open(path, 'w') as subjfile:
-                print("{} {}".format(uri, label), file=subjfile)
-        with open(path, 'a') as subjfile:
+    def _subject_filename(self, subject_id):
+        filename = '{:08d}.txt'.format(subject_id)
+        return os.path.join(self._temp_directory.name, filename)
+
+    def _create_subject(self, subject_id, uri, label):
+        filename = self._subject_filename(subject_id)
+        with open(filename, 'w') as subjfile:
+            print("{} {}".format(uri, label), file=subjfile)
+
+    def _add_text_to_subject(self, subject_id, text):
+        filename = self._subject_filename(subject_id)
+        with open(filename, 'a') as subjfile:
             print(text, file=subjfile)
 
     def _generate_corpus_from_documents(self):
         self._temp_directory = tempfile.TemporaryDirectory()
+
+        for subject_id, subject_info in enumerate(self._subject_index):
+            uri, label = subject_info
+            self._create_subject(subject_id, uri, label)
 
         for text, uris in self.documents:
             for uri in uris:
                 subject_id = self._subject_index.by_uri(uri)
                 if subject_id is None:
                     continue
-                self._add_subject(subject_id, uri, text)
+                self._add_text_to_subject(subject_id, text)
 
         from .subject import SubjectDirectory
         self._subject_corpus = SubjectDirectory(self._temp_directory.name)
