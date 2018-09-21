@@ -8,71 +8,22 @@ from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.metrics import precision_score, recall_score, f1_score
 
 
-def sklearn_metric_score(selected, relevant, metric_fn):
-    """call a sklearn metric function, converting the selected and relevant
-       subjects into the multilabel indicator arrays expected by sklearn"""
-    mlb = MultiLabelBinarizer()
-    mlb.fit(list(relevant) + list(selected))
-    y_true = mlb.transform(relevant)
-    y_pred = mlb.transform(selected)
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        return metric_fn(y_true, y_pred, average='samples')
-
-
-def precision(selected, relevant, limit=None):
-    """return the precision, i.e. the fraction of selected instances that
-    are relevant"""
-    if limit is not None:
-        selected = [subjs[:limit] for subjs in selected]
-    return sklearn_metric_score(selected, relevant, precision_score)
-
-
-def recall(selected, relevant):
-    """return the recall, i.e. the fraction of relevant instances that were
-    selected"""
-    return sklearn_metric_score(selected, relevant, recall_score)
-
-
-def f_measure(selected, relevant):
-    """return the F-measure similarity of two sets"""
-    return sklearn_metric_score(selected, relevant, f1_score)
-
-
-def true_positives_bitwise(y_true, y_pred, average):
+def true_positives(y_true, y_pred):
     """calculate the number of true positives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
     return (y_true & y_pred).sum()
 
 
-def true_positives(selected, relevant):
-    """return the number of true positives, i.e. how many selected instances
-    were relevant"""
-    return sklearn_metric_score(selected, relevant, true_positives_bitwise)
-
-
-def false_positives_bitwise(y_true, y_pred, average):
+def false_positives(y_true, y_pred):
     """calculate the number of false positives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
     return (~y_true & y_pred).sum()
 
 
-def false_positives(selected, relevant):
-    """return the number of false positives, i.e. how many selected instances
-    were not relevant"""
-    return sklearn_metric_score(selected, relevant, false_positives_bitwise)
-
-
-def false_negatives_bitwise(y_true, y_pred, average):
+def false_negatives(y_true, y_pred):
     """calculate the number of false negatives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
     return (y_true & ~y_pred).sum()
-
-
-def false_negatives(selected, relevant):
-    """return the number of false negaives, i.e. how many relevant instances
-    were not selected"""
-    return sklearn_metric_score(selected, relevant, false_negatives_bitwise)
 
 
 def dcg(selected, relevant, limit):
@@ -131,20 +82,39 @@ class EvaluationBatch:
 
         transformed_samples = [self._transform_sample(sample)
                                for sample in self._samples]
-        hits, gold_subjects = zip(*transformed_samples)
+        selected, relevant = zip(*transformed_samples)
 
-        results = collections.OrderedDict([
-            ('Precision', precision(hits, gold_subjects)),
-            ('Recall', recall(hits, gold_subjects)),
-            ('F-measure', f_measure(hits, gold_subjects)),
-            ('NDCG@5', normalized_dcg(hits, gold_subjects, limit=5)),
-            ('NDCG@10', normalized_dcg(hits, gold_subjects, limit=10)),
-            ('Precision@1', precision(hits, gold_subjects, limit=1)),
-            ('Precision@3', precision(hits, gold_subjects, limit=3)),
-            ('Precision@5', precision(hits, gold_subjects, limit=5)),
-            ('True positives', true_positives(hits, gold_subjects)),
-            ('False positives', false_positives(hits, gold_subjects)),
-            ('False negatives', false_negatives(hits, gold_subjects))
-        ])
+        mlb = MultiLabelBinarizer()
+        mlb.fit(list(selected) + list(relevant))
+        y_true = mlb.transform(relevant)
+        y_pred = mlb.transform(selected)
+
+        def y_pred_at(limit):
+            return mlb.transform([subjs[:limit] for subjs in selected])
+
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+
+            results = collections.OrderedDict([
+                ('Precision', precision_score(y_true,
+                                              y_pred,
+                                              average='samples')),
+                ('Recall', recall_score(y_true, y_pred, average='samples')),
+                ('F-measure', f1_score(y_true, y_pred, average='samples')),
+                ('NDCG@5', normalized_dcg(selected, relevant, limit=5)),
+                ('NDCG@10', normalized_dcg(selected, relevant, limit=10)),
+                ('Precision@1', precision_score(y_true,
+                                                y_pred_at(1),
+                                                average='samples')),
+                ('Precision@3', precision_score(y_true,
+                                                y_pred_at(3),
+                                                average='samples')),
+                ('Precision@5', precision_score(y_true,
+                                                y_pred_at(5),
+                                                average='samples')),
+                ('True positives', true_positives(y_true, y_pred)),
+                ('False positives', false_positives(y_true, y_pred)),
+                ('False negatives', false_negatives(y_true, y_pred))
+            ])
 
         return results
