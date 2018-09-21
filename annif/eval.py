@@ -1,7 +1,6 @@
 """Evaluation metrics for Annif"""
 
 import collections
-import functools
 import statistics
 import warnings
 import numpy
@@ -9,133 +8,48 @@ from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.metrics import precision_score, recall_score, f1_score
 
 
-def sklearn_metric_score(selected, relevant, metric_fn):
-    """call a sklearn metric function, converting the selected and relevant
-       subjects into the multilabel indicator arrays expected by sklearn"""
-    mlb = MultiLabelBinarizer()
-    mlb.fit(list(relevant) + list(selected))
-    y_true = mlb.transform(relevant)
-    y_pred = mlb.transform(selected)
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        return metric_fn(y_true, y_pred, average='samples')
+def true_positives(y_true, y_pred):
+    """calculate the number of true positives using bitwise operations,
+    emulating the way sklearn evaluation metric functions work"""
+    return (y_true & y_pred).sum()
 
 
-def precision(selected, relevant, at_k=None):
-    """return the precision, i.e. the fraction of selected instances that
-    are relevant"""
-    if at_k is not None:
-        selected = [subjs[:at_k] for subjs in selected]
-    return sklearn_metric_score(selected, relevant, precision_score)
+def false_positives(y_true, y_pred):
+    """calculate the number of false positives using bitwise operations,
+    emulating the way sklearn evaluation metric functions work"""
+    return (~y_true & y_pred).sum()
 
 
-def recall(selected, relevant):
-    """return the recall, i.e. the fraction of relevant instances that were
-    selected"""
-    return sklearn_metric_score(selected, relevant, recall_score)
+def false_negatives(y_true, y_pred):
+    """calculate the number of false negatives using bitwise operations,
+    emulating the way sklearn evaluation metric functions work"""
+    return (y_true & ~y_pred).sum()
 
 
-def f_measure(selected, relevant):
-    """return the F-measure similarity of two sets"""
-    return sklearn_metric_score(selected, relevant, f1_score)
-
-
-def true_positives(selected, relevant):
-    """return the number of true positives, i.e. how many selected instances
-    were relevant"""
-    count = 0
-    for ssubj, rsubj in zip(selected, relevant):
-        sel = set(ssubj)
-        rel = set(rsubj)
-        count += len(sel & rel)
-    return count
-
-
-def false_positives(selected, relevant):
-    """return the number of false positives, i.e. how many selected instances
-    were not relevant"""
-    count = 0
-    for ssubj, rsubj in zip(selected, relevant):
-        sel = set(ssubj)
-        rel = set(rsubj)
-        count += len(sel - rel)
-    return count
-
-
-def false_negatives(selected, relevant):
-    """return the number of false negaives, i.e. how many relevant instances
-    were not selected"""
-    count = 0
-    for ssubj, rsubj in zip(selected, relevant):
-        sel = set(ssubj)
-        rel = set(rsubj)
-        count += len(rel - sel)
-    return count
-
-
-def dcg(selected, relevant, at_k):
+def dcg(selected, relevant, limit):
     """return the discounted cumulative gain (DCG) score for the selected
     instances vs. relevant instances"""
     if len(selected) == 0 or len(relevant) == 0:
         return 0.0
     scores = numpy.array([int(item in relevant)
-                          for item in list(selected)[:at_k]])
+                          for item in list(selected)[:limit]])
     weights = numpy.log2(numpy.arange(2, scores.size + 2))
     return numpy.sum(scores / weights)
 
 
-def normalized_dcg(selected, relevant, at_k):
+def normalized_dcg(selected, relevant, limit):
     """return the normalized discounted cumulative gain (nDCG) score for the
     selected instances vs. relevant instances"""
 
     scores = []
     for ssubj, rsubj in zip(selected, relevant):
-        dcg_val = dcg(ssubj, rsubj, at_k)
-        dcg_max = dcg(rsubj, rsubj, at_k)
+        dcg_val = dcg(ssubj, rsubj, limit)
+        dcg_max = dcg(rsubj, rsubj, limit)
         if dcg_max == 0.0:
             scores.append(0.0)
         else:
             scores.append(dcg_val / dcg_max)
     return statistics.mean(scores)
-
-
-def evaluate(samples):
-    """evaluate a set of selected subject against a gold standard using
-    different metrics"""
-
-    metrics = [
-        ('Precision', precision),
-        ('Recall', recall),
-        ('F-measure', f_measure),
-        ('NDCG@5', functools.partial(normalized_dcg, at_k=5)),
-        ('NDCG@10', functools.partial(normalized_dcg, at_k=10)),
-        ('Precision@1', functools.partial(precision, at_k=1)),
-        ('Precision@3', functools.partial(precision, at_k=3)),
-        ('Precision@5', functools.partial(precision, at_k=5)),
-        ('True positives', true_positives),
-        ('False positives', false_positives),
-        ('False negatives', false_negatives)
-    ]
-
-    results = collections.OrderedDict()
-    for metric_name, metric_fn in metrics:
-        hits, gold_subjects = zip(*samples)
-        results[metric_name] = metric_fn(hits, gold_subjects)
-    return results
-
-
-def transform_sample(sample):
-    """transform a single document (sample) with predicted and gold standard
-       subjects into either sequences of URIs (if available) or sequences of
-       labels"""
-    hits, gold_subjects = sample
-    if gold_subjects.has_uris():
-        selected = [hit.uri for hit in hits]
-        gold_set = gold_subjects.subject_uris
-    else:
-        selected = [hit.label for hit in hits]
-        gold_set = gold_subjects.subject_labels
-    return (selected, gold_set)
 
 
 class EvaluationBatch:
@@ -149,7 +63,56 @@ class EvaluationBatch:
     def evaluate(self, hits, gold_subjects):
         self._samples.append((hits, gold_subjects))
 
+    def _transform_sample(self, sample):
+        """transform a single document (sample) with predicted and gold
+           standard subjects into either sequences of URIs (if available) or
+           sequences of labels"""
+        hits, gold_subjects = sample
+        if gold_subjects.has_uris():
+            selected = [hit.uri for hit in hits]
+            gold_set = gold_subjects.subject_uris
+        else:
+            selected = [hit.label for hit in hits]
+            gold_set = gold_subjects.subject_labels
+        return (selected, gold_set)
+
     def results(self):
-        transformed_samples = [transform_sample(sample)
+        """evaluate a set of selected subjects against a gold standard using
+        different metrics"""
+
+        transformed_samples = [self._transform_sample(sample)
                                for sample in self._samples]
-        return evaluate(transformed_samples)
+        selected, relevant = zip(*transformed_samples)
+
+        mlb = MultiLabelBinarizer()
+        mlb.fit(list(selected) + list(relevant))
+        y_true = mlb.transform(relevant)
+        y_pred = mlb.transform(selected)
+
+        def y_pred_at(limit):
+            return mlb.transform([subjs[:limit] for subjs in selected])
+
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+
+            results = collections.OrderedDict([
+                ('Precision (per document average)',
+                 precision_score(y_true, y_pred, average='samples')),
+                ('Recall (per document average)',
+                 recall_score(y_true, y_pred, average='samples')),
+                ('F1 score (per document average)',
+                 f1_score(y_true, y_pred, average='samples')),
+                ('NDCG@5', normalized_dcg(selected, relevant, limit=5)),
+                ('NDCG@10', normalized_dcg(selected, relevant, limit=10)),
+                ('Precision@1 (per document average)',
+                 precision_score(y_true, y_pred_at(1), average='samples')),
+                ('Precision@3 (per document average)',
+                 precision_score(y_true, y_pred_at(3), average='samples')),
+                ('Precision@5 (per document average)',
+                 precision_score(y_true, y_pred_at(5), average='samples')),
+                ('True positives', true_positives(y_true, y_pred)),
+                ('False positives', false_positives(y_true, y_pred)),
+                ('False negatives', false_negatives(y_true, y_pred))
+            ])
+
+        return results

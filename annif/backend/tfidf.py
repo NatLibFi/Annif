@@ -51,5 +51,5 @@ class TFIDFBackend(backend.AnnifBackend):
         vectors = project.vectorizer.transform([text])
         docsim = self._index[vectors[0]]
         return AnalysisResult.from_vector(docsim,
-                                          self.params['limit'],
+                                          int(self.params['limit']),
                                           project.subjects)
