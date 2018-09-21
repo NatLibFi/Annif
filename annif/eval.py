@@ -101,45 +101,6 @@ def normalized_dcg(selected, relevant, limit):
     return statistics.mean(scores)
 
 
-def evaluate(samples):
-    """evaluate a set of selected subject against a gold standard using
-    different metrics"""
-
-    transformed_samples = [transform_sample(sample)
-                           for sample in samples]
-    hits, gold_subjects = zip(*transformed_samples)
-
-    results = collections.OrderedDict([
-        ('Precision', precision(hits, gold_subjects)),
-        ('Recall', recall(hits, gold_subjects)),
-        ('F-measure', f_measure(hits, gold_subjects)),
-        ('NDCG@5', normalized_dcg(hits, gold_subjects, limit=5)),
-        ('NDCG@10', normalized_dcg(hits, gold_subjects, limit=10)),
-        ('Precision@1', precision(hits, gold_subjects, limit=1)),
-        ('Precision@3', precision(hits, gold_subjects, limit=3)),
-        ('Precision@5', precision(hits, gold_subjects, limit=5)),
-        ('True positives', true_positives(hits, gold_subjects)),
-        ('False positives', false_positives(hits, gold_subjects)),
-        ('False negatives', false_negatives(hits, gold_subjects))
-    ])
-
-    return results
-
-
-def transform_sample(sample):
-    """transform a single document (sample) with predicted and gold standard
-       subjects into either sequences of URIs (if available) or sequences of
-       labels"""
-    hits, gold_subjects = sample
-    if gold_subjects.has_uris():
-        selected = [hit.uri for hit in hits]
-        gold_set = gold_subjects.subject_uris
-    else:
-        selected = [hit.label for hit in hits]
-        gold_set = gold_subjects.subject_labels
-    return (selected, gold_set)
-
-
 class EvaluationBatch:
     """A class for evaluating batches of results using all available metrics.
     The evaluate() method is called once per document in the batch.
@@ -151,5 +112,39 @@ class EvaluationBatch:
     def evaluate(self, hits, gold_subjects):
         self._samples.append((hits, gold_subjects))
 
+    def _transform_sample(self, sample):
+        """transform a single document (sample) with predicted and gold
+           standard subjects into either sequences of URIs (if available) or
+           sequences of labels"""
+        hits, gold_subjects = sample
+        if gold_subjects.has_uris():
+            selected = [hit.uri for hit in hits]
+            gold_set = gold_subjects.subject_uris
+        else:
+            selected = [hit.label for hit in hits]
+            gold_set = gold_subjects.subject_labels
+        return (selected, gold_set)
+
     def results(self):
-        return evaluate(self._samples)
+        """evaluate a set of selected subjects against a gold standard using
+        different metrics"""
+
+        transformed_samples = [self._transform_sample(sample)
+                               for sample in self._samples]
+        hits, gold_subjects = zip(*transformed_samples)
+
+        results = collections.OrderedDict([
+            ('Precision', precision(hits, gold_subjects)),
+            ('Recall', recall(hits, gold_subjects)),
+            ('F-measure', f_measure(hits, gold_subjects)),
+            ('NDCG@5', normalized_dcg(hits, gold_subjects, limit=5)),
+            ('NDCG@10', normalized_dcg(hits, gold_subjects, limit=10)),
+            ('Precision@1', precision(hits, gold_subjects, limit=1)),
+            ('Precision@3', precision(hits, gold_subjects, limit=3)),
+            ('Precision@5', precision(hits, gold_subjects, limit=5)),
+            ('True positives', true_positives(hits, gold_subjects)),
+            ('False positives', false_positives(hits, gold_subjects)),
+            ('False negatives', false_negatives(hits, gold_subjects))
+        ])
+
+        return results
