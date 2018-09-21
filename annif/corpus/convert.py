@@ -3,7 +3,6 @@
 import collections
 import os.path
 import tempfile
-import annif.util
 from .types import Document, DocumentCorpus, SubjectCorpus
 
 
