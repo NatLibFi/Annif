@@ -54,8 +54,8 @@ def test_evaluation_batch():
             score=1.0)]
     batch.evaluate(hits2, gold_set)
     results = batch.results()
-    assert results['Precision'] == 0.5
-    assert results['Recall'] == 0.5
+    assert results['Precision (per document average)'] == 0.5
+    assert results['Recall (per document average)'] == 0.5
     assert results['True positives'] == 1
     assert results['False positives'] == 1
     assert results['False negatives'] == 1

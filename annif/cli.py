@@ -286,7 +286,7 @@ def run_optimize(project_id, directory, backend_param):
         for hit_filter, batch in filter_batches.values():
             batch.evaluate(hit_filter(hits), gold_subjects)
 
-    click.echo("\t".join(('Limit', 'Thresh.', 'Prec.', 'Rec.', 'F-meas.')))
+    click.echo("\t".join(('Limit', 'Thresh.', 'Prec.', 'Rec.', 'F1')))
 
     best_scores = collections.defaultdict(float)
     best_params = {}
@@ -302,13 +302,17 @@ def run_optimize(project_id, directory, backend_param):
             template.format(
                 params[0],
                 params[1],
-                results['Precision'],
-                results['Recall'],
-                results['F-measure']))
+                results['Precision (per document average)'],
+                results['Recall (per document average)'],
+                results['F1 score (per document average)']))
 
     click.echo()
     template2 = "Best {}:\t{:.04f}\tLimit: {:d}\tThreshold: {:.02f}"
-    for metric in ('Precision', 'Recall', 'F-measure', 'NDCG@5', 'NDCG@10'):
+    for metric in ('Precision (per document average)',
+                   'Recall (per document average)',
+                   'F1 score (per document average)',
+                   'NDCG@5',
+                   'NDCG@10'):
         click.echo(
             template2.format(
                 metric,
