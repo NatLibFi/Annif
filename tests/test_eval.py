@@ -1,40 +1,47 @@
 """Unit tests for evaluation metrics in Annif"""
 
+import numpy as np
 import annif.corpus
 import annif.eval
 import annif.hit
 
 
-def test_ndcg_empty():
-    selected = [[]]
-    gold = [['A', 'E', 'I', 'O', 'U']]
-    ndcg = annif.eval.normalized_dcg(selected, gold, 5)
-    assert ndcg == 0
+def test_ndcg_nolimit():
+    y_true = np.array([[1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]])
+    y_pred = np.array([[7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0]])
+    ndcg = annif.eval.ndcg_score(y_true, y_pred)
+    assert ndcg > 0.49
+    assert ndcg < 0.50
 
 
-def test_ndcg_empty2():
-    selected = [['A', 'B', 'C', 'D', 'E']]
-    gold = [[]]
-    ndcg = annif.eval.normalized_dcg(selected, gold, 5)
-    assert ndcg == 0
+def test_ndcg_10():
+    y_true = np.array([[1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]])
+    y_pred = np.array([[7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0]])
+    ndcg = annif.eval.ndcg_score(y_true, y_pred, 10)
+    assert ndcg > 0.55
+    assert ndcg < 0.56
 
 
 def test_ndcg_5():
-    selected = [['A', 'B', 'C', 'D', 'E', 'F', 'G']]  # len=7
-    gold = [['A', 'E', 'I', 'O', 'U', 'Z', 'X',
-             'C', 'V', 'B', 'N', 'M']]  # len=12
-    ndcg = annif.eval.normalized_dcg(selected, gold, 5)
+    y_true = np.array([[1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]])
+    y_pred = np.array([[7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0]])
+    ndcg = annif.eval.ndcg_score(y_true, y_pred, 5)
     assert ndcg > 0.85
     assert ndcg < 0.86
 
 
-def test_ndcg_10():
-    selected = [['A', 'B', 'C', 'D', 'E', 'F', 'G']]  # len=7
-    gold = [['A', 'E', 'I', 'O', 'U', 'Z', 'X',
-             'C', 'V', 'B', 'N', 'M']]  # len=12
-    ndcg = annif.eval.normalized_dcg(selected, gold, 10)
-    assert ndcg > 0.55
-    assert ndcg < 0.56
+def test_ndcg_empty():
+    y_true = np.array([[1, 1, 1, 1, 1]])
+    y_pred = np.array([[0, 0, 0, 0, 0]])
+    ndcg = annif.eval.ndcg_score(y_true, y_pred)
+    assert ndcg == 0
+
+
+def test_ndcg_empty2():
+    y_true = np.array([[0, 0, 0, 0, 0]])
+    y_pred = np.array([[1, 1, 1, 1, 1]])
+    ndcg = annif.eval.ndcg_score(y_true, y_pred)
+    assert ndcg == 1.0
 
 
 def test_evaluation_batch(subject_index):
