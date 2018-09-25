@@ -44,12 +44,12 @@ def parse_backend_params(backend_param):
     return backend_params
 
 
-def generate_filter_batches():
+def generate_filter_batches(subjects):
     filter_batches = collections.OrderedDict()
     for limit in range(1, 16):
         for threshold in [i * 0.05 for i in range(20)]:
             hit_filter = HitFilter(limit, threshold)
-            batch = annif.eval.EvaluationBatch()
+            batch = annif.eval.EvaluationBatch(subjects)
             filter_batches[(limit, threshold)] = (hit_filter, batch)
     return filter_batches
 
@@ -217,7 +217,7 @@ def run_eval(project_id, subject_file, limit, threshold, backend_param):
         gold_subjects = annif.corpus.SubjectSet(subjfile.read())
 
     template = "{0:<20}\t{1}"
-    eval_batch = annif.eval.EvaluationBatch()
+    eval_batch = annif.eval.EvaluationBatch(project.subjects)
     eval_batch.evaluate(hits, gold_subjects)
     for metric, score in eval_batch.results().items():
         click.echo(template.format(metric + ":", score))
@@ -242,7 +242,7 @@ def run_evaldir(project_id, directory, limit, threshold, backend_param):
     backend_params = parse_backend_params(backend_param)
 
     hit_filter = HitFilter(limit=limit, threshold=threshold)
-    eval_batch = annif.eval.EvaluationBatch()
+    eval_batch = annif.eval.EvaluationBatch(project.subjects)
     for docfilename, subjectfilename in annif.corpus.DocumentDirectory(
             directory, require_subjects=True):
         with open(docfilename) as docfile:
@@ -274,7 +274,7 @@ def run_optimize(project_id, directory, backend_param):
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
 
-    filter_batches = generate_filter_batches()
+    filter_batches = generate_filter_batches(project.subjects)
 
     for docfilename, subjectfilename in annif.corpus.DocumentDirectory(
             directory, require_subjects=True):

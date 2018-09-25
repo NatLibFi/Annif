@@ -46,6 +46,11 @@ def subject_corpus():
 
 
 @pytest.fixture(scope='module')
+def subject_index(subject_corpus):
+    return annif.corpus.SubjectIndex(subject_corpus)
+
+
+@pytest.fixture(scope='module')
 def document_corpus():
     docfile = os.path.join(
         os.path.dirname(__file__),
