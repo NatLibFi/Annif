@@ -27,29 +27,27 @@ def false_negatives(y_true, y_pred):
     return (y_true & ~y_pred).sum()
 
 
-def dcg(selected, relevant, limit):
-    """return the discounted cumulative gain (DCG) score for the selected
-    instances vs. relevant instances"""
-    if len(selected) == 0 or len(relevant) == 0:
-        return 0.0
-    scores = np.array([int(item in relevant)
-                       for item in list(selected)[:limit]])
-    weights = np.log2(np.arange(2, scores.size + 2))
-    return np.sum(scores / weights)
+def dcg_score(y_true, y_pred, limit=None):
+    order = y_pred.argsort()[::-1]
+    n_pred = np.count_nonzero(y_pred)
+    if limit is not None:
+        n_pred = min(limit, n_pred)
+    order = order[:n_pred]
+    gain = y_true[order]
+    discount = np.log2(np.arange(order.size) + 2)
+
+    return (gain / discount).sum()
 
 
-def normalized_dcg(selected, relevant, limit):
-    """return the normalized discounted cumulative gain (nDCG) score for the
-    selected instances vs. relevant instances"""
-
+def ndcg_score(y_true, y_pred, limit=None):
     scores = []
-    for ssubj, rsubj in zip(selected, relevant):
-        dcg_val = dcg(ssubj, rsubj, limit)
-        dcg_max = dcg(rsubj, rsubj, limit)
-        if dcg_max == 0.0:
-            scores.append(0.0)
+    for true, pred in zip(y_true, y_pred):
+        idcg = dcg_score(true, true, limit)
+        dcg = dcg_score(true, pred, limit)
+        if idcg > 0:
+            scores.append(dcg / idcg)
         else:
-            scores.append(dcg_val / dcg_max)
+            scores.append(1.0)  # perfect score for no relevant hits case
     return statistics.mean(scores)
 
 
@@ -110,8 +108,9 @@ class EvaluationBatch:
                  recall_score(y_true, y_pred, average='samples')),
                 ('F1 score (per document average)',
                  f1_score(y_true, y_pred, average='samples')),
-                ('NDCG@5', normalized_dcg(selected, relevant, limit=5)),
-                ('NDCG@10', normalized_dcg(selected, relevant, limit=10)),
+                ('NDCG', ndcg_score(y_true2, y_scores)),
+                ('NDCG@5', ndcg_score(y_true2, y_scores, limit=5)),
+                ('NDCG@10', ndcg_score(y_true2, y_scores, limit=10)),
                 ('Precision@1 (per document average)',
                  precision_score(y_true, y_pred_at(1), average='samples')),
                 ('Precision@3 (per document average)',
