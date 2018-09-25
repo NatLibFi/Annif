@@ -3,9 +3,10 @@
 import collections
 import statistics
 import warnings
-import numpy
+import numpy as np
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.metrics import label_ranking_average_precision_score
 
 
 def true_positives(y_true, y_pred):
@@ -31,10 +32,10 @@ def dcg(selected, relevant, limit):
     instances vs. relevant instances"""
     if len(selected) == 0 or len(relevant) == 0:
         return 0.0
-    scores = numpy.array([int(item in relevant)
-                          for item in list(selected)[:limit]])
-    weights = numpy.log2(numpy.arange(2, scores.size + 2))
-    return numpy.sum(scores / weights)
+    scores = np.array([int(item in relevant)
+                       for item in list(selected)[:limit]])
+    weights = np.log2(np.arange(2, scores.size + 2))
+    return np.sum(scores / weights)
 
 
 def normalized_dcg(selected, relevant, limit):
@@ -57,7 +58,8 @@ class EvaluationBatch:
     The evaluate() method is called once per document in the batch.
     Final results can be queried using the results() method."""
 
-    def __init__(self):
+    def __init__(self, subject_index):
+        self._subject_index = subject_index
         self._samples = []
 
     def evaluate(self, hits, gold_subjects):
@@ -89,6 +91,12 @@ class EvaluationBatch:
         y_true = mlb.transform(relevant)
         y_pred = mlb.transform(selected)
 
+        y_true2 = np.array([gold_subjects.as_vector(self._subject_index)
+                            for hits, gold_subjects in self._samples])
+
+        y_scores = np.array([hits.as_vector(self._subject_index)
+                             for hits, gold_subjects in self._samples])
+
         def y_pred_at(limit):
             return mlb.transform([subjs[:limit] for subjs in selected])
 
@@ -110,6 +118,8 @@ class EvaluationBatch:
                  precision_score(y_true, y_pred_at(3), average='samples')),
                 ('Precision@5 (per document average)',
                  precision_score(y_true, y_pred_at(5), average='samples')),
+                ('Label ranking average precision',
+                 label_ranking_average_precision_score(y_true2, y_scores)),
                 ('True positives', true_positives(y_true, y_pred)),
                 ('False positives', false_positives(y_true, y_pred)),
                 ('False negatives', false_negatives(y_true, y_pred))

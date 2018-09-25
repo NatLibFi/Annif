@@ -37,25 +37,28 @@ def test_ndcg_10():
     assert ndcg < 0.56
 
 
-def test_evaluation_batch():
-    batch = annif.eval.EvaluationBatch()
+def test_evaluation_batch(subject_index):
+    batch = annif.eval.EvaluationBatch(subject_index)
 
-    gold_set = annif.corpus.SubjectSet('<http://example.org/s1>\tsubject 1')
-    hits1 = [
+    gold_set = annif.corpus.SubjectSet(
+        '<http://www.yso.fi/onto/yso/p10849>\tarkeologit')
+    hits1 = annif.hit.AnalysisResult([
         annif.hit.AnalysisHit(
-            uri='http://example.org/s1',
-            label='subject 1',
-            score=1.0)]
+            uri='http://www.yso.fi/onto/yso/p10849',
+            label='arkeologit',
+            score=1.0)])
     batch.evaluate(hits1, gold_set)
-    hits2 = [
+    hits2 = annif.hit.AnalysisResult([
         annif.hit.AnalysisHit(
-            uri='http://example.org/s2',
-            label='subject 2',
-            score=1.0)]
+            uri='http://www.yso.fi/onto/yso/p1747',
+            label='egyptologit',
+            score=1.0)])
     batch.evaluate(hits2, gold_set)
     results = batch.results()
     assert results['Precision (per document average)'] == 0.5
     assert results['Recall (per document average)'] == 0.5
+    assert results['Label ranking average precision'] >= 0.50
+    assert results['Label ranking average precision'] <= 0.51
     assert results['True positives'] == 1
     assert results['False positives'] == 1
     assert results['False negatives'] == 1
