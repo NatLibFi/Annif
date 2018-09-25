@@ -28,6 +28,8 @@ def false_negatives(y_true, y_pred):
 
 
 def dcg_score(y_true, y_pred, limit=None):
+    """return the discounted cumulative gain (DCG) score for the selected
+    labels vs. relevant labels"""
     order = y_pred.argsort()[::-1]
     n_pred = np.count_nonzero(y_pred)
     if limit is not None:
@@ -40,6 +42,8 @@ def dcg_score(y_true, y_pred, limit=None):
 
 
 def ndcg_score(y_true, y_pred, limit=None):
+    """return the normalized discounted cumulative gain (nDCG) score for the
+    selected labels vs. relevant labels"""
     scores = []
     for true, pred in zip(y_true, y_pred):
         idcg = dcg_score(true, true, limit)
