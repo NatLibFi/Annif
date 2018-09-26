@@ -5,7 +5,7 @@ import os.path
 import gensim.similarities
 from gensim.matutils import Sparse2Corpus
 import annif.util
-from annif.hit import AnalysisHit, AnalysisResult
+from annif.hit import AnalysisResult
 from . import backend
 
 
