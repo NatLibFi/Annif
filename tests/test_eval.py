@@ -112,3 +112,4 @@ def test_evaluation_batch(subject_index):
     assert results['True positives'] == 1
     assert results['False positives'] == 1
     assert results['False negatives'] == 1
+    assert results['Documents evaluated'] == 2

@@ -276,6 +276,7 @@ def run_optimize(project_id, directory, backend_param):
 
     filter_batches = generate_filter_batches(project.subjects)
 
+    ndocs = 0
     for docfilename, subjectfilename in annif.corpus.DocumentDirectory(
             directory, require_subjects=True):
         with open(docfilename) as docfile:
@@ -285,6 +286,7 @@ def run_optimize(project_id, directory, backend_param):
             gold_subjects = annif.corpus.SubjectSet(subjfile.read())
         for hit_filter, batch in filter_batches.values():
             batch.evaluate(hit_filter(hits), gold_subjects)
+        ndocs += 1
 
     click.echo("\t".join(('Limit', 'Thresh.', 'Prec.', 'Rec.', 'F1')))
 
@@ -319,6 +321,7 @@ def run_optimize(project_id, directory, backend_param):
                 best_scores[metric],
                 best_params[metric][0],
                 best_params[metric][1]))
+    click.echo("Documents evaluated:\t{}".format(ndocs))
 
 
 if __name__ == '__main__':

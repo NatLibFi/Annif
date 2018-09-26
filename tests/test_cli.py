@@ -317,6 +317,8 @@ def test_evaldir(tmpdir):
     assert int(false_positives.group(1)) == 1
     false_negatives = re.search(r'False negatives:\s+(\d+)', result.output)
     assert int(false_negatives.group(1)) == 1
+    ndocs = re.search(r'Documents evaluated:\s+(\d+)', result.output)
+    assert int(ndocs.group(1)) == 2
 
 
 def test_evaldir_param(tmpdir):
@@ -360,3 +362,5 @@ def test_optimize(tmpdir):
     f_measure = re.search(r'Best F1 score .*?doc.*?:\s+(\d.\d+)',
                           result.output)
     assert float(f_measure.group(1)) == 0.5
+    ndocs = re.search(r'Documents evaluated:\s+(\d)', result.output)
+    assert int(ndocs.group(1)) == 2
