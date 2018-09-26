@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import os
-import connexion
 import logging
+import connexion
 
 logger = logging.getLogger('annif')
 
