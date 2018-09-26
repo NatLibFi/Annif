@@ -112,7 +112,8 @@ class EvaluationBatch:
                  label_ranking_average_precision_score(y_true, y_pred)),
                 ('True positives', true_positives(y_true, y_pred_binary)),
                 ('False positives', false_positives(y_true, y_pred_binary)),
-                ('False negatives', false_negatives(y_true, y_pred_binary))
+                ('False negatives', false_negatives(y_true, y_pred_binary)),
+                ('Documents evaluated', y_true.shape[0])
             ])
 
         return results
