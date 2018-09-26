@@ -5,12 +5,9 @@ checks:
 build:
   environment:
     python: 3.6.3
-  nodes:
-    analysis:
-      dependencies:
-        override:
-         - pip install pipenv
-         - pipenv install --dev --skip-lock
-      tests:
-        override:
-         - py-scrutinizer-run
+  dependencies:
+    override:
+     - true
+  tests:
+    override:
+     - py-scrutinizer-run
