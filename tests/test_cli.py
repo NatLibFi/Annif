@@ -208,26 +208,26 @@ def test_eval_label(tmpdir, testdatadir):
     assert not result.exception
     assert result.exit_code == 0
 
-    precision = re.search('Precision .*doc.*:\s+(\d.\d+)', result.output)
+    precision = re.search(r'Precision .*doc.*:\s+(\d.\d+)', result.output)
     assert float(precision.group(1)) == 1.0
-    recall = re.search('Recall .*doc.*:\s+(\d.\d+)', result.output)
+    recall = re.search(r'Recall .*doc.*:\s+(\d.\d+)', result.output)
     assert float(recall.group(1)) == 0.5
-    f_measure = re.search('F1 score .*doc.*:\s+(\d.\d+)', result.output)
+    f_measure = re.search(r'F1 score .*doc.*:\s+(\d.\d+)', result.output)
     assert float(f_measure.group(1)) > 0.66
     assert float(f_measure.group(1)) < 0.67
-    precision1 = re.search('Precision@1 .*doc.*:\s+(\d.\d+)', result.output)
+    precision1 = re.search(r'Precision@1 .*doc.*:\s+(\d.\d+)', result.output)
     assert float(precision1.group(1)) == 1.0
-    precision3 = re.search('Precision@3 .*doc.*:\s+(\d.\d+)', result.output)
+    precision3 = re.search(r'Precision@3 .*doc.*:\s+(\d.\d+)', result.output)
     assert float(precision3.group(1)) == 1.0
-    precision5 = re.search('Precision@5 .*doc.*:\s+(\d.\d+)', result.output)
+    precision5 = re.search(r'Precision@5 .*doc.*:\s+(\d.\d+)', result.output)
     assert float(precision5.group(1)) == 1.0
-    lrap = re.search('Label ranking.*:\s+(\d.\d+)', result.output)
+    lrap = re.search(r'Label ranking.*:\s+(\d.\d+)', result.output)
     assert float(lrap.group(1)) == 1.0
-    true_positives = re.search('True positives:\s+(\d+)', result.output)
+    true_positives = re.search(r'True positives:\s+(\d+)', result.output)
     assert int(true_positives.group(1)) == 1
-    false_positives = re.search('False positives:\s+(\d+)', result.output)
+    false_positives = re.search(r'False positives:\s+(\d+)', result.output)
     assert int(false_positives.group(1)) == 0
-    false_negatives = re.search('False negatives:\s+(\d+)', result.output)
+    false_negatives = re.search(r'False negatives:\s+(\d+)', result.output)
     assert int(false_negatives.group(1)) == 1
 
 
@@ -247,7 +247,7 @@ def test_eval_param(tmpdir):
 
     # since zero scores were set with the parameter, there should be no hits
     # at all
-    recall = re.search('Recall .*doc.*:\s+(\d.\d+)', result.output)
+    recall = re.search(r'Recall .*doc.*:\s+(\d.\d+)', result.output)
     assert float(recall.group(1)) == 0.0
 
 
@@ -262,26 +262,26 @@ def test_eval_uri(tmpdir):
     assert not result.exception
     assert result.exit_code == 0
 
-    precision = re.search('Precision .*doc.*:\s+(\d.\d+)', result.output)
+    precision = re.search(r'Precision .*doc.*:\s+(\d.\d+)', result.output)
     assert float(precision.group(1)) == 1.0
-    recall = re.search('Recall.*doc.*:\s+(\d.\d+)', result.output)
+    recall = re.search(r'Recall.*doc.*:\s+(\d.\d+)', result.output)
     assert float(recall.group(1)) == 0.5
-    f_measure = re.search('F1 score .*doc.*:\s+(\d.\d+)', result.output)
+    f_measure = re.search(r'F1 score .*doc.*:\s+(\d.\d+)', result.output)
     assert float(f_measure.group(1)) > 0.66
     assert float(f_measure.group(1)) < 0.67
-    precision1 = re.search('Precision@1 .*doc.*:\s+(\d.\d+)', result.output)
+    precision1 = re.search(r'Precision@1 .*doc.*:\s+(\d.\d+)', result.output)
     assert float(precision1.group(1)) == 1.0
-    precision3 = re.search('Precision@3 .*doc.*:\s+(\d.\d+)', result.output)
+    precision3 = re.search(r'Precision@3 .*doc.*:\s+(\d.\d+)', result.output)
     assert float(precision3.group(1)) == 1.0
-    precision5 = re.search('Precision@5 .*doc.*:\s+(\d.\d+)', result.output)
+    precision5 = re.search(r'Precision@5 .*doc.*:\s+(\d.\d+)', result.output)
     assert float(precision5.group(1)) == 1.0
-    lrap = re.search('Label ranking.*:\s+(\d.\d+)', result.output)
+    lrap = re.search(r'Label ranking.*:\s+(\d.\d+)', result.output)
     assert float(lrap.group(1)) == 1.0
-    true_positives = re.search('True positives:\s+(\d+)', result.output)
+    true_positives = re.search(r'True positives:\s+(\d+)', result.output)
     assert int(true_positives.group(1)) == 1
-    false_positives = re.search('False positives:\s+(\d+)', result.output)
+    false_positives = re.search(r'False positives:\s+(\d+)', result.output)
     assert int(false_positives.group(1)) == 0
-    false_negatives = re.search('False negatives:\s+(\d+)', result.output)
+    false_negatives = re.search(r'False negatives:\s+(\d+)', result.output)
     assert int(false_negatives.group(1)) == 1
 
 
@@ -296,25 +296,25 @@ def test_evaldir(tmpdir):
     assert not result.exception
     assert result.exit_code == 0
 
-    precision = re.search('Precision .*doc.*:\s+(\d.\d+)', result.output)
+    precision = re.search(r'Precision .*doc.*:\s+(\d.\d+)', result.output)
     assert float(precision.group(1)) == 0.5
-    recall = re.search('Recall .*doc.*:\s+(\d.\d+)', result.output)
+    recall = re.search(r'Recall .*doc.*:\s+(\d.\d+)', result.output)
     assert float(recall.group(1)) == 0.5
-    f_measure = re.search('F1 score .*doc.*:\s+(\d.\d+)', result.output)
+    f_measure = re.search(r'F1 score .*doc.*:\s+(\d.\d+)', result.output)
     assert float(f_measure.group(1)) == 0.5
-    precision1 = re.search('Precision@1 .*doc.*:\s+(\d.\d+)', result.output)
+    precision1 = re.search(r'Precision@1 .*doc.*:\s+(\d.\d+)', result.output)
     assert float(precision1.group(1)) == 0.5
-    precision3 = re.search('Precision@3 .*doc.*:\s+(\d.\d+)', result.output)
+    precision3 = re.search(r'Precision@3 .*doc.*:\s+(\d.\d+)', result.output)
     assert float(precision3.group(1)) == 0.5
-    precision5 = re.search('Precision@5 .*doc.*:\s+(\d.\d+)', result.output)
+    precision5 = re.search(r'Precision@5 .*doc.*:\s+(\d.\d+)', result.output)
     assert float(precision5.group(1)) == 0.5
-    lrap = re.search('Label ranking.*:\s+(\d.\d+)', result.output)
+    lrap = re.search(r'Label ranking.*:\s+(\d.\d+)', result.output)
     assert float(lrap.group(1)) == 1.0
-    true_positives = re.search('True positives:\s+(\d+)', result.output)
+    true_positives = re.search(r'True positives:\s+(\d+)', result.output)
     assert int(true_positives.group(1)) == 1
-    false_positives = re.search('False positives:\s+(\d+)', result.output)
+    false_positives = re.search(r'False positives:\s+(\d+)', result.output)
     assert int(false_positives.group(1)) == 1
-    false_negatives = re.search('False negatives:\s+(\d+)', result.output)
+    false_negatives = re.search(r'False negatives:\s+(\d+)', result.output)
     assert int(false_negatives.group(1)) == 1
 
 
@@ -334,7 +334,7 @@ def test_evaldir_param(tmpdir):
 
     # since zero scores were set with the parameter, there should be no hits
     # at all
-    recall = re.search('Recall .*doc.*:\s+(\d.\d+)', result.output)
+    recall = re.search(r'Recall .*doc.*:\s+(\d.\d+)', result.output)
     assert float(recall.group(1)) == 0.0
 
 
@@ -351,10 +351,11 @@ def test_optimize(tmpdir):
     assert not result.exception
     assert result.exit_code == 0
 
-    precision = re.search('Best Precision .*?doc.*?:\s+(\d.\d+)',
+    precision = re.search(r'Best Precision .*?doc.*?:\s+(\d.\d+)',
                           result.output)
     assert float(precision.group(1)) == 0.5
-    recall = re.search('Best Recall .*?doc.*?:\s+(\d.\d+)', result.output)
+    recall = re.search(r'Best Recall .*?doc.*?:\s+(\d.\d+)', result.output)
     assert float(recall.group(1)) == 0.5
-    f_measure = re.search('Best F1 score .*?doc.*?:\s+(\d.\d+)', result.output)
+    f_measure = re.search(r'Best F1 score .*?doc.*?:\s+(\d.\d+)',
+                          result.output)
     assert float(f_measure.group(1)) == 0.5
