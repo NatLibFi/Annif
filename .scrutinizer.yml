@@ -1,16 +1,16 @@
 checks:
-    python:
-        code_rating: true
-        duplicate_code: true
-
+  python:
+    code_rating: true
+    duplicate_code: true
 build:
+  environment:
+    python: 3.6.3
   nodes:
     analysis:
+      dependencies:
+        override:
+         - pip install pipenv
+         - pipenv install --dev --skip-lock
       tests:
         override:
-          - py-scrutinizer-run
-    my-tests:
-      tests:
-        override:
-          - true
-
+         - py-scrutinizer-run
