@@ -105,10 +105,10 @@ def test_evaluation_batch(subject_index):
             score=1.0)])
     batch.evaluate(hits2, gold_set)
     results = batch.results()
-    assert results['Precision (per document average)'] == 0.5
-    assert results['Recall (per document average)'] == 0.5
-    assert results['Label ranking average precision'] >= 0.50
-    assert results['Label ranking average precision'] <= 0.51
+    assert results['Precision (doc avg)'] == 0.5
+    assert results['Recall (doc avg)'] == 0.5
+    assert results['LRAP'] >= 0.50
+    assert results['LRAP'] <= 0.51
     assert results['True positives'] == 1
     assert results['False positives'] == 1
     assert results['False negatives'] == 1

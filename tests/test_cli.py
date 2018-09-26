@@ -222,7 +222,7 @@ def test_eval_label(tmpdir, testdatadir):
     assert float(precision3.group(1)) == 1.0
     precision5 = re.search(r'Precision@5:\s+(\d.\d+)', result.output)
     assert float(precision5.group(1)) == 1.0
-    lrap = re.search(r'Label ranking.*:\s+(\d.\d+)', result.output)
+    lrap = re.search(r'LRAP:\s+(\d.\d+)', result.output)
     assert float(lrap.group(1)) == 1.0
     true_positives = re.search(r'True positives:\s+(\d+)', result.output)
     assert int(true_positives.group(1)) == 1
@@ -276,7 +276,7 @@ def test_eval_uri(tmpdir):
     assert float(precision3.group(1)) == 1.0
     precision5 = re.search(r'Precision@5:\s+(\d.\d+)', result.output)
     assert float(precision5.group(1)) == 1.0
-    lrap = re.search(r'Label ranking.*:\s+(\d.\d+)', result.output)
+    lrap = re.search(r'LRAP:\s+(\d.\d+)', result.output)
     assert float(lrap.group(1)) == 1.0
     true_positives = re.search(r'True positives:\s+(\d+)', result.output)
     assert int(true_positives.group(1)) == 1
@@ -309,7 +309,7 @@ def test_evaldir(tmpdir):
     assert float(precision3.group(1)) == 0.5
     precision5 = re.search(r'Precision@5:\s+(\d.\d+)', result.output)
     assert float(precision5.group(1)) == 0.5
-    lrap = re.search(r'Label ranking.*:\s+(\d.\d+)', result.output)
+    lrap = re.search(r'LRAP:\s+(\d.\d+)', result.output)
     assert float(lrap.group(1)) == 0.75
     true_positives = re.search(r'True positives:\s+(\d+)', result.output)
     assert int(true_positives.group(1)) == 1
