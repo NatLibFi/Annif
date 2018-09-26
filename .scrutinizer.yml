@@ -1,10 +1,12 @@
+checks:
+    python:
+        code_rating: true
+        duplicate_code: true
+
 build:
-    environment:
-        python: 3.6.3
-    dependencies:
+  nodes:
+    analysis:
+      tests:
         override:
-            - pip install pipenv
-            - pipenv install --dev --skip-lock
-    tests:
-        override:
-            - true
+          - py-scrutinizer-run
+
