@@ -216,11 +216,11 @@ def test_eval_label(tmpdir, testdatadir):
     f_measure = re.search(r'F1 score .*doc.*:\s+(\d.\d+)', result.output)
     assert float(f_measure.group(1)) > 0.66
     assert float(f_measure.group(1)) < 0.67
-    precision1 = re.search(r'Precision@1 .*doc.*:\s+(\d.\d+)', result.output)
+    precision1 = re.search(r'Precision@1:\s+(\d.\d+)', result.output)
     assert float(precision1.group(1)) == 1.0
-    precision3 = re.search(r'Precision@3 .*doc.*:\s+(\d.\d+)', result.output)
+    precision3 = re.search(r'Precision@3:\s+(\d.\d+)', result.output)
     assert float(precision3.group(1)) == 1.0
-    precision5 = re.search(r'Precision@5 .*doc.*:\s+(\d.\d+)', result.output)
+    precision5 = re.search(r'Precision@5:\s+(\d.\d+)', result.output)
     assert float(precision5.group(1)) == 1.0
     lrap = re.search(r'Label ranking.*:\s+(\d.\d+)', result.output)
     assert float(lrap.group(1)) == 1.0
@@ -270,11 +270,11 @@ def test_eval_uri(tmpdir):
     f_measure = re.search(r'F1 score .*doc.*:\s+(\d.\d+)', result.output)
     assert float(f_measure.group(1)) > 0.66
     assert float(f_measure.group(1)) < 0.67
-    precision1 = re.search(r'Precision@1 .*doc.*:\s+(\d.\d+)', result.output)
+    precision1 = re.search(r'Precision@1:\s+(\d.\d+)', result.output)
     assert float(precision1.group(1)) == 1.0
-    precision3 = re.search(r'Precision@3 .*doc.*:\s+(\d.\d+)', result.output)
+    precision3 = re.search(r'Precision@3:\s+(\d.\d+)', result.output)
     assert float(precision3.group(1)) == 1.0
-    precision5 = re.search(r'Precision@5 .*doc.*:\s+(\d.\d+)', result.output)
+    precision5 = re.search(r'Precision@5:\s+(\d.\d+)', result.output)
     assert float(precision5.group(1)) == 1.0
     lrap = re.search(r'Label ranking.*:\s+(\d.\d+)', result.output)
     assert float(lrap.group(1)) == 1.0
@@ -303,11 +303,11 @@ def test_evaldir(tmpdir):
     assert float(recall.group(1)) == 0.5
     f_measure = re.search(r'F1 score .*doc.*:\s+(\d.\d+)', result.output)
     assert float(f_measure.group(1)) == 0.5
-    precision1 = re.search(r'Precision@1 .*doc.*:\s+(\d.\d+)', result.output)
+    precision1 = re.search(r'Precision@1:\s+(\d.\d+)', result.output)
     assert float(precision1.group(1)) == 0.5
-    precision3 = re.search(r'Precision@3 .*doc.*:\s+(\d.\d+)', result.output)
+    precision3 = re.search(r'Precision@3:\s+(\d.\d+)', result.output)
     assert float(precision3.group(1)) == 0.5
-    precision5 = re.search(r'Precision@5 .*doc.*:\s+(\d.\d+)', result.output)
+    precision5 = re.search(r'Precision@5:\s+(\d.\d+)', result.output)
     assert float(precision5.group(1)) == 0.5
     lrap = re.search(r'Label ranking.*:\s+(\d.\d+)', result.output)
     assert float(lrap.group(1)) == 0.75
