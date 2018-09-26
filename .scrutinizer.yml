@@ -9,4 +9,8 @@ build:
       tests:
         override:
           - py-scrutinizer-run
+    my-tests:
+      tests:
+        override:
+          - true
 
