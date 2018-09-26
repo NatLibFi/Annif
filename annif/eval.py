@@ -27,6 +27,19 @@ def false_negatives(y_true, y_pred):
     return (y_true & ~y_pred).sum()
 
 
+def precision_at_k_score(y_true, y_pred, limit):
+    """calculate the precision at K, i.e. the number of relevant items
+    among the top K predicted ones"""
+    scores = []
+    for true, pred in zip(y_true, y_pred):
+        order = pred.argsort()[::-1]
+        limit = min(limit, np.count_nonzero(pred))
+        order = order[:limit]
+        gain = true[order]
+        scores.append(gain.sum() / limit)
+    return statistics.mean(scores)
+
+
 def dcg_score(y_true, y_pred, limit=None):
     """return the discounted cumulative gain (DCG) score for the selected
     labels vs. relevant labels"""
@@ -99,9 +112,6 @@ class EvaluationBatch:
         y_scores = np.array([hits.as_vector(self._subject_index)
                              for hits, gold_subjects in self._samples])
 
-        def y_pred_at(limit):
-            return mlb.transform([subjs[:limit] for subjs in selected])
-
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
 
@@ -116,11 +126,11 @@ class EvaluationBatch:
                 ('NDCG@5', ndcg_score(y_true2, y_scores, limit=5)),
                 ('NDCG@10', ndcg_score(y_true2, y_scores, limit=10)),
                 ('Precision@1 (per document average)',
-                 precision_score(y_true, y_pred_at(1), average='samples')),
+                 precision_at_k_score(y_true2, y_scores, limit=1)),
                 ('Precision@3 (per document average)',
-                 precision_score(y_true, y_pred_at(3), average='samples')),
+                 precision_at_k_score(y_true2, y_scores, limit=3)),
                 ('Precision@5 (per document average)',
-                 precision_score(y_true, y_pred_at(5), average='samples')),
+                 precision_at_k_score(y_true2, y_scores, limit=5)),
                 ('Label ranking average precision',
                  label_ranking_average_precision_score(y_true2, y_scores)),
                 ('True positives', true_positives(y_true, y_pred)),

@@ -200,7 +200,8 @@ def test_eval_label(tmpdir, testdatadir):
     keyfile = tmpdir.join('dummy.key')
     keyfile.write("dummy\nanother\n")
     subjectfile = testdatadir.ensure('projects/dummy-en/subjects')
-    subjectfile.write("<http://example.org/dummy>\tdummy\n")
+    subjectfile.write("<http://example.org/dummy>\tdummy\n" +
+                      "<http://example.org/none>\tnone\n")
 
     result = runner.invoke(
         annif.cli.cli, [
@@ -309,7 +310,7 @@ def test_evaldir(tmpdir):
     precision5 = re.search(r'Precision@5 .*doc.*:\s+(\d.\d+)', result.output)
     assert float(precision5.group(1)) == 0.5
     lrap = re.search(r'Label ranking.*:\s+(\d.\d+)', result.output)
-    assert float(lrap.group(1)) == 1.0
+    assert float(lrap.group(1)) == 0.75
     true_positives = re.search(r'True positives:\s+(\d+)', result.output)
     assert int(true_positives.group(1)) == 1
     false_positives = re.search(r'False positives:\s+(\d+)', result.output)
