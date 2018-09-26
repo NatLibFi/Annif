@@ -3,14 +3,8 @@ url = "https://pypi.python.org/simple"
 name = "pypi"
 verify_ssl = true
 
-[[source]]
-url = "https://testpypi.python.org/pypi"
-verify_ssl = true
-name = "test"
-
 [dev-packages]
 codecov = "*"
-python-coveralls = "*"
 pytest-cov = "*"
 pytest-watch = "*"
 pytest-flask = "*"
@@ -25,7 +19,7 @@ click-log = "*"
 nltk = "*"
 gensim = "*"
 sklearn = "*"
-fasttext = {version="*", index="test"}
+fasttextmirror = "*"
 rdflib = "*"
 
 [requires]
