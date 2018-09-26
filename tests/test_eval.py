@@ -6,6 +6,33 @@ import annif.eval
 import annif.hit
 
 
+# DCG@6 example from https://en.wikipedia.org/wiki/Discounted_cumulative_gain
+def test_dcg():
+    y_true = np.array([3, 2, 3, 0, 1, 2])
+    y_pred = np.array([6, 5, 4, 3, 2, 1])
+    dcg = annif.eval.dcg_score(y_true, y_pred, 6)
+    assert dcg > 6.86
+    assert dcg < 6.87
+
+
+# iDCG@6 example from https://en.wikipedia.org/wiki/Discounted_cumulative_gain
+def test_dcg_ideal():
+    y_true = np.array([3, 3, 3, 2, 2, 2, 1, 0])
+    y_pred = np.array([8, 7, 6, 5, 4, 3, 2, 1])
+    dcg = annif.eval.dcg_score(y_true, y_pred, 6)
+    assert dcg > 8.74
+    assert dcg < 8.75
+
+
+# nDCG@6 example from https://en.wikipedia.org/wiki/Discounted_cumulative_gain
+def test_ndcg():
+    y_true = np.array([[3, 2, 3, 0, 1, 2, 3, 2]])
+    y_pred = np.array([[6, 5, 4, 3, 2, 1, 0, 0]])
+    ndcg = annif.eval.ndcg_score(y_true, y_pred, 6)
+    assert ndcg > 0.78
+    assert ndcg < 0.79
+
+
 def test_ndcg_nolimit():
     y_true = np.array([[1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]])
     y_pred = np.array([[7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0]])
