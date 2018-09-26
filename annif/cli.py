@@ -304,15 +304,15 @@ def run_optimize(project_id, directory, backend_param):
             template.format(
                 params[0],
                 params[1],
-                results['Precision (per document average)'],
-                results['Recall (per document average)'],
-                results['F1 score (per document average)']))
+                results['Precision (doc avg)'],
+                results['Recall (doc avg)'],
+                results['F1 score (doc avg)']))
 
     click.echo()
     template2 = "Best {}:\t{:.04f}\tLimit: {:d}\tThreshold: {:.02f}"
-    for metric in ('Precision (per document average)',
-                   'Recall (per document average)',
-                   'F1 score (per document average)',
+    for metric in ('Precision (doc avg)',
+                   'Recall (doc avg)',
+                   'F1 score (doc avg)',
                    'NDCG@5',
                    'NDCG@10'):
         click.echo(
