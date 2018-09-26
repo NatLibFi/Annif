@@ -12,7 +12,8 @@ import annif.corpus
 import annif.hit
 import annif.backend
 import annif.util
-from annif import logger
+
+logger = annif.logger
 
 
 class AnnifProject:

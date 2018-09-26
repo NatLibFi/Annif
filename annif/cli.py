@@ -14,8 +14,8 @@ import annif.corpus
 import annif.eval
 import annif.project
 from annif.hit import HitFilter
-from annif import logger
 
+logger = annif.logger
 click_log.basic_config(logger)
 
 cli = FlaskGroup(create_app=annif.create_app)
