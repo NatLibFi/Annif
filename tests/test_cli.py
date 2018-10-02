@@ -196,7 +196,7 @@ def test_analyzedir(tmpdir):
         'utf-8') == "<http://example.org/dummy>\tdummy\t1.0\n"
 
 
-def test_evaldir_label(tmpdir, testdatadir):
+def test_eval_label(tmpdir, testdatadir):
     subjectfile = testdatadir.ensure('projects/dummy-en/subjects')
     subjectfile.write("<http://example.org/dummy>\tdummy\n" +
                       "<http://example.org/none>\tnone\n")
@@ -207,7 +207,7 @@ def test_evaldir_label(tmpdir, testdatadir):
     tmpdir.join('doc2.key').write('none')
     tmpdir.join('doc3.txt').write('doc3')
 
-    result = runner.invoke(annif.cli.cli, ['evaldir', 'dummy-en', str(tmpdir)])
+    result = runner.invoke(annif.cli.cli, ['eval', 'dummy-en', str(tmpdir)])
     assert not result.exception
     assert result.exit_code == 0
 
@@ -235,7 +235,7 @@ def test_evaldir_label(tmpdir, testdatadir):
     assert int(ndocs.group(1)) == 2
 
 
-def test_evaldir_uri(tmpdir):
+def test_eval_uri(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     keyfile = tmpdir.join('doc1.key').write(
         "<http://example.org/dummy>\tdummy\n")
@@ -244,7 +244,7 @@ def test_evaldir_uri(tmpdir):
         "<http://example.org/none>\tnone\n")
     tmpdir.join('doc3.txt').write('doc3')
 
-    result = runner.invoke(annif.cli.cli, ['evaldir', 'dummy-en', str(tmpdir)])
+    result = runner.invoke(annif.cli.cli, ['eval', 'dummy-en', str(tmpdir)])
     assert not result.exception
     assert result.exit_code == 0
 
@@ -272,7 +272,7 @@ def test_evaldir_uri(tmpdir):
     assert int(ndocs.group(1)) == 2
 
 
-def test_evaldir_param(tmpdir):
+def test_eval_param(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('dummy')
     tmpdir.join('doc2.txt').write('doc2')
@@ -281,7 +281,7 @@ def test_evaldir_param(tmpdir):
 
     result = runner.invoke(
         annif.cli.cli, [
-            'evaldir', '--backend-param', 'dummy.score=0.0', 'dummy-en',
+            'eval', '--backend-param', 'dummy.score=0.0', 'dummy-en',
             str(tmpdir)])
     assert not result.exception
     assert result.exit_code == 0

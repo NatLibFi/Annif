@@ -193,19 +193,19 @@ def run_analyzedir(project_id, directory, suffix, force,
                 click.echo(line, file=subjfile)
 
 
-@cli.command('evaldir')
+@cli.command('eval')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('directory', type=click.Path(file_okay=True))
 @click.option('--limit', default=10)
 @click.option('--threshold', default=0.0)
 @click.option('--backend-param', '-b', multiple=True)
-def run_evaldir(project_id, directory, limit, threshold, backend_param):
+def run_eval(project_id, directory, limit, threshold, backend_param):
     """"
     Evaluate the analysis results for a directory with documents against a
     gold standard given in subject files.
 
-    USAGE: annif evaldir <project_id> <directory> [--limit=N]
+    USAGE: annif eval <project_id> <directory> [--limit=N]
            [--threshold=N]
     """
     project = get_project(project_id)
