@@ -196,101 +196,52 @@ def test_analyzedir(tmpdir):
         'utf-8') == "<http://example.org/dummy>\tdummy\t1.0\n"
 
 
-def test_eval_label(tmpdir, testdatadir):
-    keyfile = tmpdir.join('dummy.key')
-    keyfile.write("dummy\nanother\n")
+def test_evaldir_label(tmpdir, testdatadir):
     subjectfile = testdatadir.ensure('projects/dummy-en/subjects')
     subjectfile.write("<http://example.org/dummy>\tdummy\n" +
                       "<http://example.org/none>\tnone\n")
 
-    result = runner.invoke(
-        annif.cli.cli, [
-            'eval', 'dummy-en', str(keyfile)], input='nothing special')
-    assert not result.exception
-    assert result.exit_code == 0
-
-    precision = re.search(r'Precision .*doc.*:\s+(\d.\d+)', result.output)
-    assert float(precision.group(1)) == 1.0
-    recall = re.search(r'Recall .*doc.*:\s+(\d.\d+)', result.output)
-    assert float(recall.group(1)) == 0.5
-    f_measure = re.search(r'F1 score .*doc.*:\s+(\d.\d+)', result.output)
-    assert float(f_measure.group(1)) > 0.66
-    assert float(f_measure.group(1)) < 0.67
-    precision1 = re.search(r'Precision@1:\s+(\d.\d+)', result.output)
-    assert float(precision1.group(1)) == 1.0
-    precision3 = re.search(r'Precision@3:\s+(\d.\d+)', result.output)
-    assert float(precision3.group(1)) == 1.0
-    precision5 = re.search(r'Precision@5:\s+(\d.\d+)', result.output)
-    assert float(precision5.group(1)) == 1.0
-    lrap = re.search(r'LRAP:\s+(\d.\d+)', result.output)
-    assert float(lrap.group(1)) == 1.0
-    true_positives = re.search(r'True positives:\s+(\d+)', result.output)
-    assert int(true_positives.group(1)) == 1
-    false_positives = re.search(r'False positives:\s+(\d+)', result.output)
-    assert int(false_positives.group(1)) == 0
-    false_negatives = re.search(r'False negatives:\s+(\d+)', result.output)
-    assert int(false_negatives.group(1)) == 1
-
-
-def test_eval_param(tmpdir):
-    keyfile = tmpdir.join('dummy.key')
-    keyfile.write("dummy\nanother\n")
-
-    result = runner.invoke(annif.cli.cli,
-                           ['eval',
-                            '--backend-param',
-                            'dummy.score=0.0',
-                            'dummy-en',
-                            str(keyfile)],
-                           input='nothing special')
-    assert not result.exception
-    assert result.exit_code == 0
-
-    # since zero scores were set with the parameter, there should be no hits
-    # at all
-    recall = re.search(r'Recall .*doc.*:\s+(\d.\d+)', result.output)
-    assert float(recall.group(1)) == 0.0
-
-
-def test_eval_uri(tmpdir):
-    keyfile = tmpdir.join('dummy.key')
-    keyfile.write(
-        "<http://example.org/one>\tone\n<http://example.org/dummy>\tdummy\n")
-
-    result = runner.invoke(
-        annif.cli.cli, [
-            'eval', 'dummy-en', str(keyfile)], input='nothing special')
-    assert not result.exception
-    assert result.exit_code == 0
-
-    precision = re.search(r'Precision .*doc.*:\s+(\d.\d+)', result.output)
-    assert float(precision.group(1)) == 1.0
-    recall = re.search(r'Recall.*doc.*:\s+(\d.\d+)', result.output)
-    assert float(recall.group(1)) == 0.5
-    f_measure = re.search(r'F1 score .*doc.*:\s+(\d.\d+)', result.output)
-    assert float(f_measure.group(1)) > 0.66
-    assert float(f_measure.group(1)) < 0.67
-    precision1 = re.search(r'Precision@1:\s+(\d.\d+)', result.output)
-    assert float(precision1.group(1)) == 1.0
-    precision3 = re.search(r'Precision@3:\s+(\d.\d+)', result.output)
-    assert float(precision3.group(1)) == 1.0
-    precision5 = re.search(r'Precision@5:\s+(\d.\d+)', result.output)
-    assert float(precision5.group(1)) == 1.0
-    lrap = re.search(r'LRAP:\s+(\d.\d+)', result.output)
-    assert float(lrap.group(1)) == 1.0
-    true_positives = re.search(r'True positives:\s+(\d+)', result.output)
-    assert int(true_positives.group(1)) == 1
-    false_positives = re.search(r'False positives:\s+(\d+)', result.output)
-    assert int(false_positives.group(1)) == 0
-    false_negatives = re.search(r'False negatives:\s+(\d+)', result.output)
-    assert int(false_negatives.group(1)) == 1
-
-
-def test_evaldir(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('dummy')
     tmpdir.join('doc2.txt').write('doc2')
     tmpdir.join('doc2.key').write('none')
+    tmpdir.join('doc3.txt').write('doc3')
+
+    result = runner.invoke(annif.cli.cli, ['evaldir', 'dummy-en', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    precision = re.search(r'Precision .*doc.*:\s+(\d.\d+)', result.output)
+    assert float(precision.group(1)) == 0.5
+    recall = re.search(r'Recall .*doc.*:\s+(\d.\d+)', result.output)
+    assert float(recall.group(1)) == 0.5
+    f_measure = re.search(r'F1 score .*doc.*:\s+(\d.\d+)', result.output)
+    assert float(f_measure.group(1)) == 0.5
+    precision1 = re.search(r'Precision@1:\s+(\d.\d+)', result.output)
+    assert float(precision1.group(1)) == 0.5
+    precision3 = re.search(r'Precision@3:\s+(\d.\d+)', result.output)
+    assert float(precision3.group(1)) == 0.5
+    precision5 = re.search(r'Precision@5:\s+(\d.\d+)', result.output)
+    assert float(precision5.group(1)) == 0.5
+    lrap = re.search(r'LRAP:\s+(\d.\d+)', result.output)
+    assert float(lrap.group(1)) == 0.75
+    true_positives = re.search(r'True positives:\s+(\d+)', result.output)
+    assert int(true_positives.group(1)) == 1
+    false_positives = re.search(r'False positives:\s+(\d+)', result.output)
+    assert int(false_positives.group(1)) == 1
+    false_negatives = re.search(r'False negatives:\s+(\d+)', result.output)
+    assert int(false_negatives.group(1)) == 1
+    ndocs = re.search(r'Documents evaluated:\s+(\d+)', result.output)
+    assert int(ndocs.group(1)) == 2
+
+
+def test_evaldir_uri(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    keyfile = tmpdir.join('doc1.key').write(
+        "<http://example.org/dummy>\tdummy\n")
+    tmpdir.join('doc2.txt').write('doc2')
+    keyfile = tmpdir.join('doc2.key').write(
+        "<http://example.org/none>\tnone\n")
     tmpdir.join('doc3.txt').write('doc3')
 
     result = runner.invoke(annif.cli.cli, ['evaldir', 'dummy-en', str(tmpdir)])

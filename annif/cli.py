@@ -193,36 +193,6 @@ def run_analyzedir(project_id, directory, suffix, force,
                 click.echo(line, file=subjfile)
 
 
-@cli.command('eval')
-@click_log.simple_verbosity_option(logger)
-@click.argument('project_id')
-@click.argument('subject_file', type=click.Path(dir_okay=False))
-@click.option('--limit', default=10)
-@click.option('--threshold', default=0.0)
-@click.option('--backend-param', '-b', multiple=True)
-def run_eval(project_id, subject_file, limit, threshold, backend_param):
-    """"
-    Evaluate the analysis result for a document against a gold standard
-    given in a subject file.
-
-    USAGE: annif eval <project_id> <subject_file> [--limit=N]
-           [--threshold=N] <document.txt
-    """
-    project = get_project(project_id)
-    text = sys.stdin.read()
-    backend_params = parse_backend_params(backend_param)
-    hit_filter = HitFilter(limit=limit, threshold=threshold)
-    hits = hit_filter(project.analyze(text, backend_params))
-    with open(subject_file) as subjfile:
-        gold_subjects = annif.corpus.SubjectSet(subjfile.read())
-
-    template = "{0:<20}\t{1}"
-    eval_batch = annif.eval.EvaluationBatch(project.subjects)
-    eval_batch.evaluate(hits, gold_subjects)
-    for metric, score in eval_batch.results().items():
-        click.echo(template.format(metric + ":", score))
-
-
 @cli.command('evaldir')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
