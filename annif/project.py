@@ -69,7 +69,7 @@ class AnnifProject:
                      str(vectorizer))
 
         logger.debug("Project '%s': initializing backends", self.project_id)
-        for backend, weight in self.backends:
+        for backend, _ in self.backends:
             backend.initialize()
 
         self.initialized = True
@@ -159,7 +159,7 @@ class AnnifProject:
         self._create_subject_index(subject_corpus)
         self._create_vectorizer(subject_corpus)
 
-        for backend, weight in self.backends:
+        for backend, _ in self.backends:
             backend.load_corpus(subject_corpus, project=self)
 
     def load_vocabulary(self, subject_corpus):
@@ -173,7 +173,7 @@ class AnnifProject:
         corpus.set_subject_index(self.subjects)
         self._create_vectorizer(corpus)
 
-        for backend, weight in self.backends:
+        for backend, _ in self.backends:
             backend.load_corpus(corpus, project=self)
 
     def dump(self):
