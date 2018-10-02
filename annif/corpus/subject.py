@@ -99,9 +99,17 @@ class SubjectSet:
     """Represents a set of subjects for a document."""
 
     def __init__(self, subj_data):
-        self.subject_uris = set()
-        self.subject_labels = set()
-        self._parse(subj_data)
+        """initialize a SubjectSet from either a string representation or a
+        tuple (URIs, labels)"""
+
+        if isinstance(subj_data, str):
+            self.subject_uris = set()
+            self.subject_labels = set()
+            self._parse(subj_data)
+        else:
+            uris, labels = subj_data
+            self.subject_uris = set(uris)
+            self.subject_labels = set(labels)
 
     def _parse(self, subj_data):
         for line in subj_data.splitlines():
@@ -121,7 +129,7 @@ class SubjectSet:
 
     def has_uris(self):
         """returns True if the URIs for all subjects are known"""
-        return len(self.subject_uris) == len(self.subject_labels)
+        return len(self.subject_uris) >= len(self.subject_labels)
 
     def as_vector(self, subject_index):
         """Return the hits as a one-dimensional NumPy array in sklearn

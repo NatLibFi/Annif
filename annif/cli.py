@@ -196,31 +196,34 @@ def run_analyzedir(project_id, directory, suffix, force,
 @cli.command('eval')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
-@click.argument('directory', type=click.Path(file_okay=True))
+@click.argument('path', type=click.Path(file_okay=True))
 @click.option('--limit', default=10)
 @click.option('--threshold', default=0.0)
 @click.option('--backend-param', '-b', multiple=True)
-def run_eval(project_id, directory, limit, threshold, backend_param):
+def run_eval(project_id, path, limit, threshold, backend_param):
     """"
-    Evaluate the analysis results for a directory with documents against a
-    gold standard given in subject files.
+    Evaluate the analysis results for a collection of documents, comparing
+    the results of automated indexing against a gold standard. The path may
+    be either a TSV file with short documents or a directory with documents
+    in separate files.
 
-    USAGE: annif eval <project_id> <directory> [--limit=N]
-           [--threshold=N]
+    USAGE: annif eval <project_id> <path> [--limit=N] [--threshold=N]
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
 
     hit_filter = HitFilter(limit=limit, threshold=threshold)
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
-    for docfilename, subjectfilename in annif.corpus.DocumentDirectory(
-            directory, require_subjects=True):
-        with open(docfilename) as docfile:
-            text = docfile.read()
-        hits = hit_filter(project.analyze(text, backend_params))
-        with open(subjectfilename) as subjfile:
-            gold_subjects = annif.corpus.SubjectSet(subjfile.read())
-        eval_batch.evaluate(hits, gold_subjects)
+
+    if os.path.isdir(path):
+        docs = annif.corpus.DocumentDirectory(path, require_subjects=True)
+    else:
+        docs = annif.corpus.DocumentFile(path)
+
+    for doc in docs.documents:
+        hits = hit_filter(project.analyze(doc.text, backend_params))
+        eval_batch.evaluate(hits,
+                            annif.corpus.SubjectSet((doc.uris, doc.labels)))
 
     template = "{0:<20}\t{1}"
     for metric, score in eval_batch.results().items():

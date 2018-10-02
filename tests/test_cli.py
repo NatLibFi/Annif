@@ -292,6 +292,21 @@ def test_eval_param(tmpdir):
     assert float(recall.group(1)) == 0.0
 
 
+def test_eval_docfile(testdatadir):
+    subjectfile = testdatadir.ensure('projects/dummy-fi/subjects')
+    subjectfile.write("<http://example.org/dummy>\tdummy\n" +
+                      "<http://example.org/none>\tnone\n")
+
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents.tsv')
+    result = runner.invoke(annif.cli.cli, ['eval', 'dummy-fi', docfile])
+    assert not result.exception
+    assert result.exit_code == 0
+
+
 def test_optimize(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('dummy')
