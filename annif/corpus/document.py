@@ -6,6 +6,7 @@ import re
 import annif.util
 from .types import Document, DocumentCorpus
 from .convert import DocumentToSubjectCorpusMixin
+from .subject import SubjectSet
 
 
 class DocumentDirectory(DocumentCorpus, DocumentToSubjectCorpusMixin):
@@ -39,7 +40,7 @@ class DocumentDirectory(DocumentCorpus, DocumentToSubjectCorpusMixin):
                 text = docfile.read()
             with open(keyfilename) as keyfile:
                 subjects = SubjectSet(keyfile.read())
-            yield Document(text=text, uris=[subj.uri for subj in subjects])
+            yield Document(text=text, uris=subjects.subject_uris)
 
 
 class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
