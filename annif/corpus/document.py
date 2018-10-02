@@ -6,9 +6,10 @@ import re
 import annif.util
 from .types import Document, DocumentCorpus
 from .convert import DocumentToSubjectCorpusMixin
+from .subject import SubjectSet
 
 
-class DocumentDirectory:
+class DocumentDirectory(DocumentCorpus, DocumentToSubjectCorpusMixin):
     """A directory of files as a full text document corpus"""
 
     def __init__(self, path, require_subjects=False):
@@ -31,6 +32,15 @@ class DocumentDirectory:
                 continue
             if not self.require_subjects:
                 yield (filename, None)
+
+    @property
+    def documents(self):
+        for docfilename, keyfilename in self:
+            with open(docfilename) as docfile:
+                text = docfile.read()
+            with open(keyfilename) as keyfile:
+                subjects = SubjectSet(keyfile.read())
+            yield Document(text=text, uris=subjects.subject_uris)
 
 
 class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
