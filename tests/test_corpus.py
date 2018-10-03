@@ -137,6 +137,21 @@ def test_subjdir(tmpdir):
     assert 'third' in subjects[2].text
 
 
+def test_subjdir_as_doccorpus(tmpdir):
+    tmpdir.join('subj1.txt').write("""http://example.org/subj1 subject one
+        first subject
+        this is the first thing we know about""")
+    tmpdir.join('subj2.txt').write("""http://example.org/subj2 subject two
+        second subject
+        this is the second thing we know about""")
+    tmpdir.join('subj3.txt').write("""http://example.org/subj3 subject three
+        third subject
+        this is the third thing we know about""")
+    subjdir = annif.corpus.SubjectDirectory(str(tmpdir))
+    documents = list(subjdir.documents)
+    assert len(documents) == 6
+
+
 def test_subject_by_uri(subject_index):
     subj_id = subject_index.by_uri('http://www.yso.fi/onto/yso/p7141')
     assert subject_index[subj_id][1] == 'sinetit'
