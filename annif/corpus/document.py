@@ -3,6 +3,7 @@
 import glob
 import os.path
 import re
+import gzip
 import annif.util
 from .types import Document, DocumentCorpus
 from .convert import DocumentToSubjectCorpusMixin
@@ -52,7 +53,14 @@ class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
 
     @property
     def documents(self):
-        with open(self.path) as tsvfile:
+        if self.path.endswith('.gz'):
+            def opener(path):
+                """open a gzip compressed file in text mode"""
+                return gzip.open(path, mode='rt')
+        else:
+            opener = open
+
+        with opener(self.path) as tsvfile:
             for line in tsvfile:
                 text, uris = line.split('\t', maxsplit=1)
                 subjects = [annif.util.cleanup_uri(uri)
