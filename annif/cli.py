@@ -77,8 +77,6 @@ def generate_filter_batches(subjects):
 def run_list_projects():
     """
     List available projects.
-
-    Usage: annif list-projects
     """
 
     template = "{0: <15}{1: <30}{2: <15}"
@@ -95,14 +93,7 @@ def run_list_projects():
 @click.argument('project_id')
 def run_show_project(project_id):
     """
-    Show project information.
-
-    Usage: annif show-project <project_id>
-
-    Outputs a human-readable string representation formatted as follows:
-
-    Project ID:    testproj
-    Language:      fi
+    Show information about a project.
     """
 
     proj = get_project(project_id)
@@ -119,6 +110,9 @@ def run_show_project(project_id):
 @click.argument('project_id')
 @click.argument('subjectfile', type=click.Path(dir_okay=False))
 def run_loadvoc(project_id, subjectfile):
+    """
+    Load a vocabulary for a project.
+    """
     proj = get_project(project_id)
     if annif.corpus.SubjectFileSKOS.is_rdf_file(subjectfile):
         # SKOS/RDF file supported by rdflib
@@ -134,6 +128,9 @@ def run_loadvoc(project_id, subjectfile):
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(), nargs=-1)
 def run_train(project_id, paths):
+    """
+    Train a project on a collection of documents.
+    """
     proj = get_project(project_id)
     documents = open_documents(paths)
     proj.load_documents(documents)
@@ -142,14 +139,13 @@ def run_train(project_id, paths):
 @cli.command('analyze')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
-@click.option('--limit', default=10)
-@click.option('--threshold', default=0.0)
-@click.option('--backend-param', '-b', multiple=True)
+@click.option('--limit', default=10, help='Maximum number of subjects')
+@click.option('--threshold', default=0.0, help='Minimum score threshold')
+@click.option('--backend-param', '-b', multiple=True,
+              help='Backend parameters to override')
 def run_analyze(project_id, limit, threshold, backend_param):
-    """"
-    Analyze a document.
-
-    USAGE: annif analyze <project_id> [--limit=N] [--threshold=N] <document.txt
+    """
+    Analyze a single document from standard input.
     """
     project = get_project(project_id)
     text = sys.stdin.read()
@@ -164,19 +160,21 @@ def run_analyze(project_id, limit, threshold, backend_param):
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('directory', type=click.Path(file_okay=False))
-@click.option('--suffix', default='.annif')
-@click.option('--force/--no-force', default=False)
-@click.option('--limit', default=10)
-@click.option('--threshold', default=0.0)
-@click.option('--backend-param', '-b', multiple=True)
+@click.option(
+    '--suffix',
+    default='.annif',
+    help='File name suffix for result files')
+@click.option('--force/--no-force', default=False,
+              help='Force overwriting of existing result files')
+@click.option('--limit', default=10, help='Maximum number of subjects')
+@click.option('--threshold', default=0.0, help='Minimum score threshold')
+@click.option('--backend-param', '-b', multiple=True,
+              help='Backend parameters to override')
 def run_analyzedir(project_id, directory, suffix, force,
                    limit, threshold, backend_param):
-    """"
+    """
     Analyze a directory with documents. Write the results in TSV files
     with the given suffix.
-
-    USAGE: annif analyzedir <project_id> <directory> [--suffix=SUFFIX]
-                            [--force=FORCE] [--limit=N] [--threshold=N]
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
@@ -202,17 +200,17 @@ def run_analyzedir(project_id, directory, suffix, force,
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(), nargs=-1)
-@click.option('--limit', default=10)
-@click.option('--threshold', default=0.0)
-@click.option('--backend-param', '-b', multiple=True)
+@click.option('--limit', default=10, help='Maximum number of subjects')
+@click.option('--threshold', default=0.0, help='Minimum score threshold')
+@click.option('--backend-param', '-b', multiple=True,
+              help='Backend parameters to override')
 def run_eval(project_id, paths, limit, threshold, backend_param):
-    """"
-    Evaluate the analysis results for a collection of documents, comparing
-    the results of automated indexing against a gold standard. The path may
-    be either a TSV file with short documents or a directory with documents
-    in separate files.
+    """
+    Analyze documents and evaluate the result.
 
-    USAGE: annif eval <project_id> <path> [--limit=N] [--threshold=N]
+    Compare the results of automated indexing against a gold standard. The
+    path may be either a TSV file with short documents or a directory with
+    documents in separate files.
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
@@ -235,15 +233,16 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(), nargs=-1)
-@click.option('--backend-param', '-b', multiple=True)
+@click.option('--backend-param', '-b', multiple=True,
+              help='Backend parameters to override')
 def run_optimize(project_id, paths, backend_param):
-    """"
+    """
+    Analyze documents, testing multiple limits and thresholds.
+
     Evaluate the analysis results for a directory with documents against a
     gold standard given in subject files. Test different limit/threshold
     values and report the precision, recall and F-measure of each combination
     of settings.
-
-    USAGE: annif optimize <project_id> <directory>
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
