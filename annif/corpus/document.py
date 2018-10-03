@@ -55,6 +55,7 @@ class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
     def documents(self):
         if self.path.endswith('.gz'):
             def opener(path):
+                """open a gzip compressed file in text mode"""
                 return gzip.open(path, mode='rt')
         else:
             opener = open
