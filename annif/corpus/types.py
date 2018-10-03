@@ -4,7 +4,7 @@ import abc
 import collections
 
 
-Document = collections.namedtuple('Document', 'text uris')
+Document = collections.namedtuple('Document', 'text uris labels')
 
 
 class DocumentCorpus(metaclass=abc.ABCMeta):

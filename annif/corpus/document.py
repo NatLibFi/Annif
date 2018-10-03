@@ -40,7 +40,8 @@ class DocumentDirectory(DocumentCorpus, DocumentToSubjectCorpusMixin):
                 text = docfile.read()
             with open(keyfilename) as keyfile:
                 subjects = SubjectSet(keyfile.read())
-            yield Document(text=text, uris=subjects.subject_uris)
+            yield Document(text=text, uris=subjects.subject_uris,
+                           labels=subjects.subject_labels)
 
 
 class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
@@ -56,4 +57,4 @@ class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
                 text, uris = line.split('\t', maxsplit=1)
                 subjects = [annif.util.cleanup_uri(uri)
                             for uri in uris.split()]
-                yield Document(text=text, uris=subjects)
+                yield Document(text=text, uris=subjects, labels=[])

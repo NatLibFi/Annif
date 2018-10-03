@@ -292,7 +292,22 @@ def test_eval_param(tmpdir):
     assert float(recall.group(1)) == 0.0
 
 
-def test_optimize(tmpdir):
+def test_eval_docfile(testdatadir):
+    subjectfile = testdatadir.ensure('projects/dummy-fi/subjects')
+    subjectfile.write("<http://example.org/dummy>\tdummy\n" +
+                      "<http://example.org/none>\tnone\n")
+
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents.tsv')
+    result = runner.invoke(annif.cli.cli, ['eval', 'dummy-fi', docfile])
+    assert not result.exception
+    assert result.exit_code == 0
+
+
+def test_optimize_dir(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('dummy')
     tmpdir.join('doc2.txt').write('doc2')
@@ -305,13 +320,26 @@ def test_optimize(tmpdir):
     assert not result.exception
     assert result.exit_code == 0
 
-    precision = re.search(r'Best Precision .*?doc.*?:\s+(\d.\d+)',
+    precision = re.search(r'Best\s+Precision .*?doc.*?:\s+(\d.\d+)',
                           result.output)
     assert float(precision.group(1)) == 0.5
-    recall = re.search(r'Best Recall .*?doc.*?:\s+(\d.\d+)', result.output)
+    recall = re.search(r'Best\s+Recall .*?doc.*?:\s+(\d.\d+)', result.output)
     assert float(recall.group(1)) == 0.5
-    f_measure = re.search(r'Best F1 score .*?doc.*?:\s+(\d.\d+)',
+    f_measure = re.search(r'Best\s+F1 score .*?doc.*?:\s+(\d.\d+)',
                           result.output)
     assert float(f_measure.group(1)) == 0.5
     ndocs = re.search(r'Documents evaluated:\s+(\d)', result.output)
     assert int(ndocs.group(1)) == 2
+
+
+def test_optimize_docfile(tmpdir):
+    docfile = tmpdir.join('documents.tsv')
+    docfile.write("""Läntinen\t<http://www.yso.fi/onto/yso/p2557>
+        Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
+        Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
+
+    result = runner.invoke(
+        annif.cli.cli, [
+            'optimize', 'dummy-fi', str(docfile)])
+    assert not result.exception
+    assert result.exit_code == 0
