@@ -73,13 +73,13 @@ def test_loadvoc_rdf(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/subjects').size() > 0
 
 
-def test_loaddocs(testdatadir):
+def test_train(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
         'archaeology',
         'documents.tsv')
-    result = runner.invoke(annif.cli.cli, ['loaddocs', 'tfidf-fi', docfile])
+    result = runner.invoke(annif.cli.cli, ['train', 'tfidf-fi', docfile])
     assert not result.exception
     assert result.exit_code == 0
     assert testdatadir.join('projects/tfidf-fi/vectorizer').exists()
@@ -88,14 +88,14 @@ def test_loaddocs(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
-def test_loaddocs_multiple(testdatadir):
+def test_train_multiple(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
         'archaeology',
         'documents.tsv')
     result = runner.invoke(annif.cli.cli,
-                           ['loaddocs', 'tfidf-fi', docfile, docfile])
+                           ['train', 'tfidf-fi', docfile, docfile])
     assert not result.exception
     assert result.exit_code == 0
     assert testdatadir.join('projects/tfidf-fi/vectorizer').exists()

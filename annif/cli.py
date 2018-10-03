@@ -129,11 +129,11 @@ def run_loadvoc(project_id, subjectfile):
     proj.load_vocabulary(subjects)
 
 
-@cli.command('loaddocs')
+@cli.command('train')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(), nargs=-1)
-def run_loaddocs(project_id, paths):
+def run_train(project_id, paths):
     proj = get_project(project_id)
     documents = open_documents(paths)
     proj.load_documents(documents)
