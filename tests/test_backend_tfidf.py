@@ -9,23 +9,23 @@ import unittest.mock
 
 
 @pytest.fixture(scope='module')
-def project(subject_corpus):
+def project(document_corpus):
     proj = unittest.mock.Mock()
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
-    proj.subjects = annif.corpus.SubjectIndex(subject_corpus)
+    proj.subjects = annif.corpus.SubjectIndex(document_corpus)
     proj.vectorizer = TfidfVectorizer(tokenizer=proj.analyzer.tokenize_words)
-    proj.vectorizer.fit([subj.text for subj in subject_corpus.subjects])
+    proj.vectorizer.fit([subj.text for subj in document_corpus.subjects])
     return proj
 
 
-def test_tfidf_load_subjects(datadir, subject_corpus, project):
+def test_tfidf_load_subjects(datadir, document_corpus, project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
         params={'limit': 10},
         datadir=str(datadir))
 
-    tfidf.load_corpus(subject_corpus, project)
+    tfidf.load_corpus(document_corpus, project)
     assert len(tfidf._index) > 0
     assert datadir.join('tfidf-index').exists()
     assert datadir.join('tfidf-index').size() > 0

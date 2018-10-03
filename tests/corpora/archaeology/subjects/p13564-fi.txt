@@ -1,6 +1,0 @@
-http://www.yso.fi/onto/yso/p13564 termoluminesenssi
-termoluminesenssi termoluminesenssi
-Elintarvikkeiden säteilytyksen osoittaminen termoluminesenssimenetelmällä
-Kahdella TL-materiaalilla varustetun henkilökohtaisen annosmittarin säteilynmittausominaisuudet
-Luminesenssiajoitus, taustasäteily ja vuosikymmenten takaiset kaivauslöydöt
-Valoreaktio II:n fluoresenssin, termoluminesenssin ja viivästyneen luminesenssin yhteys

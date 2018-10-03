@@ -9,14 +9,14 @@ import unittest.mock
 
 
 @pytest.fixture(scope='module')
-def project(subject_corpus):
+def project(document_corpus):
     proj = unittest.mock.Mock()
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
-    proj.subjects = annif.corpus.SubjectIndex(subject_corpus)
+    proj.subjects = annif.corpus.SubjectIndex(document_corpus)
     return proj
 
 
-def test_fasttext_load_subjects(datadir, subject_corpus, project):
+def test_fasttext_load_subjects(datadir, document_corpus, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
@@ -28,7 +28,7 @@ def test_fasttext_load_subjects(datadir, subject_corpus, project):
             'loss': 'hs'},
         datadir=str(datadir))
 
-    fasttext.load_corpus(subject_corpus, project)
+    fasttext.load_corpus(document_corpus, project)
     assert fasttext._model is not None
     assert datadir.join('fasttext-model').exists()
     assert datadir.join('fasttext-model').size() > 0
