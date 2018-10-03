@@ -104,29 +104,6 @@ def test_loaddocs_multiple(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
-def test_load(testdatadir):
-    with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
-    with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/vectorizer')))
-    with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/tfidf-index')))
-    subjdir = os.path.join(
-        os.path.dirname(__file__),
-        'corpora',
-        'archaeology',
-        'subjects')
-    result = runner.invoke(annif.cli.cli, ['load', 'tfidf-fi', subjdir])
-    assert not result.exception
-    assert result.exit_code == 0
-    assert testdatadir.join('projects/tfidf-fi/subjects').exists()
-    assert testdatadir.join('projects/tfidf-fi/subjects').size() > 0
-    assert testdatadir.join('projects/tfidf-fi/vectorizer').exists()
-    assert testdatadir.join('projects/tfidf-fi/vectorizer').size() > 0
-    assert testdatadir.join('projects/tfidf-fi/tfidf-index').exists()
-    assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
-
-
 def test_analyze():
     result = runner.invoke(
         annif.cli.cli,

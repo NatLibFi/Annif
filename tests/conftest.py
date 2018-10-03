@@ -36,31 +36,6 @@ def testdatadir(app):
 
 
 @pytest.fixture(scope='module')
-def subject_corpus():
-    subjdir = os.path.join(
-        os.path.dirname(__file__),
-        'corpora',
-        'archaeology',
-        'subjects')
-    return annif.corpus.SubjectDirectory(subjdir)
-
-
-@pytest.fixture(scope='module')
-def subject_index(subject_corpus):
-    return annif.corpus.SubjectIndex(subject_corpus)
-
-
-@pytest.fixture(scope='module')
-def document_corpus():
-    docfile = os.path.join(
-        os.path.dirname(__file__),
-        'corpora',
-        'archaeology',
-        'documents.tsv')
-    return annif.corpus.DocumentFile(docfile)
-
-
-@pytest.fixture(scope='module')
 def vocabulary():
     docfile = os.path.join(
         os.path.dirname(__file__),
@@ -68,3 +43,20 @@ def vocabulary():
         'archaeology',
         'subjects.tsv')
     return annif.corpus.SubjectFileTSV(docfile)
+
+
+@pytest.fixture(scope='module')
+def subject_index(vocabulary):
+    return annif.corpus.SubjectIndex(vocabulary)
+
+
+@pytest.fixture(scope='module')
+def document_corpus(subject_index):
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents.tsv')
+    doc_corpus = annif.corpus.DocumentFile(docfile)
+    doc_corpus.set_subject_index(subject_index)
+    return doc_corpus

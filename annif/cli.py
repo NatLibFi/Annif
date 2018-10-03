@@ -139,16 +139,6 @@ def run_loaddocs(project_id, paths):
     proj.load_documents(documents)
 
 
-@cli.command('load')
-@click_log.simple_verbosity_option(logger)
-@click.argument('project_id')
-@click.argument('directory', type=click.Path(file_okay=False))
-def run_load(project_id, directory):
-    proj = get_project(project_id)
-    subjects = annif.corpus.SubjectDirectory(directory)
-    proj.load_subjects(subjects)
-
-
 @cli.command('analyze')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')

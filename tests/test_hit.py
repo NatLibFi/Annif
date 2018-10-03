@@ -36,8 +36,8 @@ def test_hitfilter_zero_score():
     assert len(hits) == 0
 
 
-def test_analysishits_as_vector(subject_corpus):
-    subjects = SubjectIndex(subject_corpus)
+def test_analysishits_as_vector(document_corpus):
+    subjects = SubjectIndex(document_corpus)
     hits = AnalysisResult([AnalysisHit(uri='http://www.yso.fi/onto/yso/p7141',
                                        label='sinetit', score=1.0),
                            AnalysisHit(uri='http://www.yso.fi/onto/yso/p6479',
