@@ -1,5 +1,6 @@
 """Unit tests for corpus functionality in Annif"""
 
+import gzip
 import annif.corpus
 
 
@@ -154,3 +155,24 @@ def test_subject_by_label(subject_index):
 def test_subject_by_label_missing(subject_index):
     subj_id = subject_index.by_label('nonexistent')
     assert subj_id is None
+
+
+def test_docfile_plain(tmpdir):
+    docfile = tmpdir.join('documents.tsv')
+    docfile.write("""Läntinen\t<http://www.yso.fi/onto/yso/p2557>
+        Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
+        Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
+
+    docs = annif.corpus.DocumentFile(str(docfile))
+    assert len(list(docs.documents)) == 3
+
+
+def test_docfile_gzipped(tmpdir):
+    docfile = tmpdir.join('documents.tsv.gz')
+    with gzip.open(str(docfile), 'wt') as gzf:
+        gzf.write("""Pohjoinen\t<http://www.yso.fi/onto/yso/p2557>
+            Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
+            Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
+
+    docs = annif.corpus.DocumentFile(str(docfile))
+    assert len(list(docs.documents)) == 3
