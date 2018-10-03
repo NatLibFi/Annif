@@ -33,15 +33,23 @@ def get_project(project_id):
         sys.exit(1)
 
 
-def open_documents(path):
-    """Helper function to open a document corpus from a path that is either
-    a TSV file or a directory of TXT files and return it as an instance of
-    DocumentCorpus."""
+def open_documents(paths):
+    """Helper function to open a document corpus from a list of pathnames,
+    each of which is either a TSV file or a directory of TXT files. The
+    corpus will be returned as an instance of DocumentCorpus."""
 
-    if os.path.isdir(path):
-        docs = annif.corpus.DocumentDirectory(path, require_subjects=True)
+    def open_doc_path(path):
+        """open a single path and return it as a DocumentCorpus"""
+        if os.path.isdir(path):
+            return annif.corpus.DocumentDirectory(path, require_subjects=True)
+        else:
+            return annif.corpus.DocumentFile(path)
+
+    if len(paths) > 1:
+        corpora = [open_doc_path(path) for path in paths]
+        docs = annif.corpus.CombinedCorpus(corpora)
     else:
-        docs = annif.corpus.DocumentFile(path)
+        docs = open_doc_path(paths[0])
     return docs
 
 
@@ -125,14 +133,10 @@ def run_loadvoc(project_id, subjectfile):
 @cli.command('loaddocs')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
-@click.argument('docfile', type=click.Path(dir_okay=False), nargs=-1)
-def run_loaddocs(project_id, docfile):
+@click.argument('paths', type=click.Path(), nargs=-1)
+def run_loaddocs(project_id, paths):
     proj = get_project(project_id)
-    if len(docfile) > 1:
-        corpora = [annif.corpus.DocumentFile(docfn) for docfn in docfile]
-        documents = annif.corpus.CombinedCorpus(corpora)
-    else:
-        documents = annif.corpus.DocumentFile(docfile[0])
+    documents = open_documents(paths)
     proj.load_documents(documents)
 
 
@@ -208,11 +212,11 @@ def run_analyzedir(project_id, directory, suffix, force,
 @cli.command('eval')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
-@click.argument('path', type=click.Path(file_okay=True, dir_okay=True))
+@click.argument('paths', type=click.Path(), nargs=-1)
 @click.option('--limit', default=10)
 @click.option('--threshold', default=0.0)
 @click.option('--backend-param', '-b', multiple=True)
-def run_eval(project_id, path, limit, threshold, backend_param):
+def run_eval(project_id, paths, limit, threshold, backend_param):
     """"
     Evaluate the analysis results for a collection of documents, comparing
     the results of automated indexing against a gold standard. The path may
@@ -227,7 +231,7 @@ def run_eval(project_id, path, limit, threshold, backend_param):
     hit_filter = HitFilter(limit=limit, threshold=threshold)
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
 
-    docs = open_documents(path)
+    docs = open_documents(paths)
     for doc in docs.documents:
         hits = hit_filter(project.analyze(doc.text, backend_params))
         eval_batch.evaluate(hits,
@@ -241,9 +245,9 @@ def run_eval(project_id, path, limit, threshold, backend_param):
 @cli.command('optimize')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
-@click.argument('path', type=click.Path(file_okay=True, dir_okay=True))
+@click.argument('paths', type=click.Path(), nargs=-1)
 @click.option('--backend-param', '-b', multiple=True)
-def run_optimize(project_id, path, backend_param):
+def run_optimize(project_id, paths, backend_param):
     """"
     Evaluate the analysis results for a directory with documents against a
     gold standard given in subject files. Test different limit/threshold
@@ -258,7 +262,7 @@ def run_optimize(project_id, path, backend_param):
     filter_batches = generate_filter_batches(project.subjects)
 
     ndocs = 0
-    docs = open_documents(path)
+    docs = open_documents(paths)
     for doc in docs.documents:
         hits = project.analyze(doc.text, backend_params)
         gold_subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
