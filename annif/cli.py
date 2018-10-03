@@ -33,6 +33,18 @@ def get_project(project_id):
         sys.exit(1)
 
 
+def open_documents(path):
+    """Helper function to open a document corpus from a path that is either
+    a TSV file or a directory of TXT files and return it as an instance of
+    DocumentCorpus."""
+
+    if os.path.isdir(path):
+        docs = annif.corpus.DocumentDirectory(path, require_subjects=True)
+    else:
+        docs = annif.corpus.DocumentFile(path)
+    return docs
+
+
 def parse_backend_params(backend_param):
     """Parse a list of backend parameters given with the --backend-param
     option into a nested dict structure"""
@@ -215,11 +227,7 @@ def run_eval(project_id, path, limit, threshold, backend_param):
     hit_filter = HitFilter(limit=limit, threshold=threshold)
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
 
-    if os.path.isdir(path):
-        docs = annif.corpus.DocumentDirectory(path, require_subjects=True)
-    else:
-        docs = annif.corpus.DocumentFile(path)
-
+    docs = open_documents(path)
     for doc in docs.documents:
         hits = hit_filter(project.analyze(doc.text, backend_params))
         eval_batch.evaluate(hits,
@@ -250,11 +258,7 @@ def run_optimize(project_id, path, backend_param):
     filter_batches = generate_filter_batches(project.subjects)
 
     ndocs = 0
-    if os.path.isdir(path):
-        docs = annif.corpus.DocumentDirectory(path, require_subjects=True)
-    else:
-        docs = annif.corpus.DocumentFile(path)
-
+    docs = open_documents(path)
     for doc in docs.documents:
         hits = project.analyze(doc.text, backend_params)
         gold_subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
