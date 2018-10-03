@@ -42,8 +42,7 @@ def open_documents(paths):
         """open a single path and return it as a DocumentCorpus"""
         if os.path.isdir(path):
             return annif.corpus.DocumentDirectory(path, require_subjects=True)
-        else:
-            return annif.corpus.DocumentFile(path)
+        return annif.corpus.DocumentFile(path)
 
     if len(paths) > 1:
         corpora = [open_doc_path(path) for path in paths]
