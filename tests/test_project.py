@@ -52,18 +52,18 @@ def test_get_project_nonexistent(app):
 
 def test_project_load_vocabulary(app, vocabulary, testdatadir):
     with app.app_context():
-        project = annif.project.get_project('fasttext-fi')
+        project = annif.project.get_project('tfidf-fi')
     project.load_vocabulary(vocabulary)
-    assert testdatadir.join('projects/fasttext-fi/subjects').exists()
-    assert testdatadir.join('projects/fasttext-fi/subjects').size() > 0
+    assert testdatadir.join('projects/tfidf-fi/subjects').exists()
+    assert testdatadir.join('projects/tfidf-fi/subjects').size() > 0
 
 
 def test_project_load_documents(app, document_corpus, testdatadir):
     with app.app_context():
-        project = annif.project.get_project('fasttext-fi')
+        project = annif.project.get_project('tfidf-fi')
     project.load_documents(document_corpus)
-    assert testdatadir.join('projects/fasttext-fi/fasttext-model').exists()
-    assert testdatadir.join('projects/fasttext-fi/fasttext-model').size() > 0
+    assert testdatadir.join('projects/tfidf-fi/tfidf-index').exists()
+    assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
 def test_project_analyze(app):
