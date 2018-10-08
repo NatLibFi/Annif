@@ -16,7 +16,7 @@ def project(document_corpus):
     return proj
 
 
-def test_fasttext_load_subjects(datadir, document_corpus, project):
+def test_fasttext_load_documents(datadir, document_corpus, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',

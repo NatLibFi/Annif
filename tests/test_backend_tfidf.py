@@ -18,7 +18,7 @@ def project(document_corpus):
     return proj
 
 
-def test_tfidf_load_subjects(datadir, document_corpus, project):
+def test_tfidf_load_documents(datadir, document_corpus, project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',

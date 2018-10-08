@@ -66,18 +66,6 @@ def test_project_load_documents(app, document_corpus, testdatadir):
     assert testdatadir.join('projects/fasttext-fi/fasttext-model').size() > 0
 
 
-def test_project_load_subjects(app, document_corpus, testdatadir):
-    with app.app_context():
-        project = annif.project.get_project('tfidf-fi')
-    project.load_subjects(document_corpus)
-    assert testdatadir.join('projects/tfidf-fi/subjects').exists()
-    assert testdatadir.join('projects/tfidf-fi/subjects').size() > 0
-    assert testdatadir.join('projects/tfidf-fi/vectorizer').exists()
-    assert testdatadir.join('projects/tfidf-fi/vectorizer').size() > 0
-    assert testdatadir.join('projects/tfidf-fi/tfidf-index').exists()
-    assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
-
-
 def test_project_analyze(app):
     with app.app_context():
         project = annif.project.get_project('dummy-en')
