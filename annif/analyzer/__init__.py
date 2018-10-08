@@ -3,6 +3,7 @@
 import re
 from . import simple
 from . import snowball
+from . import voikko
 
 _analyzers = {}
 
@@ -31,3 +32,4 @@ def get_analyzer(analyzerspec):
 
 register_analyzer(simple.SimpleAnalyzer)
 register_analyzer(snowball.SnowballAnalyzer)
+register_analyzer(voikko.VoikkoAnalyzer)
