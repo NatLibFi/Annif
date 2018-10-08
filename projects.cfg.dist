@@ -6,6 +6,7 @@ language=fi
 backends=tfidf
 analyzer=snowball(finnish)
 limit=100
+vocab=yso-fi
 
 [tfidf-sv]
 name=TF-IDF Swedish
@@ -13,6 +14,7 @@ language=sv
 backends=tfidf
 analyzer=snowball(swedish)
 limit=100
+vocab=yso-sv
 
 [tfidf-en]
 name=TF-IDF English
@@ -20,6 +22,7 @@ language=en
 backends=tfidf
 analyzer=snowball(english)
 limit=100
+vocab=yso-en
 
 [fasttext-fi]
 name=fastText Finnish
@@ -32,6 +35,7 @@ epoch=30
 loss=hs
 limit=100
 chunksize=24
+vocab=yso-fi
 
 [fasttext-sv]
 name=fastText Swedish
@@ -44,6 +48,7 @@ epoch=30
 loss=hs
 limit=100
 chunksize=24
+vocab=yso-sv
 
 [fasttext-en]
 name=fastText English
@@ -56,24 +61,28 @@ epoch=30
 loss=hs
 limit=100
 chunksize=24
+vocab=yso-en
 
 [maui-fi]
 name=Maui Finnish
 language=fi
 backends=http
 endpoint=http://localhost:8080/maui/jyu-fin/analyze
+vocab=yso-fi
 
 [maui-sv]
 name=Maui Swedish
 language=sv
 backends=http
 endpoint=http://localhost:8080/maui/jyu-swe/analyze
+vocab=yso-sv
 
 [maui-en]
 name=Maui English
 language=en
 backends=http
 endpoint=http://localhost:8080/maui/jyu-eng/analyze
+vocab=yso-en
 
 [annif-api-fi]
 name=Annif prototype API Finnish
@@ -81,6 +90,7 @@ language=fi
 backends=http
 endpoint=http://api.annif.org/v0/autoindex
 project=yso-finna-fi
+vocab=yso-fi
 
 [annif-api-sv]
 name=Annif prototype API Swedish
@@ -88,6 +98,7 @@ language=sv
 backends=http
 endpoint=http://api.annif.org/v0/autoindex
 project=yso-finna-sv
+vocab=yso-sv
 
 [annif-api-en]
 name=Annif prototype API English
@@ -95,3 +106,4 @@ language=en
 backends=http
 endpoint=http://api.annif.org/v0/autoindex
 project=yso-finna-en
+vocab=yso-en
