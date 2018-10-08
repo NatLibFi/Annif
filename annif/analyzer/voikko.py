@@ -1,4 +1,4 @@
-"""Snowball analyzer for Annif, based on nltk Snowball stemmer."""
+"""Voikko analyzer for Annif, based on libvoikko library."""
 
 import functools
 import voikko.libvoikko
