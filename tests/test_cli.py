@@ -54,8 +54,8 @@ def test_loadvoc_tsv(testdatadir):
     result = runner.invoke(annif.cli.cli, ['loadvoc', 'tfidf-fi', subjectfile])
     assert not result.exception
     assert result.exit_code == 0
-    assert testdatadir.join('projects/tfidf-fi/subjects').exists()
-    assert testdatadir.join('projects/tfidf-fi/subjects').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
 
 
 def test_loadvoc_rdf(testdatadir):
@@ -69,8 +69,8 @@ def test_loadvoc_rdf(testdatadir):
     result = runner.invoke(annif.cli.cli, ['loadvoc', 'tfidf-fi', subjectfile])
     assert not result.exception
     assert result.exit_code == 0
-    assert testdatadir.join('projects/tfidf-fi/subjects').exists()
-    assert testdatadir.join('projects/tfidf-fi/subjects').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
 
 
 def test_train(testdatadir):
@@ -174,7 +174,7 @@ def test_analyzedir(tmpdir):
 
 
 def test_eval_label(tmpdir, testdatadir):
-    subjectfile = testdatadir.ensure('projects/dummy-en/subjects')
+    subjectfile = testdatadir.ensure('vocabs/dummy-en/subjects')
     subjectfile.write("<http://example.org/dummy>\tdummy\n" +
                       "<http://example.org/none>\tnone\n")
 
@@ -270,7 +270,7 @@ def test_eval_param(tmpdir):
 
 
 def test_eval_docfile(testdatadir):
-    subjectfile = testdatadir.ensure('projects/dummy-fi/subjects')
+    subjectfile = testdatadir.ensure('vocabs/dummy-fi/subjects')
     subjectfile.write("<http://example.org/dummy>\tdummy\n" +
                       "<http://example.org/none>\tnone\n")
 

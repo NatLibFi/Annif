@@ -12,6 +12,7 @@ import annif.corpus
 import annif.hit
 import annif.backend
 import annif.util
+import annif.vocab
 
 logger = annif.logger
 
@@ -21,7 +22,7 @@ class AnnifProject:
 
     # defaults for unitialized instances
     _analyzer = None
-    _subjects = None
+    _vocab = None
     _vectorizer = None
     initialized = False
 
@@ -30,6 +31,8 @@ class AnnifProject:
         self.name = config['name']
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
+        self.vocab_id = config.get('vocab', None)
+        self._base_datadir = datadir
         self._datadir = os.path.join(datadir, 'projects', self.project_id)
         self.backends = self._initialize_backends(config)
 
@@ -100,15 +103,15 @@ class AnnifProject:
         return self._analyzer
 
     @property
+    def vocab(self):
+        if self._vocab is None and self.vocab_id:
+            self._vocab = annif.vocab.AnnifVocabulary(self.vocab_id,
+                                                      self._base_datadir)
+        return self._vocab
+
+    @property
     def subjects(self):
-        if self._subjects is None:
-            path = os.path.join(self._get_datadir(), 'subjects')
-            if os.path.exists(path):
-                logger.debug('loading subjects from %s', path)
-                self._subjects = annif.corpus.SubjectIndex.load(path)
-            else:
-                logger.warning("subject file '%s' not found", path)
-        return self._subjects
+        return self.vocab.subjects
 
     @property
     def vectorizer(self):
@@ -133,10 +136,6 @@ class AnnifProject:
         logger.debug('%d hits after merging', len(merged_hits))
         return merged_hits
 
-    def _create_subject_index(self, subject_corpus):
-        self._subjects = annif.corpus.SubjectIndex(subject_corpus)
-        annif.util.atomic_save(self._subjects, self._get_datadir(), 'subjects')
-
     def _create_vectorizer(self, subjectcorpus):
         if True not in [
                 be[0].needs_subject_vectorizer for be in self.backends]:
@@ -151,11 +150,6 @@ class AnnifProject:
             self._get_datadir(),
             'vectorizer',
             method=joblib.dump)
-
-    def load_vocabulary(self, subject_corpus):
-        """load only subjects from a subject index"""
-
-        self._create_subject_index(subject_corpus)
 
     def load_documents(self, corpus):
         """load training documents from a metadata source"""
