@@ -16,7 +16,7 @@ def project(document_corpus):
     return proj
 
 
-def test_fasttext_load_subjects(datadir, document_corpus, project):
+def test_fasttext_load_documents(datadir, document_corpus, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
@@ -57,24 +57,6 @@ def test_fasttext_load_documents_unknown_subject(tmpdir, datadir, project):
     assert datadir.join('fasttext-model').size() > 0
 
 
-def test_fasttext_load_documents(datadir, document_corpus, project):
-    fasttext_type = annif.backend.get_backend("fasttext")
-    fasttext = fasttext_type(
-        backend_id='fasttext',
-        params={
-            'limit': 50,
-            'dim': 100,
-            'lr': 0.25,
-            'epoch': 20,
-            'loss': 'hs'},
-        datadir=str(datadir))
-
-    fasttext.load_corpus(document_corpus, project)
-    assert fasttext._model is not None
-    assert datadir.join('fasttext-model').exists()
-    assert datadir.join('fasttext-model').size() > 0
-
-
 def test_fasttext_analyze(datadir, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
@@ -95,7 +77,7 @@ def test_fasttext_analyze(datadir, project):
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan.""", project)
 
-    assert len(results) == 50
+    assert len(results) > 0
     assert 'http://www.yso.fi/onto/yso/p1265' in [
         result.uri for result in results]
     assert 'arkeologia' in [result.label for result in results]

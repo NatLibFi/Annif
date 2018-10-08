@@ -152,16 +152,6 @@ class AnnifProject:
             'vectorizer',
             method=joblib.dump)
 
-    def load_subjects(self, subject_corpus):
-        """load subjects (vocabulary and text) from a subject corpus (e.g.
-        SubjectDirectory)"""
-
-        self._create_subject_index(subject_corpus)
-        self._create_vectorizer(subject_corpus)
-
-        for backend, _ in self.backends:
-            backend.load_corpus(subject_corpus, project=self)
-
     def load_vocabulary(self, subject_corpus):
         """load only subjects from a subject index"""
 
