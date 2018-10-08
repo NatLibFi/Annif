@@ -77,7 +77,7 @@ def test_fasttext_analyze(datadir, project):
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan.""", project)
 
-    assert len(results) == 50
+    assert len(results) > 0
     assert 'http://www.yso.fi/onto/yso/p1265' in [
         result.uri for result in results]
     assert 'arkeologia' in [result.label for result in results]
