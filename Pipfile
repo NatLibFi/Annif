@@ -15,6 +15,7 @@ bumpversion = "*"
 [packages]
 "e1839a8" = {editable = true, path = "."}
 connexion = "*"
+flask-cors = "*"
 click-log = "*"
 nltk = "*"
 gensim = "*"

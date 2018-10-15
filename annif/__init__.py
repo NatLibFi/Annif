@@ -3,6 +3,7 @@
 import os
 import logging
 import connexion
+from flask_cors import CORS
 
 logger = logging.getLogger('annif')
 
@@ -26,6 +27,9 @@ def create_app(script_info=None, config_name=None):
     cxapp.app.config.from_envvar('ANNIF_SETTINGS', silent=True)
 
     cxapp.add_api('annif.yaml')
+
+    # add CORS support
+    CORS(cxapp.app)
 
     annif.project.initialize_projects(cxapp.app)
 

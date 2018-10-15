@@ -4,6 +4,7 @@ from swagger_tester import swagger_test
 import time
 import threading
 import os
+import requests
 
 
 def test_swagger(app):
@@ -20,3 +21,7 @@ def test_swagger(app):
     thread.start()
     time.sleep(1)
     swagger_test(app_url='http://localhost:8000/v1')
+
+    # test that the service supports CORS
+    req = requests.get('http://localhost:8000/v1/projects')
+    assert req.headers['access-control-allow-origin'] == '*'
