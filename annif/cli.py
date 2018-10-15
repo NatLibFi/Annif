@@ -14,6 +14,7 @@ import annif.corpus
 import annif.eval
 import annif.project
 from annif.hit import HitFilter
+from annif.exception import AnnifException
 
 logger = annif.logger
 click_log.basic_config(logger)
@@ -151,7 +152,11 @@ def run_analyze(project_id, limit, threshold, backend_param):
     text = sys.stdin.read()
     backend_params = parse_backend_params(backend_param)
     hit_filter = HitFilter(limit, threshold)
-    hits = hit_filter(project.analyze(text, backend_params))
+    try:
+        hits = hit_filter(project.analyze(text, backend_params))
+    except AnnifException as err:
+        click.echo(err.format_message())
+        sys.exit(1)
     for hit in hits:
         click.echo("<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score))
 

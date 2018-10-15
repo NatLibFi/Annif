@@ -13,6 +13,7 @@ import annif.hit
 import annif.backend
 import annif.util
 import annif.vocab
+from annif.exception import NotInitializedException
 
 logger = annif.logger
 
@@ -66,14 +67,19 @@ class AnnifProject:
         logger.debug("Project '%s': initialized subjects: %s",
                      self.project_id,
                      str(subjects))
-        vectorizer = self.vectorizer
-        logger.debug("Project '%s': initialized vectorizer: %s",
-                     self.project_id,
-                     str(vectorizer))
-
+        try:
+            vectorizer = self.vectorizer
+            logger.debug("Project '%s': initialized vectorizer: %s",
+                         self.project_id,
+                         str(vectorizer))
+        except NotInitializedException as err:
+            logger.warning(err.format_message())
         logger.debug("Project '%s': initializing backends", self.project_id)
         for backend, _ in self.backends:
-            backend.initialize()
+            try:
+                backend.initialize()
+            except NotInitializedException as err:
+                logger.warning(err.format_message())
 
         self.initialized = True
 
@@ -121,7 +127,9 @@ class AnnifProject:
                 logger.debug('loading vectorizer from %s', path)
                 self._vectorizer = joblib.load(path)
             else:
-                logger.warning("vectorizer file '%s' not found", path)
+                raise NotInitializedException(
+                    "vectorizer file '{}' not found".format(path),
+                    project_id=self.project_id)
         return self._vectorizer
 
     def analyze(self, text, backend_params=None):
