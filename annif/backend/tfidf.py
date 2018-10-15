@@ -6,6 +6,7 @@ import gensim.similarities
 from gensim.matutils import Sparse2Corpus
 import annif.util
 from annif.hit import AnalysisResult
+from annif.exception import NotInitializedException
 from . import backend
 
 
@@ -14,7 +15,6 @@ class TFIDFBackend(backend.AnnifBackend):
     name = "tfidf"
     needs_subject_index = True
     needs_subject_vectorizer = True
-    can_load_subjects = True
 
     # defaults for uninitialized instances
     _index = None
@@ -29,8 +29,9 @@ class TFIDFBackend(backend.AnnifBackend):
                 self._index = gensim.similarities.SparseMatrixSimilarity.load(
                     path)
             else:
-                self.warning(
-                    'load failed, similarity index {} not found!'.format(path))
+                raise NotInitializedException(
+                    'similarity index {} not found'.format(path),
+                    backend_id=self.backend_id)
 
     def load_corpus(self, corpus, project):
         self.info('creating similarity index')

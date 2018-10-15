@@ -4,6 +4,7 @@ import collections
 import os.path
 import annif.util
 from annif.hit import AnalysisHit, AnalysisResult
+from annif.exception import NotInitializedException
 import fastText
 from . import backend
 
@@ -13,8 +14,6 @@ class FastTextBackend(backend.AnnifBackend):
 
     name = "fasttext"
     needs_subject_index = True
-    can_load_documents = True
-    can_load_subjects = True
 
     FASTTEXT_PARAMS = {
         'lr': float,
@@ -48,7 +47,9 @@ class FastTextBackend(backend.AnnifBackend):
                 self.debug('loaded model {}'.format(str(self._model)))
                 self.debug('dim: {}'.format(self._model.get_dimension()))
             else:
-                self.warning('load failed, model {} not found!'.format(path))
+                raise NotInitializedException(
+                    'model {} not found'.format(path),
+                    backend_id=self.backend_id)
 
     @classmethod
     def _id_to_label(cls, subject_id):

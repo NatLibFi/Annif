@@ -13,8 +13,6 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     name = None
     needs_subject_index = False
     needs_subject_vectorizer = False
-    can_load_subjects = False
-    can_load_documents = False
 
     def __init__(self, backend_id, params, datadir):
         """Initialize backend with specific parameters. The

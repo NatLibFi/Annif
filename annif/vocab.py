@@ -5,6 +5,7 @@ import os.path
 import annif
 import annif.corpus
 import annif.util
+from annif.exception import NotInitializedException
 
 logger = annif.logger
 
@@ -39,7 +40,8 @@ class AnnifVocabulary:
                 logger.debug('loading subjects from %s', path)
                 self._subjects = annif.corpus.SubjectIndex.load(path)
             else:
-                logger.warning("subject file '%s' not found", path)
+                raise NotInitializedException(
+                    "subject file {} not found".format(path))
         return self._subjects
 
     def load_vocabulary(self, subject_corpus):

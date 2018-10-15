@@ -191,7 +191,8 @@ def run_analyzedir(project_id, directory, suffix, force,
                     subjectfilename))
             continue
         with open(subjectfilename, 'w') as subjfile:
-            for hit in hit_filter(project.analyze(text, backend_params)):
+            results = project.analyze(text, backend_params)
+            for hit in hit_filter(results):
                 line = "<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score)
                 click.echo(line, file=subjfile)
 
@@ -220,7 +221,8 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
 
     docs = open_documents(paths)
     for doc in docs.documents:
-        hits = hit_filter(project.analyze(doc.text, backend_params))
+        results = project.analyze(doc.text, backend_params)
+        hits = hit_filter(results)
         eval_batch.evaluate(hits,
                             annif.corpus.SubjectSet((doc.uris, doc.labels)))
 

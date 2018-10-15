@@ -13,6 +13,8 @@ import annif.hit
 import annif.backend
 import annif.util
 import annif.vocab
+from annif.exception import AnnifException, ConfigurationException, \
+    NotInitializedException
 
 logger = annif.logger
 
@@ -34,7 +36,7 @@ class AnnifProject:
         self.vocab_id = config.get('vocab', None)
         self._base_datadir = datadir
         self._datadir = os.path.join(datadir, 'projects', self.project_id)
-        self.backends = self._initialize_backends(config)
+        self.backends = self._setup_backends(config)
 
     def _get_datadir(self):
         """return the path of the directory where this project can store its
@@ -43,7 +45,7 @@ class AnnifProject:
             os.makedirs(self._datadir)
         return self._datadir
 
-    def _initialize_backends(self, config):
+    def _setup_backends(self, config):
         backends = []
         for backend_id, weight in annif.util.parse_sources(config['backends']):
             backend_type = annif.backend.get_backend(backend_id)
@@ -54,26 +56,47 @@ class AnnifProject:
             backends.append((backend, weight))
         return backends
 
-    def initialize(self):
-        """initialize this project and all backends so that they are ready to
-        analyze"""
-        logger.debug("Initializing project '%s'", self.project_id)
+    def _initialize_analyzer(self):
         analyzer = self.analyzer
         logger.debug("Project '%s': initialized analyzer: %s",
                      self.project_id,
                      str(analyzer))
-        subjects = self.subjects
-        logger.debug("Project '%s': initialized subjects: %s",
-                     self.project_id,
-                     str(subjects))
-        vectorizer = self.vectorizer
-        logger.debug("Project '%s': initialized vectorizer: %s",
-                     self.project_id,
-                     str(vectorizer))
 
+    def _initialize_subjects(self):
+        try:
+            subjects = self.subjects
+            logger.debug("Project '%s': initialized subjects: %s",
+                         self.project_id,
+                         str(subjects))
+        except AnnifException as err:
+            logger.warning(err.format_message())
+
+    def _initialize_vectorizer(self):
+        try:
+            vectorizer = self.vectorizer
+            logger.debug("Project '%s': initialized vectorizer: %s",
+                         self.project_id,
+                         str(vectorizer))
+        except AnnifException as err:
+            logger.warning(err.format_message())
+
+    def _initialize_backends(self):
         logger.debug("Project '%s': initializing backends", self.project_id)
         for backend, _ in self.backends:
-            backend.initialize()
+            try:
+                backend.initialize()
+            except AnnifException as err:
+                logger.warning(err.format_message())
+
+    def initialize(self):
+        """initialize this project and all backends so that they are ready to
+        analyze"""
+        logger.debug("Initializing project '%s'", self.project_id)
+
+        self._initialize_analyzer()
+        self._initialize_subjects()
+        self._initialize_vectorizer()
+        self._initialize_backends()
 
         self.initialized = True
 
@@ -104,7 +127,10 @@ class AnnifProject:
 
     @property
     def vocab(self):
-        if self._vocab is None and self.vocab_id:
+        if self._vocab is None:
+            if self.vocab_id is None:
+                raise ConfigurationException("vocab setting is missing",
+                                             project_id=self.project_id)
             self._vocab = annif.vocab.AnnifVocabulary(self.vocab_id,
                                                       self._base_datadir)
         return self._vocab
@@ -121,7 +147,9 @@ class AnnifProject:
                 logger.debug('loading vectorizer from %s', path)
                 self._vectorizer = joblib.load(path)
             else:
-                logger.warning("vectorizer file '%s' not found", path)
+                raise NotInitializedException(
+                    "vectorizer file '{}' not found".format(path),
+                    project_id=self.project_id)
         return self._vectorizer
 
     def analyze(self, text, backend_params=None):
