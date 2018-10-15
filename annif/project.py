@@ -63,10 +63,13 @@ class AnnifProject:
         logger.debug("Project '%s': initialized analyzer: %s",
                      self.project_id,
                      str(analyzer))
-        subjects = self.subjects
-        logger.debug("Project '%s': initialized subjects: %s",
-                     self.project_id,
-                     str(subjects))
+        try:
+            subjects = self.subjects
+            logger.debug("Project '%s': initialized subjects: %s",
+                         self.project_id,
+                         str(subjects))
+        except NotInitializedException as err:
+            logger.warning(err.format_message())
         try:
             vectorizer = self.vectorizer
             logger.debug("Project '%s': initialized vectorizer: %s",

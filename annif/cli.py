@@ -138,7 +138,11 @@ def run_train(project_id, paths):
     """
     proj = get_project(project_id)
     documents = open_documents(paths)
-    proj.load_documents(documents)
+    try:
+        proj.load_documents(documents)
+    except AnnifException as err:
+        click.echo(err.format_message(), err=True)
+        sys.exit(1)
 
 
 @cli.command('analyze')
