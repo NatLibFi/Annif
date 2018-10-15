@@ -204,7 +204,12 @@ def run_analyzedir(project_id, directory, suffix, force,
                     subjectfilename))
             continue
         with open(subjectfilename, 'w') as subjfile:
-            for hit in hit_filter(project.analyze(text, backend_params)):
+            try:
+                results = project.analyze(text, backend_params)
+            except AnnifException as err:
+                click.echo(err.format_message(), err=True)
+                sys.exit(1)
+            for hit in hit_filter(results):
                 line = "<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score)
                 click.echo(line, file=subjfile)
 
@@ -229,11 +234,20 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
     backend_params = parse_backend_params(backend_param)
 
     hit_filter = HitFilter(limit=limit, threshold=threshold)
-    eval_batch = annif.eval.EvaluationBatch(project.subjects)
+    try:
+        eval_batch = annif.eval.EvaluationBatch(project.subjects)
+    except AnnifException as err:
+        click.echo(err.format_message(), err=True)
+        sys.exit(1)
 
     docs = open_documents(paths)
     for doc in docs.documents:
-        hits = hit_filter(project.analyze(doc.text, backend_params))
+        try:
+            results = project.analyze(doc.text, backend_params)
+        except AnnifException as err:
+            click.echo(err.format_message(), err=True)
+            sys.exit(1)
+        hits = hit_filter(results)
         eval_batch.evaluate(hits,
                             annif.corpus.SubjectSet((doc.uris, doc.labels)))
 
@@ -260,12 +274,21 @@ def run_optimize(project_id, paths, backend_param):
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
 
-    filter_batches = generate_filter_batches(project.subjects)
+    try:
+        subjects = project.subjects
+    except AnnifException as err:
+        click.echo(err.format_message(), err=True)
+        sys.exit(1)
+    filter_batches = generate_filter_batches(subjects)
 
     ndocs = 0
     docs = open_documents(paths)
     for doc in docs.documents:
-        hits = project.analyze(doc.text, backend_params)
+        try:
+            hits = project.analyze(doc.text, backend_params)
+        except AnnifException as err:
+            click.echo(err.format_message(), err=True)
+            sys.exit(1)
         gold_subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
         for hit_filter, batch in filter_batches.values():
             batch.evaluate(hit_filter(hits), gold_subjects)
