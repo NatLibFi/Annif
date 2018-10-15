@@ -13,7 +13,7 @@ import annif.hit
 import annif.backend
 import annif.util
 import annif.vocab
-from annif.exception import NotInitializedException
+from annif.exception import ConfigurationException, NotInitializedException
 
 logger = annif.logger
 
@@ -110,7 +110,10 @@ class AnnifProject:
 
     @property
     def vocab(self):
-        if self._vocab is None and self.vocab_id:
+        if self._vocab is None:
+            if self.vocab_id is None:
+                raise ConfigurationException("vocab setting is missing",
+                                             project_id=self.project_id)
             self._vocab = annif.vocab.AnnifVocabulary(self.vocab_id,
                                                       self._base_datadir)
         return self._vocab

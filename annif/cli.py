@@ -121,7 +121,11 @@ def run_loadvoc(project_id, subjectfile):
     else:
         # probably a TSV file
         subjects = annif.corpus.SubjectFileTSV(subjectfile)
-    proj.vocab.load_vocabulary(subjects)
+    try:
+        proj.vocab.load_vocabulary(subjects)
+    except AnnifException as err:
+        click.echo(err.format_message(), err=True)
+        sys.exit(1)
 
 
 @cli.command('train')
@@ -155,7 +159,7 @@ def run_analyze(project_id, limit, threshold, backend_param):
     try:
         hits = hit_filter(project.analyze(text, backend_params))
     except AnnifException as err:
-        click.echo(err.format_message())
+        click.echo(err.format_message(), err=True)
         sys.exit(1)
     for hit in hits:
         click.echo("<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score))

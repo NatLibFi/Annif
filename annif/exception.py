@@ -21,14 +21,24 @@ class AnnifException(Exception):
 
 class NotInitializedException(AnnifException):
     """Exception raised for attempting to use a project or backend that
-    cannot be initialized, most likely since it is misconfigured or not yet
-    functional because of lack of vocabulary or training."""
+    cannot be initialized, most likely since it is not yet functional
+    because of lack of vocabulary or training."""
+
+    prefix = "Couldn't initialize"
 
     def format_message(self):
         if self.project_id is not None:
-            return "Couldn't initialize project '{}': {}".format(self.project_id,
-                                                             self.message)
+            return "{} project '{}': {}".format(self.prefix,
+                                                self.project_id,
+                                                self.message)
         if self.backend_id is not None:
-            return "Couldn't initialize backend '{}': {}".format(self.backend_id,
-                                                             self.message)
-        return "Couldn't initialize: {}".format(self.message)
+            return "{} backend '{}': {}".format(self.prefix,
+                                                self.backend_id,
+                                                self.message)
+        return "{}: {}".format(self.prefix, self.message)
+
+
+class ConfigurationException(AnnifException):
+    """Exception raised when a project or backend is misconfigured."""
+
+    prefix = "Misconfigured"
