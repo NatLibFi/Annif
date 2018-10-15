@@ -36,7 +36,7 @@ class AnnifProject:
         self.vocab_id = config.get('vocab', None)
         self._base_datadir = datadir
         self._datadir = os.path.join(datadir, 'projects', self.project_id)
-        self.backends = self._initialize_backends(config)
+        self.backends = self._setup_backends(config)
 
     def _get_datadir(self):
         """return the path of the directory where this project can store its
@@ -45,7 +45,7 @@ class AnnifProject:
             os.makedirs(self._datadir)
         return self._datadir
 
-    def _initialize_backends(self, config):
+    def _setup_backends(self, config):
         backends = []
         for backend_id, weight in annif.util.parse_sources(config['backends']):
             backend_type = annif.backend.get_backend(backend_id)
@@ -56,14 +56,13 @@ class AnnifProject:
             backends.append((backend, weight))
         return backends
 
-    def initialize(self):
-        """initialize this project and all backends so that they are ready to
-        analyze"""
-        logger.debug("Initializing project '%s'", self.project_id)
+    def _initialize_analyzer(self):
         analyzer = self.analyzer
         logger.debug("Project '%s': initialized analyzer: %s",
                      self.project_id,
                      str(analyzer))
+
+    def _initialize_subjects(self):
         try:
             subjects = self.subjects
             logger.debug("Project '%s': initialized subjects: %s",
@@ -71,6 +70,8 @@ class AnnifProject:
                          str(subjects))
         except AnnifException as err:
             logger.warning(err.format_message())
+
+    def _initialize_vectorizer(self):
         try:
             vectorizer = self.vectorizer
             logger.debug("Project '%s': initialized vectorizer: %s",
@@ -78,12 +79,24 @@ class AnnifProject:
                          str(vectorizer))
         except AnnifException as err:
             logger.warning(err.format_message())
+
+    def _initialize_backends(self):
         logger.debug("Project '%s': initializing backends", self.project_id)
         for backend, _ in self.backends:
             try:
                 backend.initialize()
             except AnnifException as err:
                 logger.warning(err.format_message())
+
+    def initialize(self):
+        """initialize this project and all backends so that they are ready to
+        analyze"""
+        logger.debug("Initializing project '%s'", self.project_id)
+
+        self._initialize_analyzer()
+        self._initialize_subjects()
+        self._initialize_vectorizer()
+        self._initialize_backends()
 
         self.initialized = True
 
