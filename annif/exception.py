@@ -9,7 +9,7 @@ class AnnifException(ClickException):
     that the CLI can automatically handle exceptions."""
 
     def __init__(self, message, project_id=None, backend_id=None):
-        self.message = message
+        super().__init__(message)
         self.project_id = project_id
         self.backend_id = backend_id
 
