@@ -14,7 +14,6 @@ import annif.corpus
 import annif.eval
 import annif.project
 from annif.hit import HitFilter
-from annif.exception import AnnifException
 
 logger = annif.logger
 click_log.basic_config(logger)
@@ -121,11 +120,7 @@ def run_loadvoc(project_id, subjectfile):
     else:
         # probably a TSV file
         subjects = annif.corpus.SubjectFileTSV(subjectfile)
-    try:
-        proj.vocab.load_vocabulary(subjects)
-    except AnnifException as err:
-        click.echo(err.format_message(), err=True)
-        sys.exit(1)
+    proj.vocab.load_vocabulary(subjects)
 
 
 @cli.command('train')
@@ -138,11 +133,7 @@ def run_train(project_id, paths):
     """
     proj = get_project(project_id)
     documents = open_documents(paths)
-    try:
-        proj.load_documents(documents)
-    except AnnifException as err:
-        click.echo(err.format_message(), err=True)
-        sys.exit(1)
+    proj.load_documents(documents)
 
 
 @cli.command('analyze')
@@ -160,11 +151,7 @@ def run_analyze(project_id, limit, threshold, backend_param):
     text = sys.stdin.read()
     backend_params = parse_backend_params(backend_param)
     hit_filter = HitFilter(limit, threshold)
-    try:
-        hits = hit_filter(project.analyze(text, backend_params))
-    except AnnifException as err:
-        click.echo(err.format_message(), err=True)
-        sys.exit(1)
+    hits = hit_filter(project.analyze(text, backend_params))
     for hit in hits:
         click.echo("<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score))
 
@@ -204,11 +191,7 @@ def run_analyzedir(project_id, directory, suffix, force,
                     subjectfilename))
             continue
         with open(subjectfilename, 'w') as subjfile:
-            try:
-                results = project.analyze(text, backend_params)
-            except AnnifException as err:
-                click.echo(err.format_message(), err=True)
-                sys.exit(1)
+            results = project.analyze(text, backend_params)
             for hit in hit_filter(results):
                 line = "<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score)
                 click.echo(line, file=subjfile)
@@ -234,19 +217,11 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
     backend_params = parse_backend_params(backend_param)
 
     hit_filter = HitFilter(limit=limit, threshold=threshold)
-    try:
-        eval_batch = annif.eval.EvaluationBatch(project.subjects)
-    except AnnifException as err:
-        click.echo(err.format_message(), err=True)
-        sys.exit(1)
+    eval_batch = annif.eval.EvaluationBatch(project.subjects)
 
     docs = open_documents(paths)
     for doc in docs.documents:
-        try:
-            results = project.analyze(doc.text, backend_params)
-        except AnnifException as err:
-            click.echo(err.format_message(), err=True)
-            sys.exit(1)
+        results = project.analyze(doc.text, backend_params)
         hits = hit_filter(results)
         eval_batch.evaluate(hits,
                             annif.corpus.SubjectSet((doc.uris, doc.labels)))
@@ -274,21 +249,12 @@ def run_optimize(project_id, paths, backend_param):
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
 
-    try:
-        subjects = project.subjects
-    except AnnifException as err:
-        click.echo(err.format_message(), err=True)
-        sys.exit(1)
-    filter_batches = generate_filter_batches(subjects)
+    filter_batches = generate_filter_batches(project.subjects)
 
     ndocs = 0
     docs = open_documents(paths)
     for doc in docs.documents:
-        try:
-            hits = project.analyze(doc.text, backend_params)
-        except AnnifException as err:
-            click.echo(err.format_message(), err=True)
-            sys.exit(1)
+        hits = project.analyze(doc.text, backend_params)
         gold_subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
         for hit_filter, batch in filter_batches.values():
             batch.evaluate(hit_filter(hits), gold_subjects)

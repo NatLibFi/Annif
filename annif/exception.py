@@ -1,8 +1,12 @@
 """Custom exceptions used by Annif"""
 
 
-class AnnifException(Exception):
-    """Base Annif exception"""
+from click import ClickException
+
+
+class AnnifException(ClickException):
+    """Base Annif exception. We define this as a subclass of ClickException so
+    that the CLI can automatically handle exceptions."""
 
     def __init__(self, message, project_id=None, backend_id=None):
         self.message = message
