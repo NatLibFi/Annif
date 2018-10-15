@@ -14,7 +14,6 @@ class TFIDFBackend(backend.AnnifBackend):
     name = "tfidf"
     needs_subject_index = True
     needs_subject_vectorizer = True
-    can_load_subjects = True
 
     # defaults for uninitialized instances
     _index = None

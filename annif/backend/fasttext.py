@@ -13,8 +13,6 @@ class FastTextBackend(backend.AnnifBackend):
 
     name = "fasttext"
     needs_subject_index = True
-    can_load_documents = True
-    can_load_subjects = True
 
     FASTTEXT_PARAMS = {
         'lr': float,
