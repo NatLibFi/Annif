@@ -3,6 +3,7 @@
 import pytest
 import annif.project
 import annif.backend.dummy
+from annif.exception import ConfigurationException
 
 
 def test_get_project_en(app):
@@ -48,6 +49,13 @@ def test_get_project_nonexistent(app):
     with app.app_context():
         with pytest.raises(ValueError):
             annif.project.get_project('nonexistent')
+
+
+def test_get_project_novocab(app):
+    with app.app_context():
+        project = annif.project.get_project('novocab')
+        with pytest.raises(ConfigurationException):
+            vocab = project.vocab
 
 
 def test_project_load_vocabulary_tfidf(app, vocabulary, testdatadir):

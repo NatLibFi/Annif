@@ -13,7 +13,8 @@ import annif.hit
 import annif.backend
 import annif.util
 import annif.vocab
-from annif.exception import ConfigurationException, NotInitializedException
+from annif.exception import AnnifException, ConfigurationException, \
+    NotInitializedException
 
 logger = annif.logger
 
@@ -68,20 +69,20 @@ class AnnifProject:
             logger.debug("Project '%s': initialized subjects: %s",
                          self.project_id,
                          str(subjects))
-        except NotInitializedException as err:
+        except AnnifException as err:
             logger.warning(err.format_message())
         try:
             vectorizer = self.vectorizer
             logger.debug("Project '%s': initialized vectorizer: %s",
                          self.project_id,
                          str(vectorizer))
-        except NotInitializedException as err:
+        except AnnifException as err:
             logger.warning(err.format_message())
         logger.debug("Project '%s': initializing backends", self.project_id)
         for backend, _ in self.backends:
             try:
                 backend.initialize()
-            except NotInitializedException as err:
+            except AnnifException as err:
                 logger.warning(err.format_message())
 
         self.initialized = True
