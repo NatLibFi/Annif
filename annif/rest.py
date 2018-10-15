@@ -4,6 +4,7 @@ methods defined in the Swagger specification."""
 import connexion
 import annif.project
 from annif.hit import HitFilter
+from annif.exception import AnnifException
 
 
 def project_not_found_error(project_id):
@@ -11,6 +12,13 @@ def project_not_found_error(project_id):
         status=404,
         title='Project not found',
         detail="Project '{}' not found".format(project_id))
+
+
+def server_error(err):
+    return connexion.problem(
+        status=503,
+        title='Service unavailable',
+        detail=err.format_message())
 
 
 def list_projects():
@@ -33,5 +41,9 @@ def analyze(project_id, text, limit, threshold):
         return project_not_found_error(project_id)
 
     hit_filter = HitFilter(limit, threshold)
-    hits = hit_filter(project.analyze(text))
+    try:
+        result = project.analyze(text)
+    except AnnifException as err:
+        return server_error(err)
+    hits = hit_filter(result)
     return {'results': [hit._asdict() for hit in hits]}
