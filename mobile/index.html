@@ -1,0 +1,230 @@
+<!doctype html>
+<html>
+<head>
+    <title>Annif Mobile</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
+    href="https://code.jquery.com/mobile/1.5.0-alpha.1/jquery.mobile-1.5.0-alpha.1.min.css">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script
+    src="https://code.jquery.com/mobile/1.5.0-alpha.1/jquery.mobile-1.5.0-alpha.1.min.js"></script>
+    <script src='https://code.responsivevoice.org/responsivevoice.js'></script>
+    <style type="text/css">
+
+.ui-content {
+    padding: 0;
+}
+   
+.ui-block-a {
+    padding-right: 0.25em;
+}
+
+.ui-block-b {
+    padding-left: 0.25em;
+}
+
+.imagefileblock .ui-textinput-text {
+    border-style: none;
+}
+
+#imagefile {
+	width: 0.1px;
+	height: 0.1px;
+	opacity: 0;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
+}
+
+#previewimg {
+    width: 100%;
+} 
+
+label.select {
+    display: none;
+}
+
+.projectselector {
+    margin: 0.5em 0;
+    padding: 0;
+}
+
+.ui-button {
+    font-size: 12px;
+}
+
+#responsivevoiceattribution {
+    float: right;
+    padding: 0.2em;
+}
+
+    </style>
+    <script>
+
+var OCR_BACKEND_URL = '/cgi-bin/ocr.cgi';
+var ANNIF_BASE_URL = 'http://dev.annif.org/v1/';
+
+// hardcoded projects for now
+// TODO read available projects from API instead
+var PROJECTS = {
+    "yso-fi": {
+        name: 'Finnish (YSO)',
+        language: 'fi'
+    },
+    "yso-sv": {
+        name: 'Swedish (YSO)',
+        language: 'sv'
+    },
+    "yso-en": {
+        name: 'English (YSO)',
+        language: 'en'
+    }
+}
+
+// which voice setting to use for Responsive Voice synthesis, per language
+var VOICE_PER_LANGUAGE = {
+    fi: "Finnish Female",
+    sv: "Swedish Female",
+    en: "UK English Female"
+}
+
+$(function() {
+    $("#tabs").tabs({
+        activate: function(event, ui) {
+            responsiveVoice.cancel();
+        }
+    });
+    $.each(PROJECTS, function(project_id, project_data) {
+        $('#project').append(
+            $('<option>').attr('value',project_id).append(project_data.name)
+        );
+    });
+    $( "#project" ).selectmenu("refresh");
+});
+
+function current_language() {
+    var project = $("#project").val();
+    return PROJECTS[project].language;
+}
+
+function handleImage(files) {
+    $.mobile.loading('show');
+    var formData = new FormData();
+    formData.append("imagefile", files[0]);
+    formData.append("language", current_language());
+    jQuery.ajax({
+        url: OCR_BACKEND_URL,
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
+        type: 'POST',
+        success: function (result) {
+            $('#previewtext').val(result)
+            $('#previewtext').keyup();
+            $('a[href="#text"]').trigger("click");
+            autoindex();
+        }
+    });
+    var img = document.getElementById('previewimg');
+    var reader = new FileReader();
+    reader.onload = (function(aImg) { 
+        return function(e) { 
+            aImg.src = e.target.result;
+        };
+    })(img);
+    reader.readAsDataURL(files[0]);
+}
+
+function autoindex() {
+    $.mobile.loading('show');
+    $.ajax({
+        url: ANNIF_BASE_URL + $('#project').val() + "/analyze",
+        method: 'POST',
+        data: { text: $('#previewtext').val() },
+        success: function(data) {
+            $('#results').empty();
+            var labels = [];
+            $.each(data, function(idx, value) {
+                $('#results').append(
+                    $('<li>').append(
+                        $('<a>').attr('href',value.uri).append(value.label)
+                    )
+                );
+                labels.push(value.label);
+            });
+            $.mobile.loading('hide');
+            $('a[href="#topics"]').trigger("click");
+            var labellist = labels.join(". ");
+            responsiveVoice.speak(labellist, VOICE_PER_LANGUAGE[current_language()]);
+        }
+    });
+}
+
+
+    </script>
+</head>
+<body>
+    <div data-role="page">
+    
+
+        <div data-role="main" class="ui-content">
+
+<div data-role="tabs" id="tabs">
+        <div data-role="navbar">
+    <ul>
+      <li><a href="#image" data-theme="a" data-ajax="false">Picture</a></li>
+      <li><a href="#text" data-theme="a" data-ajax="false">Text</a></li>
+      <li><a href="#topics" data-theme="a" data-ajax="false">Topics</a></li>
+    </ul>
+        </div>
+
+
+    <div id="image" class="ui-content">
+            <div class="ui-grid-a">
+
+                <div class="ui-block-a imagefileblock">
+                    <input id="imagefile" name="imagefile" type="file" accept="image/*" capture="camera" onchange="handleImage(this.files)">
+                    <label for="imagefile" data-role="button" data-theme="b"
+                    data-icon="ui-icon-camera">Take a picture</label>
+                </div>
+
+                <div class="ui-block-b">
+                    <div class="ui-field-contain projectselector">
+                      <label for="project" class="select">Language/Project:</label>
+                      <select name="project" id="project">
+                      </select>
+                    </div>
+                </div>
+
+            </div>
+
+
+        <div id="preview">
+          <img id="previewimg">
+        </div>
+    </div>
+    <div id="text" class="ui-content">
+        <textarea id="previewtext" rows="40" cols="80">
+        
+        </textarea>
+    </div>
+    <div id="topics" class="ui-content">
+        <ul id="results">
+        </ul>
+    </div>
+</div>
+
+        </div><!-- /content -->
+        <div data-role="toolbar" data-type="footer" data-position="fixed">
+
+<div id="responsivevoiceattribution">
+<div style="width:300px;vertical-align:top;font-family: Arial;font-size:9pt;line-height: normal">
+<a rel="license" href="//responsivevoice.org/"><img title="ResponsiveVoice Text To Speech" src="https://responsivevoice.org/wp-content/uploads/2014/08/120x31.png" style="float:left;padding-right:2px" /></a><span xmlns:dct="https://purl.org/dc/terms/" property="dct:title"><a href="//responsivevoice.org/" target="_blank" title="ResponsiveVoice Text To Speech">ResponsiveVoice</a></span> used under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" title="Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License">Non-Commercial License</a></div>
+</div>
+       </div>
+ 
+    </div><!-- /page -->
+</body>
+</html>

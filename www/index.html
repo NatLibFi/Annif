@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Annif - tool for automated subject indexing and classification</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="static/css/bootstrap.min.css">
+  <script src="static/js/jquery.min.js"></script>
+  <script src="static/js/bootstrap.min.js"></script>
+  <script src="static/js/annif.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet"> 
+  <style type="text/css">
+    body { font-family: 'Titillium Web', sans-serif; }
+    header { background-color: #3f9a88; }
+    h1 { color: white; font-size: 2rem; }
+    #robot { max-width: 15rem; }
+    #video h2 { font-size: 1rem; font-weight: bold; }
+    #video p { font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+<header class="mb-4 mt-0">
+  <div class="container">
+    <h1 class="py-3">Annif <small>- tool for automated subject indexing and
+    classification</small></h1>
+  </div>
+</header>
+  
+<div class="container">
+
+  <div class="row">
+    <div class="col-md-8">
+      <p class="lead">     
+      Feed Annif a controlled vocabulary (subject headings, thesaurus or
+      classification) and existing metadata - Annif then knows how to assign
+      subjects for new documents!</p>
+      
+      <p class="mb-5">Annif is built upon a combination of existing
+      <strong>natural language processing</strong> and <strong>machine
+      learning</strong> tools including <a
+      href="https://github.com/zelandiya/maui">Maui</a>, <a
+      href="https://fasttext.cc/">fastText</a> and <a
+      href="https://radimrehurek.com/gensim/">Gensim</a>. It is designed to
+      be <strong>multilingual</strong> and it can support <strong>any
+      subject vocabulary</strong> (in SKOS or a simple TSV format). It can
+      be used either via a command-line interface or a microservice-style
+      REST API. It also comes with a <a href="http://m.annif.org">mobile web
+      app</a> that can analyse physical documents such as printed books.</p>
+
+    </div>
+    <div class="col-md-4">
+      <img id="robot" src="static/img/annif.svg" class="img-fluid mx-auto
+      d-block my-4" alt="Annif Robot">  
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-8">
+      <div class="jumbotron py-5">
+      <img src="static/img/nationallibrary.gif" class="float-right ml-5 mt-4
+      mr-3"
+      alt="National Library of Finland">
+      
+      <h2>Get Annif</h2>
+
+      <p>Code and documentation for Annif is <a
+      href="https://github.com/NatLibFi/Annif/">available on Github</a>
+      (Apache 2.0 license). Annif is being developed at the <a
+      href="http://www.nationallibrary.fi">National Library of
+      Finland</a>.</p>
+      
+      <p>Check out the <a href="http://api.annif.org">Annif REST API</a>
+      for accessing Annif as a service!
+      </div>
+    </div>
+    <div class="col-md-4" id="video">
+      <h2>Watch the video</h2>
+      
+      <p>The video demonstrates the <a
+      href="https://github.com/osma/annif">first prototype of Annif</a>
+      which is no longer being maintained.</p>
+      
+      <iframe src="https://player.vimeo.com/video/212577974" width="350px"
+      height="200px" frameborder="0" webkitallowfullscreen
+      mozallowfullscreen allowfullscreen></iframe>
+
+    </div>
+    
+  </div>
+  
+  <h2>Try Annif!</h2>
+  
+  <div class="row mb-5">
+    <div class="col-md-8">
+      <div class="form-group">
+        <label for="text">Text to analyze:</label><br>
+        <textarea class="form-control" rows="15" name="text" id="text"></textarea>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="form-group">
+        <label for="project">Project (vocabulary and language):</label>
+        <select class="form-control" id="project">
+          <option></option>
+        </select>
+      </div>
+      <button type="button" class="btn btn-primary" id="analyze">Analyze</button>
+
+      <h2 class="mt-4">Results</h2>
+      <ul class="list-group list-group-flush" id="results">
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
