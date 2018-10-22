@@ -1,5 +1,5 @@
 
-var base_url = 'http://dev.annif.org/v1/';
+var base_url = 'http://api.annif.org/v1/';
 
 function clearResults() {
     $('#results').empty();
