@@ -1,88 +1,43 @@
 {% extends "base.html" %}
 
-{% block head %}
-<script type="text/javascript">
-
-function clearResults() {
-    $('#results').empty();
-}
-
-function fetch_projects() {
-    $.ajax({
-        url: "/v1/projects",
-        method: 'GET',
-        success: function(data) {
-            $.each(data.projects, function(idx, value) {
-                $('#project').append(
-                    $('<option>').attr('value',value.project_id).append(value.name)
-                );
-            });
-        }
-    });
-
-}
-
-function analyze() {
-    $.ajax({
-        url: "/v1/projects/" + $('#project').val() + "/analyze",
-        method: 'POST',
-        data: { 
-          text: $('#text').val(),
-        },
-        success: function(data) {
-            $.each(data.results, function(idx, value) {
-                $('#results').append(
-                    $('<li>').append(
-                        $('<a>').attr('href',value.uri).append(value.label)
-                    )
-                );
-            });
-        }
-    });
-}
-
-$(document).ready(function() {
-    fetch_projects();
-    $('#submit').click(function() {
-        clearResults();
-        analyze();
-    });
-});
-
-</script>
-{% endblock %}
-
 {% block content %}
-<h1>Annif</h1>
-<p>Welcome!</p>
+<header class="mb-4 mt-0">
+  <div class="container">
+    <h1 class="py-3">Annif</h1>
+  </div>
+</header>
 
-<h2>REST API</h2>
+<div class="container">
 
-<p>See the <a href="v1/ui/">Swagger documentation</a> for API specification.</p>
+  <p>Welcome!</p>
 
-<h2>Try it!</h2>
+  <h2>REST API</h2>
 
-<div class="row">
-  <div class="col-8">
+  <p>See the <a href="v1/ui/">Swagger documentation</a> for API specification.</p>
+  
+  <div class="row mb-5">
+    <div class="col-md-8">
+      <div class="form-group">
+        <label for="text">Text to analyze:</label><br>
+        <textarea class="form-control" rows="15" name="text" id="text"></textarea>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="form-group">
+        <label for="project">Project (vocabulary and language):</label>
+        <select class="form-control" id="project">
+          <option></option>
+        </select>
+      </div>
+      <button type="button" class="btn btn-primary" id="analyze">Analyze</button>
 
-    <label for="text">Text to analyze:</label><br>
-    <textarea rows="20" cols="70" name="text" id="text">
-
-    </textarea>
+      <h2 class="mt-4">Results</h2>
+      <ul class="list-group list-group-flush" id="results">
+      </ul>
+    </div>
   </div>
 
-  <div class="col-4">
 
-    <label for="project">Language/Project:</label>
-    <select name="project" id="project">
-    </select>
-    <input type="submit" name="submit" id="submit" value="Analyze">
-
-  <h2>Results</h2>
-  <ul id="results">
-  </ul>
-
-  </div>
-</div>
+</div> <!-- container -->
 
 {% endblock %}
