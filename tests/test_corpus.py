@@ -107,9 +107,9 @@ def test_docdir_as_doccorpus(tmpdir):
     docs = list(docdir.documents)
     assert len(docs) == 2
     assert docs[0].text == 'doc1'
-    assert docs[0].uris == set(['http://example.org/subj1'])
+    assert docs[0].uris == {'http://example.org/subj1'}
     assert docs[1].text == 'doc2'
-    assert docs[1].uris == set(['http://example.org/subj2'])
+    assert docs[1].uris == {'http://example.org/subj2'}
 
 
 def test_subjdir(tmpdir):
