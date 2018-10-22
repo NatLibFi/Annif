@@ -146,7 +146,7 @@ function autoindex() {
         success: function(data) {
             $('#results').empty();
             var labels = [];
-            $.each(data, function(idx, value) {
+            $.each(data.results, function(idx, value) {
                 $('#results').append(
                     $('<li>').append(
                         $('<a>').attr('href',value.uri).append(value.label)
