@@ -140,7 +140,7 @@ function handleImage(files) {
 function autoindex() {
     $.mobile.loading('show');
     $.ajax({
-        url: ANNIF_BASE_URL + $('#project').val() + "/analyze",
+        url: ANNIF_BASE_URL + "projects/" + $('#project').val() + "/analyze",
         method: 'POST',
         data: { text: $('#previewtext').val() },
         success: function(data) {
