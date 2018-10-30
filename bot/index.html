@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>AnnifBot</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="static/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/botui/build/botui.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/botui/build/botui-theme-default.css">
+  <script src="static/js/jquery.min.js"></script>
+  <script src="static/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/vue/latest/vue.min.js"></script>
+  <script src="static/js/botui.js"></script>
+  <style type="text/css">
+    header { background-color: #3f9a88; }
+    h1 { color: white; font-size: 2rem; }
+  </style>
+</head>
+<body>
+
+<header class="mb-4 mt-0">
+  <div class="container">
+    <h1 class="py-3">AnnifBot
+  </div>
+</header>
+  
+<div class="container">
+
+  <div class="row">
+    <div class="col-md-12">
+      <div id="my-botui-app">
+        <bot-ui></bot-ui>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+  <script>
+
+var annif_base_url = 'http://api.annif.org/v1/';
+var finna_base_url = 'https://api.finna.fi/v1/';
+var finna_image_url = 'https://api.finna.fi';
+var finna_record_url = 'https://www.finna.fi/Record/'
+
+var project = 'yso-fi';
+
+function random_choice(arr) {
+   return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function analyze(text, callback) {
+    $.ajax({
+        url: annif_base_url + "projects/" + project + "/analyze",
+        method: 'POST',
+        data: { 
+          text: text,
+        },
+        success: function(data) {
+            callback(data.results);
+        }
+    });
+}
+
+function random_picture(subject, callback) {
+  var filters = ['format:0/Image/', 'online_boolean:1'];
+  $.ajax({
+    url: finna_base_url + "search",
+    method: 'GET',
+    data: {
+      lookfor: subject,
+      'filter[]': filters,
+    },
+    success: function(data) {
+      pic = random_choice(data.records);
+      callback(pic.title, pic.images[0], pic.id);
+    }
+  });
+}
+
+function ask_pic() {
+  botui.action.button({
+    action: [
+      { // show only one button
+        text: 'Joo!',
+        value: true
+      },
+      { // show only one button
+        text: 'Ei',
+        value: false
+      }
+    ]
+  }).then(function (res) { // will be called when a button is clicked.
+    if(res.value == true) {
+      show_pic(label);
+    } else {
+      botui.message.add({
+        content: "Mikä muu sinua voisi kiinnostaa?"
+      }).then(get_subject);
+    }
+  });
+}
+
+
+var botui = new BotUI('my-botui-app');
+
+
+function show_pic(label) {
+  botui.message.add({
+    delay: 1000,
+    content: 'Odotas, etsin sinulle kuvan!'
+  }).then(function() {
+    random_picture(label, function(title, url, recid) {
+      var img_url = finna_image_url + url;
+      var rec_url = finna_record_url + encodeURI(recid);
+      botui.message.add({
+        content: 'Tässä on ' + title + ': [![' + title + '](' + img_url + ')](' + rec_url + ')'
+      }).then(function() {
+        botui.message.add({
+          delay: 500,
+          content: "Haluatko lisää?"
+        }).then(ask_pic);
+      });
+    });
+  });
+}
+
+function get_subject() {
+  return botui.action.text({ // show 'text' action
+    human: true, 
+    action: {
+      placeholder: ''
+    }
+  }).then(function (res) { // get the result
+    analyze(res.value, function(results) {
+      label = results[0].label
+      var msg = 'Kiinnostaako sinua ' + label + '?';
+      botui.message.add({
+        content: msg
+      }).then(ask_pic);
+    });
+  });
+}
+
+
+botui.message.add({
+  content: 'Hei, olen Anni F!'
+}).then(function(res) {
+  return botui.message.add({
+    content: 'Mikä sinua tänään kiinnostaa?',
+  }).then(get_subject);
+});
+  </script>
+
+</body>
+</html>
