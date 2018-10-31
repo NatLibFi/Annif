@@ -139,7 +139,7 @@ function show_pic(label) {
         botui.message.add({
           delay: 500,
           content: "Haluatko lisää?"
-        }).then(ask_pic);
+        }).then(function() { ask_pic(label); });
       });
     });
   });
