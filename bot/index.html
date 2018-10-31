@@ -85,8 +85,14 @@ function random_picture(subject, callback) {
       'filter[]': filters,
     },
     success: function(data) {
-      pic = random_choice(data.records);
-      callback(pic.title, pic.images[0], pic.id);
+      if (data.hasOwnProperty('records') && data.records.length > 0) {
+        pic = random_choice(data.records);
+        callback(pic.title, pic.images[0], pic.id);
+      } else {
+        botui.message.add({
+          content: "Voi harmi, en löytänytkään yhtään kuvaa. Mikä muu sinua voisi kiinnostaa?"
+        }).then(get_subject);
+      }
     }
   });
 }
