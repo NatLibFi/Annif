@@ -27,9 +27,16 @@
 <div class="container">
 
   <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-8">
       <div id="my-botui-app">
         <bot-ui></bot-ui>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div id="about">
+        <p>I'm Anni and I'm a robot. I love books, old photographs, museum
+        objects and other collections in libraries, archives and
+        museums.</p>
       </div>
     </div>
   </div>
@@ -78,7 +85,7 @@ function random_picture(subject, callback) {
   });
 }
 
-function ask_pic() {
+function ask_pic(label) {
   botui.action.button({
     action: [
       { // show only one button
@@ -134,10 +141,14 @@ function get_subject() {
   }).then(function (res) { // get the result
     analyze(res.value, function(results) {
       label = results[0].label
-      var msg = 'Kiinnostaako sinua ' + label + '?';
-      botui.message.add({
-        content: msg
-      }).then(ask_pic);
+      if (label == res.value) {
+        show_pic(label)
+      } else {
+        var msg = 'Kiinnostaako sinua ' + label + '?';
+        botui.message.add({
+          content: msg
+        }).then(ask_pic(label));
+      }
     });
   });
 }
