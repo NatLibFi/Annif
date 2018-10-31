@@ -14,12 +14,7 @@
   <style type="text/css">
     header { background-color: #3f9a88; }
     h1 { color: white; font-size: 2rem; }
-    #about {
-      border: 1px solid #999999;
-      border-radius: 0.5rem;
-      padding: 1rem;
-    }
-    #about h2 {
+    #chat h2 {
       background: white url(static/img/anni.png) no-repeat bottom left;
       background-size: 2.6rem 3.5rem;
       padding-left: 3rem;
@@ -28,6 +23,21 @@
       height: 3.5rem;
       border-bottom: 1px solid #999999;
     }
+    #about {
+      border: 1px solid #999999;
+      border-radius: 0.5rem;
+      padding: 1rem;
+    }
+    #about h2 {
+      background: white url(static/img/anni.png) no-repeat bottom left;
+      background-size: 2.1rem 2.8rem;
+      padding-left: 2.3rem;
+      padding-top: 1.5rem;
+      font-size: 1.3rem;
+      height: 2.8rem;
+      border-bottom: 1px solid #999999;
+    }
+    #about p { font-size: 0.9rem; }
   </style>
 </head>
 <body>
@@ -41,7 +51,8 @@
 <div class="container">
 
   <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-8" id="chat">
+      <h2>Anni F.</h2>
       <div id="my-botui-app">
         <bot-ui></bot-ui>
       </div>
@@ -226,7 +237,7 @@ function get_subject() {
 
 
 botui.message.add({
-  content: 'Hei, olen Anni F!'
+  content: 'Hei, olen Anni! Hauska tutustua!'
 }).then(function(res) {
   return botui.message.add({
     content: 'Mikä sinua tänään kiinnostaa?',
