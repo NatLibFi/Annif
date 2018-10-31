@@ -64,7 +64,13 @@ function analyze(text, callback) {
           text: text,
         },
         success: function(data) {
+          if (data.results.length > 0) {
             callback(data.results);
+          } else {
+            botui.message.add({
+              content: "En ihan ymmärtänyt. Mikä muu sinua voisi kiinnostaa?"
+            }).then(get_subject);
+          }
         }
     });
 }
