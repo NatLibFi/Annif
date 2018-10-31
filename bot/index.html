@@ -62,6 +62,7 @@ function analyze(text, callback) {
         method: 'POST',
         data: { 
           text: text,
+          limit: 3
         },
         success: function(data) {
           if (data.results.length > 0) {
@@ -144,6 +145,39 @@ function show_pic(label) {
   });
 }
 
+function ask_subject(subjects) {
+  label = subjects.shift().label;
+  var msg = 'Kiinnostaako sinua ' + label + '?';
+  botui.message.add({
+    content: msg
+  }).then(function() {
+    botui.action.button({
+      action: [
+        { // show only one button
+          text: 'Joo!',
+          value: true
+        },
+        { // show only one button
+          text: 'Ei',
+          value: false
+        }
+      ]
+    }).then(function (res) { // will be called when a button is clicked.
+      if(res.value == true) {
+        show_pic(label);
+      } else {
+        if (subjects.length > 0) {
+          ask_subject(subjects);
+        } else {
+          botui.message.add({
+            content: "Mikä muu sinua voisi kiinnostaa?"
+          }).then(get_subject);
+        }
+      }
+    });
+  });
+}
+
 function get_subject() {
   return botui.action.text({ // show 'text' action
     human: true, 
@@ -152,14 +186,10 @@ function get_subject() {
     }
   }).then(function (res) { // get the result
     analyze(res.value, function(results) {
-      label = results[0].label
-      if (label == res.value) {
-        show_pic(label)
+      if(results.length > 0 && results[0].label == res.value) {
+        show_pic(results[0].label); // shortcut
       } else {
-        var msg = 'Kiinnostaako sinua ' + label + '?';
-        botui.message.add({
-          content: msg
-        }).then(ask_pic(label));
+        ask_subject(results);
       }
     });
   });
