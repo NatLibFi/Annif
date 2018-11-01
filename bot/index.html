@@ -144,6 +144,7 @@ function random_picture(subject, callback) {
 }
 
 function ask_pic(label) {
+  $('html, body').animate({scrollTop:$(document).height()}, 'slow');
   botui.action.button({
     action: [
       { // show only one button
@@ -178,6 +179,7 @@ function show_pic(label) {
     random_picture(label, function(title, url, recid) {
       var img_url = finna_image_url + url;
       var rec_url = finna_record_url + encodeURI(recid);
+      $('html, body').animate({scrollTop:$(document).height()}, 'slow');
       botui.message.add({
         content: 'Tässä on ' + title + ': [![' + title + '](' + img_url + ')](' + rec_url + ')'
       }).then(function() {
@@ -196,6 +198,7 @@ function ask_subject(subjects) {
   botui.message.add({
     content: msg
   }).then(function() {
+    $('html, body').animate({scrollTop:$(document).height()}, 'slow');
     botui.action.button({
       action: [
         { // show only one button
