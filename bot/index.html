@@ -234,7 +234,8 @@ function get_subject() {
     }
   }).then(function (res) { // get the result
     analyze(res.value, function(results) {
-      if(results.length > 0 && results[0].label == res.value) {
+      if(results.length > 0 &&
+         results[0].label.toLowerCase() == res.value.toLowerCase()) {
         show_pic(results[0].label); // shortcut
       } else {
         ask_subject(results);
