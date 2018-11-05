@@ -173,11 +173,7 @@ def test_analyzedir(tmpdir):
         'utf-8') == "<http://example.org/dummy>\tdummy\t1.0\n"
 
 
-def test_eval_label(tmpdir, testdatadir):
-    subjectfile = testdatadir.ensure('vocabs/dummy-en/subjects')
-    subjectfile.write("<http://example.org/dummy>\tdummy\n" +
-                      "<http://example.org/none>\tnone\n")
-
+def test_eval_label(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('dummy')
     tmpdir.join('doc2.txt').write('doc2')
@@ -269,11 +265,7 @@ def test_eval_param(tmpdir):
     assert float(recall.group(1)) == 0.0
 
 
-def test_eval_docfile(testdatadir):
-    subjectfile = testdatadir.ensure('vocabs/dummy-fi/subjects')
-    subjectfile.write("<http://example.org/dummy>\tdummy\n" +
-                      "<http://example.org/none>\tnone\n")
-
+def test_eval_docfile():
     docfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',

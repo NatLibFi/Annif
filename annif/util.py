@@ -1,9 +1,9 @@
 """Utility functions for Annif"""
 
-import collections
 import glob
 import os
 import tempfile
+import numpy as np
 from annif import logger
 from annif.hit import AnalysisResult
 
@@ -41,21 +41,16 @@ def cleanup_uri(uri):
     return uri
 
 
-def merge_hits(weighted_hits):
+def merge_hits(weighted_hits, subject_index):
     """Merge hits from multiple sources. Input is a sequence of WeightedHits
-    objects"""
-    hits_by_uri = collections.defaultdict(list)
-    totalweight = 0.0
-    for whit in weighted_hits:
-        totalweight += whit.weight
-        for hit in whit.hits:
-            new_hit = hit._replace(score=hit.score * whit.weight)
-            hits_by_uri[hit.uri].append(new_hit)
-    merged_hits = []
-    for hits in hits_by_uri.values():
-        total = sum([hit.score for hit in hits]) / totalweight
-        merged_hits.append(hits[0]._replace(score=total))
-    return AnalysisResult(merged_hits)
+    objects. A SubjectIndex is needed to convert between subject IDs and URIs.
+    Returns an AnalysisResult object."""
+
+    weights = [whit.weight for whit in weighted_hits]
+    scores = [whit.hits.as_vector(subject_index) for whit in weighted_hits]
+    result = np.average(scores, axis=0, weights=weights)
+    return AnalysisResult.from_vector(
+        result, len(subject_index), subject_index)
 
 
 def parse_sources(sourcedef):
