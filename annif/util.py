@@ -1,6 +1,5 @@
 """Utility functions for Annif"""
 
-import collections
 import glob
 import os
 import tempfile
