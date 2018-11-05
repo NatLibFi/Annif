@@ -104,11 +104,7 @@ def test_train_multiple(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
-def test_analyze(testdatadir):
-    subjectfile = testdatadir.ensure('vocabs/dummy-fi/subjects')
-    subjectfile.write("<http://example.org/dummy>\tdummy\n" +
-                      "<http://example.org/none>\tnone\n")
-
+def test_analyze():
     result = runner.invoke(
         annif.cli.cli,
         ['analyze', 'dummy-fi'],
@@ -139,11 +135,7 @@ def test_analyze_param():
     assert result.exit_code == 0
 
 
-def test_analyze_ensemble(testdatadir):
-    subjectfile = testdatadir.ensure('vocabs/dummy-en/subjects')
-    subjectfile.write("<http://example.org/dummy>\tdummy\n" +
-                      "<http://example.org/none>\tnone\n")
-
+def test_analyze_ensemble():
     result = runner.invoke(
         annif.cli.cli,
         ['analyze', 'ensemble'],
@@ -273,11 +265,7 @@ def test_eval_param(tmpdir):
     assert float(recall.group(1)) == 0.0
 
 
-def test_eval_docfile(testdatadir):
-    subjectfile = testdatadir.ensure('vocabs/dummy-fi/subjects')
-    subjectfile.write("<http://example.org/dummy>\tdummy\n" +
-                      "<http://example.org/none>\tnone\n")
-
+def test_eval_docfile():
     docfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',

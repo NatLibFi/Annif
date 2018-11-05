@@ -7,9 +7,18 @@ import py.path
 import annif
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def app():
+    # make sure the dummy vocab is in place because many tests depend on it
+    subjfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'dummy-subjects.tsv')
+    vocab = annif.corpus.SubjectFileTSV(subjfile)
     app = annif.create_app(config_name='config.TestingConfig')
+    with app.app_context():
+        project = annif.project.get_project('dummy-en')
+        project.vocab.load_vocabulary(vocab)
     return app
 
 
@@ -31,7 +40,7 @@ def testdatadir(app):
     with app.app_context():
         dir = py.path.local(app.config['DATADIR'])
     # clean up previous state of datadir
-    shutil.rmtree(str(dir), ignore_errors=True)
+    shutil.rmtree(os.path.join(str(dir), 'projects'), ignore_errors=True)
     return dir
 
 
