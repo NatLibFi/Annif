@@ -14,6 +14,7 @@ setup(
     author_email='osma.suominen@helsinki.fi',
     description='Automated subject indexing and classification tool',
     long_description=read('README.md'),
+    long_description_content_type='text/markdown',
     packages=find_packages(),
     install_requires=[
         'connexion',
@@ -25,4 +26,10 @@ setup(
         'fasttextmirror',
         'rdflib'],
     entry_points={
-        'console_scripts': ['annif=annif.cli:cli']})
+        'console_scripts': ['annif=annif.cli:cli']},
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: Apache Software License",
+        "Operating System :: OS Independent",
+    ]
+)
