@@ -121,6 +121,7 @@ function analyze(text, callback) {
     });
 }
 
+
 function random_picture(subject, callback) {
   var filters = ['format:0/Image/', 'online_boolean:1'];
   $.ajax({
@@ -143,7 +144,31 @@ function random_picture(subject, callback) {
   });
 }
 
-function ask_pic(label) {
+function random_book(subject, callback) {
+  var filters = ['format:0/Book/'];
+  $.ajax({
+    url: finna_base_url + "search",
+    method: 'GET',
+    data: {
+      lookfor: subject,
+      type: 'Subject',
+      'filter[]': filters,
+    },
+    success: function(data) {
+      if (data.hasOwnProperty('records') && data.records.length > 0) {
+        book = random_choice(data.records);
+        console.log(book);
+        callback(book.title, book.nonPresenterAuthors, book.images[0], book.id);
+      } else {
+        botui.message.add({
+          content: "Voi harmi, en löytänytkään yhtään kirjaa. Mikä muu sinua voisi kiinnostaa?"
+        }).then(get_subject);
+      }
+    }
+  });
+}
+
+function ask_more(label) {
   $('html, body').animate({scrollTop:$(document).height()}, 'slow');
   botui.action.button({
     action: [
@@ -158,7 +183,7 @@ function ask_pic(label) {
     ]
   }).then(function (res) { // will be called when a button is clicked.
     if(res.value == true) {
-      show_pic(label);
+      show_content(label);
     } else {
       botui.message.add({
         content: "Mikä muu sinua voisi kiinnostaa?"
@@ -181,15 +206,48 @@ function show_pic(label) {
       var rec_url = finna_record_url + encodeURI(recid);
       $('html, body').animate({scrollTop:$(document).height()}, 'slow');
       botui.message.add({
-        content: 'Tässä on ' + title + ': [![' + title + '](' + img_url + ')](' + rec_url + ')'
+        content: title + ' [![' + title + '](' + img_url + ')](' + rec_url + ')'
       }).then(function() {
         botui.message.add({
           delay: 500,
           content: "Haluatko lisää?"
-        }).then(function() { ask_pic(label); });
+        }).then(function() { ask_more(label); });
       });
     });
   });
+}
+
+function show_book(label) {
+  botui.message.add({
+    delay: 1000,
+    content: 'Odotas, etsin sinulle kirjan!'
+  }).then(function() {
+    random_book(label, function(title, authors, url, recid) {
+      var img_url = finna_image_url + url;
+      var rec_url = finna_record_url + encodeURI(recid);
+      $('html, body').animate({scrollTop:$(document).height()}, 'slow');
+      if (authors.length > 0) {
+        var author_string = authors.map(author => author.name).join('; ') +
+        ":<br>\n";
+      } else {
+        var author_string = "";
+      }
+      botui.message.add({
+        content: author_string + '[' + title + '](' + rec_url + ') [![' + title + '](' + img_url + ')](' + rec_url + ')'
+      }).then(function() {
+        botui.message.add({
+          delay: 500,
+          content: "Haluatko lisää?"
+        }).then(function() { ask_more(label); });
+      });
+    });
+  });
+}
+
+function show_content(label) {
+  var show_functions = [show_pic, show_book];
+  func = random_choice(show_functions);
+  func(label);
 }
 
 function ask_subject(subjects) {
@@ -212,7 +270,7 @@ function ask_subject(subjects) {
       ]
     }).then(function (res) { // will be called when a button is clicked.
       if(res.value == true) {
-        show_pic(label);
+        show_content(label);
       } else {
         if (subjects.length > 0) {
           ask_subject(subjects);
@@ -236,7 +294,7 @@ function get_subject() {
     analyze(res.value, function(results) {
       if(results.length > 0 &&
          results[0].label.toLowerCase() == res.value.toLowerCase()) {
-        show_pic(results[0].label); // shortcut
+        show_content(results[0].label); // shortcut
       } else {
         ask_subject(results);
       }
