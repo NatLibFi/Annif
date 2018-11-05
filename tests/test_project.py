@@ -90,6 +90,18 @@ def test_project_load_documents_fasttext(app, document_corpus, testdatadir):
     assert testdatadir.join('projects/fasttext-fi/fasttext-model').size() > 0
 
 
+def test_project_load_vocabulary_dummy(app, tmpdir, testdatadir):
+    subjfile = tmpdir.join('subjects.tsv')
+    subjfile.write("<http://example.org/dummy>\tdummy\n" +
+                   "<http://example.org/none>\tnone\n")
+    vocab = annif.corpus.SubjectFileTSV(str(subjfile))
+    with app.app_context():
+        project = annif.project.get_project('dummy-en')
+    project.vocab.load_vocabulary(vocab)
+    assert testdatadir.join('vocabs/dummy-en/subjects').exists()
+    assert testdatadir.join('vocabs/dummy-en/subjects').size() > 0
+
+
 def test_project_analyze(app):
     with app.app_context():
         project = annif.project.get_project('dummy-en')

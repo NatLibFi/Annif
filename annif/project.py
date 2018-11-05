@@ -106,11 +106,7 @@ class AnnifProject:
             backend_params = {}
         for backend, weight in self.backends:
             beparams = backend_params.get(backend.backend_id, {})
-            hits = [
-                hit for hit in backend.analyze(
-                    text,
-                    project=self,
-                    params=beparams) if hit.score > 0.0]
+            hits = backend.analyze(text, project=self, params=beparams)
             logger.debug(
                 'Got %d hits from backend %s',
                 len(hits), backend.backend_id)
@@ -160,7 +156,7 @@ class AnnifProject:
         logger.debug('Analyzing text "%s..." (len=%d)',
                      text[:20], len(text))
         hits_from_backends = self._analyze_with_backends(text, backend_params)
-        merged_hits = annif.util.merge_hits(hits_from_backends)
+        merged_hits = annif.util.merge_hits(hits_from_backends, self.subjects)
         logger.debug('%d hits after merging', len(merged_hits))
         return merged_hits
 

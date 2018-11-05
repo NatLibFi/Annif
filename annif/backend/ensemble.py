@@ -15,7 +15,7 @@ class EnsembleBackend(backend.AnnifBackend):
         hits_from_sources = []
         for project_id, weight in sources:
             project = annif.project.get_project(project_id)
-            hits = [hit for hit in project.analyze(text) if hit.score > 0.0]
+            hits = project.analyze(text)
             self.debug(
                 'Got {} hits from project {}'.format(
                     len(hits), project.project_id))
@@ -27,6 +27,7 @@ class EnsembleBackend(backend.AnnifBackend):
     def _analyze(self, text, project, params):
         sources = annif.util.parse_sources(params['sources'])
         hits_from_sources = self._analyze_with_sources(text, sources)
-        merged_hits = annif.util.merge_hits(hits_from_sources)
+        merged_hits = annif.util.merge_hits(
+            hits_from_sources, project.subjects)
         self.debug('{} hits after merging'.format(len(merged_hits)))
         return merged_hits

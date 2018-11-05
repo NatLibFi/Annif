@@ -28,7 +28,7 @@ class AnalysisResult:
     """A sequence of hits returned by an analysis operation."""
 
     def __init__(self, hits):
-        self._hits = hits
+        self._hits = [hit for hit in hits if hit.score > 0.0]
 
     @classmethod
     def from_vector(cls, vector, limit, subject_index):

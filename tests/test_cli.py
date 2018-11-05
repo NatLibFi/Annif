@@ -104,7 +104,11 @@ def test_train_multiple(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
-def test_analyze():
+def test_analyze(testdatadir):
+    subjectfile = testdatadir.ensure('vocabs/dummy-fi/subjects')
+    subjectfile.write("<http://example.org/dummy>\tdummy\n" +
+                      "<http://example.org/none>\tnone\n")
+
     result = runner.invoke(
         annif.cli.cli,
         ['analyze', 'dummy-fi'],
@@ -135,7 +139,11 @@ def test_analyze_param():
     assert result.exit_code == 0
 
 
-def test_analyze_ensemble():
+def test_analyze_ensemble(testdatadir):
+    subjectfile = testdatadir.ensure('vocabs/dummy-en/subjects')
+    subjectfile.write("<http://example.org/dummy>\tdummy\n" +
+                      "<http://example.org/none>\tnone\n")
+
     result = runner.invoke(
         annif.cli.cli,
         ['analyze', 'ensemble'],
@@ -173,11 +181,7 @@ def test_analyzedir(tmpdir):
         'utf-8') == "<http://example.org/dummy>\tdummy\t1.0\n"
 
 
-def test_eval_label(tmpdir, testdatadir):
-    subjectfile = testdatadir.ensure('vocabs/dummy-en/subjects')
-    subjectfile.write("<http://example.org/dummy>\tdummy\n" +
-                      "<http://example.org/none>\tnone\n")
-
+def test_eval_label(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('dummy')
     tmpdir.join('doc2.txt').write('doc2')
