@@ -48,11 +48,10 @@ class AnalysisResult:
             subject_index=subject_index)
 
     def _vector_to_hits(self):
-        top_scores = sorted(enumerate(self._vector),
-                            key=lambda id_score: id_score[1],
-                            reverse=True)
+        sorted_indices = np.argsort(self._vector)[::-1]
         hits = []
-        for subject_id, score in top_scores[:self._limit]:
+        for subject_id in sorted_indices[:self._limit]:
+            score = self._vector[subject_id]
             if score <= 0.0:
                 continue
             subject = self._subject_index[subject_id]
