@@ -4,7 +4,7 @@ import unittest.mock
 import annif.backend.http
 
 
-def test_http_analyze(app):
+def test_http_analyze(app, project):
     with unittest.mock.patch('requests.post') as mock_request:
         # create a mock response whose .json() method returns the list that we
         # define here
@@ -20,14 +20,14 @@ def test_http_analyze(app):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             datadir=app.config['DATADIR'])
-        result = http.analyze('this is some text', project=None)
+        result = http.analyze('this is some text', project=project)
         assert len(result) == 1
         assert result[0].uri == 'http://example.org/http'
         assert result[0].label == 'http'
         assert result[0].score == 1.0
 
 
-def test_http_analyze_with_results(app):
+def test_http_analyze_with_results(app, project):
     with unittest.mock.patch('requests.post') as mock_request:
         # create a mock response whose .json() method returns the list that we
         # define here
@@ -43,14 +43,14 @@ def test_http_analyze_with_results(app):
                 'endpoint': 'http://api.example.org/dummy/analyze',
             },
             datadir=app.config['DATADIR'])
-        result = http.analyze('this is some text', project=None)
+        result = http.analyze('this is some text', project=project)
         assert len(result) == 1
         assert result[0].uri == 'http://example.org/http'
         assert result[0].label == 'http'
         assert result[0].score == 1.0
 
 
-def test_http_analyze_zero_score(app):
+def test_http_analyze_zero_score(app, project):
     with unittest.mock.patch('requests.post') as mock_request:
         # create a mock response whose .json() method returns the list that we
         # define here
@@ -66,5 +66,5 @@ def test_http_analyze_zero_score(app):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             datadir=app.config['DATADIR'])
-        result = http.analyze('this is some text', project=None)
+        result = http.analyze('this is some text', project=project)
         assert len(result) == 0

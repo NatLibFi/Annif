@@ -85,7 +85,7 @@ class EvaluationBatch:
 
         y_true = np.array([gold_subjects.as_vector(self._subject_index)
                            for hits, gold_subjects in self._samples])
-        y_pred = np.array([hits.as_vector(self._subject_index)
+        y_pred = np.array([hits.vector
                            for hits, gold_subjects in self._samples])
         y_pred_binary = y_pred > 0.0
 

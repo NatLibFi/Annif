@@ -5,15 +5,6 @@ import annif.backend
 import annif.corpus
 from sklearn.feature_extraction.text import TfidfVectorizer
 import pytest
-import unittest.mock
-
-
-@pytest.fixture(scope='module')
-def project(document_corpus):
-    proj = unittest.mock.Mock()
-    proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
-    proj.subjects = annif.corpus.SubjectIndex(document_corpus)
-    return proj
 
 
 def test_fasttext_load_documents(datadir, document_corpus, project):

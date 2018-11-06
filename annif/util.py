@@ -5,7 +5,7 @@ import os
 import tempfile
 import numpy as np
 from annif import logger
-from annif.hit import AnalysisResult
+from annif.hit import VectorAnalysisResult
 
 
 def atomic_save(obj, dirname, filename, method=None):
@@ -47,10 +47,9 @@ def merge_hits(weighted_hits, subject_index):
     Returns an AnalysisResult object."""
 
     weights = [whit.weight for whit in weighted_hits]
-    scores = [whit.hits.as_vector(subject_index) for whit in weighted_hits]
+    scores = [whit.hits.vector for whit in weighted_hits]
     result = np.average(scores, axis=0, weights=weights)
-    return AnalysisResult.from_vector(
-        result, len(subject_index), subject_index)
+    return VectorAnalysisResult(result, subject_index)
 
 
 def parse_sources(sourcedef):
