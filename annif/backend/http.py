@@ -3,7 +3,7 @@ and returns the results"""
 
 
 import requests
-from annif.hit import AnalysisHit, AnalysisResult
+from annif.hit import AnalysisHit, ListAnalysisResult
 from . import backend
 
 
@@ -20,8 +20,9 @@ class HTTPBackend(backend.AnnifBackend):
             results = response['results']
         else:
             results = response
-        return AnalysisResult([AnalysisHit(uri=h['uri'],
-                                           label=h['label'],
-                                           score=h['score'])
-                               for h in results
-                               if h['score'] > 0.0])
+        return ListAnalysisResult([AnalysisHit(uri=h['uri'],
+                                               label=h['label'],
+                                               score=h['score'])
+                                   for h in results
+                                   if h['score'] > 0.0],
+                                  project.subjects)

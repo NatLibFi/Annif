@@ -3,7 +3,7 @@
 import collections
 import os.path
 import annif.util
-from annif.hit import AnalysisHit, AnalysisResult
+from annif.hit import AnalysisHit, ListAnalysisResult
 from annif.exception import NotInitializedException
 import fastText
 from . import backend
@@ -124,7 +124,7 @@ class FastTextBackend(backend.AnnifBackend):
                 uri=subject[0],
                 label=subject[1],
                 score=score / len(chunktexts)))
-        return AnalysisResult(results)
+        return ListAnalysisResult(results, project.subjects)
 
     def _analyze(self, text, project, params):
         self.initialize()

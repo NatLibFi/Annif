@@ -92,17 +92,17 @@ def test_evaluation_batch(subject_index):
 
     gold_set = annif.corpus.SubjectSet(
         '<http://www.yso.fi/onto/yso/p10849>\tarkeologit')
-    hits1 = annif.hit.AnalysisResult([
+    hits1 = annif.hit.ListAnalysisResult([
         annif.hit.AnalysisHit(
             uri='http://www.yso.fi/onto/yso/p10849',
             label='arkeologit',
-            score=1.0)])
+            score=1.0)], subject_index)
     batch.evaluate(hits1, gold_set)
-    hits2 = annif.hit.AnalysisResult([
+    hits2 = annif.hit.ListAnalysisResult([
         annif.hit.AnalysisHit(
             uri='http://www.yso.fi/onto/yso/p1747',
             label='egyptologit',
-            score=1.0)])
+            score=1.0)], subject_index)
     batch.evaluate(hits2, gold_set)
     results = batch.results()
     assert results['Precision (doc avg)'] == 0.5

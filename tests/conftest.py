@@ -4,6 +4,7 @@ import os.path
 import shutil
 import pytest
 import py.path
+import unittest.mock
 import annif
 
 
@@ -69,3 +70,11 @@ def document_corpus(subject_index):
     doc_corpus = annif.corpus.DocumentFile(docfile)
     doc_corpus.set_subject_index(subject_index)
     return doc_corpus
+
+
+@pytest.fixture(scope='module')
+def project(document_corpus):
+    proj = unittest.mock.Mock()
+    proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
+    proj.subjects = annif.corpus.SubjectIndex(document_corpus)
+    return proj
