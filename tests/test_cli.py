@@ -9,7 +9,7 @@ import pytest
 from click.testing import CliRunner
 import annif.cli
 
-runner = CliRunner(env={'ANNIF_CONFIG': 'config.TestingConfig'})
+runner = CliRunner(env={'ANNIF_CONFIG': 'annif.default_config.TestingConfig'})
 
 # Generate a random project name to use in tests
 TEMP_PROJECT = ''.join(
