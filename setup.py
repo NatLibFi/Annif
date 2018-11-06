@@ -16,6 +16,8 @@ setup(
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
     packages=find_packages(),
+    include_package_data=True,
+    zip_safe=False,
     install_requires=[
         'connexion',
         'flask-cors',

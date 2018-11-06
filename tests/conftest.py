@@ -16,7 +16,7 @@ def app():
         'corpora',
         'dummy-subjects.tsv')
     vocab = annif.corpus.SubjectFileTSV(subjfile)
-    app = annif.create_app(config_name='config.TestingConfig')
+    app = annif.create_app(config_name='annif.default_config.TestingConfig')
     with app.app_context():
         project = annif.project.get_project('dummy-en')
         project.vocab.load_vocabulary(vocab)
@@ -25,7 +25,8 @@ def app():
 
 @pytest.fixture(scope='module')
 def app_with_initialize():
-    app = annif.create_app(config_name='config.TestingInitializeConfig')
+    app = annif.create_app(
+        config_name='annif.default_config.TestingInitializeConfig')
     return app
 
 
