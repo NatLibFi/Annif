@@ -80,7 +80,8 @@ class PAVBackend(ensemble.EnsembleBackend):
         self.debug('{} hits after merging'.format(len(merged_hits)))
         return merged_hits
 
-    def _analyze_train_corpus(self, source_project, corpus):
+    @classmethod
+    def _analyze_train_corpus(cls, source_project, corpus):
         scores = []
         true = []
         for doc in corpus.documents:
