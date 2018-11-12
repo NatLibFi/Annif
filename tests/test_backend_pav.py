@@ -7,20 +7,20 @@ def test_pav_load_documents(app, datadir, document_corpus, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
-        params={'limit': 50, 'min-docs': 1, 'sources': 'fasttext-fi'},
+        params={'limit': 50, 'min-docs': 1, 'sources': 'dummy-fi'},
         datadir=str(datadir))
 
     with app.app_context():
         pav.load_corpus(document_corpus, project)
-    assert datadir.join('pav-model-fasttext-fi').exists()
-    assert datadir.join('pav-model-fasttext-fi').size() > 0
+    assert datadir.join('pav-model-dummy-fi').exists()
+    assert datadir.join('pav-model-dummy-fi').size() > 0
 
 
 def test_pav_analyze(app, datadir, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
-        params={'limit': 50, 'min-docs': 1, 'sources': 'fasttext-fi'},
+        params={'limit': 50, 'min-docs': 1, 'sources': 'dummy-fi'},
         datadir=str(datadir))
 
     results = pav.analyze("""Arkeologiaa sanotaan joskus myös
@@ -31,6 +31,3 @@ def test_pav_analyze(app, datadir, project):
         pohjaan.""", project)
 
     assert len(results) > 0
-    assert 'http://www.yso.fi/onto/yso/p1265' in [
-        result.uri for result in results]
-    assert 'arkeologia' in [result.label for result in results]
