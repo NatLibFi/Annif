@@ -1,17 +1,19 @@
 """Unit tests for the PAV backend in Annif"""
 
 import annif.backend
+import annif.corpus
 
 
 def test_pav_load_documents(app, datadir, tmpdir, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
-        params={'limit': 50, 'min-docs': 0, 'sources': 'dummy-fi'},
+        params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
         datadir=str(datadir))
 
     tmpfile = tmpdir.join('document.tsv')
     tmpfile.write("dummy\thttp://example.org/dummy\n" +
+                  "another\thttp://example.org/dummy\n" +
                   "none\thttp://example.org/none")
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
@@ -21,11 +23,24 @@ def test_pav_load_documents(app, datadir, tmpdir, project):
     assert datadir.join('pav-model-dummy-fi').size() > 0
 
 
+def test_pav_initialize(app, datadir):
+    pav_type = annif.backend.get_backend("pav")
+    pav = pav_type(
+        backend_id='pav',
+        params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        datadir=str(datadir))
+
+    assert pav._models is None
+    with app.app_context():
+        pav.initialize()
+    assert pav._models is not None
+
+
 def test_pav_analyze(app, datadir, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
-        params={'limit': 50, 'min-docs': 0, 'sources': 'dummy-fi'},
+        params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
         datadir=str(datadir))
 
     results = pav.analyze("""Arkeologiaa sanotaan joskus myös
@@ -35,4 +50,5 @@ def test_pav_analyze(app, datadir, project):
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan.""", project)
 
+    assert len(pav._models['dummy-fi']) == 1
     assert len(results) > 0
