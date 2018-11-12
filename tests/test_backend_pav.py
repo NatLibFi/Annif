@@ -34,6 +34,9 @@ def test_pav_initialize(app, datadir):
     with app.app_context():
         pav.initialize()
     assert pav._models is not None
+    # initialize a second time - this shouldn't do anything
+    with app.app_context():
+        pav.initialize()
 
 
 def test_pav_analyze(app, datadir, project):
