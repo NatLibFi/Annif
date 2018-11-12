@@ -7,6 +7,7 @@ from . import ensemble
 from . import http
 from . import tfidf
 from . import fasttext
+from . import pav
 
 
 _backend_types = {}
@@ -28,3 +29,4 @@ register_backend(ensemble.EnsembleBackend)
 register_backend(http.HTTPBackend)
 register_backend(tfidf.TFIDFBackend)
 register_backend(fasttext.FastTextBackend)
+register_backend(pav.PAVBackend)

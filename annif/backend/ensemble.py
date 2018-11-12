@@ -11,17 +11,23 @@ class EnsembleBackend(backend.AnnifBackend):
     """Ensemble backend that combines results from multiple projects"""
     name = "ensemble"
 
+    def _normalize_hits(self, hits, source_project):
+        """Hook for processing hits from backends. Intended to be overridden
+        by subclasses."""
+        return hits
+
     def _analyze_with_sources(self, text, sources):
         hits_from_sources = []
         for project_id, weight in sources:
-            project = annif.project.get_project(project_id)
-            hits = project.analyze(text)
+            source_project = annif.project.get_project(project_id)
+            hits = source_project.analyze(text)
             self.debug(
                 'Got {} hits from project {}'.format(
-                    len(hits), project.project_id))
+                    len(hits), source_project.project_id))
+            norm_hits = self._normalize_hits(hits, source_project)
             hits_from_sources.append(
                 annif.hit.WeightedHits(
-                    hits=hits, weight=weight))
+                    hits=norm_hits, weight=weight))
         return hits_from_sources
 
     def _analyze(self, text, project, params):
