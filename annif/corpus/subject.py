@@ -140,9 +140,11 @@ class SubjectSet:
         if self.has_uris():
             for uri in self.subject_uris:
                 subject_id = subject_index.by_uri(uri)
-                vector[subject_id] = 1
+                if subject_id is not None:
+                    vector[subject_id] = 1
         else:
             for label in self.subject_labels:
                 subject_id = subject_index.by_label(label)
-                vector[subject_id] = 1
+                if subject_id is not None:
+                    vector[subject_id] = 1
         return vector

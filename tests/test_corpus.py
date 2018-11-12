@@ -28,6 +28,25 @@ def test_subjectset_labels():
     assert "another" in sset.subject_labels
 
 
+def test_subjectset_from_tuple():
+    uris = ['http://www.yso.fi/onto/yso/p10849',
+            'http://www.yso.fi/onto/yso/p19740']
+    labels = ['arkeologit', 'obeliskit']
+    sset = annif.corpus.SubjectSet((uris, labels))
+    assert sset.has_uris()
+    assert len(sset.subject_uris) == 2
+    assert 'http://www.yso.fi/onto/yso/p10849' in sset.subject_uris
+    assert 'http://www.yso.fi/onto/yso/p19740' in sset.subject_uris
+
+
+def test_subjectset_as_vector(subject_index):
+    uris = ['http://www.yso.fi/onto/yso/p10849', 'http://example.org/unknown']
+    labels = ['arkeologit', 'unknown-subject']
+    sset = annif.corpus.SubjectSet((uris, labels))
+    vector = sset.as_vector(subject_index)
+    assert vector.sum() == 1  # only one known subject
+
+
 def test_docdir_key(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('key1')
