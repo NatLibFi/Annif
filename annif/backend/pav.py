@@ -24,10 +24,12 @@ class PAVBackend(ensemble.EnsembleBackend):
     # defaults for uninitialized instances
     _models = None
 
-    def _get_model(self, source_project_id, project):
-        if self._models is None:
-            self._models = {}
-        if source_project_id not in self._models:
+    def initialize(self):
+        if self._models is not None:
+            return  # already initialized
+        self._models = {}
+        sources = annif.util.parse_sources(self.params['sources'])
+        for source_project_id, _ in sources:
             model_filename = self.MODEL_FILE_PREFIX + source_project_id
             path = os.path.join(self._get_datadir(), model_filename)
             if os.path.exists(path):
@@ -36,11 +38,14 @@ class PAVBackend(ensemble.EnsembleBackend):
             else:
                 raise NotInitializedException(
                     "PAV model file '{}' not found".format(path),
-                    project_id=project.project_id)
+                    backend_id=self.backend_id)
+
+    def _get_model(self, source_project_id):
+        self.initialize()
         return self._models[source_project_id]
 
-    def _normalize_hits(self, hits, source_project, project):
-        reg_models = self._get_model(source_project.project_id, project)
+    def _normalize_hits(self, hits, source_project):
+        reg_models = self._get_model(source_project.project_id)
         pav_result = []
         for hit in hits.hits:
             if hit.uri in reg_models:

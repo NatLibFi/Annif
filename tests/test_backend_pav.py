@@ -3,12 +3,17 @@
 import annif.backend
 
 
-def test_pav_load_documents(app, datadir, document_corpus, project):
+def test_pav_load_documents(app, datadir, tmpdir, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
         params={'limit': 50, 'min-docs': 0, 'sources': 'dummy-fi'},
         datadir=str(datadir))
+
+    tmpfile = tmpdir.join('document.tsv')
+    tmpfile.write("dummy\thttp://example.org/dummy\n" +
+                  "none\thttp://example.org/none")
+    document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
     with app.app_context():
         pav.load_corpus(document_corpus, project)
