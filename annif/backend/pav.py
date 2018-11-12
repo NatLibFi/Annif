@@ -91,7 +91,7 @@ class PAVBackend(ensemble.EnsembleBackend):
             true.append(subjects.as_vector(source_project.subjects))
         return np.array(scores), np.array(true)
 
-    def _create_pav_model(self, source_project_id, min_docs, corpus, project):
+    def _create_pav_model(self, source_project_id, min_docs, corpus):
         self.info("creating PAV model for source {}, min_docs={}".format(
             source_project_id, min_docs))
         source_project = annif.project.get_project(source_project_id)
@@ -119,5 +119,4 @@ class PAVBackend(ensemble.EnsembleBackend):
         sources = annif.util.parse_sources(self.params['sources'])
         min_docs = int(self.params['min-docs'])
         for source_project_id, _ in sources:
-            self._create_pav_model(
-                source_project_id, min_docs, corpus, project)
+            self._create_pav_model(source_project_id, min_docs, corpus)
