@@ -1,10 +1,7 @@
-"""Unit tests for the TF-IDF backend in Annif"""
+"""Unit tests for the fastText backend in Annif"""
 
-import annif
 import annif.backend
 import annif.corpus
-from sklearn.feature_extraction.text import TfidfVectorizer
-import pytest
 
 
 def test_fasttext_load_documents(datadir, document_corpus, project):
