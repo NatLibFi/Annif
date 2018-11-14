@@ -21,7 +21,11 @@ class HTTPBackend(backend.AnnifBackend):
         except requests.exceptions.RequestException as err:
             self.warning("HTTP request failed: {}".format(err))
             return ListAnalysisResult([], project.subjects)
-        response = req.json()
+        try:
+            response = req.json()
+        except ValueError as err:
+            self.warning("JSON decode failed: {}".format(err))
+            return ListAnalysisResult([], project.subjects)
         if 'results' in response:
             results = response['results']
         else:

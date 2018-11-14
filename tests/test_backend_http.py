@@ -85,3 +85,22 @@ def test_http_analyze_error(app, project):
             datadir=app.config['DATADIR'])
         result = http.analyze('this is some text', project=project)
         assert len(result) == 0
+
+
+def test_http_analyze_json_fails(app, project):
+    with unittest.mock.patch('requests.post') as mock_request:
+        # create a mock response whose .json() method returns the list that we
+        # define here
+        mock_response = unittest.mock.Mock()
+        mock_response.json.side_effect = ValueError("JSON decode failed")
+        mock_request.return_value = mock_response
+
+        http_type = annif.backend.get_backend("http")
+        http = http_type(
+            backend_id='http',
+            params={
+                'endpoint': 'http://api.example.org/analyze',
+                'project': 'dummy'},
+            datadir=app.config['DATADIR'])
+        result = http.analyze('this is some text', project=project)
+        assert len(result) == 0
