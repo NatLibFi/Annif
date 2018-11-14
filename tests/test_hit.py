@@ -61,3 +61,15 @@ def test_analysishits_vector(document_corpus):
             assert score == 0.5
         else:
             assert score == 0.0
+
+
+def test_analysishits_vector_notfound(document_corpus):
+    subjects = SubjectIndex(document_corpus)
+    hits = ListAnalysisResult(
+        [
+            AnalysisHit(
+                uri='http://example.com/notfound',
+                label='not found',
+                score=1.0)],
+        subjects)
+    assert hits.vector.sum() == 0
