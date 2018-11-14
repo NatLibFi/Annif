@@ -3,6 +3,7 @@ and returns the results"""
 
 
 import requests
+import requests.exceptions
 from annif.hit import AnalysisHit, ListAnalysisResult
 from . import backend
 
@@ -14,7 +15,12 @@ class HTTPBackend(backend.AnnifBackend):
         data = {'text': text}
         if 'project' in params:
             data['project'] = params['project']
-        req = requests.post(params['endpoint'], data=data)
+        try:
+            req = requests.post(params['endpoint'], data=data)
+            req.raise_for_status()
+        except requests.exceptions.RequestException as err:
+            self.warning("HTTP request failed: {}".format(err))
+            return ListAnalysisResult([], project.subjects)
         response = req.json()
         if 'results' in response:
             results = response['results']
