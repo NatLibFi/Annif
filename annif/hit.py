@@ -117,7 +117,8 @@ class ListAnalysisResult(AnalysisResult):
         vector = np.zeros(len(self._subject_index))
         for hit in self._hits:
             subject_id = self._subject_index.by_uri(hit.uri)
-            vector[subject_id] = hit.score
+            if subject_id is not None:
+                vector[subject_id] = hit.score
         return vector
 
     @property
