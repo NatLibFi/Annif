@@ -195,6 +195,13 @@ class AnnifProject:
 
 
 def _create_projects(projects_file, datadir, init_projects):
+    if not os.path.exists(projects_file):
+        logger.warning("Project configuration file '%s' is missing. " +
+                       'Please provide one.', projects_file)
+        logger.warning('You can set the path to the project configuration ' +
+                       'file using the ANNIF_PROJECTS environment variable.')
+        return {}
+
     config = configparser.ConfigParser()
     config.optionxform = lambda option: option
     with open(projects_file) as projf:
