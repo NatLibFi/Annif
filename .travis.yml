@@ -1,17 +1,26 @@
 sudo: false
 language: python
 python:
-  - "3.5"
-  - "3.6"
+- '3.5'
+- '3.6'
 cache: pip
 install:
-  - pip install pipenv
-  - pip install --upgrade pytest
-  - pipenv install --dev --skip-lock
-  - travis_wait 30 python -m nltk.downloader punkt
+- pip install pipenv
+- pip install --upgrade pytest
+- pipenv install --dev --skip-lock
+- travis_wait 30 python -m nltk.downloader punkt
 script:
-  - pytest --cov=./
+- pytest --cov=./
 after_success:
-  - codecov
+- codecov
 notifications:
   slack: kansalliskirjasto:tyt7yhMrgqceJoKiSNt09nvV
+deploy:
+  provider: pypi
+  user: osma
+  password:
+    secure: b6uEmuk1zlKYC9+GKvf5YUx/+I9A7O2rJi172HpN3dOJCvWBoPtCINdSGxyFfRuhu39T/8UjB8ZmdLbw0bz+0/K02VJsbxXWkBFRS+YA3Go1GscydRXrbtxfKrRTWWE/7FG9HKlvaXFhcZLKGFu6dle0IfEY/P+sEzP1a+hWHwReO4KL37bsA9922mD2zeJW4D3GrGwkg8pOrMEDvSMEd4DhGLo6LjgBhr+ErbF7Ngk29bBgrVbWR+z0c6KkOa4uhoxl/7YJqypjJsFzJKGGMGxhhSeVpqrbVT2t8GZG/0GV3HUkHW3neMJWsy6sX8QBYlwH0nW/je4LUdAE70nB3H2zDRYcVburQZv/aX5246x+I8Ur/wlxnHM9LQ4ipc8RFgQVhNxWgQkbIt1K1EuaX/uf3shKowx8U0XIwUTuLdVTxQQIYEJ9RSF1V4dVBaImOtIteIEI26dFh1jg7VdWpTxY5eZ9bv1ahjhuFpp33YfTe7ylAweSNY+Mtb4ibIYAn/6aRoyOELrwLlrL8qli7I+qjwItlXCzv3pwWq2mTFdjMRD9j6K2HW22dwoEgZQ3/NqrriYp9L2pyubcHqSS71Xlg4bjt1zZzqG1hSXqMfEaxic+uFlLVtAcxpBm5LndxUGo3rMJu3Nh8hOHLP6tLdmylxgiYb+alB8twqwdQ20=
+  on:
+    tags: true
+  distributions: "sdist bdist_wheel"
+  skip_existing: true
