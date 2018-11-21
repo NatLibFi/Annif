@@ -8,7 +8,7 @@ def read(fname):
 
 setup(
     name='annif',
-    version='0.36.1',
+    version='0.36.2',
     url='https://github.com/NatLibFi/Annif',
     author='Osma Suominen',
     author_email='osma.suominen@helsinki.fi',
@@ -19,7 +19,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'connexion',
+        'connexion[swagger-ui]',
         'flask-cors',
         'click-log',
         'nltk',

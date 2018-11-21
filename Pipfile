@@ -14,7 +14,7 @@ bumpversion = "*"
 
 [packages]
 "e1839a8" = {editable = true, path = "."}
-connexion = "*"
+connexion = {extras = ["swagger-ui"]}
 flask-cors = "*"
 click-log = "*"
 nltk = "*"
