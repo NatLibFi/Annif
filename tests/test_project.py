@@ -1,5 +1,6 @@
 """Unit tests for projects in Annif"""
 
+import os
 import pytest
 import annif.project
 import annif.backend.dummy
@@ -124,3 +125,11 @@ def test_project_initialized(app_with_initialize):
     assert project.initialized
     dummy = project.backends[0][0]
     assert dummy.initialized
+
+
+def test_project_file_not_found():
+    app = annif.create_app(
+        config_name='annif.default_config.TestingNoProjectsConfig')
+    with app.app_context():
+        with pytest.raises(ValueError):
+            project = annif.project.get_project('dummy-en')
