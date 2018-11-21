@@ -20,6 +20,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'connexion[swagger-ui]',
+        'swagger_ui_bundle',
         'flask-cors',
         'click-log',
         'nltk',
