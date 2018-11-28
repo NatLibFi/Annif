@@ -6,6 +6,7 @@ import pytest
 import py.path
 import unittest.mock
 import annif
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 @pytest.fixture(scope='module')
@@ -79,3 +80,11 @@ def project(document_corpus):
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
     proj.subjects = annif.corpus.SubjectIndex(document_corpus)
     return proj
+
+
+@pytest.fixture(scope='module')
+def project_with_vectorizer(project, document_corpus):
+    project.vectorizer = TfidfVectorizer(
+        tokenizer=project.analyzer.tokenize_words)
+    project.vectorizer.fit([subj.text for subj in document_corpus.subjects])
+    return project

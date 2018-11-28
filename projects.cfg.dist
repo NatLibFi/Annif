@@ -24,6 +24,33 @@ analyzer=snowball(english)
 limit=100
 vocab=yso-en
 
+[lsi-fi]
+name=LSI Finnish
+language=fi
+backends=lsi
+analyzer=snowball(finnish)
+limit=100
+vocab=yso-fi
+num_topics=200
+
+[lsi-sv]
+name=LSI Swedish
+language=sv
+backends=lsi
+analyzer=snowball(swedish)
+limit=100
+vocab=yso-sv
+num_topics=200
+
+[lsi-en]
+name=LSI English
+language=en
+backends=lsi
+analyzer=snowball(english)
+limit=100
+vocab=yso-en
+num_topics=200
+
 [fasttext-fi]
 name=fastText Finnish
 language=fi

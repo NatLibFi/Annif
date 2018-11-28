@@ -6,6 +6,7 @@ from . import dummy
 from . import ensemble
 from . import http
 from . import tfidf
+from . import lsi
 from . import fasttext
 from . import pav
 
@@ -28,5 +29,6 @@ register_backend(dummy.DummyBackend)
 register_backend(ensemble.EnsembleBackend)
 register_backend(http.HTTPBackend)
 register_backend(tfidf.TFIDFBackend)
+register_backend(lsi.LSIBackend)
 register_backend(fasttext.FastTextBackend)
 register_backend(pav.PAVBackend)
