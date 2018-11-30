@@ -22,7 +22,7 @@ logger = annif.logger
 class AnnifProject:
     """Class representing the configuration of a single Annif project."""
 
-    # defaults for unitialized instances
+    # defaults for uninitialized instances
     _analyzer = None
     _vocab = None
     _vectorizer = None

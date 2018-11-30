@@ -22,7 +22,7 @@ paths:
         - application/json
       responses:
         '200':
-          description: succesful operation
+          description: successful operation
           schema:
             $ref: '#/definitions/ProjectList'
       tags:
@@ -38,7 +38,7 @@ paths:
         - $ref: '#/parameters/project_id'
       responses:
         '200':
-          description: succesful operation
+          description: successful operation
           schema:
             $ref: '#/definitions/Project'
         '404':
