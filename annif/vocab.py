@@ -14,7 +14,7 @@ class AnnifVocabulary:
     """Class representing a subject vocabulary which can be used by multiple
     Annif projects."""
 
-    # defaults for unitialized instances
+    # defaults for uninitialized instances
     _subjects = None
 
     def __init__(self, vocab_id, datadir):
