@@ -4,6 +4,8 @@ python:
 - '3.5'
 - '3.6'
 cache: pip
+before_install:
+- export BOTO_CONFIG=/dev/null
 install:
 - pip install pipenv
 - pip install --upgrade pytest
