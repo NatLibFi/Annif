@@ -22,7 +22,7 @@ class DocumentDirectory(DocumentCorpus, DocumentToSubjectCorpusMixin):
         subjectfile) containing file paths. If there is no key file and
         require_subjects is False, the subjectfile will be returned as None."""
 
-        for filename in glob.glob(os.path.join(self.path, '*.txt')):
+        for filename in sorted(glob.glob(os.path.join(self.path, '*.txt'))):
             tsvfilename = re.sub(r'\.txt$', '.tsv', filename)
             if os.path.exists(tsvfilename):
                 yield (filename, tsvfilename)
