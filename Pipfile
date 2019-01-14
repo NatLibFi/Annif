@@ -22,5 +22,6 @@ nltk = "*"
 gensim = "*"
 sklearn = "*"
 rdflib = "*"
+vowpalwabbit = "*"
 
 [requires]

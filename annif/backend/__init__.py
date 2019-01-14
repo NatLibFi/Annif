@@ -29,6 +29,7 @@ register_backend(ensemble.EnsembleBackend)
 register_backend(http.HTTPBackend)
 register_backend(tfidf.TFIDFBackend)
 register_backend(pav.PAVBackend)
+<<<<<<< ac148fb4b8338b9167cf19d2e1ee877def91897e
 
 # Optional backends
 try:
@@ -36,3 +37,9 @@ try:
     register_backend(fasttext.FastTextBackend)
 except ImportError:
     annif.logger.debug("fastText not available, not enabling fasttext backend")
+
+try:
+    from . import vw
+    register_backend(vw.VWBackend)
+except ImportError:
+    annif.logger.debug("vowpalwabbit not available, not enabling vw backend")

@@ -30,6 +30,7 @@ setup(
     extras_require={
         'fasttext': ['fasttextmirror'],
         'voikko': ['voikko'],
+        'vw': ['vowpalwabbit'],
     },
     entry_points={
         'console_scripts': ['annif=annif.cli:cli']},
