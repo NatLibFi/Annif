@@ -12,7 +12,7 @@ addons:
 cache: pip
 before_install:
 - export BOTO_CONFIG=/dev/null
-- sudo apt-get install libboost-program-options-dev libboost-python-dev zlib1g-dev
+- sudo apt-get install libboost-program-options-dev libboost-python-dev zlib1g-dev python-dev
 install:
 - pip install pipenv
 - pip install --upgrade pytest
