@@ -17,6 +17,7 @@ class VWBackend(backend.AnnifBackend):
     needs_subject_index = True
 
     MODEL_FILE = 'vw-model'
+    TRAIN_FILE = 'vw-train.txt'
 
     # defaults for uninitialized instances
     _model = None
@@ -46,11 +47,16 @@ class VWBackend(backend.AnnifBackend):
     def _normalize_text(cls, project, text):
         return ' '.join(project.analyzer.tokenize_words(text)).replace(':', '')
 
-    @classmethod
-    def _corpus_to_examples(cls, project, corpus):
+    def _write_train_file(self, examples, filename):
+        with open(filename, 'w') as trainfile:
+            for ex in examples:
+                print(ex, file=trainfile)
+
+    def _create_train_file(self, corpus, project):
+        self.info('creating VW train file')
         examples = []
         for doc in corpus.documents:
-            text = cls._normalize_text(project, doc.text)
+            text = self._normalize_text(project, doc.text)
             for uri in doc.uris:
                 subject_id = project.subjects.by_uri(uri)
                 if subject_id is None:
@@ -58,20 +64,27 @@ class VWBackend(backend.AnnifBackend):
                 exstr = '{} | {}'.format(subject_id + 1, text)
                 examples.append(exstr)
         random.shuffle(examples)
-        return examples
+        annif.util.atomic_save(examples,
+                               self._get_datadir(),
+                               self.TRAIN_FILE,
+                               method=self._write_train_file)
 
-    def load_corpus(self, corpus, project):
+    def _create_model(self, project):
         self.info('creating VW model')
-        modelpath = os.path.join(self._get_datadir(), self.MODEL_FILE)
+        trainpath = os.path.join(self._get_datadir(), self.TRAIN_FILE)
         self._model = pyvw.vw(
             oaa=len(
                 project.subjects),
             loss_function='logistic',
-            probabilities=True)
-        examples = self._corpus_to_examples(project, corpus)
-        for ex in examples:
-            self._model.learn(ex)
+            probabilities=True,
+            data=trainpath,
+            b=28)
+        modelpath = os.path.join(self._get_datadir(), self.MODEL_FILE)
         self._model.save(modelpath)
+
+    def load_corpus(self, corpus, project):
+        self._create_train_file(corpus, project)
+        self._create_model(project)
 
     def _analyze(self, text, project, params):
         self.initialize()
