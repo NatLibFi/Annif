@@ -7,6 +7,7 @@ python:
 cache: pip
 before_install:
 - export BOTO_CONFIG=/dev/null
+install:
 - pip install pipenv
 - pip install --upgrade pytest
 - pipenv install --dev --skip-lock
