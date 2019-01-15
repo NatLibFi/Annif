@@ -6,8 +6,8 @@ from . import dummy
 from . import ensemble
 from . import http
 from . import tfidf
-from . import fasttext
 from . import pav
+import annif
 
 
 _backend_types = {}
@@ -28,5 +28,11 @@ register_backend(dummy.DummyBackend)
 register_backend(ensemble.EnsembleBackend)
 register_backend(http.HTTPBackend)
 register_backend(tfidf.TFIDFBackend)
-register_backend(fasttext.FastTextBackend)
 register_backend(pav.PAVBackend)
+
+# Optional backends
+try:
+    from . import fasttext
+    register_backend(fasttext.FastTextBackend)
+except ImportError:
+    annif.logger.debug("fastText not available, not enabling fasttext backend")

@@ -3,7 +3,7 @@
 import pytest
 import annif.analyzer
 
-voikko = pytest.importorskip("voikko")
+voikko = pytest.importorskip("annif.analyzer.voikko")
 
 
 def test_voikko_getstate():

@@ -21,7 +21,6 @@ click-log = "*"
 nltk = "*"
 gensim = "*"
 sklearn = "*"
-fasttextmirror = "*"
 rdflib = "*"
 
 [requires]

@@ -35,7 +35,6 @@ register_analyzer(snowball.SnowballAnalyzer)
 
 # Optional analyzers
 try:
-    import voikko as _voikko
     from . import voikko
     register_analyzer(voikko.VoikkoAnalyzer)
 except ImportError:
