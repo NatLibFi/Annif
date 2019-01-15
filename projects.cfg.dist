@@ -3,7 +3,7 @@
 [tfidf-fi]
 name=TF-IDF Finnish
 language=fi
-backends=tfidf
+backend=tfidf
 analyzer=voikko(fi)
 limit=100
 vocab=yso-fi
@@ -11,7 +11,7 @@ vocab=yso-fi
 [tfidf-sv]
 name=TF-IDF Swedish
 language=sv
-backends=tfidf
+backend=tfidf
 analyzer=snowball(swedish)
 limit=100
 vocab=yso-sv
@@ -19,7 +19,7 @@ vocab=yso-sv
 [tfidf-en]
 name=TF-IDF English
 language=en
-backends=tfidf
+backend=tfidf
 analyzer=snowball(english)
 limit=100
 vocab=yso-en
@@ -27,7 +27,7 @@ vocab=yso-en
 [fasttext-fi]
 name=fastText Finnish
 language=fi
-backends=fasttext
+backend=fasttext
 analyzer=voikko(fi)
 dim=500
 lr=0.25
@@ -40,7 +40,7 @@ vocab=yso-fi
 [fasttext-sv]
 name=fastText Swedish
 language=sv
-backends=fasttext
+backend=fasttext
 analyzer=snowball(swedish)
 dim=500
 lr=0.25
@@ -53,7 +53,7 @@ vocab=yso-sv
 [fasttext-en]
 name=fastText English
 language=en
-backends=fasttext
+backend=fasttext
 analyzer=snowball(english)
 dim=500
 lr=0.25
@@ -66,28 +66,28 @@ vocab=yso-en
 [maui-fi]
 name=Maui Finnish
 language=fi
-backends=http
+backend=http
 endpoint=http://localhost:8080/maui/jyu-fin/analyze
 vocab=yso-fi
 
 [maui-sv]
 name=Maui Swedish
 language=sv
-backends=http
+backend=http
 endpoint=http://localhost:8080/maui/jyu-swe/analyze
 vocab=yso-sv
 
 [maui-en]
 name=Maui English
 language=en
-backends=http
+backend=http
 endpoint=http://localhost:8080/maui/jyu-eng/analyze
 vocab=yso-en
 
 [annif-api-fi]
 name=Annif prototype API Finnish
 language=fi
-backends=http
+backend=http
 endpoint=http://api.annif.org/v0/autoindex
 project=yso-finna-fi
 vocab=yso-fi
@@ -95,7 +95,7 @@ vocab=yso-fi
 [annif-api-sv]
 name=Annif prototype API Swedish
 language=sv
-backends=http
+backend=http
 endpoint=http://api.annif.org/v0/autoindex
 project=yso-finna-sv
 vocab=yso-sv
@@ -103,7 +103,7 @@ vocab=yso-sv
 [annif-api-en]
 name=Annif prototype API English
 language=en
-backends=http
+backend=http
 endpoint=http://api.annif.org/v0/autoindex
 project=yso-finna-en
 vocab=yso-en

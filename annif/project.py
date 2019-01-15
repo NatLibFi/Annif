@@ -36,7 +36,7 @@ class AnnifProject:
         self.vocab_id = config.get('vocab', None)
         self._base_datadir = datadir
         self._datadir = os.path.join(datadir, 'projects', self.project_id)
-        self.backends = self._setup_backends(config)
+        self.backend = self._setup_backend(config)
 
     def _get_datadir(self):
         """return the path of the directory where this project can store its
@@ -45,16 +45,10 @@ class AnnifProject:
             os.makedirs(self._datadir)
         return self._datadir
 
-    def _setup_backends(self, config):
-        backends = []
-        for backend_id, weight in annif.util.parse_sources(config['backends']):
-            backend_type = annif.backend.get_backend(backend_id)
-            backend = backend_type(
-                backend_id,
-                params=config,
-                datadir=self._datadir)
-            backends.append((backend, weight))
-        return backends
+    def _setup_backend(self, config):
+        backend_id = config['backend']
+        backend_type = annif.backend.get_backend(backend_id)
+        return backend_type(backend_id, params=config, datadir=self._datadir)
 
     def _initialize_analyzer(self):
         analyzer = self.analyzer
@@ -80,40 +74,34 @@ class AnnifProject:
         except AnnifException as err:
             logger.warning(err.format_message())
 
-    def _initialize_backends(self):
-        logger.debug("Project '%s': initializing backends", self.project_id)
-        for backend, _ in self.backends:
-            try:
-                backend.initialize()
-            except AnnifException as err:
-                logger.warning(err.format_message())
+    def _initialize_backend(self):
+        logger.debug("Project '%s': initializing backend", self.project_id)
+        try:
+            self.backend.initialize()
+        except AnnifException as err:
+            logger.warning(err.format_message())
 
     def initialize(self):
-        """initialize this project and all backends so that they are ready to
+        """initialize this project and its backend so that they are ready to
         analyze"""
         logger.debug("Initializing project '%s'", self.project_id)
 
         self._initialize_analyzer()
         self._initialize_subjects()
         self._initialize_vectorizer()
-        self._initialize_backends()
+        self._initialize_backend()
 
         self.initialized = True
 
-    def _analyze_with_backends(self, text, backend_params):
-        hits_from_backends = []
+    def _analyze_with_backend(self, text, backend_params):
         if backend_params is None:
             backend_params = {}
-        for backend, weight in self.backends:
-            beparams = backend_params.get(backend.backend_id, {})
-            hits = backend.analyze(text, project=self, params=beparams)
-            logger.debug(
-                'Got %d hits from backend %s',
-                len(hits), backend.backend_id)
-            hits_from_backends.append(
-                annif.hit.WeightedHits(
-                    hits=hits, weight=weight))
-        return hits_from_backends
+        beparams = backend_params.get(self.backend.backend_id, {})
+        hits = self.backend.analyze(text, project=self, params=beparams)
+        logger.debug(
+            'Got %d hits from backend %s',
+            len(hits), self.backend.backend_id)
+        return hits
 
     @property
     def analyzer(self):
@@ -149,21 +137,18 @@ class AnnifProject:
         return self._vectorizer
 
     def analyze(self, text, backend_params=None):
-        """Analyze the given text by passing it to backends and joining the
-        results. Returns a list of AnalysisHit objects ordered by decreasing
-        score."""
+        """Analyze the given text by passing it to the backend. Returns a
+        list of AnalysisHit objects ordered by decreasing score."""
 
         logger.debug('Analyzing text "%s..." (len=%d)',
                      text[:20], len(text))
-        hits_from_backends = self._analyze_with_backends(text, backend_params)
-        merged_hits = annif.util.merge_hits(hits_from_backends, self.subjects)
-        logger.debug('%d hits after merging', len(merged_hits))
-        return merged_hits
+        hits = self._analyze_with_backend(text, backend_params)
+        logger.debug('%d hits from backend', len(hits))
+        return hits
 
     def _create_vectorizer(self, subjectcorpus):
-        if True not in [
-                be[0].needs_subject_vectorizer for be in self.backends]:
-            logger.debug('not creating vectorizer: not needed by any backend')
+        if not self.backend.needs_subject_vectorizer:
+            logger.debug('not creating vectorizer: not needed by backend')
             return
         logger.info('creating vectorizer')
         self._vectorizer = TfidfVectorizer(
@@ -180,17 +165,14 @@ class AnnifProject:
 
         corpus.set_subject_index(self.subjects)
         self._create_vectorizer(corpus)
-
-        for backend, _ in self.backends:
-            backend.load_corpus(corpus, project=self)
+        self.backend.load_corpus(corpus, project=self)
 
     def dump(self):
         """return this project as a dict"""
         return {'project_id': self.project_id,
                 'name': self.name,
                 'language': self.language,
-                'backends': [{'backend_id': be[0].backend_id,
-                              'weight': be[1]} for be in self.backends]
+                'backend': {'backend_id': self.backend.backend_id}
                 }
 
 
