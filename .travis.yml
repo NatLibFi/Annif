@@ -8,6 +8,7 @@ addons:
   apt:
     packages:
     - libvoikko1
+    - voikko-fi
 cache: pip
 before_install:
 - export BOTO_CONFIG=/dev/null
