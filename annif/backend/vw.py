@@ -8,9 +8,10 @@ import numpy as np
 from annif.hit import AnalysisHit, VectorAnalysisResult
 from annif.exception import NotInitializedException
 from . import backend
+from . import mixins
 
 
-class VWBackend(backend.AnnifBackend):
+class VWBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     """Vorpal Wabbit backend for Annif"""
 
     name = "vw"
@@ -93,21 +94,3 @@ class VWBackend(backend.AnnifBackend):
             results.append(np.array(self._model.predict(example)))
         return VectorAnalysisResult(
             np.array(results).mean(axis=0), project.subjects)
-
-    def _analyze(self, text, project, params):
-        self.initialize()
-        self.debug('Analyzing text "{}..." (len={})'.format(
-            text[:20], len(text)))
-        sentences = project.analyzer.tokenize_sentences(text)
-        self.debug('Found {} sentences'.format(len(sentences)))
-        chunksize = int(params['chunksize'])
-        chunktexts = []
-        for i in range(0, len(sentences), chunksize):
-            chunktext = ' '.join(sentences[i:i + chunksize])
-            normalized = self._normalize_text(project, chunktext)
-            if normalized != '':
-                chunktexts.append(normalized)
-        self.debug('Split sentences into {} chunks'.format(len(chunktexts)))
-        return self._analyze_chunks(chunktexts, project)
-
-        normalized = self._normalize_text(project, text)
