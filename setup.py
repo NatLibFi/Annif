@@ -27,8 +27,10 @@ setup(
         'gensim',
         'sklearn',
         'fasttextmirror',
-        'rdflib',
-        'voikko'],
+        'rdflib'],
+    extras_require={
+        'voikko': ['voikko'],
+    },
     entry_points={
         'console_scripts': ['annif=annif.cli:cli']},
     classifiers=[

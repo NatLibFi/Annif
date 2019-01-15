@@ -23,6 +23,5 @@ gensim = "*"
 sklearn = "*"
 fasttextmirror = "*"
 rdflib = "*"
-voikko = "*"
 
 [requires]
