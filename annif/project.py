@@ -171,12 +171,12 @@ class AnnifProject:
             'vectorizer',
             method=joblib.dump)
 
-    def load_documents(self, corpus):
-        """load training documents from a metadata source"""
+    def train(self, corpus):
+        """train the project using documents from a metadata source"""
 
         corpus.set_subject_index(self.subjects)
         self._create_vectorizer(corpus)
-        self.backend.load_corpus(corpus, project=self)
+        self.backend.train(corpus, project=self)
 
     def dump(self):
         """return this project as a dict"""

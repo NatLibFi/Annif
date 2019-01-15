@@ -7,7 +7,7 @@ import annif.corpus
 fasttext = pytest.importorskip("annif.backend.fasttext")
 
 
-def test_fasttext_load_documents(datadir, document_corpus, project):
+def test_fasttext_train(datadir, document_corpus, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
@@ -19,13 +19,13 @@ def test_fasttext_load_documents(datadir, document_corpus, project):
             'loss': 'hs'},
         datadir=str(datadir))
 
-    fasttext.load_corpus(document_corpus, project)
+    fasttext.train(document_corpus, project)
     assert fasttext._model is not None
     assert datadir.join('fasttext-model').exists()
     assert datadir.join('fasttext-model').size() > 0
 
 
-def test_fasttext_load_documents_unknown_subject(tmpdir, datadir, project):
+def test_fasttext_train_unknown_subject(tmpdir, datadir, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
@@ -42,7 +42,7 @@ def test_fasttext_load_documents_unknown_subject(tmpdir, datadir, project):
                   "arkeologia\thttp://www.yso.fi/onto/yso/p1265")
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
-    fasttext.load_corpus(document_corpus, project)
+    fasttext.train(document_corpus, project)
     assert fasttext._model is not None
     assert datadir.join('fasttext-model').exists()
     assert datadir.join('fasttext-model').size() > 0

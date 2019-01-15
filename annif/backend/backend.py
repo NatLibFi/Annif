@@ -29,8 +29,8 @@ class AnnifBackend(metaclass=abc.ABCMeta):
             os.makedirs(self._datadir)
         return self._datadir
 
-    def load_corpus(self, corpus, project):
-        """load the given document or subject corpus"""
+    def train(self, corpus, project):
+        """train the model on the given document or subject corpus"""
         pass  # default is to do nothing, subclasses may override
 
     def initialize(self):

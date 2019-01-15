@@ -18,14 +18,14 @@ def project(document_corpus):
     return proj
 
 
-def test_tfidf_load_documents(datadir, document_corpus, project):
+def test_tfidf_train(datadir, document_corpus, project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
         params={'limit': 10},
         datadir=str(datadir))
 
-    tfidf.load_corpus(document_corpus, project)
+    tfidf.train(document_corpus, project)
     assert len(tfidf._index) > 0
     assert datadir.join('tfidf-index').exists()
     assert datadir.join('tfidf-index').size() > 0
