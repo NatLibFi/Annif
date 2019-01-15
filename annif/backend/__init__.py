@@ -29,7 +29,6 @@ register_backend(ensemble.EnsembleBackend)
 register_backend(http.HTTPBackend)
 register_backend(tfidf.TFIDFBackend)
 register_backend(pav.PAVBackend)
-<<<<<<< ac148fb4b8338b9167cf19d2e1ee877def91897e
 
 # Optional backends
 try:
