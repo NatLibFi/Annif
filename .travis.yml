@@ -4,24 +4,25 @@ python:
 - '3.5'
 - '3.6'
 - '3.7'
-addons:
-  apt:
-    packages:
-    - libvoikko1
-    - voikko-fi
 cache: pip
 before_install:
 - export BOTO_CONFIG=/dev/null
-- sudo apt-get install libboost-program-options-dev libboost-python-dev zlib1g-dev python-dev
-install:
+- sudo ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.a /usr/lib/x86_64-linux-gnu/libboost_python.a
+- sudo ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.so /usr/lib/x86_64-linux-gnu/libboost_python.so
 - pip install pipenv
 - pip install --upgrade pytest
 - pipenv install --dev --skip-lock
+- travis_wait 30 python -m nltk.downloader punkt
 # For Python 3.5, also install optional dependencies that were not specified in Pipfile
 # For other Python versions we will only run the tests that depend on pure Python modules
+# - fastText dependencies
 - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install fasttextmirror; fi
+# - voikko dependencies
+- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then apt install libvoikko1 voikko-fi; fi
 - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install voikko; fi
-- travis_wait 30 python -m nltk.downloader punkt
+# - vw dependencies
+- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then apt install libboost-program-options-dev libboost-python-dev zlib1g-dev; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install vowpalwabbit; fi
 script:
 - pytest --cov=./
 after_success:
