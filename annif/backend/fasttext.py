@@ -102,7 +102,7 @@ class FastTextBackend(backend.AnnifBackend):
         self._model = fastText.train_supervised(trainpath, **params)
         self._model.save_model(modelpath)
 
-    def load_corpus(self, corpus, project):
+    def train(self, corpus, project):
         self._create_train_file(corpus, project)
         self._create_model()
 

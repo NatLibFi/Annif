@@ -133,7 +133,7 @@ def run_train(project_id, paths):
     """
     proj = get_project(project_id)
     documents = open_documents(paths)
-    proj.load_documents(documents)
+    proj.train(documents)
 
 
 @cli.command('analyze')

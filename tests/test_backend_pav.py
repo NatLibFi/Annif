@@ -4,7 +4,7 @@ import annif.backend
 import annif.corpus
 
 
-def test_pav_load_documents(app, datadir, tmpdir, project):
+def test_pav_train(app, datadir, tmpdir, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
@@ -18,7 +18,7 @@ def test_pav_load_documents(app, datadir, tmpdir, project):
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
     with app.app_context():
-        pav.load_corpus(document_corpus, project)
+        pav.train(document_corpus, project)
     assert datadir.join('pav-model-dummy-fi').exists()
     assert datadir.join('pav-model-dummy-fi').size() > 0
 
