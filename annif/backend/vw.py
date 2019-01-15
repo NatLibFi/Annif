@@ -82,7 +82,7 @@ class VWBackend(backend.AnnifBackend):
         modelpath = os.path.join(self._get_datadir(), self.MODEL_FILE)
         self._model.save(modelpath)
 
-    def load_corpus(self, corpus, project):
+    def train(self, corpus, project):
         self._create_train_file(corpus, project)
         self._create_model(project)
 
