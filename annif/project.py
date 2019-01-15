@@ -24,6 +24,7 @@ class AnnifProject:
 
     # defaults for uninitialized instances
     _analyzer = None
+    _backend = None
     _vocab = None
     _vectorizer = None
     initialized = False
@@ -36,7 +37,7 @@ class AnnifProject:
         self.vocab_id = config.get('vocab', None)
         self._base_datadir = datadir
         self._datadir = os.path.join(datadir, 'projects', self.project_id)
-        self.backend = self._setup_backend(config)
+        self.config = config
 
     def _get_datadir(self):
         """return the path of the directory where this project can store its
@@ -44,11 +45,6 @@ class AnnifProject:
         if not os.path.exists(self._datadir):
             os.makedirs(self._datadir)
         return self._datadir
-
-    def _setup_backend(self, config):
-        backend_id = config['backend']
-        backend_type = annif.backend.get_backend(backend_id)
-        return backend_type(backend_id, params=config, datadir=self._datadir)
 
     def _initialize_analyzer(self):
         analyzer = self.analyzer
@@ -76,6 +72,9 @@ class AnnifProject:
 
     def _initialize_backend(self):
         logger.debug("Project '%s': initializing backend", self.project_id)
+        if not self.backend:
+            logger.debug("Cannot initialize backend: does not exist")
+            return
         try:
             self.backend.initialize()
         except AnnifException as err:
@@ -108,6 +107,18 @@ class AnnifProject:
         if self._analyzer is None and self.analyzer_spec:
             self._analyzer = annif.analyzer.get_analyzer(self.analyzer_spec)
         return self._analyzer
+
+    @property
+    def backend(self):
+        if self._backend is None:
+            backend_id = self.config['backend']
+            try:
+                backend_class = annif.backend.get_backend(backend_id)
+                self._backend = backend_class(
+                    backend_id, params=self.config, datadir=self._datadir)
+            except ValueError:
+                logger.debug("Could not create backend %s", backend_id)
+        return self._backend
 
     @property
     def vocab(self):
@@ -172,7 +183,7 @@ class AnnifProject:
         return {'project_id': self.project_id,
                 'name': self.name,
                 'language': self.language,
-                'backend': {'backend_id': self.backend.backend_id}
+                'backend': {'backend_id': self.config['backend']}
                 }
 
 

@@ -71,6 +71,7 @@ def test_project_load_documents_tfidf(app, document_corpus, testdatadir):
 
 
 def test_project_load_vocabulary_fasttext(app, vocabulary, testdatadir):
+    pytest.importorskip("annif.backend.fasttext")
     with app.app_context():
         project = annif.project.get_project('fasttext-fi')
     project.vocab.load_vocabulary(vocabulary)
@@ -79,6 +80,7 @@ def test_project_load_vocabulary_fasttext(app, vocabulary, testdatadir):
 
 
 def test_project_load_documents_fasttext(app, document_corpus, testdatadir):
+    pytest.importorskip("annif.backend.fasttext")
     with app.app_context():
         project = annif.project.get_project('fasttext-fi')
     project.load_documents(document_corpus)

@@ -1,7 +1,10 @@
 """Unit tests for the fastText backend in Annif"""
 
+import pytest
 import annif.backend
 import annif.corpus
+
+fasttext = pytest.importorskip("annif.backend.fasttext")
 
 
 def test_fasttext_load_documents(datadir, document_corpus, project):

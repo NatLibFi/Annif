@@ -26,9 +26,9 @@ setup(
         'nltk',
         'gensim',
         'sklearn',
-        'fasttextmirror',
         'rdflib'],
     extras_require={
+        'fasttext': ['fasttextmirror'],
         'voikko': ['voikko'],
     },
     entry_points={
