@@ -4,6 +4,11 @@ python:
 - '3.5'
 - '3.6'
 - '3.7'
+addons:
+  apt:
+    packages:
+    - libvoikko1
+    - voikko-fi
 cache: pip
 before_install:
 - export BOTO_CONFIG=/dev/null
@@ -11,6 +16,8 @@ install:
 - pip install pipenv
 - pip install --upgrade pytest
 - pipenv install --dev --skip-lock
+# install optional dependencies that were not specified in Pipfile
+- pip install voikko
 - travis_wait 30 python -m nltk.downloader punkt
 script:
 - pytest --cov=./

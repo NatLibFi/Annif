@@ -28,6 +28,9 @@ setup(
         'sklearn',
         'fasttextmirror',
         'rdflib'],
+    extras_require={
+        'voikko': ['voikko'],
+    },
     entry_points={
         'console_scripts': ['annif=annif.cli:cli']},
     classifiers=[

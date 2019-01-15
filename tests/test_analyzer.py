@@ -69,7 +69,7 @@ def test_swedish_analyzer_normalize_word():
     assert analyzer.normalize_word("hundar") == "hund"
 
 
-def test_finnish_analyzer_normalize_word():
+def test_snowball_finnish_analyzer_normalize_word():
     analyzer = annif.analyzer.get_analyzer("snowball(finnish)")
     assert analyzer.normalize_word("vanhat") == "vanh"
     assert analyzer.normalize_word("koirien") == "koir"
