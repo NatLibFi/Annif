@@ -16,6 +16,8 @@ install:
 - pip install pipenv
 - pip install --upgrade pytest
 - pipenv install --dev --skip-lock
+# install optional dependencies that were not specified in Pipfile
+- pip install voikko
 - travis_wait 30 python -m nltk.downloader punkt
 script:
 - pytest --cov=./
