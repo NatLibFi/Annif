@@ -97,12 +97,8 @@ definitions:
       backend_id:
         type: string
         example: my-backend
-      weight:
-        type: number
-        example: 1.0
     required:
       - backend_id
-      - weight
   Project:
     description: A project definition
     properties:
@@ -115,15 +111,13 @@ definitions:
       language:
         type: string
         example: en
-      backends:
-        type: array
-        items:
-          $ref: '#/definitions/ProjectBackend'
+      backend:
+        $ref: '#/definitions/ProjectBackend'
     required:
       - project_id
       - name
       - language
-      - backends
+      - backend
   ProjectList:
     description: A list of projects
     properties:

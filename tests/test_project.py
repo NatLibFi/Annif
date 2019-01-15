@@ -14,9 +14,7 @@ def test_get_project_en(app):
     assert project.language == 'en'
     assert project.analyzer.name == 'snowball'
     assert project.analyzer.param == 'english'
-    assert len(project.backends) == 1
-    assert isinstance(project.backends[0][0], annif.backend.dummy.DummyBackend)
-    assert project.backends[0][1] == 0.5
+    assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
 
 
 def test_get_project_fi(app):
@@ -26,9 +24,7 @@ def test_get_project_fi(app):
     assert project.language == 'fi'
     assert project.analyzer.name == 'snowball'
     assert project.analyzer.param == 'finnish'
-    assert len(project.backends) == 1
-    assert isinstance(project.backends[0][0], annif.backend.dummy.DummyBackend)
-    assert project.backends[0][1] == 1.0
+    assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
 
 
 def test_get_project_fi_dump(app):
@@ -39,10 +35,9 @@ def test_get_project_fi_dump(app):
         'project_id': 'dummy-fi',
         'name': 'Dummy Finnish',
         'language': 'fi',
-        'backends': [{
+        'backend': {
             'backend_id': 'dummy',
-            'weight': 1.0
-        }]
+        }
     }
 
 
@@ -115,16 +110,14 @@ def test_project_not_initialized(app):
     with app.app_context():
         project = annif.project.get_project('dummy-en')
     assert not project.initialized
-    dummy = project.backends[0][0]
-    assert not dummy.initialized
+    assert not project.backend.initialized
 
 
 def test_project_initialized(app_with_initialize):
     with app_with_initialize.app_context():
         project = annif.project.get_project('dummy-en')
     assert project.initialized
-    dummy = project.backends[0][0]
-    assert dummy.initialized
+    assert project.backend.initialized
 
 
 def test_project_file_not_found():
