@@ -11,7 +11,7 @@ def test_vw_train(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend("vw")
     vw = vw_type(
         backend_id='vw',
-        params={},
+        params={'chunksize': 4},
         datadir=str(datadir))
 
     vw.train(document_corpus, project)
@@ -24,7 +24,7 @@ def test_vw_train_unknown_subject(tmpdir, datadir, project):
     vw_type = annif.backend.get_backend("vw")
     vw = vw_type(
         backend_id='vw',
-        params={},
+        params={'chunksize': 4},
         datadir=str(datadir))
 
     tmpfile = tmpdir.join('document.tsv')
@@ -42,7 +42,7 @@ def test_vw_analyze(datadir, project):
     vw_type = annif.backend.get_backend("vw")
     vw = vw_type(
         backend_id='vw',
-        params={},
+        params={'chunksize': 4},
         datadir=str(datadir))
 
     results = vw.analyze("""Arkeologiaa sanotaan joskus myös
