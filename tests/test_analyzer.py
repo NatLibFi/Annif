@@ -75,12 +75,6 @@ def test_snowball_finnish_analyzer_normalize_word():
     assert analyzer.normalize_word("koirien") == "koir"
 
 
-def test_voikko_finnish_analyzer_normalize_word():
-    analyzer = annif.analyzer.get_analyzer("voikko(fi)")
-    assert analyzer.normalize_word("vanhat") == "vanha"
-    assert analyzer.normalize_word("koirien") == "koira"
-
-
 def test_simple_analyzer():
     analyzer = annif.analyzer.get_analyzer("simple")
     assert analyzer.normalize_word("Big") == "big"

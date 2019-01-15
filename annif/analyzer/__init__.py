@@ -3,7 +3,7 @@
 import re
 from . import simple
 from . import snowball
-from . import voikko
+import annif
 
 _analyzers = {}
 
@@ -32,4 +32,11 @@ def get_analyzer(analyzerspec):
 
 register_analyzer(simple.SimpleAnalyzer)
 register_analyzer(snowball.SnowballAnalyzer)
-register_analyzer(voikko.VoikkoAnalyzer)
+
+# Optional analyzers
+try:
+    import voikko
+    from . import voikko
+    register_analyzer(voikko.VoikkoAnalyzer)
+except ImportError:
+    annif.logger.debug("voikko not available, not enabling voikko analyzer")

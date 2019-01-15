@@ -24,8 +24,8 @@ def test_get_project_fi(app):
         project = annif.project.get_project('dummy-fi')
     assert project.project_id == 'dummy-fi'
     assert project.language == 'fi'
-    assert project.analyzer.name == 'voikko'
-    assert project.analyzer.param == 'fi'
+    assert project.analyzer.name == 'snowball'
+    assert project.analyzer.param == 'finnish'
     assert len(project.backends) == 1
     assert isinstance(project.backends[0][0], annif.backend.dummy.DummyBackend)
     assert project.backends[0][1] == 1.0
