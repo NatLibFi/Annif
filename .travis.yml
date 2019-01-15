@@ -18,6 +18,7 @@ install:
 - pipenv install --dev --skip-lock
 # install optional dependencies that were not specified in Pipfile
 - pip install voikko
+- pip install fasttextmirror
 - travis_wait 30 python -m nltk.downloader punkt
 script:
 - pytest --cov=./
