@@ -16,10 +16,10 @@ before_install:
 # - fastText dependencies
 - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install fasttextmirror; fi
 # - voikko dependencies
-- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then apt install libvoikko1 voikko-fi; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then sudo apt install libvoikko1 voikko-fi; fi
 - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install voikko; fi
 # - vw dependencies
-- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then apt install libboost-program-options-dev libboost-python-dev zlib1g-dev; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then sudo apt install libboost-program-options-dev libboost-python-dev zlib1g-dev; fi
 - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then sudo ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.a /usr/lib/x86_64-linux-gnu/libboost_python.a; fi
 - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then sudo ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.so /usr/lib/x86_64-linux-gnu/libboost_python.so; fi
 - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install vowpalwabbit; fi
