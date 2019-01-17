@@ -38,7 +38,8 @@ except ImportError:
     annif.logger.debug("fastText not available, not enabling fasttext backend")
 
 try:
-    from . import vw
-    register_backend(vw.VWBackend)
+    from . import vw_multi
+    register_backend(vw_multi.VWMultiBackend)
 except ImportError:
-    annif.logger.debug("vowpalwabbit not available, not enabling vw backend")
+    annif.logger.debug(
+        "vowpalwabbit not available, not enabling vw_multi backend")

@@ -1,4 +1,5 @@
-"""Annif backend using the Vorpal Wabbit classifier"""
+"""Annif backend using the Vorpal Wabbit multiclass and multilabel
+classifiers"""
 
 import random
 import os.path
@@ -11,10 +12,10 @@ from . import backend
 from . import mixins
 
 
-class VWBackend(mixins.ChunkingBackend, backend.AnnifBackend):
-    """Vorpal Wabbit backend for Annif"""
+class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
+    """Vorpal Wabbit multiclass/multilabel backend for Annif"""
 
-    name = "vw"
+    name = "vw_multi"
     needs_subject_index = True
 
     MODEL_FILE = 'vw-model'

@@ -4,13 +4,13 @@ import pytest
 import annif.backend
 import annif.corpus
 
-pytest.importorskip("annif.backend.vw")
+pytest.importorskip("annif.backend.vw_multi")
 
 
 def test_vw_train(datadir, document_corpus, project):
-    vw_type = annif.backend.get_backend("vw")
+    vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
-        backend_id='vw',
+        backend_id='vw_multi',
         params={'chunksize': 4},
         datadir=str(datadir))
 
@@ -21,9 +21,9 @@ def test_vw_train(datadir, document_corpus, project):
 
 
 def test_vw_train_unknown_subject(tmpdir, datadir, project):
-    vw_type = annif.backend.get_backend("vw")
+    vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
-        backend_id='vw',
+        backend_id='vw_multi',
         params={'chunksize': 4},
         datadir=str(datadir))
 
@@ -39,9 +39,9 @@ def test_vw_train_unknown_subject(tmpdir, datadir, project):
 
 
 def test_vw_analyze(datadir, project):
-    vw_type = annif.backend.get_backend("vw")
+    vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
-        backend_id='vw',
+        backend_id='vw_multi',
         params={'chunksize': 4},
         datadir=str(datadir))
 
