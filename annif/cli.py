@@ -152,7 +152,7 @@ def run_analyze(project_id, limit, threshold, backend_param):
     backend_params = parse_backend_params(backend_param)
     hit_filter = HitFilter(limit, threshold)
     hits = hit_filter(project.analyze(text, backend_params))
-    for hit in hits:
+    for hit in hits():
         click.echo("<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score))
 
 
@@ -192,7 +192,7 @@ def run_analyzedir(project_id, directory, suffix, force,
             continue
         with open(subjectfilename, 'w') as subjfile:
             results = project.analyze(text, backend_params)
-            for hit in hit_filter(results):
+            for hit in hit_filter(results)():
                 line = "<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score)
                 click.echo(line, file=subjfile)
 

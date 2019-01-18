@@ -17,7 +17,7 @@ class HitFilter:
         self._threshold = threshold
 
     def __call__(self, orighits):
-        return orighits.filter(self._limit, self._threshold)
+        return lambda: orighits.filter(self._limit, self._threshold)
 
 
 class AnalysisResult(metaclass=abc.ABCMeta):

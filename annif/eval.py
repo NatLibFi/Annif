@@ -67,6 +67,12 @@ def ndcg_score(y_true, y_pred, limit=None):
     return statistics.mean(scores)
 
 
+def hit_vector(hits):
+    if hasattr(hits, 'vector'):
+        return hits.vector
+    return hits().vector
+
+
 class EvaluationBatch:
     """A class for evaluating batches of results using all available metrics.
     The evaluate() method is called once per document in the batch.
@@ -85,7 +91,7 @@ class EvaluationBatch:
 
         y_true = np.array([gold_subjects.as_vector(self._subject_index)
                            for hits, gold_subjects in self._samples])
-        y_pred = np.array([hits.vector
+        y_pred = np.array([hit_vector(hits)
                            for hits, gold_subjects in self._samples])
         y_pred_binary = y_pred > 0.0
 

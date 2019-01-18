@@ -57,5 +57,5 @@ def analyze(project_id, text, limit, threshold):
         result = project.analyze(text)
     except AnnifException as err:
         return server_error(err)
-    hits = hit_filter(result)
+    hits = hit_filter(result)()
     return {'results': [hit._asdict() for hit in hits]}
