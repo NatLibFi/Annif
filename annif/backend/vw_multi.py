@@ -18,6 +18,18 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     name = "vw_multi"
     needs_subject_index = True
 
+    VW_PARAMS = {
+        # each param specifier is a pair (allowed_values, default_value)
+        # where allowed_values is either a type or a list of allowed values
+        # and default_value may be None, to let VW decide by itself
+        'bit_precision': (int, None),
+        'learning_rate': (float, None),
+        'loss_function': (['squared', 'logistic', 'hinge'], 'logistic'),
+        'l1': (float, None),
+        'l2': (float, None),
+        'passes': (int, None)
+    }
+
     MODEL_FILE = 'vw-model'
     TRAIN_FILE = 'vw-train.txt'
 
@@ -71,16 +83,36 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                                self.TRAIN_FILE,
                                method=self._write_train_file)
 
+    def _convert_param(self, param, val):
+        pspec, _ = self.VW_PARAMS[param]
+        if isinstance(pspec, list):
+            if val in pspec:
+                return val
+            raise ConfigurationException(
+                "{} is not a valid value for {} (allowed: {})".format(
+                    val, param, ', '.join(pspec)), backend_id=self.backend_id)
+        try:
+            return pspec(val)
+        except ValueError:
+            raise ConfigurationException(
+                "The {} value {} cannot be converted to {}".format(
+                    param, val, pspec), backend_id=self.backend_id)
+
     def _create_model(self, project):
         self.info('creating VW model')
         trainpath = os.path.join(self._get_datadir(), self.TRAIN_FILE)
+        params = {param: defaultval
+                  for param, (_, defaultval) in self.VW_PARAMS.items()
+                  if defaultval is not None}
+        params.update({param: self._convert_param(param, val)
+                       for param, val in self.params.items()
+                       if param in self.VW_PARAMS})
+        self.debug("model parameters: {}".format(params))
         self._model = pyvw.vw(
-            oaa=len(
-                project.subjects),
-            loss_function='logistic',
+            oaa=len(project.subjects),
             probabilities=True,
             data=trainpath,
-            b=28)
+            **params)
         modelpath = os.path.join(self._get_datadir(), self.MODEL_FILE)
         self._model.save(modelpath)
 
