@@ -79,9 +79,55 @@ class EvaluationBatch:
     def evaluate(self, hits, gold_subjects):
         self._samples.append((hits, gold_subjects))
 
-    def results(self):
+    def _evaluate_samples(self, y_true, y_pred, y_pred_binary, metrics='all'):
+        results = collections.OrderedDict()
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+
+            results['Precision (doc avg)'] = precision_score(
+                y_true, y_pred_binary, average='samples')
+            results['Recall (doc avg)'] = recall_score(
+                y_true, y_pred_binary, average='samples')
+            results['F1 score (doc avg)'] = f1_score(
+                y_true, y_pred_binary, average='samples')
+            if metrics == 'all':
+                results['Precision (conc avg)'] = precision_score(
+                    y_true, y_pred_binary, average='macro')
+                results['Recall (conc avg)'] = recall_score(
+                    y_true, y_pred_binary, average='macro')
+                results['F1 score (conc avg)'] = f1_score(
+                    y_true, y_pred_binary, average='macro')
+                results['Precision (microavg)'] = precision_score(
+                    y_true, y_pred_binary, average='micro')
+                results['Recall (microavg)'] = recall_score(
+                    y_true, y_pred_binary, average='micro')
+                results['F1 score (microavg)'] = f1_score(
+                    y_true, y_pred_binary, average='micro')
+            results['NDCG'] = ndcg_score(y_true, y_pred)
+            results['NDCG@5'] = ndcg_score(y_true, y_pred, limit=5)
+            results['NDCG@10'] = ndcg_score(y_true, y_pred, limit=10)
+            if metrics == 'all':
+                results['Precision@1'] = precision_at_k_score(
+                    y_true, y_pred, limit=1)
+                results['Precision@3'] = precision_at_k_score(
+                    y_true, y_pred, limit=3)
+                results['Precision@5'] = precision_at_k_score(
+                    y_true, y_pred, limit=5)
+                results['LRAP'] = label_ranking_average_precision_score(
+                    y_true, y_pred)
+                results['True positives'] = true_positives(
+                    y_true, y_pred_binary)
+                results['False positives'] = false_positives(
+                    y_true, y_pred_binary)
+                results['False negatives'] = false_negatives(
+                    y_true, y_pred_binary)
+
+        return results
+
+    def results(self, metrics='all'):
         """evaluate a set of selected subjects against a gold standard using
-        different metrics"""
+        different metrics. The set of metrics can be either 'all' or
+        'simple'."""
 
         y_true = np.array([gold_subjects.as_vector(self._subject_index)
                            for hits, gold_subjects in self._samples])
@@ -89,43 +135,7 @@ class EvaluationBatch:
                            for hits, gold_subjects in self._samples])
         y_pred_binary = y_pred > 0.0
 
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-
-            results = collections.OrderedDict([
-                ('Precision (doc avg)',
-                 precision_score(y_true, y_pred_binary, average='samples')),
-                ('Recall (doc avg)',
-                 recall_score(y_true, y_pred_binary, average='samples')),
-                ('F1 score (doc avg)',
-                 f1_score(y_true, y_pred_binary, average='samples')),
-                ('Precision (conc avg)',
-                 precision_score(y_true, y_pred_binary, average='macro')),
-                ('Recall (conc avg)',
-                 recall_score(y_true, y_pred_binary, average='macro')),
-                ('F1 score (conc avg)',
-                 f1_score(y_true, y_pred_binary, average='macro')),
-                ('Precision (microavg)',
-                 precision_score(y_true, y_pred_binary, average='micro')),
-                ('Recall (microavg)',
-                 recall_score(y_true, y_pred_binary, average='micro')),
-                ('F1 score (microavg)',
-                 f1_score(y_true, y_pred_binary, average='micro')),
-                ('NDCG', ndcg_score(y_true, y_pred)),
-                ('NDCG@5', ndcg_score(y_true, y_pred, limit=5)),
-                ('NDCG@10', ndcg_score(y_true, y_pred, limit=10)),
-                ('Precision@1',
-                 precision_at_k_score(y_true, y_pred, limit=1)),
-                ('Precision@3',
-                 precision_at_k_score(y_true, y_pred, limit=3)),
-                ('Precision@5',
-                 precision_at_k_score(y_true, y_pred, limit=5)),
-                ('LRAP',
-                 label_ranking_average_precision_score(y_true, y_pred)),
-                ('True positives', true_positives(y_true, y_pred_binary)),
-                ('False positives', false_positives(y_true, y_pred_binary)),
-                ('False negatives', false_negatives(y_true, y_pred_binary)),
-                ('Documents evaluated', y_true.shape[0])
-            ])
-
+        results = self._evaluate_samples(
+            y_true, y_pred, y_pred_binary, metrics)
+        results['Documents evaluated'] = y_true.shape[0]
         return results
