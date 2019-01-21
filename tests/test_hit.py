@@ -45,6 +45,8 @@ def test_lazyanalysisresult(subject_index):
     assert len(lar.hits) == 10
     assert lar.vector is not None
     assert lar[0] is not None
+    filtered = lar.filter(limit=5, threshold=0.0)
+    assert len(filtered) == 5
     assert lar._object is not None
 
 
