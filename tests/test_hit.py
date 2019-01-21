@@ -1,7 +1,7 @@
 """Unit tests for hit processing in Annif"""
 
-from annif.hit import AnalysisHit, AnalysisResult, ListAnalysisResult, \
-    HitFilter
+from annif.hit import AnalysisHit, AnalysisResult, LazyAnalysisResult, \
+    ListAnalysisResult, HitFilter
 from annif.corpus import SubjectIndex
 import numpy as np
 
@@ -36,6 +36,16 @@ def test_hitfilter_zero_score(subject_index):
     hits = HitFilter()(orighits)
     assert isinstance(hits, AnalysisResult)
     assert len(hits) == 0
+
+
+def test_lazyanalysisresult(subject_index):
+    lar = LazyAnalysisResult(lambda: generate_hits(10, subject_index))
+    assert lar._object is None
+    assert len(lar) == 10
+    assert len(lar.hits) == 10
+    assert lar.vector is not None
+    assert lar[0] is not None
+    assert lar._object is not None
 
 
 def test_analysishits_vector(document_corpus):
