@@ -17,7 +17,9 @@ class HitFilter:
         self._threshold = threshold
 
     def __call__(self, orighits):
-        return orighits.filter(self._limit, self._threshold)
+        return LazyAnalysisResult(
+            lambda: orighits.filter(
+                self._limit, self._threshold))
 
 
 class AnalysisResult(metaclass=abc.ABCMeta):
@@ -51,6 +53,44 @@ class AnalysisResult(metaclass=abc.ABCMeta):
 
     def __getitem__(self, idx):
         return self.hits[idx]
+
+
+class LazyAnalysisResult(AnalysisResult):
+    """AnalysisResult implementation that wraps another AnalysisResult which
+    is initialized lazily only when it is actually accessed. Method calls
+    will be proxied to the wrapped AnalysisResult."""
+
+    def __init__(self, construct):
+        """Create the proxy object. The given construct function will be
+        called to create the actual AnalysisResult when it is needed."""
+        self._construct = construct
+        self._object = None
+
+    def _initialize(self):
+        if self._object is None:
+            self._object = self._construct()
+
+    @property
+    def hits(self):
+        self._initialize()
+        return self._object.hits
+
+    @property
+    def vector(self):
+        self._initialize()
+        return self._object.vector
+
+    def filter(self, limit=None, threshold=0.0):
+        self._initialize()
+        return self._object.filter(limit, threshold)
+
+    def __len__(self):
+        self._initialize()
+        return len(self._object)
+
+    def __getitem__(self, idx):
+        self._initialize()
+        return self._object[idx]
 
 
 class VectorAnalysisResult(AnalysisResult):

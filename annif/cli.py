@@ -267,7 +267,7 @@ def run_optimize(project_id, paths, backend_param):
 
     template = "{:d}\t{:.02f}\t{:.04f}\t{:.04f}\t{:.04f}"
     for params, filter_batch in filter_batches.items():
-        results = filter_batch[1].results()
+        results = filter_batch[1].results(metrics='simple')
         for metric, score in results.items():
             if score >= best_scores[metric]:
                 best_scores[metric] = score
