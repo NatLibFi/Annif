@@ -79,7 +79,8 @@ class EvaluationBatch:
     def evaluate(self, hits, gold_subjects):
         self._samples.append((hits, gold_subjects))
 
-    def _evaluate_samples(self, y_true, y_pred, y_pred_binary, metrics='all'):
+    def _evaluate_samples(self, y_true, y_pred, metrics='all'):
+        y_pred_binary = y_pred > 0.0
         results = collections.OrderedDict()
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
@@ -133,9 +134,8 @@ class EvaluationBatch:
                            for hits, gold_subjects in self._samples])
         y_pred = np.array([hits.vector
                            for hits, gold_subjects in self._samples])
-        y_pred_binary = y_pred > 0.0
 
         results = self._evaluate_samples(
-            y_true, y_pred, y_pred_binary, metrics)
+            y_true, y_pred, metrics)
         results['Documents evaluated'] = y_true.shape[0]
         return results
