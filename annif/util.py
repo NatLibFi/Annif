@@ -27,13 +27,6 @@ def atomic_save(obj, dirname, filename, method=None):
         os.rename(fn, newname)
 
 
-def localname(uri):
-    """return the local name extracted from a URI, i.e. the part after the
-    last slash or hash character"""
-
-    return uri.split('/')[-1].split('#')[-1]
-
-
 def cleanup_uri(uri):
     """remove angle brackets from a URI, if any"""
     if uri.startswith('<') and uri.endswith('>'):
