@@ -101,7 +101,7 @@ def run_show_project(project_id):
     template = "{0:<20}{1}"
 
     click.echo(template.format('Project ID:', proj.project_id))
-    click.echo(template.format('Project Name:', proj.project_id))
+    click.echo(template.format('Project Name:', proj.name))
     click.echo(template.format('Language:', proj.language))
 
 

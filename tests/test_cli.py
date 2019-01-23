@@ -33,6 +33,18 @@ def test_list_projects_bad_arguments():
 
 
 def test_show_project():
+    result = runner.invoke(annif.cli.cli, ['show-project', 'dummy-en'])
+    assert not result.exception
+
+    project_id = re.search(r'Project ID:\s+(.+)', result.output)
+    assert project_id.group(1) == 'dummy-en'
+    project_name = re.search(r'Project Name:\s+(.+)', result.output)
+    assert project_name.group(1) == 'Dummy English'
+    project_lang = re.search(r'Language:\s+(.+)', result.output)
+    assert project_lang.group(1) == 'en'
+
+
+def test_show_project_nonexistent():
     assert runner.invoke(
         annif.cli.cli,
         ['show-project', TEMP_PROJECT]).exit_code != 0
