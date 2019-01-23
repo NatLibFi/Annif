@@ -117,7 +117,10 @@ class AnnifProject:
                 self._backend = backend_class(
                     backend_id, params=self.config, datadir=self._datadir)
             except ValueError:
-                logger.warning("Could not create backend %s", backend_id)
+                logger.warning(
+                    "Could not create backend %s, "
+                    "make sure you've installed optional dependencies",
+                    backend_id)
         return self._backend
 
     @property
