@@ -42,7 +42,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def _analyze(self, text, project, params):
         """This method should implemented by backends. It implements
         the analyze functionality, with pre-processed parameters."""
-        pass
+        pass  # pragma: no cover
 
     def analyze(self, text, project, params=None):
         """Analyze some input text and return a list of subjects represented

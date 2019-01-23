@@ -31,25 +31,25 @@ class AnalysisResult(metaclass=abc.ABCMeta):
     def hits(self):
         """Return the hits as an ordered sequence of AnalysisHit objects,
         highest scores first."""
-        pass
+        pass  # pragma: no cover
 
     @property
     @abc.abstractmethod
     def vector(self):
         """Return the hits as a one-dimensional score vector
         where the indexes match the given subject index."""
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def filter(self, limit=None, threshold=0.0):
         """Return a subset of the hits, filtered by the given limit and
         score threshold, as another AnalysisResult object."""
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def __len__(self):
         """Return the number of hits with non-zero scores."""
-        pass
+        pass  # pragma: no cover
 
     def __getitem__(self, idx):
         return self.hits[idx]

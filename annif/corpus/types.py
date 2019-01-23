@@ -14,7 +14,7 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def documents(self):
         """Iterate through the document corpus, yielding Document objects."""
-        pass
+        pass  # pragma: no cover
 
 
 Subject = collections.namedtuple('Subject', 'uri label text')
@@ -27,4 +27,4 @@ class SubjectCorpus(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def subjects(self):
         """Iterate through the subject corpus, yielding Subject objects."""
-        pass
+        pass  # pragma: no cover
