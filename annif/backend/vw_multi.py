@@ -59,7 +59,9 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
 
     @classmethod
     def _normalize_text(cls, project, text):
-        return ' '.join(project.analyzer.tokenize_words(text)).replace(':', '')
+        ntext = ' '.join(project.analyzer.tokenize_words(text))
+        # colon and pipe chars have special meaning in VW and must be avoided
+        return ntext.replace(':', '').replace('|', '')
 
     def _write_train_file(self, examples, filename):
         with open(filename, 'w') as trainfile:
