@@ -266,7 +266,11 @@ def run_optimize(project_id, paths, backend_param):
     best_params = {}
 
     template = "{:d}\t{:.02f}\t{:.04f}\t{:.04f}\t{:.04f}"
-    for params, filter_batch in filter_batches.items():
+    # Store the batches in a list that gets consumed along the way
+    # This way GC will have a chance to reclaim the memory
+    filter_batches = list(filter_batches.items())
+    while filter_batches:
+        params, filter_batch = filter_batches.pop(0)
         results = filter_batch[1].results(metrics='simple')
         for metric, score in results.items():
             if score >= best_scores[metric]:
