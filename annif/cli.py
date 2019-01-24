@@ -79,7 +79,7 @@ def run_list_projects():
     List available projects.
     """
 
-    template = "{0: <15}{1: <30}{2: <15}"
+    template = "{0: <25}{1: <45}{2: <8}"
 
     header = template.format("Project ID", "Project Name", "Language")
     click.echo(header)
