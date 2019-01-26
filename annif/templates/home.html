@@ -31,13 +31,19 @@
   <p>See the <a href="v1/ui/">Swagger documentation</a> for API specification.</p>
   
   <div id="app">
+    <template v-if="errors.length">
+      <b>Please correct the following error(s):</b>
+      <ul>
+        <li v-for="error in errors"><% error %></li>
+      </ul>
+    </template>
     <div class="row mb-5">
       <div class="col-md-8">
         <annif-textarea></annif-textarea>
       </div>
       <div class="col-md-4">
         <annif-projects></annif-projects>
-        <button type="button" class="btn btn-primary" id="analyze">Analyze</button>
+        <button type="button" class="btn btn-primary" id="analyze" v-on:click="analyze">Analyze</button>
         <annif-results></annif-results>
       </div>
     </div>
@@ -49,9 +55,15 @@
 <script src="/static/js/jquery-3.3.1.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
 <script>
+// NB: using delimiters <% %> due to Jinja's syntax taking precedence
+
+// TBD: probably a good idea to use vuex later
+const results_ = [];
+
 // Component with text area for input
 Vue.component('annif-textarea', {
-    template: '<div class="form-group">\
+  delimiters: ["<%","%>"],
+  template: '<div class="form-group">\
   <label for="text">Text to analyze:</label><br>\
   <textarea class="form-control" rows="15" name="text" id="text"></textarea>\
 </div>'
@@ -59,11 +71,34 @@ Vue.component('annif-textarea', {
 
 // Component with list of projects
 Vue.component('annif-projects', {
-    template: '<div>\
+  delimiters: ["<%","%>"],
+  data: function() {
+    return {
+      projects: []
+    }
+  },
+  methods: {
+    loadData: function() {
+      var this_ = this;
+      $.ajax({
+        url: "/v1/projects",
+        method: 'GET',
+        success: function(data) {
+          this_.projects = data.projects;
+        }
+    });
+    }
+  },
+  mounted: function() {
+    // TBD: we can add a button to reload the list of projects later
+    this.loadData();
+  },
+  template: '<div>\
   <div class="form-group">\
     <label for="project">Project (vocabulary and language):</label>\
     <select class="form-control" id="project">\
       <option></option>\
+      <option v-for="project in projects" v-bind:value="project.project_id"><% project.name %></option>\
     </select>\
   </div>\
 </div>'
@@ -71,18 +106,71 @@ Vue.component('annif-projects', {
 
 // Component with the list of results
 Vue.component('annif-results', {
-    template: '<div>\
+  delimiters: ["<%","%>"],
+  data: function() {
+    return {
+      results: results_
+    };
+  },
+  template: '<div>\
   <h2 class="mt-4">Results</h2>\
-  <ul class="list-group list-group-flush" id="results"></ul>\
+  <ul class="list-group list-group-flush" id="results">\
+    <li class="list-group-item p-0" v-for="result in results">\
+      <meter class="mr-2" v-bind:value="result.score"></meter>\
+      <a v-bind:href="result.uri"><% result.label %></a>\
+    </li>\
+  </ul>\
 </div>'
 });
 
 // Application, which uses the components above
 var app = new Vue({
+  delimiters: ["<%","%>"],
   el: '#app',
   data: {
+    results: results_,
+    errors: []
   },
-  delimiters: ["<%","%>"]
+  methods: {
+    clearResults: function() {
+      $('#results').empty();
+      while (this.results.length > 0) {
+        this.results.pop();
+      }
+    },
+    analyze: function(event) {
+      this.errors = [];
+      var text = $('#text').val();
+      if (text.trim() === "") {
+        this.errors.push("You need to enter the text to analyze");
+      }
+      var project = $('#project').val();
+      if (project.trim() === "") {
+        this.errors.push("You need to select one project");
+      }
+      if (this.errors.length) {
+        event.preventDefault();
+        return;
+      }
+      this.clearResults();
+      var this_ = this;
+      $.ajax({
+        url: "/v1/projects/" + project + "/analyze",
+        method: 'POST',
+        data: {
+          text: text,
+        },
+        success: function(data) {
+          // need to iterate and push, so that we do not change the pointer to the constant!
+          // TBD: replace once using shared data (state pattern, or vuex)
+          for (var i = 0; i < data.results.length; i++) {
+            var result = data.results[i];
+            this_.results.push(result);
+          }
+        }
+    });
+    }
+  }
 });
 </script>
 </body>
