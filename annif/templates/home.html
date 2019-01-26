@@ -148,11 +148,11 @@ var app = new Vue({
       if (project.trim() === "") {
         this.errors.push("You need to select one project");
       }
+      this.clearResults();
       if (this.errors.length) {
         event.preventDefault();
         return;
       }
-      this.clearResults();
       var this_ = this;
       $.ajax({
         url: "/v1/projects/" + project + "/analyze",
