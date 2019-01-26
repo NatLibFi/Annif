@@ -163,6 +163,12 @@ var app = new Vue({
         success: function(data) {
           // need to iterate and push, so that we do not change the pointer to the constant!
           // TBD: replace once using shared data (state pattern, or vuex)
+          if (data.results.length === 0) {
+            $('#results').append(
+              $("<p>No results returned</p>")
+            );
+            return;
+          }
           for (var i = 0; i < data.results.length; i++) {
             var result = data.results[i];
             this_.results.push(result);
