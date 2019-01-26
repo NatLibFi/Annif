@@ -33,9 +33,7 @@
   <div id="app">
     <template v-if="errors.length">
       <b>Please correct the following error(s):</b>
-      <ul>
-        <li v-for="error in errors"><% error %></li>
-      </ul>
+      <div class="alert alert-warning" role="alert" v-for="error in errors"><% error %></div>
     </template>
     <div class="row mb-5">
       <div class="col-md-8">
@@ -165,7 +163,7 @@ var app = new Vue({
           // TBD: replace once using shared data (state pattern, or vuex)
           if (data.results.length === 0) {
             $('#results').append(
-              $("<p>No results returned</p>")
+              $('<div class="alert alert-warning" role="alert">No results returned</div>')
             );
             return;
           }
@@ -173,6 +171,11 @@ var app = new Vue({
             var result = data.results[i];
             this_.results.push(result);
           }
+        },
+        error: function() {
+          $('#results').append(
+            $('<div class="alert alert-danger" role="alert">Server returned error when analyzing data</div>')
+          );
         }
     });
     }
