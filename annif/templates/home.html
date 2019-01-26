@@ -30,35 +30,60 @@
 
   <p>See the <a href="v1/ui/">Swagger documentation</a> for API specification.</p>
   
-  <div class="row mb-5">
-    <div class="col-md-8">
-      <div class="form-group">
-        <label for="text">Text to analyze:</label><br>
-        <textarea class="form-control" rows="15" name="text" id="text"></textarea>
+  <div id="app">
+    <div class="row mb-5">
+      <div class="col-md-8">
+        <annif-textarea></annif-textarea>
       </div>
-    </div>
-    <div class="col-md-4">
-      <div class="form-group">
-        <label for="project">Project (vocabulary and language):</label>
-        <select class="form-control" id="project">
-          <option></option>
-        </select>
+      <div class="col-md-4">
+        <annif-projects></annif-projects>
+        <button type="button" class="btn btn-primary" id="analyze">Analyze</button>
+        <annif-results></annif-results>
       </div>
-      <button type="button" class="btn btn-primary" id="analyze">Analyze</button>
-
-      <h2 class="mt-4">Results</h2>
-      <ul class="list-group list-group-flush" id="results">
-      </ul>
     </div>
   </div>
 
-
 </div> <!-- container -->
 
-<script src="/static/js/jquery-3.3.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue@2.5.22/dist/vue.js"></script>
+<script src="/static/js/jquery-3.3.1.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
-<script src="/static/js/annif.js"></script>
+<script>
+// Component with text area for input
+Vue.component('annif-textarea', {
+    template: '<div class="form-group">\
+  <label for="text">Text to analyze:</label><br>\
+  <textarea class="form-control" rows="15" name="text" id="text"></textarea>\
+</div>'
+});
 
+// Component with list of projects
+Vue.component('annif-projects', {
+    template: '<div>\
+  <div class="form-group">\
+    <label for="project">Project (vocabulary and language):</label>\
+    <select class="form-control" id="project">\
+      <option></option>\
+    </select>\
+  </div>\
+</div>'
+});
+
+// Component with the list of results
+Vue.component('annif-results', {
+    template: '<div>\
+  <h2 class="mt-4">Results</h2>\
+  <ul class="list-group list-group-flush" id="results"></ul>\
+</div>'
+});
+
+// Application, which uses the components above
+var app = new Vue({
+  el: '#app',
+  data: {
+  },
+  delimiters: ["<%","%>"]
+});
+</script>
 </body>
 </html>

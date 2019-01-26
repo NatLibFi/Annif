@@ -43,4 +43,6 @@ $(document).ready(function() {
         clearResults();
         analyze();
     });
+
+    
 });
