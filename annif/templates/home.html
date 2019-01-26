@@ -1,6 +1,21 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if title %}
+  <title>{{ title }}</title>
+  {% else %}
+  <title>Annif</title>
+  {% endif %}
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
 
-{% block content %}
 <header class="mb-4 mt-0">
   <div class="container">
     <h1 class="py-3">Annif</h1>
@@ -40,4 +55,10 @@
 
 </div> <!-- container -->
 
-{% endblock %}
+<script src="/static/js/jquery-3.3.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.22/dist/vue.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/js/annif.js"></script>
+
+</body>
+</html>
