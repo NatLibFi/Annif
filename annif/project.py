@@ -45,17 +45,20 @@ class AnnifProject:
         self.name = config['name']
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
-        access = config.get('access', self.DEFAULT_ACCESS)
-        try:
-            self.access = getattr(Access, access)
-        except AttributeError:
-            raise ConfigurationException(
-                "'%s' is not a valid access setting".format(self.access),
-                project_id=self.project_id)
         self.vocab_id = config.get('vocab', None)
         self._base_datadir = datadir
         self._datadir = os.path.join(datadir, 'projects', self.project_id)
         self.config = config
+        self._init_access()
+
+    def _init_access(self):
+        access = self.config.get('access', self.DEFAULT_ACCESS)
+        try:
+            self.access = getattr(Access, access)
+        except AttributeError:
+            raise ConfigurationException(
+                "'{}' is not a valid access setting".format(access),
+                project_id=self.project_id)
 
     def _get_datadir(self):
         """return the path of the directory where this project can store its

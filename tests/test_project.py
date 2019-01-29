@@ -8,6 +8,14 @@ from annif.exception import ConfigurationException
 from annif.project import Access
 
 
+def test_create_project_wrong_access(app):
+    with pytest.raises(ConfigurationException):
+        project = annif.project.AnnifProject(
+            'example',
+            {'name': 'Example', 'language': 'en', 'access': 'invalid'},
+            '.')
+
+
 def test_get_project_en(app):
     with app.app_context():
         project = annif.project.get_project('dummy-en')
