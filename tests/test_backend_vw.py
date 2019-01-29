@@ -3,7 +3,7 @@
 import pytest
 import annif.backend
 import annif.corpus
-from annif.exception import ConfigurationException
+from annif.exception import ConfigurationException, NotInitializedException
 
 pytest.importorskip("annif.backend.vw_multi")
 
@@ -17,11 +17,25 @@ def vw_corpus(tmpdir):
     return annif.corpus.DocumentFile(str(tmpfile))
 
 
+def test_vw_analyze_no_model(datadir, project):
+    vw_type = annif.backend.get_backend('vw_multi')
+    vw = vw_type(
+        backend_id='vw_multi',
+        params={'chunksize': 4},
+        datadir=str(datadir))
+
+    with pytest.raises(NotInitializedException):
+        results = vw.analyze("example text", project)
+
+
 def test_vw_train(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={'chunksize': 4, 'learning_rate': 0.5},
+        params={
+            'chunksize': 4,
+            'learning_rate': 0.5,
+            'loss_function': 'hinge'},
         datadir=str(datadir))
 
     vw.train(document_corpus, project)
@@ -83,3 +97,15 @@ def test_vw_analyze(datadir, project):
     assert 'http://www.yso.fi/onto/yso/p1265' in [
         result.uri for result in results]
     assert 'arkeologia' in [result.label for result in results]
+
+
+def test_vw_analyze_empty(datadir, project):
+    vw_type = annif.backend.get_backend('vw_multi')
+    vw = vw_type(
+        backend_id='vw_multi',
+        params={'chunksize': 4},
+        datadir=str(datadir))
+
+    results = vw.analyze("...", project)
+
+    assert len(results) == 0
