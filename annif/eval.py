@@ -30,12 +30,16 @@ def precision_at_k_score(y_true, y_pred, limit):
     """calculate the precision at K, i.e. the number of relevant items
     among the top K predicted ones"""
     scores = []
+    origlimit = limit
     for true, pred in zip(y_true, y_pred):
         order = pred.argsort()[::-1]
-        limit = min(limit, np.count_nonzero(pred))
-        order = order[:limit]
+        orderlimit = min(limit, np.count_nonzero(pred))
+        order = order[:orderlimit]
         gain = true[order]
-        scores.append(gain.sum() / limit)
+        if orderlimit > 0:
+            scores.append(gain.sum() / orderlimit)
+        else:
+            scores.append(0.0)
     return statistics.mean(scores)
 
 
