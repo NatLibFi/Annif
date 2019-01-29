@@ -20,6 +20,14 @@ def test_list_projects():
     result = runner.invoke(annif.cli.cli, ["list-projects"])
     assert not result.exception
     assert result.exit_code == 0
+    # public project should be visible
+    assert 'dummy-fi' in result.output
+    # hidden project should be visible
+    assert 'dummy-en' in result.output
+    # private project should be visible
+    assert 'dummydummy' in result.output
+    # project with no access setting should be visible
+    assert 'ensemble' in result.output
 
 
 def test_list_projects_bad_arguments():
@@ -42,6 +50,8 @@ def test_show_project():
     assert project_name.group(1) == 'Dummy English'
     project_lang = re.search(r'Language:\s+(.+)', result.output)
     assert project_lang.group(1) == 'en'
+    access = re.search(r'Access:\s+(.+)', result.output)
+    assert access.group(1) == 'hidden'
 
 
 def test_show_project_nonexistent():

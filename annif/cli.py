@@ -13,6 +13,7 @@ import annif
 import annif.corpus
 import annif.eval
 import annif.project
+from annif.project import Access
 from annif.hit import HitFilter
 
 logger = annif.logger
@@ -25,7 +26,7 @@ def get_project(project_id):
     """
     Helper function to get a project by ID and bail out if it doesn't exist"""
     try:
-        return annif.project.get_project(project_id)
+        return annif.project.get_project(project_id, min_access=Access.hidden)
     except ValueError:
         click.echo(
             "No projects found with id \'{0}\'.".format(project_id),
@@ -80,12 +81,10 @@ def run_list_projects():
     """
 
     template = "{0: <25}{1: <45}{2: <8}"
-
     header = template.format("Project ID", "Project Name", "Language")
     click.echo(header)
     click.echo("-" * len(header))
-
-    for proj in annif.project.get_projects().values():
+    for proj in annif.project.get_projects(min_access=Access.private).values():
         click.echo(template.format(proj.project_id, proj.name, proj.language))
 
 
@@ -97,12 +96,11 @@ def run_show_project(project_id):
     """
 
     proj = get_project(project_id)
-
     template = "{0:<20}{1}"
-
     click.echo(template.format('Project ID:', proj.project_id))
     click.echo(template.format('Project Name:', proj.name))
     click.echo(template.format('Language:', proj.language))
+    click.echo(template.format('Access:', proj.access.name))
 
 
 @cli.command('loadvoc')
