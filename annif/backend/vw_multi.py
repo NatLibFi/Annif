@@ -53,11 +53,6 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                     backend_id=self.backend_id)
 
     @classmethod
-    def _label_to_subject(cls, project, label):
-        subject_id = int(label) - 1
-        return project.subjects[subject_id]
-
-    @classmethod
     def _normalize_text(cls, project, text):
         ntext = ' '.join(project.analyzer.tokenize_words(text))
         # colon and pipe chars have special meaning in VW and must be avoided
