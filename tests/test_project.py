@@ -5,6 +5,7 @@ import pytest
 import annif.project
 import annif.backend.dummy
 from annif.exception import ConfigurationException
+from annif.project import Access
 
 
 def test_get_project_en(app):
@@ -14,6 +15,7 @@ def test_get_project_en(app):
     assert project.language == 'en'
     assert project.analyzer.name == 'snowball'
     assert project.analyzer.param == 'english'
+    assert project.access == Access.hidden
     assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
 
 
@@ -24,6 +26,18 @@ def test_get_project_fi(app):
     assert project.language == 'fi'
     assert project.analyzer.name == 'snowball'
     assert project.analyzer.param == 'finnish'
+    assert project.access == Access.public
+    assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
+
+
+def test_get_project_dummydummy(app):
+    with app.app_context():
+        project = annif.project.get_project('dummydummy')
+    assert project.project_id == 'dummydummy'
+    assert project.language == 'en'
+    assert project.analyzer.name == 'snowball'
+    assert project.analyzer.param == 'english'
+    assert project.access == Access.private
     assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
 
 

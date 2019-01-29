@@ -2,6 +2,7 @@
 
 import collections
 import configparser
+import enum
 import os.path
 from sklearn.externals import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -19,6 +20,13 @@ from annif.exception import AnnifException, ConfigurationException, \
 logger = annif.logger
 
 
+class Access(enum.IntEnum):
+    """Enumeration of access levels for projects"""
+    private = 1
+    hidden = 2
+    public = 3
+
+
 class AnnifProject:
     """Class representing the configuration of a single Annif project."""
 
@@ -29,11 +37,21 @@ class AnnifProject:
     _vectorizer = None
     initialized = False
 
+    # default values for configuration settings
+    DEFAULT_ACCESS = 'public'
+
     def __init__(self, project_id, config, datadir):
         self.project_id = project_id
         self.name = config['name']
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
+        access = config.get('access', self.DEFAULT_ACCESS)
+        try:
+            self.access = getattr(Access, access)
+        except AttributeError:
+            raise ConfigurationException(
+                "'%s' is not a valid access setting".format(self.access),
+                project_id=self.project_id)
         self.vocab_id = config.get('vocab', None)
         self._base_datadir = datadir
         self._datadir = os.path.join(datadir, 'projects', self.project_id)
@@ -222,14 +240,20 @@ def initialize_projects(app):
         projects_file, datadir, init_projects)
 
 
-def get_projects():
-    """return the available projects as a dict of project_id -> AnnifProject"""
-    return current_app.annif_projects
+def get_projects(min_access=Access.private):
+    """Return the available projects as a dict of project_id ->
+    AnnifProject. The min_access parameter may be used to set the minimum
+    access level required for the returned projects."""
+
+    projects = [(project_id, project)
+                for project_id, project in current_app.annif_projects.items()
+                if project.access >= min_access]
+    return collections.OrderedDict(projects)
 
 
-def get_project(project_id):
+def get_project(project_id, min_access=Access.private):
     """return the definition of a single Project by project_id"""
-    projects = get_projects()
+    projects = get_projects(min_access)
     try:
         return projects[project_id]
     except KeyError:

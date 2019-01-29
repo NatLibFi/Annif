@@ -5,6 +5,7 @@ import connexion
 import annif.project
 from annif.hit import HitFilter
 from annif.exception import AnnifException
+from annif.project import Access
 
 
 def project_not_found_error(project_id):
@@ -29,15 +30,18 @@ def server_error(err):
 def list_projects():
     """return a dict with projects formatted according to Swagger spec"""
 
-    return {'projects': [proj.dump()
-                         for proj in annif.project.get_projects().values()]}
+    return {
+        'projects': [
+            proj.dump() for proj in annif.project.get_projects(
+                min_access=Access.public).values()]}
 
 
 def show_project(project_id):
     """return a single project formatted according to Swagger spec"""
 
     try:
-        project = annif.project.get_project(project_id)
+        project = annif.project.get_project(
+            project_id, min_access=Access.hidden)
     except ValueError:
         return project_not_found_error(project_id)
     return project.dump()
@@ -48,7 +52,8 @@ def analyze(project_id, text, limit, threshold):
     Swagger spec"""
 
     try:
-        project = annif.project.get_project(project_id)
+        project = annif.project.get_project(
+            project_id, min_access=Access.hidden)
     except ValueError:
         return project_not_found_error(project_id)
 
