@@ -13,7 +13,7 @@ class ChunkingBackend(metaclass=abc.ABCMeta):
         """Analyze the chunked text; should be implemented by the subclass
         inheriting this mixin"""
 
-        pass
+        pass  # pragma: no cover
 
     def _analyze(self, text, project, params):
         self.initialize()
