@@ -42,21 +42,14 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     def initialize(self):
         if self._model is None:
             path = os.path.join(self._get_datadir(), self.MODEL_FILE)
-            self.debug('loading VW model from {}'.format(path))
-            params = {}
-            if self.algorithm == 'oaa':
-                params['probabilities'] = True
-                params['loss_function'] = 'logistic'
-            if os.path.exists(path):
-                self._model = pyvw.vw(
-                    i=path,
-                    quiet=True,
-                    **params)
-                self.debug('loaded model {}'.format(str(self._model)))
-            else:
+            if not os.path.exists(path):
                 raise NotInitializedException(
                     'model {} not found'.format(path),
                     backend_id=self.backend_id)
+            self.debug('loading VW model from {}'.format(path))
+            params = self._create_params({'i': path, 'quiet': True})
+            self._model = pyvw.vw(**params)
+            self.debug('loaded model {}'.format(str(self._model)))
 
     @property
     def algorithm(self):
@@ -111,12 +104,10 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                 "The {} value {} cannot be converted to {}".format(
                     param, val, pspec), backend_id=self.backend_id)
 
-    def _create_model(self, project):
-        self.info('creating VW model (algorithm: {})'.format(self.algorithm))
-        trainpath = os.path.join(self._get_datadir(), self.TRAIN_FILE)
-        params = {param: defaultval
-                  for param, (_, defaultval) in self.VW_PARAMS.items()
-                  if defaultval is not None}
+    def _create_params(self, params):
+        params.update({param: defaultval
+                       for param, (_, defaultval) in self.VW_PARAMS.items()
+                       if defaultval is not None})
         params.update({param: self._convert_param(param, val)
                        for param, val in self.params.items()
                        if param in self.VW_PARAMS})
@@ -124,15 +115,19 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             # need a cache file when there are multiple passes
             params['cache'] = True
             params['kill_cache'] = True
-        params[self.algorithm] = len(project.subjects)
         if self.algorithm == 'oaa':
             # only the oaa algorithm supports probabilities output
             params['probabilities'] = True
             params['loss_function'] = 'logistic'
+        return params
+
+    def _create_model(self, project):
+        self.info('creating VW model (algorithm: {})'.format(self.algorithm))
+        trainpath = os.path.join(self._get_datadir(), self.TRAIN_FILE)
+        params = self._create_params(
+            {'data': trainpath, self.algorithm: len(project.subjects)})
         self.debug("model parameters: {}".format(params))
-        self._model = pyvw.vw(
-            data=trainpath,
-            **params)
+        self._model = pyvw.vw(**params)
         modelpath = os.path.join(self._get_datadir(), self.MODEL_FILE)
         self._model.save(modelpath)
 
