@@ -96,19 +96,6 @@ def test_vw_train_invalid_learning_rate(datadir, project, vw_corpus):
         vw.train(vw_corpus, project)
 
 
-def test_vw_train_unknown_subject(datadir, project, vw_corpus):
-    vw_type = annif.backend.get_backend('vw_multi')
-    vw = vw_type(
-        backend_id='vw_multi',
-        params={'chunksize': 4},
-        datadir=str(datadir))
-
-    vw.train(vw_corpus, project)
-    assert vw._model is not None
-    assert datadir.join('vw-model').exists()
-    assert datadir.join('vw-model').size() > 0
-
-
 def test_vw_analyze(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
@@ -134,6 +121,18 @@ def test_vw_analyze_empty(datadir, project):
     vw = vw_type(
         backend_id='vw_multi',
         params={'chunksize': 4},
+        datadir=str(datadir))
+
+    results = vw.analyze("...", project)
+
+    assert len(results) == 0
+
+
+def test_vw_analyze_multiple_passes(datadir, project):
+    vw_type = annif.backend.get_backend('vw_multi')
+    vw = vw_type(
+        backend_id='vw_multi',
+        params={'chunksize': 4, 'passes': 2},
         datadir=str(datadir))
 
     results = vw.analyze("...", project)
