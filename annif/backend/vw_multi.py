@@ -113,12 +113,10 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                        if param in self.VW_PARAMS})
         if params.get('passes', 1) > 1:
             # need a cache file when there are multiple passes
-            params['cache'] = True
-            params['kill_cache'] = True
+            params.update({'cache': True, 'kill_cache': True})
         if self.algorithm == 'oaa':
             # only the oaa algorithm supports probabilities output
-            params['probabilities'] = True
-            params['loss_function'] = 'logistic'
+            params.update({'probabilities': True, 'loss_function': 'logistic'})
         return params
 
     def _create_model(self, project):
