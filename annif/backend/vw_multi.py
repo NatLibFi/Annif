@@ -6,7 +6,7 @@ import os.path
 import annif.util
 from vowpalwabbit import pyvw
 import numpy as np
-from annif.hit import AnalysisHit, VectorAnalysisResult
+from annif.hit import VectorAnalysisResult
 from annif.exception import ConfigurationException, NotInitializedException
 from . import backend
 from . import mixins
@@ -30,6 +30,9 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         'passes': (int, None)
     }
 
+    DEFAULT_ALGORITHM = 'oaa'
+    SUPPORTED_ALGORITHMS = ('oaa', 'ect')
+
     MODEL_FILE = 'vw-model'
     TRAIN_FILE = 'vw-train.txt'
 
@@ -39,18 +42,24 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     def initialize(self):
         if self._model is None:
             path = os.path.join(self._get_datadir(), self.MODEL_FILE)
-            self.debug('loading VW model from {}'.format(path))
-            if os.path.exists(path):
-                self._model = pyvw.vw(
-                    i=path,
-                    quiet=True,
-                    loss_function='logistic',
-                    probabilities=True)
-                self.debug('loaded model {}'.format(str(self._model)))
-            else:
+            if not os.path.exists(path):
                 raise NotInitializedException(
                     'model {} not found'.format(path),
                     backend_id=self.backend_id)
+            self.debug('loading VW model from {}'.format(path))
+            params = self._create_params({'i': path, 'quiet': True})
+            self._model = pyvw.vw(**params)
+            self.debug('loaded model {}'.format(str(self._model)))
+
+    @property
+    def algorithm(self):
+        algorithm = self.params.get('algorithm', self.DEFAULT_ALGORITHM)
+        if algorithm not in self.SUPPORTED_ALGORITHMS:
+            raise ConfigurationException(
+                "{} is not a valid algorithm (allowed: {})".format(
+                    algorithm, ', '.join(self.SUPPORTED_ALGORITHMS)),
+                backend_id=self.backend_id)
+        return algorithm
 
     @classmethod
     def _normalize_text(cls, project, text):
@@ -95,21 +104,28 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                 "The {} value {} cannot be converted to {}".format(
                     param, val, pspec), backend_id=self.backend_id)
 
-    def _create_model(self, project):
-        self.info('creating VW model')
-        trainpath = os.path.join(self._get_datadir(), self.TRAIN_FILE)
-        params = {param: defaultval
-                  for param, (_, defaultval) in self.VW_PARAMS.items()
-                  if defaultval is not None}
+    def _create_params(self, params):
+        params.update({param: defaultval
+                       for param, (_, defaultval) in self.VW_PARAMS.items()
+                       if defaultval is not None})
         params.update({param: self._convert_param(param, val)
                        for param, val in self.params.items()
                        if param in self.VW_PARAMS})
+        if params.get('passes', 1) > 1:
+            # need a cache file when there are multiple passes
+            params.update({'cache': True, 'kill_cache': True})
+        if self.algorithm == 'oaa':
+            # only the oaa algorithm supports probabilities output
+            params.update({'probabilities': True, 'loss_function': 'logistic'})
+        return params
+
+    def _create_model(self, project):
+        self.info('creating VW model (algorithm: {})'.format(self.algorithm))
+        trainpath = os.path.join(self._get_datadir(), self.TRAIN_FILE)
+        params = self._create_params(
+            {'data': trainpath, self.algorithm: len(project.subjects)})
         self.debug("model parameters: {}".format(params))
-        self._model = pyvw.vw(
-            oaa=len(project.subjects),
-            probabilities=True,
-            data=trainpath,
-            **params)
+        self._model = pyvw.vw(**params)
         modelpath = os.path.join(self._get_datadir(), self.MODEL_FILE)
         self._model.save(modelpath)
 
@@ -121,6 +137,14 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         results = []
         for chunktext in chunktexts:
             example = ' | {}'.format(chunktext)
-            results.append(np.array(self._model.predict(example)))
+            result = self._model.predict(example)
+            if isinstance(result, int):
+                # just a single integer - need to one-hot-encode
+                mask = np.zeros(len(project.subjects))
+                mask[result - 1] = 1.0
+                result = mask
+            else:
+                result = np.array(result)
+            results.append(result)
         return VectorAnalysisResult(
             np.array(results).mean(axis=0), project.subjects)
