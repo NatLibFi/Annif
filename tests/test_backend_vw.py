@@ -60,6 +60,36 @@ def test_vw_train_multiple_passes(datadir, document_corpus, project):
     assert datadir.join('vw-model').size() > 0
 
 
+def test_vw_train_ect(datadir, document_corpus, project):
+    vw_type = annif.backend.get_backend('vw_multi')
+    vw = vw_type(
+        backend_id='vw_multi',
+        params={
+            'chunksize': 4,
+            'learning_rate': 0.5,
+            'algorithm': 'ect'},
+        datadir=str(datadir))
+
+    vw.train(document_corpus, project)
+    assert vw._model is not None
+    assert datadir.join('vw-model').exists()
+    assert datadir.join('vw-model').size() > 0
+
+
+def test_vw_train_invalid_algorithm(datadir, document_corpus, project):
+    vw_type = annif.backend.get_backend('vw_multi')
+    vw = vw_type(
+        backend_id='vw_multi',
+        params={
+            'chunksize': 4,
+            'learning_rate': 0.5,
+            'algorithm': 'invalid'},
+        datadir=str(datadir))
+
+    with pytest.raises(ConfigurationException):
+        vw.train(document_corpus, project)
+
+
 def test_vw_train_invalid_loss_function(datadir, project, vw_corpus):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
