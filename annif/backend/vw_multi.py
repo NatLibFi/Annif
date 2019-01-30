@@ -48,6 +48,10 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                     backend_id=self.backend_id)
             self.debug('loading VW model from {}'.format(path))
             params = self._create_params({'i': path, 'quiet': True})
+            if 'passes' in params:
+                # don't confuse the model with passes
+                del params['passes']
+            self.debug("model parameters: {}".format(params))
             self._model = pyvw.vw(**params)
             self.debug('loaded model {}'.format(str(self._model)))
 
@@ -111,9 +115,6 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         params.update({param: self._convert_param(param, val)
                        for param, val in self.params.items()
                        if param in self.VW_PARAMS})
-        if params.get('passes', 1) > 1:
-            # need a cache file when there are multiple passes
-            params.update({'cache': True, 'kill_cache': True})
         if self.algorithm == 'oaa':
             # only the oaa algorithm supports probabilities output
             params.update({'probabilities': True, 'loss_function': 'logistic'})
@@ -124,6 +125,9 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         trainpath = os.path.join(self._get_datadir(), self.TRAIN_FILE)
         params = self._create_params(
             {'data': trainpath, self.algorithm: len(project.subjects)})
+        if params.get('passes', 1) > 1:
+            # need a cache file when there are multiple passes
+            params.update({'cache': True, 'kill_cache': True})
         self.debug("model parameters: {}".format(params))
         self._model = pyvw.vw(**params)
         modelpath = os.path.join(self._get_datadir(), self.MODEL_FILE)
