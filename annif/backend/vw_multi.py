@@ -104,6 +104,10 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         params.update({param: self._convert_param(param, val)
                        for param, val in self.params.items()
                        if param in self.VW_PARAMS})
+        if params.get('passes', 1) > 1:
+            # need a cache file when there are multiple passes
+            params['cache'] = True
+            params['kill_cache'] = True
         self.debug("model parameters: {}".format(params))
         self._model = pyvw.vw(
             oaa=len(project.subjects),
