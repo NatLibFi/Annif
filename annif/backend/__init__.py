@@ -6,6 +6,7 @@ from . import dummy
 from . import ensemble
 from . import http
 from . import tfidf
+from . import doc2vec
 from . import pav
 import annif
 
@@ -28,6 +29,7 @@ register_backend(dummy.DummyBackend)
 register_backend(ensemble.EnsembleBackend)
 register_backend(http.HTTPBackend)
 register_backend(tfidf.TFIDFBackend)
+register_backend(doc2vec.Doc2VecBackend)
 register_backend(pav.PAVBackend)
 
 # Optional backends
