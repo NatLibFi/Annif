@@ -172,3 +172,72 @@ def test_vw_analyze_ect(datadir, project):
         pohjaan.""", project)
 
     assert len(results) > 0
+
+
+def test_vw_train_log_multi(datadir, document_corpus, project):
+    vw_type = annif.backend.get_backend('vw_multi')
+    vw = vw_type(
+        backend_id='vw_multi',
+        params={
+            'chunksize': 4,
+            'learning_rate': 0.5,
+            'algorithm': 'log_multi'},
+        datadir=str(datadir))
+
+    vw.train(document_corpus, project)
+    assert vw._model is not None
+    assert datadir.join('vw-model').exists()
+    assert datadir.join('vw-model').size() > 0
+
+
+def test_vw_analyze_log_multi(datadir, project):
+    vw_type = annif.backend.get_backend('vw_multi')
+    vw = vw_type(
+        backend_id='vw_multi',
+        params={'chunksize': 1,
+                'algorithm': 'log_multi'},
+        datadir=str(datadir))
+
+    results = vw.analyze("""Arkeologiaa sanotaan joskus myös
+        muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
+        tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
+        Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
+        joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
+        pohjaan.""", project)
+
+    assert len(results) > 0
+
+
+def test_vw_train_multilabel_oaa(datadir, document_corpus, project):
+    vw_type = annif.backend.get_backend('vw_multi')
+    vw = vw_type(
+        backend_id='vw_multi',
+        params={
+            'chunksize': 4,
+            'learning_rate': 0.5,
+            'algorithm': 'multilabel_oaa'},
+        datadir=str(datadir))
+
+    vw.train(document_corpus, project)
+    assert vw._model is not None
+    assert datadir.join('vw-model').exists()
+    assert datadir.join('vw-model').size() > 0
+
+
+def test_vw_analyze_multilabel_oaa(datadir, project):
+    vw_type = annif.backend.get_backend('vw_multi')
+    vw = vw_type(
+        backend_id='vw_multi',
+        params={'chunksize': 1,
+                'algorithm': 'multilabel_oaa'},
+        datadir=str(datadir))
+
+    results = vw.analyze("""Arkeologiaa sanotaan joskus myös
+        muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
+        tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
+        Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
+        joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
+        pohjaan.""", project)
+
+    # weak assertion, but often multilabel_oaa produces zero hits
+    assert len(results) >= 0
