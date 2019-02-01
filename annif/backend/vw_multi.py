@@ -23,15 +23,17 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         # where allowed_values is either a type or a list of allowed values
         # and default_value may be None, to let VW decide by itself
         'bit_precision': (int, None),
+        'ngram': (int, None),
         'learning_rate': (float, None),
         'loss_function': (['squared', 'logistic', 'hinge'], 'logistic'),
         'l1': (float, None),
         'l2': (float, None),
-        'passes': (int, None)
+        'passes': (int, None),
+        'probabilities': (bool, None)
     }
 
     DEFAULT_ALGORITHM = 'oaa'
-    SUPPORTED_ALGORITHMS = ('oaa', 'ect')
+    SUPPORTED_ALGORITHMS = ('oaa', 'ect', 'log_multi', 'multilabel_oaa')
 
     MODEL_FILE = 'vw-model'
     TRAIN_FILE = 'vw-train.txt'
@@ -71,22 +73,35 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         # colon and pipe chars have special meaning in VW and must be avoided
         return ntext.replace(':', '').replace('|', '')
 
-    def _write_train_file(self, examples, filename):
+    @classmethod
+    def _write_train_file(cls, examples, filename):
         with open(filename, 'w') as trainfile:
             for ex in examples:
                 print(ex, file=trainfile)
+
+    @classmethod
+    def _uris_to_subject_ids(cls, project, uris):
+        subject_ids = []
+        for uri in uris:
+            subject_id = project.subjects.by_uri(uri)
+            if subject_id is not None:
+                subject_ids.append(subject_id)
+        return subject_ids
+
+    def _format_examples(self, project, text, uris):
+        subject_ids = self._uris_to_subject_ids(project, uris)
+        if self.algorithm == 'multilabel_oaa':
+            yield '{} | {}'.format(','.join(map(str, subject_ids)), text)
+        else:
+            for subject_id in subject_ids:
+                yield '{} | {}'.format(subject_id + 1, text)
 
     def _create_train_file(self, corpus, project):
         self.info('creating VW train file')
         examples = []
         for doc in corpus.documents:
             text = self._normalize_text(project, doc.text)
-            for uri in doc.uris:
-                subject_id = project.subjects.by_uri(uri)
-                if subject_id is None:
-                    continue
-                exstr = '{} | {}'.format(subject_id + 1, text)
-                examples.append(exstr)
+            examples.extend(self._format_examples(project, text, doc.uris))
         random.shuffle(examples)
         annif.util.atomic_save(examples,
                                self._get_datadir(),
@@ -115,9 +130,6 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         params.update({param: self._convert_param(param, val)
                        for param, val in self.params.items()
                        if param in self.VW_PARAMS})
-        if self.algorithm == 'oaa':
-            # only the oaa algorithm supports probabilities output
-            params.update({'probabilities': True, 'loss_function': 'logistic'})
         return params
 
     def _create_model(self, project):
@@ -142,8 +154,13 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         for chunktext in chunktexts:
             example = ' | {}'.format(chunktext)
             result = self._model.predict(example)
-            if isinstance(result, int):
-                # just a single integer - need to one-hot-encode
+            if self.algorithm == 'multilabel_oaa':
+                # result is a list of subject IDs - need to vectorize
+                mask = np.zeros(len(project.subjects))
+                mask[result] = 1.0
+                result = mask
+            elif isinstance(result, int):
+                # result is a single integer - need to one-hot-encode
                 mask = np.zeros(len(project.subjects))
                 mask[result - 1] = 1.0
                 result = mask
