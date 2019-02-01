@@ -100,7 +100,7 @@ def test_vw_analyze(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={'chunksize': 4},
+        params={'chunksize': 4, 'probabilities': 1},
         datadir=str(datadir))
 
     results = vw.analyze("""Arkeologiaa sanotaan joskus myös
