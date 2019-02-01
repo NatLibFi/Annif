@@ -17,7 +17,7 @@ def vw_corpus(tmpdir):
     return annif.corpus.DocumentFile(str(tmpfile))
 
 
-def test_vw_analyze_no_model(datadir, project):
+def test_vw_multi_analyze_no_model(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -28,7 +28,7 @@ def test_vw_analyze_no_model(datadir, project):
         results = vw.analyze("example text", project)
 
 
-def test_vw_train(datadir, document_corpus, project):
+def test_vw_multi_train(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -44,7 +44,7 @@ def test_vw_train(datadir, document_corpus, project):
     assert datadir.join('vw-model').size() > 0
 
 
-def test_vw_train_multiple_passes(datadir, document_corpus, project):
+def test_vw_multi_train_multiple_passes(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -60,7 +60,7 @@ def test_vw_train_multiple_passes(datadir, document_corpus, project):
     assert datadir.join('vw-model').size() > 0
 
 
-def test_vw_train_invalid_algorithm(datadir, document_corpus, project):
+def test_vw_multi_train_invalid_algorithm(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -74,7 +74,7 @@ def test_vw_train_invalid_algorithm(datadir, document_corpus, project):
         vw.train(document_corpus, project)
 
 
-def test_vw_train_invalid_loss_function(datadir, project, vw_corpus):
+def test_vw_multi_train_invalid_loss_function(datadir, project, vw_corpus):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -85,7 +85,7 @@ def test_vw_train_invalid_loss_function(datadir, project, vw_corpus):
         vw.train(vw_corpus, project)
 
 
-def test_vw_train_invalid_learning_rate(datadir, project, vw_corpus):
+def test_vw_multi_train_invalid_learning_rate(datadir, project, vw_corpus):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -96,7 +96,7 @@ def test_vw_train_invalid_learning_rate(datadir, project, vw_corpus):
         vw.train(vw_corpus, project)
 
 
-def test_vw_analyze(datadir, project):
+def test_vw_multi_analyze(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -116,7 +116,7 @@ def test_vw_analyze(datadir, project):
     assert 'arkeologia' in [result.label for result in results]
 
 
-def test_vw_analyze_empty(datadir, project):
+def test_vw_multi_analyze_empty(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -128,7 +128,7 @@ def test_vw_analyze_empty(datadir, project):
     assert len(results) == 0
 
 
-def test_vw_analyze_multiple_passes(datadir, project):
+def test_vw_multi_analyze_multiple_passes(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -140,7 +140,7 @@ def test_vw_analyze_multiple_passes(datadir, project):
     assert len(results) == 0
 
 
-def test_vw_train_ect(datadir, document_corpus, project):
+def test_vw_multi_train_ect(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -156,7 +156,7 @@ def test_vw_train_ect(datadir, document_corpus, project):
     assert datadir.join('vw-model').size() > 0
 
 
-def test_vw_analyze_ect(datadir, project):
+def test_vw_multi_analyze_ect(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -174,7 +174,7 @@ def test_vw_analyze_ect(datadir, project):
     assert len(results) > 0
 
 
-def test_vw_train_log_multi(datadir, document_corpus, project):
+def test_vw_multi_train_log_multi(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -190,7 +190,7 @@ def test_vw_train_log_multi(datadir, document_corpus, project):
     assert datadir.join('vw-model').size() > 0
 
 
-def test_vw_analyze_log_multi(datadir, project):
+def test_vw_multi_analyze_log_multi(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -208,7 +208,7 @@ def test_vw_analyze_log_multi(datadir, project):
     assert len(results) > 0
 
 
-def test_vw_train_multilabel_oaa(datadir, document_corpus, project):
+def test_vw_multi_train_multilabel_oaa(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -224,7 +224,7 @@ def test_vw_train_multilabel_oaa(datadir, document_corpus, project):
     assert datadir.join('vw-model').size() > 0
 
 
-def test_vw_analyze_multilabel_oaa(datadir, project):
+def test_vw_multi_analyze_multilabel_oaa(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
