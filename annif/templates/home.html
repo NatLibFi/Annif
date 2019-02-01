@@ -1,6 +1,21 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if title %}
+  <title>{{ title }}</title>
+  {% else %}
+  <title>Annif</title>
+  {% endif %}
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
 
-{% block content %}
 <header class="mb-4 mt-0">
   <div class="container">
     <h1 class="py-3">Annif</h1>
@@ -15,29 +30,157 @@
 
   <p>See the <a href="v1/ui/">Swagger documentation</a> for API specification.</p>
   
-  <div class="row mb-5">
-    <div class="col-md-8">
-      <div class="form-group">
-        <label for="text">Text to analyze:</label><br>
-        <textarea class="form-control" rows="15" name="text" id="text"></textarea>
+  <div id="app">
+    <template v-if="errors.length">
+      <b>Please correct the following error(s):</b>
+      <div class="alert alert-warning" role="alert" v-for="error in errors"><% error %></div>
+    </template>
+    <div class="row mb-5">
+      <div class="col-md-8">
+        <annif-textarea></annif-textarea>
       </div>
-    </div>
-    <div class="col-md-4">
-      <div class="form-group">
-        <label for="project">Project (vocabulary and language):</label>
-        <select class="form-control" id="project">
-          <option></option>
-        </select>
+      <div class="col-md-4">
+        <annif-projects></annif-projects>
+        <button type="button" class="btn btn-primary" id="analyze" v-on:click="analyze">Analyze</button>
+        <annif-results></annif-results>
       </div>
-      <button type="button" class="btn btn-primary" id="analyze">Analyze</button>
-
-      <h2 class="mt-4">Results</h2>
-      <ul class="list-group list-group-flush" id="results">
-      </ul>
     </div>
   </div>
 
-
 </div> <!-- container -->
 
-{% endblock %}
+<script src="/static/js/vue.min.js"></script>
+<script src="/static/js/jquery-3.3.1.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script>
+// NB: using delimiters <% %> due to Jinja's syntax taking precedence
+
+// TBD: probably a good idea to use vuex later
+const results_ = [];
+
+// Component with text area for input
+Vue.component('annif-textarea', {
+  delimiters: ["<%","%>"],
+  template: '<div class="form-group">\
+  <label for="text">Text to analyze:</label><br>\
+  <textarea class="form-control" rows="15" name="text" id="text"></textarea>\
+</div>'
+});
+
+// Component with list of projects
+Vue.component('annif-projects', {
+  delimiters: ["<%","%>"],
+  data: function() {
+    return {
+      projects: []
+    }
+  },
+  methods: {
+    loadData: function() {
+      var this_ = this;
+      $.ajax({
+        url: "/v1/projects",
+        method: 'GET',
+        success: function(data) {
+          this_.projects = data.projects;
+        }
+    });
+    }
+  },
+  mounted: function() {
+    // TBD: we can add a button to reload the list of projects later
+    this.loadData();
+  },
+  template: '<div>\
+  <div class="form-group">\
+    <label for="project">Project (vocabulary and language):</label>\
+    <select class="form-control" id="project">\
+      <option></option>\
+      <option v-for="project in projects" v-bind:value="project.project_id"><% project.name %></option>\
+    </select>\
+  </div>\
+</div>'
+});
+
+// Component with the list of results
+Vue.component('annif-results', {
+  delimiters: ["<%","%>"],
+  data: function() {
+    return {
+      results: results_
+    };
+  },
+  template: '<div>\
+  <h2 class="mt-4">Results</h2>\
+  <ul class="list-group list-group-flush" id="results">\
+    <li class="list-group-item p-0" v-for="result in results">\
+      <meter class="mr-2" v-bind:value="result.score"></meter>\
+      <a v-bind:href="result.uri"><% result.label %></a>\
+    </li>\
+  </ul>\
+</div>'
+});
+
+// Application, which uses the components above
+var app = new Vue({
+  delimiters: ["<%","%>"],
+  el: '#app',
+  data: {
+    results: results_,
+    errors: []
+  },
+  methods: {
+    clearResults: function() {
+      $('#results').empty();
+      while (this.results.length > 0) {
+        this.results.pop();
+      }
+    },
+    analyze: function(event) {
+      this.errors = [];
+      var text = $('#text').val();
+      if (text.trim() === "") {
+        this.errors.push("You need to enter the text to analyze");
+      }
+      var project = $('#project').val();
+      if (project.trim() === "") {
+        this.errors.push("You need to select one project");
+      }
+      this.clearResults();
+      if (this.errors.length) {
+        event.preventDefault();
+        return;
+      }
+      var this_ = this;
+      $.ajax({
+        url: "/v1/projects/" + project + "/analyze",
+        method: 'POST',
+        data: {
+          text: text,
+        },
+        success: function(data) {
+          // need to iterate and push, so that we do not change the pointer to the constant!
+          // TBD: replace once using shared data (state pattern, or vuex)
+          if (data.results.length === 0) {
+            $('#results').append(
+              $('<div class="alert alert-warning" role="alert">No results returned</div>')
+            );
+            return;
+          }
+          for (var i = 0; i < data.results.length; i++) {
+            var result = data.results[i];
+            this_.results.push(result);
+          }
+        },
+        error: function() {
+          $('#results').append(
+            $('<div class="alert alert-danger" role="alert">Server returned error when analyzing data</div>')
+          );
+        }
+    });
+    }
+  }
+});
+</script>
+</body>
+</html>
