@@ -79,13 +79,17 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             for ex in examples:
                 print(ex, file=trainfile)
 
-    def _format_examples(self, project, text, uris):
+    @classmethod
+    def _uris_to_subject_ids(cls, project, uris):
         subject_ids = []
         for uri in uris:
             subject_id = project.subjects.by_uri(uri)
             if subject_id is not None:
                 subject_ids.append(subject_id)
+        return subject_ids
 
+    def _format_examples(self, project, text, uris):
+        subject_ids = self._uris_to_subject_ids(project, uris)
         if self.algorithm == 'multilabel_oaa':
             yield '{} | {}'.format(','.join(map(str, subject_ids)), text)
         else:
