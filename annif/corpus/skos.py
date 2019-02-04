@@ -26,8 +26,8 @@ class SubjectFileSKOS(SubjectCorpus):
             label = str(labels[0][1])
             yield Subject(uri=str(concept), label=label, text=None)
 
-    @classmethod
-    def is_rdf_file(cls, path):
+    @staticmethod
+    def is_rdf_file(path):
         """return True if the path looks like an RDF file that can be loaded
         as SKOS"""
 

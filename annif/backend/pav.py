@@ -61,8 +61,8 @@ class PAVBackend(ensemble.EnsembleBackend):
         return annif.hit.ListAnalysisResult(
             pav_result, source_project.subjects)
 
-    @classmethod
-    def _analyze_train_corpus(cls, source_project, corpus):
+    @staticmethod
+    def _analyze_train_corpus(source_project, corpus):
         scores = []
         true = []
         for doc in corpus.documents:

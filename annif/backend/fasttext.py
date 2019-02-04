@@ -52,12 +52,12 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                     'model {} not found'.format(path),
                     backend_id=self.backend_id)
 
-    @classmethod
-    def _id_to_label(cls, subject_id):
+    @staticmethod
+    def _id_to_label(subject_id):
         return "__label__{:d}".format(subject_id)
 
-    @classmethod
-    def _label_to_subject(cls, project, label):
+    @staticmethod
+    def _label_to_subject(project, label):
         labelnum = label.replace('__label__', '')
         subject_id = int(labelnum)
         return project.subjects[subject_id]
@@ -72,8 +72,8 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                 else:
                     self.warning('no labels for document "{}"'.format(doc))
 
-    @classmethod
-    def _normalize_text(cls, project, text):
+    @staticmethod
+    def _normalize_text(project, text):
         return ' '.join(project.analyzer.tokenize_words(text))
 
     def _create_train_file(self, corpus, project):
