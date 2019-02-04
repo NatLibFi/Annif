@@ -107,9 +107,18 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         self._create_train_file(corpus, project)
         self._create_model()
 
+    def _predict_chunks(self, chunktexts, project, limit):
+        normalized_chunks = []
+        for chunktext in chunktexts:
+            normalized = self._normalize_text(project, chunktext)
+            if normalized != '':
+                normalized_chunks.append(normalized)
+        return self._model.predict(normalized_chunks, limit)
+
     def _analyze_chunks(self, chunktexts, project):
         limit = int(self.params['limit'])
-        chunklabels, chunkscores = self._model.predict(chunktexts, limit)
+        chunklabels, chunkscores = self._predict_chunks(
+            chunktexts, project, limit)
         label_scores = collections.defaultdict(float)
         for labels, scores in zip(chunklabels, chunkscores):
             for label, score in zip(labels, scores):

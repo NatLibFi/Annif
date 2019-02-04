@@ -152,7 +152,10 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     def _analyze_chunks(self, chunktexts, project):
         results = []
         for chunktext in chunktexts:
-            example = ' | {}'.format(chunktext)
+            normalized = self._normalize_text(project, chunktext)
+            if normalized == '':
+                continue
+            example = ' | {}'.format(normalized)
             result = self._model.predict(example)
             if self.algorithm == 'multilabel_oaa':
                 # result is a list of subject IDs - need to vectorize
