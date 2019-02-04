@@ -6,7 +6,7 @@ import os.path
 import annif.util
 from vowpalwabbit import pyvw
 import numpy as np
-from annif.hit import VectorAnalysisResult
+from annif.hit import ListAnalysisResult, VectorAnalysisResult
 from annif.exception import ConfigurationException, NotInitializedException
 from . import backend
 from . import mixins
@@ -23,7 +23,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         # where allowed_values is either a type or a list of allowed values
         # and default_value may be None, to let VW decide by itself
         'bit_precision': (int, None),
-        'ngram': (int, None),
+        'ngram': (lambda x: '_{}'.format(int(x)), None),
         'learning_rate': (float, None),
         'loss_function': (['squared', 'logistic', 'hinge'], 'logistic'),
         'l1': (float, None),
@@ -34,6 +34,8 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
 
     DEFAULT_ALGORITHM = 'oaa'
     SUPPORTED_ALGORITHMS = ('oaa', 'ect', 'log_multi', 'multilabel_oaa')
+
+    DEFAULT_INPUTS = '_text_'
 
     MODEL_FILE = 'vw-model'
     TRAIN_FILE = 'vw-train.txt'
@@ -67,11 +69,20 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                 backend_id=self.backend_id)
         return algorithm
 
+    @property
+    def inputs(self):
+        inputs = self.params.get('inputs', self.DEFAULT_INPUTS)
+        return inputs.split(',')
+
+    @staticmethod
+    def _cleanup_text(text):
+        # colon and pipe chars have special meaning in VW and must be avoided
+        return text.replace(':', '').replace('|', '')
+
     @staticmethod
     def _normalize_text(project, text):
         ntext = ' '.join(project.analyzer.tokenize_words(text))
-        # colon and pipe chars have special meaning in VW and must be avoided
-        return ntext.replace(':', '').replace('|', '')
+        return VWMultiBackend._cleanup_text(ntext)
 
     @staticmethod
     def _write_train_file(examples, filename):
@@ -91,16 +102,39 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     def _format_examples(self, project, text, uris):
         subject_ids = self._uris_to_subject_ids(project, uris)
         if self.algorithm == 'multilabel_oaa':
-            yield '{} | {}'.format(','.join(map(str, subject_ids)), text)
+            yield '{} {}'.format(','.join(map(str, subject_ids)), text)
         else:
             for subject_id in subject_ids:
-                yield '{} | {}'.format(subject_id + 1, text)
+                yield '{} {}'.format(subject_id + 1, text)
+
+    def _inputs_to_exampletext(self, project, text):
+        namespaces = {}
+        for input in self.inputs:
+            if input == '_text_':
+                normalized = self._normalize_text(project, text)
+                if normalized != '':
+                    namespaces['_text_'] = normalized
+            else:
+                proj = annif.project.get_project(input)
+                result = proj.analyze(text)
+                features = [
+                    '{}:{}'.format(
+                        self._cleanup_text(
+                            hit.uri),
+                        hit.score) for hit in result.hits]
+                namespaces[input] = ' '.join(features)
+        if not namespaces:
+            return None
+        return ' '.join(['|{} {}'.format(namespace, featurestr)
+                         for namespace, featurestr in namespaces.items()])
 
     def _create_train_file(self, corpus, project):
         self.info('creating VW train file')
         examples = []
         for doc in corpus.documents:
-            text = self._normalize_text(project, doc.text)
+            text = self._inputs_to_exampletext(project, doc.text)
+            if not text:
+                continue
             examples.extend(self._format_examples(project, text, doc.uris))
         random.shuffle(examples)
         annif.util.atomic_save(examples,
@@ -152,10 +186,10 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     def _analyze_chunks(self, chunktexts, project):
         results = []
         for chunktext in chunktexts:
-            normalized = self._normalize_text(project, chunktext)
-            if normalized == '':
+            exampletext = self._inputs_to_exampletext(project, chunktext)
+            if not exampletext:
                 continue
-            example = ' | {}'.format(normalized)
+            example = ' {}'.format(exampletext)
             result = self._model.predict(example)
             if self.algorithm == 'multilabel_oaa':
                 # result is a list of subject IDs - need to vectorize
@@ -170,5 +204,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             else:
                 result = np.array(result)
             results.append(result)
+        if len(results) == 0:  # empty result
+            return ListAnalysisResult(hits=[], subject_index=project.subjects)
         return VectorAnalysisResult(
             np.array(results).mean(axis=0), project.subjects)
