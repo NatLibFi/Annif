@@ -67,20 +67,20 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                 backend_id=self.backend_id)
         return algorithm
 
-    @classmethod
-    def _normalize_text(cls, project, text):
+    @staticmethod
+    def _normalize_text(project, text):
         ntext = ' '.join(project.analyzer.tokenize_words(text))
         # colon and pipe chars have special meaning in VW and must be avoided
         return ntext.replace(':', '').replace('|', '')
 
-    @classmethod
-    def _write_train_file(cls, examples, filename):
+    @staticmethod
+    def _write_train_file(examples, filename):
         with open(filename, 'w') as trainfile:
             for ex in examples:
                 print(ex, file=trainfile)
 
-    @classmethod
-    def _uris_to_subject_ids(cls, project, uris):
+    @staticmethod
+    def _uris_to_subject_ids(project, uris):
         subject_ids = []
         for uri in uris:
             subject_id = project.subjects.by_uri(uri)
