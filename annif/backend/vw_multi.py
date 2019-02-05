@@ -107,21 +107,27 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             for subject_id in subject_ids:
                 yield '{} {}'.format(subject_id + 1, text)
 
+    def _get_input(self, input, project, text):
+        if input == '_text_':
+            normalized = self._normalize_text(project, text)
+            if normalized != '':
+                return normalized
+        else:
+            proj = annif.project.get_project(input)
+            result = proj.analyze(text)
+            features = [
+                '{}:{}'.format(self._cleanup_text(hit.uri), hit.score)
+                for hit in result.hits]
+            if features:
+                return ' '.join(features)
+        return None
+
     def _inputs_to_exampletext(self, project, text):
         namespaces = {}
         for input in self.inputs:
-            if input == '_text_':
-                normalized = self._normalize_text(project, text)
-                if normalized != '':
-                    namespaces['_text_'] = normalized
-            else:
-                proj = annif.project.get_project(input)
-                result = proj.analyze(text)
-                features = [
-                    '{}:{}'.format(self._cleanup_text(hit.uri), hit.score)
-                    for hit in result.hits]
-                if features:
-                    namespaces[input] = ' '.join(features)
+            inputtext = self._get_input(input, project, text)
+            if inputtext:
+                namespaces[input] = inputtext
         if not namespaces:
             return None
         return ' '.join(['|{} {}'.format(namespace, featurestr)
