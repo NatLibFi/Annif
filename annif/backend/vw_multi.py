@@ -109,18 +109,14 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
 
     def _get_input(self, input, project, text):
         if input == '_text_':
-            normalized = self._normalize_text(project, text)
-            if normalized != '':
-                return normalized
+            return self._normalize_text(project, text)
         else:
             proj = annif.project.get_project(input)
             result = proj.analyze(text)
             features = [
                 '{}:{}'.format(self._cleanup_text(hit.uri), hit.score)
                 for hit in result.hits]
-            if features:
-                return ' '.join(features)
-        return None
+            return ' '.join(features)
 
     def _inputs_to_exampletext(self, project, text):
         namespaces = {}
