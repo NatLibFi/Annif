@@ -182,6 +182,21 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         self._create_train_file(corpus, project)
         self._create_model(project)
 
+    def _convert_result(self, result, project):
+        if self.algorithm == 'multilabel_oaa':
+            # result is a list of subject IDs - need to vectorize
+            mask = np.zeros(len(project.subjects))
+            mask[result] = 1.0
+            return mask
+        elif isinstance(result, int):
+            # result is a single integer - need to one-hot-encode
+            mask = np.zeros(len(project.subjects))
+            mask[result - 1] = 1.0
+            return mask
+        else:
+            # result is a list of scores (probabilities or binary 1/0)
+            return np.array(result)
+
     def _analyze_chunks(self, chunktexts, project):
         results = []
         for chunktext in chunktexts:
@@ -190,19 +205,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                 continue
             example = ' {}'.format(exampletext)
             result = self._model.predict(example)
-            if self.algorithm == 'multilabel_oaa':
-                # result is a list of subject IDs - need to vectorize
-                mask = np.zeros(len(project.subjects))
-                mask[result] = 1.0
-                result = mask
-            elif isinstance(result, int):
-                # result is a single integer - need to one-hot-encode
-                mask = np.zeros(len(project.subjects))
-                mask[result - 1] = 1.0
-                result = mask
-            else:
-                result = np.array(result)
-            results.append(result)
+            results.append(self._convert_result(result, project))
         if not results:  # empty result
             return ListAnalysisResult(hits=[], subject_index=project.subjects)
         return VectorAnalysisResult(
