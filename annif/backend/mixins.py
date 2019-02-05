@@ -24,10 +24,7 @@ class ChunkingBackend(metaclass=abc.ABCMeta):
         chunksize = int(params['chunksize'])
         chunktexts = []
         for i in range(0, len(sentences), chunksize):
-            chunktext = ' '.join(sentences[i:i + chunksize])
-            normalized = self._normalize_text(project, chunktext)
-            if normalized != '':
-                chunktexts.append(normalized)
+            chunktexts.append(' '.join(sentences[i:i + chunksize]))
         self.debug('Split sentences into {} chunks'.format(len(chunktexts)))
         if len(chunktexts) == 0:  # nothing to analyze, empty result
             return ListAnalysisResult(hits=[], subject_index=project.subjects)

@@ -13,7 +13,8 @@ def vw_corpus(tmpdir):
     """return a small document corpus for testing VW training"""
     tmpfile = tmpdir.join('document.tsv')
     tmpfile.write("nonexistent\thttp://example.com/nonexistent\n" +
-                  "arkeologia\thttp://www.yso.fi/onto/yso/p1265")
+                  "arkeologia\thttp://www.yso.fi/onto/yso/p1265\n" +
+                  "...\thttp://example.com/none")
     return annif.corpus.DocumentFile(str(tmpfile))
 
 
@@ -39,6 +40,22 @@ def test_vw_multi_train(datadir, document_corpus, project):
         datadir=str(datadir))
 
     vw.train(document_corpus, project)
+    assert vw._model is not None
+    assert datadir.join('vw-model').exists()
+    assert datadir.join('vw-model').size() > 0
+
+
+def test_vw_multi_train_from_project(app, datadir, document_corpus, project):
+    vw_type = annif.backend.get_backend('vw_multi')
+    vw = vw_type(
+        backend_id='vw_multi',
+        params={
+            'chunksize': 4,
+            'inputs': '_text_,dummy-en'},
+        datadir=str(datadir))
+
+    with app.app_context():
+        vw.train(document_corpus, project)
     assert vw._model is not None
     assert datadir.join('vw-model').exists()
     assert datadir.join('vw-model').size() > 0
