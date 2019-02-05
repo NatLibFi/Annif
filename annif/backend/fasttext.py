@@ -108,12 +108,9 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         self._create_model()
 
     def _predict_chunks(self, chunktexts, project, limit):
-        normalized_chunks = []
-        for chunktext in chunktexts:
-            normalized = self._normalize_text(project, chunktext)
-            if normalized != '':
-                normalized_chunks.append(normalized)
-        return self._model.predict(normalized_chunks, limit)
+        return self._model.predict(list(
+            filter(None, [self._normalize_text(project, chunktext)
+                          for chunktext in chunktexts])), limit)
 
     def _analyze_chunks(self, chunktexts, project):
         limit = int(self.params['limit'])
