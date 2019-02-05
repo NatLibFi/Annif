@@ -13,7 +13,8 @@ def vw_corpus(tmpdir):
     """return a small document corpus for testing VW training"""
     tmpfile = tmpdir.join('document.tsv')
     tmpfile.write("nonexistent\thttp://example.com/nonexistent\n" +
-                  "arkeologia\thttp://www.yso.fi/onto/yso/p1265")
+                  "arkeologia\thttp://www.yso.fi/onto/yso/p1265\n" +
+                  "...\thttp://example.com/none")
     return annif.corpus.DocumentFile(str(tmpfile))
 
 
