@@ -118,11 +118,10 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                 proj = annif.project.get_project(input)
                 result = proj.analyze(text)
                 features = [
-                    '{}:{}'.format(
-                        self._cleanup_text(
-                            hit.uri),
-                        hit.score) for hit in result.hits]
-                namespaces[input] = ' '.join(features)
+                    '{}:{}'.format(self._cleanup_text(hit.uri), hit.score)
+                    for hit in result.hits]
+                if features:
+                    namespaces[input] = ' '.join(features)
         if not namespaces:
             return None
         return ' '.join(['|{} {}'.format(namespace, featurestr)
@@ -204,7 +203,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             else:
                 result = np.array(result)
             results.append(result)
-        if len(results) == 0:  # empty result
+        if not results:  # empty result
             return ListAnalysisResult(hits=[], subject_index=project.subjects)
         return VectorAnalysisResult(
             np.array(results).mean(axis=0), project.subjects)
