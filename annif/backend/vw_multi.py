@@ -129,8 +129,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         return ' '.join(['|{} {}'.format(namespace, featurestr)
                          for namespace, featurestr in namespaces.items()])
 
-    def _create_train_file(self, corpus, project):
-        self.info('creating VW train file')
+    def _create_examples(self, corpus, project):
         examples = []
         for doc in corpus.documents:
             text = self._inputs_to_exampletext(project, doc.text)
@@ -138,6 +137,11 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                 continue
             examples.extend(self._format_examples(project, text, doc.uris))
         random.shuffle(examples)
+        return examples
+
+    def _create_train_file(self, corpus, project):
+        self.info('creating VW train file')
+        examples = self._create_examples(corpus, project)
         annif.util.atomic_save(examples,
                                self._get_datadir(),
                                self.TRAIN_FILE,
@@ -183,6 +187,12 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     def train(self, corpus, project):
         self._create_train_file(corpus, project)
         self._create_model(project)
+
+    def learn(self, corpus, project):
+        for example in self._create_examples(corpus, project):
+            self._model.learn(example)
+        modelpath = os.path.join(self._get_datadir(), self.MODEL_FILE)
+        self._model.save(modelpath)
 
     def _convert_result(self, result, project):
         if self.algorithm == 'multilabel_oaa':

@@ -33,6 +33,10 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         """train the model on the given document or subject corpus"""
         pass  # default is to do nothing, subclasses may override
 
+    def learn(self, corpus, project):
+        """further train the model on the given document or subject corpus"""
+        pass  # default is to do nothing, subclasses may override
+
     def initialize(self):
         """This method can be overridden by backends. It should cause the
         backend to pre-load all data it needs during operation."""
