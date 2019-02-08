@@ -64,3 +64,21 @@ def analyze(project_id, text, limit, threshold):
         return server_error(err)
     hits = hit_filter(result)
     return {'results': [hit._asdict() for hit in hits]}
+
+
+def learn(project_id, documents):
+    """learn from documents and return an empty 204 response if succesful"""
+
+    try:
+        project = annif.project.get_project(
+            project_id, min_access=Access.hidden)
+    except ValueError:
+        return project_not_found_error(project_id)
+
+#   TODO should convert the documents to a corpus object
+#    try:
+#        project.learn(documents)
+#    except AnnifException as err:
+#        return server_error(err)
+
+    return None, 204
