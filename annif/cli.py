@@ -134,6 +134,19 @@ def run_train(project_id, paths):
     proj.train(documents)
 
 
+@cli.command('learn')
+@click_log.simple_verbosity_option(logger)
+@click.argument('project_id')
+@click.argument('paths', type=click.Path(), nargs=-1)
+def run_learn(project_id, paths):
+    """
+    Further train an existing project on a collection of documents.
+    """
+    proj = get_project(project_id)
+    documents = open_documents(paths)
+    proj.learn(documents)
+
+
 @cli.command('analyze')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
