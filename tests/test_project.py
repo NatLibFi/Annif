@@ -92,6 +92,15 @@ def test_project_train_tfidf(app, document_corpus, testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
+def test_project_learn_tfidf(app, document_corpus, testdatadir):
+    with app.app_context():
+        project = annif.project.get_project('tfidf-fi')
+
+    project.learn(document_corpus)
+    # Should assert that the index file changed, but this is not really
+    # implemented in the tfidf backend yet
+
+
 def test_project_load_vocabulary_fasttext(app, vocabulary, testdatadir):
     pytest.importorskip("annif.backend.fasttext")
     with app.app_context():

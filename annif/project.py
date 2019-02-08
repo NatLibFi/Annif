@@ -202,6 +202,12 @@ class AnnifProject:
         self._create_vectorizer(corpus)
         self.backend.train(corpus, project=self)
 
+    def learn(self, corpus):
+        """further train the project using documents from a metadata source"""
+
+        corpus.set_subject_index(self.subjects)
+        self.backend.train(corpus, project=self)
+
     def dump(self):
         """return this project as a dict"""
         return {'project_id': self.project_id,
