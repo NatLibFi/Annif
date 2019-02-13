@@ -172,10 +172,19 @@ var app = new Vue({
             this_.results.push(result);
           }
         },
-        error: function() {
-          $('#results').append(
-            $('<div class="alert alert-danger" role="alert">Server returned error when analyzing data</div>')
-          );
+        error: function(data) {
+          var msg = $('<div class="alert alert-danger" role="alert">').append('Server returned error when analyzing data');
+          if (data.responseJSON != null) {
+            if (data.responseJSON.title) {
+              msg.append($('<h2>').append(data.responseJSON.title));
+            }
+            if (data.responseJSON.detail) {
+              msg.append($('<p>').append(data.responseJSON.detail));
+            }
+          } else {
+            msg.append('<h2>No response from server</h2>');
+          }
+          $('#results').append(msg);
         }
     });
     }
