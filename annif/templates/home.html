@@ -29,7 +29,7 @@
   <h2>REST API</h2>
 
   <p>See the <a href="v1/ui/">Swagger documentation</a> for API specification.</p>
-  
+
   <div id="app">
     <template v-if="errors.length">
       <b>Please correct the following error(s):</b>
@@ -41,7 +41,7 @@
       </div>
       <div class="col-md-4">
         <annif-projects></annif-projects>
-        <button type="button" class="btn btn-primary" id="analyze" v-on:click="analyze">Analyze</button>
+        <button type="button" class="btn btn-primary" id="analyze" @click="analyze">Analyze</button>
         <annif-results></annif-results>
       </div>
     </div>
