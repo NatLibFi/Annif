@@ -1,16 +1,16 @@
 """Vocabulary management functionality for Annif"""
 
-import os
 import os.path
 import annif
 import annif.corpus
 import annif.util
+from annif.datadir import DatadirMixin
 from annif.exception import NotInitializedException
 
 logger = annif.logger
 
 
-class AnnifVocabulary:
+class AnnifVocabulary(DatadirMixin):
     """Class representing a subject vocabulary which can be used by multiple
     Annif projects."""
 
@@ -18,24 +18,17 @@ class AnnifVocabulary:
     _subjects = None
 
     def __init__(self, vocab_id, datadir):
+        DatadirMixin.__init__(self, datadir, 'vocabs', vocab_id)
         self.vocab_id = vocab_id
-        self._datadir = os.path.join(datadir, 'vocabs', self.vocab_id)
-
-    def _get_datadir(self):
-        """return the path of the directory where this project can store its
-        data files"""
-        if not os.path.exists(self._datadir):
-            os.makedirs(self._datadir)
-        return self._datadir
 
     def _create_subject_index(self, subject_corpus):
         self._subjects = annif.corpus.SubjectIndex(subject_corpus)
-        annif.util.atomic_save(self._subjects, self._get_datadir(), 'subjects')
+        annif.util.atomic_save(self._subjects, self.datadir, 'subjects')
 
     @property
     def subjects(self):
         if self._subjects is None:
-            path = os.path.join(self._get_datadir(), 'subjects')
+            path = os.path.join(self.datadir, 'subjects')
             if os.path.exists(path):
                 logger.debug('loading subjects from %s', path)
                 self._subjects = annif.corpus.SubjectIndex.load(path)

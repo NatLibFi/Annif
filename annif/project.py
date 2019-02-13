@@ -14,6 +14,7 @@ import annif.hit
 import annif.backend
 import annif.util
 import annif.vocab
+from annif.datadir import DatadirMixin
 from annif.exception import AnnifException, ConfigurationException, \
     NotInitializedException
 
@@ -27,7 +28,7 @@ class Access(enum.IntEnum):
     public = 3
 
 
-class AnnifProject:
+class AnnifProject(DatadirMixin):
     """Class representing the configuration of a single Annif project."""
 
     # defaults for uninitialized instances
@@ -41,14 +42,14 @@ class AnnifProject:
     DEFAULT_ACCESS = 'public'
 
     def __init__(self, project_id, config, datadir):
+        DatadirMixin.__init__(self, datadir, 'projects', project_id)
         self.project_id = project_id
         self.name = config['name']
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
         self.vocab_id = config.get('vocab', None)
-        self._base_datadir = datadir
-        self._datadir = os.path.join(datadir, 'projects', self.project_id)
         self.config = config
+        self._base_datadir = datadir
         self._init_access()
 
     def _init_access(self):
@@ -59,13 +60,6 @@ class AnnifProject:
             raise ConfigurationException(
                 "'{}' is not a valid access setting".format(access),
                 project_id=self.project_id)
-
-    def _get_datadir(self):
-        """return the path of the directory where this project can store its
-        data files"""
-        if not os.path.exists(self._datadir):
-            os.makedirs(self._datadir)
-        return self._datadir
 
     def _initialize_analyzer(self):
         analyzer = self.analyzer
@@ -136,7 +130,7 @@ class AnnifProject:
             try:
                 backend_class = annif.backend.get_backend(backend_id)
                 self._backend = backend_class(
-                    backend_id, params=self.config, datadir=self._datadir)
+                    backend_id, params=self.config, datadir=self.datadir)
             except ValueError:
                 logger.warning(
                     "Could not create backend %s, "
@@ -161,7 +155,7 @@ class AnnifProject:
     @property
     def vectorizer(self):
         if self._vectorizer is None:
-            path = os.path.join(self._get_datadir(), 'vectorizer')
+            path = os.path.join(self.datadir, 'vectorizer')
             if os.path.exists(path):
                 logger.debug('loading vectorizer from %s', path)
                 self._vectorizer = joblib.load(path)
@@ -191,7 +185,7 @@ class AnnifProject:
         self._vectorizer.fit((subj.text for subj in subjectcorpus.subjects))
         annif.util.atomic_save(
             self._vectorizer,
-            self._get_datadir(),
+            self.datadir,
             'vectorizer',
             method=joblib.dump)
 

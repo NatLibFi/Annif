@@ -45,7 +45,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
 
     def initialize(self):
         if self._model is None:
-            path = os.path.join(self._get_datadir(), self.MODEL_FILE)
+            path = os.path.join(self.datadir, self.MODEL_FILE)
             if not os.path.exists(path):
                 raise NotInitializedException(
                     'model {} not found'.format(path),
@@ -139,7 +139,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             examples.extend(self._format_examples(project, text, doc.uris))
         random.shuffle(examples)
         annif.util.atomic_save(examples,
-                               self._get_datadir(),
+                               self.datadir,
                                self.TRAIN_FILE,
                                method=self._write_train_file)
 
@@ -169,7 +169,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
 
     def _create_model(self, project):
         self.info('creating VW model (algorithm: {})'.format(self.algorithm))
-        trainpath = os.path.join(self._get_datadir(), self.TRAIN_FILE)
+        trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
         params = self._create_params(
             {'data': trainpath, self.algorithm: len(project.subjects)})
         if params.get('passes', 1) > 1:
@@ -177,7 +177,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             params.update({'cache': True, 'kill_cache': True})
         self.debug("model parameters: {}".format(params))
         self._model = pyvw.vw(**params)
-        modelpath = os.path.join(self._get_datadir(), self.MODEL_FILE)
+        modelpath = os.path.join(self.datadir, self.MODEL_FILE)
         self._model.save(modelpath)
 
     def train(self, corpus, project):

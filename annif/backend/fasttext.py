@@ -41,7 +41,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
 
     def initialize(self):
         if self._model is None:
-            path = os.path.join(self._get_datadir(), self.MODEL_FILE)
+            path = os.path.join(self.datadir, self.MODEL_FILE)
             self.debug('loading fastText model from {}'.format(path))
             if os.path.exists(path):
                 self._model = fastText.load_model(path)
@@ -89,14 +89,14 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                                   for uri in doc.uris]
 
         annif.util.atomic_save(doc_subjects,
-                               self._get_datadir(),
+                               self.datadir,
                                self.TRAIN_FILE,
                                method=self._write_train_file)
 
     def _create_model(self):
         self.info('creating fastText model')
-        trainpath = os.path.join(self._get_datadir(), self.TRAIN_FILE)
-        modelpath = os.path.join(self._get_datadir(), self.MODEL_FILE)
+        trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
+        modelpath = os.path.join(self.datadir, self.MODEL_FILE)
         params = {param: self.FASTTEXT_PARAMS[param](val)
                   for param, val in self.params.items()
                   if param in self.FASTTEXT_PARAMS}

@@ -31,7 +31,7 @@ class PAVBackend(ensemble.EnsembleBackend):
         sources = annif.util.parse_sources(self.params['sources'])
         for source_project_id, _ in sources:
             model_filename = self.MODEL_FILE_PREFIX + source_project_id
-            path = os.path.join(self._get_datadir(), model_filename)
+            path = os.path.join(self.datadir, model_filename)
             if os.path.exists(path):
                 self.debug('loading PAV model from {}'.format(path))
                 self._models[source_project_id] = joblib.load(path)
@@ -91,7 +91,7 @@ class PAVBackend(ensemble.EnsembleBackend):
         model_filename = self.MODEL_FILE_PREFIX + source_project_id
         annif.util.atomic_save(
             pav_regressions,
-            self._get_datadir(),
+            self.datadir,
             model_filename,
             method=joblib.dump)
 
