@@ -1,8 +1,6 @@
 """Common functionality for backends."""
 
 import abc
-import os
-import os.path
 from annif import logger
 
 
