@@ -1,8 +1,6 @@
 """Common functionality for backends."""
 
 import abc
-import os
-import os.path
 from annif import logger
 
 
@@ -20,14 +18,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         backend type."""
         self.backend_id = backend_id
         self.params = params
-        self._datadir = datadir
-
-    def _get_datadir(self):
-        """return the path of the directory where this backend can store its
-        data files"""
-        if not os.path.exists(self._datadir):
-            os.makedirs(self._datadir)
-        return self._datadir
+        self.datadir = datadir
 
     def train(self, corpus, project):
         """train the model on the given document or subject corpus"""

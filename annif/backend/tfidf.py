@@ -23,7 +23,7 @@ class TFIDFBackend(backend.AnnifBackend):
 
     def initialize(self):
         if self._index is None:
-            path = os.path.join(self._get_datadir(), self.INDEX_FILE)
+            path = os.path.join(self.datadir, self.INDEX_FILE)
             self.debug('loading similarity index from {}'.format(path))
             if os.path.exists(path):
                 self._index = gensim.similarities.SparseMatrixSimilarity.load(
@@ -42,7 +42,7 @@ class TFIDFBackend(backend.AnnifBackend):
             gscorpus, num_features=len(project.vectorizer.vocabulary_))
         annif.util.atomic_save(
             self._index,
-            self._get_datadir(),
+            self.datadir,
             self.INDEX_FILE)
 
     def _analyze(self, text, project, params):

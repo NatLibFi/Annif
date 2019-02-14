@@ -10,3 +10,4 @@ __pycache__
 data
 Pipfile.lock
 projects.cfg
+venv/
