@@ -40,7 +40,7 @@ class DocumentDirectory(DocumentCorpus, DocumentToSubjectCorpusMixin):
             with open(docfilename, errors='replace') as docfile:
                 text = docfile.read()
             with open(keyfilename) as keyfile:
-                subjects = SubjectSet(keyfile.read())
+                subjects = SubjectSet.from_string(keyfile.read())
             yield Document(text=text, uris=subjects.subject_uris,
                            labels=subjects.subject_labels)
 

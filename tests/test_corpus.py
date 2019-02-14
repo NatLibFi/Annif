@@ -9,7 +9,7 @@ def test_subjectset_uris():
     <http://example.org/another>\tanother
     """
 
-    sset = annif.corpus.SubjectSet(data)
+    sset = annif.corpus.SubjectSet.from_string(data)
     assert sset.has_uris()
     assert len(sset.subject_uris) == 2
     assert "http://example.org/dummy" in sset.subject_uris
@@ -21,7 +21,7 @@ def test_subjectset_labels():
     another
     """
 
-    sset = annif.corpus.SubjectSet(data)
+    sset = annif.corpus.SubjectSet.from_string(data)
     assert not sset.has_uris()
     assert len(sset.subject_labels) == 2
     assert "dummy" in sset.subject_labels
