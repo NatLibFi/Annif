@@ -191,7 +191,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     def learn(self, corpus, project):
         for example in self._create_examples(corpus, project):
             self._model.learn(example)
-        modelpath = os.path.join(self._get_datadir(), self.MODEL_FILE)
+        modelpath = os.path.join(self.datadir, self.MODEL_FILE)
         self._model.save(modelpath)
 
     def _convert_result(self, result, project):
