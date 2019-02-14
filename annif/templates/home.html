@@ -45,7 +45,7 @@
       <div class="col-md-4">
         <annif-projects :projects="projects" @project-selected="onProjectSelected"></annif-projects>
         <button type="button" class="btn btn-primary" id="analyze" @click="analyze">Analyze</button>
-        <annif-results></annif-results>
+        <annif-results :results="results"></annif-results>
       </div>
     </div>
   </div>
@@ -79,9 +79,6 @@ class Problem {
     return this.detail.trim() !== '';
   }
 }
-
-// TBD: probably a good idea to use vuex later
-const results_ = [];
 
 Vue.config.devtools = true;
 
@@ -123,11 +120,7 @@ Vue.component('annif-projects', {
 // Component with the list of results
 Vue.component('annif-results', {
   delimiters: ["<%","%>"],
-  data: function() {
-    return {
-      results: results_
-    };
-  },
+  props: ['results'],
   template: '<div>\
   <h2 class="mt-4">Results</h2>\
   <ul class="list-group list-group-flush" id="results">\
@@ -147,7 +140,7 @@ new Vue({
     text: '',
     project: '',
     projects: [],
-    results: results_,
+    results: [],
     problems: []
   },
   mounted: function() {
@@ -200,21 +193,19 @@ new Vue({
       }
       var this_ = this;
       $.ajax({
-        url: "/v1/projects/" + project + "/analyze",
+        url: "/v1/projects/" + this_.project + "/analyze",
         method: 'POST',
         data: {
-          text: text,
+          text: this_.text,
         },
         success: function(data) {
-          // need to iterate and push, so that we do not change the pointer to the constant!
-          // TBD: replace once using shared data (state pattern, or vuex)
           if (data.results.length === 0) {
             this_.problems.push(new Problem('No results returned', '', false));
-            return;
-          }
-          for (var i = 0; i < data.results.length; i++) {
-            var result = data.results[i];
-            this_.results.push(result);
+          } else {
+            for (var i = 0; i < data.results.length; i++) {
+              var result = data.results[i];
+              this_.results.push(result);
+            }
           }
         },
         error: function(data) {
