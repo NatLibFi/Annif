@@ -29,20 +29,27 @@
   <h2>REST API</h2>
 
   <p>See the <a href="v1/ui/">Swagger documentation</a> for API specification.</p>
-  
+
   <div id="app">
-    <template v-if="errors.length">
+    <template v-if="problems.length">
       <b>Please correct the following error(s):</b>
-      <div class="alert alert-warning" role="alert" v-for="error in errors"><% error %></div>
+      <div :class="['alert', (problem.isError ? 'alert-danger' : 'alert-warning')]"  role="alert" v-for="problem in problems">
+        <h2 v-if="problem.hasTitle()"><% problem.title %></h2>
+        <span v-if="problem.hasDetail()"><% problem.detail %></span>
+      </div>
     </template>
     <div class="row mb-5">
       <div class="col-md-8">
-        <annif-textarea></annif-textarea>
+        <annif-textarea @text-changed="onTextChanged"></annif-textarea>
       </div>
       <div class="col-md-4">
-        <annif-projects></annif-projects>
-        <button type="button" class="btn btn-primary" id="analyze" v-on:click="analyze">Analyze</button>
-        <annif-results></annif-results>
+        <annif-projects :projects="projects" @project-selected="onProjectSelected"></annif-projects>
+        <button type="button" class="btn btn-primary" @click="analyze" :disabled="loading">
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="loading"></span>
+          <span v-if="!loading">Analyze</span>
+          <span v-else>Loading...</span>
+        </button>
+        <annif-results :results="results"></annif-results>
       </div>
     </div>
   </div>
@@ -50,51 +57,63 @@
 </div> <!-- container -->
 
 <script src="/static/js/vue.min.js"></script>
+<!-- bootstrap dependencies -->
 <script src="/static/js/jquery-3.3.1.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
-<script>
+<script type="text/javascript">
 // NB: using delimiters <% %> due to Jinja's syntax taking precedence
 
-// TBD: probably a good idea to use vuex later
-const results_ = [];
+class Problem {
+  constructor(title, detail, isError) {
+    if (title !== undefined) {
+      this.title = title;
+    }
+    if (detail !== undefined) {
+      this.detail = detail;
+    }
+
+    this.isError = !!isError;
+  }
+
+  hasTitle() {
+    return this.title.trim() !== '';
+  }
+
+  hasDetail() {
+    return this.detail.trim() !== '';
+  }
+}
+
+Vue.config.devtools = true;
 
 // Component with text area for input
 Vue.component('annif-textarea', {
   delimiters: ["<%","%>"],
+  methods: {
+    handleTextInput: function(event) {
+      this.$emit('text-changed', event.target.value);
+    }
+  },
   template: '<div class="form-group">\
   <label for="text">Text to analyze:</label><br>\
-  <textarea class="form-control" rows="15" name="text" id="text"></textarea>\
+  <textarea class="form-control" rows="15" name="text" id="text" @input="handleTextInput"></textarea>\
 </div>'
 });
 
 // Component with list of projects
 Vue.component('annif-projects', {
   delimiters: ["<%","%>"],
-  data: function() {
-    return {
-      projects: []
-    }
-  },
+  props: ['projects'],
   methods: {
-    loadData: function() {
-      var this_ = this;
-      $.ajax({
-        url: "/v1/projects",
-        method: 'GET',
-        success: function(data) {
-          this_.projects = data.projects;
-        }
-    });
+    handleProjectSelected: function(event) {
+      // User selected a project, so we use the bus to emit the value. This will be picked up by the parent component
+      this.$emit('project-selected', event.target.value);
     }
-  },
-  mounted: function() {
-    // TBD: we can add a button to reload the list of projects later
-    this.loadData();
   },
   template: '<div>\
   <div class="form-group">\
     <label for="project">Project (vocabulary and language):</label>\
-    <select class="form-control" id="project">\
+    <select class="form-control" id="project" @input="handleProjectSelected">\
       <option></option>\
       <option v-for="project in projects" v-bind:value="project.project_id"><% project.name %></option>\
     </select>\
@@ -105,11 +124,7 @@ Vue.component('annif-projects', {
 // Component with the list of results
 Vue.component('annif-results', {
   delimiters: ["<%","%>"],
-  data: function() {
-    return {
-      results: results_
-    };
-  },
+  props: ['results'],
   template: '<div>\
   <h2 class="mt-4">Results</h2>\
   <ul class="list-group list-group-flush" id="results">\
@@ -122,60 +137,96 @@ Vue.component('annif-results', {
 });
 
 // Application, which uses the components above
-var app = new Vue({
+new Vue({
   delimiters: ["<%","%>"],
   el: '#app',
   data: {
-    results: results_,
-    errors: []
+    text: '',
+    project: '',
+    projects: [],
+    results: [],
+    problems: [],
+    loading: false
+  },
+  mounted: function() {
+    // TBD: we can add a button to reload the list of projects later
+    this.loadProjects();
   },
   methods: {
     clearResults: function() {
-      $('#results').empty();
       while (this.results.length > 0) {
         this.results.pop();
       }
     },
+    onProjectSelected(project) {
+      this.project = project;
+    },
+    onTextChanged(text) {
+      this.text = text;
+    },
+    loadProjects: function() {
+      var this_ = this;
+      $.ajax({
+        url: "/v1/projects",
+        method: 'GET',
+        success: function(data) {
+          this_.projects = data.projects;
+        },
+        error: function(data) {
+          if (data.responseJSON == null) {
+            this_.problems.push(new Problem('No response from server', '', true));
+          } else {
+            var title = data.responseJSON.title || '';
+            var detail = data.responseJSON.detail || '';
+            this_.problems.push(new Problem(title, detail, true));
+          }
+        }
+      });
+    },
     analyze: function(event) {
-      this.errors = [];
-      var text = $('#text').val();
-      if (text.trim() === "") {
-        this.errors.push("You need to enter the text to analyze");
+      this.problems = [];
+      if (this.text.trim() === "") {
+        this.problems.push(new Problem('', 'You need to enter the text to analyze', false));
       }
-      var project = $('#project').val();
-      if (project.trim() === "") {
-        this.errors.push("You need to select one project");
+      if (this.project.trim() === "") {
+        this.problems.push(new Problem('', 'You need to select one project', false));
       }
       this.clearResults();
-      if (this.errors.length) {
+      if (this.problems.length) {
         event.preventDefault();
         return;
       }
       var this_ = this;
       $.ajax({
-        url: "/v1/projects/" + project + "/analyze",
+        url: "/v1/projects/" + this_.project + "/analyze",
         method: 'POST',
         data: {
-          text: text,
+          text: this_.text,
+        },
+        beforeSend: function() {
+          this_.loading = true;
         },
         success: function(data) {
-          // need to iterate and push, so that we do not change the pointer to the constant!
-          // TBD: replace once using shared data (state pattern, or vuex)
           if (data.results.length === 0) {
-            $('#results').append(
-              $('<div class="alert alert-warning" role="alert">No results returned</div>')
-            );
-            return;
-          }
-          for (var i = 0; i < data.results.length; i++) {
-            var result = data.results[i];
-            this_.results.push(result);
+            this_.problems.push(new Problem('No results returned', '', false));
+          } else {
+            for (var i = 0; i < data.results.length; i++) {
+              var result = data.results[i];
+              this_.results.push(result);
+            }
           }
         },
-        error: function() {
-          $('#results').append(
-            $('<div class="alert alert-danger" role="alert">Server returned error when analyzing data</div>')
-          );
+        error: function(data) {
+          if (data.responseJSON == null) {
+            this_.problems.push(new Problem('No response from server', '', true));
+          } else {
+            var title = data.responseJSON.title || '';
+            var detail = data.responseJSON.detail || '';
+            this_.problems.push(new Problem(title, detail, true));
+          }
+        },
+        complete: function() {
+          this_.loading = false;
         }
     });
     }
