@@ -44,7 +44,11 @@
       </div>
       <div class="col-md-4">
         <annif-projects :projects="projects" @project-selected="onProjectSelected"></annif-projects>
-        <button type="button" class="btn btn-primary" id="analyze" @click="analyze">Analyze</button>
+        <button type="button" class="btn btn-primary" @click="analyze" :disabled="loading">
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="loading"></span>
+          <span v-if="!loading">Analyze</span>
+          <span v-else>Loading...</span>
+        </button>
         <annif-results :results="results"></annif-results>
       </div>
     </div>
@@ -141,7 +145,8 @@ new Vue({
     project: '',
     projects: [],
     results: [],
-    problems: []
+    problems: [],
+    loading: false
   },
   mounted: function() {
     // TBD: we can add a button to reload the list of projects later
@@ -198,6 +203,9 @@ new Vue({
         data: {
           text: this_.text,
         },
+        beforeSend: function() {
+          this_.loading = true;
+        },
         success: function(data) {
           if (data.results.length === 0) {
             this_.problems.push(new Problem('No results returned', '', false));
@@ -216,6 +224,9 @@ new Vue({
             var detail = data.responseJSON.detail || '';
             this_.problems.push(new Problem(title, detail, true));
           }
+        },
+        complete: function() {
+          this_.loading = false;
         }
     });
     }
