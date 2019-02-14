@@ -43,7 +43,7 @@
         <annif-textarea></annif-textarea>
       </div>
       <div class="col-md-4">
-        <annif-projects></annif-projects>
+        <annif-projects @project-selected="onProjectSelected"></annif-projects>
         <button type="button" class="btn btn-primary" id="analyze" @click="analyze">Analyze</button>
         <annif-results></annif-results>
       </div>
@@ -56,7 +56,7 @@
 <!-- bootstrap dependencies -->
 <script src="/static/js/jquery-3.3.1.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
-<script>
+<script type="text/javascript">
 // NB: using delimiters <% %> due to Jinja's syntax taking precedence
 
 class Problem {
@@ -111,7 +111,11 @@ Vue.component('annif-projects', {
         success: function(data) {
           this_.projects = data.projects;
         }
-    });
+      });
+    },
+    handleProjectSelected: function(event) {
+      // User selected a project, so we use the bus to emit the value. This will be picked up by the parent component
+      this.$emit('project-selected', event.target.value);
     }
   },
   mounted: function() {
@@ -121,7 +125,7 @@ Vue.component('annif-projects', {
   template: '<div>\
   <div class="form-group">\
     <label for="project">Project (vocabulary and language):</label>\
-    <select class="form-control" id="project">\
+    <select class="form-control" id="project" @input="handleProjectSelected">\
       <option></option>\
       <option v-for="project in projects" v-bind:value="project.project_id"><% project.name %></option>\
     </select>\
@@ -149,10 +153,12 @@ Vue.component('annif-results', {
 });
 
 // Application, which uses the components above
-var app = new Vue({
+new Vue({
   delimiters: ["<%","%>"],
   el: '#app',
   data: {
+    text: '',
+    project: '',
     results: results_,
     problems: []
   },
@@ -162,14 +168,17 @@ var app = new Vue({
         this.results.pop();
       }
     },
+    onProjectSelected(project) {
+      console.log("IIIII")
+      console.log(project);
+      this.project = project;
+    },
     analyze: function(event) {
       this.problems = [];
-      var text = $('#text').val();
-      if (text.trim() === "") {
+      if (this.text.trim() === "") {
         this.problems.push(new Problem('', 'You need to enter the text to analyze', false));
       }
-      var project = $('#project').val();
-      if (project.trim() === "") {
+      if (this.project.trim() === "") {
         this.problems.push(new Problem('', 'You need to select one project', false));
       }
       this.clearResults();
