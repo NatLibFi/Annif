@@ -31,9 +31,12 @@
   <p>See the <a href="v1/ui/">Swagger documentation</a> for API specification.</p>
 
   <div id="app">
-    <template v-if="errors.length">
+    <template v-if="problems.length">
       <b>Please correct the following error(s):</b>
-      <div class="alert alert-warning" role="alert" v-for="error in errors"><% error %></div>
+      <div :class="['alert', (problem.isError ? 'alert-danger' : 'alert-warning')]"  role="alert" v-for="problem in problems">
+        <h2 v-if="problem.hasTitle()"><% problem.title %></h2>
+        <span v-if="problem.hasDetail()"><% problem.detail %></span>
+      </div>
     </template>
     <div class="row mb-5">
       <div class="col-md-8">
@@ -56,8 +59,31 @@
 <script>
 // NB: using delimiters <% %> due to Jinja's syntax taking precedence
 
+class Problem {
+  constructor(title, detail, isError) {
+    if (title !== undefined) {
+      this.title = title;
+    }
+    if (detail !== undefined) {
+      this.detail = detail;
+    }
+
+    this.isError = !!isError;
+  }
+
+  hasTitle() {
+    return this.title.trim() !== '';
+  }
+
+  hasDetail() {
+    return this.detail.trim() !== '';
+  }
+}
+
 // TBD: probably a good idea to use vuex later
 const results_ = [];
+
+Vue.config.devtools = true;
 
 // Component with text area for input
 Vue.component('annif-textarea', {
@@ -128,27 +154,26 @@ var app = new Vue({
   el: '#app',
   data: {
     results: results_,
-    errors: []
+    problems: []
   },
   methods: {
     clearResults: function() {
-      $('#results').empty();
       while (this.results.length > 0) {
         this.results.pop();
       }
     },
     analyze: function(event) {
-      this.errors = [];
+      this.problems = [];
       var text = $('#text').val();
       if (text.trim() === "") {
-        this.errors.push("You need to enter the text to analyze");
+        this.problems.push(new Problem('', 'You need to enter the text to analyze', false));
       }
       var project = $('#project').val();
       if (project.trim() === "") {
-        this.errors.push("You need to select one project");
+        this.problems.push(new Problem('', 'You need to select one project', false));
       }
       this.clearResults();
-      if (this.errors.length) {
+      if (this.problems.length) {
         event.preventDefault();
         return;
       }
@@ -163,9 +188,7 @@ var app = new Vue({
           // need to iterate and push, so that we do not change the pointer to the constant!
           // TBD: replace once using shared data (state pattern, or vuex)
           if (data.results.length === 0) {
-            $('#results').append(
-              $('<div class="alert alert-warning" role="alert">No results returned</div>')
-            );
+            this_.problems.push(new Problem('No results returned', '', false));
             return;
           }
           for (var i = 0; i < data.results.length; i++) {
@@ -173,10 +196,14 @@ var app = new Vue({
             this_.results.push(result);
           }
         },
-        error: function() {
-          $('#results').append(
-            $('<div class="alert alert-danger" role="alert">Server returned error when analyzing data</div>')
-          );
+        error: function(data) {
+          if (data.responseJSON == null) {
+            this_.problems.push(new Problem('No response from server', '', true));
+          } else {
+            var title = data.responseJSON.title || '';
+            var detail = data.responseJSON.detail || '';
+            this_.problems.push(new Problem(title, detail, true));
+          }
         }
     });
     }
