@@ -43,7 +43,7 @@
         <annif-textarea @text-changed="onTextChanged"></annif-textarea>
       </div>
       <div class="col-md-4">
-        <annif-projects @project-selected="onProjectSelected"></annif-projects>
+        <annif-projects :projects="projects" @project-selected="onProjectSelected"></annif-projects>
         <button type="button" class="btn btn-primary" id="analyze" @click="analyze">Analyze</button>
         <annif-results></annif-results>
       </div>
@@ -102,30 +102,12 @@ Vue.component('annif-textarea', {
 // Component with list of projects
 Vue.component('annif-projects', {
   delimiters: ["<%","%>"],
-  data: function() {
-    return {
-      projects: []
-    }
-  },
+  props: ['projects'],
   methods: {
-    loadData: function() {
-      var this_ = this;
-      $.ajax({
-        url: "/v1/projects",
-        method: 'GET',
-        success: function(data) {
-          this_.projects = data.projects;
-        }
-      });
-    },
     handleProjectSelected: function(event) {
       // User selected a project, so we use the bus to emit the value. This will be picked up by the parent component
       this.$emit('project-selected', event.target.value);
     }
-  },
-  mounted: function() {
-    // TBD: we can add a button to reload the list of projects later
-    this.loadData();
   },
   template: '<div>\
   <div class="form-group">\
@@ -164,8 +146,13 @@ new Vue({
   data: {
     text: '',
     project: '',
+    projects: [],
     results: results_,
     problems: []
+  },
+  mounted: function() {
+    // TBD: we can add a button to reload the list of projects later
+    this.loadProjects();
   },
   methods: {
     clearResults: function() {
@@ -178,6 +165,25 @@ new Vue({
     },
     onTextChanged(text) {
       this.text = text;
+    },
+    loadProjects: function() {
+      var this_ = this;
+      $.ajax({
+        url: "/v1/projects",
+        method: 'GET',
+        success: function(data) {
+          this_.projects = data.projects;
+        },
+        error: function(data) {
+          if (data.responseJSON == null) {
+            this_.problems.push(new Problem('No response from server', '', true));
+          } else {
+            var title = data.responseJSON.title || '';
+            var detail = data.responseJSON.detail || '';
+            this_.problems.push(new Problem(title, detail, true));
+          }
+        }
+      });
     },
     analyze: function(event) {
       this.problems = [];
