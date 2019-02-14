@@ -66,3 +66,15 @@ class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
                 subjects = [annif.util.cleanup_uri(uri)
                             for uri in uris.split()]
                 yield Document(text=text, uris=subjects, labels=[])
+
+
+class DocumentList(DocumentCorpus, DocumentToSubjectCorpusMixin):
+    """A document corpus based on a list of other iterable of Document
+    objects"""
+
+    def __init__(self, documents):
+        self._documents = documents
+
+    @property
+    def documents(self):
+        yield from self._documents

@@ -3,6 +3,7 @@ methods defined in the Swagger specification."""
 
 import connexion
 import annif.project
+from annif.corpus import Document, DocumentList
 from annif.hit import HitFilter
 from annif.exception import AnnifException
 from annif.project import Access
@@ -75,10 +76,14 @@ def learn(project_id, documents):
     except ValueError:
         return project_not_found_error(project_id)
 
-#   TODO should convert the documents to a corpus object
-#    try:
-#        project.learn(documents)
-#    except AnnifException as err:
-#        return server_error(err)
+    corpus = [Document(text=d['text'],
+                       uris=[subj['uri'] for subj in d['subjects']],
+                       labels=[subj['label'] for subj in d['subjects']])
+              for d in documents
+              if 'text' in d and 'subjects' in d]
+    try:
+        project.learn(DocumentList(corpus))
+    except AnnifException as err:
+        return server_error(err)
 
     return None, 204
