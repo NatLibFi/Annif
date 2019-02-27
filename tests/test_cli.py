@@ -126,6 +126,28 @@ def test_train_multiple(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
+def test_learn(testdatadir):
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents.tsv')
+    result = runner.invoke(annif.cli.cli, ['learn', 'dummy-fi', docfile])
+    assert not result.exception
+    assert result.exit_code == 0
+
+
+def test_learn_notsupported(testdatadir):
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents.tsv')
+    result = runner.invoke(annif.cli.cli, ['learn', 'tfidf-fi', docfile])
+    assert result.exit_code != 0
+    assert 'Learning not supported' in result.output
+
+
 def test_analyze():
     result = runner.invoke(
         annif.cli.cli,

@@ -54,3 +54,12 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def warning(self, message):
         """Log a warning message from this backend"""
         logger.warning("Backend {}: {}".format(self.backend_id, message))
+
+
+class AnnifLearningBackend(AnnifBackend):
+    """Base class for Annif backends that can perform online learning"""
+
+    @abc.abstractmethod
+    def learn(self, corpus, project):
+        """further train the model on the given document or subject corpus"""
+        pass  # pragma: no cover

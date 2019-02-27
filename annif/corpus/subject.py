@@ -98,22 +98,20 @@ class SubjectIndex:
 class SubjectSet:
     """Represents a set of subjects for a document."""
 
-    def __init__(self, subj_data):
-        """initialize a SubjectSet from either a string representation or a
-        tuple (URIs, labels)"""
+    def __init__(self, subj_data=None):
+        """Create a SubjectSet and optionally initialize it from a tuple
+        (URIs, labels)"""
 
-        if isinstance(subj_data, str):
-            self.subject_uris = set()
-            self.subject_labels = set()
-            self._parse(subj_data)
-        else:
-            uris, labels = subj_data
-            self.subject_uris = set(uris)
-            self.subject_labels = set(labels)
+        uris, labels = subj_data or ([], [])
+        self.subject_uris = set(uris)
+        self.subject_labels = set(labels)
 
-    def _parse(self, subj_data):
+    @classmethod
+    def from_string(cls, subj_data):
+        sset = cls()
         for line in subj_data.splitlines():
-            self._parse_line(line)
+            sset._parse_line(line)
+        return sset
 
     def _parse_line(self, line):
         vals = line.split("\t")

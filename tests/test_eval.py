@@ -90,7 +90,7 @@ def test_ndcg_empty2():
 def test_evaluation_batch(subject_index):
     batch = annif.eval.EvaluationBatch(subject_index)
 
-    gold_set = annif.corpus.SubjectSet(
+    gold_set = annif.corpus.SubjectSet.from_string(
         '<http://www.yso.fi/onto/yso/p10849>\tarkeologit')
     hits1 = annif.hit.ListAnalysisResult([
         annif.hit.AnalysisHit(

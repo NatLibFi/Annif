@@ -29,7 +29,7 @@ def test_vw_multi_analyze_no_model(datadir, project):
         results = vw.analyze("example text", project)
 
 
-def test_vw_multi_train(datadir, document_corpus, project):
+def test_vw_multi_train_and_learn(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -43,6 +43,16 @@ def test_vw_multi_train(datadir, document_corpus, project):
     assert vw._model is not None
     assert datadir.join('vw-model').exists()
     assert datadir.join('vw-model').size() > 0
+
+    # test online learning
+    modelfile = datadir.join('vw-model')
+
+    old_size = modelfile.size()
+    old_mtime = modelfile.mtime()
+
+    vw.learn(document_corpus, project)
+
+    assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
 
 
 def test_vw_multi_train_from_project(app, datadir, document_corpus, project):

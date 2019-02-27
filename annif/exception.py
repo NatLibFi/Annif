@@ -46,3 +46,10 @@ class ConfigurationException(AnnifException):
     """Exception raised when a project or backend is misconfigured."""
 
     prefix = "Misconfigured"
+
+
+class NotSupportedException(AnnifException):
+    """Exception raised when an operation is not supported by a project or
+    backend."""
+
+    prefix = "Not supported"

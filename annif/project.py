@@ -16,7 +16,7 @@ import annif.util
 import annif.vocab
 from annif.datadir import DatadirMixin
 from annif.exception import AnnifException, ConfigurationException, \
-    NotInitializedException
+    NotInitializedException, NotSupportedException
 
 logger = annif.logger
 
@@ -195,6 +195,18 @@ class AnnifProject(DatadirMixin):
         corpus.set_subject_index(self.subjects)
         self._create_vectorizer(corpus)
         self.backend.train(corpus, project=self)
+
+    def learn(self, corpus):
+        """further train the project using documents from a metadata source"""
+
+        corpus.set_subject_index(self.subjects)
+        if isinstance(
+                self.backend,
+                annif.backend.backend.AnnifLearningBackend):
+            self.backend.learn(corpus, project=self)
+        else:
+            raise NotSupportedException("Learning not supported by backend",
+                                        project_id=self.project_id)
 
     def dump(self):
         """return this project as a dict"""
