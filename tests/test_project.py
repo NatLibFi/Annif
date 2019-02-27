@@ -4,7 +4,7 @@ import os
 import pytest
 import annif.project
 import annif.backend.dummy
-from annif.exception import ConfigurationException
+from annif.exception import ConfigurationException, NotSupportedException
 from annif.project import Access
 
 
@@ -107,6 +107,19 @@ def test_project_learn(app, tmpdir):
         assert result[0].uri == 'http://example.org/key1'
         assert result[0].label == 'key1'
         assert result[0].score == 1.0
+
+
+def test_project_learn_not_supported(app, tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.tsv').write('<http://example.org/key1>\tkey1')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.tsv').write('<http://example.org/key2>\tkey2')
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir))
+
+    with app.app_context():
+        project = annif.project.get_project('tfidf-fi')
+        with pytest.raises(NotSupportedException):
+            project.learn(docdir)
 
 
 def test_project_load_vocabulary_fasttext(app, vocabulary, testdatadir):

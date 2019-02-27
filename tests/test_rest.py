@@ -132,3 +132,9 @@ def test_rest_learn_nonexistent(app):
     with app.app_context():
         result = annif.rest.learn('nonexistent', [])
         assert result.status_code == 404
+
+
+def test_rest_learn_not_supported(app):
+    with app.app_context():
+        result = annif.rest.learn('tfidf-fi', [])
+        assert result.status_code == 503
