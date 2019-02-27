@@ -67,6 +67,15 @@ def analyze(project_id, text, limit, threshold):
     return {'results': [hit._asdict() for hit in hits]}
 
 
+def _documents_to_corpus(documents):
+    corpus = [Document(text=d['text'],
+                       uris=[subj['uri'] for subj in d['subjects']],
+                       labels=[subj['label'] for subj in d['subjects']])
+              for d in documents
+              if 'text' in d and 'subjects' in d]
+    return DocumentList(corpus)
+
+
 def learn(project_id, documents):
     """learn from documents and return an empty 204 response if succesful"""
 
@@ -76,13 +85,10 @@ def learn(project_id, documents):
     except ValueError:
         return project_not_found_error(project_id)
 
-    corpus = [Document(text=d['text'],
-                       uris=[subj['uri'] for subj in d['subjects']],
-                       labels=[subj['label'] for subj in d['subjects']])
-              for d in documents
-              if 'text' in d and 'subjects' in d]
+    corpus = _documents_to_corpus(documents)
+
     try:
-        project.learn(DocumentList(corpus))
+        project.learn(corpus)
     except AnnifException as err:
         return server_error(err)
 
