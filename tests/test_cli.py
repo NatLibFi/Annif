@@ -132,7 +132,7 @@ def test_learn(testdatadir):
         'corpora',
         'archaeology',
         'documents.tsv')
-    result = runner.invoke(annif.cli.cli, ['learn', 'tfidf-fi', docfile])
+    result = runner.invoke(annif.cli.cli, ['learn', 'dummy-fi', docfile])
     assert not result.exception
     assert result.exit_code == 0
 

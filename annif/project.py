@@ -200,7 +200,7 @@ class AnnifProject(DatadirMixin):
         """further train the project using documents from a metadata source"""
 
         corpus.set_subject_index(self.subjects)
-        self.backend.train(corpus, project=self)
+        self.backend.learn(corpus, project=self)
 
     def dump(self):
         """return this project as a dict"""

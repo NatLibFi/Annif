@@ -24,10 +24,6 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         """train the model on the given document or subject corpus"""
         pass  # default is to do nothing, subclasses may override
 
-    def learn(self, corpus, project):
-        """further train the model on the given document or subject corpus"""
-        pass  # default is to do nothing, subclasses may override
-
     def initialize(self):
         """This method can be overridden by backends. It should cause the
         backend to pre-load all data it needs during operation."""
@@ -58,3 +54,12 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def warning(self, message):
         """Log a warning message from this backend"""
         logger.warning("Backend {}: {}".format(self.backend_id, message))
+
+
+class AnnifLearningBackend(AnnifBackend):
+    """Base class for Annif backends that can perform online learning"""
+
+    @abc.abstractmethod
+    def learn(self, corpus, project):
+        """further train the model on the given document or subject corpus"""
+        pass  # pragma: no cover

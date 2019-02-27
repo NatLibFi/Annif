@@ -12,7 +12,7 @@ from . import backend
 from . import mixins
 
 
-class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifBackend):
+class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
     """Vorpal Wabbit multiclass/multilabel backend for Annif"""
 
     name = "vw_multi"

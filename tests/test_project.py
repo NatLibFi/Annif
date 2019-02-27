@@ -92,13 +92,21 @@ def test_project_train_tfidf(app, document_corpus, testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
-def test_project_learn_tfidf(app, document_corpus, testdatadir):
-    with app.app_context():
-        project = annif.project.get_project('tfidf-fi')
+def test_project_learn(app, tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.tsv').write('<http://example.org/key1>\tkey1')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.tsv').write('<http://example.org/key2>\tkey2')
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir))
 
-    project.learn(document_corpus)
-    # Should assert that the index file changed, but this is not really
-    # implemented in the tfidf backend yet
+    with app.app_context():
+        project = annif.project.get_project('dummy-fi')
+        project.learn(docdir)
+        result = project.analyze('this is some text')
+        assert len(result) == 1
+        assert result[0].uri == 'http://example.org/key1'
+        assert result[0].label == 'key1'
+        assert result[0].score == 1.0
 
 
 def test_project_load_vocabulary_fasttext(app, vocabulary, testdatadir):

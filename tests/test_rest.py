@@ -88,11 +88,41 @@ def test_rest_analyze_nonexistent(app):
         assert result.status_code == 404
 
 
-def test_rest_novocab(app):
+def test_rest_analyze_novocab(app):
     with app.app_context():
         result = annif.rest.analyze(
             'novocab',
             text='example text',
             limit=10,
             threshold=0.0)
+        assert result.status_code == 503
+
+
+def test_rest_learn_empty(app):
+    with app.app_context():
+        response = annif.rest.learn('dummy-en', [])
+        assert response == (None, 204)  # success, no output
+
+
+def test_rest_learn(app):
+    documents = [{'text': 'the quick brown fox',
+                  'subjects': [{'uri': 'http://example.org/fox',
+                                'label': 'fox'}]}]
+    with app.app_context():
+        response = annif.rest.learn('dummy-en', documents)
+        assert response == (None, 204)  # success, no output
+
+        result = annif.rest.analyze(
+            'dummy-en',
+            text='example text',
+            limit=10,
+            threshold=0.0)
+        assert 'results' in result
+        assert result['results'][0]['uri'] == 'http://example.org/fox'
+        assert result['results'][0]['label'] == 'fox'
+
+
+def test_rest_learn_novocab(app):
+    with app.app_context():
+        result = annif.rest.learn('novocab', [])
         assert result.status_code == 503
