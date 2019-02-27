@@ -126,3 +126,9 @@ def test_rest_learn_novocab(app):
     with app.app_context():
         result = annif.rest.learn('novocab', [])
         assert result.status_code == 503
+
+
+def test_rest_learn_nonexistent(app):
+    with app.app_context():
+        result = annif.rest.learn('nonexistent', [])
+        assert result.status_code == 404
