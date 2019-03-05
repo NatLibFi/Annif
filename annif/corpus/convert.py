@@ -31,12 +31,12 @@ class DocumentToSubjectCorpusMixin(SubjectCorpus):
 
     def _create_subject(self, subject_id, uri, label):
         filename = self._subject_filename(subject_id)
-        with open(filename, 'w') as subjfile:
+        with open(filename, 'w', encoding='utf-8') as subjfile:
             print("{} {}".format(uri, label), file=subjfile)
 
     def _add_text_to_subject(self, subject_id, text):
         filename = self._subject_filename(subject_id)
-        with open(filename, 'a') as subjfile:
+        with open(filename, 'a', encoding='utf-8') as subjfile:
             print(text, file=subjfile)
 
     def _generate_corpus_from_documents(self):

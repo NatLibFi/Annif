@@ -19,7 +19,7 @@ class SubjectDirectory(SubjectCorpus, SubjectToDocumentCorpusMixin):
     @property
     def subjects(self):
         for filename in self._filenames:
-            with open(filename) as subjfile:
+            with open(filename, encoding='utf-8') as subjfile:
                 uri, label = subjfile.readline().strip().split(' ', 1)
                 text = ' '.join(subjfile.readlines())
                 yield Subject(uri=uri, label=label, text=text)
@@ -33,7 +33,7 @@ class SubjectFileTSV(SubjectCorpus, SubjectToDocumentCorpusMixin):
 
     @property
     def subjects(self):
-        with open(self.path) as subjfile:
+        with open(self.path, encoding='utf-8') as subjfile:
             for line in subjfile:
                 uri, label = line.strip().split(None, 1)
                 clean_uri = annif.util.cleanup_uri(uri)
@@ -81,7 +81,7 @@ class SubjectIndex:
     def save(self, path):
         """Save this subject index into a file."""
 
-        with open(path, 'w') as subjfile:
+        with open(path, 'w', encoding='utf-8') as subjfile:
             for subject_id in range(len(self)):
                 line = "<{}>\t{}".format(
                     self._uris[subject_id], self._labels[subject_id])

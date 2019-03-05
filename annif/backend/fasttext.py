@@ -63,7 +63,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         return project.subjects[subject_id]
 
     def _write_train_file(self, doc_subjects, filename):
-        with open(filename, 'w') as trainfile:
+        with open(filename, 'w', encoding='utf-8') as trainfile:
             for doc, subject_ids in doc_subjects.items():
                 labels = [self._id_to_label(sid) for sid in subject_ids
                           if sid is not None]

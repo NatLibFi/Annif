@@ -86,7 +86,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
 
     @staticmethod
     def _write_train_file(examples, filename):
-        with open(filename, 'w') as trainfile:
+        with open(filename, 'w', encoding='utf-8') as trainfile:
             for ex in examples:
                 print(ex, file=trainfile)
 
