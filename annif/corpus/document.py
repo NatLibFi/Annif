@@ -37,8 +37,8 @@ class DocumentDirectory(DocumentCorpus, DocumentToSubjectCorpusMixin):
     @property
     def documents(self):
         for docfilename, keyfilename in self:
-            with open(docfilename, errors='replace', 
-                encoding='utf-8') as docfile:
+            with open(docfilename, errors='replace',
+                    encoding='utf-8') as docfile:
                 text = docfile.read()
             with open(keyfilename, encoding='utf-8') as keyfile:
                 subjects = SubjectSet.from_string(keyfile.read())
