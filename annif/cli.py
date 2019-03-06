@@ -193,7 +193,7 @@ def run_analyzedir(project_id, directory, suffix, force,
 
     for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
             directory, require_subjects=False):
-        with open(docfilename) as docfile:
+        with open(docfilename, encoding='utf-8') as docfile:
             text = docfile.read()
         subjectfilename = re.sub(r'\.txt$', suffix, docfilename)
         if os.path.exists(subjectfilename) and not force:
@@ -201,7 +201,7 @@ def run_analyzedir(project_id, directory, suffix, force,
                 "Not overwriting {} (use --force to override)".format(
                     subjectfilename))
             continue
-        with open(subjectfilename, 'w') as subjfile:
+        with open(subjectfilename, 'w', encoding='utf-8') as subjfile:
             results = project.analyze(text, backend_params)
             for hit in hit_filter(results):
                 line = "<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score)
