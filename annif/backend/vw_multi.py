@@ -1,4 +1,4 @@
-"""Annif backend using the Vorpal Wabbit multiclass and multilabel
+"""Annif backend using the Vowpal Wabbit multiclass and multilabel
 classifiers"""
 
 import random
@@ -6,7 +6,7 @@ import os.path
 import annif.util
 from vowpalwabbit import pyvw
 import numpy as np
-from annif.suggestion import ListSuggestionResult, VectorAnalysisResult
+from annif.suggestion import ListSuggestionResult, VectorSuggestionResult
 from annif.exception import ConfigurationException, NotInitializedException
 from . import backend
 from . import mixins
