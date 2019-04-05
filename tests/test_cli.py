@@ -148,20 +148,20 @@ def test_learn_notsupported(testdatadir):
     assert 'Learning not supported' in result.output
 
 
-def test_analyze():
+def test_suggest():
     result = runner.invoke(
         annif.cli.cli,
-        ['analyze', 'dummy-fi'],
+        ['suggest', 'dummy-fi'],
         input='kissa')
     assert not result.exception
     assert result.output == "<http://example.org/dummy>\tdummy\t1.0\n"
     assert result.exit_code == 0
 
 
-def test_analyze_nonexistent():
+def test_suggest_nonexistent():
     result = runner.invoke(
         annif.cli.cli,
-        ['analyze', TEMP_PROJECT],
+        ['suggest', TEMP_PROJECT],
         input='kissa')
     assert result.exception
     assert result.output == "No projects found with id '{}'.\n".format(
@@ -169,31 +169,31 @@ def test_analyze_nonexistent():
     assert result.exit_code != 0
 
 
-def test_analyze_param():
+def test_suggest_param():
     result = runner.invoke(
         annif.cli.cli,
-        ['analyze', '--backend-param', 'dummy.score=0.8', 'dummy-fi'],
+        ['suggest', '--backend-param', 'dummy.score=0.8', 'dummy-fi'],
         input='kissa')
     assert not result.exception
     assert result.output == "<http://example.org/dummy>\tdummy\t0.8\n"
     assert result.exit_code == 0
 
 
-def test_analyze_ensemble():
+def test_suggest_ensemble():
     result = runner.invoke(
         annif.cli.cli,
-        ['analyze', 'ensemble'],
+        ['suggest', 'ensemble'],
         input='the cat sat on the mat')
     assert not result.exception
     assert result.output == "<http://example.org/dummy>\tdummy\t1.0\n"
     assert result.exit_code == 0
 
 
-def test_analyzedir(tmpdir):
+def test_index(tmpdir):
     tmpdir.join('doc1.txt').write('nothing special')
 
     result = runner.invoke(
-        annif.cli.cli, ['analyzedir', 'dummy-en', str(tmpdir)])
+        annif.cli.cli, ['index', 'dummy-en', str(tmpdir)])
     assert not result.exception
     assert result.exit_code == 0
 
@@ -203,14 +203,14 @@ def test_analyzedir(tmpdir):
 
     # make sure that preexisting subject files are not overwritten
     result = runner.invoke(
-        annif.cli.cli, ['analyzedir', 'dummy-en', str(tmpdir)])
+        annif.cli.cli, ['index', 'dummy-en', str(tmpdir)])
     assert not result.exception
     assert result.exit_code == 0
     assert "Not overwriting" in result.output
 
     # check that the --force parameter forces overwriting
     result = runner.invoke(
-        annif.cli.cli, ['analyzedir', 'dummy-fi', '--force', str(tmpdir)])
+        annif.cli.cli, ['index', 'dummy-fi', '--force', str(tmpdir)])
     assert tmpdir.join('doc1.annif').exists()
     assert "Not overwriting" not in result.output
     assert tmpdir.join('doc1.annif').read_text(

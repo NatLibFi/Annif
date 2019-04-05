@@ -147,16 +147,16 @@ def run_learn(project_id, paths):
     proj.learn(documents)
 
 
-@cli.command('analyze')
+@cli.command('suggest')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
 @click.option('--backend-param', '-b', multiple=True,
               help='Backend parameters to override')
-def run_analyze(project_id, limit, threshold, backend_param):
+def run_suggest(project_id, limit, threshold, backend_param):
     """
-    Analyze a single document from standard input.
+    Suggest subjects for a single document from standard input.
     """
     project = get_project(project_id)
     text = sys.stdin.read()
@@ -167,7 +167,7 @@ def run_analyze(project_id, limit, threshold, backend_param):
         click.echo("<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score))
 
 
-@cli.command('analyzedir')
+@cli.command('index')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('directory', type=click.Path(file_okay=False))
@@ -181,11 +181,11 @@ def run_analyze(project_id, limit, threshold, backend_param):
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
 @click.option('--backend-param', '-b', multiple=True,
               help='Backend parameters to override')
-def run_analyzedir(project_id, directory, suffix, force,
-                   limit, threshold, backend_param):
+def run_index(project_id, directory, suffix, force,
+              limit, threshold, backend_param):
     """
-    Analyze a directory with documents. Write the results in TSV files
-    with the given suffix.
+    Index a directory with documents, suggesting subjects for each document.
+    Write the results in TSV files with the given suffix.
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
