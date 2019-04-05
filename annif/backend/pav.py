@@ -58,7 +58,7 @@ class PAVBackend(ensemble.EnsembleBackend):
                     label=hit.label,
                     score=score))
         pav_result.sort(key=lambda hit: hit.score, reverse=True)
-        return annif.hit.ListAnalysisResult(
+        return annif.hit.ListSuggestionResult(
             pav_result, source_project.subjects)
 
     @staticmethod

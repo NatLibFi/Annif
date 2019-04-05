@@ -92,13 +92,13 @@ def test_evaluation_batch(subject_index):
 
     gold_set = annif.corpus.SubjectSet.from_string(
         '<http://www.yso.fi/onto/yso/p10849>\tarkeologit')
-    hits1 = annif.hit.ListAnalysisResult([
+    hits1 = annif.hit.ListSuggestionResult([
         annif.hit.SubjectSuggestion(
             uri='http://www.yso.fi/onto/yso/p10849',
             label='arkeologit',
             score=1.0)], subject_index)
     batch.evaluate(hits1, gold_set)
-    hits2 = annif.hit.ListAnalysisResult([
+    hits2 = annif.hit.ListSuggestionResult([
         annif.hit.SubjectSuggestion(
             uri='http://www.yso.fi/onto/yso/p1747',
             label='egyptologit',

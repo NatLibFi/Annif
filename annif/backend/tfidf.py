@@ -5,7 +5,7 @@ import os.path
 import gensim.similarities
 from gensim.matutils import Sparse2Corpus
 import annif.util
-from annif.hit import VectorAnalysisResult
+from annif.hit import VectorSuggestionResult
 from annif.exception import NotInitializedException
 from . import backend
 
@@ -51,5 +51,5 @@ class TFIDFBackend(backend.AnnifBackend):
             text[:20], len(text)))
         vectors = project.vectorizer.transform([text])
         docsim = self._index[vectors[0]]
-        fullresult = VectorAnalysisResult(docsim, project.subjects)
+        fullresult = VectorSuggestionResult(docsim, project.subjects)
         return fullresult.filter(limit=int(self.params['limit']))

@@ -6,7 +6,7 @@ import os.path
 import annif.util
 from vowpalwabbit import pyvw
 import numpy as np
-from annif.hit import ListAnalysisResult, VectorAnalysisResult
+from annif.hit import ListSuggestionResult, VectorAnalysisResult
 from annif.exception import ConfigurationException, NotInitializedException
 from . import backend
 from . import mixins
@@ -219,6 +219,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
             result = self._model.predict(example)
             results.append(self._convert_result(result, project))
         if not results:  # empty result
-            return ListAnalysisResult(hits=[], subject_index=project.subjects)
-        return VectorAnalysisResult(
+            return ListSuggestionResult(
+                hits=[], subject_index=project.subjects)
+        return VectorSuggestionResult(
             np.array(results).mean(axis=0), project.subjects)

@@ -17,12 +17,12 @@ class HitFilter:
         self._threshold = threshold
 
     def __call__(self, orighits):
-        return LazyAnalysisResult(
+        return LazySuggestionResult(
             lambda: orighits.filter(
                 self._limit, self._threshold))
 
 
-class AnalysisResult(metaclass=abc.ABCMeta):
+class SuggestionResult(metaclass=abc.ABCMeta):
     """Abstract base class for a set of hits returned by an analysis
     operation."""
 
@@ -43,7 +43,7 @@ class AnalysisResult(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def filter(self, limit=None, threshold=0.0):
         """Return a subset of the hits, filtered by the given limit and
-        score threshold, as another AnalysisResult object."""
+        score threshold, as another SuggestionResult object."""
         pass  # pragma: no cover
 
     @abc.abstractmethod
@@ -55,14 +55,14 @@ class AnalysisResult(metaclass=abc.ABCMeta):
         return self.hits[idx]
 
 
-class LazyAnalysisResult(AnalysisResult):
-    """AnalysisResult implementation that wraps another AnalysisResult which
+class LazySuggestionResult(SuggestionResult):
+    """SuggestionResult implementation that wraps another SuggestionResult which
     is initialized lazily only when it is actually accessed. Method calls
-    will be proxied to the wrapped AnalysisResult."""
+    will be proxied to the wrapped SuggestionResult."""
 
     def __init__(self, construct):
         """Create the proxy object. The given construct function will be
-        called to create the actual AnalysisResult when it is needed."""
+        called to create the actual SuggestionResult when it is needed."""
         self._construct = construct
         self._object = None
 
@@ -93,8 +93,8 @@ class LazyAnalysisResult(AnalysisResult):
         return self._object[idx]
 
 
-class VectorAnalysisResult(AnalysisResult):
-    """AnalysisResult implementation based primarily on NumPy vectors."""
+class VectorSuggestionResult(SuggestionResult):
+    """SuggestionResult implementation based primarily on NumPy vectors."""
 
     def __init__(self, vector, subject_index):
         self._vector = vector
@@ -114,7 +114,7 @@ class VectorAnalysisResult(AnalysisResult):
                     uri=subject[0],
                     label=subject[1],
                     score=score))
-        return ListAnalysisResult(hits, self._subject_index)
+        return ListSuggestionResult(hits, self._subject_index)
 
     @property
     def subject_order(self):
@@ -139,14 +139,14 @@ class VectorAnalysisResult(AnalysisResult):
             top_k_subjects = self.subject_order[:limit]
             limit_mask[top_k_subjects] = True
             mask = mask & limit_mask
-        return VectorAnalysisResult(self._vector * mask, self._subject_index)
+        return VectorSuggestionResult(self._vector * mask, self._subject_index)
 
     def __len__(self):
         return (self._vector > 0.0).sum()
 
 
-class ListAnalysisResult(AnalysisResult):
-    """AnalysisResult implementation based primarily on lists of hits."""
+class ListSuggestionResult(SuggestionResult):
+    """SuggestionResult implementation based primarily on lists of hits."""
 
     def __init__(self, hits, subject_index):
         self._hits = [hit for hit in hits if hit.score > 0.0]
@@ -175,10 +175,10 @@ class ListAnalysisResult(AnalysisResult):
         hits = sorted(self.hits, key=lambda hit: hit.score, reverse=True)
         if limit is not None:
             hits = hits[:limit]
-        return ListAnalysisResult([hit for hit in hits
-                                   if hit.score >= threshold and
-                                   hit.score > 0.0],
-                                  self._subject_index)
+        return ListSuggestionResult([hit for hit in hits
+                                     if hit.score >= threshold and
+                                     hit.score > 0.0],
+                                    self._subject_index)
 
     def __len__(self):
         return len(self._hits)

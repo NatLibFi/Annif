@@ -79,7 +79,7 @@ paths:
         '200':
           description: successful operation
           schema:
-            $ref: '#/definitions/AnalysisResultList'
+            $ref: '#/definitions/SuggestionResultList'
         '404':
           description: Project not found
           schema:
@@ -157,7 +157,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Project'
-  AnalysisResult:
+  SuggestionResult:
     description: A single candidate subject for a document
     properties:
       uri:
@@ -173,13 +173,13 @@ definitions:
       - uri
       - label
       - score
-  AnalysisResultList:
+  SuggestionResultList:
     description: A list of analysis results
     properties:
       results:
         type: array
         items:
-          $ref: '#/definitions/AnalysisResult'
+          $ref: '#/definitions/SuggestionResult'
   IndexedDocument:
     description: A document with attached, known good subjects
     properties:

@@ -2,7 +2,7 @@
 
 
 import abc
-from annif.hit import ListAnalysisResult
+from annif.hit import ListSuggestionResult
 
 
 class ChunkingBackend(metaclass=abc.ABCMeta):
@@ -27,5 +27,6 @@ class ChunkingBackend(metaclass=abc.ABCMeta):
             chunktexts.append(' '.join(sentences[i:i + chunksize]))
         self.debug('Split sentences into {} chunks'.format(len(chunktexts)))
         if len(chunktexts) == 0:  # no input, empty result
-            return ListAnalysisResult(hits=[], subject_index=project.subjects)
+            return ListSuggestionResult(
+                hits=[], subject_index=project.subjects)
         return self._suggest_chunks(chunktexts, project)
