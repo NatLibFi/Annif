@@ -9,7 +9,7 @@ SubjectSuggestion = collections.namedtuple('AnalysisHit', 'uri label score')
 WeightedHits = collections.namedtuple('WeightedHits', 'hits weight')
 
 
-class HitFilter:
+class SuggestionFilter:
     """A reusable filter for filtering SubjectSuggestion objects."""
 
     def __init__(self, limit=None, threshold=0.0):

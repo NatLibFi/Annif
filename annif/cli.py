@@ -14,7 +14,7 @@ import annif.corpus
 import annif.eval
 import annif.project
 from annif.project import Access
-from annif.hit import HitFilter
+from annif.hit import SuggestionFilter
 
 logger = annif.logger
 click_log.basic_config(logger)
@@ -68,7 +68,7 @@ def generate_filter_batches(subjects):
     filter_batches = collections.OrderedDict()
     for limit in range(1, 16):
         for threshold in [i * 0.05 for i in range(20)]:
-            hit_filter = HitFilter(limit, threshold)
+            hit_filter = SuggestionFilter(limit, threshold)
             batch = annif.eval.EvaluationBatch(subjects)
             filter_batches[(limit, threshold)] = (hit_filter, batch)
     return filter_batches
@@ -161,7 +161,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
     project = get_project(project_id)
     text = sys.stdin.read()
     backend_params = parse_backend_params(backend_param)
-    hit_filter = HitFilter(limit, threshold)
+    hit_filter = SuggestionFilter(limit, threshold)
     hits = hit_filter(project.suggest(text, backend_params))
     for hit in hits:
         click.echo("<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score))
@@ -189,7 +189,7 @@ def run_index(project_id, directory, suffix, force,
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
-    hit_filter = HitFilter(limit, threshold)
+    hit_filter = SuggestionFilter(limit, threshold)
 
     for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
             directory, require_subjects=False):
@@ -227,7 +227,7 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
 
-    hit_filter = HitFilter(limit=limit, threshold=threshold)
+    hit_filter = SuggestionFilter(limit=limit, threshold=threshold)
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
 
     docs = open_documents(paths)

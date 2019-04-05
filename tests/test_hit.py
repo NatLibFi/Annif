@@ -1,7 +1,7 @@
 """Unit tests for hit processing in Annif"""
 
 from annif.hit import SubjectSuggestion, SuggestionResult, \
-    LazySuggestionResult, ListSuggestionResult, HitFilter
+    LazySuggestionResult, ListSuggestionResult, SuggestionFilter
 from annif.corpus import SubjectIndex
 import numpy as np
 
@@ -17,14 +17,14 @@ def generate_hits(n, subject_index):
 
 def test_hitfilter_limit(subject_index):
     orighits = generate_hits(10, subject_index)
-    hits = HitFilter(limit=5)(orighits)
+    hits = SuggestionFilter(limit=5)(orighits)
     assert isinstance(hits, SuggestionResult)
     assert len(hits) == 5
 
 
 def test_hitfilter_threshold(subject_index):
     orighits = generate_hits(10, subject_index)
-    hits = HitFilter(threshold=0.5)(orighits)
+    hits = SuggestionFilter(threshold=0.5)(orighits)
     assert isinstance(hits, SuggestionResult)
     assert len(hits) == 2
 
@@ -33,7 +33,7 @@ def test_hitfilter_zero_score(subject_index):
     orighits = ListSuggestionResult(
         [SubjectSuggestion(uri='uri', label='label', score=0.0)],
         subject_index)
-    hits = HitFilter()(orighits)
+    hits = SuggestionFilter()(orighits)
     assert isinstance(hits, SuggestionResult)
     assert len(hits) == 0
 

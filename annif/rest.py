@@ -4,7 +4,7 @@ methods defined in the Swagger specification."""
 import connexion
 import annif.project
 from annif.corpus import Document, DocumentList
-from annif.hit import HitFilter
+from annif.hit import SuggestionFilter
 from annif.exception import AnnifException
 from annif.project import Access
 
@@ -58,7 +58,7 @@ def analyze(project_id, text, limit, threshold):
     except ValueError:
         return project_not_found_error(project_id)
 
-    hit_filter = HitFilter(limit, threshold)
+    hit_filter = SuggestionFilter(limit, threshold)
     try:
         result = project.suggest(text)
     except AnnifException as err:
