@@ -14,7 +14,7 @@ import annif.corpus
 import annif.eval
 import annif.project
 from annif.project import Access
-from annif.hit import SuggestionFilter
+from annif.suggestion import SuggestionFilter
 
 logger = annif.logger
 click_log.basic_config(logger)

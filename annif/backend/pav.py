@@ -8,7 +8,7 @@ from sklearn.externals import joblib
 from sklearn.isotonic import IsotonicRegression
 import numpy as np
 import annif.corpus
-import annif.hit
+import annif.suggestion
 import annif.project
 import annif.util
 from annif.exception import NotInitializedException
@@ -53,12 +53,12 @@ class PAVBackend(ensemble.EnsembleBackend):
             else:  # default to raw score
                 score = hit.score
             pav_result.append(
-                annif.hit.SubjectSuggestion(
+                annif.suggestion.SubjectSuggestion(
                     uri=hit.uri,
                     label=hit.label,
                     score=score))
         pav_result.sort(key=lambda hit: hit.score, reverse=True)
-        return annif.hit.ListSuggestionResult(
+        return annif.suggestion.ListSuggestionResult(
             pav_result, source_project.subjects)
 
     @staticmethod

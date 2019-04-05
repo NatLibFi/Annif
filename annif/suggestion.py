@@ -1,4 +1,4 @@
-"""Representing hits from analysis."""
+"""Representing suggested subjects."""
 
 import abc
 import collections

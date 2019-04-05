@@ -6,7 +6,7 @@ import os.path
 import annif.util
 from vowpalwabbit import pyvw
 import numpy as np
-from annif.hit import ListSuggestionResult, VectorAnalysisResult
+from annif.suggestion import ListSuggestionResult, VectorAnalysisResult
 from annif.exception import ConfigurationException, NotInitializedException
 from . import backend
 from . import mixins

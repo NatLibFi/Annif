@@ -1,7 +1,7 @@
 """Ensemble backend that combines results from multiple projects"""
 
 
-import annif.hit
+import annif.suggestion
 import annif.project
 import annif.util
 from . import backend
@@ -26,7 +26,7 @@ class EnsembleBackend(backend.AnnifBackend):
                     len(hits), source_project.project_id))
             norm_hits = self._normalize_hits(hits, source_project)
             hits_from_sources.append(
-                annif.hit.WeightedHits(
+                annif.suggestion.WeightedHits(
                     hits=norm_hits, weight=weight))
         return hits_from_sources
 

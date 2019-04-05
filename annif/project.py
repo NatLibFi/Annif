@@ -10,7 +10,7 @@ from flask import current_app
 import annif
 import annif.analyzer
 import annif.corpus
-import annif.hit
+import annif.suggestion
 import annif.backend
 import annif.util
 import annif.vocab

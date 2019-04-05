@@ -5,7 +5,7 @@ import os.path
 import gensim.similarities
 from gensim.matutils import Sparse2Corpus
 import annif.util
-from annif.hit import VectorSuggestionResult
+from annif.suggestion import VectorSuggestionResult
 from annif.exception import NotInitializedException
 from . import backend
 

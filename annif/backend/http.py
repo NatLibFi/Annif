@@ -4,7 +4,7 @@ and returns the results"""
 
 import requests
 import requests.exceptions
-from annif.hit import SubjectSuggestion, ListSuggestionResult
+from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 from . import backend
 
 

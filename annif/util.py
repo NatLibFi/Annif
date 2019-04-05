@@ -5,7 +5,7 @@ import os
 import tempfile
 import numpy as np
 from annif import logger
-from annif.hit import VectorSuggestionResult
+from annif.suggestion import VectorSuggestionResult
 
 
 def atomic_save(obj, dirname, filename, method=None):

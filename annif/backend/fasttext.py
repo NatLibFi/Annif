@@ -3,7 +3,7 @@
 import collections
 import os.path
 import annif.util
-from annif.hit import SubjectSuggestion, ListSuggestionResult
+from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 from annif.exception import NotInitializedException
 import fastText
 from . import backend

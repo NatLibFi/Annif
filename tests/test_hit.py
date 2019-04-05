@@ -1,6 +1,6 @@
 """Unit tests for hit processing in Annif"""
 
-from annif.hit import SubjectSuggestion, SuggestionResult, \
+from annif.suggestion import SubjectSuggestion, SuggestionResult, \
     LazySuggestionResult, ListSuggestionResult, SuggestionFilter
 from annif.corpus import SubjectIndex
 import numpy as np

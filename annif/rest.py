@@ -4,7 +4,7 @@ methods defined in the Swagger specification."""
 import connexion
 import annif.project
 from annif.corpus import Document, DocumentList
-from annif.hit import SuggestionFilter
+from annif.suggestion import SuggestionFilter
 from annif.exception import AnnifException
 from annif.project import Access
 

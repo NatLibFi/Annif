@@ -2,7 +2,7 @@
 
 
 import abc
-from annif.hit import ListSuggestionResult
+from annif.suggestion import ListSuggestionResult
 
 
 class ChunkingBackend(metaclass=abc.ABCMeta):
