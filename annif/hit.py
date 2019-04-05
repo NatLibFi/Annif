@@ -5,12 +5,12 @@ import collections
 import numpy as np
 
 
-AnalysisHit = collections.namedtuple('AnalysisHit', 'uri label score')
+SubjectSuggestion = collections.namedtuple('AnalysisHit', 'uri label score')
 WeightedHits = collections.namedtuple('WeightedHits', 'hits weight')
 
 
 class HitFilter:
-    """A reusable filter for filtering AnalysisHit objects."""
+    """A reusable filter for filtering SubjectSuggestion objects."""
 
     def __init__(self, limit=None, threshold=0.0):
         self._limit = limit
@@ -29,7 +29,7 @@ class AnalysisResult(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
     def hits(self):
-        """Return the hits as an ordered sequence of AnalysisHit objects,
+        """Return the hits as an ordered sequence of SubjectSuggestion objects,
         highest scores first."""
         pass  # pragma: no cover
 
@@ -110,7 +110,7 @@ class VectorAnalysisResult(AnalysisResult):
                 continue  # we can skip the remaining ones
             subject = self._subject_index[subject_id]
             hits.append(
-                AnalysisHit(
+                SubjectSuggestion(
                     uri=subject[0],
                     label=subject[1],
                     score=score))

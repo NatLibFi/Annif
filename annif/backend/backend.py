@@ -37,7 +37,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     def suggest(self, text, project, params=None):
         """Suggest subjects for the input text and return a list of subjects
-        represented as a list of AnalysisHit objects."""
+        represented as a list of SubjectSuggestion objects."""
         beparams = dict(self.params)
         if params is not None:
             beparams.update(params)

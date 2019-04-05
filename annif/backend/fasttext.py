@@ -3,7 +3,7 @@
 import collections
 import os.path
 import annif.util
-from annif.hit import AnalysisHit, ListAnalysisResult
+from annif.hit import SubjectSuggestion, ListAnalysisResult
 from annif.exception import NotInitializedException
 import fastText
 from . import backend
@@ -127,7 +127,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         results = []
         for score, label in best_labels[:limit]:
             subject = self._label_to_subject(project, label)
-            results.append(AnalysisHit(
+            results.append(SubjectSuggestion(
                 uri=subject[0],
                 label=subject[1],
                 score=score / len(chunktexts)))

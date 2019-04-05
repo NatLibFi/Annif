@@ -4,7 +4,7 @@ and returns the results"""
 
 import requests
 import requests.exceptions
-from annif.hit import AnalysisHit, ListAnalysisResult
+from annif.hit import SubjectSuggestion, ListAnalysisResult
 from . import backend
 
 
@@ -35,9 +35,9 @@ class HTTPBackend(backend.AnnifBackend):
             results = response
 
         try:
-            return ListAnalysisResult([AnalysisHit(uri=h['uri'],
-                                                   label=h['label'],
-                                                   score=h['score'])
+            return ListAnalysisResult([SubjectSuggestion(uri=h['uri'],
+                                                         label=h['label'],
+                                                         score=h['score'])
                                        for h in results
                                        if h['score'] > 0.0],
                                       project.subjects)

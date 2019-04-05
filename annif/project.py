@@ -168,7 +168,7 @@ class AnnifProject(DatadirMixin):
 
     def suggest(self, text, backend_params=None):
         """Suggest subjects the given text by passing it to the backend. Returns a
-        list of AnalysisHit objects ordered by decreasing score."""
+        list of SubjectSuggestion objects ordered by decreasing score."""
 
         logger.debug('Suggesting subjects for text "%s..." (len=%d)',
                      text[:20], len(text))

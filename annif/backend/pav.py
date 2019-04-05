@@ -53,7 +53,7 @@ class PAVBackend(ensemble.EnsembleBackend):
             else:  # default to raw score
                 score = hit.score
             pav_result.append(
-                annif.hit.AnalysisHit(
+                annif.hit.SubjectSuggestion(
                     uri=hit.uri,
                     label=hit.label,
                     score=score))

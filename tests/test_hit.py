@@ -1,6 +1,6 @@
 """Unit tests for hit processing in Annif"""
 
-from annif.hit import AnalysisHit, AnalysisResult, LazyAnalysisResult, \
+from annif.hit import SubjectSuggestion, AnalysisResult, LazyAnalysisResult, \
     ListAnalysisResult, HitFilter
 from annif.corpus import SubjectIndex
 import numpy as np
@@ -9,9 +9,9 @@ import numpy as np
 def generate_hits(n, subject_index):
     hits = []
     for i in range(n):
-        hits.append(AnalysisHit(uri='http://example.org/{}'.format(i),
-                                label='hit {}'.format(i),
-                                score=1.0 / (i + 1)))
+        hits.append(SubjectSuggestion(uri='http://example.org/{}'.format(i),
+                                      label='hit {}'.format(i),
+                                      score=1.0 / (i + 1)))
     return ListAnalysisResult(hits, subject_index)
 
 
@@ -31,7 +31,7 @@ def test_hitfilter_threshold(subject_index):
 
 def test_hitfilter_zero_score(subject_index):
     orighits = ListAnalysisResult(
-        [AnalysisHit(uri='uri', label='label', score=0.0)],
+        [SubjectSuggestion(uri='uri', label='label', score=0.0)],
         subject_index)
     hits = HitFilter()(orighits)
     assert isinstance(hits, AnalysisResult)
@@ -54,11 +54,11 @@ def test_analysishits_vector(document_corpus):
     subjects = SubjectIndex(document_corpus)
     hits = ListAnalysisResult(
         [
-            AnalysisHit(
+            SubjectSuggestion(
                 uri='http://www.yso.fi/onto/yso/p7141',
                 label='sinetit',
                 score=1.0),
-            AnalysisHit(
+            SubjectSuggestion(
                 uri='http://www.yso.fi/onto/yso/p6479',
                 label='viikingit',
                 score=0.5)],
@@ -79,7 +79,7 @@ def test_analysishits_vector_notfound(document_corpus):
     subjects = SubjectIndex(document_corpus)
     hits = ListAnalysisResult(
         [
-            AnalysisHit(
+            SubjectSuggestion(
                 uri='http://example.com/notfound',
                 label='not found',
                 score=1.0)],
