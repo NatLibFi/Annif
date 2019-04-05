@@ -14,7 +14,7 @@ class DummyBackend(backend.AnnifLearningBackend):
     def initialize(self):
         self.initialized = True
 
-    def _analyze(self, text, project, params):
+    def _suggest(self, text, project, params):
         score = float(params.get('score', 1.0))
         return ListAnalysisResult([AnalysisHit(uri=self.uri,
                                                label=self.label,

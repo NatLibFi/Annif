@@ -48,7 +48,7 @@ def test_fasttext_train_unknown_subject(tmpdir, datadir, project):
     assert datadir.join('fasttext-model').size() > 0
 
 
-def test_fasttext_analyze(datadir, project):
+def test_fasttext_suggest(datadir, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
@@ -61,7 +61,7 @@ def test_fasttext_analyze(datadir, project):
             'loss': 'hs'},
         datadir=str(datadir))
 
-    results = fasttext.analyze("""Arkeologiaa sanotaan joskus myös
+    results = fasttext.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,

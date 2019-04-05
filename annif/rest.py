@@ -60,7 +60,7 @@ def analyze(project_id, text, limit, threshold):
 
     hit_filter = HitFilter(limit, threshold)
     try:
-        result = project.analyze(text)
+        result = project.suggest(text)
     except AnnifException as err:
         return server_error(err)
     hits = hit_filter(result)

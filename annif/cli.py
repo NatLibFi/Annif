@@ -162,7 +162,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
     text = sys.stdin.read()
     backend_params = parse_backend_params(backend_param)
     hit_filter = HitFilter(limit, threshold)
-    hits = hit_filter(project.analyze(text, backend_params))
+    hits = hit_filter(project.suggest(text, backend_params))
     for hit in hits:
         click.echo("<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score))
 
@@ -202,7 +202,7 @@ def run_index(project_id, directory, suffix, force,
                     subjectfilename))
             continue
         with open(subjectfilename, 'w', encoding='utf-8') as subjfile:
-            results = project.analyze(text, backend_params)
+            results = project.suggest(text, backend_params)
             for hit in hit_filter(results):
                 line = "<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score)
                 click.echo(line, file=subjfile)
@@ -232,7 +232,7 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
 
     docs = open_documents(paths)
     for doc in docs.documents:
-        results = project.analyze(doc.text, backend_params)
+        results = project.suggest(doc.text, backend_params)
         hits = hit_filter(results)
         eval_batch.evaluate(hits,
                             annif.corpus.SubjectSet((doc.uris, doc.labels)))
@@ -265,7 +265,7 @@ def run_optimize(project_id, paths, backend_param):
     ndocs = 0
     docs = open_documents(paths)
     for doc in docs.documents:
-        hits = project.analyze(doc.text, backend_params)
+        hits = project.suggest(doc.text, backend_params)
         gold_subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
         for hit_filter, batch in filter_batches.values():
             batch.evaluate(hit_filter(hits), gold_subjects)

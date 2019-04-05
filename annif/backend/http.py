@@ -11,7 +11,7 @@ from . import backend
 class HTTPBackend(backend.AnnifBackend):
     name = "http"
 
-    def _analyze(self, text, project, params):
+    def _suggest(self, text, project, params):
         data = {'text': text}
         if 'project' in params:
             data['project'] = params['project']
