@@ -35,7 +35,7 @@ def cleanup_uri(uri):
 
 
 def merge_hits(weighted_hits, subject_index):
-    """Merge hits from multiple sources. Input is a sequence of WeightedHits
+    """Merge hits from multiple sources. Input is a sequence of WeightedSuggestion
     objects. A SubjectIndex is needed to convert between subject IDs and URIs.
     Returns an SuggestionResult object."""
 

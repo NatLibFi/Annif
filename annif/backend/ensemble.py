@@ -26,7 +26,7 @@ class EnsembleBackend(backend.AnnifBackend):
                     len(hits), source_project.project_id))
             norm_hits = self._normalize_hits(hits, source_project)
             hits_from_sources.append(
-                annif.suggestion.WeightedHits(
+                annif.suggestion.WeightedSuggestion(
                     hits=norm_hits, weight=weight))
         return hits_from_sources
 

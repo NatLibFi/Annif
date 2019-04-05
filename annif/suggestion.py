@@ -6,7 +6,8 @@ import numpy as np
 
 
 SubjectSuggestion = collections.namedtuple('AnalysisHit', 'uri label score')
-WeightedHits = collections.namedtuple('WeightedHits', 'hits weight')
+WeightedSuggestion = collections.namedtuple(
+    'WeightedSuggestion', 'hits weight')
 
 
 class SuggestionFilter:
