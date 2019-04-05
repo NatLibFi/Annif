@@ -5,7 +5,8 @@ import collections
 import numpy as np
 
 
-SubjectSuggestion = collections.namedtuple('SubjectSuggestion', 'uri label score')
+SubjectSuggestion = collections.namedtuple(
+    'SubjectSuggestion', 'uri label score')
 WeightedSuggestion = collections.namedtuple(
     'WeightedSuggestion', 'hits weight')
 
