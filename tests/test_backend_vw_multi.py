@@ -18,7 +18,7 @@ def vw_corpus(tmpdir):
     return annif.corpus.DocumentFile(str(tmpfile))
 
 
-def test_vw_multi_analyze_no_model(datadir, project):
+def test_vw_multi_suggest_no_model(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -26,7 +26,7 @@ def test_vw_multi_analyze_no_model(datadir, project):
         datadir=str(datadir))
 
     with pytest.raises(NotInitializedException):
-        results = vw.analyze("example text", project)
+        results = vw.suggest("example text", project)
 
 
 def test_vw_multi_train_and_learn(datadir, document_corpus, project):
@@ -123,14 +123,14 @@ def test_vw_multi_train_invalid_learning_rate(datadir, project, vw_corpus):
         vw.train(vw_corpus, project)
 
 
-def test_vw_multi_analyze(datadir, project):
+def test_vw_multi_suggest(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
         params={'chunksize': 4, 'probabilities': 1},
         datadir=str(datadir))
 
-    results = vw.analyze("""Arkeologiaa sanotaan joskus myös
+    results = vw.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
@@ -143,26 +143,26 @@ def test_vw_multi_analyze(datadir, project):
     assert 'arkeologia' in [result.label for result in results]
 
 
-def test_vw_multi_analyze_empty(datadir, project):
+def test_vw_multi_suggest_empty(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
         params={'chunksize': 4},
         datadir=str(datadir))
 
-    results = vw.analyze("...", project)
+    results = vw.suggest("...", project)
 
     assert len(results) == 0
 
 
-def test_vw_multi_analyze_multiple_passes(datadir, project):
+def test_vw_multi_suggest_multiple_passes(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
         params={'chunksize': 4, 'passes': 2},
         datadir=str(datadir))
 
-    results = vw.analyze("...", project)
+    results = vw.suggest("...", project)
 
     assert len(results) == 0
 
@@ -183,7 +183,7 @@ def test_vw_multi_train_ect(datadir, document_corpus, project):
     assert datadir.join('vw-model').size() > 0
 
 
-def test_vw_multi_analyze_ect(datadir, project):
+def test_vw_multi_suggest_ect(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -191,7 +191,7 @@ def test_vw_multi_analyze_ect(datadir, project):
                 'algorithm': 'ect'},
         datadir=str(datadir))
 
-    results = vw.analyze("""Arkeologiaa sanotaan joskus myös
+    results = vw.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
@@ -217,7 +217,7 @@ def test_vw_multi_train_log_multi(datadir, document_corpus, project):
     assert datadir.join('vw-model').size() > 0
 
 
-def test_vw_multi_analyze_log_multi(datadir, project):
+def test_vw_multi_suggest_log_multi(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -225,7 +225,7 @@ def test_vw_multi_analyze_log_multi(datadir, project):
                 'algorithm': 'log_multi'},
         datadir=str(datadir))
 
-    results = vw.analyze("""Arkeologiaa sanotaan joskus myös
+    results = vw.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
@@ -251,7 +251,7 @@ def test_vw_multi_train_multilabel_oaa(datadir, document_corpus, project):
     assert datadir.join('vw-model').size() > 0
 
 
-def test_vw_multi_analyze_multilabel_oaa(datadir, project):
+def test_vw_multi_suggest_multilabel_oaa(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -259,7 +259,7 @@ def test_vw_multi_analyze_multilabel_oaa(datadir, project):
                 'algorithm': 'multilabel_oaa'},
         datadir=str(datadir))
 
-    results = vw.analyze("""Arkeologiaa sanotaan joskus myös
+    results = vw.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,

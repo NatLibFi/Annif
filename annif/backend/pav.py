@@ -62,11 +62,11 @@ class PAVBackend(ensemble.EnsembleBackend):
             pav_result, source_project.subjects)
 
     @staticmethod
-    def _analyze_train_corpus(source_project, corpus):
+    def _suggest_train_corpus(source_project, corpus):
         scores = []
         true = []
         for doc in corpus.documents:
-            hits = source_project.analyze(doc.text)
+            hits = source_project.suggest(doc.text)
             scores.append(hits.vector)
             subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
             true.append(subjects.as_vector(source_project.subjects))
@@ -76,8 +76,8 @@ class PAVBackend(ensemble.EnsembleBackend):
         self.info("creating PAV model for source {}, min_docs={}".format(
             source_project_id, min_docs))
         source_project = annif.project.get_project(source_project_id)
-        # analyze the training corpus
-        scores, true = self._analyze_train_corpus(source_project, corpus)
+        # suggest subjects for the training corpus
+        scores, true = self._suggest_train_corpus(source_project, corpus)
         # create the concept-specific PAV regression models
         pav_regressions = {}
         for cid in range(len(source_project.subjects)):

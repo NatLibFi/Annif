@@ -102,7 +102,7 @@ def test_project_learn(app, tmpdir):
     with app.app_context():
         project = annif.project.get_project('dummy-fi')
         project.learn(docdir)
-        result = project.analyze('this is some text')
+        result = project.suggest('this is some text')
         assert len(result) == 1
         assert result[0].uri == 'http://example.org/key1'
         assert result[0].label == 'key1'
@@ -140,20 +140,20 @@ def test_project_train_fasttext(app, document_corpus, testdatadir):
     assert testdatadir.join('projects/fasttext-fi/fasttext-model').size() > 0
 
 
-def test_project_analyze(app):
+def test_project_suggest(app):
     with app.app_context():
         project = annif.project.get_project('dummy-en')
-    result = project.analyze('this is some text')
+    result = project.suggest('this is some text')
     assert len(result) == 1
     assert result[0].uri == 'http://example.org/dummy'
     assert result[0].label == 'dummy'
     assert result[0].score == 1.0
 
 
-def test_project_analyze_combine(app):
+def test_project_suggest_combine(app):
     with app.app_context():
         project = annif.project.get_project('dummydummy')
-    result = project.analyze('this is some text')
+    result = project.suggest('this is some text')
     assert len(result) == 1
     assert result[0].uri == 'http://example.org/dummy'
     assert result[0].label == 'dummy'

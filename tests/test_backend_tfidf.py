@@ -31,14 +31,14 @@ def test_tfidf_train(datadir, document_corpus, project):
     assert datadir.join('tfidf-index').size() > 0
 
 
-def test_tfidf_analyze(datadir, project):
+def test_tfidf_suggest(datadir, project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
         params={'limit': 10},
         datadir=str(datadir))
 
-    results = tfidf.analyze("""Arkeologiaa sanotaan joskus myös
+    results = tfidf.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
@@ -51,13 +51,13 @@ def test_tfidf_analyze(datadir, project):
     assert 'arkeologia' in [result.label for result in results]
 
 
-def test_tfidf_analyze_unknown(datadir, project):
+def test_tfidf_suggest_unknown(datadir, project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
         params={'limit': 10},
         datadir=str(datadir))
 
-    results = tfidf.analyze("abcdefghijk", project)  # unknown word
+    results = tfidf.suggest("abcdefghijk", project)  # unknown word
 
     assert len(results) == 0

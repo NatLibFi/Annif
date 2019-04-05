@@ -112,7 +112,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
             return self._normalize_text(project, text)
         else:
             proj = annif.project.get_project(input)
-            result = proj.analyze(text)
+            result = proj.suggest(text)
             features = [
                 '{}:{}'.format(self._cleanup_text(hit.uri), hit.score)
                 for hit in result.hits]
@@ -209,7 +209,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
             # result is a list of scores (probabilities or binary 1/0)
             return np.array(result)
 
-    def _analyze_chunks(self, chunktexts, project):
+    def _suggest_chunks(self, chunktexts, project):
         results = []
         for chunktext in chunktexts:
             exampletext = self._inputs_to_exampletext(project, chunktext)

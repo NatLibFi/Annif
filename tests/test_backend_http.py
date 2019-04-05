@@ -5,7 +5,7 @@ import unittest.mock
 import annif.backend.http
 
 
-def test_http_analyze(app, project):
+def test_http_suggest(app, project):
     with unittest.mock.patch('requests.post') as mock_request:
         # create a mock response whose .json() method returns the list that we
         # define here
@@ -21,14 +21,14 @@ def test_http_analyze(app, project):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             datadir=app.config['DATADIR'])
-        result = http.analyze('this is some text', project=project)
+        result = http.suggest('this is some text', project=project)
         assert len(result) == 1
         assert result[0].uri == 'http://example.org/http'
         assert result[0].label == 'http'
         assert result[0].score == 1.0
 
 
-def test_http_analyze_with_results(app, project):
+def test_http_suggest_with_results(app, project):
     with unittest.mock.patch('requests.post') as mock_request:
         # create a mock response whose .json() method returns the list that we
         # define here
@@ -44,14 +44,14 @@ def test_http_analyze_with_results(app, project):
                 'endpoint': 'http://api.example.org/dummy/analyze',
             },
             datadir=app.config['DATADIR'])
-        result = http.analyze('this is some text', project=project)
+        result = http.suggest('this is some text', project=project)
         assert len(result) == 1
         assert result[0].uri == 'http://example.org/http'
         assert result[0].label == 'http'
         assert result[0].score == 1.0
 
 
-def test_http_analyze_zero_score(app, project):
+def test_http_suggest_zero_score(app, project):
     with unittest.mock.patch('requests.post') as mock_request:
         # create a mock response whose .json() method returns the list that we
         # define here
@@ -67,11 +67,11 @@ def test_http_analyze_zero_score(app, project):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             datadir=app.config['DATADIR'])
-        result = http.analyze('this is some text', project=project)
+        result = http.suggest('this is some text', project=project)
         assert len(result) == 0
 
 
-def test_http_analyze_error(app, project):
+def test_http_suggest_error(app, project):
     with unittest.mock.patch('requests.post') as mock_request:
         mock_request.side_effect = requests.exceptions.RequestException(
             'failed')
@@ -83,11 +83,11 @@ def test_http_analyze_error(app, project):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             datadir=app.config['DATADIR'])
-        result = http.analyze('this is some text', project=project)
+        result = http.suggest('this is some text', project=project)
         assert len(result) == 0
 
 
-def test_http_analyze_json_fails(app, project):
+def test_http_suggest_json_fails(app, project):
     with unittest.mock.patch('requests.post') as mock_request:
         # create a mock response whose .json() method returns the list that we
         # define here
@@ -102,11 +102,11 @@ def test_http_analyze_json_fails(app, project):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             datadir=app.config['DATADIR'])
-        result = http.analyze('this is some text', project=project)
+        result = http.suggest('this is some text', project=project)
         assert len(result) == 0
 
 
-def test_http_analyze_unexpected_json(app, project):
+def test_http_suggest_unexpected_json(app, project):
     with unittest.mock.patch('requests.post') as mock_request:
         # create a mock response whose .json() method returns the list that we
         # define here
@@ -121,5 +121,5 @@ def test_http_analyze_unexpected_json(app, project):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             datadir=app.config['DATADIR'])
-        result = http.analyze('this is some text', project=project)
+        result = http.suggest('this is some text', project=project)
         assert len(result) == 0
