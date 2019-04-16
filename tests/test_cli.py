@@ -4,8 +4,6 @@ import contextlib
 import random
 import re
 import os.path
-import shutil
-import pytest
 from click.testing import CliRunner
 import annif.cli
 
