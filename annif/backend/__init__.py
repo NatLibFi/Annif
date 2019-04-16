@@ -1,7 +1,5 @@
 """Registry of backend types for Annif"""
 
-import configparser
-from flask import current_app
 from . import dummy
 from . import ensemble
 from . import http

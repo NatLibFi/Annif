@@ -1,6 +1,5 @@
 """Unit tests for REST API backend code in Annif"""
 
-import connexion
 import annif.rest
 
 

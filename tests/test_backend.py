@@ -1,6 +1,5 @@
 """Unit tests for backends in Annif"""
 
-import os
 import pytest
 import annif
 import annif.backend
