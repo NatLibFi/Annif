@@ -21,16 +21,19 @@ setup(
     install_requires=[
         'connexion[swagger-ui]',
         'swagger_ui_bundle',
+        'flask',
         'flask-cors',
+        'click',
         'click-log',
         'nltk',
         'gensim',
         'sklearn',
         'rdflib'],
+    tests_require=['py', 'pytest', 'requests'],
     extras_require={
-        'fasttext': ['fasttextmirror'],
+        'fasttext': ['fasttext', 'fasttextmirror'],
         'voikko': ['voikko'],
-        'vw': ['vowpalwabbit'],
+        'vw': ['vowpalwabbit', 'numpy'],
     },
     entry_points={
         'console_scripts': ['annif=annif.cli:cli']},
