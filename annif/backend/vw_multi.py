@@ -1,4 +1,4 @@
-"""Annif backend using the Vorpal Wabbit multiclass and multilabel
+"""Annif backend using the Vowpal Wabbit multiclass and multilabel
 classifiers"""
 
 import random
@@ -6,7 +6,7 @@ import os.path
 import annif.util
 from vowpalwabbit import pyvw
 import numpy as np
-from annif.hit import ListAnalysisResult, VectorAnalysisResult
+from annif.suggestion import ListSuggestionResult, VectorSuggestionResult
 from annif.exception import ConfigurationException, NotInitializedException
 from . import backend
 from . import mixins
@@ -112,7 +112,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
             return self._normalize_text(project, text)
         else:
             proj = annif.project.get_project(input)
-            result = proj.analyze(text)
+            result = proj.suggest(text)
             features = [
                 '{}:{}'.format(self._cleanup_text(hit.uri), hit.score)
                 for hit in result.hits]
@@ -209,7 +209,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
             # result is a list of scores (probabilities or binary 1/0)
             return np.array(result)
 
-    def _analyze_chunks(self, chunktexts, project):
+    def _suggest_chunks(self, chunktexts, project):
         results = []
         for chunktext in chunktexts:
             exampletext = self._inputs_to_exampletext(project, chunktext)
@@ -219,6 +219,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
             result = self._model.predict(example)
             results.append(self._convert_result(result, project))
         if not results:  # empty result
-            return ListAnalysisResult(hits=[], subject_index=project.subjects)
-        return VectorAnalysisResult(
+            return ListSuggestionResult(
+                hits=[], subject_index=project.subjects)
+        return VectorSuggestionResult(
             np.array(results).mean(axis=0), project.subjects)

@@ -5,7 +5,7 @@ import os
 import tempfile
 import numpy as np
 from annif import logger
-from annif.hit import VectorAnalysisResult
+from annif.suggestion import VectorSuggestionResult
 
 
 def atomic_save(obj, dirname, filename, method=None):
@@ -35,14 +35,14 @@ def cleanup_uri(uri):
 
 
 def merge_hits(weighted_hits, subject_index):
-    """Merge hits from multiple sources. Input is a sequence of WeightedHits
+    """Merge hits from multiple sources. Input is a sequence of WeightedSuggestion
     objects. A SubjectIndex is needed to convert between subject IDs and URIs.
-    Returns an AnalysisResult object."""
+    Returns an SuggestionResult object."""
 
     weights = [whit.weight for whit in weighted_hits]
     scores = [whit.hits.vector for whit in weighted_hits]
     result = np.average(scores, axis=0, weights=weights)
-    return VectorAnalysisResult(result, subject_index)
+    return VectorSuggestionResult(result, subject_index)
 
 
 def parse_sources(sourcedef):

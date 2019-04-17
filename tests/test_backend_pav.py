@@ -39,14 +39,14 @@ def test_pav_initialize(app, datadir):
         pav.initialize()
 
 
-def test_pav_analyze(app, datadir, project):
+def test_pav_suggest(app, datadir, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
         params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
         datadir=str(datadir))
 
-    results = pav.analyze("""Arkeologiaa sanotaan joskus myös
+    results = pav.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,

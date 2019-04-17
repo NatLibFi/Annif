@@ -10,7 +10,7 @@ from flask import current_app
 import annif
 import annif.analyzer
 import annif.corpus
-import annif.hit
+import annif.suggestion
 import annif.backend
 import annif.util
 import annif.vocab
@@ -97,7 +97,8 @@ class AnnifProject(DatadirMixin):
 
     def initialize(self):
         """initialize this project and its backend so that they are ready to
-        analyze"""
+        be used"""
+
         logger.debug("Initializing project '%s'", self.project_id)
 
         self._initialize_analyzer()
@@ -107,11 +108,11 @@ class AnnifProject(DatadirMixin):
 
         self.initialized = True
 
-    def _analyze_with_backend(self, text, backend_params):
+    def _suggest_with_backend(self, text, backend_params):
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-        hits = self.backend.analyze(text, project=self, params=beparams)
+        hits = self.backend.suggest(text, project=self, params=beparams)
         logger.debug(
             'Got %d hits from backend %s',
             len(hits), self.backend.backend_id)
@@ -165,13 +166,13 @@ class AnnifProject(DatadirMixin):
                     project_id=self.project_id)
         return self._vectorizer
 
-    def analyze(self, text, backend_params=None):
-        """Analyze the given text by passing it to the backend. Returns a
-        list of AnalysisHit objects ordered by decreasing score."""
+    def suggest(self, text, backend_params=None):
+        """Suggest subjects the given text by passing it to the backend. Returns a
+        list of SubjectSuggestion objects ordered by decreasing score."""
 
-        logger.debug('Analyzing text "%s..." (len=%d)',
+        logger.debug('Suggesting subjects for text "%s..." (len=%d)',
                      text[:20], len(text))
-        hits = self._analyze_with_backend(text, backend_params)
+        hits = self._suggest_with_backend(text, backend_params)
         logger.debug('%d hits from backend', len(hits))
         return hits
 

@@ -14,7 +14,7 @@ import annif.corpus
 import annif.eval
 import annif.project
 from annif.project import Access
-from annif.hit import HitFilter
+from annif.suggestion import SuggestionFilter
 
 logger = annif.logger
 click_log.basic_config(logger)
@@ -68,7 +68,7 @@ def generate_filter_batches(subjects):
     filter_batches = collections.OrderedDict()
     for limit in range(1, 16):
         for threshold in [i * 0.05 for i in range(20)]:
-            hit_filter = HitFilter(limit, threshold)
+            hit_filter = SuggestionFilter(limit, threshold)
             batch = annif.eval.EvaluationBatch(subjects)
             filter_batches[(limit, threshold)] = (hit_filter, batch)
     return filter_batches
@@ -147,27 +147,27 @@ def run_learn(project_id, paths):
     proj.learn(documents)
 
 
-@cli.command('analyze')
+@cli.command('suggest')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
 @click.option('--backend-param', '-b', multiple=True,
               help='Backend parameters to override')
-def run_analyze(project_id, limit, threshold, backend_param):
+def run_suggest(project_id, limit, threshold, backend_param):
     """
-    Analyze a single document from standard input.
+    Suggest subjects for a single document from standard input.
     """
     project = get_project(project_id)
     text = sys.stdin.read()
     backend_params = parse_backend_params(backend_param)
-    hit_filter = HitFilter(limit, threshold)
-    hits = hit_filter(project.analyze(text, backend_params))
+    hit_filter = SuggestionFilter(limit, threshold)
+    hits = hit_filter(project.suggest(text, backend_params))
     for hit in hits:
         click.echo("<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score))
 
 
-@cli.command('analyzedir')
+@cli.command('index')
 @click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('directory', type=click.Path(file_okay=False))
@@ -181,15 +181,15 @@ def run_analyze(project_id, limit, threshold, backend_param):
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
 @click.option('--backend-param', '-b', multiple=True,
               help='Backend parameters to override')
-def run_analyzedir(project_id, directory, suffix, force,
-                   limit, threshold, backend_param):
+def run_index(project_id, directory, suffix, force,
+              limit, threshold, backend_param):
     """
-    Analyze a directory with documents. Write the results in TSV files
-    with the given suffix.
+    Index a directory with documents, suggesting subjects for each document.
+    Write the results in TSV files with the given suffix.
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
-    hit_filter = HitFilter(limit, threshold)
+    hit_filter = SuggestionFilter(limit, threshold)
 
     for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
             directory, require_subjects=False):
@@ -202,7 +202,7 @@ def run_analyzedir(project_id, directory, suffix, force,
                     subjectfilename))
             continue
         with open(subjectfilename, 'w', encoding='utf-8') as subjfile:
-            results = project.analyze(text, backend_params)
+            results = project.suggest(text, backend_params)
             for hit in hit_filter(results):
                 line = "<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score)
                 click.echo(line, file=subjfile)
@@ -227,12 +227,12 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
 
-    hit_filter = HitFilter(limit=limit, threshold=threshold)
+    hit_filter = SuggestionFilter(limit=limit, threshold=threshold)
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
 
     docs = open_documents(paths)
     for doc in docs.documents:
-        results = project.analyze(doc.text, backend_params)
+        results = project.suggest(doc.text, backend_params)
         hits = hit_filter(results)
         eval_batch.evaluate(hits,
                             annif.corpus.SubjectSet((doc.uris, doc.labels)))
@@ -265,7 +265,7 @@ def run_optimize(project_id, paths, backend_param):
     ndocs = 0
     docs = open_documents(paths)
     for doc in docs.documents:
-        hits = project.analyze(doc.text, backend_params)
+        hits = project.suggest(doc.text, backend_params)
         gold_subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
         for hit_filter, batch in filter_batches.values():
             batch.evaluate(hit_filter(hits), gold_subjects)

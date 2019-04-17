@@ -30,18 +30,18 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def _analyze(self, text, project, params):
+    def _suggest(self, text, project, params):
         """This method should implemented by backends. It implements
-        the analyze functionality, with pre-processed parameters."""
+        the suggest functionality, with pre-processed parameters."""
         pass  # pragma: no cover
 
-    def analyze(self, text, project, params=None):
-        """Analyze some input text and return a list of subjects represented
-        as a list of AnalysisHit objects."""
+    def suggest(self, text, project, params=None):
+        """Suggest subjects for the input text and return a list of subjects
+        represented as a list of SubjectSuggestion objects."""
         beparams = dict(self.params)
         if params is not None:
             beparams.update(params)
-        return self._analyze(text, project, params=beparams)
+        return self._suggest(text, project, params=beparams)
 
     def debug(self, message):
         """Log a debug message from this backend"""

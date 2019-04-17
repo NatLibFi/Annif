@@ -1,7 +1,7 @@
 """Dummy backend for testing basic interaction of projects and backends"""
 
 
-from annif.hit import AnalysisHit, ListAnalysisResult
+from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 from . import backend
 
 
@@ -14,12 +14,12 @@ class DummyBackend(backend.AnnifLearningBackend):
     def initialize(self):
         self.initialized = True
 
-    def _analyze(self, text, project, params):
+    def _suggest(self, text, project, params):
         score = float(params.get('score', 1.0))
-        return ListAnalysisResult([AnalysisHit(uri=self.uri,
-                                               label=self.label,
-                                               score=score)],
-                                  project.subjects)
+        return ListSuggestionResult([SubjectSuggestion(uri=self.uri,
+                                                       label=self.label,
+                                                       score=score)],
+                                    project.subjects)
 
     def learn(self, corpus, project):
         # in this dummy backend we "learn" by picking up the URI and label
