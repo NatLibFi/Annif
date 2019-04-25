@@ -48,9 +48,9 @@ def show_project(project_id):
     return project.dump()
 
 
-def analyze(project_id, text, limit, threshold):
-    """analyze text and return a dict with results formatted according to
-    Swagger spec"""
+def suggest(project_id, text, limit, threshold):
+    """suggest subjects for the given text and return a dict with results
+    formatted according to Swagger spec"""
 
     try:
         project = annif.project.get_project(
