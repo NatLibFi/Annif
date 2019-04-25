@@ -44,10 +44,10 @@ def test_rest_show_project_nonexistent(app):
         assert result.status_code == 404
 
 
-def test_rest_analyze_public(app):
+def test_rest_suggest_public(app):
     # public projects should be accessible via REST
     with app.app_context():
-        result = annif.rest.analyze(
+        result = annif.rest.suggest(
             'dummy-fi',
             text='example text',
             limit=10,
@@ -55,10 +55,10 @@ def test_rest_analyze_public(app):
         assert 'results' in result
 
 
-def test_rest_analyze_hidden(app):
+def test_rest_suggest_hidden(app):
     # hidden projects should be accessible if you know the project id
     with app.app_context():
-        result = annif.rest.analyze(
+        result = annif.rest.suggest(
             'dummy-en',
             text='example text',
             limit=10,
@@ -66,10 +66,10 @@ def test_rest_analyze_hidden(app):
         assert 'results' in result
 
 
-def test_rest_analyze_private(app):
+def test_rest_suggest_private(app):
     # private projects should not be accessible via REST
     with app.app_context():
-        result = annif.rest.analyze(
+        result = annif.rest.suggest(
             'dummydummy',
             text='example text',
             limit=10,
@@ -77,9 +77,9 @@ def test_rest_analyze_private(app):
         assert result.status_code == 404
 
 
-def test_rest_analyze_nonexistent(app):
+def test_rest_suggest_nonexistent(app):
     with app.app_context():
-        result = annif.rest.analyze(
+        result = annif.rest.suggest(
             'nonexistent',
             text='example text',
             limit=10,
@@ -87,9 +87,9 @@ def test_rest_analyze_nonexistent(app):
         assert result.status_code == 404
 
 
-def test_rest_analyze_novocab(app):
+def test_rest_suggest_novocab(app):
     with app.app_context():
-        result = annif.rest.analyze(
+        result = annif.rest.suggest(
             'novocab',
             text='example text',
             limit=10,
@@ -111,7 +111,7 @@ def test_rest_learn(app):
         response = annif.rest.learn('dummy-en', documents)
         assert response == (None, 204)  # success, no output
 
-        result = annif.rest.analyze(
+        result = annif.rest.suggest(
             'dummy-en',
             text='example text',
             limit=10,

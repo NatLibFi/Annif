@@ -44,7 +44,7 @@
       </div>
       <div class="col-md-4">
         <annif-projects :projects="projects" @project-selected="onProjectSelected"></annif-projects>
-        <button type="button" class="btn btn-primary" @click="analyze" :disabled="loading">
+        <button type="button" class="btn btn-primary" @click="suggest" :disabled="loading">
           <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="loading"></span>
           <span v-if="!loading">Analyze</span>
           <span v-else>Loading...</span>
@@ -183,7 +183,7 @@ new Vue({
         }
       });
     },
-    analyze: function(event) {
+    suggest: function(event) {
       this.problems = [];
       if (this.text.trim() === "") {
         this.problems.push(new Problem('', 'You need to enter the text to analyze', false));
@@ -198,7 +198,7 @@ new Vue({
       }
       var this_ = this;
       $.ajax({
-        url: "/v1/projects/" + this_.project + "/analyze",
+        url: "/v1/projects/" + this_.project + "/suggest",
         method: 'POST',
         data: {
           text: this_.text,

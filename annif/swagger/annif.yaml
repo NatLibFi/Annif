@@ -47,10 +47,10 @@ paths:
             $ref: '#/definitions/Problem'
       tags:
         - Project administration
-  '/projects/{project_id}/analyze':
+  '/projects/{project_id}/suggest':
     post:
       summary: suggest subjects for a given text
-      operationId: annif.rest.analyze
+      operationId: annif.rest.suggest
       consumes:
         - application/x-www-form-urlencoded
       produces:
@@ -60,7 +60,7 @@ paths:
         - $ref: '#/parameters/project_id'
         - name: text
           in: formData
-          description: text to analyze
+          description: input text
           required: true
           type: string
         - name: limit
