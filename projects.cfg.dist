@@ -84,26 +84,20 @@ backend=http
 endpoint=http://localhost:8080/maui/jyu-eng/analyze
 vocab=yso-en
 
-[annif-api-fi]
-name=Annif prototype API Finnish
+[ensemble-fi]
+name=Ensemble Finnish
 language=fi
-backend=http
-endpoint=http://api.annif.org/v0/autoindex
-project=yso-finna-fi
-vocab=yso-fi
+backend=ensemble
+sources=tfidf-fi,fasttext-fi,maui-fi
 
-[annif-api-sv]
-name=Annif prototype API Swedish
+[ensemble-sv]
+name=Ensemble Swedish
 language=sv
-backend=http
-endpoint=http://api.annif.org/v0/autoindex
-project=yso-finna-sv
-vocab=yso-sv
+backend=ensemble
+sources=tfidf-sv,fasttext-sv,maui-sv
 
-[annif-api-en]
-name=Annif prototype API English
+[ensemble-en]
+name=Ensemble English
 language=en
-backend=http
-endpoint=http://api.annif.org/v0/autoindex
-project=yso-finna-en
-vocab=yso-en
+backend=ensemble
+sources=tfidf-en,fasttext-en,maui-en
