@@ -11,6 +11,7 @@ pytest-flask = "*"
 "pytest-pep8" = "*"
 swagger-tester = "*"
 bumpversion = "*"
+sphinx = "*"
 
 [packages]
 "e1839a8" = {editable = true, path = "."}
