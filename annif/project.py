@@ -4,7 +4,7 @@ import collections
 import configparser
 import enum
 import os.path
-from sklearn.externals import joblib
+import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
 from flask import current_app
 import annif

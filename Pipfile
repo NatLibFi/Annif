@@ -18,6 +18,7 @@ connexion = {extras = ["swagger-ui"]}
 swagger-ui-bundle = "*"
 flask-cors = "*"
 click-log = "*"
+joblib = "*"
 nltk = "*"
 gensim = "*"
 sklearn = "*"

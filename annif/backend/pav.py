@@ -4,7 +4,7 @@ PAV algorithm, a.k.a. isotonic regression, to turn raw scores returned by
 individual backends into probabilities."""
 
 import os.path
-from sklearn.externals import joblib
+import joblib
 from sklearn.isotonic import IsotonicRegression
 import numpy as np
 import annif.corpus
