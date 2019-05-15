@@ -24,5 +24,6 @@ nltk = "*"
 gensim = "*"
 sklearn = "*"
 rdflib = "*"
+sphinx-rtd-theme = "*"
 
 [requires]
