@@ -11,6 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import re
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -20,6 +21,12 @@ sys.path.insert(0, os.path.abspath('..'))
 project = 'annif'
 copyright = '2017, University Of Helsinki (The National Library Of Finland)'
 author = 'Osma Suominen'
+
+# Get version number from GitHub tag
+# The full version, including alpha/beta/rc tags.
+release = re.sub('^v', '', os.popen('git describe --tags').read().strip())
+# The short X.Y version.
+version = release
 
 
 # -- General configuration ---------------------------------------------------

@@ -6,6 +6,8 @@
 Welcome to annif's documentation!
 =================================
 
+You are reading documentation for version |version|.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
