@@ -1,1 +1,2 @@
 docs
+Dockerfile # TODO Remove from here and avoid copying too early in Dockerfile 
