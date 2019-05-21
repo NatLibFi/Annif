@@ -1,0 +1,14 @@
+FROM python:3.6-alpine
+
+# Using old pip version because --no-cache-dir doesn't seem to work in 19.1.1 
+RUN apk --no-cache update \
+	&& echo "http://dl-8.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
+	&& apk --no-cache --update-cache add make automake gcc g++ gfortran build-base wget freetype-dev libpng-dev openblas-dev \
+	&& pip install --upgrade pip==18.1 \
+	&& pip install cython pipenv --no-cache-dir
+    
+COPY . /Annif
+WORKDIR /Annif
+
+RUN pipenv install --system --deploy --ignore-pipfile --dev
+RUN python -m nltk.downloader punkt
