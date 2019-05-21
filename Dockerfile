@@ -1,32 +1,43 @@
-FROM python:3.6
+FROM python:3.6-slim
 
-#FROM python:3.6-slim
-#FROM python:3-alpine
-#FROM vaultvulp/pipenv-alpine
-
-# TODO Using old pip version because --no-cache-dir doesn't seem to work in 19.1.1 
-RUN pip install pipenv --upgrade pip==18.1
+# Using old pip version because --no-cache-dir doesn't seem to work in 19.1.1 
+RUN pip install --upgrade pip==18.1 \
+	&& pip install pipenv --no-cache-dir
 
 COPY . /Annif
+# TODO Copy only needed files for pipenv install in this layer
+#COPY Pipfile Pipfile.lock setup.py setup.cfg /Annif/
+
 WORKDIR /Annif
 
-#RUN pipenv install --system --deploy --ignore-pipfile
+# TODO Handle occasional timeout in nltk.downloader leading failed build
+# TODO Disable caching in pipenv, maybe EXPORT PIP_NO_CACHE_DIR=false 
 RUN pipenv install --system --deploy --ignore-pipfile --dev \
 	&& python -m nltk.downloader punkt
 
-# Voikko optional dependency
-RUN apt-get update && apt-get install -y libvoikko1 voikko-fi \
-    && pip install annif[voikko] --no-cache-dir
 
-# fasttext optional dependency
-# TODO Why cython is needed?
-RUN pip install cython fasttextmirror --no-cache-dir
+## Install optional dependencies
+# Voikko
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		libvoikko1 \
+		voikko-fi \
+    && pip install --no-cache-dir \
+    	annif[voikko] 
 
-# Vowpal Wabbit fastext optional dependency
-RUN apt-get install -y libboost-program-options-dev libboost-python-dev zlib1g-dev
-RUN pip install vowpalwabbit --no-cache-dir
+# fasttext
+RUN apt-get install -y --no-install-recommends \
+		build-essential \
+	&& pip install --no-cache-dir \
+		cython \
+		fasttextmirror
+
+# Vowpal Wabbit. Using old VW because 8.5 links to wrong Python version
+RUN apt-get install -y --no-install-recommends \
+		libboost-program-options-dev\
+		zlib1g-dev \
+		libboost-python-dev \
+	&& pip install --no-cache-dir \
+		vowpalwabbit==8.4
 
 CMD annif
-#ENTRYPOINT ["annif"]
-
-# TODO EXPORT PIP_NO_CACHE_DIR=false for disabling caching in pipenv
