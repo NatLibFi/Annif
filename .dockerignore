@@ -1,2 +1,4 @@
 docs
-Dockerfile # TODO Remove from here and avoid copying too early in Dockerfile 
+Dockerfile* # TODO Remove from here and avoid copying altogether in Dockerfile
+**/__pycache__
+**/*.pyc
