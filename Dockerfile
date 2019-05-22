@@ -32,14 +32,11 @@ RUN pip install --upgrade pip==18.1 \
 	&& pip install pipenv --no-cache-dir
 
 COPY . /Annif
-# TODO Copy only needed files for pipenv install in this layer
-#COPY Pipfile Pipfile.lock setup.py setup.cfg /Annif/
-
 WORKDIR /Annif
 
 # TODO Handle occasional timeout in nltk.downloader leading failed build
 # TODO Disable caching in pipenv, maybe EXPORT PIP_NO_CACHE_DIR=false
-RUN pipenv install --system --deploy --ignore-pipfile --dev \
+RUN pipenv install --system --deploy --ignore-pipfile \
 	&& python -m nltk.downloader punkt \
     && pip install --no-cache-dir \
     	annif[voikko] \

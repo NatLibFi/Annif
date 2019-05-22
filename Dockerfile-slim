@@ -12,7 +12,7 @@ COPY . /Annif
 WORKDIR /Annif
 
 # TODO Handle occasional timeout in nltk.downloader leading failed build
-RUN pipenv install --system --deploy --ignore-pipfile --dev \
+RUN pipenv install --system --deploy --ignore-pipfile \
 	&& python -m nltk.downloader punkt
 
 CMD annif
