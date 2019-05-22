@@ -5,14 +5,14 @@ FROM python:3.6-slim
 RUN pip install --upgrade pip==18.1 \
 	&& pip install pipenv --no-cache-dir
 
-COPY . /Annif
-# TODO Copy only needed files for pipenv install in this layer
-#COPY Pipfile Pipfile.lock setup.py setup.cfg /Annif/
-
+# Files needed by pipenv install:
+COPY Pipfile Pipfile.lock README.md setup.py /Annif/
 WORKDIR /Annif
 
 # TODO Handle occasional timeout in nltk.downloader leading failed build
 RUN pipenv install --system --deploy --ignore-pipfile \
 	&& python -m nltk.downloader punkt
+
+COPY annif annif
 
 CMD annif

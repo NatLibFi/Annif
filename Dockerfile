@@ -31,7 +31,8 @@ RUN apt-get update \
 RUN pip install --upgrade pip==18.1 \
 	&& pip install pipenv --no-cache-dir
 
-COPY . /Annif
+# Files needed by pipenv install:
+COPY Pipfile Pipfile.lock README.md setup.py /Annif/
 WORKDIR /Annif
 
 # TODO Handle occasional timeout in nltk.downloader leading failed build
@@ -43,5 +44,6 @@ RUN pipenv install --system --deploy --ignore-pipfile \
 		fasttextmirror \
 		vowpalwabbit==8.4
 
+COPY annif annif
 
 CMD annif
