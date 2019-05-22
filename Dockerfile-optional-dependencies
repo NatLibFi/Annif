@@ -6,21 +6,26 @@ RUN apt-get update \
 		libvoikko1 \
 		voikko-fi \
     && pip install --no-cache-dir \
-    	annif[voikko] 
+    	annif[voikko] \
+	&& rm -rf /var/lib/apt/lists/*
 
 # fasttext
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
 		build-essential \
 	&& pip install --no-cache-dir \
 		cython \
-		fasttextmirror
+		fasttextmirror \
+	&& rm -rf /var/lib/apt/lists/*
 
 # Vowpal Wabbit. Using old VW because 8.5 links to wrong Python version
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
 		libboost-program-options-dev\
 		zlib1g-dev \
 		libboost-python-dev \
 	&& pip install --no-cache-dir \
-		vowpalwabbit==8.4
+		vowpalwabbit==8.4 \
+	&& rm -rf /var/lib/apt/lists/*
 
 CMD annif
