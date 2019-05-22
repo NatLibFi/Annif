@@ -29,7 +29,8 @@ RUN apt-get update \
 ## Install pipenv and Annif
 # Using old pip version because --no-cache-dir doesn't seem to work in 19.1.1
 RUN pip install --upgrade pip==18.1 \
-	&& pip install pipenv --no-cache-dir
+	&& pip install pipenv --no-cache-dir \
+	&& rm -rf /root/.cache/pip*/*
 
 # Files needed by pipenv install:
 COPY Pipfile Pipfile.lock README.md setup.py /Annif/
@@ -42,7 +43,8 @@ RUN pipenv install --system --deploy --ignore-pipfile \
     && pip install --no-cache-dir \
     	annif[voikko] \
 		fasttextmirror \
-		vowpalwabbit==8.4
+		vowpalwabbit==8.4 \
+	&& rm -rf /root/.cache/pip*/*
 
 COPY annif annif
 
