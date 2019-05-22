@@ -20,10 +20,12 @@ RUN apt-get update \
 # Vowpal Wabbit. Using old VW because 8.5 links to wrong Python version
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
-		libboost-program-options-dev\
+		libboost-program-options-dev \
 		zlib1g-dev \
 		libboost-python-dev \
-	&& rm -rf /var/lib/apt/lists/*
+	&& rm -rf /var/lib/apt/lists/* \
+	&& dpkg -P --force-all python2.7 python2.7-dev python2.7-minimal \
+	&& rm -rf ./usr/lib/python2.7* ./usr/bin/python2.7 ./usr/lib/x86_64-linux-gnu/libpython2.7.so.1.0
 
 
 ## Install pipenv and Annif
