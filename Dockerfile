@@ -36,15 +36,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		build-essential \
 		zlib1g-dev \
 	&& rm -rf /var/lib/apt/lists/* /usr/include/* \
-	&& dpkg -r --force-depends \
-		libstdc++-6-dev \
-		libpython2.7-dev \
-		libpython3.5-dev \
-		libc6-dev \
-		libgcc-6-dev \
-		python2.7 python2.7-dev python2.7-minimal \
-	&& rm -rf \
-		/usr/lib/python2.7*
+	&& rm -rf /root/.cache/pip*/* \
+	&& rm -rf /usr/lib/python2.7*
 
 
 ## Install Annif
