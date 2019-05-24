@@ -1,11 +1,6 @@
 FROM python:3.6-slim
 
 
-## Update Using old pip version because --no-cache-dir doesn't seem to work in 19.1.1
-RUN pip install --upgrade pip==18.1 \
-	&& rm -rf /root/.cache/pip*/*
-
-
 ## Install optional dependencies
 # Voikko
 RUN apt-get update && apt-get install -y --no-install-recommends \
