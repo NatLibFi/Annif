@@ -1,0 +1,8 @@
+FROM annif
+
+RUN pip install pipenv --no-cache-dir \
+	&& pipenv install --system --deploy --ignore-pipfile --dev
+
+COPY . .
+
+CMD annif
