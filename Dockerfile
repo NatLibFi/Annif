@@ -1,7 +1,10 @@
 FROM python:3.6-slim
 
 
-## Install optional dependencies
+LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
+
+
+## Install optional dependencies:
 RUN apt-get update \
 	## Voikko:
 	&& apt-get install -y --no-install-recommends \
@@ -31,7 +34,7 @@ RUN apt-get update \
 	&& rm -rf /usr/lib/python2.7*
 
 
-## Install Annif
+## Install Annif:
 # Files needed by pipenv install:
 COPY Pipfile Pipfile.lock README.md setup.py /Annif/
 WORKDIR /Annif
