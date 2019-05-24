@@ -39,10 +39,10 @@ RUN apt-get update \
 COPY Pipfile Pipfile.lock README.md setup.py /Annif/
 WORKDIR /Annif
 
-# TODO Handle occasional timeout in nltk.downloader leading failed build
+# Handle occasional timeout in nltk.downloader with 3 tries
 RUN pip install pipenv --no-cache-dir \
 	&& pipenv install --system --deploy --ignore-pipfile \
-	&& python -m nltk.downloader punkt \
+	&& for i in 1 2 3; do python -m nltk.downloader punkt && break || sleep 1; done \
 	&& pip uninstall -y pipenv \
 	&& rm -rf /root/.cache/pip*/*
 
