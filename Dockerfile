@@ -47,5 +47,6 @@ RUN pip install pipenv --no-cache-dir \
 	&& rm -rf /root/.cache/pip*/*
 
 COPY annif annif
+COPY projects.cfg.dist projects.cfg.dist
 
 CMD annif
