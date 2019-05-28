@@ -41,7 +41,7 @@ WORKDIR /Annif
 
 # Handle occasional timeout in nltk.downloader with 3 tries
 RUN pip install pipenv --no-cache-dir \
-	&& pipenv install --system --deploy \
+	&& pipenv install --system --skip-lock \
 	&& for i in 1 2 3; do python -m nltk.downloader punkt -d /usr/share/nltk_data && break || sleep 1; done \
 	&& pip uninstall -y pipenv \
 	&& rm -rf /root/.cache/pip*/*
