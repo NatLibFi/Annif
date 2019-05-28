@@ -48,10 +48,8 @@ RUN pip install pipenv --no-cache-dir \
 
 
 COPY annif annif
-COPY projects.cfg.dist /Annif/projects.cfg
-
+COPY projects.cfg.dist /Annif/projects.cfg.dist
 
 WORKDIR /annif_projects
-ENV ANNIF_PROJECTS=/Annif/projects.cfg
 
 CMD annif
