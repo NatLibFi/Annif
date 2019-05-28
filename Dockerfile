@@ -49,6 +49,7 @@ RUN pip install pipenv --no-cache-dir \
 
 COPY annif annif
 COPY projects.cfg.dist /Annif/projects.cfg.dist
+RUN chmod -R 777 /Annif
 
 WORKDIR /annif_projects
 
@@ -58,5 +59,6 @@ RUN groupadd -g 999 annif_user \
     && useradd -r -u 999 -g annif_user annif_user \
     && chown -R annif_user:annif_user /annif_projects
 USER annif_user
+
 
 CMD annif
