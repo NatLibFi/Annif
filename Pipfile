@@ -12,6 +12,7 @@ pytest-flask = "*"
 swagger-tester = "*"
 bumpversion = "*"
 sphinx = "*"
+sphinx-rtd-theme = "*"
 
 [packages]
 "e1839a8" = {editable = true, path = "."}
@@ -24,6 +25,5 @@ nltk = "*"
 gensim = "*"
 sklearn = "*"
 rdflib = "*"
-sphinx-rtd-theme = "*"
 
 [requires]
