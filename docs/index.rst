@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to Annif's API documentation!
-=================================
+=====================================
 
 See `installation instructions <https://github.com/NatLibFi/Annif/blob/master/README.md>`_  and `Wiki pages <https://github.com/NatLibFi/Annif/wiki>`_ in GitHub, and also http://annif.org/.
 
