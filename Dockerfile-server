@@ -1,0 +1,11 @@
+FROM annif
+
+USER root
+
+RUN pip install gunicorn
+
+#USER annif_user
+
+RUN cp /Annif/projects.cfg.dist /annif_projects/projects.cfg
+
+CMD ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000"]
