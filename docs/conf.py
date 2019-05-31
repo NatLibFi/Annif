@@ -23,7 +23,6 @@ copyright = '2017, University Of Helsinki (The National Library Of Finland)'
 author = 'Osma Suominen'
 
 # Get version number from GitHub tag
-# The full version, including alpha/beta/rc tags.
 release = re.sub(
     '^v',
     '',
