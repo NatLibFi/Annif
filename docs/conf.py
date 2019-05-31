@@ -24,7 +24,11 @@ author = 'Osma Suominen'
 
 # Get version number from GitHub tag
 # The full version, including alpha/beta/rc tags.
-release = re.sub('^v', '', os.popen('git describe --tags --abbrev=0').read().strip())
+release = re.sub(
+    '^v',
+    '',
+    os.popen('git describe --tags --abbrev=0').read().strip()
+)
 # The short X.Y version.
 version = release
 
