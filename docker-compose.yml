@@ -4,9 +4,11 @@ services:
 
   annif_server:
     restart: always
-    build:
-      context: .
-      dockerfile: Dockerfile-server
+    image: annif
+    volumes:
+      - ./projects.cfg.dist:/annif_projects/projects.cfg
+    command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000"]
+
 
   nginx:
     restart: always

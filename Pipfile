@@ -23,5 +23,6 @@ nltk = "*"
 gensim = "*"
 sklearn = "*"
 rdflib = "*"
+gunicorn = "*"
 
 [requires]
