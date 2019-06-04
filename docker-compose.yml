@@ -2,7 +2,7 @@ version: "3"
 
 services:
 
-  annif_server:
+  gunicorn_server:
     restart: always
     image: annif
     volumes:
@@ -17,4 +17,4 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - annif_server
+      - gunicorn_server
