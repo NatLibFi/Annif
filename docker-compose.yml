@@ -9,16 +9,11 @@ services:
       - ./projects.cfg.dist:/annif_projects/projects.cfg
     command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000"]
 
-
   nginx:
     restart: always
-    build:
-      context: annif/nginx/
-    ## Instead of having own Dockerfile for nginx image, this could be used:
-    #image: nginx:alpine
-    #volumes:
-    #  - ./annif/nginx/nginx.conf:/etc/nginx/nginx.conf
-    #command: nginx #-c /etc/nginx/nginx.conf
+    image: nginx
+    volumes:
+      - ./annif/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     ports:
       - "80:80"
     depends_on:
