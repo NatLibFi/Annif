@@ -6,7 +6,8 @@ services:
     restart: always
     image: annif
     volumes:
-      - ./projects.cfg.dist:/annif_projects/projects.cfg
+      - ${ANNIF_PROJECTS}:/annif_projects
+    user: ${UID}:${GID}
     command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000"]
 
   nginx:
