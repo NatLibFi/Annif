@@ -1,8 +1,6 @@
-FROM python:3.6-slim
-
+FROM python:3.6-slim AS builder
 
 LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
-
 
 ## Install optional dependencies:
 RUN apt-get update \
@@ -24,14 +22,32 @@ RUN apt-get update \
 		zlib1g-dev \
 		libboost-python-dev \
 	&& pip install --no-cache-dir \
+		vowpalwabbit==8.4
+
+
+
+FROM python:3.6-slim
+
+COPY --from=builder /usr/local/lib/python3.6 /usr/local/lib/python3.6
+
+# Dependencies needed at runtime:
+## Install optional dependencies:
+RUN apt-get update \
+	## Voikko:
+	&& apt-get install -y --no-install-recommends \
+		libvoikko1 \
+		voikko-fi \
+	&& pip install --no-cache-dir \
+		annif[voikko] \
+	## Vowpal Wabbit. Using old VW because 8.5 links to wrong Python version
+	&& apt-get install -y --no-install-recommends \
+		libboost-program-options1.62.0 \
+		libboost-python1.62.0 \
+	&& pip install --no-cache-dir \
 		vowpalwabbit==8.4 \
 	## Clean up:
-	&& apt-get remove --auto-remove -y \
-		build-essential \
-		zlib1g-dev \
 	&& rm -rf /var/lib/apt/lists/* /usr/include/* \
-	&& rm -rf /root/.cache/pip*/* \
-	&& rm -rf /usr/lib/python2.7*
+	&& rm -rf /root/.cache/pip*/*
 
 
 ## Install Annif:
