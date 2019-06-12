@@ -30,8 +30,7 @@ FROM python:3.6-slim
 
 COPY --from=builder /usr/local/lib/python3.6 /usr/local/lib/python3.6
 
-# Dependencies needed at runtime:
-## Install optional dependencies:
+## Dependencies needed at runtime:
 RUN apt-get update \
 	## Voikko:
 	&& apt-get install -y --no-install-recommends \
@@ -64,8 +63,7 @@ RUN pip install pipenv --no-cache-dir \
 
 
 COPY annif annif
-COPY projects.cfg.dist /Annif/projects.cfg.dist
-RUN chmod -R 777 /Annif
+COPY projects.cfg.dist projects.cfg.dist
 
 WORKDIR /annif-projects
 
