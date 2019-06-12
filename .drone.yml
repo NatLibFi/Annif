@@ -11,7 +11,7 @@ steps:
         from_secret: docker_password
       registry: quay.io
       repo: quay.io/natlibfi/annif
-      auto_tag: true
+      tags: [latest]
     when:
       event: push
       branch: [issue278-dockerize-annif]
