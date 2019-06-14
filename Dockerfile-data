@@ -1,5 +1,5 @@
-FROM alpine
-#FROM scratch
+FROM busybox
+
 COPY data /annif-projects/data
 COPY projects.cfg /annif-projects/
 
@@ -10,4 +10,3 @@ RUN addgroup -g 998 annif_user \
 USER annif_user
 
 CMD sh
-#CMD ["true"]
