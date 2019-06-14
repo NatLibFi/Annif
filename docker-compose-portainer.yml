@@ -49,6 +49,14 @@ services:
         cp -r --verbose /annif-projects/. /annif-data/ &&
         echo Copied!"
     # TODO: Would rsync be better? (Copying tfidf-en model took only 0.06s...)
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      placement:
+        constraints:
+        - node.labels.environment == test
 
 volumes:
   annif-data:
