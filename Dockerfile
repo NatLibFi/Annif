@@ -69,8 +69,8 @@ WORKDIR /annif-projects
 
 
 # Switch user to non-root:
-RUN groupadd -g 999 annif_user \
-    && useradd -r -u 999 -g annif_user annif_user \
+RUN groupadd -g 998 annif_user \
+    && useradd -r -u 998 -g annif_user annif_user \
     && chown -R annif_user:annif_user /annif-projects
 USER annif_user
 
