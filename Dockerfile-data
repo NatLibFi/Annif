@@ -1,0 +1,13 @@
+FROM alpine
+#FROM scratch
+COPY data /annif-projects/data
+COPY projects.cfg /annif-projects/
+
+# Switch user to non-root:
+RUN addgroup -g 998 annif_user \
+    && adduser -S -u 998 -g annif_user annif_user \
+    && chown -R annif_user:annif_user /annif-projects
+USER annif_user
+
+CMD sh
+#CMD ["true"]
