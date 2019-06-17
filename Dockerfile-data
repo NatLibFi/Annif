@@ -1,7 +1,7 @@
 FROM busybox
 
 COPY data /annif-projects/data
-COPY projects.cfg /annif-projects/
+COPY projects.cfg nginx.conf /annif-projects/
 
 # Switch user to non-root:
 RUN addgroup -g 998 annif_user \
