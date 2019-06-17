@@ -27,8 +27,8 @@ services:
     image: nginx
     volumes:
       - annif-data:/annif-projects
-    ports:
-      - "80:80"
+    # ports:
+    #   - "80:80"
     depends_on:
       - gunicorn_server
     command: ["nginx", "-c", "/annif-projects/nginx.conf", "-g", "daemon off;"]
