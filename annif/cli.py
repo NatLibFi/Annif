@@ -19,6 +19,29 @@ from annif.suggestion import SuggestionFilter
 logger = annif.logger
 click_log.basic_config(logger)
 
+
+def set_project_config_path():
+    import argparse
+
+    # Instantiate the parser
+    parser = argparse.ArgumentParser(description='Optional app description')
+
+    # Optional positional argument
+    parser.add_argument('--projects', type=str, nargs='?',
+                        help='An optional path to projects.cfg.')
+
+    args, _ = parser.parse_known_args()
+
+    print(sys.argv)
+    if args.projects:
+        sys.argv.remove('--projects')
+        sys.argv.remove(args.projects)
+        os.environ['ANNIF_PROJECTS'] = args.projects
+    print(sys.argv)
+
+
+set_project_config_path()
+
 cli = FlaskGroup(create_app=annif.create_app)
 
 
