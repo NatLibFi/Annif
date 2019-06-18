@@ -44,12 +44,7 @@ services:
   data:
     image: annif-data
     volumes:
-      - annif-data:/annif-data
-    command: >
-      sh -c "echo Copying data to named volume annif-data... &&
-        cp -r --verbose /annif-projects/. /annif-data/ &&
-        echo Copied!"
-    # TODO: Would rsync be better? (Copying tfidf-en model took only 0.06s...)
+      - annif-data:/annif-projects
     deploy:
       replicas: 1
       restart_policy:
