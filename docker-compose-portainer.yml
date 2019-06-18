@@ -10,7 +10,7 @@ services:
     # user: ${UID}:${GID}
     command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000"]
     volumes:
-      - annif-data:/annif-projects
+      - data:/annif-projects
     depends_on:
       - data
 
@@ -26,7 +26,7 @@ services:
     restart: always
     image: nginx
     volumes:
-      - annif-data:/annif-projects
+      - data:/annif-projects
     # ports:
     #   - "80:80"
     depends_on:
@@ -39,12 +39,12 @@ services:
   #   tty: true
   #   command: bash
   #   volumes:
-  #     - annif-data:/annif-projects
+  #     - data:/annif-projects
 
   data:
     image: annif-data
     volumes:
-      - annif-data:/annif-projects
+      - data:/annif-projects
     deploy:
       replicas: 1
       restart_policy:
@@ -55,4 +55,4 @@ services:
         - node.labels.environment == test
 
 volumes:
-  annif-data:
+  data:
