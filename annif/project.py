@@ -255,6 +255,9 @@ def get_projects(min_access=Access.private):
     AnnifProject. The min_access parameter may be used to set the minimum
     access level required for the returned projects."""
 
+    if not hasattr(current_app, 'annif_projects'):
+        initialize_projects(current_app)
+
     projects = [(project_id, project)
                 for project_id, project in current_app.annif_projects.items()
                 if project.access >= min_access]
