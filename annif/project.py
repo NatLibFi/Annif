@@ -223,7 +223,8 @@ def _create_projects(projects_file, datadir, init_projects):
         logger.warning("Project configuration file '%s' is missing. " +
                        'Please provide one.', projects_file)
         logger.warning('You can set the path to the project configuration ' +
-                       'file using the ANNIF_PROJECTS environment variable.')
+                       'file using the ANNIF_PROJECTS environment variable ' +
+                       'or the command-line option "--projects".')
         return {}
 
     config = configparser.ConfigParser()

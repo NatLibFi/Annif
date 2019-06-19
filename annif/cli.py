@@ -74,7 +74,27 @@ def generate_filter_batches(subjects):
     return filter_batches
 
 
+def set_project_config_file_path(ctx, param, value):
+    """Override the default path or the path given in env by CLI option"""
+    from flask.cli import ScriptInfo
+    from flask import current_app
+    with ctx.ensure_object(ScriptInfo).load_app().app_context():
+        if value:
+            current_app.config['PROJECTS_FILE'] = value
+
+
+def common_options(f):
+    """Decorator to add common options for all CLI commands"""
+    f = click.option(
+        '-p', '--projects', help='Set path to projects.cfg',
+        callback=set_project_config_file_path, expose_value=False,
+        is_eager=True)(f)
+    f = click_log.simple_verbosity_option(logger)(f)
+    return f
+
+
 @cli.command('list-projects')
+@common_options
 def run_list_projects():
     """
     List available projects.
@@ -90,6 +110,7 @@ def run_list_projects():
 
 @cli.command('show-project')
 @click.argument('project_id')
+@common_options
 def run_show_project(project_id):
     """
     Show information about a project.
@@ -104,9 +125,9 @@ def run_show_project(project_id):
 
 
 @cli.command('loadvoc')
-@click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('subjectfile', type=click.Path(dir_okay=False))
+@common_options
 def run_loadvoc(project_id, subjectfile):
     """
     Load a vocabulary for a project.
@@ -122,9 +143,9 @@ def run_loadvoc(project_id, subjectfile):
 
 
 @cli.command('train')
-@click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(), nargs=-1)
+@common_options
 def run_train(project_id, paths):
     """
     Train a project on a collection of documents.
@@ -135,9 +156,9 @@ def run_train(project_id, paths):
 
 
 @cli.command('learn')
-@click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(), nargs=-1)
+@common_options
 def run_learn(project_id, paths):
     """
     Further train an existing project on a collection of documents.
@@ -148,12 +169,12 @@ def run_learn(project_id, paths):
 
 
 @cli.command('suggest')
-@click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
 @click.option('--backend-param', '-b', multiple=True,
               help='Backend parameters to override')
+@common_options
 def run_suggest(project_id, limit, threshold, backend_param):
     """
     Suggest subjects for a single document from standard input.
@@ -168,7 +189,6 @@ def run_suggest(project_id, limit, threshold, backend_param):
 
 
 @cli.command('index')
-@click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('directory', type=click.Path(file_okay=False))
 @click.option(
@@ -181,6 +201,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
 @click.option('--backend-param', '-b', multiple=True,
               help='Backend parameters to override')
+@common_options
 def run_index(project_id, directory, suffix, force,
               limit, threshold, backend_param):
     """
@@ -209,13 +230,13 @@ def run_index(project_id, directory, suffix, force,
 
 
 @cli.command('eval')
-@click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(), nargs=-1)
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
 @click.option('--backend-param', '-b', multiple=True,
               help='Backend parameters to override')
+@common_options
 def run_eval(project_id, paths, limit, threshold, backend_param):
     """
     Analyze documents and evaluate the result.
@@ -243,11 +264,11 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
 
 
 @cli.command('optimize')
-@click_log.simple_verbosity_option(logger)
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(), nargs=-1)
 @click.option('--backend-param', '-b', multiple=True,
               help='Backend parameters to override')
+@common_options
 def run_optimize(project_id, paths, backend_param):
     """
     Analyze documents, testing multiple limits and thresholds.
