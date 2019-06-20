@@ -1,4 +1,4 @@
-FROM annif
+FROM quay.io/natlibfi/annif
 
 WORKDIR /Annif
 
