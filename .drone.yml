@@ -15,7 +15,7 @@ steps:
     when:
       event: push
       branch: [issue278-dockerize-annif]
-
+---
 kind: pipeline
 name: dev-image-deployment
 steps:
