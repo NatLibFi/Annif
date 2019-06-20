@@ -1,4 +1,4 @@
-FROM python:3.6-slim AS builder
+FROM python:3.7-slim AS builder
 
 LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
 
@@ -26,9 +26,9 @@ RUN apt-get update \
 
 
 
-FROM python:3.6-slim
+FROM python:3.7-slim
 
-COPY --from=builder /usr/local/lib/python3.6 /usr/local/lib/python3.6
+COPY --from=builder /usr/local/lib/python3.7 /usr/local/lib/python3.7
 
 ## Dependencies needed at runtime:
 RUN apt-get update \
