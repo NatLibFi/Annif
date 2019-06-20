@@ -2,16 +2,31 @@ version: "3"
 
 services:
 
+  bash:
+    image: quay.io/natlibfi/annif
+    volumes:
+      - ${ANNIF_PROJECTS}:/annif-projects
+    user: ${UID}:${GID}
+    stdin_open: true
+    tty: true
+    command: bash
+
+  # Note: to connect to the mauiservice from other services, use "mauiservice" in place of "localhost"
+  mauiservice:
+    image: quay.io/natlibfi/mauiservice
+    volumes:
+      - ${ANNIF_PROJECTS}:/annif-projects
+    ports:
+      - "8080:8080"
+
   gunicorn_server:
-    restart: always
-    image: annif
+    image: quay.io/natlibfi/annif
     volumes:
       - ${ANNIF_PROJECTS}:/annif-projects
     user: ${UID}:${GID}
     command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000"]
 
   nginx:
-    restart: always
     image: nginx
     volumes:
       - ./annif/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
