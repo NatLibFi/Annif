@@ -1,6 +1,7 @@
 kind: pipeline
 name: default
 steps:
+
   - name: docker
     image: plugins/docker
     settings:
@@ -12,13 +13,7 @@ steps:
       registry: quay.io
       repo: quay.io/natlibfi/annif
       tags: [latest]
-    when:
-      event: push
-      branch: [issue278-dockerize-annif]
----
-kind: pipeline
-name: dev-image-deployment
-steps:
+
   - name: docker-dev
     image: plugins/docker
     settings:
@@ -30,6 +25,7 @@ steps:
       registry: quay.io
       repo: quay.io/natlibfi/annif
       tags: [dev]
+
     when:
       event: push
       branch: [issue278-dockerize-annif]
