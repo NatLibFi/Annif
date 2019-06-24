@@ -163,7 +163,6 @@ def test_project_not_initialized(app):
     with app.app_context():
         project = annif.project.get_project('dummy-en')
     assert not project.initialized
-    assert not project.backend.initialized
 
 
 def test_project_initialized(app_with_initialize):

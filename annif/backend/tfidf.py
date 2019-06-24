@@ -46,7 +46,6 @@ class TFIDFBackend(backend.AnnifBackend):
             self.INDEX_FILE)
 
     def _suggest(self, text, project, params):
-        self.initialize()
         self.debug('Suggesting subjects for text "{}..." (len={})'.format(
             text[:20], len(text)))
         vectors = project.vectorizer.transform([text])
