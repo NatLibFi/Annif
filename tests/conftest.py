@@ -74,6 +74,18 @@ def document_corpus(subject_index):
 
 
 @pytest.fixture(scope='module')
+def fulltext_corpus(subject_index):
+    docdir = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'fulltext')
+    ft_corpus = annif.corpus.DocumentDirectory(docdir)
+    ft_corpus.set_subject_index(subject_index)
+    return ft_corpus
+
+
+@pytest.fixture(scope='module')
 def project(document_corpus):
     proj = unittest.mock.Mock()
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
