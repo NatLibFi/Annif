@@ -8,7 +8,8 @@ import re
 import sys
 import click
 import click_log
-from flask.cli import FlaskGroup
+from flask import current_app
+from flask.cli import FlaskGroup, ScriptInfo
 import annif
 import annif.corpus
 import annif.eval
@@ -76,8 +77,6 @@ def generate_filter_batches(subjects):
 
 def set_project_config_file_path(ctx, param, value):
     """Override the default path or the path given in env by CLI option"""
-    from flask.cli import ScriptInfo
-    from flask import current_app
     with ctx.ensure_object(ScriptInfo).load_app().app_context():
         if value:
             current_app.config['PROJECTS_FILE'] = value
