@@ -13,7 +13,6 @@ swagger-tester = "*"
 bumpversion = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"
-pipenv-to-requirements = "*"
 
 [packages]
 "e1839a8" = {editable = true, path = "."}
