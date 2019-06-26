@@ -139,13 +139,6 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
         self._create_train_file(corpus, project)
         self._create_model(project)
 
-    def learn(self, corpus, project):
-        self.initialize()
-        for example in self._create_examples(corpus, project):
-            self._model.learn(example)
-        modelpath = os.path.join(self.datadir, self.MODEL_FILE)
-        self._model.save(modelpath)
-
     def _convert_result(self, result, project):
         if self.algorithm == 'multilabel_oaa':
             # result is a list of subject IDs - need to vectorize

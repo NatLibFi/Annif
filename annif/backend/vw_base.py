@@ -1,5 +1,6 @@
 """Base class for Vowpal Wabbit based Annif backends"""
 
+import abc
 import os
 from vowpalwabbit import pyvw
 from annif.exception import ConfigurationException
@@ -7,7 +8,7 @@ from annif.exception import NotInitializedException
 from . import backend
 
 
-class VWBaseBackend(backend.AnnifLearningBackend):
+class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
     """Base class for Vowpal Wabbit based Annif backends"""
 
     # Parameters for VW based backends
@@ -61,3 +62,17 @@ class VWBaseBackend(backend.AnnifLearningBackend):
                        for param, val in self.params.items()
                        if param in self.VW_PARAMS})
         return params
+
+    @abc.abstractmethod
+    def _create_examples(self, corpus, project):
+        """This method should be implemented by concrete backends. It
+        should return a sequence of strings formatted according to the VW
+        input format."""
+        pass
+    
+    def learn(self, corpus, project):
+        self.initialize()
+        for example in self._create_examples(corpus, project):
+            self._model.learn(example)
+        modelpath = os.path.join(self.datadir, self.MODEL_FILE)
+        self._model.save(modelpath)

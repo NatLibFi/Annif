@@ -111,10 +111,3 @@ class VWEnsembleBackend(
         self.info("creating VW ensemble model")
         self._create_train_file(corpus, project)
         self._create_model(project)
-
-    def learn(self, corpus, project):
-        self.initialize()
-        for example in self._create_examples(corpus, project):
-            self._model.learn(example)
-        modelpath = os.path.join(self.datadir, self.MODEL_FILE)
-        self._model.save(modelpath)
