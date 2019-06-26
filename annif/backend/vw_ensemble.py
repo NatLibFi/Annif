@@ -42,6 +42,11 @@ class VWEnsembleBackend(
                 result[subj_id] = score
         return VectorSuggestionResult(result, project.subjects)
 
+    @property
+    def _source_project_ids(self):
+        sources = annif.util.parse_sources(self.params['sources'])
+        return [project_id for project_id, _ in sources]
+
     def _format_example(self, subject_id, scores, true=None):
         if true is None:
             val = ''
@@ -50,34 +55,34 @@ class VWEnsembleBackend(
         else:
             val = -1
         ex = "{} |{}".format(val, subject_id)
-        for proj_idx, proj in enumerate(self.source_project_ids):
+        for proj_idx, proj in enumerate(self._source_project_ids):
             ex += " {}:{}".format(proj, scores[proj_idx])
         return ex
 
-    @property
-    def source_project_ids(self):
-        sources = annif.util.parse_sources(self.params['sources'])
-        return [project_id for project_id, _ in sources]
+    def _doc_to_example(self, doc, project, source_projects):
+        examples = []
+        subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
+        true = subjects.as_vector(project.subjects)
+        score_vectors = []
+        for source_project in source_projects:
+            hits = source_project.suggest(doc.text)
+            score_vectors.append(hits.vector)
+        score_vector = np.array(score_vectors)
+        for subj_id in range(len(true)):
+            if true[subj_id] or score_vector[:, subj_id].sum() > 0.0:
+                ex = self._format_example(
+                    subj_id,
+                    score_vector[:, subj_id],
+                    true[subj_id])
+                examples.append(ex)
+        return examples
 
     def _create_examples(self, corpus, project):
         source_projects = [annif.project.get_project(project_id)
-                           for project_id in self.source_project_ids]
+                           for project_id in self._source_project_ids]
         examples = []
         for doc in corpus.documents:
-            subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
-            true = subjects.as_vector(project.subjects)
-            score_vectors = []
-            for source_project in source_projects:
-                hits = source_project.suggest(doc.text)
-                score_vectors.append(hits.vector)
-            score_vector = np.array(score_vectors)
-            for subj_id in range(len(true)):
-                if true[subj_id] or score_vector[:, subj_id].sum() > 0.0:
-                    ex = self._format_example(
-                        subj_id,
-                        score_vector[:, subj_id],
-                        true[subj_id])
-                    examples.append(ex)
+            examples += self._doc_to_example(doc, project, source_projects)
         random.shuffle(examples)
         return examples
 
