@@ -19,9 +19,6 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
     needs_subject_index = True
 
     VW_PARAMS = {
-        # each param specifier is a pair (allowed_values, default_value)
-        # where allowed_values is either a type or a list of allowed values
-        # and default_value may be None, to let VW decide by itself
         'bit_precision': (int, None),
         'ngram': (lambda x: '_{}'.format(int(x)), None),
         'learning_rate': (float, None),
@@ -124,30 +121,6 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
                                self.datadir,
                                self.TRAIN_FILE,
                                method=self._write_train_file)
-
-    def _convert_param(self, param, val):
-        pspec, _ = self.VW_PARAMS[param]
-        if isinstance(pspec, list):
-            if val in pspec:
-                return val
-            raise ConfigurationException(
-                "{} is not a valid value for {} (allowed: {})".format(
-                    val, param, ', '.join(pspec)), backend_id=self.backend_id)
-        try:
-            return pspec(val)
-        except ValueError:
-            raise ConfigurationException(
-                "The {} value {} cannot be converted to {}".format(
-                    param, val, pspec), backend_id=self.backend_id)
-
-    def _create_params(self, params):
-        params.update({param: defaultval
-                       for param, (_, defaultval) in self.VW_PARAMS.items()
-                       if defaultval is not None})
-        params.update({param: self._convert_param(param, val)
-                       for param, val in self.params.items()
-                       if param in self.VW_PARAMS})
-        return params
 
     def _create_model(self, project):
         self.info('creating VW model (algorithm: {})'.format(self.algorithm))
