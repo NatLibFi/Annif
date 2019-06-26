@@ -28,4 +28,4 @@ steps:
 
     when:
       event: push
-      branch: [master, issue278-dockerize-annif]
+      branch: [master]
