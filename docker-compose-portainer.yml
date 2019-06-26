@@ -1,0 +1,56 @@
+version: "3"
+
+services:
+
+  gunicorn_server:
+    restart: always
+    image: quay.io/natlibfi/annif
+    command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000"]
+    volumes:
+      - data:/annif-projects
+    depends_on:
+      - data
+
+  nginx:
+    restart: always
+    image: nginx
+    volumes:
+      - data:/annif-projects
+    depends_on:
+      - gunicorn_server
+    command: ["nginx", "-c", "/annif-projects/nginx.conf", "-g", "daemon off;"]
+    networks:
+    - default
+    - traefik-net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+        - node.labels.environment == test
+      labels:
+      - 'traefik.port=80'
+      - 'traefik.docker.network=traefik-net'
+      - 'traefik.frontend.rule=Host:annif.dev.finto.fi'
+
+
+  data:
+    image: annif-data
+    volumes:
+      - data:/annif-projects
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      placement:
+        constraints:
+        - node.labels.environment == test
+
+volumes:
+  data:
+
+networks:
+  traefik-net:
+    external: true

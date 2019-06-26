@@ -1,0 +1,19 @@
+FROM quay.io/natlibfi/annif
+
+WORKDIR /Annif
+
+USER root
+
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		curl
+
+RUN pip install pipenv --no-cache-dir \
+	&& pipenv install --system --skip-lock --dev
+
+COPY . .
+RUN chmod -R 777 /Annif
+
+USER annif_user
+
+CMD annif
