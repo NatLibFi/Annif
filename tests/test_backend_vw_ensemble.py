@@ -3,19 +3,27 @@
 import pytest
 import annif.backend
 import annif.corpus
+import annif.project
 
 pytest.importorskip("annif.backend.vw_ensemble")
 
 
-def test_vw_ensemble_train(app, datadir, tmpdir, fulltext_corpus, project):
+def test_vw_ensemble_train(app, datadir, tmpdir):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
-        params={'sources': 'tfidf-fi'},
+        params={'sources': 'dummy-en'},
         datadir=str(datadir))
 
+    tmpfile = tmpdir.join('document.tsv')
+    tmpfile.write("dummy\thttp://example.org/dummy\n" +
+                  "another\thttp://example.org/dummy\n" +
+                  "none\thttp://example.org/none")
+    document_corpus = annif.corpus.DocumentFile(str(tmpfile))
+    project = annif.project.get_project('dummy-en')
+
     with app.app_context():
-        vw_ensemble.train(fulltext_corpus, project)
+        vw_ensemble.train(document_corpus, project)
     assert datadir.join('vw-train.txt').exists()
     assert datadir.join('vw-train.txt').size() > 0
     assert datadir.join('vw-model').exists()
@@ -26,7 +34,7 @@ def test_vw_ensemble_initialize(app, datadir):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
-        params={'sources': 'tfidf-fi'},
+        params={'sources': 'dummy-en'},
         datadir=str(datadir))
 
     assert vw_ensemble._model is None
@@ -38,12 +46,14 @@ def test_vw_ensemble_initialize(app, datadir):
         vw_ensemble.initialize()
 
 
-def test_vw_ensemble_suggest(app, datadir, project):
+def test_vw_ensemble_suggest(app, datadir):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
-        params={'sources': 'tfidf-fi'},
+        params={'sources': 'dummy-en'},
         datadir=str(datadir))
+
+    project = annif.project.get_project('dummy-en')
 
     results = vw_ensemble.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
