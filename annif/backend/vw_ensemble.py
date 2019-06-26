@@ -8,13 +8,13 @@ from vowpalwabbit import pyvw
 import numpy as np
 from annif.suggestion import VectorSuggestionResult
 from annif.exception import ConfigurationException, NotInitializedException
-from . import backend
+from . import vw_base
 from . import ensemble
 
 
 class VWEnsembleBackend(
         ensemble.EnsembleBackend,
-        backend.AnnifLearningBackend):
+        vw_base.VWBaseBackend):
     """Vowpal Wabbit ensemble backend that combines results from multiple
     projects and learns how well those projects/backends recognize
     particular subjects."""

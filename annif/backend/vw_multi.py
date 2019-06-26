@@ -8,12 +8,12 @@ from vowpalwabbit import pyvw
 import numpy as np
 from annif.suggestion import ListSuggestionResult, VectorSuggestionResult
 from annif.exception import ConfigurationException, NotInitializedException
-from . import backend
+from . import vw_base
 from . import mixins
 
 
-class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
-    """Vorpal Wabbit multiclass/multilabel backend for Annif"""
+class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
+    """Vowpal Wabbit multiclass/multilabel backend for Annif"""
 
     name = "vw_multi"
     needs_subject_index = True
