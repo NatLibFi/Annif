@@ -12,6 +12,7 @@ runner = CliRunner(env={'ANNIF_CONFIG': 'annif.default_config.TestingConfig'})
 # Generate a random project name to use in tests
 TEMP_PROJECT = ''.join(
     random.choice('abcdefghiklmnopqrstuvwxyz') for _ in range(8))
+PROJECTS_FILE_OPTION = 'tests/projects_for_config_path_option.cfg'
 
 
 def test_list_projects():
@@ -36,6 +37,26 @@ def test_list_projects_bad_arguments():
             'list-projects', 'moi']).exit_code != 0
     assert runner.invoke(
         annif.cli.run_list_projects, ['moi', '--debug', 'y']).exit_code != 0
+
+
+def test_list_projects_config_path_option():
+    result = runner.invoke(
+        annif.cli.cli, ["list-projects", "--projects", PROJECTS_FILE_OPTION])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert 'dummy_for_projects_option' in result.output
+    assert 'dummy-fi' not in result.output
+    assert 'dummy-en' not in result.output
+
+
+def test_list_projects_config_path_option_nonexistent():
+    nonexistent_file = "nonexistent.cfg"
+    result = runner.invoke(
+        annif.cli.cli, ["list-projects", "--projects", nonexistent_file])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert 'Project configuration file "{}" is missing.'.format(
+        nonexistent_file) in result.output
 
 
 def test_show_project():
