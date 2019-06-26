@@ -40,14 +40,6 @@ def test_list_projects_bad_arguments():
 
 
 def test_list_projects_config_path_option():
-    nonexistent_file = "nonexistent.cfg"
-    result = runner.invoke(
-        annif.cli.cli, ["list-projects", "--projects", nonexistent_file])
-    assert not result.exception
-    assert result.exit_code == 0
-    assert 'Project configuration file "{}" is missing.'.format(
-        nonexistent_file) in result.output
-
     result = runner.invoke(
         annif.cli.cli, ["list-projects", "--projects", PROJECTS_FILE_OPTION])
     assert not result.exception
@@ -55,6 +47,16 @@ def test_list_projects_config_path_option():
     assert 'dummy_for_projects_option' in result.output
     assert 'dummy-fi' not in result.output
     assert 'dummy-en' not in result.output
+
+
+def test_list_projects_config_path_option_nonexistent():
+    nonexistent_file = "nonexistent.cfg"
+    result = runner.invoke(
+        annif.cli.cli, ["list-projects", "--projects", nonexistent_file])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert 'Project configuration file "{}" is missing.'.format(
+        nonexistent_file) in result.output
 
 
 def test_show_project():
