@@ -95,7 +95,7 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
         self.info("creating VW model")
         self._create_train_file(corpus, project)
         self._create_model(project)
-    
+
     def learn(self, corpus, project):
         self.initialize()
         for example in self._create_examples(corpus, project):
