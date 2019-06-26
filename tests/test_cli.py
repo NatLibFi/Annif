@@ -12,7 +12,6 @@ runner = CliRunner(env={'ANNIF_CONFIG': 'annif.default_config.TestingConfig'})
 # Generate a random project name to use in tests
 TEMP_PROJECT = ''.join(
     random.choice('abcdefghiklmnopqrstuvwxyz') for _ in range(8))
-PROJECTS_FILE = 'tests/projects.cfg'
 PROJECTS_FILE_OPTION = 'tests/projects_for_config_path_option.cfg'
 
 
