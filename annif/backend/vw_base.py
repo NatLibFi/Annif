@@ -3,6 +3,7 @@
 import abc
 import os
 from vowpalwabbit import pyvw
+import annif.util
 from annif.exception import ConfigurationException
 from annif.exception import NotInitializedException
 from . import backend
@@ -63,12 +64,37 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
                        if param in self.VW_PARAMS})
         return params
 
+    @staticmethod
+    def _write_train_file(examples, filename):
+        with open(filename, 'w', encoding='utf-8') as trainfile:
+            for ex in examples:
+                print(ex, file=trainfile)
+
+    def _create_train_file(self, corpus, project):
+        self.info('creating VW train file')
+        examples = self._create_examples(corpus, project)
+        annif.util.atomic_save(examples,
+                               self.datadir,
+                               self.TRAIN_FILE,
+                               method=self._write_train_file)
+
     @abc.abstractmethod
     def _create_examples(self, corpus, project):
         """This method should be implemented by concrete backends. It
         should return a sequence of strings formatted according to the VW
         input format."""
         pass
+
+    @abc.abstractmethod
+    def _create_model(self, project):
+        """This method should be implemented by concrete backends.  It
+        should create an empty (untrained) VW model and save it to disk."""
+        pass
+
+    def train(self, corpus, project):
+        self.info("creating VW model")
+        self._create_train_file(corpus, project)
+        self._create_model(project)
     
     def learn(self, corpus, project):
         self.initialize()

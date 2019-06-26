@@ -29,12 +29,6 @@ class VWEnsembleBackend(
         'passes': (int, None)
     }
 
-    @staticmethod
-    def _write_train_file(examples, filename):
-        with open(filename, 'w', encoding='utf-8') as trainfile:
-            for ex in examples:
-                print(ex, file=trainfile)
-
     def _merge_hits_from_sources(self, hits_from_sources, project, params):
         score_vector = np.array([hits.vector
                                  for hits, _ in hits_from_sources])
@@ -87,14 +81,6 @@ class VWEnsembleBackend(
         random.shuffle(examples)
         return examples
 
-    def _create_train_file(self, corpus, project):
-        self.info('creating VW train file')
-        examples = self._create_examples(corpus, project)
-        annif.util.atomic_save(examples,
-                               self.datadir,
-                               self.TRAIN_FILE,
-                               method=self._write_train_file)
-
     def _create_model(self, project):
         trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
         params = self._create_params(
@@ -106,8 +92,3 @@ class VWEnsembleBackend(
         self._model = pyvw.vw(**params)
         modelpath = os.path.join(self.datadir, self.MODEL_FILE)
         self._model.save(modelpath)
-
-    def train(self, corpus, project):
-        self.info("creating VW ensemble model")
-        self._create_train_file(corpus, project)
-        self._create_model(project)

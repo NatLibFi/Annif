@@ -3,9 +3,9 @@ classifiers"""
 
 import random
 import os.path
-import annif.util
 from vowpalwabbit import pyvw
 import numpy as np
+import annif.project
 from annif.suggestion import ListSuggestionResult, VectorSuggestionResult
 from annif.exception import ConfigurationException
 from . import vw_base
@@ -60,12 +60,6 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
         return VWMultiBackend._cleanup_text(ntext)
 
     @staticmethod
-    def _write_train_file(examples, filename):
-        with open(filename, 'w', encoding='utf-8') as trainfile:
-            for ex in examples:
-                print(ex, file=trainfile)
-
-    @staticmethod
     def _uris_to_subject_ids(project, uris):
         subject_ids = []
         for uri in uris:
@@ -114,14 +108,6 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
         random.shuffle(examples)
         return examples
 
-    def _create_train_file(self, corpus, project):
-        self.info('creating VW train file')
-        examples = self._create_examples(corpus, project)
-        annif.util.atomic_save(examples,
-                               self.datadir,
-                               self.TRAIN_FILE,
-                               method=self._write_train_file)
-
     def _create_model(self, project):
         self.info('creating VW model (algorithm: {})'.format(self.algorithm))
         trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
@@ -134,10 +120,6 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
         self._model = pyvw.vw(**params)
         modelpath = os.path.join(self.datadir, self.MODEL_FILE)
         self._model.save(modelpath)
-
-    def train(self, corpus, project):
-        self._create_train_file(corpus, project)
-        self._create_model(project)
 
     def _convert_result(self, result, project):
         if self.algorithm == 'multilabel_oaa':
