@@ -4,6 +4,7 @@ classifiers"""
 import random
 import os.path
 import annif.util
+import annif.project
 from vowpalwabbit import pyvw
 import numpy as np
 from annif.suggestion import VectorSuggestionResult
