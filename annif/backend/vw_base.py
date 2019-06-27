@@ -83,7 +83,7 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
         """This method should be implemented by concrete backends. It
         should return a sequence of strings formatted according to the VW
         input format."""
-        pass
+        pass  # pragma: no cover
 
     def _create_model(self, project, initial_params={}):
         trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
