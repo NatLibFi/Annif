@@ -220,10 +220,11 @@ class AnnifProject(DatadirMixin):
 
 def _create_projects(projects_file, datadir, init_projects):
     if not os.path.exists(projects_file):
-        logger.warning("Project configuration file '%s' is missing. " +
-                       'Please provide one.', projects_file)
-        logger.warning('You can set the path to the project configuration ' +
-                       'file using the ANNIF_PROJECTS environment variable.')
+        logger.warning(
+            'Project configuration file "%s" is missing. Please provide one.' +
+            ' You can set the path to the project configuration file using ' +
+            'the ANNIF_PROJECTS environment variable or the command-line ' +
+            'option "--projects".', projects_file)
         return {}
 
     config = configparser.ConfigParser()
@@ -254,6 +255,9 @@ def get_projects(min_access=Access.private):
     """Return the available projects as a dict of project_id ->
     AnnifProject. The min_access parameter may be used to set the minimum
     access level required for the returned projects."""
+
+    if not hasattr(current_app, 'annif_projects'):
+        initialize_projects(current_app)
 
     projects = [(project_id, project)
                 for project_id, project in current_app.annif_projects.items()
