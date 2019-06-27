@@ -85,11 +85,17 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
         input format."""
         pass
 
-    @abc.abstractmethod
-    def _create_model(self, project):
-        """This method should be implemented by concrete backends.  It
-        should create an empty (untrained) VW model and save it to disk."""
-        pass
+    def _create_model(self, project, initial_params={}):
+        trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
+        initial_params['data'] = trainpath
+        params = self._create_params(initial_params)
+        if params.get('passes', 1) > 1:
+            # need a cache file when there are multiple passes
+            params.update({'cache': True, 'kill_cache': True})
+        self.debug("model parameters: {}".format(params))
+        self._model = pyvw.vw(**params)
+        modelpath = os.path.join(self.datadir, self.MODEL_FILE)
+        self._model.save(modelpath)
 
     def train(self, corpus, project):
         self.info("creating VW model")

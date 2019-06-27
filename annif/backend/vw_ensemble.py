@@ -86,15 +86,3 @@ class VWEnsembleBackend(
             examples += self._doc_to_example(doc, project, source_projects)
         random.shuffle(examples)
         return examples
-
-    def _create_model(self, project):
-        trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
-        params = self._create_params(
-            {'data': trainpath, 'q': '::'})
-        if params.get('passes', 1) > 1:
-            # need a cache file when there are multiple passes
-            params.update({'cache': True, 'kill_cache': True})
-        self.debug("model parameters: {}".format(params))
-        self._model = pyvw.vw(**params)
-        modelpath = os.path.join(self.datadir, self.MODEL_FILE)
-        self._model.save(modelpath)

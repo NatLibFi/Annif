@@ -110,16 +110,7 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
 
     def _create_model(self, project):
         self.info('creating VW model (algorithm: {})'.format(self.algorithm))
-        trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
-        params = self._create_params(
-            {'data': trainpath, self.algorithm: len(project.subjects)})
-        if params.get('passes', 1) > 1:
-            # need a cache file when there are multiple passes
-            params.update({'cache': True, 'kill_cache': True})
-        self.debug("model parameters: {}".format(params))
-        self._model = pyvw.vw(**params)
-        modelpath = os.path.join(self.datadir, self.MODEL_FILE)
-        self._model.save(modelpath)
+        super()._create_model(project, {self.algorithm: len(project.subjects)})
 
     def _convert_result(self, result, project):
         if self.algorithm == 'multilabel_oaa':
