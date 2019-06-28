@@ -103,15 +103,18 @@ class VWEnsembleBackend(
             ex += " {}:{}".format(proj, scores[proj_idx])
         return ex
 
-    def _doc_to_example(self, doc, project, source_projects):
-        examples = []
-        subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
-        true = subjects.as_vector(project.subjects)
+    def _doc_score_vector(self, doc, source_projects):
         score_vectors = []
         for source_project in source_projects:
             hits = source_project.suggest(doc.text)
             score_vectors.append(hits.vector)
-        score_vector = np.array(score_vectors)
+        return np.array(score_vectors)
+
+    def _doc_to_example(self, doc, project, source_projects):
+        examples = []
+        subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
+        true = subjects.as_vector(project.subjects)
+        score_vector = self._doc_score_vector(doc, source_projects)
         for subj_id in range(len(true)):
             if true[subj_id] or score_vector[:, subj_id].sum() > 0.0:
                 ex = (subj_id, self._format_example(
