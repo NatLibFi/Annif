@@ -45,23 +45,26 @@ class VWEnsembleBackend(
     # will make it more careful so that it will require more training data.
     DEFAULT_DISCOUNT_RATE = 0.01
 
+    def _load_subject_freq(self):
+        path = os.path.join(self.datadir, self.FREQ_FILE)
+        if not os.path.exists(path):
+            raise NotInitializedException(
+                'frequency file {} not found'.format(path),
+                backend_id=self.backend_id)
+        self.debug('loading concept frequencies from {}'.format(path))
+        with open(path) as freqf:
+            # The Counter was serialized like a dictionary, need to
+            # convert it back. Keys that became strings need to be turned
+            # back into integers.
+            self._subject_freq = collections.Counter()
+            for cid, freq in json.load(freqf).items():
+                self._subject_freq[int(cid)] = freq
+        self.debug('loaded frequencies for {} concepts'.format(
+            len(self._subject_freq)))
+
     def initialize(self):
         if self._subject_freq is None:
-            path = os.path.join(self.datadir, self.FREQ_FILE)
-            if not os.path.exists(path):
-                raise NotInitializedException(
-                    'frequency file {} not found'.format(path),
-                    backend_id=self.backend_id)
-            self.debug('loading concept frequencies from {}'.format(path))
-            with open(path) as freqf:
-                # The Counter was serialized like a dictionary, need to
-                # convert it back. Keys that became strings need to be turned
-                # back into integers.
-                self._subject_freq = collections.Counter()
-                for cid, freq in json.load(freqf).items():
-                    self._subject_freq[int(cid)] = freq
-            self.debug('loaded frequencies for {} concepts'.format(
-                len(self._subject_freq)))
+            self._load_subject_freq()
         super().initialize()
 
     def _merge_hits_from_sources(self, hits_from_sources, project, params):
