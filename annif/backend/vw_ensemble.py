@@ -103,7 +103,7 @@ class VWEnsembleBackend(
             val = -1
         ex = "{} |{}".format(val, subject_id)
         for proj_idx, proj in enumerate(self._source_project_ids):
-            ex += " {}:{}".format(proj, scores[proj_idx])
+            ex += " {}:{:.6f}".format(proj, scores[proj_idx])
         return ex
 
     def _doc_score_vector(self, doc, source_projects):

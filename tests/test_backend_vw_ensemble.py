@@ -97,3 +97,25 @@ def test_vw_ensemble_suggest(app, datadir):
 
     assert vw_ensemble._model is not None
     assert len(results) > 0
+
+
+def test_vw_ensemble_format_example(datadir):
+    vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
+    vw_ensemble = vw_ensemble_type(
+        backend_id='vw_ensemble',
+        params={'sources': 'dummy-en'},
+        datadir=str(datadir))
+
+    ex = vw_ensemble._format_example(0, [0.5])
+    assert ex == ' |0 dummy-en:0.500000'
+
+
+def test_vw_ensemble_format_example_avoid_sci_notation(datadir):
+    vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
+    vw_ensemble = vw_ensemble_type(
+        backend_id='vw_ensemble',
+        params={'sources': 'dummy-en'},
+        datadir=str(datadir))
+
+    ex = vw_ensemble._format_example(0, [7.24e-05])
+    assert ex == ' |0 dummy-en:0.000072'
