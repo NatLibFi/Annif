@@ -2,8 +2,6 @@
 classifiers"""
 
 import random
-import os.path
-from vowpalwabbit import pyvw
 import numpy as np
 import annif.project
 from annif.suggestion import ListSuggestionResult, VectorSuggestionResult
