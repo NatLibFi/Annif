@@ -30,10 +30,16 @@ class EnsembleBackend(backend.AnnifBackend):
                     hits=norm_hits, weight=weight))
         return hits_from_sources
 
+    def _merge_hits_from_sources(self, hits_from_sources, project, params):
+        """Hook for merging hits from sources. Can be overridden by
+        subclasses."""
+        return annif.util.merge_hits(hits_from_sources, project.subjects)
+
     def _suggest(self, text, project, params):
         sources = annif.util.parse_sources(params['sources'])
         hits_from_sources = self._suggest_with_sources(text, sources)
-        merged_hits = annif.util.merge_hits(
-            hits_from_sources, project.subjects)
+        merged_hits = self._merge_hits_from_sources(hits_from_sources,
+                                                    project,
+                                                    params)
         self.debug('{} hits after merging'.format(len(merged_hits)))
         return merged_hits

@@ -16,7 +16,6 @@ class ChunkingBackend(metaclass=abc.ABCMeta):
         pass  # pragma: no cover
 
     def _suggest(self, text, project, params):
-        self.initialize()
         self.debug('Suggesting subjects for text "{}..." (len={})'.format(
             text[:20], len(text)))
         sentences = project.analyzer.tokenize_sentences(text)

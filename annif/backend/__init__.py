@@ -38,6 +38,8 @@ except ImportError:
 try:
     from . import vw_multi
     register_backend(vw_multi.VWMultiBackend)
+    from . import vw_ensemble
+    register_backend(vw_ensemble.VWEnsembleBackend)
 except ImportError:
-    annif.logger.debug(
-        "vowpalwabbit not available, not enabling vw_multi backend")
+    annif.logger.debug("vowpalwabbit not available, not enabling " +
+                       "vw_multi & vw_ensemble backends")
