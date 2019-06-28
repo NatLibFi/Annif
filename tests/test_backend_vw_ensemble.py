@@ -1,14 +1,28 @@
 """Unit tests for the vw_ensemble backend in Annif"""
 
+import json
+import time
 import pytest
 import annif.backend
 import annif.corpus
 import annif.project
+from annif.exception import NotInitializedException
 
 pytest.importorskip("annif.backend.vw_ensemble")
 
 
-def test_vw_ensemble_train(app, datadir, tmpdir):
+def test_vw_ensemble_suggest_no_model(datadir, project):
+    vw_ensemble_type = annif.backend.get_backend('vw_ensemble')
+    vw_ensemble = vw_ensemble_type(
+        backend_id='vw_ensemble',
+        params={'sources': 'dummy-en'},
+        datadir=str(datadir))
+
+    with pytest.raises(NotInitializedException):
+        results = vw_ensemble.suggest("example text", project)
+
+
+def test_vw_ensemble_train_and_learn(app, datadir, tmpdir):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
@@ -30,6 +44,23 @@ def test_vw_ensemble_train(app, datadir, tmpdir):
     assert datadir.join('subject-freq.json').size() > 0
     assert datadir.join('vw-model').exists()
     assert datadir.join('vw-model').size() > 0
+
+    # test online learning
+    modelfile = datadir.join('vw-model')
+    freqfile = datadir.join('subject-freq.json')
+
+    old_size = modelfile.size()
+    old_mtime = modelfile.mtime()
+    with open(str(freqfile)) as freqf:
+        old_totalfreq = sum(json.load(freqf).values())
+
+    time.sleep(0.1)  # make sure the timestamp has a chance to increase
+
+    vw_ensemble.learn(document_corpus, project)
+
+    assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
+    with open(str(freqfile)) as freqf:
+        assert sum(json.load(freqf).values()) != old_totalfreq
 
 
 def test_vw_ensemble_initialize(app, datadir):
