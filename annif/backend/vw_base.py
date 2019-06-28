@@ -56,6 +56,7 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
                     param, val, pspec), backend_id=self.backend_id)
 
     def _create_params(self, params):
+        params = params.copy()  # don't mutate the original dict
         params.update({param: defaultval
                        for param, (_, defaultval) in self.VW_PARAMS.items()
                        if defaultval is not None})
@@ -86,6 +87,7 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
         pass  # pragma: no cover
 
     def _create_model(self, project, initial_params={}):
+        initial_params = initial_params.copy()  # don't mutate the original
         trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
         initial_params['data'] = trainpath
         params = self._create_params(initial_params)
