@@ -75,8 +75,8 @@ class VWEnsembleBackend(
     def _merge_hits_from_sources(self, hits_from_sources, project, params):
         score_vector = np.array([hits.vector
                                  for hits, _ in hits_from_sources])
-        discount_rate = self.params.get('discount_rate',
-                                        self.DEFAULT_DISCOUNT_RATE)
+        discount_rate = float(self.params.get('discount_rate',
+                                              self.DEFAULT_DISCOUNT_RATE))
         result = np.zeros(score_vector.shape[1])
         for subj_id in range(score_vector.shape[1]):
             subj_score_vector = score_vector[:, subj_id]

@@ -99,6 +99,25 @@ def test_vw_ensemble_suggest(app, datadir):
     assert len(results) > 0
 
 
+def test_vw_ensemble_suggest_set_discount_rate(app, datadir):
+    vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
+    vw_ensemble = vw_ensemble_type(
+        backend_id='vw_ensemble',
+        params={'sources': 'dummy-en', 'discount_rate': '0.02'},
+        datadir=str(datadir))
+
+    project = annif.project.get_project('dummy-en')
+
+    results = vw_ensemble.suggest("""Arkeologiaa sanotaan joskus myös
+        muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
+        tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
+        Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
+        joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
+        pohjaan.""", project)
+
+    assert len(results) > 0
+
+
 def test_vw_ensemble_format_example(datadir):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
