@@ -1,12 +1,15 @@
 """Annif backend using the Vowpal Wabbit multiclass and multilabel
 classifiers"""
 
+import collections
+import json
 import random
 import os.path
 import annif.util
 import annif.project
 from vowpalwabbit import pyvw
 import numpy as np
+from annif.exception import NotInitializedException
 from annif.suggestion import VectorSuggestionResult
 from . import vw_base
 from . import ensemble
@@ -30,6 +33,37 @@ class VWEnsembleBackend(
         'passes': (int, None)
     }
 
+    # number of training examples per subject, stored as a collections.Counter
+    _subject_freq = None
+
+    FREQ_FILE = 'subject-freq.json'
+
+    # The discount rate affects how quickly the ensemble starts to trust its
+    # own judgement when the amount of training data increases, versus using
+    # a simple mean of scores. A higher value will mean that the model
+    # adapts quicker (and possibly makes more errors) while a lower value
+    # will make it more careful so that it will require more training data.
+    DEFAULT_DISCOUNT_RATE = 0.01
+
+    def initialize(self):
+        if self._subject_freq is None:
+            path = os.path.join(self.datadir, self.FREQ_FILE)
+            if not os.path.exists(path):
+                raise NotInitializedException(
+                    'frequency file {} not found'.format(path),
+                    backend_id=self.backend_id)
+            self.debug('loading concept frequencies from {}'.format(path))
+            with open(path) as freqf:
+                # The Counter was serialized like a dictionary, need to
+                # convert it back. Keys that became strings need to be turned
+                # back into integers.
+                self._subject_freq = collections.Counter()
+                for cid, freq in json.load(freqf).items():
+                    self._subject_freq[int(cid)] = freq
+            self.debug('loaded frequencies for {} concepts'.format(
+                len(self._subject_freq)))
+        super().initialize()
+
     def _merge_hits_from_sources(self, hits_from_sources, project, params):
         score_vector = np.array([hits.vector
                                  for hits, _ in hits_from_sources])
@@ -39,8 +73,14 @@ class VWEnsembleBackend(
                 ex = self._format_example(
                     subj_id,
                     score_vector[:, subj_id])
-                score = (self._model.predict(ex) + 1.0) / 2.0
-                result[subj_id] = score
+                discount_rate = self.params.get(
+                    'discount_rate', self.DEFAULT_DISCOUNT_RATE)
+                raw_weight = 1.0 / \
+                    ((discount_rate * self._subject_freq[subj_id]) + 1)
+                raw_score = score_vector[:, subj_id].mean()
+                pred_score = (self._model.predict(ex) + 1.0) / 2.0
+                result[subj_id] = (raw_weight * raw_score) + \
+                    (1.0 - raw_weight) * pred_score
         return VectorSuggestionResult(result, project.subjects)
 
     @property
@@ -71,10 +111,10 @@ class VWEnsembleBackend(
         score_vector = np.array(score_vectors)
         for subj_id in range(len(true)):
             if true[subj_id] or score_vector[:, subj_id].sum() > 0.0:
-                ex = self._format_example(
+                ex = (subj_id, self._format_example(
                     subj_id,
                     score_vector[:, subj_id],
-                    true[subj_id])
+                    true[subj_id]))
                 examples.append(ex)
         return examples
 
@@ -86,3 +126,38 @@ class VWEnsembleBackend(
             examples += self._doc_to_example(doc, project, source_projects)
         random.shuffle(examples)
         return examples
+
+    @staticmethod
+    def _write_freq_file(subject_freq, filename):
+        with open(filename, 'w') as freqfile:
+            json.dump(subject_freq, freqfile)
+
+    def _create_train_file(self, corpus, project):
+        self.info('creating VW train file')
+        exampledata = self._create_examples(corpus, project)
+
+        subjects = [subj_id for subj_id, ex in exampledata]
+        self._subject_freq = collections.Counter(subjects)
+        annif.util.atomic_save(self._subject_freq,
+                               self.datadir,
+                               self.FREQ_FILE,
+                               method=self._write_freq_file)
+
+        examples = [ex for subj_id, ex in exampledata]
+        annif.util.atomic_save(examples,
+                               self.datadir,
+                               self.TRAIN_FILE,
+                               method=self._write_train_file)
+
+    def learn(self, corpus, project):
+        self.initialize()
+        exampledata = self._create_examples(corpus, project)
+        for subj_id, example in exampledata:
+            self._model.learn(example)
+            self._subject_freq[subj_id] += 1
+        modelpath = os.path.join(self.datadir, self.MODEL_FILE)
+        self._model.save(modelpath)
+        annif.util.atomic_save(self._subject_freq,
+                               self.datadir,
+                               self.FREQ_FILE,
+                               method=self._write_freq_file)

@@ -26,6 +26,8 @@ def test_vw_ensemble_train(app, datadir, tmpdir):
         vw_ensemble.train(document_corpus, project)
     assert datadir.join('vw-train.txt').exists()
     assert datadir.join('vw-train.txt').size() > 0
+    assert datadir.join('subject-freq.json').exists()
+    assert datadir.join('subject-freq.json').size() > 0
     assert datadir.join('vw-model').exists()
     assert datadir.join('vw-model').size() > 0
 
