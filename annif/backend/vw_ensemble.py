@@ -7,7 +7,6 @@ import random
 import os.path
 import annif.util
 import annif.project
-from vowpalwabbit import pyvw
 import numpy as np
 from annif.exception import NotInitializedException
 from annif.suggestion import VectorSuggestionResult
