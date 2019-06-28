@@ -65,8 +65,24 @@ annif.backend.tfidf module
     :undoc-members:
     :show-inheritance:
 
-annif.backend.vw\_multi module
-------------------------------
+annif.backend.vw_base module
+----------------------------
+
+.. automodule:: annif.backend.vw_base
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+annif.backend.vw_ensemble module
+--------------------------------
+
+.. automodule:: annif.backend.vw_ensemble
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+annif.backend.vw_multi module
+-----------------------------
 
 .. automodule:: annif.backend.vw_multi
     :members:
