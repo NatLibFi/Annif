@@ -27,5 +27,6 @@ gensim = "*"
 sklearn = "*"
 rdflib = "*"
 gunicorn = "*"
+sphinxcontrib-apidoc = "*"
 
 [requires]
