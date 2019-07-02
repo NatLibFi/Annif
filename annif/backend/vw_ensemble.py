@@ -44,6 +44,10 @@ class VWEnsembleBackend(
     # will make it more careful so that it will require more training data.
     DEFAULT_DISCOUNT_RATE = 0.01
 
+    # score threshold for "zero features": scores lower than this will be
+    # considered zero and marked with a zero feature given to VW
+    ZERO_THRESHOLD = 0.001
+
     def _load_subject_freq(self):
         path = os.path.join(self.datadir, self.FREQ_FILE)
         if not os.path.exists(path):
@@ -101,9 +105,16 @@ class VWEnsembleBackend(
             val = 1
         else:
             val = -1
-        ex = "{} |{}".format(val, subject_id)
-        for proj_idx, proj in enumerate(self._source_project_ids):
-            ex += " {}:{:.6f}".format(proj, scores[proj_idx])
+
+        features = " ".join(["{}:{:.6f}".format(proj, scores[proj_idx])
+                             for proj_idx, proj
+                             in enumerate(self._source_project_ids)])
+        zero_features = " ".join(["zero^{}".format(proj)
+                                  for proj_idx, proj
+                                  in enumerate(self._source_project_ids)
+                                  if scores[proj_idx] < self.ZERO_THRESHOLD])
+        ex = "{} |raw {} {} |{} {} {}".format(
+            val, features, zero_features, subject_id, features, zero_features)
         return ex
 
     def _doc_score_vector(self, doc, source_projects):
@@ -119,7 +130,8 @@ class VWEnsembleBackend(
         true = subjects.as_vector(project.subjects)
         score_vector = self._doc_score_vector(doc, source_projects)
         for subj_id in range(len(true)):
-            if true[subj_id] or score_vector[:, subj_id].sum() > 0.0:
+            if true[subj_id] \
+               or score_vector[:, subj_id].sum() >= self.ZERO_THRESHOLD:
                 ex = (subj_id, self._format_example(
                     subj_id,
                     score_vector[:, subj_id],
