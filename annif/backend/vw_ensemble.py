@@ -98,14 +98,16 @@ class VWEnsembleBackend(
         sources = annif.util.parse_sources(self.params['sources'])
         return [project_id for project_id, _ in sources]
 
-    def _format_example(self, subject_id, scores, true=None):
+    @staticmethod
+    def _format_value(true):
         if true is None:
-            val = ''
+            return ''
         elif true:
-            val = 1
+            return 1
         else:
-            val = -1
+            return -1
 
+    def _format_example(self, subject_id, scores, true=None):
         features = " ".join(["{}:{:.6f}".format(proj, scores[proj_idx])
                              for proj_idx, proj
                              in enumerate(self._source_project_ids)])
@@ -114,7 +116,12 @@ class VWEnsembleBackend(
                                   in enumerate(self._source_project_ids)
                                   if scores[proj_idx] < self.ZERO_THRESHOLD])
         return "{} |raw {} {} |{} {} {}".format(
-            val, features, zero_features, subject_id, features, zero_features)
+            self._format_value(true),
+            features,
+            zero_features,
+            subject_id,
+            features,
+            zero_features)
 
     def _doc_score_vector(self, doc, source_projects):
         score_vectors = []
