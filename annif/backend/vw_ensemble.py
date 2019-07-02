@@ -113,9 +113,8 @@ class VWEnsembleBackend(
                                   for proj_idx, proj
                                   in enumerate(self._source_project_ids)
                                   if scores[proj_idx] < self.ZERO_THRESHOLD])
-        ex = "{} |raw {} {} |{} {} {}".format(
+        return "{} |raw {} {} |{} {} {}".format(
             val, features, zero_features, subject_id, features, zero_features)
-        return ex
 
     def _doc_score_vector(self, doc, source_projects):
         score_vectors = []
