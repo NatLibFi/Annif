@@ -62,21 +62,25 @@ def parse_backend_params(backend_param, project):
     for beparam in backend_param:
         backend, param = beparam.split('.', 1)
         key, val = param.split('=', 1)
-        # TODO: Allow overriding a parameter of a specific backend of ensemble
-        if 'sources' in project.config:  # Ensemble or PAV backend
-            raise NotSupportedException(
-                'Backend paramater overriding not supported for {} model.'
-                .format(project.config['backend']))
-        if backend != project.config['backend']:
-            raise AnnifException(
-                'The backend {} in CLI option "-b {}" not matching the project'
-                ' backend {}.'
-                .format(backend, beparam, project.config['backend']))
         logger.debug(
             'CLI option overriding parameter for backend {}: {}'
             .format(backend, param))
+        validate_backend_params(backend, beparam, project)
         backend_params[backend][key] = val
     return backend_params
+
+
+def validate_backend_params(backend, beparam, project):
+    # TODO: Allow overriding a parameter of a specific backend of ensemble
+    if 'sources' in project.config:  # Ensemble or PAV backend
+        raise NotSupportedException(
+            'Backend paramater overriding not supported for {} model.'
+            .format(project.config['backend']))
+    if backend != project.config['backend']:
+        raise AnnifException(
+            'The backend {} in CLI option "-b {}" not matching the project'
+            ' backend {}.'
+            .format(backend, beparam, project.config['backend']))
 
 
 def generate_filter_batches(subjects):
