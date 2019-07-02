@@ -126,7 +126,7 @@ def test_vw_ensemble_format_example(datadir):
         datadir=str(datadir))
 
     ex = vw_ensemble._format_example(0, [0.5])
-    assert ex == ' |0 dummy-en:0.500000'
+    assert ex == ' |raw dummy-en:0.500000  |0 dummy-en:0.500000 '
 
 
 def test_vw_ensemble_format_example_avoid_sci_notation(datadir):
@@ -137,4 +137,5 @@ def test_vw_ensemble_format_example_avoid_sci_notation(datadir):
         datadir=str(datadir))
 
     ex = vw_ensemble._format_example(0, [7.24e-05])
-    assert ex == ' |0 dummy-en:0.000072'
+    assert ex == ' |raw dummy-en:0.000072 zero^dummy-en' + \
+                 ' |0 dummy-en:0.000072 zero^dummy-en'
