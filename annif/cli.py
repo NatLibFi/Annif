@@ -16,6 +16,7 @@ import annif.eval
 import annif.project
 from annif.project import Access
 from annif.suggestion import SuggestionFilter
+from annif.exception import AnnifException, NotSupportedException
 
 logger = annif.logger
 click_log.basic_config(logger)
@@ -54,13 +55,26 @@ def open_documents(paths):
     return docs
 
 
-def parse_backend_params(backend_param):
+def parse_backend_params(backend_param, project):
     """Parse a list of backend parameters given with the --backend-param
     option into a nested dict structure"""
     backend_params = collections.defaultdict(dict)
     for beparam in backend_param:
         backend, param = beparam.split('.', 1)
         key, val = param.split('=', 1)
+        # TODO: Allow overriding a parameter of a specific backend of ensemble
+        if 'sources' in project.config:  # Ensemble or PAV backend
+            raise NotSupportedException(
+                'Backend paramater overriding not supported for {} model.'
+                .format(project.config['backend']))
+        if backend != project.config['backend']:
+            raise AnnifException(
+                'The backend {} in CLI option "-b {}" not matching the project'
+                ' backend {}.'
+                .format(backend, beparam, project.config['backend']))
+        logger.debug(
+            'CLI option overriding parameter for backend {}: {}'
+            .format(backend, param))
         backend_params[backend][key] = val
     return backend_params
 
@@ -144,25 +158,32 @@ def run_loadvoc(project_id, subjectfile):
 @cli.command('train')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(), nargs=-1)
+@click.option('--backend-param', '-b', multiple=True,
+              help='Backend parameters to override. Use syntax "-b <backend>' +
+              '.<parameter>=<value>".')
 @common_options
-def run_train(project_id, paths):
+def run_train(project_id, paths, backend_param):
     """
     Train a project on a collection of documents.
     """
     proj = get_project(project_id)
     documents = open_documents(paths)
     proj.train(documents)
+    backend_params = parse_backend_params(backend_param, proj)
 
 
 @cli.command('learn')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(), nargs=-1)
+@click.option('--backend-param', '-b', multiple=True,
+              help='Backend parameters to override')
 @common_options
-def run_learn(project_id, paths):
+def run_learn(project_id, paths, backend_param):
     """
     Further train an existing project on a collection of documents.
     """
     proj = get_project(project_id)
+    backend_params = parse_backend_params(backend_param, proj)
     documents = open_documents(paths)
     proj.learn(documents)
 
@@ -180,7 +201,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
     """
     project = get_project(project_id)
     text = sys.stdin.read()
-    backend_params = parse_backend_params(backend_param)
+    backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(limit, threshold)
     hits = hit_filter(project.suggest(text, backend_params))
     for hit in hits:
@@ -208,7 +229,7 @@ def run_index(project_id, directory, suffix, force,
     Write the results in TSV files with the given suffix.
     """
     project = get_project(project_id)
-    backend_params = parse_backend_params(backend_param)
+    backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(limit, threshold)
 
     for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
@@ -245,7 +266,7 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
     documents in separate files.
     """
     project = get_project(project_id)
-    backend_params = parse_backend_params(backend_param)
+    backend_params = parse_backend_params(backend_param, project)
 
     hit_filter = SuggestionFilter(limit=limit, threshold=threshold)
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
@@ -278,7 +299,7 @@ def run_optimize(project_id, paths, backend_param):
     of settings.
     """
     project = get_project(project_id)
-    backend_params = parse_backend_params(backend_param)
+    backend_params = parse_backend_params(backend_param, project)
 
     filter_batches = generate_filter_batches(project.subjects)
 

@@ -198,6 +198,18 @@ def test_suggest_param():
     assert result.exit_code == 0
 
 
+def test_suggest_param_backend_nonexistent():
+    result = runner.invoke(
+        annif.cli.cli,
+        ['suggest', '--backend-param', 'not_a_backend.score=0.8', 'dummy-fi'],
+        input='kissa')
+    assert result.exception
+    assert 'The backend not_a_backend in CLI option ' + \
+        '"-b not_a_backend.score=0.8" not matching the project backend ' + \
+        'dummy.' in result.output
+    assert result.exit_code != 0
+
+
 def test_suggest_ensemble():
     result = runner.invoke(
         annif.cli.cli,
