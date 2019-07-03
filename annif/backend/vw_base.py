@@ -94,7 +94,7 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
         if params.get('passes', 1) > 1:
             # need a cache file when there are multiple passes
             params.update({'cache': True, 'kill_cache': True})
-        self.debug("model parameters: {}".format(params))
+        self.debug("Model parameters: {}".format(params))
         self._model = pyvw.vw(**params)
         modelpath = os.path.join(self.datadir, self.MODEL_FILE)
         self._model.save(modelpath)

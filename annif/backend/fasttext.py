@@ -100,6 +100,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         params = {param: self.FASTTEXT_PARAMS[param](val)
                   for param, val in self.config_params.items()
                   if param in self.FASTTEXT_PARAMS}
+        self.debug('Model parameters: {}'.format(params))
         self._model = fastText.train_supervised(trainpath, **params)
         self._model.save_model(modelpath)
 
