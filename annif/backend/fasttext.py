@@ -112,8 +112,8 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             filter(None, [self._normalize_text(project, chunktext)
                           for chunktext in chunktexts])), limit)
 
-    def _suggest_chunks(self, chunktexts, project):
-        limit = int(self.config_params['limit'])
+    def _suggest_chunks(self, chunktexts, project, params):
+        limit = int(params['limit'])
         chunklabels, chunkscores = self._predict_chunks(
             chunktexts, project, limit)
         label_scores = collections.defaultdict(float)

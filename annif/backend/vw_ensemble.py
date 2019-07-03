@@ -80,7 +80,7 @@ class VWEnsembleBackend(
         score_vector = np.array([hits.vector
                                  for hits, _ in hits_from_sources])
         discount_rate = float(
-            self.config_params.get(
+            params.get(
                 'discount_rate',
                 self.DEFAULT_DISCOUNT_RATE))
         result = np.zeros(score_vector.shape[1])

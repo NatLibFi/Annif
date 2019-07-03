@@ -125,7 +125,7 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
             # result is a list of scores (probabilities or binary 1/0)
             return np.array(result)
 
-    def _suggest_chunks(self, chunktexts, project):
+    def _suggest_chunks(self, chunktexts, project, params):
         results = []
         for chunktext in chunktexts:
             exampletext = self._inputs_to_exampletext(project, chunktext)

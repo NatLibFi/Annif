@@ -9,7 +9,7 @@ class ChunkingBackend(metaclass=abc.ABCMeta):
     """Annif backend mixin that implements chunking of input"""
 
     @abc.abstractmethod
-    def _suggest_chunks(self, chunktexts, project):
+    def _suggest_chunks(self, chunktexts, project, params):
         """Suggest subjects for the chunked text; should be implemented by
         the subclass inheriting this mixin"""
 
@@ -28,4 +28,4 @@ class ChunkingBackend(metaclass=abc.ABCMeta):
         if len(chunktexts) == 0:  # no input, empty result
             return ListSuggestionResult(
                 hits=[], subject_index=project.subjects)
-        return self._suggest_chunks(chunktexts, project)
+        return self._suggest_chunks(chunktexts, project, params)
