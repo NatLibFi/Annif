@@ -15,8 +15,8 @@ from . import ensemble
 
 
 class VWEnsembleBackend(
-        ensemble.EnsembleBackend,
-        vw_base.VWBaseBackend):
+        vw_base.VWBaseBackend,
+        ensemble.EnsembleBackend):
     """Vowpal Wabbit ensemble backend that combines results from multiple
     projects and learns how well those projects/backends recognize
     particular subjects."""
