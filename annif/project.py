@@ -131,7 +131,8 @@ class AnnifProject(DatadirMixin):
             try:
                 backend_class = annif.backend.get_backend(backend_id)
                 self._backend = backend_class(
-                    backend_id, params=self.config, datadir=self.datadir)
+                    backend_id, config_params=self.config,
+                    datadir=self.datadir)
             except ValueError:
                 logger.warning(
                     "Could not create backend %s, "

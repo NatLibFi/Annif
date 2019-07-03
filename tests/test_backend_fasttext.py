@@ -11,7 +11,7 @@ def test_fasttext_train(datadir, document_corpus, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
-        params={
+        config_params={
             'limit': 50,
             'dim': 100,
             'lr': 0.25,
@@ -29,7 +29,7 @@ def test_fasttext_train_unknown_subject(tmpdir, datadir, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
-        params={
+        config_params={
             'limit': 50,
             'dim': 100,
             'lr': 0.25,
@@ -52,7 +52,7 @@ def test_fasttext_suggest(datadir, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
-        params={
+        config_params={
             'limit': 50,
             'chunksize': 1,
             'dim': 100,

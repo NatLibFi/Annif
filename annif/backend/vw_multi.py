@@ -34,7 +34,7 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
 
     @property
     def algorithm(self):
-        algorithm = self.params.get('algorithm', self.DEFAULT_ALGORITHM)
+        algorithm = self.config_params.get('algorithm', self.DEFAULT_ALGORITHM)
         if algorithm not in self.SUPPORTED_ALGORITHMS:
             raise ConfigurationException(
                 "{} is not a valid algorithm (allowed: {})".format(
@@ -44,7 +44,7 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
 
     @property
     def inputs(self):
-        inputs = self.params.get('inputs', self.DEFAULT_INPUTS)
+        inputs = self.config_params.get('inputs', self.DEFAULT_INPUTS)
         return inputs.split(',')
 
     @staticmethod

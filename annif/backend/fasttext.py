@@ -98,7 +98,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
         modelpath = os.path.join(self.datadir, self.MODEL_FILE)
         params = {param: self.FASTTEXT_PARAMS[param](val)
-                  for param, val in self.params.items()
+                  for param, val in self.config_params.items()
                   if param in self.FASTTEXT_PARAMS}
         self._model = fastText.train_supervised(trainpath, **params)
         self._model.save_model(modelpath)
@@ -113,7 +113,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                           for chunktext in chunktexts])), limit)
 
     def _suggest_chunks(self, chunktexts, project):
-        limit = int(self.params['limit'])
+        limit = int(self.config_params['limit'])
         chunklabels, chunkscores = self._predict_chunks(
             chunktexts, project, limit)
         label_scores = collections.defaultdict(float)

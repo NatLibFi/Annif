@@ -61,7 +61,7 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
                        for param, (_, defaultval) in self.VW_PARAMS.items()
                        if defaultval is not None})
         params.update({param: self._convert_param(param, val)
-                       for param, val in self.params.items()
+                       for param, val in self.config_params.items()
                        if param in self.VW_PARAMS})
         return params
 

@@ -12,12 +12,12 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     needs_subject_index = False
     needs_subject_vectorizer = False
 
-    def __init__(self, backend_id, params, datadir):
+    def __init__(self, backend_id, config_params, datadir):
         """Initialize backend with specific parameters. The
         parameters are a dict. Keys and values depend on the specific
         backend type."""
         self.backend_id = backend_id
-        self.params = params
+        self.config_params = config_params
         self.datadir = datadir
 
     def train(self, corpus, project):
@@ -39,7 +39,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         """Suggest subjects for the input text and return a list of subjects
         represented as a list of SubjectSuggestion objects."""
         self.initialize()
-        beparams = dict(self.params)
+        beparams = dict(self.config_params)
         if params:
             beparams.update(params)
         return self._suggest(text, project, params=beparams)

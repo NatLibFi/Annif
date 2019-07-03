@@ -51,4 +51,4 @@ class TFIDFBackend(backend.AnnifBackend):
         vectors = project.vectorizer.transform([text])
         docsim = self._index[vectors[0]]
         fullresult = VectorSuggestionResult(docsim, project.subjects)
-        return fullresult.filter(limit=int(self.params['limit']))
+        return fullresult.filter(limit=int(self.config_params['limit']))
