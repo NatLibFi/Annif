@@ -145,6 +145,25 @@ def test_train_multiple(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
+def test_train_fasttext_params():
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents_10_lines.tsv')
+    result = runner.invoke(
+        annif.cli.cli,
+        ['train', 'fasttext-fi', docfile,
+         '--backend-param', 'fasttext.dim=1',
+         '--backend-param', 'fasttext.lr=42.1',
+         '--backend-param', 'fasttext.epoch=0',
+         '-v', 'DEBUG'])
+    assert not result.exception
+    assert "Model parameters: {'dim': 1, 'lr': 42.1, 'epoch': 0," \
+        in result.output
+    assert result.exit_code == 0
+
+
 def test_learn(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__),
