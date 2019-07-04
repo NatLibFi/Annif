@@ -210,6 +210,16 @@ def test_suggest_param_backend_nonexistent():
     assert result.exit_code != 0
 
 
+def test_suggest_param_limit():
+    result = runner.invoke(
+        annif.cli.cli,
+        ['suggest', '--backend-param', 'tfidf.limit=0', 'tfidf-fi'],
+        input='kissa')
+    assert not result.exception
+    assert len(result.output) == 0
+    assert result.exit_code == 0
+
+
 def test_suggest_ensemble():
     result = runner.invoke(
         annif.cli.cli,
