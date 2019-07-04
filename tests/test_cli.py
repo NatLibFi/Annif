@@ -159,8 +159,9 @@ def test_train_fasttext_params():
          '--backend-param', 'fasttext.epoch=0',
          '-v', 'DEBUG'])
     assert not result.exception
-    assert "Model parameters: {'dim': 1, 'lr': 42.1, 'epoch': 0," \
-        in result.output
+    assert "'dim': 1," in result.output
+    assert "'lr': 42.1," in result.output
+    assert "'epoch': 0," in result.output
     assert result.exit_code == 0
 
 
