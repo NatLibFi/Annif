@@ -45,5 +45,5 @@ class EnsembleBackend(backend.AnnifBackend):
         self.debug('{} hits after merging'.format(len(merged_hits)))
         return merged_hits
 
-    def train(self, corpus, project):
+    def _train(self, corpus, project, params):
         raise NotSupportedException('Training ensemble model is not possible.')

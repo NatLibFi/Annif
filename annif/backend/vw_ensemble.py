@@ -183,7 +183,7 @@ class VWEnsembleBackend(
                                self.TRAIN_FILE,
                                method=self._write_train_file)
 
-    def learn(self, corpus, project):
+    def _learn(self, corpus, project, params):
         self.initialize()
         exampledata = self._create_examples(corpus, project)
         for subj_id, example in exampledata:

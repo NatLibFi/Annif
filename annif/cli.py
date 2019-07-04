@@ -171,9 +171,9 @@ def run_train(project_id, paths, backend_param):
     Train a project on a collection of documents.
     """
     proj = get_project(project_id)
-    documents = open_documents(paths)
-    proj.train(documents)
     backend_params = parse_backend_params(backend_param, proj)
+    documents = open_documents(paths)
+    proj.train(documents, backend_params)
 
 
 @cli.command('learn')
@@ -189,7 +189,7 @@ def run_learn(project_id, paths, backend_param):
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
     documents = open_documents(paths)
-    proj.learn(documents)
+    proj.learn(documents, backend_params)
 
 
 @cli.command('suggest')

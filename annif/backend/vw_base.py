@@ -99,12 +99,12 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
         modelpath = os.path.join(self.datadir, self.MODEL_FILE)
         self._model.save(modelpath)
 
-    def train(self, corpus, project):
+    def _train(self, corpus, project, params):
         self.info("creating VW model")
         self._create_train_file(corpus, project)
         self._create_model(project)
 
-    def learn(self, corpus, project):
+    def _learn(self, corpus, project, params):
         self.initialize()
         for example in self._create_examples(corpus, project):
             self._model.learn(example)

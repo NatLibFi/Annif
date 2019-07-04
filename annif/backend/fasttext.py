@@ -93,7 +93,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                                self.TRAIN_FILE,
                                method=self._write_train_file)
 
-    def _create_model(self):
+    def _create_model(self, params):
         self.info('creating fastText model')
         trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
         modelpath = os.path.join(self.datadir, self.MODEL_FILE)
@@ -104,11 +104,11 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         self._model = fastText.train_supervised(trainpath, **params)
         self._model.save_model(modelpath)
 
-    def train(self, corpus, project):
+    def _train(self, corpus, project, params):
         self._create_train_file(corpus, project)
-        self._create_model()
+        self._create_model(params)
 
-    def _predict_chunks(self, chunktexts, project, limit):
+    def _predict_chunks(self, chunktexts, project, limit, params):
         return self._model.predict(list(
             filter(None, [self._normalize_text(project, chunktext)
                           for chunktext in chunktexts])), limit)
@@ -116,7 +116,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     def _suggest_chunks(self, chunktexts, project, params):
         limit = int(params['limit'])
         chunklabels, chunkscores = self._predict_chunks(
-            chunktexts, project, limit)
+            chunktexts, project, limit, params)
         label_scores = collections.defaultdict(float)
         for labels, scores in zip(chunklabels, chunkscores):
             for label, score in zip(labels, scores):

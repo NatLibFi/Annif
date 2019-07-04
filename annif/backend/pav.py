@@ -95,7 +95,7 @@ class PAVBackend(ensemble.EnsembleBackend):
             model_filename,
             method=joblib.dump)
 
-    def train(self, corpus, project):
+    def _train(self, corpus, project, params):
         self.info("creating PAV models")
         sources = annif.util.parse_sources(self.config_params['sources'])
         min_docs = int(self.config_params['min-docs'])

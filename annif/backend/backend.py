@@ -20,9 +20,17 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         self.config_params = config_params
         self.datadir = datadir
 
-    def train(self, corpus, project):
-        """train the model on the given document or subject corpus"""
-        pass  # default is to do nothing, subclasses may override
+    def _train(self, corpus, project, params):
+        """This method should be implemented by backends. It implements
+        the train functionality, with pre-processed parameters."""
+        pass
+
+    def train(self, corpus, project, params=None):
+        """Train the model on the given document or subject corpus."""
+        beparams = dict(self.config_params)
+        if params:
+            beparams.update(params)
+        return self._train(corpus, project, params=beparams)
 
     def initialize(self):
         """This method can be overridden by backends. It should cause the
@@ -61,6 +69,14 @@ class AnnifLearningBackend(AnnifBackend):
     """Base class for Annif backends that can perform online learning"""
 
     @abc.abstractmethod
-    def learn(self, corpus, project):
-        """further train the model on the given document or subject corpus"""
+    def _learn(self, corpus, project, params):
+        """This method should implemented by backends. It implements the learn
+        functionality, with pre-processed parameters."""
         pass  # pragma: no cover
+
+    def learn(self, corpus, project, params=None):
+        """Further train the model on the given document or subject corpus."""
+        beparams = dict(self.config_params)
+        if params:
+            beparams.update(params)
+        return self._learn(corpus, project, params=beparams)

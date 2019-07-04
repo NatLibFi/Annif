@@ -33,7 +33,7 @@ class TFIDFBackend(backend.AnnifBackend):
                     'similarity index {} not found'.format(path),
                     backend_id=self.backend_id)
 
-    def train(self, corpus, project):
+    def _train(self, corpus, project, params):
         self.info('creating similarity index')
         veccorpus = project.vectorizer.transform(
             (subj.text for subj in corpus.subjects))

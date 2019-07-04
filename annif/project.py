@@ -170,7 +170,6 @@ class AnnifProject(DatadirMixin):
     def suggest(self, text, backend_params=None):
         """Suggest subjects the given text by passing it to the backend. Returns a
         list of SubjectSuggestion objects ordered by decreasing score."""
-
         logger.debug('Suggesting subjects for text "%s..." (len=%d)',
                      text[:20], len(text))
         hits = self._suggest_with_backend(text, backend_params)
@@ -191,21 +190,24 @@ class AnnifProject(DatadirMixin):
             'vectorizer',
             method=joblib.dump)
 
-    def train(self, corpus):
+    def train(self, corpus, backend_params=None):
         """train the project using documents from a metadata source"""
-
+        if backend_params is None:
+            backend_params = {}
         corpus.set_subject_index(self.subjects)
         self._create_vectorizer(corpus)
-        self.backend.train(corpus, project=self)
+        beparams = backend_params.get(self.backend.backend_id, {})
+        self.backend.train(corpus, project=self, params=beparams)
 
-    def learn(self, corpus):
+    def learn(self, corpus, backend_params=None):
         """further train the project using documents from a metadata source"""
-
+        if backend_params is None:
+            backend_params = {}
         corpus.set_subject_index(self.subjects)
         if isinstance(
                 self.backend,
                 annif.backend.backend.AnnifLearningBackend):
-            self.backend.learn(corpus, project=self)
+            self.backend.learn(corpus, project=self, params=backend_params)
         else:
             raise NotSupportedException("Learning not supported by backend",
                                         project_id=self.project_id)
