@@ -98,7 +98,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
         modelpath = os.path.join(self.datadir, self.MODEL_FILE)
         params = {param: self.FASTTEXT_PARAMS[param](val)
-                  for param, val in self.config_params.items()
+                  for param, val in params.items()
                   if param in self.FASTTEXT_PARAMS}
         self.debug('Model parameters: {}'.format(params))
         self._model = fastText.train_supervised(trainpath, **params)
