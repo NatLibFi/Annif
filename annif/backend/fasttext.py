@@ -111,7 +111,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     def _predict_chunks(self, chunktexts, project, limit):
         return self._model.predict(list(
             filter(None, [self._normalize_text(project, chunktext)
-                          for chunktext in chunktexts])), limit, threshold=-0.1)
+                          for chunktext in chunktexts])), limit)
 
     def _suggest_chunks(self, chunktexts, project):
         limit = int(self.params['limit'])
