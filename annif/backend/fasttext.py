@@ -5,7 +5,7 @@ import os.path
 import annif.util
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 from annif.exception import NotInitializedException
-import fastText
+import fasttext
 from . import backend
 from . import mixins
 
@@ -44,7 +44,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             path = os.path.join(self.datadir, self.MODEL_FILE)
             self.debug('loading fastText model from {}'.format(path))
             if os.path.exists(path):
-                self._model = fastText.load_model(path)
+                self._model = fasttext.load_model(path)
                 self.debug('loaded model {}'.format(str(self._model)))
                 self.debug('dim: {}'.format(self._model.get_dimension()))
             else:
@@ -100,7 +100,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         params = {param: self.FASTTEXT_PARAMS[param](val)
                   for param, val in self.params.items()
                   if param in self.FASTTEXT_PARAMS}
-        self._model = fastText.train_supervised(trainpath, **params)
+        self._model = fasttext.train_supervised(trainpath, **params)
         self._model.save_model(modelpath)
 
     def train(self, corpus, project):
