@@ -76,6 +76,8 @@ def validate_backend_params(backend, beparam, project):
         raise NotSupportedException(
             'Backend paramater overriding not supported for {} model.'
             .format(project.config['backend']))
+    if 'algorithm' in beparam:
+        raise NotSupportedException('Algorithm overriding not supported.')
     if backend != project.config['backend']:
         raise AnnifException(
             'The backend {} in CLI option "-b {}" not matching the project'
