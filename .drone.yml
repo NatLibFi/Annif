@@ -26,8 +26,8 @@ steps:
       repo: quay.io/natlibfi/annif
       tags: [dev]
 
-  trigger:
-    branch:
-    - master
-    event:
-    - push
+trigger:
+  branch:
+  - master
+  event:
+  - push
