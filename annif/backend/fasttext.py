@@ -30,7 +30,8 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         'minn': int,
         'maxn': int,
         'thread': int,
-        't': float
+        't': float,
+        'pretrainedVectors': str
     }
 
     MODEL_FILE = 'fasttext-model'
