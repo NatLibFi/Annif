@@ -65,10 +65,10 @@ class VWEnsembleBackend(
         self.debug('loaded frequencies for {} concepts'.format(
             len(self._subject_freq)))
 
-    def initialize(self):
+    def initialize(self, params=None):
         if self._subject_freq is None:
             self._load_subject_freq()
-        super().initialize()
+        super().initialize(params)
 
     def _calculate_scores(self, subj_id, subj_score_vector):
         ex = self._format_example(subj_id, subj_score_vector)

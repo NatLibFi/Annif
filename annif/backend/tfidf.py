@@ -21,7 +21,7 @@ class TFIDFBackend(backend.AnnifBackend):
 
     INDEX_FILE = 'tfidf-index'
 
-    def initialize(self):
+    def initialize(self, params=None):
         if self._index is None:
             path = os.path.join(self.datadir, self.INDEX_FILE)
             self.debug('loading similarity index from {}'.format(path))

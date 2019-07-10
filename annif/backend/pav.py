@@ -24,7 +24,7 @@ class PAVBackend(ensemble.EnsembleBackend):
     # defaults for uninitialized instances
     _models = None
 
-    def initialize(self):
+    def initialize(self, params=None):
         if self._models is not None:
             return  # already initialized
         self._models = {}

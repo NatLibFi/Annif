@@ -11,7 +11,7 @@ class DummyBackend(backend.AnnifLearningBackend):
     uri = 'http://example.org/dummy'
     label = 'dummy'
 
-    def initialize(self):
+    def initialize(self, params=None):
         self.initialized = True
 
     def _suggest(self, text, project, params):

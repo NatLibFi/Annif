@@ -24,7 +24,9 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
     # defaults for uninitialized instances
     _model = None
 
-    def initialize(self):
+    def initialize(self, params=None):
+        if params is None:
+            params = {}
         if self._model is None:
             path = os.path.join(self.datadir, self.MODEL_FILE)
             if not os.path.exists(path):

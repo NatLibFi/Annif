@@ -32,7 +32,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
             beparams.update(params)
         return self._train(corpus, project, params=beparams)
 
-    def initialize(self):
+    def initialize(self, params=None):
         """This method can be overridden by backends. It should cause the
         backend to pre-load all data it needs during operation."""
         pass
@@ -46,10 +46,10 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def suggest(self, text, project, params=None):
         """Suggest subjects for the input text and return a list of subjects
         represented as a list of SubjectSuggestion objects."""
-        self.initialize()
         beparams = dict(self.config_params)
         if params:
             beparams.update(params)
+        self.initialize(beparams)
         return self._suggest(text, project, params=beparams)
 
     def debug(self, message):
