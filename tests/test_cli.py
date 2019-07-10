@@ -159,8 +159,10 @@ def test_train_fasttext_params():
          '--backend-param', 'fasttext.epoch=0',
          '-v', 'DEBUG'])
     assert not result.exception
+    parameters_clause = 'Backend fasttext: Model parameters:'
+    assert parameters_clause in result.output
     for line in result.output.split("\n"):
-        if 'Backend fasttext: Model parameters:' in line:
+        if parameters_clause in line:
             assert "'dim': 1" in line
             assert "'lr': 42.1" in line
             assert "'epoch': 0" in line
