@@ -4,6 +4,7 @@ import contextlib
 import random
 import re
 import os.path
+import pytest
 from click.testing import CliRunner
 import annif.cli
 
@@ -146,6 +147,7 @@ def test_train_multiple(testdatadir):
 
 
 def test_train_fasttext_params():
+    pytest.importorskip('annif.backend.fasttext')
     docfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
@@ -170,6 +172,7 @@ def test_train_fasttext_params():
 
 
 def test_train_vw_multi_params():
+    pytest.importorskip('annif.backend.vw_multi')
     docfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
