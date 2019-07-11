@@ -183,7 +183,6 @@ def test_train_vw_multi_params():
          '--backend-param', 'vw_multi.quiet=1',
          '-v', 'DEBUG'])
     assert not result.exception
-    assert not result.exception
     parameters_clause = 'Backend vw_multi: Model parameters:'
     assert parameters_clause in result.output
     for line in result.output.split("\n"):
