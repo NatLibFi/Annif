@@ -195,6 +195,22 @@ def test_train_vw_multi_params():
     assert result.exit_code == 0
 
 
+def test_train_vw_multi_param_algorithm_invalid():
+    pytest.importorskip('annif.backend.vw_multi')
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents_10_lines.tsv')
+    result = runner.invoke(
+        annif.cli.cli,
+        ['train', 'vw-multi-fi', docfile,
+         '--backend-param', 'vw_multi.algorithm=oaa'])
+    assert result.exception
+    assert result.exit_code == 1
+    assert 'Algorithm overriding not supported.' in result.output
+
+
 def test_learn(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__),
