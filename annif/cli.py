@@ -112,6 +112,15 @@ def common_options(f):
     return f
 
 
+def common_option_backend_param(f):
+    """Decorator to add common option for CLI commands to override BE params"""
+    f = click.option(
+        '--backend-param', '-b', multiple=True,
+        help='Backend parameters to override. Use syntax "-b <backend>' +
+        '.<parameter>=<value>".')(f)
+    return f
+
+
 @cli.command('list-projects')
 @common_options
 def run_list_projects():
@@ -164,9 +173,7 @@ def run_loadvoc(project_id, subjectfile):
 @cli.command('train')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(), nargs=-1)
-@click.option('--backend-param', '-b', multiple=True,
-              help='Backend parameters to override. Use syntax "-b <backend>' +
-              '.<parameter>=<value>".')
+@common_option_backend_param
 @common_options
 def run_train(project_id, paths, backend_param):
     """
@@ -181,8 +188,7 @@ def run_train(project_id, paths, backend_param):
 @cli.command('learn')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(), nargs=-1)
-@click.option('--backend-param', '-b', multiple=True,
-              help='Backend parameters to override')
+@common_option_backend_param
 @common_options
 def run_learn(project_id, paths, backend_param):
     """
@@ -198,8 +204,7 @@ def run_learn(project_id, paths, backend_param):
 @click.argument('project_id')
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
-@click.option('--backend-param', '-b', multiple=True,
-              help='Backend parameters to override')
+@common_option_backend_param
 @common_options
 def run_suggest(project_id, limit, threshold, backend_param):
     """
@@ -225,8 +230,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
               help='Force overwriting of existing result files')
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
-@click.option('--backend-param', '-b', multiple=True,
-              help='Backend parameters to override')
+@common_option_backend_param
 @common_options
 def run_index(project_id, directory, suffix, force,
               limit, threshold, backend_param):
@@ -260,8 +264,7 @@ def run_index(project_id, directory, suffix, force,
 @click.argument('paths', type=click.Path(), nargs=-1)
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
-@click.option('--backend-param', '-b', multiple=True,
-              help='Backend parameters to override')
+@common_option_backend_param
 @common_options
 def run_eval(project_id, paths, limit, threshold, backend_param):
     """
@@ -292,8 +295,7 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
 @cli.command('optimize')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(), nargs=-1)
-@click.option('--backend-param', '-b', multiple=True,
-              help='Backend parameters to override')
+@common_option_backend_param
 @common_options
 def run_optimize(project_id, paths, backend_param):
     """
