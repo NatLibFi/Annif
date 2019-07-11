@@ -24,11 +24,15 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
         'l1': (float, None),
         'l2': (float, None),
         'passes': (int, None),
-        'probabilities': (bool, None)
+        'probabilities': (bool, None),
+        'quiet': (bool, False),
+        'data': (str, None),
+        'i': (str, None),
     }
 
     DEFAULT_ALGORITHM = 'oaa'
     SUPPORTED_ALGORITHMS = ('oaa', 'ect', 'log_multi', 'multilabel_oaa')
+    VW_PARAMS.update({alg: (int, None) for alg in SUPPORTED_ALGORITHMS})
 
     DEFAULT_INPUTS = '_text_'
 
@@ -106,9 +110,13 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
         random.shuffle(examples)
         return examples
 
-    def _create_model(self, project):
+    def _create_model(self, project, params):
         self.info('creating VW model (algorithm: {})'.format(self.algorithm))
-        super()._create_model(project, {self.algorithm: len(project.subjects)})
+        vw_params = {
+                self.algorithm: len(project.subjects),
+                **{key: val for key, val in params.items()
+                   if key in self.VW_PARAMS}}
+        super()._create_model(project, vw_params)
 
     def _convert_result(self, result, project):
         if self.algorithm == 'multilabel_oaa':

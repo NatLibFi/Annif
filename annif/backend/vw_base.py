@@ -34,7 +34,7 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
                     'model {} not found'.format(path),
                     backend_id=self.backend_id)
             self.debug('loading VW model from {}'.format(path))
-            params = self._create_params({'i': path, 'quiet': True})
+            params = self._create_params({'i': path, 'quiet': True, **params})
             if 'passes' in params:
                 # don't confuse the model with passes
                 del params['passes']
@@ -57,13 +57,13 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
                 "The {} value {} cannot be converted to {}".format(
                     param, val, pspec), backend_id=self.backend_id)
 
-    def _create_params(self, params):
-        params = params.copy()  # don't mutate the original dict
-        params.update({param: defaultval
-                       for param, (_, defaultval) in self.VW_PARAMS.items()
-                       if defaultval is not None})
+    def _create_params(self, initial_params):
+        # Create from defaults:
+        params = {param: defaultval
+                  for param, (_, defaultval) in self.VW_PARAMS.items()
+                  if defaultval is not None}
         params.update({param: self._convert_param(param, val)
-                       for param, val in self.config_params.items()
+                       for param, val in initial_params.items()
                        if param in self.VW_PARAMS})
         return params
 
@@ -104,7 +104,7 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
     def _train(self, corpus, project, params):
         self.info("creating VW model")
         self._create_train_file(corpus, project)
-        self._create_model(project)
+        self._create_model(project, params)
 
     def _learn(self, corpus, project, params):
         self.initialize()

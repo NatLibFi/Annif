@@ -156,10 +156,10 @@ class VWEnsembleBackend(
         random.shuffle(examples)
         return examples
 
-    def _create_model(self, project):
+    def _create_model(self, project, params):
         # add interactions between raw (descriptor-invariant) features to
         # the mix
-        super()._create_model(project, {'q': 'rr'})
+        super()._create_model(project, {'q': 'rr', **params})
 
     @staticmethod
     def _write_freq_file(subject_freq, filename):
