@@ -44,10 +44,6 @@ class VWEnsembleBackend(
     # will make it more careful so that it will require more training data.
     DEFAULT_DISCOUNT_RATE = 0.01
 
-    # score threshold for "zero features": scores lower than this will be
-    # considered zero and marked with a zero feature given to VW
-    ZERO_THRESHOLD = 0.001
-
     def _load_subject_freq(self):
         path = os.path.join(self.datadir, self.FREQ_FILE)
         if not os.path.exists(path):
@@ -100,30 +96,17 @@ class VWEnsembleBackend(
         sources = annif.util.parse_sources(self.config_params['sources'])
         return [project_id for project_id, _ in sources]
 
-    @staticmethod
-    def _format_value(true):
-        if true is None:
-            return ''
-        elif true:
-            return 1
-        else:
-            return -1
-
     def _format_example(self, subject_id, scores, true=None):
-        features = " ".join(["{}:{:.6f}".format(proj, scores[proj_idx])
-                             for proj_idx, proj
-                             in enumerate(self._source_project_ids)])
-        zero_features = " ".join(["zero^{}".format(proj)
-                                  for proj_idx, proj
-                                  in enumerate(self._source_project_ids)
-                                  if scores[proj_idx] < self.ZERO_THRESHOLD])
-        return "{} |raw {} {} |{} {} {}".format(
-            self._format_value(true),
-            features,
-            zero_features,
-            subject_id,
-            features,
-            zero_features)
+        if true is None:
+            val = ''
+        elif true:
+            val = 1
+        else:
+            val = -1
+        ex = "{} |{}".format(val, subject_id)
+        for proj_idx, proj in enumerate(self._source_project_ids):
+            ex += " {}:{:.6f}".format(proj, scores[proj_idx])
+        return ex
 
     def _doc_score_vector(self, doc, source_projects):
         score_vectors = []
@@ -138,8 +121,7 @@ class VWEnsembleBackend(
         true = subjects.as_vector(project.subjects)
         score_vector = self._doc_score_vector(doc, source_projects)
         for subj_id in range(len(true)):
-            if true[subj_id] \
-               or score_vector[:, subj_id].sum() >= self.ZERO_THRESHOLD:
+            if true[subj_id] or score_vector[:, subj_id].sum() > 0.0:
                 ex = (subj_id, self._format_example(
                     subj_id,
                     score_vector[:, subj_id],
