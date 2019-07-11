@@ -20,6 +20,12 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         self.config_params = config_params
         self.datadir = datadir
 
+    def _get_backend_params(self, params):
+        beparams = dict(self.config_params)
+        if params:
+            beparams.update(params)
+        return beparams
+
     def _train(self, corpus, project, params):
         """This method should be implemented by backends. It implements
         the train functionality, with pre-processed parameters."""
@@ -27,9 +33,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     def train(self, corpus, project, params=None):
         """Train the model on the given document or subject corpus."""
-        beparams = dict(self.config_params)
-        if params:
-            beparams.update(params)
+        beparams = self._get_backend_params(params)
         return self._train(corpus, project, params=beparams)
 
     def initialize(self, params=None):
@@ -46,9 +50,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def suggest(self, text, project, params=None):
         """Suggest subjects for the input text and return a list of subjects
         represented as a list of SubjectSuggestion objects."""
-        beparams = dict(self.config_params)
-        if params:
-            beparams.update(params)
+        beparams = self._get_backend_params(params)
         self.initialize(beparams)
         return self._suggest(text, project, params=beparams)
 
@@ -76,7 +78,5 @@ class AnnifLearningBackend(AnnifBackend):
 
     def learn(self, corpus, project, params=None):
         """Further train the model on the given document or subject corpus."""
-        beparams = dict(self.config_params)
-        if params:
-            beparams.update(params)
+        beparams = self._get_backend_params(params)
         return self._learn(corpus, project, params=beparams)
