@@ -82,6 +82,14 @@ def test_get_project_nobackend(app):
             backend = project.backend
 
 
+def test_get_project_invalid_config_file(app):
+    app = annif.create_app(
+        config_name='annif.default_config.TestingInvalidProjectsConfig')
+    with app.app_context():
+        with pytest.raises(ConfigurationException):
+            project = annif.project.get_project('duplicatedvocab')
+
+
 def test_project_load_vocabulary_tfidf(app, vocabulary, testdatadir):
     with app.app_context():
         project = annif.project.get_project('tfidf-fi')
