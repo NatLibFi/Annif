@@ -233,7 +233,11 @@ def _create_projects(projects_file, datadir, init_projects):
     config = configparser.ConfigParser()
     config.optionxform = lambda option: option
     with open(projects_file, encoding='utf-8') as projf:
-        config.read_file(projf)
+        try:
+            config.read_file(projf)
+        except (configparser.DuplicateOptionError,
+                configparser.DuplicateSectionError) as err:
+            raise ConfigurationException(err)
 
     # create AnnifProject objects from the configuration file
     projects = collections.OrderedDict()
