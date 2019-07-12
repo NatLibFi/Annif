@@ -75,6 +75,13 @@ def test_get_project_novocab(app):
             vocab = project.vocab
 
 
+def test_get_project_nobackend(app):
+    with app.app_context():
+        project = annif.project.get_project('nobackend')
+        with pytest.raises(ConfigurationException):
+            backend = project.backend
+
+
 def test_project_load_vocabulary_tfidf(app, vocabulary, testdatadir):
     with app.app_context():
         project = annif.project.get_project('tfidf-fi')
