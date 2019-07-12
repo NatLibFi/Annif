@@ -87,10 +87,10 @@ class AnnifProject(DatadirMixin):
 
     def _initialize_backend(self):
         logger.debug("Project '%s': initializing backend", self.project_id)
-        if not self.backend:
-            logger.debug("Cannot initialize backend: does not exist")
-            return
         try:
+            if not self.backend:
+                logger.debug("Cannot initialize backend: does not exist")
+                return
             self.backend.initialize()
         except AnnifException as err:
             logger.warning(err.format_message())
@@ -127,6 +127,9 @@ class AnnifProject(DatadirMixin):
     @property
     def backend(self):
         if self._backend is None:
+            if 'backend' not in self.config:
+                raise ConfigurationException(
+                    "backend setting is missing", project_id=self.project_id)
             backend_id = self.config['backend']
             try:
                 backend_class = annif.backend.get_backend(backend_id)
@@ -214,7 +217,7 @@ class AnnifProject(DatadirMixin):
         return {'project_id': self.project_id,
                 'name': self.name,
                 'language': self.language,
-                'backend': {'backend_id': self.config['backend']}
+                'backend': {'backend_id': self.config.get('backend')}
                 }
 
 
