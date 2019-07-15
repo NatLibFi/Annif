@@ -12,6 +12,10 @@ addons:
     - libboost-program-options-dev
     - libboost-python-dev
     - zlib1g-dev
+    - cmake
+    - libboost-system-dev
+    - libboost-thread-dev
+    - libboost-test-dev
 cache: pip
 before_install:
 - export BOTO_CONFIG=/dev/null
