@@ -123,6 +123,28 @@ def run_show_project(project_id):
     click.echo(template.format('Access:', proj.access.name))
 
 
+@cli.command('init')
+@click.argument('project_id')
+@common_options
+def run_init_project(project_id):
+    """
+    Remove the data files of a project.
+    """
+
+    proj = get_project(project_id)
+    datadir_path = proj.datadir
+    data_files = os.listdir(datadir_path)
+    if data_files:
+        for data_file in data_files:
+            os.remove(os.path.join(datadir_path, data_file))
+        click.echo('Removed data files for project {}.'.format(project_id))
+    else:
+        click.echo(
+            'No data files to remove for project {}.'.format(project_id),
+            err=True)
+        sys.exit(1)
+
+
 @cli.command('loadvoc')
 @click.argument('project_id')
 @click.argument('subjectfile', type=click.Path(dir_okay=False))
