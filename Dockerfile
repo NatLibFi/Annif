@@ -16,13 +16,21 @@ RUN apt-get update \
 	&& pip install --no-cache-dir \
 		cython \
 		fasttextmirror \
-	## Vowpal Wabbit. Using old VW because 8.5 links to wrong Python version
+	## Vowpal Wabbit
 	&& apt-get install -y --no-install-recommends \
 		libboost-program-options-dev \
 		zlib1g-dev \
 		libboost-python-dev \
+		cmake \
+		libboost-system-dev \
+		libboost-thread-dev \
+		libboost-test-dev \
+	&& ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.a \
+		/usr/lib/x86_64-linux-gnu/libboost_python3.a \
+	&& ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.so \
+		/usr/lib/x86_64-linux-gnu/libboost_python3.so \
 	&& pip install --no-cache-dir \
-		vowpalwabbit==8.4
+		vowpalwabbit
 
 
 
@@ -38,12 +46,13 @@ RUN apt-get update \
 		voikko-fi \
 	&& pip install --no-cache-dir \
 		annif[voikko] \
-	## Vowpal Wabbit. Using old VW because 8.5 links to wrong Python version
+	## Vowpal Wabbit
 	&& apt-get install -y --no-install-recommends \
 		libboost-program-options1.62.0 \
 		libboost-python1.62.0 \
+		libboost-system1.62.0 \
 	&& pip install --no-cache-dir \
-		vowpalwabbit==8.4 \
+		vowpalwabbit \
 	## Clean up:
 	&& rm -rf /var/lib/apt/lists/* /usr/include/* \
 	&& rm -rf /root/.cache/pip*/*
