@@ -84,6 +84,28 @@ def test_show_project_nonexistent():
     assert failed_result.exception
 
 
+def test_init_project(testdatadir):
+    dirpath = os.path.join(testdatadir, 'projects', 'dummy-fi')
+    fpath = os.path.join(dirpath, 'test_init_project_datafile')
+    os.makedirs(dirpath)
+    open(fpath, 'a').close()
+
+    assert runner.invoke(
+        annif.cli.cli,
+        ['init', 'dummy-fi']).exit_code == 0
+    assert not os.path.exists(fpath)
+
+
+def test_init_project_nonexistent(testdatadir):
+    runner.invoke(
+        annif.cli.cli,
+        ['init', 'dummy-fi']).exit_code != 0
+    # Nonexistent project:
+    runner.invoke(
+        annif.cli.cli,
+        ['init', TEMP_PROJECT]).exit_code != 0
+
+
 def test_loadvoc_tsv(testdatadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
