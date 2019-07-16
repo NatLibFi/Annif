@@ -12,7 +12,8 @@ steps:
         from_secret: docker_password
       registry: quay.io
       repo: quay.io/natlibfi/annif
-      auto_tag: true
+      tag: [test-tag]
+      dry_run: true
 
 trigger:
   branch:
