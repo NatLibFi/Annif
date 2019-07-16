@@ -26,7 +26,7 @@ steps:
       repo: quay.io/natlibfi/annif
       tags: [dev]
 
- - name: docker-tag-image-with-git-tag
+  - name: docker-tag-image-with-git-tag
     image: plugins/docker
     settings:
       dockerfile: Dockerfile
