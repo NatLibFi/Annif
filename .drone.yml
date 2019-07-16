@@ -13,6 +13,7 @@ steps:
       registry: quay.io
       repo: quay.io/natlibfi/annif
       auto_tag: true
+      dry_run: true
 
 trigger:
   branch:
