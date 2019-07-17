@@ -65,24 +65,24 @@ class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
             opener = open
         try:
             with opener(self.path) as tsvfile:
-                yield from self._parse_lines(tsvfile)
+                for line in tsvfile:
+                    yield from self._parse_tsv_line(line)
         except FileNotFoundError as err:
             raise AnnifException(str(err))
 
     @staticmethod
-    def _parse_lines(tsvfile):
-        for line in tsvfile:
-            try:
-                text, uris = line.split('\t', maxsplit=1)
-                subjects = [annif.util.cleanup_uri(uri)
-                            for uri in uris.split()]
-                yield Document(text=text, uris=subjects, labels=[])
-            except ValueError as err:
-                if 'not enough values to unpack' in str(err):
-                    msg = 'Skipping invalid line (missing tab): "%s"'
-                    logger.warning(msg, line.rstrip())
-                else:
-                    raise
+    def _parse_tsv_line(line):
+        try:
+            text, uris = line.split('\t', maxsplit=1)
+            subjects = [annif.util.cleanup_uri(uri)
+                        for uri in uris.split()]
+            yield Document(text=text, uris=subjects, labels=[])
+        except ValueError as err:
+            if 'not enough values to unpack' in str(err):
+                msg = 'Skipping invalid line (missing tab): "%s"'
+                logger.warning(msg, line.rstrip())
+            else:
+                raise
 
 
 class DocumentList(DocumentCorpus, DocumentToSubjectCorpusMixin):
