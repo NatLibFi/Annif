@@ -2,6 +2,8 @@
 
 import gzip
 import annif.corpus
+import pytest
+from annif.exception import AnnifException
 
 
 def test_subjectset_uris():
@@ -199,6 +201,33 @@ def test_docfile_plain(tmpdir):
 
     docs = annif.corpus.DocumentFile(str(docfile))
     assert len(list(docs.documents)) == 3
+
+
+def test_docfile_nonexistent(tmpdir):
+    docfile = tmpdir.join('documents_nonexistent.tsv')
+    with pytest.raises(AnnifException) as err:
+        docs = annif.corpus.DocumentFile(str(docfile))
+        list(docs.documents)
+    assert "No such file or directory: '{}'".format(docfile) in str(err)
+
+
+def test_docfile_plain_invalid_lines(tmpdir, caplog, capsys):
+    docfile = tmpdir.join('documents_invalid.tsv')
+    docfile.write("""Läntinen\t<http://www.yso.fi/onto/yso/p2557>
+
+        Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
+        A line with no tabs
+        Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
+    docs = annif.corpus.DocumentFile(str(docfile))
+    assert len(list(docs.documents)) == 3
+    # Need to capture both logs and stderr: when running this test individually
+    # the warning goes to warnings log, but when full suite it goes to stderror
+    logs = caplog.text
+    stdout, stderr = capsys.readouterr()
+    lines_all_streams = (logs + stdout + stderr).splitlines()
+    assert len(lines_all_streams) == 2
+    expected_msg = 'Skipping invalid line (missing tab):'
+    assert all(expected_msg in l for l in lines_all_streams)
 
 
 def test_docfile_gzipped(tmpdir):
