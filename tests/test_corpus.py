@@ -208,6 +208,9 @@ def test_docfile_nonexistent(tmpdir):
     with pytest.raises(AnnifException) as err:
         docs = annif.corpus.DocumentFile(str(docfile))
         list(docs.documents)
+    print("No such file or directory: '{}'".format(docfile))
+    print('str(err):')
+    print(str(err))
     assert "No such file or directory: '{}'".format(docfile) in str(err)
 
 
