@@ -211,7 +211,9 @@ def test_docfile_nonexistent(tmpdir):
     print("No such file or directory: '{}'".format(docfile))
     print('str(err):')
     print(str(err))
-    assert "No such file or directory: '{}'".format(docfile) in str(err)
+    print('str(err.value):')
+    print(str(err.value))
+    assert "No such file or directory: '{}'".format(docfile) in str(err.value)
 
 
 def test_docfile_plain_invalid_lines(tmpdir, caplog, capsys):
