@@ -166,7 +166,7 @@ class VWEnsembleBackend(
                                method=self._write_train_file)
 
     def _train(self, corpus, project, params):
-        super()._train(self, corpus, project, params)
+        super()._train(corpus, project, params)
 
     def _learn(self, corpus, project, params):
         self.initialize()
