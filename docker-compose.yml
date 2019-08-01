@@ -18,6 +18,8 @@ services:
       - ${ANNIF_PROJECTS}:/annif-projects
     ports:
       - "8080:8080"
+    environment:
+      - JAVA_OPTS="-DMAUISERVICE_CONFIGURATION=/srv/maui/mauiservice.ini"
 
   gunicorn_server:
     image: quay.io/natlibfi/annif
