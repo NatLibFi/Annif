@@ -1,6 +1,7 @@
 """Unit tests for corpus functionality in Annif"""
 
 import gzip
+import pytest
 import annif.corpus
 
 
@@ -115,11 +116,28 @@ def test_docdir_tsv_require_subjects(tmpdir):
     assert files[1][1] == str(tmpdir.join('doc2.tsv'))
 
 
-def test_docdir_as_doccorpus(tmpdir):
+def test_docdir_tsv_as_doccorpus(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.tsv').write('<http://example.org/subj1>\tsubj1')
     tmpdir.join('doc2.txt').write('doc2')
-    tmpdir.join('doc2.tsv').write('<http://example.org/subj2>\tsubj1')
+    tmpdir.join('doc2.tsv').write('<http://example.org/subj2>\tsubj2')
+    tmpdir.join('doc3.txt').write('doc3')
+
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=True)
+    docs = list(docdir.documents)
+    assert len(docs) == 2
+    assert docs[0].text == 'doc1'
+    assert docs[0].uris == {'http://example.org/subj1'}
+    assert docs[1].text == 'doc2'
+    assert docs[1].uris == {'http://example.org/subj2'}
+
+
+@pytest.mark.xfail
+def test_docdir_key_as_doccorpus(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('subj1')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('subj2')
     tmpdir.join('doc3.txt').write('doc3')
 
     docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=True)
