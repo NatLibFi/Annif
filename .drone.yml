@@ -13,7 +13,7 @@ steps:
       registry: quay.io
       repo: quay.io/natlibfi/annif
       tags: [dry-run-built]
-    dry_run: true
+      dry_run: true
     when:
       event:
       - push
