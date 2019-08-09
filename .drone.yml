@@ -2,7 +2,17 @@ kind: pipeline
 name: default
 steps:
 
-  - name: docker
+  - name: build
+    image: plugins/docker
+    settings:
+      dockerfile: Dockerfile
+    dry_run: true
+    when:
+      event:
+      - push
+      - pull_request
+
+  - name: build_and_publish
     image: plugins/docker
     settings:
       dockerfile: Dockerfile
@@ -13,8 +23,13 @@ steps:
       registry: quay.io
       repo: quay.io/natlibfi/annif
       tags: [latest]
+    when:
+      branch:
+      - master
+      event:
+      - push
 
-  - name: docker-dev
+  - name: build_and_publish-dev
     image: plugins/docker
     settings:
       dockerfile: Dockerfile-dev
@@ -25,8 +40,13 @@ steps:
       registry: quay.io
       repo: quay.io/natlibfi/annif
       tags: [dev]
+    when:
+      branch:
+      - master
+      event:
+      - push
 
-  - name: docker-tag-image-with-git-tag
+  - name: build_publish_and_tag_with_release_version
     image: plugins/docker
     settings:
       dockerfile: Dockerfile
@@ -37,11 +57,8 @@ steps:
       registry: quay.io
       repo: quay.io/natlibfi/annif
       auto_tag: true
-      when:
-        event: tag
-
-trigger:
-  branch:
-  - master
-  event:
-  - push
+    when:
+      branch:
+      - master
+      event:
+      - tag
