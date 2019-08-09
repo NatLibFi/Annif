@@ -1,4 +1,4 @@
-FROM python:3.7-slim AS builder
+FROM python:3-slim-buster AS builder
 
 LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
 
@@ -34,7 +34,7 @@ RUN apt-get update \
 
 
 
-FROM python:3.7-slim
+FROM python:3-slim-buster
 
 COPY --from=builder /usr/local/lib/python3.7 /usr/local/lib/python3.7
 
@@ -48,9 +48,9 @@ RUN apt-get update \
 		annif[voikko] \
 	## Vowpal Wabbit
 	&& apt-get install -y --no-install-recommends \
-		libboost-program-options1.62.0 \
-		libboost-python1.62.0 \
-		libboost-system1.62.0 \
+		libboost-program-options1.67.0 \
+		libboost-python1.67.0 \
+		libboost-system1.67.0 \
 	&& pip install --no-cache-dir \
 		vowpalwabbit \
 	## Clean up:
