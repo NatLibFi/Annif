@@ -78,6 +78,22 @@ class SubjectIndex:
             logger.warning('Unknown subject label "%s"', label)
             return None
 
+    def uris_to_labels(self, uris):
+        """return a list of labels corresponding to the given URIs; unknown
+        URIs are ignored"""
+
+        return [self[subject_id][1]
+                for subject_id in (self.by_uri(uri) for uri in uris)
+                if subject_id is not None]
+
+    def labels_to_uris(self, labels):
+        """return a list of URIs corresponding to the given labels; unknown
+        labels are ignored"""
+
+        return [self[subject_id][0]
+                for subject_id in (self.by_label(label) for label in labels)
+                if subject_id is not None]
+
     def save(self, path):
         """Save this subject index into a file."""
 
