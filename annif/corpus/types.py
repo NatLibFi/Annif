@@ -32,13 +32,15 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
         sidx = self._subject_index
 
         if not uris and labels and sidx:
-            uris = set((sidx[sidx.by_label(label)][0]
-                        for label in labels
-                        if sidx.by_label(label)))
+            uris = set((sidx[subject_id][0]
+                        for subject_id in (sidx.by_label(label)
+                                           for label in labels)
+                        if subject_id is not None))
         if not labels and uris and sidx:
-            labels = set((sidx[sidx.by_uri(uri)][1]
-                          for uri in uris
-                          if sidx.by_uri(uri)))
+            labels = set((sidx[subject_id][1]
+                          for subject_id in (sidx.by_uri(uri)
+                                             for uri in uris)
+                          if subject_id is not None))
 
         return Document(text=text, uris=uris, labels=labels)
 
