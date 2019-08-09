@@ -9,7 +9,6 @@ from .types import Document, DocumentCorpus, SubjectCorpus
 class DocumentToSubjectCorpusMixin(SubjectCorpus):
     """Mixin class for enabling a DocumentCorpus to act as a SubjectCorpus"""
 
-    _subject_index = None
     _subject_corpus = None
     _temp_directory = None
 
@@ -18,12 +17,6 @@ class DocumentToSubjectCorpusMixin(SubjectCorpus):
         if self._subject_corpus is None:
             self._generate_corpus_from_documents()
         return self._subject_corpus.subjects
-
-    def set_subject_index(self, subject_index):
-        """Set a subject index for looking up labels that are necessary for
-        conversion"""
-
-        self._subject_index = subject_index
 
     def _subject_filename(self, subject_id):
         filename = '{:08d}.txt'.format(subject_id)
