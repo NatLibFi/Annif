@@ -6,6 +6,13 @@ steps:
     image: plugins/docker
     settings:
       dockerfile: Dockerfile
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      registry: quay.io
+      repo: quay.io/natlibfi/annif
+      tags: [dry-run-built]
     dry_run: true
     when:
       event:
