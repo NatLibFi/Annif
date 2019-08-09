@@ -24,6 +24,24 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
 
         self._subject_index = subject_index
 
+    def _create_document(self, text, uris, labels):
+        """Create a new Document instance from possibly incomplete
+        information. URIs for labels and vice versa are looked up from the
+        subject index, if available."""
+
+        sidx = self._subject_index
+
+        if not uris and labels and sidx:
+            uris = set((sidx[sidx.by_label(label)][0]
+                        for label in labels
+                        if sidx.by_label(label)))
+        if not labels and uris and sidx:
+            labels = set((sidx[sidx.by_uri(uri)][1]
+                          for uri in uris
+                          if sidx.by_uri(uri)))
+
+        return Document(text=text, uris=uris, labels=labels)
+
 
 Subject = collections.namedtuple('Subject', 'uri label text')
 
