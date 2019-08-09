@@ -29,10 +29,11 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
         information. URIs for labels and vice versa are looked up from the
         subject index, if available."""
 
-        if not uris and labels and self._subject_index:
-            uris = set((self._subject_index.labels_to_uris(labels)))
-        if not labels and uris and self._subject_index:
-            labels = set((self._subject_index.uris_to_labels(uris)))
+        if self._subject_index:
+            if not uris and labels:
+                uris = set((self._subject_index.labels_to_uris(labels)))
+            if not labels and uris:
+                labels = set((self._subject_index.uris_to_labels(uris)))
 
         return Document(text=text, uris=uris, labels=labels)
 
