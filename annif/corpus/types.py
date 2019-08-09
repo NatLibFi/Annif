@@ -29,18 +29,10 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
         information. URIs for labels and vice versa are looked up from the
         subject index, if available."""
 
-        sidx = self._subject_index
-
-        if not uris and labels and sidx:
-            uris = set((sidx[subject_id][0]
-                        for subject_id in (sidx.by_label(label)
-                                           for label in labels)
-                        if subject_id is not None))
-        if not labels and uris and sidx:
-            labels = set((sidx[subject_id][1]
-                          for subject_id in (sidx.by_uri(uri)
-                                             for uri in uris)
-                          if subject_id is not None))
+        if not uris and labels and self._subject_index:
+            uris = set((self._subject_index.labels_to_uris(labels)))
+        if not labels and uris and self._subject_index:
+            labels = set((self._subject_index.uris_to_labels(uris)))
 
         return Document(text=text, uris=uris, labels=labels)
 
