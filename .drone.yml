@@ -12,7 +12,7 @@ steps:
         from_secret: docker_password
       registry: quay.io
       repo: quay.io/natlibfi/annif
-      tags: [dry-run-builded]
+      tags: [dry-run-built]
     dry_run: true
     when:
       event:
