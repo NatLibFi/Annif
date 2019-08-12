@@ -85,8 +85,8 @@ def test_show_project_nonexistent():
 
 
 def test_init_project(testdatadir):
-    dirpath = os.path.join(testdatadir, 'projects', 'dummy-fi')
-    fpath = os.path.join(dirpath, 'test_init_project_datafile')
+    dirpath = os.path.join(str(testdatadir), 'projects', 'dummy-fi')
+    fpath = os.path.join(str(dirpath), 'test_init_project_datafile')
     os.makedirs(dirpath)
     open(fpath, 'a').close()
 
