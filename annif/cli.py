@@ -128,7 +128,7 @@ def run_show_project(project_id):
 @common_options
 def run_init_project(project_id):
     """
-    Remove the data files of a project.
+    Initialize the project to its original, untrained state.
     """
 
     proj = get_project(project_id)
