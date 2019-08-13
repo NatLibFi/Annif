@@ -10,6 +10,7 @@ import click
 import click_log
 from flask import current_app
 from flask.cli import FlaskGroup, ScriptInfo
+from shutil import rmtree
 import annif
 import annif.corpus
 import annif.eval
@@ -130,19 +131,15 @@ def run_init_project(project_id):
     """
     Initialize the project to its original, untrained state.
     """
-
     proj = get_project(project_id)
-    datadir_path = proj.datadir
-    data_files = os.listdir(datadir_path)
-    if data_files:
-        for data_file in data_files:
-            os.remove(os.path.join(datadir_path, data_file))
-        click.echo('Removed data files for project {}.'.format(project_id))
-    else:
+    datadir_path = proj._datadir_path
+    if not os.path.isdir(datadir_path):
         click.echo(
-            'No data files to remove for project {}.'.format(project_id),
+            'No model data to remove for project {}.'.format(project_id),
             err=True)
         sys.exit(1)
+    rmtree(datadir_path)
+    click.echo('Removed model data for project {}.'.format(project_id))
 
 
 @cli.command('loadvoc')
