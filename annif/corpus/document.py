@@ -72,17 +72,14 @@ class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
 
     @staticmethod
     def _parse_tsv_line(line):
-        try:
+        if '\t' in line:
             text, uris = line.split('\t', maxsplit=1)
             subjects = [annif.util.cleanup_uri(uri)
                         for uri in uris.split()]
             yield Document(text=text, uris=subjects, labels=[])
-        except ValueError as err:
-            if 'not enough values to unpack' in str(err):
-                msg = 'Skipping invalid line (missing tab): "%s"'
-                logger.warning(msg, line.rstrip())
-            else:
-                raise
+        else:
+            logger.warning('Skipping invalid line (missing tab): "%s"',
+                           line.rstrip())
 
 
 class DocumentList(DocumentCorpus, DocumentToSubjectCorpusMixin):
