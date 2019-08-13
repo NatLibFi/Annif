@@ -99,10 +99,6 @@ def test_init_project(testdatadir):
 def test_init_project_nonexistent(testdatadir):
     runner.invoke(
         annif.cli.cli,
-        ['init', 'dummy-fi']).exit_code != 0
-    # Nonexistent project:
-    runner.invoke(
-        annif.cli.cli,
         ['init', TEMP_PROJECT]).exit_code != 0
 
 
