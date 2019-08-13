@@ -222,10 +222,10 @@ def test_docfile_plain_invalid_lines(tmpdir, caplog):
         Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
     docs = annif.corpus.DocumentFile(str(docfile))
     assert len(list(docs.documents)) == 3
-    log_lines = caplog.text.splitlines()
-    assert len(log_lines) == 2
+    assert len(caplog.records) == 2
     expected_msg = 'Skipping invalid line (missing tab):'
-    assert all(expected_msg in l for l in log_lines)
+    for record in caplog.records:
+        assert expected_msg in record.message
 
 
 def test_docfile_gzipped(tmpdir):
