@@ -93,7 +93,7 @@ def test_init_project(testdatadir):
     assert runner.invoke(
         annif.cli.cli,
         ['init', 'dummy-fi']).exit_code == 0
-    assert not os.path.exists(fpath)
+    assert not os.path.isdir(dirpath)
 
 
 def test_init_project_nonexistent(testdatadir):
