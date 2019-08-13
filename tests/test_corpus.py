@@ -211,7 +211,9 @@ def test_docfile_nonexistent(tmpdir):
     assert "No such file or directory: '{}'".format(docfile) in str(err.value)
 
 
-def test_docfile_plain_invalid_lines(tmpdir, caplog, capsys):
+def test_docfile_plain_invalid_lines(tmpdir, caplog):
+    logger = annif.logger
+    logger.propagate = True
     docfile = tmpdir.join('documents_invalid.tsv')
     docfile.write("""Läntinen\t<http://www.yso.fi/onto/yso/p2557>
 
@@ -220,14 +222,10 @@ def test_docfile_plain_invalid_lines(tmpdir, caplog, capsys):
         Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
     docs = annif.corpus.DocumentFile(str(docfile))
     assert len(list(docs.documents)) == 3
-    # Need to capture both logs and stderr: when running this test individually
-    # the warning goes to warnings log, but when full suite it goes to stderror
-    logs = caplog.text
-    stdout, stderr = capsys.readouterr()
-    lines_all_streams = (logs + stdout + stderr).splitlines()
-    assert len(lines_all_streams) == 2
+    log_lines = caplog.text.splitlines()
+    assert len(log_lines) == 2
     expected_msg = 'Skipping invalid line (missing tab):'
-    assert all(expected_msg in l for l in lines_all_streams)
+    assert all(expected_msg in l for l in log_lines)
 
 
 def test_docfile_gzipped(tmpdir):
