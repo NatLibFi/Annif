@@ -10,7 +10,6 @@ import click
 import click_log
 from flask import current_app
 from flask.cli import FlaskGroup, ScriptInfo
-from shutil import rmtree
 import annif
 import annif.corpus
 import annif.eval
@@ -132,13 +131,7 @@ def run_init_project(project_id):
     Initialize the project to its original, untrained state.
     """
     proj = get_project(project_id)
-    datadir_path = proj._datadir_path
-    if not os.path.isdir(datadir_path):
-        click.echo(
-            'No model data to remove for project {}.'.format(project_id),
-            err=True)
-        sys.exit(1)
-    rmtree(datadir_path)
+    proj.remove_model_data()
     click.echo('Removed model data for project {}.'.format(project_id))
 
 
