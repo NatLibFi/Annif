@@ -52,7 +52,7 @@ RUN apt-get update \
 		libboost-python1.67.0 \
 		libboost-system1.67.0 \
 	&& pip install --no-cache-dir \
-		vowpalwabbit \
+		vowpalwabbit==8.7.* \
 	## Clean up:
 	&& rm -rf /var/lib/apt/lists/* /usr/include/* \
 	&& rm -rf /root/.cache/pip*/*

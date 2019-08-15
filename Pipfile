@@ -22,10 +22,11 @@ flask-cors = "*"
 click-log = "*"
 joblib = "*"
 nltk = "*"
-gensim = "*"
+gensim = "==3.8.*"
 sklearn = "*"
 rdflib = "*"
 gunicorn = "*"
 sphinxcontrib-apidoc = "*"
+scikit-learn = "==0.21.*"
 
 [requires]
