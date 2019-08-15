@@ -62,10 +62,13 @@ class AnnifProject(DatadirMixin):
                 project_id=self.project_id)
 
     def _initialize_analyzer(self):
-        analyzer = self.analyzer
-        logger.debug("Project '%s': initialized analyzer: %s",
-                     self.project_id,
-                     str(analyzer))
+        try:
+            analyzer = self.analyzer
+            logger.debug("Project '%s': initialized analyzer: %s",
+                         self.project_id,
+                         str(analyzer))
+        except AnnifException as err:
+            logger.warning(err.format_message())
 
     def _initialize_subjects(self):
         try:
@@ -120,8 +123,14 @@ class AnnifProject(DatadirMixin):
 
     @property
     def analyzer(self):
-        if self._analyzer is None and self.analyzer_spec:
-            self._analyzer = annif.analyzer.get_analyzer(self.analyzer_spec)
+        if self._analyzer is None:
+            if self.analyzer_spec:
+                self._analyzer = annif.analyzer.get_analyzer(
+                    self.analyzer_spec)
+            elif self.backend.needs_subject_vectorizer:
+                raise ConfigurationException(
+                    "analyzer setting is missing (and needed by the backend)",
+                    project_id=self.project_id)
         return self._analyzer
 
     @property

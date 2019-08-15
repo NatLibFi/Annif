@@ -68,6 +68,13 @@ def test_get_project_nonexistent(app):
             annif.project.get_project('nonexistent')
 
 
+def test_get_project_noanalyzer(app):
+    with app.app_context():
+        project = annif.project.get_project('noanalyzer')
+        with pytest.raises(ConfigurationException):
+            analyzer = project.analyzer
+
+
 def test_get_project_novocab(app):
     with app.app_context():
         project = annif.project.get_project('novocab')
