@@ -27,14 +27,14 @@ setup(
         'click-log',
         'joblib',
         'nltk',
-        'gensim',
-        'sklearn',
+        'gensim==3.8.*',
+        'sklearn==0.21.*',
         'rdflib'],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
         'fasttext': ['fasttext', 'fasttextmirror'],
         'voikko': ['voikko'],
-        'vw': ['vowpalwabbit', 'numpy'],
+        'vw': ['vowpalwabbit==8.7.*', 'numpy'],
     },
     entry_points={
         'console_scripts': ['annif=annif.cli:cli']},
