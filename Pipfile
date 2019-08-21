@@ -23,10 +23,9 @@ click-log = "*"
 joblib = "==0.13.2"
 nltk = "*"
 gensim = "==3.8.*"
-sklearn = "*"
+sklearn = "==0.21.*"
 rdflib = "*"
 gunicorn = "*"
 sphinxcontrib-apidoc = "*"
-scikit-learn = "==0.21.*"
 
 [requires]
