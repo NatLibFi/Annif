@@ -25,7 +25,7 @@ setup(
         'flask-cors',
         'click',
         'click-log',
-        'joblib',
+        'joblib==0.13.2',
         'nltk',
         'gensim==3.8.*',
         'sklearn==0.21.*',
