@@ -28,7 +28,7 @@ setup(
         'joblib==0.13.2',
         'nltk',
         'gensim==3.8.*',
-        'sklearn==0.21.*',
+        'scikit-learn==0.21.*',
         'rdflib'],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
