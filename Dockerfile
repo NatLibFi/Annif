@@ -15,7 +15,7 @@ RUN apt-get update \
 		build-essential \
 	&& pip install --no-cache-dir \
 		cython \
-		fasttextmirror \
+		fasttextmirror==0.8.22 \
 	## Vowpal Wabbit
 	&& apt-get install -y --no-install-recommends \
 		libboost-program-options-dev \

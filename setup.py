@@ -32,7 +32,7 @@ setup(
         'rdflib'],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
-        'fasttext': ['fasttext', 'fasttextmirror'],
+        'fasttext': ['fasttext', 'fasttextmirror==0.8.22'],
         'voikko': ['voikko'],
         'vw': ['vowpalwabbit==8.7.*', 'numpy'],
     },
