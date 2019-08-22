@@ -84,22 +84,22 @@ def test_show_project_nonexistent():
     assert failed_result.exception
 
 
-def test_init_project(testdatadir):
+def test_clear_project(testdatadir):
     dirpath = os.path.join(str(testdatadir), 'projects', 'dummy-fi')
-    fpath = os.path.join(str(dirpath), 'test_init_project_datafile')
+    fpath = os.path.join(str(dirpath), 'test_clear_project_datafile')
     os.makedirs(dirpath)
     open(fpath, 'a').close()
 
     assert runner.invoke(
         annif.cli.cli,
-        ['init', 'dummy-fi']).exit_code == 0
+        ['clear', 'dummy-fi']).exit_code == 0
     assert not os.path.isdir(dirpath)
 
 
-def test_init_project_nonexistent(testdatadir):
+def test_clear_project_nonexistent(testdatadir):
     runner.invoke(
         annif.cli.cli,
-        ['init', TEMP_PROJECT]).exit_code != 0
+        ['clear', TEMP_PROJECT]).exit_code != 0
 
 
 def test_loadvoc_tsv(testdatadir):

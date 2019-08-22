@@ -123,10 +123,10 @@ def run_show_project(project_id):
     click.echo(template.format('Access:', proj.access.name))
 
 
-@cli.command('init')
+@cli.command('clear')
 @click.argument('project_id')
 @common_options
-def run_init_project(project_id):
+def run_clear_project(project_id):
     """
     Initialize the project to its original, untrained state.
     """
