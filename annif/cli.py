@@ -132,7 +132,6 @@ def run_clear_project(project_id):
     """
     proj = get_project(project_id)
     proj.remove_model_data()
-    click.echo('Removed model data for project {}.'.format(project_id))
 
 
 @cli.command('loadvoc')

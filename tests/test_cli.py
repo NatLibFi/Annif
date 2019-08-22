@@ -96,10 +96,15 @@ def test_clear_project(testdatadir):
     assert not os.path.isdir(dirpath)
 
 
-def test_clear_project_nonexistent(testdatadir):
+def test_clear_project_nonexistent_data(testdatadir, caplog):
+    logger = annif.logger
+    logger.propagate = True
     runner.invoke(
         annif.cli.cli,
-        ['clear', TEMP_PROJECT]).exit_code != 0
+        ['clear', 'dummy-fi']).exit_code != 0
+    assert len(caplog.records) == 1
+    expected_msg = 'No model data to remove for project dummy-fi.'
+    assert expected_msg == caplog.records[0].message
 
 
 def test_loadvoc_tsv(testdatadir):

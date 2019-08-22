@@ -221,10 +221,13 @@ class AnnifProject(DatadirMixin):
     def remove_model_data(self):
         """remove the data of this project"""
         datadir_path = self._datadir_path
-        if not os.path.isdir(datadir_path):
-            raise AnnifException('No model data to remove for project {}.'
-                                 .format(self.project_id))
-        rmtree(datadir_path)
+        if os.path.isdir(datadir_path):
+            rmtree(datadir_path)
+            logger.info('Removed model data for project {}.'
+                        .format(self.project_id))
+        else:
+            logger.warning('No model data to remove for project {}.'
+                           .format(self.project_id))
 
 
 def _create_projects(projects_file, datadir, init_projects):
