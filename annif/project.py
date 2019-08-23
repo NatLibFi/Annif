@@ -7,6 +7,7 @@ import os.path
 import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
 from flask import current_app
+from shutil import rmtree
 import annif
 import annif.analyzer
 import annif.corpus
@@ -216,6 +217,17 @@ class AnnifProject(DatadirMixin):
                 'language': self.language,
                 'backend': {'backend_id': self.config['backend']}
                 }
+
+    def remove_model_data(self):
+        """remove the data of this project"""
+        datadir_path = self._datadir_path
+        if os.path.isdir(datadir_path):
+            rmtree(datadir_path)
+            logger.info('Removed model data for project {}.'
+                        .format(self.project_id))
+        else:
+            logger.warning('No model data to remove for project {}.'
+                           .format(self.project_id))
 
 
 def _create_projects(projects_file, datadir, init_projects):
