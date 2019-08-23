@@ -27,13 +27,13 @@ install:
 # For Python 3.5, also install optional dependencies that were not specified in Pipfile
 # For other Python versions we will only run the tests that depend on pure Python modules
 # - fastText dependencies
-- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install fasttextmirror; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install fasttextmirror==0.8.22; fi
 # - voikko dependencies
 - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install voikko; fi
 # - vw dependencies
 - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then sudo ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.a /usr/lib/x86_64-linux-gnu/libboost_python3.a; fi
 - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then sudo ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.so /usr/lib/x86_64-linux-gnu/libboost_python3.so; fi
-- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install vowpalwabbit; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install vowpalwabbit==8.7.*; fi
 script:
 - pytest --cov=./
 after_success:
