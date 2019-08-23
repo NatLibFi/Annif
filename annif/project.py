@@ -127,7 +127,7 @@ class AnnifProject(DatadirMixin):
             if self.analyzer_spec:
                 self._analyzer = annif.analyzer.get_analyzer(
                     self.analyzer_spec)
-            elif self.backend.needs_subject_vectorizer:
+            else:
                 raise ConfigurationException(
                     "analyzer setting is missing (and needed by the backend)",
                     project_id=self.project_id)
