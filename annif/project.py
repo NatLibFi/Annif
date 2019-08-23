@@ -63,10 +63,13 @@ class AnnifProject(DatadirMixin):
                 project_id=self.project_id)
 
     def _initialize_analyzer(self):
-        analyzer = self.analyzer
-        logger.debug("Project '%s': initialized analyzer: %s",
-                     self.project_id,
-                     str(analyzer))
+        try:
+            analyzer = self.analyzer
+            logger.debug("Project '%s': initialized analyzer: %s",
+                         self.project_id,
+                         str(analyzer))
+        except AnnifException as err:
+            logger.warning(err.format_message())
 
     def _initialize_subjects(self):
         try:
@@ -88,10 +91,10 @@ class AnnifProject(DatadirMixin):
 
     def _initialize_backend(self):
         logger.debug("Project '%s': initializing backend", self.project_id)
-        if not self.backend:
-            logger.debug("Cannot initialize backend: does not exist")
-            return
         try:
+            if not self.backend:
+                logger.debug("Cannot initialize backend: does not exist")
+                return
             self.backend.initialize()
         except AnnifException as err:
             logger.warning(err.format_message())
@@ -121,13 +124,22 @@ class AnnifProject(DatadirMixin):
 
     @property
     def analyzer(self):
-        if self._analyzer is None and self.analyzer_spec:
-            self._analyzer = annif.analyzer.get_analyzer(self.analyzer_spec)
+        if self._analyzer is None:
+            if self.analyzer_spec:
+                self._analyzer = annif.analyzer.get_analyzer(
+                    self.analyzer_spec)
+            else:
+                raise ConfigurationException(
+                    "analyzer setting is missing (and needed by the backend)",
+                    project_id=self.project_id)
         return self._analyzer
 
     @property
     def backend(self):
         if self._backend is None:
+            if 'backend' not in self.config:
+                raise ConfigurationException(
+                    "backend setting is missing", project_id=self.project_id)
             backend_id = self.config['backend']
             try:
                 backend_class = annif.backend.get_backend(backend_id)
@@ -215,7 +227,7 @@ class AnnifProject(DatadirMixin):
         return {'project_id': self.project_id,
                 'name': self.name,
                 'language': self.language,
-                'backend': {'backend_id': self.config['backend']}
+                'backend': {'backend_id': self.config.get('backend')}
                 }
 
     def remove_model_data(self):
@@ -242,7 +254,11 @@ def _create_projects(projects_file, datadir, init_projects):
     config = configparser.ConfigParser()
     config.optionxform = lambda option: option
     with open(projects_file, encoding='utf-8') as projf:
-        config.read_file(projf)
+        try:
+            config.read_file(projf)
+        except (configparser.DuplicateOptionError,
+                configparser.DuplicateSectionError) as err:
+            raise ConfigurationException(err)
 
     # create AnnifProject objects from the configuration file
     projects = collections.OrderedDict()

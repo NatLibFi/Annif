@@ -36,3 +36,7 @@ class TestingInitializeConfig(TestingConfig):
 
 class TestingNoProjectsConfig(TestingConfig):
     PROJECTS_FILE = 'tests/notfound.cfg'
+
+
+class TestingInvalidProjectsConfig(TestingConfig):
+    PROJECTS_FILE = 'tests/projects_invalid.cfg'
