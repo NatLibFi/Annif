@@ -123,6 +123,17 @@ def run_show_project(project_id):
     click.echo(template.format('Access:', proj.access.name))
 
 
+@cli.command('clear')
+@click.argument('project_id')
+@common_options
+def run_clear_project(project_id):
+    """
+    Initialize the project to its original, untrained state.
+    """
+    proj = get_project(project_id)
+    proj.remove_model_data()
+
+
 @cli.command('loadvoc')
 @click.argument('project_id')
 @click.argument('subjectfile', type=click.Path(dir_okay=False))

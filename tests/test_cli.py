@@ -84,6 +84,29 @@ def test_show_project_nonexistent():
     assert failed_result.exception
 
 
+def test_clear_project(testdatadir):
+    dirpath = os.path.join(str(testdatadir), 'projects', 'dummy-fi')
+    fpath = os.path.join(str(dirpath), 'test_clear_project_datafile')
+    os.makedirs(dirpath)
+    open(fpath, 'a').close()
+
+    assert runner.invoke(
+        annif.cli.cli,
+        ['clear', 'dummy-fi']).exit_code == 0
+    assert not os.path.isdir(dirpath)
+
+
+def test_clear_project_nonexistent_data(testdatadir, caplog):
+    logger = annif.logger
+    logger.propagate = True
+    runner.invoke(
+        annif.cli.cli,
+        ['clear', 'dummy-fi']).exit_code != 0
+    assert len(caplog.records) == 1
+    expected_msg = 'No model data to remove for project dummy-fi.'
+    assert expected_msg == caplog.records[0].message
+
+
 def test_loadvoc_tsv(testdatadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))

@@ -1,4 +1,4 @@
-FROM python:3.7-slim AS builder
+FROM python:3-slim-buster AS builder
 
 LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
 
@@ -15,18 +15,26 @@ RUN apt-get update \
 		build-essential \
 	&& pip install --no-cache-dir \
 		cython \
-		fasttextmirror \
-	## Vowpal Wabbit. Using old VW because 8.5 links to wrong Python version
+		fasttextmirror==0.8.22 \
+	## Vowpal Wabbit
 	&& apt-get install -y --no-install-recommends \
 		libboost-program-options-dev \
 		zlib1g-dev \
 		libboost-python-dev \
+		cmake \
+		libboost-system-dev \
+		libboost-thread-dev \
+		libboost-test-dev \
+	&& ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.a \
+		/usr/lib/x86_64-linux-gnu/libboost_python3.a \
+	&& ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.so \
+		/usr/lib/x86_64-linux-gnu/libboost_python3.so \
 	&& pip install --no-cache-dir \
-		vowpalwabbit==8.4
+		vowpalwabbit
 
 
 
-FROM python:3.7-slim
+FROM python:3-slim-buster
 
 COPY --from=builder /usr/local/lib/python3.7 /usr/local/lib/python3.7
 
@@ -38,12 +46,13 @@ RUN apt-get update \
 		voikko-fi \
 	&& pip install --no-cache-dir \
 		annif[voikko] \
-	## Vowpal Wabbit. Using old VW because 8.5 links to wrong Python version
+	## Vowpal Wabbit
 	&& apt-get install -y --no-install-recommends \
-		libboost-program-options1.62.0 \
-		libboost-python1.62.0 \
+		libboost-program-options1.67.0 \
+		libboost-python1.67.0 \
+		libboost-system1.67.0 \
 	&& pip install --no-cache-dir \
-		vowpalwabbit==8.4 \
+		vowpalwabbit==8.7.* \
 	## Clean up:
 	&& rm -rf /var/lib/apt/lists/* /usr/include/* \
 	&& rm -rf /root/.cache/pip*/*

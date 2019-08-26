@@ -6,7 +6,7 @@ services:
     image: quay.io/natlibfi/annif
     volumes:
       - ${ANNIF_PROJECTS}:/annif-projects
-    user: ${UID}:${GID}
+    user: ${MY_UID}:${MY_GID}
     stdin_open: true
     tty: true
     command: bash
@@ -18,12 +18,14 @@ services:
       - ${ANNIF_PROJECTS}:/annif-projects
     ports:
       - "8080:8080"
+    environment:
+      - JAVA_OPTS="-DMAUISERVICE_CONFIGURATION=/srv/maui/mauiservice.ini"
 
   gunicorn_server:
     image: quay.io/natlibfi/annif
     volumes:
       - ${ANNIF_PROJECTS}:/annif-projects
-    user: ${UID}:${GID}
+    user: ${MY_UID}:${MY_GID}
     command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000"]
 
   nginx:

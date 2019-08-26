@@ -45,8 +45,9 @@ class DocumentDirectory(DocumentCorpus, DocumentToSubjectCorpusMixin):
                 text = docfile.read()
             with open(keyfilename, encoding='utf-8') as keyfile:
                 subjects = SubjectSet.from_string(keyfile.read())
-            yield Document(text=text, uris=subjects.subject_uris,
-                           labels=subjects.subject_labels)
+            yield self._create_document(text=text,
+                                        uris=subjects.subject_uris,
+                                        labels=subjects.subject_labels)
 
 
 class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
@@ -76,7 +77,9 @@ class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
             text, uris = line.split('\t', maxsplit=1)
             subjects = [annif.util.cleanup_uri(uri)
                         for uri in uris.split()]
-            yield Document(text=text, uris=subjects, labels=[])
+            yield self._create_document(text=text,
+                                        uris=subjects,
+                                        labels=[])
         else:
             logger.warning('Skipping invalid line (missing tab): "%s"',
                            line.rstrip())
