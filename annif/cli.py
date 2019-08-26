@@ -85,7 +85,7 @@ def set_project_config_file_path(ctx, param, value):
 def common_options(f):
     """Decorator to add common options for all CLI commands"""
     f = click.option(
-        '-p', '--projects', help='Set path to projects.cfg',
+        '-p', '--projects', help='Set path to projects.cfg', type=click.Path(),
         callback=set_project_config_file_path, expose_value=False,
         is_eager=True)(f)
     f = click_log.simple_verbosity_option(logger)(f)
