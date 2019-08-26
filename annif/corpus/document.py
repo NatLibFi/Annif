@@ -64,12 +64,9 @@ class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
                 return gzip.open(path, mode='rt')
         else:
             opener = open
-        try:
-            with opener(self.path) as tsvfile:
-                for line in tsvfile:
-                    yield from self._parse_tsv_line(line)
-        except FileNotFoundError as err:
-            raise AnnifException(str(err))
+        with opener(self.path) as tsvfile:
+            for line in tsvfile:
+                yield from self._parse_tsv_line(line)
 
     def _parse_tsv_line(self, line):
         if '\t' in line:

@@ -220,14 +220,6 @@ def test_docfile_plain(tmpdir):
     assert len(list(docs.documents)) == 3
 
 
-def test_docfile_nonexistent(tmpdir):
-    docfile = tmpdir.join('documents_nonexistent.tsv')
-    with pytest.raises(AnnifException) as err:
-        docs = annif.corpus.DocumentFile(str(docfile))
-        list(docs.documents)
-    assert "No such file or directory: '{}'".format(docfile) in str(err.value)
-
-
 def test_docfile_plain_invalid_lines(tmpdir, caplog):
     logger = annif.logger
     logger.propagate = True
