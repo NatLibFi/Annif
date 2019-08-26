@@ -71,8 +71,7 @@ class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
         except FileNotFoundError as err:
             raise AnnifException(str(err))
 
-    @staticmethod
-    def _parse_tsv_line(line):
+    def _parse_tsv_line(self, line):
         if '\t' in line:
             text, uris = line.split('\t', maxsplit=1)
             subjects = [annif.util.cleanup_uri(uri)
