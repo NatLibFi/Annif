@@ -136,7 +136,7 @@ def run_clear_project(project_id):
 
 @cli.command('loadvoc')
 @click.argument('project_id')
-@click.argument('subjectfile', type=click.Path(dir_okay=False))
+@click.argument('subjectfile', type=click.Path(exists=True, dir_okay=False))
 @common_options
 def run_loadvoc(project_id, subjectfile):
     """
@@ -154,7 +154,7 @@ def run_loadvoc(project_id, subjectfile):
 
 @cli.command('train')
 @click.argument('project_id')
-@click.argument('paths', type=click.Path(), nargs=-1)
+@click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @common_options
 def run_train(project_id, paths):
     """
@@ -167,7 +167,7 @@ def run_train(project_id, paths):
 
 @cli.command('learn')
 @click.argument('project_id')
-@click.argument('paths', type=click.Path(), nargs=-1)
+@click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @common_options
 def run_learn(project_id, paths):
     """
@@ -200,7 +200,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
 
 @cli.command('index')
 @click.argument('project_id')
-@click.argument('directory', type=click.Path(file_okay=False))
+@click.argument('directory', type=click.Path(exists=True, file_okay=False))
 @click.option(
     '--suffix',
     default='.annif',
@@ -241,7 +241,7 @@ def run_index(project_id, directory, suffix, force,
 
 @cli.command('eval')
 @click.argument('project_id')
-@click.argument('paths', type=click.Path(), nargs=-1)
+@click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
 @click.option('--backend-param', '-b', multiple=True,
@@ -275,7 +275,7 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
 
 @cli.command('optimize')
 @click.argument('project_id')
-@click.argument('paths', type=click.Path(), nargs=-1)
+@click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @click.option('--backend-param', '-b', multiple=True,
               help='Backend parameters to override')
 @common_options
