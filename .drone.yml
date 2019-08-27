@@ -52,3 +52,4 @@ steps:
       - release-test-branch
       event:
       - tag
+      - push
