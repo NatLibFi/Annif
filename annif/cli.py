@@ -46,11 +46,14 @@ def open_documents(paths):
             return annif.corpus.DocumentDirectory(path, require_subjects=True)
         return annif.corpus.DocumentFile(path)
 
-    if len(paths) > 1:
+    if len(paths) == 0:
+        logger.warning('Creating empty model')
+        docs = open_doc_path('/dev/null')
+    elif len(paths) == 1:
+        docs = open_doc_path(paths[0])
+    elif len(paths) > 1:
         corpora = [open_doc_path(path) for path in paths]
         docs = annif.corpus.CombinedCorpus(corpora)
-    else:
-        docs = open_doc_path(paths[0])
     return docs
 
 
