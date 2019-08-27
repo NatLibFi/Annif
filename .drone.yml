@@ -49,6 +49,6 @@ steps:
       auto_tag: true
     when:
       branch:
-      - master
+      - release-test-branch
       event:
       - tag
