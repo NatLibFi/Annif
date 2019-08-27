@@ -50,13 +50,12 @@ def test_list_projects_config_path_option():
 
 
 def test_list_projects_config_path_option_nonexistent():
-    nonexistent_file = "nonexistent.cfg"
-    result = runner.invoke(
-        annif.cli.cli, ["list-projects", "--projects", nonexistent_file])
-    assert not result.exception
-    assert result.exit_code == 0
-    assert 'Project configuration file "{}" is missing.'.format(
-        nonexistent_file) in result.output
+    failed_result = runner.invoke(
+        annif.cli.cli, ["list-projects", "--projects", "nonexistent.cfg"])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'Error: Invalid value for "-p" / "--projects": ' \
+           'File "nonexistent.cfg" does not exist.' in failed_result.output
 
 
 def test_show_project():
