@@ -45,7 +45,7 @@ class AnnifProject(DatadirMixin):
     def __init__(self, project_id, config, datadir):
         DatadirMixin.__init__(self, datadir, 'projects', project_id)
         self.project_id = project_id
-        self.name = config['name']
+        self.name = config.get('name', project_id)
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
         self.vocab_id = config.get('vocab', None)

@@ -89,6 +89,12 @@ def test_get_project_nobackend(app):
             backend = project.backend
 
 
+def test_get_project_noname(app):
+    with app.app_context():
+        project = annif.project.get_project('noname')
+        assert project.name == project.project_id
+
+
 def test_get_project_invalid_config_file(app):
     app = annif.create_app(
         config_name='annif.default_config.TestingInvalidProjectsConfig')
