@@ -12,6 +12,10 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     needs_subject_index = False
     needs_subject_vectorizer = False
 
+    DEFAULT_PARAMS = {
+        'limit': 100,
+    }
+
     def __init__(self, backend_id, params, datadir):
         """Initialize backend with specific parameters. The
         parameters are a dict. Keys and values depend on the specific
@@ -19,6 +23,21 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         self.backend_id = backend_id
         self.params = params
         self.datadir = datadir
+        self.fill_params_with_defaults()
+
+    def fill_params_with_defaults(self):
+        """Set the parameters that are not provided in the projects config file
+        with default values defined in the backend class and its bases."""
+        for source_cls in (self.__class__, *self.__class__.__bases__):
+            for default_param, default_value in \
+                    source_cls.DEFAULT_PARAMS.items():
+                if default_param not in self.params:
+                    self.info(
+                        "no value set for parameter {}, "
+                        "using default value {} from {}"
+                        .format(default_param, default_value,
+                                source_cls.__name__))
+                    self.params[default_param] = str(default_value)
 
     def train(self, corpus, project):
         """train the model on the given document or subject corpus"""

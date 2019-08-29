@@ -33,6 +33,10 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         't': float
     }
 
+    DEFAULT_PARAMS = {
+        # 'chunksize': 2, # EXAMPLE Could override chunksize in ChunkingBackend
+    }
+
     MODEL_FILE = 'fasttext-model'
     TRAIN_FILE = 'fasttext-train.txt'
 
