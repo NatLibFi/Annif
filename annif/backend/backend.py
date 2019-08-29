@@ -32,7 +32,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
             for default_param, default_value in \
                     source_cls.DEFAULT_PARAMS.items():
                 if default_param not in self.params:
-                    self.info(
+                    self.debug(
                         "no value set for parameter {}, "
                         "using default value {} from {}"
                         .format(default_param, default_value,
