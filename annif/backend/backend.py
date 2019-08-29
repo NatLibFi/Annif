@@ -28,7 +28,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def fill_params_with_defaults(self):
         """Set the parameters that are not provided in the projects config file
         with default values defined in the backend class and its bases."""
-        for source_cls in (self.__class__, *self.__class__.__bases__):
+        for source_cls in self.__class__.mro()[:-1]:  # omit the object class
             for default_param, default_value in \
                     source_cls.DEFAULT_PARAMS.items():
                 if default_param not in self.params:
