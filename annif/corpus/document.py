@@ -5,10 +5,9 @@ import os.path
 import re
 import gzip
 import annif.util
-from .types import Document, DocumentCorpus
+from .types import DocumentCorpus
 from .convert import DocumentToSubjectCorpusMixin
 from .subject import SubjectSet
-from ..exception import AnnifException
 
 logger = annif.logger
 
