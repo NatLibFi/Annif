@@ -2,8 +2,6 @@
 
 import gzip
 import annif.corpus
-import pytest
-from annif.exception import AnnifException
 
 
 def test_subjectset_uris():
