@@ -48,7 +48,7 @@ def open_documents(paths):
 
     if len(paths) == 0:
         logger.warning('Creating empty model')
-        docs = open_doc_path('/dev/null')
+        docs = open_doc_path(os.path.devnull)
     elif len(paths) == 1:
         docs = open_doc_path(paths[0])
     elif len(paths) > 1:
