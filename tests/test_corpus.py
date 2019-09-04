@@ -244,3 +244,11 @@ def test_docfile_gzipped(tmpdir):
 
     docs = annif.corpus.DocumentFile(str(docfile))
     assert len(list(docs.documents)) == 3
+
+
+def test_docfile_are_documents_empty():
+    import os.path
+    docfile = os.path.devnull
+
+    docs = annif.corpus.DocumentFile(str(docfile))
+    assert docs.are_documents_empty()
