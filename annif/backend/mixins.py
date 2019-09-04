@@ -8,9 +8,10 @@ from annif.suggestion import ListSuggestionResult
 class ChunkingBackend(metaclass=abc.ABCMeta):
     """Annif backend mixin that implements chunking of input"""
 
-    DEFAULT_PARAMS = {
-        'chunksize': 1,
-    }
+    DEFAULT_PARAMS = {'chunksize': 1}
+
+    def default_params(self):
+        return self.DEFAULT_PARAMS
 
     @abc.abstractmethod
     def _suggest_chunks(self, chunktexts, project):
