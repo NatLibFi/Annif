@@ -37,6 +37,14 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
 
         return Document(text=text, uris=uris, labels=labels)
 
+    def are_documents_empty(self):
+        """Check if there are no documents to iterate."""
+        try:
+            next(self.documents)
+            return False
+        except StopIteration:
+            return True
+
 
 Subject = collections.namedtuple('Subject', 'uri label text')
 

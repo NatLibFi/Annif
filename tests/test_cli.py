@@ -187,6 +187,43 @@ def test_train_nonexistent_path():
            'Path "nonexistent_path" does not exist.' in failed_result.output
 
 
+def test_train_no_path_vw(caplog):
+    logger = annif.logger
+    logger.propagate = True
+    result = runner.invoke(
+        annif.cli.cli, [
+            'train', 'vw-multi-fi'])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert 'Creating empty model' == caplog.records[0].message
+
+
+def test_train_no_path_tfidf(caplog):
+    logger = annif.logger
+    logger.propagate = True
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'train', 'tfidf-fi'])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'Creating empty model' == caplog.records[0].message
+    assert 'Not supported: using TfidfVectorizer with no documents' \
+        in failed_result.output
+
+
+def test_train_no_path_fasttext(caplog):
+    logger = annif.logger
+    logger.propagate = True
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'train', 'fasttext-fi'])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'Creating empty model' == caplog.records[0].message
+    assert 'Not supported: training backend fasttext with no documents' \
+        in failed_result.output
+
+
 def test_learn(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__),
