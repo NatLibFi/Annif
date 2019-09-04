@@ -4,6 +4,7 @@ import contextlib
 import random
 import re
 import os.path
+import pytest
 from click.testing import CliRunner
 import annif.cli
 
@@ -188,6 +189,7 @@ def test_train_nonexistent_path():
 
 
 def test_train_no_path_vw(caplog):
+    pytest.importorskip('annif.backend.vw_multi')
     logger = annif.logger
     logger.propagate = True
     result = runner.invoke(
@@ -212,6 +214,7 @@ def test_train_no_path_tfidf(caplog):
 
 
 def test_train_no_path_fasttext(caplog):
+    pytest.importorskip('annif.backend.fasttext')
     logger = annif.logger
     logger.propagate = True
     failed_result = runner.invoke(
