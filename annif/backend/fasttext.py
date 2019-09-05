@@ -33,7 +33,12 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         't': float
     }
 
-    DEFAULT_PARAMS = {'loss': 'hs'}  # TODO: and others
+    DEFAULT_PARAMS = {
+        'dim': 100,
+        'lr': 0.25,
+        'epoch': 5,
+        'loss': 'hs',
+    }
 
     MODEL_FILE = 'fasttext-model'
     TRAIN_FILE = 'fasttext-train.txt'
