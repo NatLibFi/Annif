@@ -188,6 +188,17 @@ def test_train_nonexistent_path():
            'Path "nonexistent_path" does not exist.' in failed_result.output
 
 
+def test_train_no_path(caplog):
+    logger = annif.logger
+    logger.propagate = True
+    result = runner.invoke(
+        annif.cli.cli, [
+            'train', 'dummy-fi'])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert 'Reading empty file' == caplog.records[0].message
+
+
 def test_train_no_path_vw(caplog):
     pytest.importorskip('annif.backend.vw_multi')
     logger = annif.logger
@@ -198,33 +209,6 @@ def test_train_no_path_vw(caplog):
     assert not result.exception
     assert result.exit_code == 0
     assert 'Reading empty file' == caplog.records[0].message
-
-
-def test_train_no_path_tfidf(caplog):
-    logger = annif.logger
-    logger.propagate = True
-    failed_result = runner.invoke(
-        annif.cli.cli, [
-            'train', 'tfidf-fi'])
-    assert failed_result.exception
-    assert failed_result.exit_code != 0
-    assert 'Reading empty file' == caplog.records[0].message
-    assert 'Not supported: using TfidfVectorizer with no documents' \
-        in failed_result.output
-
-
-def test_train_no_path_fasttext(caplog):
-    pytest.importorskip('annif.backend.fasttext')
-    logger = annif.logger
-    logger.propagate = True
-    failed_result = runner.invoke(
-        annif.cli.cli, [
-            'train', 'fasttext-fi'])
-    assert failed_result.exception
-    assert failed_result.exit_code != 0
-    assert 'Reading empty file' == caplog.records[0].message
-    assert 'Not supported: training backend fasttext with no documents' \
-        in failed_result.output
 
 
 def test_learn(testdatadir):
