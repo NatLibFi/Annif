@@ -199,18 +199,6 @@ def test_train_no_path(caplog):
     assert 'Reading empty file' == caplog.records[0].message
 
 
-def test_train_no_path_vw(caplog):
-    pytest.importorskip('annif.backend.vw_multi')
-    logger = annif.logger
-    logger.propagate = True
-    result = runner.invoke(
-        annif.cli.cli, [
-            'train', 'vw-multi-fi'])
-    assert not result.exception
-    assert result.exit_code == 0
-    assert 'Reading empty file' == caplog.records[0].message
-
-
 def test_learn(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__),
