@@ -47,7 +47,7 @@ def open_documents(paths):
         return annif.corpus.DocumentFile(path)
 
     if len(paths) == 0:
-        logger.warning('Creating empty model')
+        logger.warning('Reading empty file')
         docs = open_doc_path(os.path.devnull)
     elif len(paths) == 1:
         docs = open_doc_path(paths[0])

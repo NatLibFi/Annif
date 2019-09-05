@@ -197,7 +197,7 @@ def test_train_no_path_vw(caplog):
             'train', 'vw-multi-fi'])
     assert not result.exception
     assert result.exit_code == 0
-    assert 'Creating empty model' == caplog.records[0].message
+    assert 'Reading empty file' == caplog.records[0].message
 
 
 def test_train_no_path_tfidf(caplog):
@@ -208,7 +208,7 @@ def test_train_no_path_tfidf(caplog):
             'train', 'tfidf-fi'])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Creating empty model' == caplog.records[0].message
+    assert 'Reading empty file' == caplog.records[0].message
     assert 'Not supported: using TfidfVectorizer with no documents' \
         in failed_result.output
 
@@ -222,7 +222,7 @@ def test_train_no_path_fasttext(caplog):
             'train', 'fasttext-fi'])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Creating empty model' == caplog.records[0].message
+    assert 'Reading empty file' == caplog.records[0].message
     assert 'Not supported: training backend fasttext with no documents' \
         in failed_result.output
 
