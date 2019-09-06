@@ -28,12 +28,14 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     def fill_params_with_defaults(self):
         """Set the parameters that are not provided in the projects config file
-        with default values defined in the backend class and its parents."""
-        for default_param, default_value in self.default_params().items():
-            if default_param not in self.params:
-                self.debug('parameter "{}" not set, using default value "{}"'
-                           .format(default_param, default_value))
-                self.params[default_param] = str(default_value)
+        with default values set in the backend class."""
+        params_to_set = {param: str(val)
+                         for param, val in self.default_params().items()
+                         if param not in self.params}
+        if params_to_set:
+            self.debug('all parameters not set, using following defaults: {}'
+                       .format(params_to_set))
+            self.params.update(params_to_set)
 
     def train(self, corpus, project):
         """train the model on the given document or subject corpus"""
