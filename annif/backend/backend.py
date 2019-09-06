@@ -19,23 +19,23 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         parameters are a dict. Keys and values depend on the specific
         backend type."""
         self.backend_id = backend_id
-        self.params = params
         self.datadir = datadir
-        self.fill_params_with_defaults()
+        self.params = self.fill_params_with_defaults(params)
 
     def default_params(self):
         return self.DEFAULT_PARAMS
 
-    def fill_params_with_defaults(self):
+    def fill_params_with_defaults(self, params):
         """Set the parameters that are not provided in the projects config file
         with default values set in the backend class."""
         params_to_set = {param: str(val)
                          for param, val in self.default_params().items()
-                         if param not in self.params}
+                         if param not in params}
         if params_to_set:
             self.debug('all parameters not set, using following defaults: {}'
                        .format(params_to_set))
-            self.params.update(params_to_set)
+            params.update(params_to_set)
+        return params
 
     def train(self, corpus, project):
         """train the model on the given document or subject corpus"""
