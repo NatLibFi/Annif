@@ -1,6 +1,7 @@
 """Unit tests for backends in Annif"""
 
 import pytest
+import logging
 import annif
 import annif.backend
 import annif.corpus
@@ -40,3 +41,16 @@ def test_learn_dummy(app, project, tmpdir):
     assert result[0].uri == 'http://example.org/key1'
     assert result[0].label == 'key1'
     assert result[0].score == 1.0
+
+
+def test_fill_params_with_defaults(app, caplog):
+    logger = annif.logger
+    logger.propagate = True
+    dummy_type = annif.backend.get_backend('dummy')
+    dummy = dummy_type(backend_id='dummy', params={},
+                       datadir=app.config['DATADIR'])
+    expected_default_params = {'limit': '100'}  # From AnnifBackend class
+    expected_msg = 'all parameters not set, using following defaults:'
+    caplog.set_level(logging.DEBUG)
+    assert expected_default_params == dummy.fill_params_with_defaults({})
+    assert expected_msg in caplog.records[0].message
