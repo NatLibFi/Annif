@@ -107,6 +107,7 @@ def test_get_project_default_params_tfidf(app):
 
 
 def test_get_project_default_params_fasttext(app):
+    pytest.importorskip("annif.backend.fasttext")
     with app.app_context():
         project = annif.project.get_project('noparams-fasttext-fi')
     expected_default_params = {
