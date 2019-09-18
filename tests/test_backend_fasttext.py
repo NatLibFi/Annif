@@ -1,10 +1,37 @@
 """Unit tests for the fastText backend in Annif"""
 
+import logging
 import pytest
 import annif.backend
 import annif.corpus
 
 fasttext = pytest.importorskip("annif.backend.fasttext")
+
+
+def test_fasttext_default_params(datadir, project, caplog):
+    logger = annif.logger
+    logger.propagate = True
+    caplog.set_level(logging.DEBUG)
+
+    fasttext_type = annif.backend.get_backend("fasttext")
+    fasttext = fasttext_type(
+        backend_id='fasttext',
+        params={},
+        datadir=str(datadir))
+
+    expected_default_params = {
+        'limit': 100,
+        'chunksize': 1,
+        'dim': 100,
+        'lr': 0.25,
+        'epoch': 5,
+        'loss': 'hs',
+    }
+    expected_msg = "all parameters not set, using following defaults:"
+    assert expected_msg in caplog.records[0].message
+    actual_params = fasttext.params
+    for param, val in expected_default_params.items():
+        assert param in actual_params and actual_params[param] == str(val)
 
 
 def test_fasttext_train(datadir, document_corpus, project):

@@ -1,5 +1,6 @@
 """Unit tests for the fastText backend in Annif"""
 
+import logging
 import pytest
 import annif.backend
 import annif.corpus
@@ -16,6 +17,30 @@ def vw_corpus(tmpdir):
                   "arkeologia\thttp://www.yso.fi/onto/yso/p1265\n" +
                   "...\thttp://example.com/none")
     return annif.corpus.DocumentFile(str(tmpfile))
+
+
+def test_vw_multi_default_params(datadir, project, caplog):
+    logger = annif.logger
+    logger.propagate = True
+    caplog.set_level(logging.DEBUG)
+
+    vw_type = annif.backend.get_backend("vw_multi")
+    vw = vw_type(
+        backend_id='vw_multi',
+        params={},
+        datadir=str(datadir))
+
+    expected_default_params = {
+        'limit': 100,
+        'chunksize': 1,
+        'algorithm': 'oaa',
+        'loss_function': 'logistic',
+    }
+    expected_msg = "all parameters not set, using following defaults:"
+    assert expected_msg in caplog.records[0].message
+    actual_params = vw.params
+    for param, val in expected_default_params.items():
+        assert param in actual_params and actual_params[param] == str(val)
 
 
 def test_vw_multi_suggest_no_model(datadir, project):
