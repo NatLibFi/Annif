@@ -273,6 +273,59 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
         click.echo(template.format(metric + ":", score))
 
 
+@cli.command('learning-curves')
+@click.argument('project_id')
+@click.argument('paths', type=click.Path(), nargs=-1)
+@click.option('--limit', default=10, help='Maximum number of subjects')
+@click.option('--threshold', default=0.0, help='Minimum score threshold')
+@click.option('--backend-param', '-b', multiple=True,
+              help='Backend parameters to override')
+@common_options
+def run_learning_curves(project_id, paths, limit, threshold, backend_param):
+    """
+    """
+    project = get_project(project_id)
+    backend_params = parse_backend_params(backend_param)
+    hit_filter = SuggestionFilter(limit=limit, threshold=threshold)
+
+    from itertools import islice
+    n = 10
+    num_lines = sum(1 for line in open(paths[0]))
+    for point in range(1, n + 1):
+        frac = 1. / point
+        num_lines_to_read = frac * num_lines
+        print('Point {}/{}'.format(point, n))
+        print('Fraction of examples to use: {}'.format(frac))
+        print('Number of examples to use: {}'.format(int(num_lines_to_read)))
+        outfile = 'tmpfile' + str(point)
+        # TODO Shuffling
+        with open(paths[0], 'r') as input_file, \
+            open(outfile, 'w') as f_out:
+            lines_cache = islice(input_file, int(num_lines_to_read))
+            for current_line in lines_cache:
+                print(current_line.rstrip(), file=f_out)
+        docs = open_documents((outfile,))
+        project.train(docs)
+
+        # Evaluate on test set:
+        eval_batch = annif.eval.EvaluationBatch(project.subjects)
+        docs_test = open_documents(paths)
+        for doc in docs_test.documents:
+            results = project.suggest(doc.text, backend_params)
+            hits = hit_filter(results)
+            eval_batch.evaluate(hits,
+                                annif.corpus.SubjectSet((doc.uris, doc.labels)))
+
+        logfile = 'logfile'
+        if point == 1:
+            with open(logfile, 'w') as lgfile:
+                line = 'Training data fraction\t' + '\t'.join(eval_batch.results().keys())
+                print(line, file=lgfile)
+        with open(logfile, 'a') as lgfile:
+            line = str(frac) + '\t' + '\t'.join((str(v) for v in eval_batch.results().values()))
+            print(line, file=lgfile)
+
+
 @cli.command('optimize')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(), nargs=-1)
