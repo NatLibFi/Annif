@@ -275,55 +275,63 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
 
 @cli.command('learning-curves')
 @click.argument('project_id')
-@click.argument('paths', type=click.Path(), nargs=-1)
+@click.argument('train-paths', type=click.Path(), nargs=-1)
+@click.option('--test-paths', type=click.Path())
+@click.option('--num-splits', '-n', default=5, help='TODO')  # TODO
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
 @click.option('--backend-param', '-b', multiple=True,
               help='Backend parameters to override')
 @common_options
-def run_learning_curves(project_id, paths, limit, threshold, backend_param):
+def run_learning_curves(project_id, train_paths, test_paths, num_splits, limit,
+                        threshold, backend_param):
+    """ # TODO
     """
-    """
-    project = get_project(project_id)
     backend_params = parse_backend_params(backend_param)
-    hit_filter = SuggestionFilter(limit=limit, threshold=threshold)
+    project = get_project(project_id)
+    docs_test = open_documents((test_paths,))
+    eval_batch = annif.eval.EvaluationBatch(project.subjects)
 
-    from itertools import islice
-    n = 10
-    num_lines = sum(1 for line in open(paths[0]))
-    for point in range(1, n + 1):
-        frac = 1. / point
-        num_lines_to_read = frac * num_lines
-        print('Point {}/{}'.format(point, n))
-        print('Fraction of examples to use: {}'.format(frac))
-        print('Number of examples to use: {}'.format(int(num_lines_to_read)))
-        outfile = 'tmpfile' + str(point)
-        # TODO Shuffling
-        with open(paths[0], 'r') as input_file, \
-            open(outfile, 'w') as f_out:
-            lines_cache = islice(input_file, int(num_lines_to_read))
-            for current_line in lines_cache:
-                print(current_line.rstrip(), file=f_out)
-        docs = open_documents((outfile,))
-        project.train(docs)
-
-        # Evaluate on test set:
-        eval_batch = annif.eval.EvaluationBatch(project.subjects)
-        docs_test = open_documents(paths)
-        for doc in docs_test.documents:
+    def _evaluate(docs, logfile):
+        hit_filter = SuggestionFilter(limit=limit, threshold=threshold)
+        for doc in docs.documents:
             results = project.suggest(doc.text, backend_params)
             hits = hit_filter(results)
-            eval_batch.evaluate(hits,
-                                annif.corpus.SubjectSet((doc.uris, doc.labels)))
-
-        logfile = 'logfile'
-        if point == 1:
+            eval_batch.evaluate(
+                hits, annif.corpus.SubjectSet((doc.uris, doc.labels)))
+        results = eval_batch.results()
+        if ind == 0:
             with open(logfile, 'w') as lgfile:
-                line = 'Training data fraction\t' + '\t'.join(eval_batch.results().keys())
+                line = 'Training data fraction\t' + '\t'.join(results.keys())
                 print(line, file=lgfile)
         with open(logfile, 'a') as lgfile:
-            line = str(frac) + '\t' + '\t'.join((str(v) for v in eval_batch.results().values()))
+            line = str((ind + 1) / (num_splits)) + '\t' + '\t'.join(
+                (str(v) for v in results.values()))
             print(line, file=lgfile)
+
+    docs = open_documents(train_paths)
+    from more_itertools import distribute
+    doc_sets = distribute(num_splits, docs.documents)
+
+    train_files = []
+    for ind, doc_set in enumerate(doc_sets):
+        new_train_file = 'train_part' + str(ind) + '.tsv'
+        click.echo('Point {}/{}'.format(ind+1, num_splits))
+        with open(new_train_file, 'w') as tmpfile:
+            for doc in doc_set:
+                line = doc.text.replace('\n', ' ').replace('\t', ' ') \
+                    + '\t<' + '> <'.join(doc.uris) + '>'
+                print(line, file=tmpfile)
+        # Train:
+        train_files.append(new_train_file)
+        docs_train = open_documents(train_files)
+        click.echo('training')
+        project.train(docs_train)
+        # Evaluate:
+        click.echo('evaluating on train set')
+        _evaluate(docs_train, 'logfile-' + project.project_id + '-train.tsv')
+        click.echo('evaluating on test set')
+        _evaluate(docs_test, 'logfile-' + project.project_id + '-test.tsv')
 
 
 @cli.command('optimize')
