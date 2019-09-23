@@ -35,6 +35,7 @@ setup(
         'fasttext': ['fasttext', 'fasttextmirror==0.8.22'],
         'voikko': ['voikko'],
         'vw': ['vowpalwabbit==8.7.*', 'numpy'],
+        'nn': ['keras', 'tensorflow'],
     },
     entry_points={
         'console_scripts': ['annif=annif.cli:cli']},
