@@ -40,7 +40,8 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
     def _merge_hits_from_sources(self, hits_from_sources, project, params):
         score_vector = np.array([hits.vector * weight
                                  for hits, weight in hits_from_sources])
-        results = self._model.predict(score_vector.transpose().expand_dims(0))
+        results = self._model.predict(
+            np.expand_dims(score_vector.transpose(), 0))
         return VectorSuggestionResult(results[0], project.subjects)
 
     def _create_model(self, sources, project):
