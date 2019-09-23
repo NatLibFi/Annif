@@ -3,14 +3,11 @@ projects."""
 
 
 import os.path
-import joblib
-from sklearn.isotonic import IsotonicRegression
 import numpy as np
-from keras.layers import Input, Dense, Reshape, Add, Flatten, Lambda, Dropout
+from keras.layers import Input, Dense, Add, Flatten, Lambda, Dropout
 from keras.models import Model, load_model
 import keras.backend as K
 import annif.corpus
-import annif.suggestion
 import annif.project
 import annif.util
 from annif.exception import NotInitializedException
