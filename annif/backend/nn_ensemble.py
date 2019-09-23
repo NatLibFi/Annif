@@ -97,12 +97,8 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
             true_vectors.append(subjects.as_vector(project.subjects))
         # collect the results into a single vector, considering weights
         scores = np.array(score_vectors)
-        print("scores shape:", scores.shape)
         # collect the gold standard values into another vector
         true = np.array(true_vectors)
-        print("true shape:", true.shape)
-
-        print("n_concepts:", len(project.subjects))
 
         # TODO: these parameters should be configurable
         epochs = 10
