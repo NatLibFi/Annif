@@ -4,6 +4,7 @@ import contextlib
 import random
 import re
 import os.path
+import pytest
 from click.testing import CliRunner
 import annif.cli
 
@@ -50,13 +51,12 @@ def test_list_projects_config_path_option():
 
 
 def test_list_projects_config_path_option_nonexistent():
-    nonexistent_file = "nonexistent.cfg"
-    result = runner.invoke(
-        annif.cli.cli, ["list-projects", "--projects", nonexistent_file])
-    assert not result.exception
-    assert result.exit_code == 0
-    assert 'Project configuration file "{}" is missing.'.format(
-        nonexistent_file) in result.output
+    failed_result = runner.invoke(
+        annif.cli.cli, ["list-projects", "--projects", "nonexistent.cfg"])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'Error: Invalid value for "-p" / "--projects": ' \
+           'File "nonexistent.cfg" does not exist.' in failed_result.output
 
 
 def test_show_project():
@@ -137,6 +137,16 @@ def test_loadvoc_rdf(testdatadir):
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
 
 
+def test_loadvoc_nonexistent_path():
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'loadvoc', 'dummy-fi', 'nonexistent_path'])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'Invalid value for "SUBJECTFILE": ' \
+           'File "nonexistent_path" does not exist.' in failed_result.output
+
+
 def test_train(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__),
@@ -168,6 +178,27 @@ def test_train_multiple(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
+def test_train_nonexistent_path():
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'train', 'dummy-fi', 'nonexistent_path'])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'Invalid value for "[PATHS]...": ' \
+           'Path "nonexistent_path" does not exist.' in failed_result.output
+
+
+def test_train_no_path(caplog):
+    logger = annif.logger
+    logger.propagate = True
+    result = runner.invoke(
+        annif.cli.cli, [
+            'train', 'dummy-fi'])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert 'Reading empty file' == caplog.records[0].message
+
+
 def test_learn(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__),
@@ -188,6 +219,16 @@ def test_learn_notsupported(testdatadir):
     result = runner.invoke(annif.cli.cli, ['learn', 'tfidf-fi', docfile])
     assert result.exit_code != 0
     assert 'Learning not supported' in result.output
+
+
+def test_learn_nonexistent_path():
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'learn', 'dummy-fi', 'nonexistent_path'])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'Invalid value for "[PATHS]...": ' \
+           'Path "nonexistent_path" does not exist.' in failed_result.output
 
 
 def test_suggest():
@@ -257,6 +298,17 @@ def test_index(tmpdir):
     assert "Not overwriting" not in result.output
     assert tmpdir.join('doc1.annif').read_text(
         'utf-8') == "<http://example.org/dummy>\tdummy\t1.0\n"
+
+
+def test_index_nonexistent_path():
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'index', 'dummy-fi', 'nonexistent_path'])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'Invalid value for "DIRECTORY": ' \
+           'Directory "nonexistent_path" does not exist.' \
+           in failed_result.output
 
 
 def test_eval_label(tmpdir):
@@ -362,6 +414,16 @@ def test_eval_docfile():
     assert result.exit_code == 0
 
 
+def test_eval_nonexistent_path():
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'eval', 'dummy-fi', 'nonexistent_path'])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'Invalid value for "[PATHS]...": ' \
+           'Path "nonexistent_path" does not exist.' in failed_result.output
+
+
 def test_optimize_dir(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('dummy')
@@ -398,3 +460,13 @@ def test_optimize_docfile(tmpdir):
             'optimize', 'dummy-fi', str(docfile)])
     assert not result.exception
     assert result.exit_code == 0
+
+
+def test_optimize_nonexistent_path():
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'optimize', 'dummy-fi', 'nonexistent_path'])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'Invalid value for "[PATHS]...": ' \
+           'Path "nonexistent_path" does not exist.' in failed_result.output
