@@ -37,7 +37,7 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
 
         return Document(text=text, uris=uris, labels=labels)
 
-    def are_documents_empty(self):
+    def is_empty(self):
         """Check if there are no documents to iterate."""
         try:
             next(self.documents)

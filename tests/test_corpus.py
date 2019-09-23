@@ -246,7 +246,7 @@ def test_docfile_gzipped(tmpdir):
     assert len(list(docs.documents)) == 3
 
 
-def test_docfile_are_documents_empty(tmpdir):
+def test_docfile_is_empty(tmpdir):
     empty_file = tmpdir.ensure('empty.tsv')
     docs = annif.corpus.DocumentFile(str(empty_file))
-    assert docs.are_documents_empty()
+    assert docs.is_empty()

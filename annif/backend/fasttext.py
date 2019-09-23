@@ -104,7 +104,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         self._model.save_model(modelpath)
 
     def train(self, corpus, project):
-        if corpus.are_documents_empty():
+        if corpus.is_empty():
             raise NotSupportedException('training backend {} with no documents'
                                         .format(self.backend_id))
         self._create_train_file(corpus, project)

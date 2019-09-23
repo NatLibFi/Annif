@@ -193,7 +193,7 @@ class AnnifProject(DatadirMixin):
         if not self.backend.needs_subject_vectorizer:
             logger.debug('not creating vectorizer: not needed by backend')
             return
-        if subjectcorpus.are_documents_empty():
+        if subjectcorpus.is_empty():
             raise NotSupportedException(
                 'using TfidfVectorizer with no documents')
         logger.info('creating vectorizer')
