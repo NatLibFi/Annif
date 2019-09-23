@@ -51,7 +51,7 @@ def open_documents(paths):
         docs = open_doc_path(os.path.devnull)
     elif len(paths) == 1:
         docs = open_doc_path(paths[0])
-    elif len(paths) > 1:
+    else:
         corpora = [open_doc_path(path) for path in paths]
         docs = annif.corpus.CombinedCorpus(corpora)
     return docs
