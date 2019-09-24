@@ -28,9 +28,9 @@ def test_vw_ensemble_default_params(datadir, project, caplog):
         'discount_rate': 0.01,
         'loss_function': 'squared',
     }
-    expected_msg = "all parameters not set, using following defaults:"
-    assert expected_msg in caplog.records[0].message
+    expected_msg = "all parameters not set, using the following defaults:"
     actual_params = vw.params
+    assert expected_msg in caplog.records[0].message
     for param, val in expected_default_params.items():
         assert param in actual_params and actual_params[param] == str(val)
 

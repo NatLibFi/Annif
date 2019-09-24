@@ -19,9 +19,9 @@ def test_pav_default_params(datadir, document_corpus, project, caplog):
     expected_default_params = {
         'min-docs': 10,
     }
-    expected_msg = "all parameters not set, using following defaults:"
-    assert expected_msg in caplog.records[0].message
+    expected_msg = "all parameters not set, using the following defaults:"
     actual_params = pav.params
+    assert expected_msg in caplog.records[0].message
     for param, val in expected_default_params.items():
         assert param in actual_params and actual_params[param] == str(val)
 

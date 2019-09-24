@@ -50,7 +50,7 @@ def test_fill_params_with_defaults(app, caplog):
     dummy = dummy_type(backend_id='dummy', params={},
                        datadir=app.config['DATADIR'])
     expected_default_params = {'limit': '100'}  # From AnnifBackend class
-    expected_msg = 'all parameters not set, using following defaults:'
+    expected_msg = 'all parameters not set, using the following defaults:'
     caplog.set_level(logging.DEBUG)
-    assert expected_default_params == dummy.fill_params_with_defaults({})
+    assert expected_default_params == dummy.params
     assert expected_msg in caplog.records[0].message

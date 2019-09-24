@@ -33,9 +33,9 @@ def test_tfidf_default_params(datadir, project, caplog):
     expected_default_params = {
         'limit': 100  # From AnnifBackend class
     }
-    expected_msg = "all parameters not set, using following defaults:"
-    assert expected_msg in caplog.records[0].message
+    expected_msg = "all parameters not set, using the following defaults:"
     actual_params = tfidf.params
+    assert expected_msg in caplog.records[0].message
     for param, val in expected_default_params.items():
         assert param in actual_params and actual_params[param] == str(val)
 
