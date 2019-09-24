@@ -2,7 +2,7 @@ kind: pipeline
 name: default
 steps:
 
-  - name: build
+  - name: dry_run_build
     image: plugins/docker
     settings:
       dockerfile: Dockerfile
@@ -25,7 +25,6 @@ steps:
   - name: build_and_publish_builder
     image: plugins/docker
     settings:
-      dockerfile: Dockerfile
       username:
         from_secret: docker_username
       password:
@@ -45,7 +44,6 @@ steps:
   - name: build_and_publish
     image: plugins/docker
     settings:
-      dockerfile: Dockerfile
       username:
         from_secret: docker_username
       password:
@@ -65,7 +63,6 @@ steps:
   - name: build_publish_and_tag_with_release_version
     image: plugins/docker
     settings:
-      dockerfile: Dockerfile
       username:
         from_secret: docker_username
       password:
