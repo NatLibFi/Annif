@@ -36,7 +36,7 @@ steps:
       target: builder
     when:
       branch:
-      - drone-caching
+      - master
       event:
       - push
 
@@ -50,7 +50,7 @@ steps:
         - quay.io/natlibfi/annif:latest
     when:
       branch:
-      - drone-caching
+      - master
       event:
       - push
 
