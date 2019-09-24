@@ -1,15 +1,19 @@
 kind: pipeline
 name: default
+
+globals:
+  - &docker_creds
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+
 steps:
 
   - name: dry_run_build
     image: plugins/docker
     settings:
-      dockerfile: Dockerfile
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
+      <<: *docker_creds
       registry: quay.io
       repo: quay.io/natlibfi/annif
       tags: [dry-run-built]
@@ -25,10 +29,7 @@ steps:
   - name: build_and_publish_builder
     image: plugins/docker
     settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
+      <<: *docker_creds
       registry: quay.io
       repo: quay.io/natlibfi/annif
       tags: [builder]
@@ -44,10 +45,7 @@ steps:
   - name: build_and_publish
     image: plugins/docker
     settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
+      <<: *docker_creds
       registry: quay.io
       repo: quay.io/natlibfi/annif
       tags: [latest]
@@ -63,10 +61,7 @@ steps:
   - name: build_publish_and_tag_with_release_version
     image: plugins/docker
     settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
+      <<: *docker_creds
       registry: quay.io
       repo: quay.io/natlibfi/annif
       auto_tag: true
