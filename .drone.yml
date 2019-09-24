@@ -16,7 +16,7 @@ steps:
       cache_from:
         - quay.io/natlibfi/annif:builder
         - quay.io/natlibfi/annif:latest
-    dry_run: true
+      dry_run: true
     when:
       event:
       - push
