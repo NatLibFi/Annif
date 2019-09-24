@@ -13,7 +13,7 @@ def test_pav_default_params(datadir, document_corpus, project, caplog):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
-        params={},
+        config_params={},
         datadir=str(datadir))
 
     expected_default_params = {
@@ -30,7 +30,7 @@ def test_pav_train(app, datadir, tmpdir, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
-        params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
         datadir=str(datadir))
 
     tmpfile = tmpdir.join('document.tsv')
@@ -49,7 +49,7 @@ def test_pav_initialize(app, datadir):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
-        params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
         datadir=str(datadir))
 
     assert pav._models is None
@@ -65,7 +65,7 @@ def test_pav_suggest(app, datadir, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
-        params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
         datadir=str(datadir))
 
     results = pav.suggest("""Arkeologiaa sanotaan joskus myös

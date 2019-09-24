@@ -14,13 +14,13 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     DEFAULT_PARAMS = {'limit': 100}
 
-    def __init__(self, backend_id, params, datadir):
+    def __init__(self, backend_id, config_params, datadir):
         """Initialize backend with specific parameters. The
         parameters are a dict. Keys and values depend on the specific
         backend type."""
         self.backend_id = backend_id
         self.datadir = datadir
-        self._params = params
+        self._params = config_params
 
     def default_params(self):
         return self.DEFAULT_PARAMS
