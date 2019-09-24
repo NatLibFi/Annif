@@ -13,7 +13,8 @@ class CombinedCorpus(SubjectCorpus, DocumentCorpus):
 
     @property
     def subjects(self):
-        for source_subjects in zip(*[corpus.subjects for corpus in self._corpora]):
+        for source_subjects in zip(
+                *[corpus.subjects for corpus in self._corpora]):
             uri = None
             label = None
             texts = []
