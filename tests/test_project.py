@@ -103,7 +103,7 @@ def test_get_project_default_params_tfidf(app):
     }
     actual_params = project.backend.params
     for param, val in expected_default_params.items():
-        assert param in actual_params and actual_params[param] == str(val)
+        assert param in actual_params and actual_params[param] == val
 
 
 def test_get_project_default_params_fasttext(app):
@@ -118,7 +118,7 @@ def test_get_project_default_params_fasttext(app):
         'loss': 'hs'}
     actual_params = project.backend.params
     for param, val in expected_default_params.items():
-        assert param in actual_params and actual_params[param] == str(val)
+        assert param in actual_params and actual_params[param] == val
 
 
 def test_get_project_invalid_config_file(app):

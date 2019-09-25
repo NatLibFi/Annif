@@ -43,14 +43,9 @@ def test_learn_dummy(app, project, tmpdir):
     assert result[0].score == 1.0
 
 
-def test_fill_params_with_defaults(app, caplog):
-    logger = annif.logger
-    logger.propagate = True
+def test_fill_params_with_defaults(app):
     dummy_type = annif.backend.get_backend('dummy')
     dummy = dummy_type(backend_id='dummy', config_params={},
                        datadir=app.config['DATADIR'])
-    expected_default_params = {'limit': '100'}  # From AnnifBackend class
-    expected_msg = 'all parameters not set, using the following defaults:'
-    caplog.set_level(logging.DEBUG)
+    expected_default_params = {'limit': 100}  # From AnnifBackend class
     assert expected_default_params == dummy.params
-    assert expected_msg in caplog.records[0].message

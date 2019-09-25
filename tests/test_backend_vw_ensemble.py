@@ -1,6 +1,5 @@
 """Unit tests for the vw_ensemble backend in Annif"""
 
-import logging
 import json
 import time
 import pytest
@@ -12,11 +11,7 @@ from annif.exception import NotInitializedException
 pytest.importorskip("annif.backend.vw_ensemble")
 
 
-def test_vw_ensemble_default_params(datadir, project, caplog):
-    logger = annif.logger
-    logger.propagate = True
-    caplog.set_level(logging.DEBUG)
-
+def test_vw_ensemble_default_params(datadir, project):
     vw_type = annif.backend.get_backend("vw_ensemble")
     vw = vw_type(
         backend_id='vw_ensemble',
@@ -28,11 +23,9 @@ def test_vw_ensemble_default_params(datadir, project, caplog):
         'discount_rate': 0.01,
         'loss_function': 'squared',
     }
-    expected_msg = "all parameters not set, using the following defaults:"
     actual_params = vw.params
-    assert expected_msg in caplog.records[0].message
     for param, val in expected_default_params.items():
-        assert param in actual_params and actual_params[param] == str(val)
+        assert param in actual_params and actual_params[param] == val
 
 
 def test_vw_ensemble_suggest_no_model(datadir, project):

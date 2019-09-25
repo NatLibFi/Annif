@@ -1,6 +1,5 @@
 """Unit tests for the fastText backend in Annif"""
 
-import logging
 import pytest
 import annif.backend
 import annif.corpus
@@ -8,11 +7,7 @@ import annif.corpus
 fasttext = pytest.importorskip("annif.backend.fasttext")
 
 
-def test_fasttext_default_params(datadir, project, caplog):
-    logger = annif.logger
-    logger.propagate = True
-    caplog.set_level(logging.DEBUG)
-
+def test_fasttext_default_params(datadir, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
@@ -27,11 +22,9 @@ def test_fasttext_default_params(datadir, project, caplog):
         'epoch': 5,
         'loss': 'hs',
     }
-    expected_msg = "all parameters not set, using the following defaults:"
     actual_params = fasttext.params
-    assert expected_msg in caplog.records[0].message
     for param, val in expected_default_params.items():
-        assert param in actual_params and actual_params[param] == str(val)
+        assert param in actual_params and actual_params[param] == val
 
 
 def test_fasttext_train(datadir, document_corpus, project):

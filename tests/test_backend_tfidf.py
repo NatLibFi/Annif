@@ -4,7 +4,6 @@ import annif
 import annif.backend
 import annif.corpus
 from sklearn.feature_extraction.text import TfidfVectorizer
-import logging
 import pytest
 import unittest.mock
 
@@ -19,11 +18,7 @@ def project(document_corpus):
     return proj
 
 
-def test_tfidf_default_params(datadir, project, caplog):
-    logger = annif.logger
-    logger.propagate = True
-    caplog.set_level(logging.DEBUG)
-
+def test_tfidf_default_params(datadir, project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
@@ -33,11 +28,9 @@ def test_tfidf_default_params(datadir, project, caplog):
     expected_default_params = {
         'limit': 100  # From AnnifBackend class
     }
-    expected_msg = "all parameters not set, using the following defaults:"
     actual_params = tfidf.params
-    assert expected_msg in caplog.records[0].message
     for param, val in expected_default_params.items():
-        assert param in actual_params and actual_params[param] == str(val)
+        assert param in actual_params and actual_params[param] == val
 
 
 def test_tfidf_train(datadir, document_corpus, project):

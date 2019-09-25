@@ -1,15 +1,10 @@
 """Unit tests for the PAV backend in Annif"""
 
-import logging
 import annif.backend
 import annif.corpus
 
 
-def test_pav_default_params(datadir, document_corpus, project, caplog):
-    logger = annif.logger
-    logger.propagate = True
-    caplog.set_level(logging.DEBUG)
-
+def test_pav_default_params(datadir, document_corpus, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
@@ -19,11 +14,9 @@ def test_pav_default_params(datadir, document_corpus, project, caplog):
     expected_default_params = {
         'min-docs': 10,
     }
-    expected_msg = "all parameters not set, using the following defaults:"
     actual_params = pav.params
-    assert expected_msg in caplog.records[0].message
     for param, val in expected_default_params.items():
-        assert param in actual_params and actual_params[param] == str(val)
+        assert param in actual_params and actual_params[param] == val
 
 
 def test_pav_train(app, datadir, tmpdir, project):
