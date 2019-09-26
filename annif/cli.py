@@ -280,61 +280,76 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
 @cli.command('learning-curves')
 @click.argument('project_id')
 @click.argument('train-paths', type=click.Path(), nargs=-1)
-@click.option('--test-paths', type=click.Path())
-@click.option('--num-splits', '-n', default=5, help='TODO')  # TODO
+@click.option('--num-points', '-n', default=5, help='TODO')  # TODO
+@click.option('--test-frac', '-f', default=0.2, help='TODO')  # TODO
+@click.option('--eval-train/--no-eval-train', default=False, help='')  # TODO
+@click.option('--eval-metrics', default='simple', help='TODO')  # TODO
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
 @click.option('--backend-param', '-b', multiple=True,
               help='Backend parameters to override')
 @common_options
-def run_learning_curves(project_id, train_paths, test_paths, num_splits, limit,
-                        threshold, backend_param):
+def run_learning_curves(project_id, train_paths, num_points, test_frac,
+                        eval_train, eval_metrics, limit, threshold,
+                        backend_param):
     """ # TODO
     """
     backend_params = parse_backend_params(backend_param)
     project = get_project(project_id)
-    docs_test = open_documents((test_paths,))
-    eval_batch = annif.eval.EvaluationBatch(project.subjects)
+    from annif.corpus import DocumentList
+    from itertools import islice
+    import warnings
+    from more_itertools import ilen
 
     def _evaluate(docs, logfile):
+        eval_batch = annif.eval.EvaluationBatch(project.subjects)
         hit_filter = SuggestionFilter(limit=limit, threshold=threshold)
         for doc in docs.documents:
             results = project.suggest(doc.text, backend_params)
             hits = hit_filter(results)
             eval_batch.evaluate(
                 hits, annif.corpus.SubjectSet((doc.uris, doc.labels)))
-        results = eval_batch.results()
-        if ind == 0:
+        results = eval_batch.results(metrics=eval_metrics)
+        if ind == 1:
             with open(logfile, 'w') as lgfile:
-                line = 'Training data fraction\t' + '\t'.join(results.keys())
+                line = 'Documents in training\t' + '\t'.join(results.keys())
                 print(line, file=lgfile)
         with open(logfile, 'a') as lgfile:
-            line = str((ind + 1) / (num_splits)) + '\t' + '\t'.join(
+            line = str(num_docs_train_part) + '\t' + '\t'.join(
                 (str(v) for v in results.values()))
             print(line, file=lgfile)
 
-    docs = open_documents(train_paths)
-    from more_itertools import distribute
-    doc_sets = distribute(num_splits, docs.documents)
+    def open_docs_slice(train_paths, start, stop):
+        docs = open_documents(train_paths)
+        return DocumentList(islice(docs.documents, start, stop))
 
-    train_files = []
-    for ind, doc_set in enumerate(doc_sets):
-        new_train_file = 'train_part' + str(ind) + '.tsv'
-        click.echo('Point {}/{}'.format(ind+1, num_splits))
-        with open(new_train_file, 'w') as tmpfile:
-            for doc in doc_set:
-                line = doc.text.replace('\n', ' ').replace('\t', ' ') \
-                    + '\t<' + '> <'.join(doc.uris) + '>'
-                print(line, file=tmpfile)
-        # Train:
-        train_files.append(new_train_file)
-        docs_train = open_documents(train_files)
-        click.echo('training')
+    docs = open_documents(train_paths)
+    num_docs = ilen(docs.documents)
+    num_docs_test = round(test_frac * num_docs)
+    num_docs_train = num_docs - num_docs_test
+    print(num_docs, num_docs_test, num_docs_train)
+
+    for ind in range(1, num_points+1):
+        num_docs_train_part = round(ind / num_points * num_docs_train)
+#        base = 2
+#        num_docs_train_part = round(
+#            base ** ind / base ** num_points * num_docs_train)
+        click.echo('Point {}/{}, documents in training: {}'.format(
+                ind, num_points, num_docs_train_part))
+#        with warnings.catch_warnings():
+#            warnings.simplefilter('ignore')
+        docs_train = open_docs_slice(train_paths, num_docs_test,
+                                     num_docs_test + num_docs_train_part)
         project.train(docs_train)
-        # Evaluate:
-        click.echo('evaluating on train set')
-        _evaluate(docs_train, 'logfile-' + project.project_id + '-train.tsv')
-        click.echo('evaluating on test set')
+
+        if eval_train:
+            click.echo('Evaluating on train set')
+            docs_train = open_docs_slice(train_paths, num_docs_test,
+                                         num_docs_test + num_docs_train_part)
+            _evaluate(docs_train,
+                      'logfile-' + project.project_id + '-train.tsv')
+        click.echo('Evaluating on test set')
+        docs_test = open_docs_slice(train_paths, 0, num_docs_test)
         _evaluate(docs_test, 'logfile-' + project.project_id + '-test.tsv')
 
 
