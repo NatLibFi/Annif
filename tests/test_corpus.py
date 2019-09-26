@@ -250,3 +250,19 @@ def test_docfile_is_empty(tmpdir):
     empty_file = tmpdir.ensure('empty.tsv')
     docs = annif.corpus.DocumentFile(str(empty_file))
     assert docs.is_empty()
+
+
+def test_combinedcorpus(tmpdir, subject_index):
+    docfile = tmpdir.join('documents.tsv')
+    docfile.write("""Läntinen\t<http://www.yso.fi/onto/yso/p2557>
+        Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
+        Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
+
+    corpus1 = annif.corpus.DocumentFile(str(docfile))
+    corpus2 = annif.corpus.DocumentFile(str(docfile))
+
+    combined = annif.corpus.CombinedCorpus([corpus1, corpus2])
+    combined.set_subject_index(subject_index)
+
+    assert len(list(combined.documents)) == 6
+    assert len(list(combined.subjects)) == len(list(corpus1.subjects))
