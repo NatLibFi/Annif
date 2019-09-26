@@ -77,7 +77,7 @@ def test_vw_multi_train_and_learn_nodocuments(datadir, tmpdir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={
+        config_params={
             'chunksize': 4,
             'learning_rate': 0.5,
             'loss_function': 'hinge'},

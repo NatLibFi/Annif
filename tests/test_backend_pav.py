@@ -44,7 +44,7 @@ def test_pav_train_nodocuments(tmpdir, datadir, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
-        params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
         datadir=str(datadir))
 
     empty_file = tmpdir.ensure('empty.tsv')
