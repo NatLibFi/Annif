@@ -218,6 +218,23 @@ def test_docfile_plain(tmpdir):
     assert len(list(docs.documents)) == 3
 
 
+def test_docfile_plain_invalid_lines(tmpdir, caplog):
+    logger = annif.logger
+    logger.propagate = True
+    docfile = tmpdir.join('documents_invalid.tsv')
+    docfile.write("""Läntinen\t<http://www.yso.fi/onto/yso/p2557>
+
+        Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
+        A line with no tabs
+        Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
+    docs = annif.corpus.DocumentFile(str(docfile))
+    assert len(list(docs.documents)) == 3
+    assert len(caplog.records) == 2
+    expected_msg = 'Skipping invalid line (missing tab):'
+    for record in caplog.records:
+        assert expected_msg in record.message
+
+
 def test_docfile_gzipped(tmpdir):
     docfile = tmpdir.join('documents.tsv.gz')
     with gzip.open(str(docfile), 'wt') as gzf:
@@ -227,3 +244,9 @@ def test_docfile_gzipped(tmpdir):
 
     docs = annif.corpus.DocumentFile(str(docfile))
     assert len(list(docs.documents)) == 3
+
+
+def test_docfile_is_empty(tmpdir):
+    empty_file = tmpdir.ensure('empty.tsv')
+    docs = annif.corpus.DocumentFile(str(empty_file))
+    assert docs.is_empty()

@@ -5,9 +5,11 @@ import os.path
 import re
 import gzip
 import annif.util
-from .types import Document, DocumentCorpus
+from .types import DocumentCorpus
 from .convert import DocumentToSubjectCorpusMixin
 from .subject import SubjectSet
+
+logger = annif.logger
 
 
 class DocumentDirectory(DocumentCorpus, DocumentToSubjectCorpusMixin):
@@ -56,20 +58,24 @@ class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
     @property
     def documents(self):
         if self.path.endswith('.gz'):
-            def opener(path):
-                """open a gzip compressed file in text mode"""
-                return gzip.open(path, mode='rt')
+            opener = gzip.open
         else:
             opener = open
-
-        with opener(self.path) as tsvfile:
+        with opener(self.path, mode='rt', encoding='utf-8') as tsvfile:
             for line in tsvfile:
-                text, uris = line.split('\t', maxsplit=1)
-                subjects = [annif.util.cleanup_uri(uri)
-                            for uri in uris.split()]
-                yield self._create_document(text=text,
-                                            uris=subjects,
-                                            labels=[])
+                yield from self._parse_tsv_line(line)
+
+    def _parse_tsv_line(self, line):
+        if '\t' in line:
+            text, uris = line.split('\t', maxsplit=1)
+            subjects = [annif.util.cleanup_uri(uri)
+                        for uri in uris.split()]
+            yield self._create_document(text=text,
+                                        uris=subjects,
+                                        labels=[])
+        else:
+            logger.warning('Skipping invalid line (missing tab): "%s"',
+                           line.rstrip())
 
 
 class DocumentList(DocumentCorpus, DocumentToSubjectCorpusMixin):

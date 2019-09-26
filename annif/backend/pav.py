@@ -11,7 +11,7 @@ import annif.corpus
 import annif.suggestion
 import annif.project
 import annif.util
-from annif.exception import NotInitializedException
+from annif.exception import NotInitializedException, NotSupportedException
 from . import ensemble
 
 
@@ -98,6 +98,9 @@ class PAVBackend(ensemble.EnsembleBackend):
             method=joblib.dump)
 
     def train(self, corpus, project):
+        if corpus.is_empty():
+            raise NotSupportedException('training backend {} with no documents'
+                                        .format(self.backend_id))
         self.info("creating PAV models")
         sources = annif.util.parse_sources(self.params['sources'])
         min_docs = int(self.params['min-docs'])

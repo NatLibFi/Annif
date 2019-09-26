@@ -1,7 +1,9 @@
 """Unit tests for the PAV backend in Annif"""
 
+import pytest
 import annif.backend
 import annif.corpus
+from annif.exception import NotSupportedException
 
 
 def test_pav_default_params(datadir, document_corpus, project):
@@ -36,6 +38,21 @@ def test_pav_train(app, datadir, tmpdir, project):
         pav.train(document_corpus, project)
     assert datadir.join('pav-model-dummy-fi').exists()
     assert datadir.join('pav-model-dummy-fi').size() > 0
+
+
+def test_pav_train_nodocuments(tmpdir, datadir, project):
+    pav_type = annif.backend.get_backend("pav")
+    pav = pav_type(
+        backend_id='pav',
+        params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        datadir=str(datadir))
+
+    empty_file = tmpdir.ensure('empty.tsv')
+    empty_document_corpus = annif.corpus.DocumentFile(str(empty_file))
+
+    with pytest.raises(NotSupportedException) as excinfo:
+        pav.train(empty_document_corpus, project)
+    assert 'training backend pav with no documents' in str(excinfo.value)
 
 
 def test_pav_initialize(app, datadir):

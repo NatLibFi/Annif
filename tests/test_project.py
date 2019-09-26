@@ -145,6 +145,16 @@ def test_project_train_tfidf(app, document_corpus, testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
+def test_project_train_tfidf_nodocuments(app, tmpdir):
+    with app.app_context():
+        project = annif.project.get_project('tfidf-fi')
+    empty_file = tmpdir.ensure('empty.tsv')
+    empty_document_corpus = annif.corpus.DocumentFile(str(empty_file))
+    with pytest.raises(NotSupportedException) as excinfo:
+        project.train(empty_document_corpus)
+    assert 'using TfidfVectorizer with no documents' in str(excinfo.value)
+
+
 def test_project_learn(app, tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.tsv').write('<http://example.org/key1>\tkey1')
