@@ -281,9 +281,11 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
 @click.argument('project_id')
 @click.argument('train-paths', type=click.Path(), nargs=-1)
 @click.option('--num-points', '-n', default=5, help='TODO')  # TODO
-@click.option('--test-frac', '-f', default=0.2, help='TODO')  # TODO
-@click.option('--eval-train/--no-eval-train', default=False, help='')  # TODO
-@click.option('--eval-metrics', default='simple', help='TODO')  # TODO
+@click.option('--test-frac', '-f', default=0.2,
+              help='The fraction of documents to use as a test set.')
+@click.option('--eval-train/--no-eval-train', default=True,
+              help='Evaluate scores also for the training set.')
+@click.option('--eval-metrics', default='simple', help='Evaluate either ')  # TODO
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
 @click.option('--backend-param', '-b', multiple=True,
@@ -296,6 +298,8 @@ def run_learning_curves(project_id, train_paths, num_points, test_frac,
     """
     backend_params = parse_backend_params(backend_param)
     project = get_project(project_id)
+    # TODO tmp datadir?
+    # project._datadir_path = 'tmp_data'
     from annif.corpus import DocumentList
     from itertools import islice
     import warnings
@@ -327,14 +331,15 @@ def run_learning_curves(project_id, train_paths, num_points, test_frac,
     num_docs = ilen(docs.documents)
     num_docs_test = round(test_frac * num_docs)
     num_docs_train = num_docs - num_docs_test
-    print(num_docs, num_docs_test, num_docs_train)
+    click.echo('Documents total: {}, in training set: {}, in test set: {}'
+               .format(num_docs, num_docs_train, num_docs_test))
 
     for ind in range(1, num_points+1):
         num_docs_train_part = round(ind / num_points * num_docs_train)
 #        base = 2
 #        num_docs_train_part = round(
 #            base ** ind / base ** num_points * num_docs_train)
-        click.echo('Point {}/{}, documents in training: {}'.format(
+        click.echo('Point {}/{}, documents in partial training set: {}'.format(
                 ind, num_points, num_docs_train_part))
 #        with warnings.catch_warnings():
 #            warnings.simplefilter('ignore')
