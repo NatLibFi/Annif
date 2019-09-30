@@ -12,8 +12,7 @@ class DummyBackend(backend.AnnifLearningBackend):
     label = 'dummy'
 
     def default_params(self):
-        params = backend.AnnifBackend.DEFAULT_PARAMS.copy()
-        return params
+        return backend.AnnifBackend.DEFAULT_PARAMS
 
     def initialize(self):
         self.initialized = True
