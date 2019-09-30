@@ -20,11 +20,17 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         backend type."""
         self.backend_id = backend_id
         self.datadir = datadir
-        self.params = self.default_params().copy()
-        self.params.update(config_params)
+        self.config_params = config_params
 
     def default_params(self):
         return self.DEFAULT_PARAMS
+
+    @property
+    def params(self):
+        params = {}
+        params.update(self.default_params())
+        params.update(self.config_params)
+        return params
 
     def train(self, corpus, project):
         """train the model on the given document or subject corpus"""
