@@ -63,9 +63,12 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
         inputs = Input(shape=(len(project.subjects), len(sources)))
 
         flat_input = Flatten()(inputs)
-        drop_input = Dropout(rate=float(self.params['dropout_rate']))(flat_input)
-        hidden = Dense(int(self.params['nodes']), activation="relu")(drop_input)
-        drop_hidden = Dropout(rate=dropout_rate)(hidden)
+        drop_input = Dropout(
+            rate=float(
+                self.params['dropout_rate']))(flat_input)
+        hidden = Dense(int(self.params['nodes']),
+                       activation="relu")(drop_input)
+        drop_hidden = Dropout(rate=float(self.params['dropout_rate']))(hidden)
         delta = Dense(len(project.subjects),
                       kernel_initializer='zeros',
                       bias_initializer='zeros')(drop_hidden)
@@ -110,6 +113,6 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
 
         # fit the model
         self._model.fit(scores, true, batch_size=32, verbose=True,
-                        epochs=int(self.params['epochs'])
+                        epochs=int(self.params['epochs']))
 
         annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)

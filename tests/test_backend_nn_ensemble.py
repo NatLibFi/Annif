@@ -12,7 +12,7 @@ def test_nn_ensemble_suggest_no_model(datadir, project):
     nn_ensemble_type = annif.backend.get_backend('nn_ensemble')
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
-        params={'sources': 'dummy-en'},
+        config_params={'sources': 'dummy-en'},
         datadir=str(datadir))
 
     with pytest.raises(NotInitializedException):
@@ -23,7 +23,7 @@ def test_nn_ensemble_train_and_learn(app, datadir, tmpdir):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
-        params={'sources': 'dummy-en'},
+        config_params={'sources': 'dummy-en'},
         datadir=str(datadir))
 
     tmpfile = tmpdir.join('document.tsv')
@@ -55,7 +55,7 @@ def test_nn_ensemble_initialize(app, datadir):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
-        params={'sources': 'dummy-en'},
+        config_params={'sources': 'dummy-en'},
         datadir=str(datadir))
 
     assert nn_ensemble._model is None
@@ -71,7 +71,7 @@ def test_nn_ensemble_suggest(app, datadir):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
-        params={'sources': 'dummy-en'},
+        config_params={'sources': 'dummy-en'},
         datadir=str(datadir))
 
     project = annif.project.get_project('dummy-en')
