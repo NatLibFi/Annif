@@ -11,11 +11,28 @@ from annif.exception import NotInitializedException
 pytest.importorskip("annif.backend.vw_ensemble")
 
 
+def test_vw_ensemble_default_params(datadir, project):
+    vw_type = annif.backend.get_backend("vw_ensemble")
+    vw = vw_type(
+        backend_id='vw_ensemble',
+        config_params={},
+        datadir=str(datadir))
+
+    expected_default_params = {
+        'limit': 100,
+        'discount_rate': 0.01,
+        'loss_function': 'squared',
+    }
+    actual_params = vw.params
+    for param, val in expected_default_params.items():
+        assert param in actual_params and actual_params[param] == val
+
+
 def test_vw_ensemble_suggest_no_model(datadir, project):
     vw_ensemble_type = annif.backend.get_backend('vw_ensemble')
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
-        params={'sources': 'dummy-en'},
+        config_params={'sources': 'dummy-en'},
         datadir=str(datadir))
 
     with pytest.raises(NotInitializedException):
@@ -26,7 +43,7 @@ def test_vw_ensemble_train_and_learn(app, datadir, tmpdir):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
-        params={'sources': 'dummy-en'},
+        config_params={'sources': 'dummy-en'},
         datadir=str(datadir))
 
     tmpfile = tmpdir.join('document.tsv')
@@ -67,7 +84,7 @@ def test_vw_ensemble_initialize(app, datadir):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
-        params={'sources': 'dummy-en'},
+        config_params={'sources': 'dummy-en'},
         datadir=str(datadir))
 
     assert vw_ensemble._model is None
@@ -83,7 +100,7 @@ def test_vw_ensemble_suggest(app, datadir):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
-        params={'sources': 'dummy-en'},
+        config_params={'sources': 'dummy-en'},
         datadir=str(datadir))
 
     project = annif.project.get_project('dummy-en')
@@ -103,7 +120,7 @@ def test_vw_ensemble_suggest_set_discount_rate(app, datadir):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
-        params={'sources': 'dummy-en', 'discount_rate': '0.02'},
+        config_params={'sources': 'dummy-en', 'discount_rate': '0.02'},
         datadir=str(datadir))
 
     project = annif.project.get_project('dummy-en')
@@ -122,7 +139,7 @@ def test_vw_ensemble_format_example(datadir):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
-        params={'sources': 'dummy-en'},
+        config_params={'sources': 'dummy-en'},
         datadir=str(datadir))
 
     ex = vw_ensemble._format_example(0, [0.5])
@@ -133,7 +150,7 @@ def test_vw_ensemble_format_example_avoid_sci_notation(datadir):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
-        params={'sources': 'dummy-en'},
+        config_params={'sources': 'dummy-en'},
         datadir=str(datadir))
 
     ex = vw_ensemble._format_example(0, [7.24e-05])

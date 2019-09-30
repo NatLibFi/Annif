@@ -6,11 +6,26 @@ import annif.corpus
 from annif.exception import NotSupportedException
 
 
+def test_pav_default_params(datadir, document_corpus, project):
+    pav_type = annif.backend.get_backend("pav")
+    pav = pav_type(
+        backend_id='pav',
+        config_params={},
+        datadir=str(datadir))
+
+    expected_default_params = {
+        'min-docs': 10,
+    }
+    actual_params = pav.params
+    for param, val in expected_default_params.items():
+        assert param in actual_params and actual_params[param] == val
+
+
 def test_pav_train(app, datadir, tmpdir, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
-        params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
         datadir=str(datadir))
 
     tmpfile = tmpdir.join('document.tsv')
@@ -29,7 +44,7 @@ def test_pav_train_nodocuments(tmpdir, datadir, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
-        params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
         datadir=str(datadir))
 
     empty_file = tmpdir.ensure('empty.tsv')
@@ -44,7 +59,7 @@ def test_pav_initialize(app, datadir):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
-        params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
         datadir=str(datadir))
 
     assert pav._models is None
@@ -60,7 +75,7 @@ def test_pav_suggest(app, datadir, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
-        params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
         datadir=str(datadir))
 
     results = pav.suggest("""Arkeologiaa sanotaan joskus myös
