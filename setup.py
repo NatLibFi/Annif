@@ -29,13 +29,15 @@ setup(
         'nltk',
         'gensim==3.8.*',
         'scikit-learn==0.21.*',
-        'rdflib'],
+        'rdflib',
+        'numpy==1.17.*',
+        'Keras==2.3.*',
+        'tensorflow==1.15.0rc1'],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
         'fasttext': ['fasttext', 'fasttextmirror==0.8.22'],
         'voikko': ['voikko'],
-        'vw': ['vowpalwabbit==8.7.*', 'numpy'],
-        'nn': ['Keras==2.3.*', 'tensorflow==1.15.0rc1'],
+        'vw': ['vowpalwabbit==8.7.*'],
     },
     entry_points={
         'console_scripts': ['annif=annif.cli:cli']},
