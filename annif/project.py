@@ -45,7 +45,7 @@ class AnnifProject(DatadirMixin):
     def __init__(self, project_id, config, datadir):
         DatadirMixin.__init__(self, datadir, 'projects', project_id)
         self.project_id = project_id
-        self.name = config['name']
+        self.name = config.get('name', project_id)
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
         self.vocab_id = config.get('vocab', None)
@@ -144,7 +144,8 @@ class AnnifProject(DatadirMixin):
             try:
                 backend_class = annif.backend.get_backend(backend_id)
                 self._backend = backend_class(
-                    backend_id, params=self.config, datadir=self.datadir)
+                    backend_id, config_params=self.config,
+                    datadir=self.datadir)
             except ValueError:
                 logger.warning(
                     "Could not create backend %s, "

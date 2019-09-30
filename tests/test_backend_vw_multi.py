@@ -18,11 +18,29 @@ def vw_corpus(tmpdir):
     return annif.corpus.DocumentFile(str(tmpfile))
 
 
+def test_vw_multi_default_params(datadir, project):
+    vw_type = annif.backend.get_backend("vw_multi")
+    vw = vw_type(
+        backend_id='vw_multi',
+        config_params={},
+        datadir=str(datadir))
+
+    expected_default_params = {
+        'limit': 100,
+        'chunksize': 1,
+        'algorithm': 'oaa',
+        'loss_function': 'logistic',
+    }
+    actual_params = vw.params
+    for param, val in expected_default_params.items():
+        assert param in actual_params and actual_params[param] == val
+
+
 def test_vw_multi_suggest_no_model(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={'chunksize': 4},
+        config_params={'chunksize': 4},
         datadir=str(datadir))
 
     with pytest.raises(NotInitializedException):
@@ -33,7 +51,7 @@ def test_vw_multi_train_and_learn(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={
+        config_params={
             'chunksize': 4,
             'learning_rate': 0.5,
             'loss_function': 'hinge'},
@@ -59,7 +77,7 @@ def test_vw_multi_train_and_learn_nodocuments(datadir, tmpdir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={
+        config_params={
             'chunksize': 4,
             'learning_rate': 0.5,
             'loss_function': 'hinge'},
@@ -87,7 +105,7 @@ def test_vw_multi_train_from_project(app, datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={
+        config_params={
             'chunksize': 4,
             'inputs': '_text_,dummy-en'},
         datadir=str(datadir))
@@ -103,7 +121,7 @@ def test_vw_multi_train_multiple_passes(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={
+        config_params={
             'chunksize': 4,
             'learning_rate': 0.5,
             'passes': 2},
@@ -119,7 +137,7 @@ def test_vw_multi_train_invalid_algorithm(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={
+        config_params={
             'chunksize': 4,
             'learning_rate': 0.5,
             'algorithm': 'invalid'},
@@ -133,7 +151,7 @@ def test_vw_multi_train_invalid_loss_function(datadir, project, vw_corpus):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={'chunksize': 4, 'loss_function': 'invalid'},
+        config_params={'chunksize': 4, 'loss_function': 'invalid'},
         datadir=str(datadir))
 
     with pytest.raises(ConfigurationException):
@@ -144,7 +162,7 @@ def test_vw_multi_train_invalid_learning_rate(datadir, project, vw_corpus):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={'chunksize': 4, 'learning_rate': 'high'},
+        config_params={'chunksize': 4, 'learning_rate': 'high'},
         datadir=str(datadir))
 
     with pytest.raises(ConfigurationException):
@@ -155,7 +173,7 @@ def test_vw_multi_suggest(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={'chunksize': 4, 'probabilities': 1},
+        config_params={'chunksize': 4, 'probabilities': 1},
         datadir=str(datadir))
 
     results = vw.suggest("""Arkeologiaa sanotaan joskus myös
@@ -175,7 +193,7 @@ def test_vw_multi_suggest_empty(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={'chunksize': 4},
+        config_params={'chunksize': 4},
         datadir=str(datadir))
 
     results = vw.suggest("...", project)
@@ -187,7 +205,7 @@ def test_vw_multi_suggest_multiple_passes(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={'chunksize': 4, 'passes': 2},
+        config_params={'chunksize': 4, 'passes': 2},
         datadir=str(datadir))
 
     results = vw.suggest("...", project)
@@ -199,7 +217,7 @@ def test_vw_multi_train_ect(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={
+        config_params={
             'chunksize': 4,
             'learning_rate': 0.5,
             'algorithm': 'ect'},
@@ -215,8 +233,8 @@ def test_vw_multi_suggest_ect(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={'chunksize': 1,
-                'algorithm': 'ect'},
+        config_params={'chunksize': 1,
+                       'algorithm': 'ect'},
         datadir=str(datadir))
 
     results = vw.suggest("""Arkeologiaa sanotaan joskus myös
@@ -233,7 +251,7 @@ def test_vw_multi_train_log_multi(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={
+        config_params={
             'chunksize': 4,
             'learning_rate': 0.5,
             'algorithm': 'log_multi'},
@@ -249,8 +267,8 @@ def test_vw_multi_suggest_log_multi(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={'chunksize': 1,
-                'algorithm': 'log_multi'},
+        config_params={'chunksize': 1,
+                       'algorithm': 'log_multi'},
         datadir=str(datadir))
 
     results = vw.suggest("""Arkeologiaa sanotaan joskus myös
@@ -267,7 +285,7 @@ def test_vw_multi_train_multilabel_oaa(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={
+        config_params={
             'chunksize': 4,
             'learning_rate': 0.5,
             'algorithm': 'multilabel_oaa'},
@@ -283,8 +301,8 @@ def test_vw_multi_suggest_multilabel_oaa(datadir, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
-        params={'chunksize': 1,
-                'algorithm': 'multilabel_oaa'},
+        config_params={'chunksize': 1,
+                       'algorithm': 'multilabel_oaa'},
         datadir=str(datadir))
 
     results = vw.suggest("""Arkeologiaa sanotaan joskus myös

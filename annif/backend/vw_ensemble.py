@@ -10,6 +10,7 @@ import annif.project
 import numpy as np
 from annif.exception import NotInitializedException
 from annif.suggestion import VectorSuggestionResult
+from . import backend
 from . import vw_base
 from . import ensemble
 
@@ -42,7 +43,16 @@ class VWEnsembleBackend(
     # a simple mean of scores. A higher value will mean that the model
     # adapts quicker (and possibly makes more errors) while a lower value
     # will make it more careful so that it will require more training data.
-    DEFAULT_DISCOUNT_RATE = 0.01
+
+    DEFAULT_PARAMS = {'discount_rate': 0.01}
+
+    def default_params(self):
+        params = backend.AnnifBackend.DEFAULT_PARAMS.copy()
+        params.update(self.DEFAULT_PARAMS)
+        params.update({param: default_val
+                       for param, (_, default_val) in self.VW_PARAMS.items()
+                       if default_val is not None})
+        return params
 
     def _load_subject_freq(self):
         path = os.path.join(self.datadir, self.FREQ_FILE)
@@ -75,8 +85,7 @@ class VWEnsembleBackend(
     def _merge_hits_from_sources(self, hits_from_sources, project, params):
         score_vector = np.array([hits.vector
                                  for hits, _ in hits_from_sources])
-        discount_rate = float(self.params.get('discount_rate',
-                                              self.DEFAULT_DISCOUNT_RATE))
+        discount_rate = float(self.params['discount_rate'])
         result = np.zeros(score_vector.shape[1])
         for subj_id in range(score_vector.shape[1]):
             subj_score_vector = score_vector[:, subj_id]

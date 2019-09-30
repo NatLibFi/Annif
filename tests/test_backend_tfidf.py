@@ -18,11 +18,26 @@ def project(document_corpus):
     return proj
 
 
+def test_tfidf_default_params(datadir, project):
+    tfidf_type = annif.backend.get_backend("tfidf")
+    tfidf = tfidf_type(
+        backend_id='tfidf',
+        config_params={},
+        datadir=str(datadir))
+
+    expected_default_params = {
+        'limit': 100  # From AnnifBackend class
+    }
+    actual_params = tfidf.params
+    for param, val in expected_default_params.items():
+        assert param in actual_params and actual_params[param] == val
+
+
 def test_tfidf_train(datadir, document_corpus, project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
-        params={'limit': 10},
+        config_params={'limit': 10},
         datadir=str(datadir))
 
     tfidf.train(document_corpus, project)
@@ -35,7 +50,7 @@ def test_tfidf_suggest(datadir, project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
-        params={'limit': 10},
+        config_params={'limit': 10},
         datadir=str(datadir))
 
     results = tfidf.suggest("""Arkeologiaa sanotaan joskus myös
@@ -55,7 +70,7 @@ def test_tfidf_suggest_unknown(datadir, project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
-        params={'limit': 10},
+        config_params={'limit': 10},
         datadir=str(datadir))
 
     results = tfidf.suggest("abcdefghijk", project)  # unknown word
