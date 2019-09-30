@@ -5,6 +5,7 @@ from . import ensemble
 from . import http
 from . import tfidf
 from . import pav
+from . import nn_ensemble
 import annif
 
 
@@ -27,6 +28,7 @@ register_backend(ensemble.EnsembleBackend)
 register_backend(http.HTTPBackend)
 register_backend(tfidf.TFIDFBackend)
 register_backend(pav.PAVBackend)
+register_backend(nn_ensemble.NNEnsembleBackend)
 
 # Optional backends
 try:
@@ -43,10 +45,3 @@ try:
 except ImportError:
     annif.logger.debug("vowpalwabbit not available, not enabling " +
                        "vw_multi & vw_ensemble backends")
-
-try:
-    from . import nn_ensemble
-    register_backend(nn_ensemble.NNEnsembleBackend)
-except ImportError:
-    annif.logger.debug("Keras and TensorFlow not available, not enabling " +
-                       "nn_ensemble backend")

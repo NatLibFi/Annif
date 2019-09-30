@@ -7,8 +7,6 @@ import annif.corpus
 import annif.project
 from annif.exception import NotInitializedException
 
-pytest.importorskip("annif.backend.nn_ensemble")
-
 
 def test_nn_ensemble_suggest_no_model(datadir, project):
     nn_ensemble_type = annif.backend.get_backend('nn_ensemble')
