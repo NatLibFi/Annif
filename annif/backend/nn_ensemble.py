@@ -23,8 +23,21 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
 
     MODEL_FILE = "nn-model.h5"
 
+    DEFAULT_PARAMS = {
+        'nodes': 60,
+        'dropout_rate': 0.2,
+        'optimizer': 'adam',
+        'epochs': 10,
+    }
+
     # defaults for uninitialized instances
     _model = None
+
+    def default_params(self):
+        params = {}
+        params.update(super().default_params())
+        params.update(self.DEFAULT_PARAMS)
+        return params
 
     def initialize(self):
         if self._model is not None:
@@ -49,14 +62,9 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
 
         inputs = Input(shape=(len(project.subjects), len(sources)))
 
-        # TODO: these parameters should be configurable
-        nodes = 60
-        dropout_rate = 0.2
-        optimizer = 'adam'
-
         flat_input = Flatten()(inputs)
-        drop_input = Dropout(rate=dropout_rate)(flat_input)
-        hidden = Dense(nodes, activation="relu")(drop_input)
+        drop_input = Dropout(rate=float(self.params['dropout_rate']))(flat_input)
+        hidden = Dense(int(self.params['nodes']), activation="relu")(drop_input)
         drop_hidden = Dropout(rate=dropout_rate)(hidden)
         delta = Dense(len(project.subjects),
                       kernel_initializer='zeros',
@@ -67,7 +75,7 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
         predictions = Add()([mean, delta])
 
         self._model = Model(inputs=inputs, outputs=predictions)
-        self._model.compile(optimizer=optimizer,
+        self._model.compile(optimizer=self.params['optimizer'],
                             loss='binary_crossentropy',
                             metrics=['top_k_categorical_accuracy'])
 
@@ -100,11 +108,8 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
         # collect the gold standard values into another vector
         true = np.array(true_vectors)
 
-        # TODO: these parameters should be configurable
-        epochs = 10
-
         # fit the model
         self._model.fit(scores, true, batch_size=32, verbose=True,
-                        epochs=epochs)
+                        epochs=int(self.params['epochs'])
 
         annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)

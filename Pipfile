@@ -15,7 +15,7 @@ sphinx = "*"
 sphinx-rtd-theme = "*"
 
 [packages]
-"e1839a8" = {editable = true, path = "."}
+"e1839a8" = {path = ".", editable = true}
 connexion = {extras = ["swagger-ui"]}
 swagger-ui-bundle = "*"
 flask-cors = "*"
