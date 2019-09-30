@@ -8,7 +8,7 @@ build:
   dependencies:
     override:
      - pip install pipenv
-     - pipenv run pip install pip==18.0
+     - pipenv run pip install pip==19.*
      - pipenv install --dev --skip-lock
   tests:
     override:
