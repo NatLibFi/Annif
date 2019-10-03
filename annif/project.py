@@ -196,10 +196,12 @@ class AnnifProject(DatadirMixin):
         if subjectcorpus.is_empty():
             raise NotSupportedException(
                 'using TfidfVectorizer with no documents')
+        logger.info('transforming subject corpus')
+        subjects = subjectcorpus.subjects
         logger.info('creating vectorizer')
         self._vectorizer = TfidfVectorizer(
             tokenizer=self.analyzer.tokenize_words)
-        self._vectorizer.fit((subj.text for subj in subjectcorpus.subjects))
+        self._vectorizer.fit((subj.text for subj in subjects))
         annif.util.atomic_save(
             self._vectorizer,
             self.datadir,
