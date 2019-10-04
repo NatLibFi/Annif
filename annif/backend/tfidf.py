@@ -1,51 +1,16 @@
 """Backend that returns most similar subjects based on similarity in sparse
 TF-IDF normalized bag-of-words vector space"""
 
+import collections
 import os.path
-import tempfile
 import joblib
 import gensim.similarities
 from gensim.matutils import Sparse2Corpus
 from sklearn.feature_extraction.text import TfidfVectorizer
 import annif.util
-from annif.corpus.subject import SubjectDirectory
 from annif.suggestion import VectorSuggestionResult
 from annif.exception import NotInitializedException, NotSupportedException
 from . import backend
-
-
-class SubjectWriter:
-    """Writes a single subject file into a SubjectDirectory, performing
-    buffering to limit the number of I/O operations."""
-
-    _buffer = None
-
-    BUFFER_SIZE = 100
-
-    def __init__(self, path, uri, label):
-        self._path = path
-        self._buffer = ["{} {}".format(uri, label)]
-        self._created = False
-
-    def _flush(self):
-        if self._created:
-            mode = 'a'
-        else:
-            mode = 'w'
-
-        with open(self._path, mode, encoding='utf-8') as subjfile:
-            for text in self._buffer:
-                print(text, file=subjfile)
-        self._buffer = []
-        self._created = True
-
-    def write(self, text):
-        self._buffer.append(text)
-        if len(self._buffer) >= self.BUFFER_SIZE:
-            self._flush()
-
-    def close(self):
-        self._flush()
 
 
 class TFIDFBackend(backend.AnnifBackend):
@@ -60,39 +25,20 @@ class TFIDFBackend(backend.AnnifBackend):
     VECTORIZER_FILE = 'vectorizer'
     INDEX_FILE = 'tfidf-index'
 
-    _temp_directory = None
-    _subject_writer = None
-
-    def _subject_filename(self, subject_id):
-        filename = '{:08d}.txt'.format(subject_id)
-        return os.path.join(self._temp_directory.name, filename)
-
-    def _create_subject(self, subject_id, uri, label):
-        filename = self._subject_filename(subject_id)
-        self._subject_writer[subject_id] = SubjectWriter(filename, uri, label)
-
-    def _add_text_to_subject(self, subject_id, text):
-        self._subject_writer[subject_id].write(text)
-
     def _generate_subjects_from_documents(self, corpus, project):
-        self._temp_directory = tempfile.TemporaryDirectory()
-        self._subject_writer = {}
-
-        for subject_id, subject_info in enumerate(project.subjects):
-            uri, label = subject_info
-            self._create_subject(subject_id, uri, label)
+        subject_text = collections.defaultdict(list)
 
         for doc in corpus.documents:
             for uri in doc.uris:
                 subject_id = project.subjects.by_uri(uri)
                 if subject_id is None:
                     continue
-                self._add_text_to_subject(subject_id, doc.text)
+                subject_text[subject_id].append(doc.text)
 
-        for subject_id, _ in enumerate(project.subjects):
-            self._subject_writer[subject_id].close()
+        for subject_id in subject_text:
+            subject_text[subject_id] = '\n'.join(subject_text[subject_id])
 
-        return SubjectDirectory(self._temp_directory.name)
+        return (subject_text[sid] for sid in sorted(subject_text.keys()))
 
     def _initialize_vectorizer(self):
         if self._vectorizer is None:
@@ -136,13 +82,11 @@ class TFIDFBackend(backend.AnnifBackend):
             raise NotSupportedException(
                 'Cannot train tfidf project with no documents')
         self.info('transforming subject corpus')
-        subjects = self._generate_subjects_from_documents(
-            corpus, project).subjects
+        subjects = self._generate_subjects_from_documents(corpus, project)
         self.info('creating vectorizer')
         self._vectorizer = TfidfVectorizer(
             tokenizer=project.analyzer.tokenize_words)
-        veccorpus = self._vectorizer.fit_transform(
-            (subj.text for subj in subjects))
+        veccorpus = self._vectorizer.fit_transform(subjects)
         annif.util.atomic_save(
             self._vectorizer,
             self.datadir,

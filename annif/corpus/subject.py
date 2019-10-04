@@ -8,22 +8,6 @@ from annif import logger
 from .types import Subject, SubjectCorpus
 
 
-class SubjectDirectory:
-    """A subject corpus in the form of a directory with .txt files."""
-
-    def __init__(self, path):
-        self.path = path
-        self._filenames = sorted(glob.glob(os.path.join(path, '*.txt')))
-
-    @property
-    def subjects(self):
-        for filename in self._filenames:
-            with open(filename, encoding='utf-8') as subjfile:
-                uri, label = subjfile.readline().strip().split(' ', 1)
-                text = ' '.join(subjfile.readlines())
-                yield Subject(uri=uri, label=label, text=text)
-
-
 class SubjectFileTSV:
     """A subject vocabulary stored in a TSV file."""
 
