@@ -26,19 +26,18 @@ class TFIDFBackend(backend.AnnifBackend):
     INDEX_FILE = 'tfidf-index'
 
     def _generate_subjects_from_documents(self, corpus, project):
-        subject_text = collections.defaultdict(list)
+        subject_tokens = collections.defaultdict(list)
 
         for doc in corpus.documents:
+            tokens = project.analyzer.tokenize_words(doc.text)
             for uri in doc.uris:
                 subject_id = project.subjects.by_uri(uri)
                 if subject_id is None:
                     continue
-                subject_text[subject_id].append(doc.text)
+                subject_tokens[subject_id].extend(tokens)
 
-        for subject_id in subject_text:
-            subject_text[subject_id] = '\n'.join(subject_text[subject_id])
-
-        return (subject_text[sid] for sid in sorted(subject_text.keys()))
+        return (" ".join(subject_tokens[sid])
+                for sid in range(len(project.subjects)))
 
     def _initialize_vectorizer(self):
         if self._vectorizer is None:
@@ -84,8 +83,7 @@ class TFIDFBackend(backend.AnnifBackend):
         self.info('transforming subject corpus')
         subjects = self._generate_subjects_from_documents(corpus, project)
         self.info('creating vectorizer')
-        self._vectorizer = TfidfVectorizer(
-            tokenizer=project.analyzer.tokenize_words)
+        self._vectorizer = TfidfVectorizer()
         veccorpus = self._vectorizer.fit_transform(subjects)
         annif.util.atomic_save(
             self._vectorizer,
@@ -97,7 +95,8 @@ class TFIDFBackend(backend.AnnifBackend):
     def _suggest(self, text, project, params):
         self.debug('Suggesting subjects for text "{}..." (len={})'.format(
             text[:20], len(text)))
-        vectors = self._vectorizer.transform([text])
+        tokens = project.analyzer.tokenize_words(text)
+        vectors = self._vectorizer.transform([" ".join(tokens)])
         docsim = self._index[vectors[0]]
         fullresult = VectorSuggestionResult(docsim, project.subjects)
         return fullresult.filter(limit=int(self.params['limit']))
