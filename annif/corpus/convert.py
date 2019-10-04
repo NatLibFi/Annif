@@ -6,11 +6,46 @@ import tempfile
 from .types import Document, DocumentCorpus, SubjectCorpus
 
 
+class SubjectWriter:
+    """Writes a single subject file into a SubjectDirectory, performing
+    buffering to limit the number of I/O operations."""
+
+    _buffer = None
+
+    BUFFER_SIZE = 100
+
+    def __init__(self, path, uri, label):
+        self._path = path
+        self._buffer = ["{} {}".format(uri, label)]
+        self._created = False
+
+    def _flush(self):
+        if self._created:
+            mode = 'a'
+        else:
+            mode = 'w'
+
+        with open(self._path, mode, encoding='utf-8') as subjfile:
+            for text in self._buffer:
+                print(text, file=subjfile)
+        self._buffer = []
+        self._created = True
+
+    def write(self, text):
+        self._buffer.append(text)
+        if len(self._buffer) >= self.BUFFER_SIZE:
+            self._flush()
+
+    def close(self):
+        self._flush()
+
+
 class DocumentToSubjectCorpusMixin(SubjectCorpus):
     """Mixin class for enabling a DocumentCorpus to act as a SubjectCorpus"""
 
     _subject_corpus = None
     _temp_directory = None
+    _subject_writer = None
 
     @property
     def subjects(self):
@@ -24,16 +59,14 @@ class DocumentToSubjectCorpusMixin(SubjectCorpus):
 
     def _create_subject(self, subject_id, uri, label):
         filename = self._subject_filename(subject_id)
-        with open(filename, 'w', encoding='utf-8') as subjfile:
-            print("{} {}".format(uri, label), file=subjfile)
+        self._subject_writer[subject_id] = SubjectWriter(filename, uri, label)
 
     def _add_text_to_subject(self, subject_id, text):
-        filename = self._subject_filename(subject_id)
-        with open(filename, 'a', encoding='utf-8') as subjfile:
-            print(text, file=subjfile)
+        self._subject_writer[subject_id].write(text)
 
     def _generate_corpus_from_documents(self):
         self._temp_directory = tempfile.TemporaryDirectory()
+        self._subject_writer = {}
 
         for subject_id, subject_info in enumerate(self._subject_index):
             uri, label = subject_info
@@ -45,6 +78,9 @@ class DocumentToSubjectCorpusMixin(SubjectCorpus):
                 if subject_id is None:
                     continue
                 self._add_text_to_subject(subject_id, doc.text)
+
+        for subject_id, _ in enumerate(self._subject_index):
+            self._subject_writer[subject_id].close()
 
         from .subject import SubjectDirectory
         self._subject_corpus = SubjectDirectory(self._temp_directory.name)

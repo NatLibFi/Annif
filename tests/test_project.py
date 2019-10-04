@@ -152,7 +152,7 @@ def test_project_train_tfidf_nodocuments(app, tmpdir):
     empty_document_corpus = annif.corpus.DocumentFile(str(empty_file))
     with pytest.raises(NotSupportedException) as excinfo:
         project.train(empty_document_corpus)
-    assert 'using TfidfVectorizer with no documents' in str(excinfo.value)
+    assert 'Cannot train tfidf project with no documents' in str(excinfo.value)
 
 
 def test_project_learn(app, tmpdir):

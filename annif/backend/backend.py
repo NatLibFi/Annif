@@ -10,7 +10,6 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     name = None
     needs_subject_index = False
-    needs_subject_vectorizer = False
 
     DEFAULT_PARAMS = {'limit': 100}
 
