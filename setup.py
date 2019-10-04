@@ -31,6 +31,7 @@ setup(
         'scikit-learn==0.21.*',
         'rdflib',
         'numpy==1.17.*',
+    ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
         'fasttext': ['fasttext', 'fasttextmirror==0.8.22'],
