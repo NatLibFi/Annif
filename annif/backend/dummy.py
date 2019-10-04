@@ -11,6 +11,9 @@ class DummyBackend(backend.AnnifLearningBackend):
     uri = 'http://example.org/dummy'
     label = 'dummy'
 
+    def default_params(self):
+        return backend.AnnifBackend.DEFAULT_PARAMS
+
     def initialize(self):
         self.initialized = True
 

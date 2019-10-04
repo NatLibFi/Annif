@@ -8,11 +8,31 @@ from annif.exception import NotSupportedException
 fasttext = pytest.importorskip("annif.backend.fasttext")
 
 
+def test_fasttext_default_params(datadir, project):
+    fasttext_type = annif.backend.get_backend("fasttext")
+    fasttext = fasttext_type(
+        backend_id='fasttext',
+        config_params={},
+        datadir=str(datadir))
+
+    expected_default_params = {
+        'limit': 100,
+        'chunksize': 1,
+        'dim': 100,
+        'lr': 0.25,
+        'epoch': 5,
+        'loss': 'hs',
+    }
+    actual_params = fasttext.params
+    for param, val in expected_default_params.items():
+        assert param in actual_params and actual_params[param] == val
+
+
 def test_fasttext_train(datadir, document_corpus, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
-        params={
+        config_params={
             'limit': 50,
             'dim': 100,
             'lr': 0.25,
@@ -30,7 +50,7 @@ def test_fasttext_train_unknown_subject(tmpdir, datadir, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
-        params={
+        config_params={
             'limit': 50,
             'dim': 100,
             'lr': 0.25,
@@ -53,7 +73,7 @@ def test_fasttext_train_nodocuments(tmpdir, datadir, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
-        params={
+        config_params={
             'limit': 50,
             'dim': 100,
             'lr': 0.25,
@@ -73,7 +93,7 @@ def test_fasttext_suggest(datadir, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
-        params={
+        config_params={
             'limit': 50,
             'chunksize': 1,
             'dim': 100,

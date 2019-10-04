@@ -17,7 +17,7 @@ def test_http_suggest(app, project):
         http_type = annif.backend.get_backend("http")
         http = http_type(
             backend_id='http',
-            params={
+            config_params={
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             datadir=app.config['DATADIR'])
@@ -40,7 +40,7 @@ def test_http_suggest_with_results(app, project):
         http_type = annif.backend.get_backend("http")
         http = http_type(
             backend_id='http',
-            params={
+            config_params={
                 'endpoint': 'http://api.example.org/dummy/analyze',
             },
             datadir=app.config['DATADIR'])
@@ -63,7 +63,7 @@ def test_http_suggest_zero_score(app, project):
         http_type = annif.backend.get_backend("http")
         http = http_type(
             backend_id='http',
-            params={
+            config_params={
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             datadir=app.config['DATADIR'])
@@ -79,7 +79,7 @@ def test_http_suggest_error(app, project):
         http_type = annif.backend.get_backend("http")
         http = http_type(
             backend_id='http',
-            params={
+            config_params={
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             datadir=app.config['DATADIR'])
@@ -98,7 +98,7 @@ def test_http_suggest_json_fails(app, project):
         http_type = annif.backend.get_backend("http")
         http = http_type(
             backend_id='http',
-            params={
+            config_params={
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             datadir=app.config['DATADIR'])
@@ -117,7 +117,7 @@ def test_http_suggest_unexpected_json(app, project):
         http_type = annif.backend.get_backend("http")
         http = http_type(
             backend_id='http',
-            params={
+            config_params={
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             datadir=app.config['DATADIR'])

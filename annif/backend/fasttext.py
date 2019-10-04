@@ -33,11 +33,24 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         't': float
     }
 
+    DEFAULT_PARAMS = {
+        'dim': 100,
+        'lr': 0.25,
+        'epoch': 5,
+        'loss': 'hs',
+    }
+
     MODEL_FILE = 'fasttext-model'
     TRAIN_FILE = 'fasttext-train.txt'
 
     # defaults for uninitialized instances
     _model = None
+
+    def default_params(self):
+        params = backend.AnnifBackend.DEFAULT_PARAMS.copy()
+        params.update(mixins.ChunkingBackend.DEFAULT_PARAMS)
+        params.update(self.DEFAULT_PARAMS)
+        return params
 
     def initialize(self):
         if self._model is None:

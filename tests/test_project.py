@@ -89,6 +89,38 @@ def test_get_project_nobackend(app):
             backend = project.backend
 
 
+def test_get_project_noname(app):
+    with app.app_context():
+        project = annif.project.get_project('noname')
+        assert project.name == project.project_id
+
+
+def test_get_project_default_params_tfidf(app):
+    with app.app_context():
+        project = annif.project.get_project('noparams-tfidf-fi')
+    expected_default_params = {
+        'limit': 100  # From AnnifBackend class
+    }
+    actual_params = project.backend.params
+    for param, val in expected_default_params.items():
+        assert param in actual_params and actual_params[param] == val
+
+
+def test_get_project_default_params_fasttext(app):
+    pytest.importorskip("annif.backend.fasttext")
+    with app.app_context():
+        project = annif.project.get_project('noparams-fasttext-fi')
+    expected_default_params = {
+        'limit': 100,  # From AnnifBackend class
+        'dim': 100,    # Rest from FastTextBackend class
+        'lr': 0.25,
+        'epoch': 5,
+        'loss': 'hs'}
+    actual_params = project.backend.params
+    for param, val in expected_default_params.items():
+        assert param in actual_params and actual_params[param] == val
+
+
 def test_get_project_invalid_config_file(app):
     app = annif.create_app(
         config_name='annif.default_config.TestingInvalidProjectsConfig')
