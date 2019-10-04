@@ -8,7 +8,7 @@ from annif import logger
 from .types import Subject, SubjectCorpus
 
 
-class SubjectDirectory(SubjectCorpus):
+class SubjectDirectory:
     """A subject corpus in the form of a directory with .txt files."""
 
     def __init__(self, path):
@@ -24,8 +24,8 @@ class SubjectDirectory(SubjectCorpus):
                 yield Subject(uri=uri, label=label, text=text)
 
 
-class SubjectFileTSV(SubjectCorpus):
-    """A subject corpus stored in a TSV file."""
+class SubjectFileTSV:
+    """A subject vocabulary stored in a TSV file."""
 
     def __init__(self, path):
         self.path = path
