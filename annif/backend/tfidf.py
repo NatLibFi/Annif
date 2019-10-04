@@ -24,22 +24,6 @@ class TFIDFBackend(backend.AnnifBackend):
     VECTORIZER_FILE = 'vectorizer'
     INDEX_FILE = 'tfidf-index'
 
-    def _create_vectorizer(self, corpus, project):
-        if corpus.is_empty():
-            raise NotSupportedException(
-                'Cannot train tfidf project with no documents')
-        self.info('transforming subject corpus')
-        subjects = corpus.subjects
-        self.info('creating vectorizer')
-        self._vectorizer = TfidfVectorizer(
-            tokenizer=project.analyzer.tokenize_words)
-        self._vectorizer.fit((subj.text for subj in subjects))
-        annif.util.atomic_save(
-            self._vectorizer,
-            self.datadir,
-            'vectorizer',
-            method=joblib.dump)
-
     def initialize(self):
         if self._vectorizer is None:
             path = os.path.join(self.datadir, self.VECTORIZER_FILE)
@@ -62,10 +46,22 @@ class TFIDFBackend(backend.AnnifBackend):
                     backend_id=self.backend_id)
 
     def train(self, corpus, project):
-        self._create_vectorizer(corpus, project)
+        if corpus.is_empty():
+            raise NotSupportedException(
+                'Cannot train tfidf project with no documents')
+        self.info('transforming subject corpus')
+        subjects = corpus.subjects
+        self.info('creating vectorizer')
+        self._vectorizer = TfidfVectorizer(
+            tokenizer=project.analyzer.tokenize_words)
+        veccorpus = self._vectorizer.fit_transform(
+            (subj.text for subj in subjects))
+        annif.util.atomic_save(
+            self._vectorizer,
+            self.datadir,
+            'vectorizer',
+            method=joblib.dump)
         self.info('creating similarity index')
-        veccorpus = self._vectorizer.transform(
-            (subj.text for subj in corpus.subjects))
         gscorpus = Sparse2Corpus(veccorpus, documents_columns=False)
         self._index = gensim.similarities.SparseMatrixSimilarity(
             gscorpus, num_features=len(self._vectorizer.vocabulary_))
