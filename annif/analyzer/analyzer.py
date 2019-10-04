@@ -1,6 +1,7 @@
 """Common functionality for analyzers."""
 
 import abc
+import functools
 import unicodedata
 import nltk.tokenize
 
@@ -17,6 +18,7 @@ class Analyzer(metaclass=abc.ABCMeta):
         """Tokenize a piece of text (e.g. a document) into sentences."""
         return nltk.tokenize.sent_tokenize(text)
 
+    @functools.lru_cache(maxsize=50000)
     def is_valid_token(self, word):
         """Return True if the word is an acceptable token."""
         if len(word) < self.TOKEN_MIN_LENGTH:
