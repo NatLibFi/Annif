@@ -51,6 +51,16 @@ class TFIDFBackend(backend.AnnifBackend):
         self._initialize_vectorizer()
         self._initialize_index()
 
+    def _create_index(self, veccorpus):
+        self.info('creating similarity index')
+        gscorpus = Sparse2Corpus(veccorpus, documents_columns=False)
+        self._index = gensim.similarities.SparseMatrixSimilarity(
+            gscorpus, num_features=len(self._vectorizer.vocabulary_))
+        annif.util.atomic_save(
+            self._index,
+            self.datadir,
+            self.INDEX_FILE)
+
     def train(self, corpus, project):
         if corpus.is_empty():
             raise NotSupportedException(
@@ -67,14 +77,7 @@ class TFIDFBackend(backend.AnnifBackend):
             self.datadir,
             self.VECTORIZER_FILE,
             method=joblib.dump)
-        self.info('creating similarity index')
-        gscorpus = Sparse2Corpus(veccorpus, documents_columns=False)
-        self._index = gensim.similarities.SparseMatrixSimilarity(
-            gscorpus, num_features=len(self._vectorizer.vocabulary_))
-        annif.util.atomic_save(
-            self._index,
-            self.datadir,
-            self.INDEX_FILE)
+        self._create_index(veccorpus)
 
     def _suggest(self, text, project, params):
         self.debug('Suggesting subjects for text "{}..." (len={})'.format(
