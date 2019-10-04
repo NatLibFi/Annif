@@ -65,7 +65,7 @@ class TFIDFBackend(backend.AnnifBackend):
         annif.util.atomic_save(
             self._vectorizer,
             self.datadir,
-            'vectorizer',
+            self.VECTORIZER_FILE,
             method=joblib.dump)
         self.info('creating similarity index')
         gscorpus = Sparse2Corpus(veccorpus, documents_columns=False)
