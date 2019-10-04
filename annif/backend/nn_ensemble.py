@@ -4,9 +4,9 @@ projects."""
 
 import os.path
 import numpy as np
-from keras.layers import Input, Dense, Add, Flatten, Lambda, Dropout
-from keras.models import Model, load_model
-import keras.backend as K
+from tensorflow.keras.layers import Input, Dense, Add, Flatten, Lambda, Dropout
+from tensorflow.keras.models import Model, load_model
+import tensorflow.keras.backend as K
 import annif.corpus
 import annif.project
 import annif.util
@@ -58,7 +58,7 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
         return VectorSuggestionResult(results[0], project.subjects)
 
     def _create_model(self, sources, project):
-        self.info("creating NN residual model")
+        self.info("creating NN ensemble model")
 
         inputs = Input(shape=(len(project.subjects), len(sources)))
 
@@ -115,4 +115,8 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
         self._model.fit(scores, true, batch_size=32, verbose=True,
                         epochs=int(self.params['epochs']))
 
-        annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)
+        annif.util.atomic_save(
+            self._model,
+            self.datadir,
+            self.MODEL_FILE,
+            suffix='.h5')
