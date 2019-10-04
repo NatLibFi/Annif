@@ -28,7 +28,5 @@ rdflib = "*"
 gunicorn = "*"
 sphinxcontrib-apidoc = "*"
 numpy = "==1.17.*"
-Keras = "==2.3.*"
-tensorflow = "==1.15.0rc1"
 
 [requires]
