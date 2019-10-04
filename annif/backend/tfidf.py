@@ -24,7 +24,7 @@ class TFIDFBackend(backend.AnnifBackend):
     VECTORIZER_FILE = 'vectorizer'
     INDEX_FILE = 'tfidf-index'
 
-    def initialize(self):
+    def _initialize_vectorizer(self):
         if self._vectorizer is None:
             path = os.path.join(self.datadir, self.VECTORIZER_FILE)
             if os.path.exists(path):
@@ -34,6 +34,8 @@ class TFIDFBackend(backend.AnnifBackend):
                 raise NotInitializedException(
                     "vectorizer file '{}' not found".format(path),
                     backend_id=self.backend_id)
+
+    def _initialize_index(self):
         if self._index is None:
             path = os.path.join(self.datadir, self.INDEX_FILE)
             self.debug('loading similarity index from {}'.format(path))
@@ -44,6 +46,10 @@ class TFIDFBackend(backend.AnnifBackend):
                 raise NotInitializedException(
                     'similarity index {} not found'.format(path),
                     backend_id=self.backend_id)
+
+    def initialize(self):
+        self._initialize_vectorizer()
+        self._initialize_index()
 
     def train(self, corpus, project):
         if corpus.is_empty():
