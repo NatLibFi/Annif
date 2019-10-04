@@ -84,26 +84,3 @@ class DocumentToSubjectCorpusMixin(SubjectCorpus):
 
         from .subject import SubjectDirectory
         self._subject_corpus = SubjectDirectory(self._temp_directory.name)
-
-
-class SubjectToDocumentCorpusMixin(DocumentCorpus):
-    """Mixin class for enabling a SubjectCorpus to act as a DocumentCorpus"""
-
-    _document_uris = None
-    _document_labels = None
-
-    @property
-    def documents(self):
-        if self._document_uris is None:
-            self._generate_corpus_from_subjects()
-        for text, uris in self._document_uris.items():
-            labels = self._document_labels[text]
-            yield Document(text=text, uris=uris, labels=labels)
-
-    def _generate_corpus_from_subjects(self):
-        self._document_uris = collections.defaultdict(set)
-        self._document_labels = collections.defaultdict(set)
-        for subj in self.subjects:
-            for line in subj.text.splitlines():
-                self._document_uris[line].add(subj.uri)
-                self._document_labels[line].add(subj.label)
