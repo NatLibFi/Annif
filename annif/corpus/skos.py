@@ -3,7 +3,7 @@
 import rdflib
 import rdflib.util
 from rdflib.namespace import SKOS, RDF, OWL
-from .subject import Subject, SubjectCorpus
+from .types import Subject, SubjectCorpus
 
 
 class SubjectFileSKOS(SubjectCorpus):

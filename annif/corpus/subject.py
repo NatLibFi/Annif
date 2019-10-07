@@ -1,11 +1,9 @@
 """Classes for supporting subject corpora expressed as directories or files"""
 
-import glob
-import os.path
 import annif.util
 import numpy as np
 from annif import logger
-from .types import Subject, SubjectCorpus
+from .types import Subject
 
 
 class SubjectFileTSV:
