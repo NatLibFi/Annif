@@ -91,11 +91,12 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
         self._create_model(sources, project)
         self.learn(corpus, project)
 
-    def learn(self, corpus, project):
+    def _corpus_to_vectors(self, corpus, project):
         # pass corpus through all source projects
         sources = [(annif.project.get_project(project_id), weight)
                    for project_id, weight
                    in annif.util.parse_sources(self.params['sources'])]
+
         score_vectors = []
         true_vectors = []
         for doc in corpus.documents:
@@ -110,6 +111,10 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
         scores = np.array(score_vectors)
         # collect the gold standard values into another vector
         true = np.array(true_vectors)
+        return (scores, true)
+
+    def learn(self, corpus, project):
+        scores, true = self._corpus_to_vectors(corpus, project)
 
         # fit the model
         self._model.fit(scores, true, batch_size=32, verbose=True,
