@@ -118,5 +118,4 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
         annif.util.atomic_save(
             self._model,
             self.datadir,
-            self.MODEL_FILE,
-            suffix='.h5')
+            self.MODEL_FILE)

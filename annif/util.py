@@ -2,20 +2,22 @@
 
 import glob
 import os
+import os.path
 import tempfile
 import numpy as np
 from annif import logger
 from annif.suggestion import VectorSuggestionResult
 
 
-def atomic_save(obj, dirname, filename, method=None, suffix=None):
+def atomic_save(obj, dirname, filename, method=None):
     """Save the given object (which must have a .save() method, unless the
     method parameter is given) into the given directory with the given
     filename, using a temporary file and renaming the temporary file to the
     final name."""
 
+    prefix, suffix = os.path.splitext(filename)
     tempfd, tempfilename = tempfile.mkstemp(
-        prefix=filename, suffix=suffix, dir=dirname)
+        prefix=prefix, suffix=suffix, dir=dirname)
     os.close(tempfd)
     logger.debug('saving %s to temporary file %s', str(obj), tempfilename)
     if method is not None:
