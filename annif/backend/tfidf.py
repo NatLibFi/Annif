@@ -3,6 +3,7 @@ TF-IDF normalized bag-of-words vector space"""
 
 import collections
 import os.path
+import tempfile
 import joblib
 import gensim.similarities
 from gensim.matutils import Sparse2Corpus
@@ -11,6 +12,44 @@ import annif.util
 from annif.suggestion import VectorSuggestionResult
 from annif.exception import NotInitializedException, NotSupportedException
 from . import backend
+
+
+class SubjectBuffer:
+    """A file-backed buffer to store and retrieve subject text."""
+
+    BUFFER_SIZE = 100
+
+    def __init__(self, tempdir, subject_id):
+        filename = '{:08d}.txt'.format(subject_id)
+        self._path = os.path.join(tempdir, filename)
+        self._buffer = []
+        self._created = False
+
+    def flush(self):
+        if self._created:
+            mode = 'a'
+        else:
+            mode = 'w'
+
+        with open(self._path, mode, encoding='utf-8') as subjfile:
+            for text in self._buffer:
+                print(text, file=subjfile)
+
+        self._buffer = []
+        self._created = True
+
+    def write(self, text):
+        self._buffer.append(text)
+        if len(self._buffer) >= self.BUFFER_SIZE:
+            self.flush()
+
+    def read(self):
+        if not self._created:
+            # file was never created - we can simply return the buffer content
+            return "\n".join(self._buffer)
+        else:
+            with open(self._path, 'r', encoding='utf-8') as subjfile:
+                return subjfile.read() + "\n" + "\n".join(self._buffer)
 
 
 class TFIDFBackend(backend.AnnifBackend):
@@ -26,18 +65,22 @@ class TFIDFBackend(backend.AnnifBackend):
     INDEX_FILE = 'tfidf-index'
 
     def _generate_subjects_from_documents(self, corpus, project):
-        subject_tokens = collections.defaultdict(list)
+        with tempfile.TemporaryDirectory() as tempdir:
+            subject_buffer = {}
+            for subject_id in range(len(project.subjects)):
+                subject_buffer[subject_id] = SubjectBuffer(tempdir,
+                                                           subject_id)
 
-        for doc in corpus.documents:
-            tokens = project.analyzer.tokenize_words(doc.text)
-            for uri in doc.uris:
-                subject_id = project.subjects.by_uri(uri)
-                if subject_id is None:
-                    continue
-                subject_tokens[subject_id].extend(tokens)
+            for doc in corpus.documents:
+                tokens = project.analyzer.tokenize_words(doc.text)
+                for uri in doc.uris:
+                    subject_id = project.subjects.by_uri(uri)
+                    if subject_id is None:
+                        continue
+                    subject_buffer[subject_id].write(" ".join(tokens))
 
-        return (" ".join(subject_tokens[sid])
-                for sid in range(len(project.subjects)))
+            for sid in range(len(project.subjects)):
+                yield subject_buffer[sid].read()
 
     def _initialize_vectorizer(self):
         if self._vectorizer is None:
