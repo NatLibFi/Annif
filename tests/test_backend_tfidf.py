@@ -9,12 +9,10 @@ import unittest.mock
 
 
 @pytest.fixture(scope='module')
-def project(document_corpus):
+def project(document_corpus, subject_index):
     proj = unittest.mock.Mock()
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
-    proj.subjects = annif.corpus.SubjectIndex(document_corpus)
-    proj.vectorizer = TfidfVectorizer(tokenizer=proj.analyzer.tokenize_words)
-    proj.vectorizer.fit([subj.text for subj in document_corpus.subjects])
+    proj.subjects = subject_index
     return proj
 
 
