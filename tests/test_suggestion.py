@@ -51,8 +51,7 @@ def test_lazy_suggestion_result(subject_index):
     assert lar._object is not None
 
 
-def test_list_suggestions_vector(document_corpus):
-    subjects = SubjectIndex(document_corpus)
+def test_list_suggestions_vector(document_corpus, subject_index):
     suggestions = ListSuggestionResult(
         [
             SubjectSuggestion(
@@ -63,26 +62,25 @@ def test_list_suggestions_vector(document_corpus):
                 uri='http://www.yso.fi/onto/yso/p6479',
                 label='viikingit',
                 score=0.5)],
-        subjects)
+        subject_index)
     assert isinstance(suggestions.vector, np.ndarray)
-    assert len(suggestions.vector) == len(subjects)
+    assert len(suggestions.vector) == len(subject_index)
     assert suggestions.vector.sum() == 1.5
     for subject_id, score in enumerate(suggestions.vector):
-        if subjects[subject_id][1] == 'sinetit':
+        if subject_index[subject_id][1] == 'sinetit':
             assert score == 1.0
-        elif subjects[subject_id][1] == 'viikingit':
+        elif subject_index[subject_id][1] == 'viikingit':
             assert score == 0.5
         else:
             assert score == 0.0
 
 
-def test_list_suggestions_vector_notfound(document_corpus):
-    subjects = SubjectIndex(document_corpus)
+def test_list_suggestions_vector_notfound(document_corpus, subject_index):
     suggestions = ListSuggestionResult(
         [
             SubjectSuggestion(
                 uri='http://example.com/notfound',
                 label='not found',
                 score=1.0)],
-        subjects)
+        subject_index)
     assert suggestions.vector.sum() == 0

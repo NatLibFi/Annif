@@ -1,28 +1,15 @@
 """Class for combining multiple corpora so they behave like a single corpus"""
 
 import itertools
-from .types import DocumentCorpus, SubjectCorpus, Subject
+from .types import DocumentCorpus
 
 
-class CombinedCorpus(SubjectCorpus, DocumentCorpus):
+class CombinedCorpus(DocumentCorpus):
     """Class for combining multiple corpora so they behave like a single
     corpus"""
 
     def __init__(self, corpora):
         self._corpora = corpora
-
-    @property
-    def subjects(self):
-        for source_subjects in zip(
-                *[corpus.subjects for corpus in self._corpora]):
-            uri = None
-            label = None
-            texts = []
-            for subject in source_subjects:
-                uri = subject.uri
-                label = subject.label
-                texts.append(subject.text)
-            yield Subject(uri=uri, label=label, text=" ".join(texts))
 
     @property
     def documents(self):

@@ -6,13 +6,12 @@ import re
 import gzip
 import annif.util
 from .types import DocumentCorpus
-from .convert import DocumentToSubjectCorpusMixin
 from .subject import SubjectSet
 
 logger = annif.logger
 
 
-class DocumentDirectory(DocumentCorpus, DocumentToSubjectCorpusMixin):
+class DocumentDirectory(DocumentCorpus):
     """A directory of files as a full text document corpus"""
 
     def __init__(self, path, require_subjects=False):
@@ -49,7 +48,7 @@ class DocumentDirectory(DocumentCorpus, DocumentToSubjectCorpusMixin):
                                         labels=subjects.subject_labels)
 
 
-class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
+class DocumentFile(DocumentCorpus):
     """A TSV file as a corpus of documents with subjects"""
 
     def __init__(self, path):
@@ -78,7 +77,7 @@ class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
                            line.rstrip())
 
 
-class DocumentList(DocumentCorpus, DocumentToSubjectCorpusMixin):
+class DocumentList(DocumentCorpus):
     """A document corpus based on a list of other iterable of Document
     objects"""
 
