@@ -52,7 +52,8 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
 
     def _merge_hits_from_sources(self, hits_from_sources, project, params):
         score_vector = np.array([hits.vector * weight
-                                 for hits, weight in hits_from_sources])
+                                 for hits, weight in hits_from_sources],
+                                dtype=np.float32)
         results = self._model.predict(
             np.expand_dims(score_vector.transpose(), 0))
         return VectorSuggestionResult(results[0], project.subjects)
@@ -104,13 +105,14 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
             for source_project, weight in sources:
                 hits = source_project.suggest(doc.text)
                 doc_scores.append(hits.vector * weight)
-            score_vectors.append(np.array(doc_scores).transpose())
+            score_vectors.append(np.array(doc_scores,
+                                          dtype=np.float32).transpose())
             subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
             true_vectors.append(subjects.as_vector(project.subjects))
         # collect the results into a single vector, considering weights
-        scores = np.array(score_vectors)
+        scores = np.array(score_vectors, dtype=np.float32)
         # collect the gold standard values into another vector
-        true = np.array(true_vectors)
+        true = np.array(true_vectors, dtype=np.float32)
         return (scores, true)
 
     def learn(self, corpus, project):
