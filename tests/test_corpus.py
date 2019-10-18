@@ -148,46 +148,6 @@ def test_docdir_key_as_doccorpus(tmpdir, subject_index):
     assert docs[1].uris == {'http://www.yso.fi/onto/yso/p13027'}
 
 
-def test_subjdir(tmpdir):
-    tmpdir.join('subj1.txt').write("""http://example.org/subj1 subject one
-        first subject
-        this is the first thing we know about""")
-    tmpdir.join('subj2.txt').write("""http://example.org/subj2 subject two
-        second subject
-        this is the second thing we know about""")
-    tmpdir.join('subj3.txt').write("""http://example.org/subj3 subject three
-        third subject
-        this is the third thing we know about""")
-
-    subjdir = annif.corpus.SubjectDirectory(str(tmpdir))
-    subjects = sorted(list(subjdir.subjects), key=lambda subj: subj.uri)
-    assert len(subjects) == 3
-    assert subjects[0].uri == 'http://example.org/subj1'
-    assert subjects[0].label == 'subject one'
-    assert 'first' in subjects[0].text
-    assert subjects[1].uri == 'http://example.org/subj2'
-    assert subjects[1].label == 'subject two'
-    assert 'second' in subjects[1].text
-    assert subjects[2].uri == 'http://example.org/subj3'
-    assert subjects[2].label == 'subject three'
-    assert 'third' in subjects[2].text
-
-
-def test_subjdir_as_doccorpus(tmpdir):
-    tmpdir.join('subj1.txt').write("""http://example.org/subj1 subject one
-        first subject
-        this is the first thing we know about""")
-    tmpdir.join('subj2.txt').write("""http://example.org/subj2 subject two
-        second subject
-        this is the second thing we know about""")
-    tmpdir.join('subj3.txt').write("""http://example.org/subj3 subject three
-        third subject
-        this is the third thing we know about""")
-    subjdir = annif.corpus.SubjectDirectory(str(tmpdir))
-    documents = list(subjdir.documents)
-    assert len(documents) == 6
-
-
 def test_subject_by_uri(subject_index):
     subj_id = subject_index.by_uri('http://www.yso.fi/onto/yso/p7141')
     assert subject_index[subj_id][1] == 'sinetit'
@@ -252,7 +212,7 @@ def test_docfile_is_empty(tmpdir):
     assert docs.is_empty()
 
 
-def test_combinedcorpus(tmpdir, subject_index):
+def test_combinedcorpus(tmpdir):
     docfile = tmpdir.join('documents.tsv')
     docfile.write("""Läntinen\t<http://www.yso.fi/onto/yso/p2557>
         Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
@@ -262,7 +222,5 @@ def test_combinedcorpus(tmpdir, subject_index):
     corpus2 = annif.corpus.DocumentFile(str(docfile))
 
     combined = annif.corpus.CombinedCorpus([corpus1, corpus2])
-    combined.set_subject_index(subject_index)
 
     assert len(list(combined.documents)) == 6
-    assert len(list(combined.subjects)) == len(list(corpus1.subjects))

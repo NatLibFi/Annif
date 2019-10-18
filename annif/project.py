@@ -4,8 +4,6 @@ import collections
 import configparser
 import enum
 import os.path
-import joblib
-from sklearn.feature_extraction.text import TfidfVectorizer
 from flask import current_app
 from shutil import rmtree
 import annif
@@ -36,7 +34,6 @@ class AnnifProject(DatadirMixin):
     _analyzer = None
     _backend = None
     _vocab = None
-    _vectorizer = None
     initialized = False
 
     # default values for configuration settings
@@ -45,7 +42,7 @@ class AnnifProject(DatadirMixin):
     def __init__(self, project_id, config, datadir):
         DatadirMixin.__init__(self, datadir, 'projects', project_id)
         self.project_id = project_id
-        self.name = config['name']
+        self.name = config.get('name', project_id)
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
         self.vocab_id = config.get('vocab', None)
@@ -80,15 +77,6 @@ class AnnifProject(DatadirMixin):
         except AnnifException as err:
             logger.warning(err.format_message())
 
-    def _initialize_vectorizer(self):
-        try:
-            vectorizer = self.vectorizer
-            logger.debug("Project '%s': initialized vectorizer: %s",
-                         self.project_id,
-                         str(vectorizer))
-        except AnnifException as err:
-            logger.warning(err.format_message())
-
     def _initialize_backend(self):
         logger.debug("Project '%s': initializing backend", self.project_id)
         try:
@@ -107,7 +95,6 @@ class AnnifProject(DatadirMixin):
 
         self._initialize_analyzer()
         self._initialize_subjects()
-        self._initialize_vectorizer()
         self._initialize_backend()
 
         self.initialized = True
@@ -144,7 +131,8 @@ class AnnifProject(DatadirMixin):
             try:
                 backend_class = annif.backend.get_backend(backend_id)
                 self._backend = backend_class(
-                    backend_id, params=self.config, datadir=self.datadir)
+                    backend_id, config_params=self.config,
+                    datadir=self.datadir)
             except ValueError:
                 logger.warning(
                     "Could not create backend %s, "
@@ -166,19 +154,6 @@ class AnnifProject(DatadirMixin):
     def subjects(self):
         return self.vocab.subjects
 
-    @property
-    def vectorizer(self):
-        if self._vectorizer is None:
-            path = os.path.join(self.datadir, 'vectorizer')
-            if os.path.exists(path):
-                logger.debug('loading vectorizer from %s', path)
-                self._vectorizer = joblib.load(path)
-            else:
-                raise NotInitializedException(
-                    "vectorizer file '{}' not found".format(path),
-                    project_id=self.project_id)
-        return self._vectorizer
-
     def suggest(self, text, backend_params=None):
         """Suggest subjects the given text by passing it to the backend. Returns a
         list of SubjectSuggestion objects ordered by decreasing score."""
@@ -189,28 +164,10 @@ class AnnifProject(DatadirMixin):
         logger.debug('%d hits from backend', len(hits))
         return hits
 
-    def _create_vectorizer(self, subjectcorpus):
-        if not self.backend.needs_subject_vectorizer:
-            logger.debug('not creating vectorizer: not needed by backend')
-            return
-        if subjectcorpus.is_empty():
-            raise NotSupportedException(
-                'using TfidfVectorizer with no documents')
-        logger.info('creating vectorizer')
-        self._vectorizer = TfidfVectorizer(
-            tokenizer=self.analyzer.tokenize_words)
-        self._vectorizer.fit((subj.text for subj in subjectcorpus.subjects))
-        annif.util.atomic_save(
-            self._vectorizer,
-            self.datadir,
-            'vectorizer',
-            method=joblib.dump)
-
     def train(self, corpus):
         """train the project using documents from a metadata source"""
 
         corpus.set_subject_index(self.subjects)
-        self._create_vectorizer(corpus)
         self.backend.train(corpus, project=self)
 
     def learn(self, corpus):

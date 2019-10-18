@@ -7,6 +7,7 @@ import annif.project
 from annif.suggestion import ListSuggestionResult, VectorSuggestionResult
 from annif.exception import ConfigurationException
 from . import vw_base
+from . import backend
 from . import mixins
 
 
@@ -27,14 +28,24 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
         'probabilities': (bool, None)
     }
 
-    DEFAULT_ALGORITHM = 'oaa'
     SUPPORTED_ALGORITHMS = ('oaa', 'ect', 'log_multi', 'multilabel_oaa')
 
     DEFAULT_INPUTS = '_text_'
 
+    DEFAULT_PARAMS = {'algorithm': 'oaa'}
+
+    def default_params(self):
+        params = backend.AnnifBackend.DEFAULT_PARAMS.copy()
+        params.update(mixins.ChunkingBackend.DEFAULT_PARAMS)
+        params.update(self.DEFAULT_PARAMS)
+        params.update({param: default_val
+                       for param, (_, default_val) in self.VW_PARAMS.items()
+                       if default_val is not None})
+        return params
+
     @property
     def algorithm(self):
-        algorithm = self.params.get('algorithm', self.DEFAULT_ALGORITHM)
+        algorithm = self.params['algorithm']
         if algorithm not in self.SUPPORTED_ALGORITHMS:
             raise ConfigurationException(
                 "{} is not a valid algorithm (allowed: {})".format(
