@@ -86,7 +86,7 @@ class PAVBackend(ensemble.EnsembleBackend):
             if true[:, cid].sum() < min_docs:
                 continue  # don't create model b/c of too few examples
             reg = IsotonicRegression(out_of_bounds='clip')
-            reg.fit(scores[:, cid], true[:, cid])
+            reg.fit(scores[:, cid].astype(np.float64), true[:, cid])
             pav_regressions[source_project.subjects[cid][0]] = reg
         self.info("created PAV model for {} concepts".format(
             len(pav_regressions)))
