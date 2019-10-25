@@ -1,4 +1,4 @@
-FROM python:3-slim-buster AS builder
+FROM python:3.7-slim-buster AS builder
 
 LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
 
@@ -34,7 +34,7 @@ RUN apt-get update \
 
 
 
-FROM python:3-slim-buster
+FROM python:3.7-slim-buster
 
 COPY --from=builder /usr/local/lib/python3.7 /usr/local/lib/python3.7
 
