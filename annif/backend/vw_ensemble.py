@@ -84,9 +84,10 @@ class VWEnsembleBackend(
 
     def _merge_hits_from_sources(self, hits_from_sources, project, params):
         score_vector = np.array([hits.vector
-                                 for hits, _ in hits_from_sources])
+                                 for hits, _ in hits_from_sources],
+                                dtype=np.float32)
         discount_rate = float(self.params['discount_rate'])
-        result = np.zeros(score_vector.shape[1])
+        result = np.zeros(score_vector.shape[1], dtype=np.float32)
         for subj_id in range(score_vector.shape[1]):
             subj_score_vector = score_vector[:, subj_id]
             if subj_score_vector.sum() > 0.0:
@@ -120,7 +121,7 @@ class VWEnsembleBackend(
         for source_project in source_projects:
             hits = source_project.suggest(doc.text)
             score_vectors.append(hits.vector)
-        return np.array(score_vectors)
+        return np.array(score_vectors, dtype=np.float32)
 
     def _doc_to_example(self, doc, project, source_projects):
         examples = []
