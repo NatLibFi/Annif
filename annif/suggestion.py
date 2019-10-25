@@ -156,7 +156,7 @@ class ListSuggestionResult(SuggestionResult):
         self._vector = None
 
     def _hits_to_vector(self):
-        vector = np.zeros(len(self._subject_index))
+        vector = np.zeros(len(self._subject_index), dtype=np.float32)
         for hit in self._hits:
             subject_id = self._subject_index.by_uri(hit.uri)
             if subject_id is not None:
