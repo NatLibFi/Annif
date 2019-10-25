@@ -131,15 +131,15 @@ class SubjectSet:
            multilabel indicator format, using a subject index as the source
            of subjects."""
 
-        vector = np.zeros(len(subject_index), dtype=np.int8)
+        vector = np.zeros(len(subject_index), dtype=bool)
         if self.has_uris():
             for uri in self.subject_uris:
                 subject_id = subject_index.by_uri(uri)
                 if subject_id is not None:
-                    vector[subject_id] = 1
+                    vector[subject_id] = True
         else:
             for label in self.subject_labels:
                 subject_id = subject_index.by_label(label)
                 if subject_id is not None:
-                    vector[subject_id] = 1
+                    vector[subject_id] = True
         return vector
