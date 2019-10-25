@@ -99,7 +99,7 @@ class VectorSuggestionResult(SuggestionResult):
     """SuggestionResult implementation based primarily on NumPy vectors."""
 
     def __init__(self, vector, subject_index):
-        self._vector = vector
+        self._vector = vector.astype(np.float32)
         self._subject_index = subject_index
         self._subject_order = None
         self._hits = None
