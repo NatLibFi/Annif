@@ -24,7 +24,7 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
     MODEL_FILE = "nn-model.h5"
 
     DEFAULT_PARAMS = {
-        'nodes': 60,
+        'nodes': 100,
         'dropout_rate': 0.2,
         'optimizer': 'adam',
         'epochs': 10,
