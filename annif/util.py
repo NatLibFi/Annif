@@ -2,6 +2,7 @@
 
 import glob
 import os
+import os.path
 import tempfile
 import numpy as np
 from annif import logger
@@ -14,7 +15,9 @@ def atomic_save(obj, dirname, filename, method=None):
     filename, using a temporary file and renaming the temporary file to the
     final name."""
 
-    tempfd, tempfilename = tempfile.mkstemp(prefix=filename, dir=dirname)
+    prefix, suffix = os.path.splitext(filename)
+    tempfd, tempfilename = tempfile.mkstemp(
+        prefix=prefix, suffix=suffix, dir=dirname)
     os.close(tempfd)
     logger.debug('saving %s to temporary file %s', str(obj), tempfilename)
     if method is not None:

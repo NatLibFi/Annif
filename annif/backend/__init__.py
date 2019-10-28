@@ -43,3 +43,10 @@ try:
 except ImportError:
     annif.logger.debug("vowpalwabbit not available, not enabling " +
                        "vw_multi & vw_ensemble backends")
+
+try:
+    from . import nn_ensemble
+    register_backend(nn_ensemble.NNEnsembleBackend)
+except ImportError:
+    annif.logger.debug("Keras and TensorFlow not available, not enabling " +
+                       "nn_ensemble backend")

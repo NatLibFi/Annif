@@ -20,10 +20,14 @@ cache: pip
 before_install:
 - export BOTO_CONFIG=/dev/null
 install:
+- pip install --upgrade pip
 - pip install pipenv
 - pip install --upgrade pytest
 - pipenv install --dev --skip-lock
 - travis_wait 30 python -m nltk.downloader punkt
+# Install the optional neural network dependencies (Keras and TensorFlow)
+# - except for one Python version (3.6) so that we can test also without them
+- if [[ $TRAVIS_PYTHON_VERSION != '3.6' ]]; then pip install .[nn]; fi
 # For Python 3.5, also install optional dependencies that were not specified in Pipfile
 # For other Python versions we will only run the tests that depend on pure Python modules
 # - fastText dependencies
