@@ -9,7 +9,7 @@ RUN apt-get update \
 		libvoikko1 \
 		voikko-fi \
 	&& pip install --no-cache-dir \
-		annif[voikko] \
+		voikko \
 	## fasttext:
 	&& apt-get install -y --no-install-recommends \
 		build-essential \
@@ -45,7 +45,7 @@ RUN apt-get update \
 		libvoikko1 \
 		voikko-fi \
 	&& pip install --no-cache-dir \
-		annif[voikko] \
+		voikko \
 	## Vowpal Wabbit
 	&& apt-get install -y --no-install-recommends \
 		libboost-program-options1.67.0 \
@@ -53,6 +53,9 @@ RUN apt-get update \
 		libboost-system1.67.0 \
 	&& pip install --no-cache-dir \
 		vowpalwabbit==8.7.* \
+	## Neural Network Ensemble
+	&& pip install --no-cache-dir \
+		tensorflow==2.0.* \
 	## Clean up:
 	&& rm -rf /var/lib/apt/lists/* /usr/include/* \
 	&& rm -rf /root/.cache/pip*/*
