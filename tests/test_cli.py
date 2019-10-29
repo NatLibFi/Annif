@@ -107,7 +107,7 @@ def test_clear_project_nonexistent_data(testdatadir, caplog):
     assert expected_msg == caplog.records[0].message
 
 
-def test_loadvoc_tsv(testdatadir):
+def test_loadvocy_tsv(testdatadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
     subjectfile = os.path.join(
@@ -120,6 +120,8 @@ def test_loadvoc_tsv(testdatadir):
     assert result.exit_code == 0
     assert testdatadir.join('vocabs/yso-fi/subjects').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects.ttl').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects.ttl').size() > 0
 
 
 def test_loadvoc_rdf(testdatadir):
@@ -135,6 +137,8 @@ def test_loadvoc_rdf(testdatadir):
     assert result.exit_code == 0
     assert testdatadir.join('vocabs/yso-fi/subjects').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects.ttl').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects.ttl').size() > 0
 
 
 def test_loadvoc_nonexistent_path():

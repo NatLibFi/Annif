@@ -19,7 +19,7 @@ def app():
     app = annif.create_app(config_name='annif.default_config.TestingConfig')
     with app.app_context():
         project = annif.project.get_project('dummy-en')
-        project.vocab.load_vocabulary(vocab)
+        project.vocab.load_vocabulary(vocab, 'en')
     return app
 
 

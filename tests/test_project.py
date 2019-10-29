@@ -132,7 +132,7 @@ def test_get_project_invalid_config_file(app):
 def test_project_load_vocabulary_tfidf(app, vocabulary, testdatadir):
     with app.app_context():
         project = annif.project.get_project('tfidf-fi')
-    project.vocab.load_vocabulary(vocabulary)
+    project.vocab.load_vocabulary(vocabulary, 'fi')
     assert testdatadir.join('vocabs/yso-fi/subjects').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
 
@@ -189,7 +189,7 @@ def test_project_load_vocabulary_fasttext(app, vocabulary, testdatadir):
     pytest.importorskip("annif.backend.fasttext")
     with app.app_context():
         project = annif.project.get_project('fasttext-fi')
-    project.vocab.load_vocabulary(vocabulary)
+    project.vocab.load_vocabulary(vocabulary, 'fi')
     assert testdatadir.join('vocabs/yso-fi/subjects').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
 

@@ -1,9 +1,11 @@
 """Classes for supporting subject corpora expressed as directories or files"""
 
+import shutil
 import annif.util
 import numpy as np
 from annif import logger
 from .types import Subject
+from .skos import serialize_subjects_to_skos
 
 
 class SubjectFileTSV:
@@ -19,6 +21,11 @@ class SubjectFileTSV:
                 uri, label = line.strip().split(None, 1)
                 clean_uri = annif.util.cleanup_uri(uri)
                 yield Subject(uri=clean_uri, label=label, text=None)
+
+    def save_skos(self, path, language):
+        """Save the contents of the subject vocabulary into a SKOS/Turtle
+        file with the given path name."""
+        serialize_subjects_to_skos(self.subjects, language, path)
 
 
 class SubjectIndex:
