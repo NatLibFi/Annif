@@ -103,7 +103,7 @@ has a citable DOI.
 
 Suominen, O., 2019. Annif: DIY automated subject indexing using multiple
 algorithms. LIBER Quarterly, 29(1), pp.1–25. DOI:
-[https://doi.org/10.18352/lq.10285]([https://doi.org/10.18352/lq.10285)
+[https://doi.org/10.18352/lq.10285](https://doi.org/10.18352/lq.10285)
 
     @article{suominen2019annif,
       title={Annif: DIY automated subject indexing using multiple algorithms},
