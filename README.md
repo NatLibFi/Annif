@@ -40,6 +40,12 @@ Start up the application:
 See [Getting Started](https://github.com/NatLibFi/Annif/wiki/Getting-started)
 in the wiki for more details.
 
+# Docker install
+
+You can use Annif as a pre-built Docker container. Please see the 
+[wiki documentation](https://github.com/NatLibFi/Annif/wiki/Usage-with-Docker)
+for details.
+
 # Development install
 
 A development version of Annif can be installed by cloning the [GitHub
@@ -77,6 +83,51 @@ Start up the application:
 Run `pipenv shell` to enter the virtual environment and then run `pytest`.
 To have the test suite watch for changes in code and run automatically, use
 pytest-watch by running `ptw`.
+
+# Getting help
+
+Many resources are available:
+
+ * [Usage documentation in the wiki](https://github.com/NatLibFi/Annif/wiki)
+ * [annif-users](https://groups.google.com/forum/#!forum/annif-users) discussion forum
+ * [Internal API documentation](https://readthedocs.org/projects/annif/) on ReadTheDocs
+ * [annif.org](http://annif.org) project web site
+
+# Publications / How to cite
+
+An article about Annif has been published in the peer-reviewed Open Access
+journal LIBER Quarterly. The software itself is also archived on Zenodo and
+has a citable DOI.
+
+## Annif article
+
+Suominen, O., 2019. Annif: DIY automated subject indexing using multiple
+algorithms. LIBER Quarterly, 29(1), pp.1–25. DOI:
+[https://doi.org/10.18352/lq.10285]([https://doi.org/10.18352/lq.10285)
+
+    @article{suominen2019annif,
+      title={Annif: DIY automated subject indexing using multiple algorithms},
+      author={Suominen, Osma},
+      journal={{LIBER} Quarterly},
+      volume={29},
+      number={1},
+      pages={1--25},
+      year={2019},
+      doi = {10.18352/lq.10285},
+      url = {https://doi.org/10.18352/lq.10285}
+    }
+
+## Citing the software itself
+
+Zenodo DOI:
+[https://doi.org/10.5281/zenodo.2578948](https://doi.org/10.5281/zenodo.2578948)
+
+    @misc{https://doi.org/10.5281/zenodo.2578948,
+      doi = {10.5281/ZENODO.2578948},
+      url = {https://doi.org/10.5281/zenodo.2578948},
+      title = {NatLibFi/Annif},
+      year = {2019}
+    }
 
 # License
 
