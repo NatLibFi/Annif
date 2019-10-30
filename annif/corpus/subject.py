@@ -1,6 +1,5 @@
 """Classes for supporting subject corpora expressed as directories or files"""
 
-import shutil
 import annif.util
 import numpy as np
 from annif import logger
