@@ -74,8 +74,14 @@ def document_corpus(subject_index):
 
 
 @pytest.fixture(scope='module')
-def project(document_corpus, subject_index):
+def project(subject_index):
     proj = unittest.mock.Mock()
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
     proj.subjects = subject_index
     return proj
+
+
+@pytest.fixture(scope='module')
+def app_project(app):
+    with app.app_context():
+        return annif.project.get_project('dummy-en')
