@@ -5,6 +5,7 @@ import responses
 import unittest.mock
 import pytest
 import annif.backend.maui
+from annif.exception import NotSupportedException
 
 
 @pytest.fixture
@@ -21,7 +22,7 @@ def maui(app):
 
 
 @responses.activate
-def test_maui_initialize_tagger_delete_non_existing(maui, datadir):
+def test_maui_initialize_tagger_delete_non_existing(maui):
     responses.add(responses.DELETE,
                   'http://api.example.org/mauiservice/dummy',
                   status=404,
@@ -36,8 +37,14 @@ def test_maui_initialize_tagger_delete_non_existing(maui, datadir):
     maui._initialize_tagger()
 
 
+def test_maui_train_nodocuments(maui, project, empty_corpus):
+    with pytest.raises(NotSupportedException) as excinfo:
+        maui.train(empty_corpus, project)
+    assert 'training backend maui with no documents' in str(excinfo.value)
+
+
 @responses.activate
-def test_maui_train(maui, datadir, document_corpus, app_project):
+def test_maui_train(maui, document_corpus, app_project):
     responses.add(responses.DELETE,
                   'http://api.example.org/mauiservice/dummy',
                   status=204)

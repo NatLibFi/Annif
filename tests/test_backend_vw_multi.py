@@ -73,7 +73,7 @@ def test_vw_multi_train_and_learn(datadir, document_corpus, project):
     assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
 
 
-def test_vw_multi_train_and_learn_nodocuments(datadir, tmpdir, project):
+def test_vw_multi_train_and_learn_nodocuments(datadir, project, empty_corpus):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -83,10 +83,7 @@ def test_vw_multi_train_and_learn_nodocuments(datadir, tmpdir, project):
             'loss_function': 'hinge'},
         datadir=str(datadir))
 
-    empty_file = tmpdir.ensure('empty.tsv')
-    empty_document_corpus = annif.corpus.DocumentFile(str(empty_file))
-
-    vw.train(empty_document_corpus, project)
+    vw.train(empty_corpus, project)
     assert datadir.join('vw-train.txt').exists()
     assert datadir.join('vw-train.txt').size() == 0
 
@@ -95,7 +92,7 @@ def test_vw_multi_train_and_learn_nodocuments(datadir, tmpdir, project):
 
     old_size = modelfile.size()
 
-    vw.learn(empty_document_corpus, project)
+    vw.learn(empty_corpus, project)
 
     assert modelfile.size() == old_size
     assert datadir.join('vw-train.txt').size() == 0

@@ -69,7 +69,7 @@ def test_fasttext_train_unknown_subject(tmpdir, datadir, project):
     assert datadir.join('fasttext-model').size() > 0
 
 
-def test_fasttext_train_nodocuments(tmpdir, datadir, project):
+def test_fasttext_train_nodocuments(datadir, project, empty_corpus):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
@@ -81,11 +81,8 @@ def test_fasttext_train_nodocuments(tmpdir, datadir, project):
             'loss': 'hs'},
         datadir=str(datadir))
 
-    empty_file = tmpdir.ensure('empty.tsv')
-    empty_document_corpus = annif.corpus.DocumentFile(str(empty_file))
-
     with pytest.raises(NotSupportedException) as excinfo:
-        fasttext.train(empty_document_corpus, project)
+        fasttext.train(empty_corpus, project)
     assert 'training backend fasttext with no documents' in str(excinfo.value)
 
 

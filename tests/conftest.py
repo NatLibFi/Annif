@@ -6,6 +6,7 @@ import pytest
 import py.path
 import unittest.mock
 import annif
+import annif.corpus
 
 
 @pytest.fixture(scope='module')
@@ -85,3 +86,9 @@ def project(subject_index):
 def app_project(app):
     with app.app_context():
         return annif.project.get_project('dummy-en')
+
+
+@pytest.fixture(scope='function')
+def empty_corpus(tmpdir):
+    empty_file = tmpdir.ensure('empty.tsv')
+    return annif.corpus.DocumentFile(str(empty_file))

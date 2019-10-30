@@ -6,7 +6,7 @@ import os.path
 import json
 import requests
 import requests.exceptions
-from annif.exception import OperationFailedException
+from annif.exception import NotSupportedException, OperationFailedException
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 from . import backend
 
