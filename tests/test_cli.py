@@ -110,6 +110,8 @@ def test_clear_project_nonexistent_data(testdatadir, caplog):
 def test_loadvocy_tsv(testdatadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
     subjectfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
@@ -127,6 +129,7 @@ def test_loadvocy_tsv(testdatadir):
 def test_loadvoc_rdf(testdatadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
+    with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
     subjectfile = os.path.join(
         os.path.dirname(__file__),
@@ -145,6 +148,7 @@ def test_loadvoc_rdf(testdatadir):
 def test_loadvoc_ttl(testdatadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
+    with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
     subjectfile = os.path.join(
         os.path.dirname(__file__),
