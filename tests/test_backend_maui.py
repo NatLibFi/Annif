@@ -64,11 +64,12 @@ def test_maui_upload_vocabulary_failed(maui, app_project):
 
 
 @responses.activate
-def test_maui_upload_train_file_failed(maui):
+def test_maui_upload_train_file_failed(maui, document_corpus):
     responses.add(responses.POST,
                   'http://api.example.org/mauiservice/dummy/train',
                   body=requests.exceptions.RequestException())
 
+    maui._create_train_file(document_corpus)
     with pytest.raises(OperationFailedException):
         maui._upload_train_file()
 
