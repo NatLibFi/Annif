@@ -16,40 +16,46 @@ class MauiBackend(backend.AnnifBackend):
 
     TRAIN_FILE = 'maui-train.jsonl'
 
-    def _initialize_tagger(self):
-        endpoint = self.params['endpoint']
-        tagger = self.params['tagger']
+    @property
+    def endpoint(self):
+        return self.params['endpoint']
 
-        self.info("Initializing Maui Service tagger '{}'".format(tagger))
+    @property
+    def tagger(self):
+        return self.params['tagger']
+
+    @property
+    def tagger_url(self):
+        return self.params['endpoint'] + self.params['tagger']
+
+    def _initialize_tagger(self):
+        self.info("Initializing Maui Service tagger '{}'".format(self.tagger))
 
         # try to delete the tagger in case it already exists
-        resp = requests.delete(endpoint + tagger)
+        resp = requests.delete(self.tagger_url)
         self.debug("Trying to delete tagger {} returned status code {}"
-                   .format(tagger, resp.status_code))
+                   .format(self.tagger, resp.status_code))
 
         # create a new tagger
-        data = {'id': tagger, 'lang': self.params['language']}
+        data = {'id': self.tagger, 'lang': self.params['language']}
         try:
-            resp = requests.post(endpoint, data=data)
+            resp = requests.post(self.endpoint, data=data)
             self.debug("Trying to create tagger {} returned status code {}"
-                       .format(tagger, resp.status_code))
+                       .format(self.tagger, resp.status_code))
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
             raise OperationFailedException(err)
 
     def _upload_vocabulary(self, project):
-        endpoint = self.params['endpoint']
-        tagger = self.params['tagger']
-
         self.info("Uploading vocabulary")
         try:
-            resp = requests.put(endpoint + tagger + '/vocab',
+            resp = requests.put(self.tagger_url + '/vocab',
                                 data=project.vocab.as_skos())
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
             raise OperationFailedException(err)
 
-    def _create_train_file(self, corpus, project):
+    def _create_train_file(self, corpus):
         self.info("Creating train file")
         train_path = os.path.join(self.datadir, self.TRAIN_FILE)
         with open(train_path, 'w') as train_file:
@@ -59,27 +65,21 @@ class MauiBackend(backend.AnnifBackend):
                 print(json_doc, file=train_file)
 
     def _upload_train_file(self):
-        endpoint = self.params['endpoint']
-        tagger = self.params['tagger']
-
         self.info("Uploading training documents")
         train_path = os.path.join(self.datadir, self.TRAIN_FILE)
         with open(train_path, 'rb') as train_file:
             try:
-                resp = requests.post(endpoint + tagger + '/train',
+                resp = requests.post(self.tagger_url + '/train',
                                      data=train_file)
                 resp.raise_for_status()
             except requests.exceptions.RequestException as err:
                 raise OperationFailedException(err)
 
     def _wait_for_train(self):
-        endpoint = self.params['endpoint']
-        tagger = self.params['tagger']
-
         self.info("Waiting for training to be completed...")
         while True:
             try:
-                resp = requests.get(endpoint + tagger + "/train")
+                resp = requests.get(self.tagger_url + "/train")
                 resp.raise_for_status()
             except requests.exceptions.RequestException as err:
                 raise OperationFailedException(err)
@@ -96,18 +96,15 @@ class MauiBackend(backend.AnnifBackend):
                                         .format(self.backend_id))
         self._initialize_tagger()
         self._upload_vocabulary(project)
-        self._create_train_file(corpus, project)
+        self._create_train_file(corpus)
         self._upload_train_file()
         self._wait_for_train()
 
     def _suggest(self, text, project, params):
-        endpoint = self.params['endpoint']
-        tagger = self.params['tagger']
-
         data = {'text': text}
 
         try:
-            resp = requests.post(endpoint + tagger + '/suggest', data=data)
+            resp = requests.post(self.tagger_url + '/suggest', data=data)
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
             self.warning("HTTP request failed: {}".format(err))
