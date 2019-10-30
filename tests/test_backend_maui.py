@@ -5,7 +5,7 @@ import responses
 import unittest.mock
 import pytest
 import annif.backend.maui
-from annif.exception import NotSupportedException
+from annif.exception import NotSupportedException, OperationFailedException
 
 
 @pytest.fixture
@@ -35,6 +35,52 @@ def test_maui_initialize_tagger_delete_non_existing(maui):
                   json={})
 
     maui._initialize_tagger()
+
+
+@responses.activate
+def test_maui_initialize_tagger_create_failed(maui):
+    responses.add(responses.DELETE,
+                  'http://api.example.org/mauiservice/dummy',
+                  status=404,
+                  json={"status": 404,
+                        "status_text": "Not Found",
+                        "message": "The resource does not exist"})
+    responses.add(responses.POST,
+                  'http://api.example.org/mauiservice/',
+                  body=requests.exceptions.RequestException())
+
+    with pytest.raises(OperationFailedException):
+        maui._initialize_tagger()
+
+
+@responses.activate
+def test_maui_upload_vocabulary_failed(maui, app_project):
+    responses.add(responses.PUT,
+                  'http://api.example.org/mauiservice/dummy/vocab',
+                  body=requests.exceptions.RequestException())
+
+    with pytest.raises(OperationFailedException):
+        maui._upload_vocabulary(app_project)
+
+
+@responses.activate
+def test_maui_upload_train_file_failed(maui):
+    responses.add(responses.POST,
+                  'http://api.example.org/mauiservice/dummy/train',
+                  body=requests.exceptions.RequestException())
+
+    with pytest.raises(OperationFailedException):
+        maui._upload_train_file()
+
+
+@responses.activate
+def test_maui_wait_for_train_failed(maui):
+    responses.add(responses.GET,
+                  'http://api.example.org/mauiservice/dummy/train',
+                  body=requests.exceptions.RequestException())
+
+    with pytest.raises(OperationFailedException):
+        maui._wait_for_train()
 
 
 def test_maui_train_nodocuments(maui, project, empty_corpus):
