@@ -64,7 +64,8 @@ def suggest(project_id, text, limit, threshold):
     except AnnifException as err:
         return server_error(err)
     hits = hit_filter(result)
-    return {'results': [hit._asdict() for hit in hits]}
+    return {'results':
+        [hit._replace(score=float(hit.score))._asdict() for hit in hits]}
 
 
 def _documents_to_corpus(documents):
