@@ -65,7 +65,7 @@ def suggest(project_id, text, limit, threshold):
         return server_error(err)
     hits = hit_filter(result)
     return {'results':
-        [hit._replace(score=float(hit.score))._asdict() for hit in hits]}
+            [hit._replace(score=float(hit.score))._asdict() for hit in hits]}
 
 
 def _documents_to_corpus(documents):
