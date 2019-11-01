@@ -61,6 +61,6 @@ steps:
       auto_tag: true
     when:
       branch:
-      - master
+      - release-0.43.1
       event:
-      - tag
+      - push
