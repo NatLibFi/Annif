@@ -12,10 +12,13 @@ import annif.project
 import annif.util
 from annif.exception import NotInitializedException
 from annif.suggestion import VectorSuggestionResult
+from . import backend
 from . import ensemble
 
 
-class NNEnsembleBackend(ensemble.EnsembleBackend):
+class NNEnsembleBackend(
+        backend.AnnifLearningBackend,
+        ensemble.EnsembleBackend):
     """Neural network ensemble backend that combines results from multiple
     projects"""
 
@@ -90,7 +93,7 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
     def train(self, corpus, project):
         sources = annif.util.parse_sources(self.params['sources'])
         self._create_model(sources, project)
-        self.learn(corpus, project)
+        self.learn(corpus, project, epochs=int(self.params['epochs']))
 
     def _corpus_to_vectors(self, corpus, project):
         # pass corpus through all source projects
@@ -115,12 +118,14 @@ class NNEnsembleBackend(ensemble.EnsembleBackend):
         true = np.array(true_vectors, dtype=np.float32)
         return (scores, true)
 
-    def learn(self, corpus, project):
+    def learn(self, corpus, project, epochs=1):
+        self.initialize()
+
         scores, true = self._corpus_to_vectors(corpus, project)
 
         # fit the model
         self._model.fit(scores, true, batch_size=32, verbose=True,
-                        epochs=int(self.params['epochs']))
+                        epochs=epochs)
 
         annif.util.atomic_save(
             self._model,
