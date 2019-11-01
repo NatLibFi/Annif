@@ -115,7 +115,7 @@ class VectorSuggestionResult(SuggestionResult):
                 SubjectSuggestion(
                     uri=subject[0],
                     label=subject[1],
-                    score=score))
+                    score=float(score)))
         return ListSuggestionResult(hits, self._subject_index)
 
     @property
