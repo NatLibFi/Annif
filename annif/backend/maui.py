@@ -112,7 +112,7 @@ class MauiBackend(backend.AnnifBackend):
         self._upload_train_file()
         self._wait_for_train()
 
-    def _suggest(self, text, project, params):
+    def _suggest_request(self, text):
         data = {'text': text}
 
         try:
@@ -120,14 +120,15 @@ class MauiBackend(backend.AnnifBackend):
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
             self.warning("HTTP request failed: {}".format(err))
-            return ListSuggestionResult([], project.subjects)
+            return None
 
         try:
-            response = resp.json()
+            return resp.json()
         except ValueError as err:
             self.warning("JSON decode failed: {}".format(err))
-            return ListSuggestionResult([], project.subjects)
+            return None
 
+    def _response_to_result(self, response, project):
         try:
             return ListSuggestionResult(
                 [SubjectSuggestion(uri=h['id'],
@@ -137,4 +138,11 @@ class MauiBackend(backend.AnnifBackend):
                  if h['probability'] > 0.0], project.subjects)
         except (TypeError, ValueError) as err:
             self.warning("Problem interpreting JSON data: {}".format(err))
+            return ListSuggestionResult([], project.subjects)
+
+    def _suggest(self, text, project, params):
+        response = self._suggest_request(text)
+        if response:
+            return self._response_to_result(response, project)
+        else:
             return ListSuggestionResult([], project.subjects)
