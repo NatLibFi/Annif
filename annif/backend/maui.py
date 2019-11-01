@@ -6,7 +6,9 @@ import os.path
 import json
 import requests
 import requests.exceptions
-from annif.exception import NotSupportedException, OperationFailedException
+from annif.exception import ConfigurationException
+from annif.exception import NotSupportedException
+from annif.exception import OperationFailedException
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 from . import backend
 
@@ -18,15 +20,25 @@ class MauiBackend(backend.AnnifBackend):
 
     @property
     def endpoint(self):
-        return self.params['endpoint']
+        try:
+            return self.params['endpoint']
+        except KeyError:
+            raise ConfigurationException(
+                "endpoint must be set in project configuration",
+                backend_id=self.backend_id)
 
     @property
     def tagger(self):
-        return self.params['tagger']
+        try:
+            return self.params['tagger']
+        except KeyError:
+            raise ConfigurationException(
+                "tagger must be set in project configuration",
+                backend_id=self.backend_id)
 
     @property
     def tagger_url(self):
-        return self.params['endpoint'] + self.params['tagger']
+        return self.endpoint + self.tagger
 
     def _initialize_tagger(self):
         self.info("Initializing Maui Service tagger '{}'".format(self.tagger))
