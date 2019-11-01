@@ -5,7 +5,9 @@ import responses
 import unittest.mock
 import pytest
 import annif.backend.maui
-from annif.exception import NotSupportedException, OperationFailedException
+from annif.exception import ConfigurationException
+from annif.exception import NotSupportedException
+from annif.exception import OperationFailedException
 
 
 @pytest.fixture
@@ -19,6 +21,32 @@ def maui(app):
             'language': 'en'},
         datadir=app.config['DATADIR'])
     return maui
+
+
+def test_maui_train_missing_endpoint(app, document_corpus, project):
+    maui_type = annif.backend.get_backend("maui")
+    maui = maui_type(
+        backend_id='maui',
+        config_params={
+            'tagger': 'dummy',
+            'language': 'en'},
+        datadir=app.config['DATADIR'])
+
+    with pytest.raises(ConfigurationException):
+        maui.train(document_corpus, project)
+
+
+def test_maui_train_missing_tagger(app, document_corpus, project):
+    maui_type = annif.backend.get_backend("maui")
+    maui = maui_type(
+        backend_id='maui',
+        config_params={
+            'endpoint': 'http://api.example.org/mauiservice/',
+            'language': 'en'},
+        datadir=app.config['DATADIR'])
+
+    with pytest.raises(ConfigurationException):
+        maui.train(document_corpus, project)
 
 
 @responses.activate
