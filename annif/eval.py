@@ -6,6 +6,7 @@ import warnings
 import numpy as np
 from sklearn.metrics import precision_score, recall_score, f1_score
 from sklearn.metrics import label_ranking_average_precision_score
+from annif.exception import NotSupportedException
 
 
 def true_positives(y_true, y_pred):
@@ -133,6 +134,9 @@ class EvaluationBatch:
         """evaluate a set of selected subjects against a gold standard using
         different metrics. The set of metrics can be either 'all' or
         'simple'."""
+
+        if not self._samples:
+            raise NotSupportedException("cannot evaluate empty corpus")
 
         y_true = np.array([gold_subjects.as_vector(self._subject_index)
                            for hits, gold_subjects in self._samples])

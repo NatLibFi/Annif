@@ -441,6 +441,16 @@ def test_eval_docfile():
     assert result.exit_code == 0
 
 
+def test_eval_empty_file(tmpdir):
+    empty_file = tmpdir.ensure('empty.tsv')
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'eval', 'dummy-fi', str(empty_file)])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'cannot evaluate empty corpus' in failed_result.output
+
+
 def test_eval_nonexistent_path():
     failed_result = runner.invoke(
         annif.cli.cli, [
