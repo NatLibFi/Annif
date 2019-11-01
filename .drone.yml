@@ -58,7 +58,9 @@ steps:
     image: plugins/docker
     settings:
       <<: *docker_settings
-      auto_tag: true
+      tags:
+        - '0.43.1'
+        - '0.43'
     when:
       branch:
       - release-0.43.1
