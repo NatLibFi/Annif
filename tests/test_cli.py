@@ -107,7 +107,7 @@ def test_clear_project_nonexistent_data(testdatadir, caplog):
     assert expected_msg == caplog.records[0].message
 
 
-def test_loadvocy_tsv(testdatadir):
+def test_loadvoc_tsv(testdatadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
     with contextlib.suppress(FileNotFoundError):
