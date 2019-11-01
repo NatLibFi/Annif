@@ -40,18 +40,15 @@ def test_pav_train(app, datadir, tmpdir, project):
     assert datadir.join('pav-model-dummy-fi').size() > 0
 
 
-def test_pav_train_nodocuments(tmpdir, datadir, project):
+def test_pav_train_nodocuments(datadir, project, empty_corpus):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
         config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
         datadir=str(datadir))
 
-    empty_file = tmpdir.ensure('empty.tsv')
-    empty_document_corpus = annif.corpus.DocumentFile(str(empty_file))
-
     with pytest.raises(NotSupportedException) as excinfo:
-        pav.train(empty_document_corpus, project)
+        pav.train(empty_corpus, project)
     assert 'training backend pav with no documents' in str(excinfo.value)
 
 

@@ -132,7 +132,7 @@ def test_get_project_invalid_config_file(app):
 def test_project_load_vocabulary_tfidf(app, vocabulary, testdatadir):
     with app.app_context():
         project = annif.project.get_project('tfidf-fi')
-    project.vocab.load_vocabulary(vocabulary)
+    project.vocab.load_vocabulary(vocabulary, 'fi')
     assert testdatadir.join('vocabs/yso-fi/subjects').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
 
@@ -145,13 +145,11 @@ def test_project_train_tfidf(app, document_corpus, testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
-def test_project_train_tfidf_nodocuments(app, tmpdir):
+def test_project_train_tfidf_nodocuments(app, empty_corpus):
     with app.app_context():
         project = annif.project.get_project('tfidf-fi')
-    empty_file = tmpdir.ensure('empty.tsv')
-    empty_document_corpus = annif.corpus.DocumentFile(str(empty_file))
     with pytest.raises(NotSupportedException) as excinfo:
-        project.train(empty_document_corpus)
+        project.train(empty_corpus)
     assert 'Cannot train tfidf project with no documents' in str(excinfo.value)
 
 
@@ -189,7 +187,7 @@ def test_project_load_vocabulary_fasttext(app, vocabulary, testdatadir):
     pytest.importorskip("annif.backend.fasttext")
     with app.app_context():
         project = annif.project.get_project('fasttext-fi')
-    project.vocab.load_vocabulary(vocabulary)
+    project.vocab.load_vocabulary(vocabulary, 'fi')
     assert testdatadir.join('vocabs/yso-fi/subjects').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
 

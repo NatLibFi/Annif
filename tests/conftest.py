@@ -6,6 +6,7 @@ import pytest
 import py.path
 import unittest.mock
 import annif
+import annif.corpus
 
 
 @pytest.fixture(scope='module')
@@ -19,7 +20,7 @@ def app():
     app = annif.create_app(config_name='annif.default_config.TestingConfig')
     with app.app_context():
         project = annif.project.get_project('dummy-en')
-        project.vocab.load_vocabulary(vocab)
+        project.vocab.load_vocabulary(vocab, 'en')
     return app
 
 
@@ -74,8 +75,20 @@ def document_corpus(subject_index):
 
 
 @pytest.fixture(scope='module')
-def project(document_corpus, subject_index):
+def project(subject_index):
     proj = unittest.mock.Mock()
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
     proj.subjects = subject_index
     return proj
+
+
+@pytest.fixture(scope='module')
+def app_project(app):
+    with app.app_context():
+        return annif.project.get_project('dummy-en')
+
+
+@pytest.fixture(scope='function')
+def empty_corpus(tmpdir):
+    empty_file = tmpdir.ensure('empty.tsv')
+    return annif.corpus.DocumentFile(str(empty_file))

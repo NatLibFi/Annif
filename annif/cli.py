@@ -153,7 +153,7 @@ def run_loadvoc(project_id, subjectfile):
     else:
         # probably a TSV file
         subjects = annif.corpus.SubjectFileTSV(subjectfile)
-    proj.vocab.load_vocabulary(subjects)
+    proj.vocab.load_vocabulary(subjects, proj.language)
 
 
 @cli.command('train')
