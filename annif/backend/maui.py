@@ -114,9 +114,13 @@ class MauiBackend(backend.AnnifBackend):
 
     def _suggest_request(self, text):
         data = {'text': text}
+        headers = {"Content-Type":
+                   "application/x-www-form-urlencoded; charset=UTF-8"}
 
         try:
-            resp = requests.post(self.tagger_url + '/suggest', data=data)
+            resp = requests.post(self.tagger_url + '/suggest',
+                                 data=data,
+                                 headers=headers)
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
             self.warning("HTTP request failed: {}".format(err))
