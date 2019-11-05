@@ -178,6 +178,18 @@ def test_docfile_plain(tmpdir):
     assert len(list(docs.documents)) == 3
 
 
+def test_docfile_bom(tmpdir):
+    docfile = tmpdir.join('documents_bom.tsv')
+    data = """Läntinen\t<http://www.yso.fi/onto/yso/p2557>
+        Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
+        Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>"""
+    docfile.write(data.encode('utf-8-sig'))
+
+    docs = annif.corpus.DocumentFile(str(docfile))
+    firstdoc = next(docs.documents)
+    assert firstdoc.text.startswith("Läntinen")
+
+
 def test_docfile_plain_invalid_lines(tmpdir, caplog):
     logger = annif.logger
     logger.propagate = True

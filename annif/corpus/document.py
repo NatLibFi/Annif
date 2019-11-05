@@ -60,7 +60,7 @@ class DocumentFile(DocumentCorpus):
             opener = gzip.open
         else:
             opener = open
-        with opener(self.path, mode='rt', encoding='utf-8') as tsvfile:
+        with opener(self.path, mode='rt', encoding='utf-8-sig') as tsvfile:
             for line in tsvfile:
                 yield from self._parse_tsv_line(line)
 
