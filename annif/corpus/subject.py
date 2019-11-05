@@ -15,7 +15,7 @@ class SubjectFileTSV:
 
     @property
     def subjects(self):
-        with open(self.path, encoding='utf-8') as subjfile:
+        with open(self.path, encoding='utf-8-sig') as subjfile:
             for line in subjfile:
                 uri, label = line.strip().split(None, 1)
                 clean_uri = annif.util.cleanup_uri(uri)
