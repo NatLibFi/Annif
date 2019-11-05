@@ -6,6 +6,12 @@ import annif.eval
 import annif.suggestion
 
 
+def test_filter_pred_top_k():
+    pred = np.array([[0, 1, 3, 2], [1, 4, 3, 0]])
+    filtered = annif.eval.filter_pred_top_k(pred, 2)
+    assert filtered.tolist() == [[0, 0, 3, 2], [0, 4, 3, 0]]
+
+
 def test_precision_at_k():
     y_true = np.array([[1, 0, 1, 0, 1, 0]])
     y_pred = np.array([[6, 5, 4, 3, 2, 1]])

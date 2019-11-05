@@ -9,6 +9,19 @@ from sklearn.metrics import label_ranking_average_precision_score
 from annif.exception import NotSupportedException
 
 
+def filter_pred_top_k(preds, limit):
+    """filter a 2D prediction vector, retaining only the top K suggestions
+    for each individual prediction; the rest will be set to zeros"""
+
+    masks = []
+    for pred in preds:
+        mask = np.zeros_like(pred, dtype=np.bool)
+        top_k = np.argsort(pred)[::-1][:limit]
+        mask[top_k] = True
+        masks.append(mask)
+    return preds * np.array(masks)
+
+
 def true_positives(y_true, y_pred):
     """calculate the number of true positives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
@@ -109,6 +122,8 @@ class EvaluationBatch:
                     y_true, y_pred_binary, average='micro')
                 results['F1 score (microavg)'] = f1_score(
                     y_true, y_pred_binary, average='micro')
+            results['F1@5'] = f1_score(
+                y_true, filter_pred_top_k(y_pred, 5) > 0.0, average='samples')
             results['NDCG'] = ndcg_score(y_true, y_pred)
             results['NDCG@5'] = ndcg_score(y_true, y_pred, limit=5)
             results['NDCG@10'] = ndcg_score(y_true, y_pred, limit=10)
