@@ -39,9 +39,9 @@ class DocumentDirectory(DocumentCorpus):
     def documents(self):
         for docfilename, keyfilename in self:
             with open(docfilename, errors='replace',
-                      encoding='utf-8') as docfile:
+                      encoding='utf-8-sig') as docfile:
                 text = docfile.read()
-            with open(keyfilename, encoding='utf-8') as keyfile:
+            with open(keyfilename, encoding='utf-8-sig') as keyfile:
                 subjects = SubjectSet.from_string(keyfile.read())
             yield self._create_document(text=text,
                                         uris=subjects.subject_uris,
