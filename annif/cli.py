@@ -228,7 +228,7 @@ def run_index(project_id, directory, suffix, force,
 
     for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
             directory, require_subjects=False):
-        with open(docfilename, encoding='utf-8') as docfile:
+        with open(docfilename, encoding='utf-8-sig') as docfile:
             text = docfile.read()
         subjectfilename = re.sub(r'\.txt$', suffix, docfilename)
         if os.path.exists(subjectfilename) and not force:
