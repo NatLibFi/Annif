@@ -213,7 +213,7 @@ def _create_projects(projects_file, datadir, init_projects):
 
     config = configparser.ConfigParser()
     config.optionxform = lambda option: option
-    with open(projects_file, encoding='utf-8') as projf:
+    with open(projects_file, encoding='utf-8-sig') as projf:
         try:
             config.read_file(projf)
         except (configparser.DuplicateOptionError,
