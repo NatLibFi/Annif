@@ -31,6 +31,7 @@ class NNEnsembleBackend(
         'dropout_rate': 0.2,
         'optimizer': 'adam',
         'epochs': 10,
+        'learn-epochs': 1,
     }
 
     # defaults for uninitialized instances
@@ -93,7 +94,7 @@ class NNEnsembleBackend(
     def train(self, corpus, project):
         sources = annif.util.parse_sources(self.params['sources'])
         self._create_model(sources, project)
-        self.learn(corpus, project, epochs=int(self.params['epochs']))
+        self._learn(corpus, project, epochs=int(self.params['epochs']))
 
     def _corpus_to_vectors(self, corpus, project):
         # pass corpus through all source projects
@@ -118,9 +119,7 @@ class NNEnsembleBackend(
         true = np.array(true_vectors, dtype=np.float32)
         return (scores, true)
 
-    def learn(self, corpus, project, epochs=1):
-        self.initialize()
-
+    def _learn(self, corpus, project, epochs):
         scores, true = self._corpus_to_vectors(corpus, project)
 
         # fit the model
@@ -131,3 +130,7 @@ class NNEnsembleBackend(
             self._model,
             self.datadir,
             self.MODEL_FILE)
+
+    def learn(self, corpus, project):
+        self.initialize()
+        self._learn(corpus, project, int(self.params['learn-epochs']))
