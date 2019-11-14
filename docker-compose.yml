@@ -11,8 +11,9 @@ services:
     tty: true
     command: bash
 
+  # Note: to connect to the mauiserver from other services, use "mauiserver" in place of "localhost"
   mauiserver:
-    image: mauiserver
+    image: quay.io/natlibfi/mauiserver
     volumes:
       - ${ANNIF_PROJECTS}/mauidata:/mauidata
     ports:
