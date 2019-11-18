@@ -51,7 +51,7 @@ def test_nn_ensemble_train_and_learn(app, tmpdir):
 
     time.sleep(0.1)  # make sure the timestamp has a chance to increase
 
-    nn_ensemble.learn(document_corpus, project)
+    nn_ensemble.learn(document_corpus)
 
     assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
 

@@ -177,7 +177,7 @@ class AnnifProject(DatadirMixin):
         if isinstance(
                 self.backend,
                 annif.backend.backend.AnnifLearningBackend):
-            self.backend.learn(corpus, project=self)
+            self.backend.learn(corpus)
         else:
             raise NotSupportedException("Learning not supported by backend",
                                         project_id=self.project_id)

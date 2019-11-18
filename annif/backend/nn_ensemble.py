@@ -131,6 +131,6 @@ class NNEnsembleBackend(
             self.datadir,
             self.MODEL_FILE)
 
-    def learn(self, corpus, project):
+    def learn(self, corpus):
         self.initialize()
         self._learn(corpus, int(self.params['learn-epochs']))

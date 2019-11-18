@@ -75,7 +75,7 @@ def test_vw_ensemble_train_and_learn(app, tmpdir):
 
     time.sleep(0.1)  # make sure the timestamp has a chance to increase
 
-    vw_ensemble.learn(document_corpus, project)
+    vw_ensemble.learn(document_corpus)
 
     assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
     with open(str(freqfile)) as freqf:

@@ -34,7 +34,7 @@ def test_learn_dummy(project, tmpdir):
     tmpdir.join('doc2.tsv').write('<http://example.org/key2>\tkey2')
     docdir = annif.corpus.DocumentDirectory(str(tmpdir))
 
-    dummy.learn(docdir, project)
+    dummy.learn(docdir)
 
     result = dummy.suggest(text='this is some text', project=project)
     assert len(result) == 1

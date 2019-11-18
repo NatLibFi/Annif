@@ -68,7 +68,7 @@ def test_vw_multi_train_and_learn(datadir, document_corpus, project):
     old_size = modelfile.size()
     old_mtime = modelfile.mtime()
 
-    vw.learn(document_corpus, project)
+    vw.learn(document_corpus)
 
     assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
 
@@ -92,7 +92,7 @@ def test_vw_multi_train_and_learn_nodocuments(datadir, project, empty_corpus):
 
     old_size = modelfile.size()
 
-    vw.learn(empty_corpus, project)
+    vw.learn(empty_corpus)
 
     assert modelfile.size() == old_size
     assert datadir.join('vw-train.txt').size() == 0
