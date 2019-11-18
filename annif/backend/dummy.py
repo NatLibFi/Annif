@@ -17,12 +17,12 @@ class DummyBackend(backend.AnnifLearningBackend):
     def initialize(self):
         self.initialized = True
 
-    def _suggest(self, text, project, params):
+    def _suggest(self, text, params):
         score = float(params.get('score', 1.0))
         return ListSuggestionResult([SubjectSuggestion(uri=self.uri,
                                                        label=self.label,
                                                        score=score)],
-                                    project.subjects)
+                                    self.project.subjects)
 
     def learn(self, corpus):
         # in this dummy backend we "learn" by picking up the URI and label

@@ -132,21 +132,21 @@ class MauiBackend(backend.AnnifBackend):
             self.warning("JSON decode failed: {}".format(err))
             return None
 
-    def _response_to_result(self, response, project):
+    def _response_to_result(self, response):
         try:
             return ListSuggestionResult(
                 [SubjectSuggestion(uri=h['id'],
                                    label=h['label'],
                                    score=h['probability'])
                  for h in response['topics']
-                 if h['probability'] > 0.0], project.subjects)
+                 if h['probability'] > 0.0], self.project.subjects)
         except (TypeError, ValueError) as err:
             self.warning("Problem interpreting JSON data: {}".format(err))
-            return ListSuggestionResult([], project.subjects)
+            return ListSuggestionResult([], self.project.subjects)
 
-    def _suggest(self, text, project, params):
+    def _suggest(self, text, params):
         response = self._suggest_request(text)
         if response:
-            return self._response_to_result(response, project)
+            return self._response_to_result(response)
         else:
-            return ListSuggestionResult([], project.subjects)
+            return ListSuggestionResult([], self.project.subjects)

@@ -80,7 +80,7 @@ def test_pav_suggest(app, project):
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
-        pohjaan.""", project)
+        pohjaan.""")
 
     assert len(pav._models['dummy-fi']) == 1
     assert len(results) > 0

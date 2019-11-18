@@ -19,7 +19,7 @@ def test_nn_ensemble_suggest_no_model(project):
         project=project)
 
     with pytest.raises(NotInitializedException):
-        results = nn_ensemble.suggest("example text", project)
+        results = nn_ensemble.suggest("example text")
 
 
 def test_nn_ensemble_train_and_learn(app, tmpdir):
@@ -85,7 +85,7 @@ def test_nn_ensemble_suggest(app, app_project):
             tiede tai oikeammin joukko tieteitä, jotka tutkivat ihmisen
             menneisyyttä. Tutkimusta tehdään analysoimalla muinaisjäännöksiä
             eli niitä jälkiä, joita ihmisten toiminta on jättänyt maaperään
-            tai vesistöjen pohjaan.""", app_project)
+            tai vesistöjen pohjaan.""")
 
     assert nn_ensemble._model is not None
     assert len(results) > 0

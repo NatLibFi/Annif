@@ -42,19 +42,19 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def _suggest(self, text, project, params):
+    def _suggest(self, text, params):
         """This method should implemented by backends. It implements
         the suggest functionality, with pre-processed parameters."""
         pass  # pragma: no cover
 
-    def suggest(self, text, project, params=None):
+    def suggest(self, text, params=None):
         """Suggest subjects for the input text and return a list of subjects
         represented as a list of SubjectSuggestion objects."""
         self.initialize()
         beparams = dict(self.params)
         if params:
             beparams.update(params)
-        return self._suggest(text, project, params=beparams)
+        return self._suggest(text, params=beparams)
 
     def debug(self, message):
         """Log a debug message from this backend"""

@@ -37,7 +37,7 @@ def test_vw_ensemble_suggest_no_model(project):
         project=project)
 
     with pytest.raises(NotInitializedException):
-        results = vw_ensemble.suggest("example text", project)
+        results = vw_ensemble.suggest("example text")
 
 
 def test_vw_ensemble_train_and_learn(app, tmpdir):
@@ -111,7 +111,7 @@ def test_vw_ensemble_suggest(app, app_project):
             tiede tai oikeammin joukko tieteitä, jotka tutkivat ihmisen
             menneisyyttä. Tutkimusta tehdään analysoimalla muinaisjäännöksiä
             eli niitä jälkiä, joita ihmisten toiminta on jättänyt maaperään
-            tai vesistöjen pohjaan.""", app_project)
+            tai vesistöjen pohjaan.""")
 
     assert vw_ensemble._model is not None
     assert len(results) > 0
@@ -130,7 +130,7 @@ def test_vw_ensemble_suggest_set_discount_rate(app, app_project):
             tiede tai oikeammin joukko tieteitä, jotka tutkivat ihmisen
             menneisyyttä. Tutkimusta tehdään analysoimalla muinaisjäännöksiä
             eli niitä jälkiä, joita ihmisten toiminta on jättänyt maaperään
-            tai vesistöjen pohjaan.""", app_project)
+            tai vesistöjen pohjaan.""")
 
     assert len(results) > 0
 

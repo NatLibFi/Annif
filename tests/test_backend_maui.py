@@ -156,7 +156,7 @@ def test_maui_suggest(maui, project):
                                     'label': 'maui',
                                     'probability': 1.0}]})
 
-    result = maui.suggest('this is some text', project=project)
+    result = maui.suggest('this is some text')
     assert len(result) == 1
     assert result[0].uri == 'http://example.org/maui'
     assert result[0].label == 'maui'
@@ -173,7 +173,7 @@ def test_maui_suggest_zero_score(maui, project):
                                     'label': 'maui',
                                     'probability': 0.0}]})
 
-    result = maui.suggest('this is some text', project=project)
+    result = maui.suggest('this is some text')
     assert len(result) == 0
     assert len(responses.calls) == 1
 
@@ -183,7 +183,7 @@ def test_maui_suggest_error(maui, project):
         mock_request.side_effect = requests.exceptions.RequestException(
             'failed')
 
-        result = maui.suggest('this is some text', project=project)
+        result = maui.suggest('this is some text')
         assert len(result) == 0
 
 
@@ -194,7 +194,7 @@ def test_maui_suggest_json_fails(maui, project):
         mock_response.json.side_effect = ValueError("JSON decode failed")
         mock_request.return_value = mock_response
 
-        result = maui.suggest('this is some text', project=project)
+        result = maui.suggest('this is some text')
         assert len(result) == 0
 
 
@@ -204,6 +204,6 @@ def test_maui_suggest_unexpected_json(maui, project):
                   'http://api.example.org/mauiservice/dummy/suggest',
                   json=["spanish inquisition"])
 
-    result = maui.suggest('this is some text', project=project)
+    result = maui.suggest('this is some text')
     assert len(result) == 0
     assert len(responses.calls) == 1

@@ -134,11 +134,11 @@ class TFIDFBackend(backend.AnnifBackend):
             method=joblib.dump)
         self._create_index(veccorpus)
 
-    def _suggest(self, text, project, params):
+    def _suggest(self, text, params):
         self.debug('Suggesting subjects for text "{}..." (len={})'.format(
             text[:20], len(text)))
-        tokens = project.analyzer.tokenize_words(text)
+        tokens = self.project.analyzer.tokenize_words(text)
         vectors = self._vectorizer.transform([" ".join(tokens)])
         docsim = self._index[vectors[0]]
-        fullresult = VectorSuggestionResult(docsim, project.subjects)
+        fullresult = VectorSuggestionResult(docsim, self.project.subjects)
         return fullresult.filter(limit=int(self.params['limit']))

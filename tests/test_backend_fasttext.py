@@ -104,7 +104,7 @@ def test_fasttext_suggest(project):
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
-        pohjaan.""", project)
+        pohjaan.""")
 
     assert len(results) > 0
     assert 'http://www.yso.fi/onto/yso/p1265' in [

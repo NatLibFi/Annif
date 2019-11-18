@@ -54,13 +54,13 @@ class NNEnsembleBackend(
         self.debug('loading Keras model from {}'.format(model_filename))
         self._model = load_model(model_filename)
 
-    def _merge_hits_from_sources(self, hits_from_sources, project, params):
+    def _merge_hits_from_sources(self, hits_from_sources, params):
         score_vector = np.array([hits.vector * weight
                                  for hits, weight in hits_from_sources],
                                 dtype=np.float32)
         results = self._model.predict(
             np.expand_dims(score_vector.transpose(), 0))
-        return VectorSuggestionResult(results[0], project.subjects)
+        return VectorSuggestionResult(results[0], self.project.subjects)
 
     def _create_model(self, sources):
         self.info("creating NN ensemble model")

@@ -69,11 +69,10 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     def _id_to_label(subject_id):
         return "__label__{:d}".format(subject_id)
 
-    @staticmethod
-    def _label_to_subject(project, label):
+    def _label_to_subject(self, label):
         labelnum = label.replace('__label__', '')
         subject_id = int(labelnum)
-        return project.subjects[subject_id]
+        return self.project.subjects[subject_id]
 
     def _write_train_file(self, doc_subjects, filename):
         with open(filename, 'w', encoding='utf-8') as trainfile:
@@ -122,15 +121,14 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         self._create_train_file(corpus)
         self._create_model()
 
-    def _predict_chunks(self, chunktexts, project, limit):
+    def _predict_chunks(self, chunktexts, limit):
         return self._model.predict(list(
             filter(None, [self._normalize_text(chunktext)
                           for chunktext in chunktexts])), limit)
 
-    def _suggest_chunks(self, chunktexts, project):
+    def _suggest_chunks(self, chunktexts):
         limit = int(self.params['limit'])
-        chunklabels, chunkscores = self._predict_chunks(
-            chunktexts, project, limit)
+        chunklabels, chunkscores = self._predict_chunks(chunktexts, limit)
         label_scores = collections.defaultdict(float)
         for labels, scores in zip(chunklabels, chunkscores):
             for label, score in zip(labels, scores):
@@ -141,9 +139,9 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
 
         results = []
         for score, label in best_labels[:limit]:
-            subject = self._label_to_subject(project, label)
+            subject = self._label_to_subject(label)
             results.append(SubjectSuggestion(
                 uri=subject[0],
                 label=subject[1],
                 score=score / len(chunktexts)))
-        return ListSuggestionResult(results, project.subjects)
+        return ListSuggestionResult(results, self.project.subjects)

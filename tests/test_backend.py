@@ -16,7 +16,7 @@ def test_get_backend_dummy(project):
     dummy_type = annif.backend.get_backend("dummy")
     dummy = dummy_type(backend_id='dummy', config_params={},
                        project=project)
-    result = dummy.suggest(text='this is some text', project=project)
+    result = dummy.suggest(text='this is some text')
     assert len(result) == 1
     assert result[0].uri == 'http://example.org/dummy'
     assert result[0].label == 'dummy'
@@ -36,7 +36,7 @@ def test_learn_dummy(project, tmpdir):
 
     dummy.learn(docdir)
 
-    result = dummy.suggest(text='this is some text', project=project)
+    result = dummy.suggest(text='this is some text')
     assert len(result) == 1
     assert result[0].uri == 'http://example.org/key1'
     assert result[0].label == 'key1'

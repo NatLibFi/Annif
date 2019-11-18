@@ -82,7 +82,7 @@ class VWEnsembleBackend(
         pred_score = (self._model.predict(ex) + 1.0) / 2.0
         return raw_score, pred_score
 
-    def _merge_hits_from_sources(self, hits_from_sources, project, params):
+    def _merge_hits_from_sources(self, hits_from_sources, params):
         score_vector = np.array([hits.vector
                                  for hits, _ in hits_from_sources],
                                 dtype=np.float32)
@@ -97,7 +97,7 @@ class VWEnsembleBackend(
                     ((discount_rate * self._subject_freq[subj_id]) + 1)
                 result[subj_id] = (raw_weight * raw_score) + \
                     (1.0 - raw_weight) * pred_score
-        return VectorSuggestionResult(result, project.subjects)
+        return VectorSuggestionResult(result, self.project.subjects)
 
     @property
     def _source_project_ids(self):

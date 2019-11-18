@@ -48,7 +48,7 @@ def test_tfidf_suggest(project):
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
-        pohjaan.""", project)
+        pohjaan.""")
 
     assert len(results) == 10
     assert 'http://www.yso.fi/onto/yso/p1265' in [
@@ -63,6 +63,6 @@ def test_tfidf_suggest_unknown(project):
         config_params={'limit': 10},
         project=project)
 
-    results = tfidf.suggest("abcdefghijk", project)  # unknown word
+    results = tfidf.suggest("abcdefghijk")  # unknown word
 
     assert len(results) == 0

@@ -119,22 +119,22 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
         self.info('creating VW model (algorithm: {})'.format(self.algorithm))
         super()._create_model({self.algorithm: len(self.project.subjects)})
 
-    def _convert_result(self, result, project):
+    def _convert_result(self, result):
         if self.algorithm == 'multilabel_oaa':
             # result is a list of subject IDs - need to vectorize
-            mask = np.zeros(len(project.subjects), dtype=np.float32)
+            mask = np.zeros(len(self.project.subjects), dtype=np.float32)
             mask[result] = 1.0
             return mask
         elif isinstance(result, int):
             # result is a single integer - need to one-hot-encode
-            mask = np.zeros(len(project.subjects), dtype=np.float32)
+            mask = np.zeros(len(self.project.subjects), dtype=np.float32)
             mask[result - 1] = 1.0
             return mask
         else:
             # result is a list of scores (probabilities or binary 1/0)
             return np.array(result, dtype=np.float32)
 
-    def _suggest_chunks(self, chunktexts, project):
+    def _suggest_chunks(self, chunktexts):
         results = []
         for chunktext in chunktexts:
 
@@ -143,9 +143,10 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
                 continue
             example = ' {}'.format(exampletext)
             result = self._model.predict(example)
-            results.append(self._convert_result(result, project))
+            results.append(self._convert_result(result))
         if not results:  # empty result
             return ListSuggestionResult(
-                hits=[], subject_index=project.subjects)
+                hits=[], subject_index=self.project.subjects)
         return VectorSuggestionResult(
-            np.array(results, dtype=np.float32).mean(axis=0), project.subjects)
+            np.array(results, dtype=np.float32).mean(axis=0),
+            self.project.subjects)

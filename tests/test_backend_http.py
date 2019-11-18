@@ -21,7 +21,7 @@ def test_http_suggest(project):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             project=project)
-        result = http.suggest('this is some text', project=project)
+        result = http.suggest('this is some text')
         assert len(result) == 1
         assert result[0].uri == 'http://example.org/http'
         assert result[0].label == 'http'
@@ -44,7 +44,7 @@ def test_http_suggest_with_results(project):
                 'endpoint': 'http://api.example.org/dummy/analyze',
             },
             project=project)
-        result = http.suggest('this is some text', project=project)
+        result = http.suggest('this is some text')
         assert len(result) == 1
         assert result[0].uri == 'http://example.org/http'
         assert result[0].label == 'http'
@@ -67,7 +67,7 @@ def test_http_suggest_zero_score(project):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             project=project)
-        result = http.suggest('this is some text', project=project)
+        result = http.suggest('this is some text')
         assert len(result) == 0
 
 
@@ -83,7 +83,7 @@ def test_http_suggest_error(project):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             project=project)
-        result = http.suggest('this is some text', project=project)
+        result = http.suggest('this is some text')
         assert len(result) == 0
 
 
@@ -102,7 +102,7 @@ def test_http_suggest_json_fails(project):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             project=project)
-        result = http.suggest('this is some text', project=project)
+        result = http.suggest('this is some text')
         assert len(result) == 0
 
 
@@ -121,5 +121,5 @@ def test_http_suggest_unexpected_json(project):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             project=project)
-        result = http.suggest('this is some text', project=project)
+        result = http.suggest('this is some text')
         assert len(result) == 0
