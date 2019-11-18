@@ -73,6 +73,6 @@ class AnnifLearningBackend(AnnifBackend):
     """Base class for Annif backends that can perform online learning"""
 
     @abc.abstractmethod
-    def learn(self, corpus, project):
+    def learn(self, corpus):
         """further train the model on the given document or subject corpus"""
         pass  # pragma: no cover
