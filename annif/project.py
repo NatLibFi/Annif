@@ -168,7 +168,7 @@ class AnnifProject(DatadirMixin):
         """train the project using documents from a metadata source"""
 
         corpus.set_subject_index(self.subjects)
-        self.backend.train(corpus, project=self)
+        self.backend.train(corpus)
 
     def learn(self, corpus):
         """further train the project using documents from a metadata source"""

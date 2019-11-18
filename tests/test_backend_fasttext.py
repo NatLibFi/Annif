@@ -40,7 +40,7 @@ def test_fasttext_train(document_corpus, project, datadir):
             'loss': 'hs'},
         project=project)
 
-    fasttext.train(document_corpus, project)
+    fasttext.train(document_corpus)
     assert fasttext._model is not None
     assert datadir.join('fasttext-model').exists()
     assert datadir.join('fasttext-model').size() > 0
@@ -63,7 +63,7 @@ def test_fasttext_train_unknown_subject(tmpdir, datadir, project):
                   "arkeologia\thttp://www.yso.fi/onto/yso/p1265")
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
-    fasttext.train(document_corpus, project)
+    fasttext.train(document_corpus)
     assert fasttext._model is not None
     assert datadir.join('fasttext-model').exists()
     assert datadir.join('fasttext-model').size() > 0
@@ -82,7 +82,7 @@ def test_fasttext_train_nodocuments(project, empty_corpus):
         project=project)
 
     with pytest.raises(NotSupportedException) as excinfo:
-        fasttext.train(empty_corpus, project)
+        fasttext.train(empty_corpus)
     assert 'training backend fasttext with no documents' in str(excinfo.value)
 
 

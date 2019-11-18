@@ -35,7 +35,7 @@ def test_pav_train(app, datadir, tmpdir, project):
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
     with app.app_context():
-        pav.train(document_corpus, project)
+        pav.train(document_corpus)
     assert datadir.join('pav-model-dummy-fi').exists()
     assert datadir.join('pav-model-dummy-fi').size() > 0
 
@@ -48,7 +48,7 @@ def test_pav_train_nodocuments(project, empty_corpus):
         project=project)
 
     with pytest.raises(NotSupportedException) as excinfo:
-        pav.train(empty_corpus, project)
+        pav.train(empty_corpus)
     assert 'training backend pav with no documents' in str(excinfo.value)
 
 

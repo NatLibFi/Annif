@@ -30,7 +30,7 @@ def test_tfidf_train(datadir, document_corpus, project):
         config_params={'limit': 10},
         project=project)
 
-    tfidf.train(document_corpus, project)
+    tfidf.train(document_corpus)
     assert len(tfidf._index) > 0
     assert datadir.join('tfidf-index').exists()
     assert datadir.join('tfidf-index').size() > 0

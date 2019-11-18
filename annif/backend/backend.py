@@ -32,7 +32,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         params.update(self.config_params)
         return params
 
-    def train(self, corpus, project):
+    def train(self, corpus):
         """train the model on the given document or subject corpus"""
         pass  # default is to do nothing, subclasses may override
 

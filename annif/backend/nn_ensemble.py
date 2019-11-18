@@ -62,10 +62,10 @@ class NNEnsembleBackend(
             np.expand_dims(score_vector.transpose(), 0))
         return VectorSuggestionResult(results[0], project.subjects)
 
-    def _create_model(self, sources, project):
+    def _create_model(self, sources):
         self.info("creating NN ensemble model")
 
-        inputs = Input(shape=(len(project.subjects), len(sources)))
+        inputs = Input(shape=(len(self.project.subjects), len(sources)))
 
         flat_input = Flatten()(inputs)
         drop_input = Dropout(
@@ -74,7 +74,7 @@ class NNEnsembleBackend(
         hidden = Dense(int(self.params['nodes']),
                        activation="relu")(drop_input)
         drop_hidden = Dropout(rate=float(self.params['dropout_rate']))(hidden)
-        delta = Dense(len(project.subjects),
+        delta = Dense(len(self.project.subjects),
                       kernel_initializer='zeros',
                       bias_initializer='zeros')(drop_hidden)
 
@@ -91,12 +91,12 @@ class NNEnsembleBackend(
         self._model.summary(print_fn=summary.append)
         self.debug("Created model: \n" + "\n".join(summary))
 
-    def train(self, corpus, project):
+    def train(self, corpus):
         sources = annif.util.parse_sources(self.params['sources'])
-        self._create_model(sources, project)
-        self._learn(corpus, project, epochs=int(self.params['epochs']))
+        self._create_model(sources)
+        self._learn(corpus, epochs=int(self.params['epochs']))
 
-    def _corpus_to_vectors(self, corpus, project):
+    def _corpus_to_vectors(self, corpus):
         # pass corpus through all source projects
         sources = [(annif.project.get_project(project_id), weight)
                    for project_id, weight
@@ -112,15 +112,15 @@ class NNEnsembleBackend(
             score_vectors.append(np.array(doc_scores,
                                           dtype=np.float32).transpose())
             subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
-            true_vectors.append(subjects.as_vector(project.subjects))
+            true_vectors.append(subjects.as_vector(self.project.subjects))
         # collect the results into a single vector, considering weights
         scores = np.array(score_vectors, dtype=np.float32)
         # collect the gold standard values into another vector
         true = np.array(true_vectors, dtype=np.float32)
         return (scores, true)
 
-    def _learn(self, corpus, project, epochs):
-        scores, true = self._corpus_to_vectors(corpus, project)
+    def _learn(self, corpus, epochs):
+        scores, true = self._corpus_to_vectors(corpus)
 
         # fit the model
         self._model.fit(scores, true, batch_size=32, verbose=True,
@@ -133,4 +133,4 @@ class NNEnsembleBackend(
 
     def learn(self, corpus, project):
         self.initialize()
-        self._learn(corpus, project, int(self.params['learn-epochs']))
+        self._learn(corpus, int(self.params['learn-epochs']))

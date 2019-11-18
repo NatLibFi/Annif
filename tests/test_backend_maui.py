@@ -11,7 +11,7 @@ from annif.exception import OperationFailedException
 
 
 @pytest.fixture
-def maui(project):
+def maui(app_project):
     maui_type = annif.backend.get_backend("maui")
     maui = maui_type(
         backend_id='maui',
@@ -19,7 +19,7 @@ def maui(project):
             'endpoint': 'http://api.example.org/mauiservice/',
             'tagger': 'dummy',
             'language': 'en'},
-        project=project)
+        project=app_project)
     return maui
 
 
@@ -33,7 +33,7 @@ def test_maui_train_missing_endpoint(document_corpus, project):
         project=project)
 
     with pytest.raises(ConfigurationException):
-        maui.train(document_corpus, project)
+        maui.train(document_corpus)
 
 
 def test_maui_train_missing_tagger(document_corpus, project):
@@ -46,7 +46,7 @@ def test_maui_train_missing_tagger(document_corpus, project):
         project=project)
 
     with pytest.raises(ConfigurationException):
-        maui.train(document_corpus, project)
+        maui.train(document_corpus)
 
 
 @responses.activate
@@ -82,13 +82,13 @@ def test_maui_initialize_tagger_create_failed(maui):
 
 
 @responses.activate
-def test_maui_upload_vocabulary_failed(maui, app_project):
+def test_maui_upload_vocabulary_failed(maui):
     responses.add(responses.PUT,
                   'http://api.example.org/mauiservice/dummy/vocab',
                   body=requests.exceptions.RequestException())
 
     with pytest.raises(OperationFailedException):
-        maui._upload_vocabulary(app_project)
+        maui._upload_vocabulary()
 
 
 @responses.activate
@@ -114,7 +114,7 @@ def test_maui_wait_for_train_failed(maui):
 
 def test_maui_train_nodocuments(maui, project, empty_corpus):
     with pytest.raises(NotSupportedException) as excinfo:
-        maui.train(empty_corpus, project)
+        maui.train(empty_corpus)
     assert 'training backend maui with no documents' in str(excinfo.value)
 
 
@@ -144,7 +144,7 @@ def test_maui_train(maui, document_corpus, app_project):
                   status=200,
                   json={"completed": True})
 
-    maui.train(document_corpus, app_project)
+    maui.train(document_corpus)
 
 
 @responses.activate

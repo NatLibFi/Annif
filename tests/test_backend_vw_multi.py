@@ -57,7 +57,7 @@ def test_vw_multi_train_and_learn(datadir, document_corpus, project):
             'loss_function': 'hinge'},
         project=project)
 
-    vw.train(document_corpus, project)
+    vw.train(document_corpus)
     assert vw._model is not None
     assert datadir.join('vw-model').exists()
     assert datadir.join('vw-model').size() > 0
@@ -83,7 +83,7 @@ def test_vw_multi_train_and_learn_nodocuments(datadir, project, empty_corpus):
             'loss_function': 'hinge'},
         project=project)
 
-    vw.train(empty_corpus, project)
+    vw.train(empty_corpus)
     assert datadir.join('vw-train.txt').exists()
     assert datadir.join('vw-train.txt').size() == 0
 
@@ -108,7 +108,7 @@ def test_vw_multi_train_from_project(app, datadir, document_corpus, project):
         project=project)
 
     with app.app_context():
-        vw.train(document_corpus, project)
+        vw.train(document_corpus)
     assert vw._model is not None
     assert datadir.join('vw-model').exists()
     assert datadir.join('vw-model').size() > 0
@@ -124,7 +124,7 @@ def test_vw_multi_train_multiple_passes(datadir, document_corpus, project):
             'passes': 2},
         project=project)
 
-    vw.train(document_corpus, project)
+    vw.train(document_corpus)
     assert vw._model is not None
     assert datadir.join('vw-model').exists()
     assert datadir.join('vw-model').size() > 0
@@ -141,7 +141,7 @@ def test_vw_multi_train_invalid_algorithm(document_corpus, project):
         project=project)
 
     with pytest.raises(ConfigurationException):
-        vw.train(document_corpus, project)
+        vw.train(document_corpus)
 
 
 def test_vw_multi_train_invalid_loss_function(project, vw_corpus):
@@ -152,7 +152,7 @@ def test_vw_multi_train_invalid_loss_function(project, vw_corpus):
         project=project)
 
     with pytest.raises(ConfigurationException):
-        vw.train(vw_corpus, project)
+        vw.train(vw_corpus)
 
 
 def test_vw_multi_train_invalid_learning_rate(project, vw_corpus):
@@ -163,7 +163,7 @@ def test_vw_multi_train_invalid_learning_rate(project, vw_corpus):
         project=project)
 
     with pytest.raises(ConfigurationException):
-        vw.train(vw_corpus, project)
+        vw.train(vw_corpus)
 
 
 def test_vw_multi_suggest(project):
@@ -220,7 +220,7 @@ def test_vw_multi_train_ect(datadir, document_corpus, project):
             'algorithm': 'ect'},
         project=project)
 
-    vw.train(document_corpus, project)
+    vw.train(document_corpus)
     assert vw._model is not None
     assert datadir.join('vw-model').exists()
     assert datadir.join('vw-model').size() > 0
@@ -254,7 +254,7 @@ def test_vw_multi_train_log_multi(datadir, document_corpus, project):
             'algorithm': 'log_multi'},
         project=project)
 
-    vw.train(document_corpus, project)
+    vw.train(document_corpus)
     assert vw._model is not None
     assert datadir.join('vw-model').exists()
     assert datadir.join('vw-model').size() > 0
@@ -288,7 +288,7 @@ def test_vw_multi_train_multilabel_oaa(datadir, document_corpus, project):
             'algorithm': 'multilabel_oaa'},
         project=project)
 
-    vw.train(document_corpus, project)
+    vw.train(document_corpus)
     assert vw._model is not None
     assert datadir.join('vw-model').exists()
     assert datadir.join('vw-model').size() > 0

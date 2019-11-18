@@ -71,22 +71,22 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
             for ex in examples:
                 print(ex, file=trainfile)
 
-    def _create_train_file(self, corpus, project):
+    def _create_train_file(self, corpus):
         self.info('creating VW train file')
-        examples = self._create_examples(corpus, project)
+        examples = self._create_examples(corpus)
         annif.util.atomic_save(examples,
                                self.datadir,
                                self.TRAIN_FILE,
                                method=self._write_train_file)
 
     @abc.abstractmethod
-    def _create_examples(self, corpus, project):
+    def _create_examples(self, corpus):
         """This method should be implemented by concrete backends. It
         should return a sequence of strings formatted according to the VW
         input format."""
         pass  # pragma: no cover
 
-    def _create_model(self, project, initial_params={}):
+    def _create_model(self, initial_params={}):
         initial_params = initial_params.copy()  # don't mutate the original
         trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
         initial_params['data'] = trainpath
@@ -99,14 +99,14 @@ class VWBaseBackend(backend.AnnifLearningBackend, metaclass=abc.ABCMeta):
         modelpath = os.path.join(self.datadir, self.MODEL_FILE)
         self._model.save(modelpath)
 
-    def train(self, corpus, project):
+    def train(self, corpus):
         self.info("creating VW model")
-        self._create_train_file(corpus, project)
-        self._create_model(project)
+        self._create_train_file(corpus)
+        self._create_model()
 
     def learn(self, corpus, project):
         self.initialize()
-        for example in self._create_examples(corpus, project):
+        for example in self._create_examples(corpus):
             self._model.learn(example)
         modelpath = os.path.join(self.datadir, self.MODEL_FILE)
         self._model.save(modelpath)

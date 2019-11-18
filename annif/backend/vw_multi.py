@@ -63,31 +63,29 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
         # colon and pipe chars have special meaning in VW and must be avoided
         return text.replace(':', '').replace('|', '')
 
-    @staticmethod
-    def _normalize_text(project, text):
-        ntext = ' '.join(project.analyzer.tokenize_words(text))
+    def _normalize_text(self, text):
+        ntext = ' '.join(self.project.analyzer.tokenize_words(text))
         return VWMultiBackend._cleanup_text(ntext)
 
-    @staticmethod
-    def _uris_to_subject_ids(project, uris):
+    def _uris_to_subject_ids(self, uris):
         subject_ids = []
         for uri in uris:
-            subject_id = project.subjects.by_uri(uri)
+            subject_id = self.project.subjects.by_uri(uri)
             if subject_id is not None:
                 subject_ids.append(subject_id)
         return subject_ids
 
-    def _format_examples(self, project, text, uris):
-        subject_ids = self._uris_to_subject_ids(project, uris)
+    def _format_examples(self, text, uris):
+        subject_ids = self._uris_to_subject_ids(uris)
         if self.algorithm == 'multilabel_oaa':
             yield '{} {}'.format(','.join(map(str, subject_ids)), text)
         else:
             for subject_id in subject_ids:
                 yield '{} {}'.format(subject_id + 1, text)
 
-    def _get_input(self, input, project, text):
+    def _get_input(self, input, text):
         if input == '_text_':
-            return self._normalize_text(project, text)
+            return self._normalize_text(text)
         else:
             proj = annif.project.get_project(input)
             result = proj.suggest(text)
@@ -96,10 +94,10 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
                 for hit in result.hits]
             return ' '.join(features)
 
-    def _inputs_to_exampletext(self, project, text):
+    def _inputs_to_exampletext(self, text):
         namespaces = {}
         for input in self.inputs:
-            inputtext = self._get_input(input, project, text)
+            inputtext = self._get_input(input, text)
             if inputtext:
                 namespaces[input] = inputtext
         if not namespaces:
@@ -107,19 +105,19 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
         return ' '.join(['|{} {}'.format(namespace, featurestr)
                          for namespace, featurestr in namespaces.items()])
 
-    def _create_examples(self, corpus, project):
+    def _create_examples(self, corpus):
         examples = []
         for doc in corpus.documents:
-            text = self._inputs_to_exampletext(project, doc.text)
+            text = self._inputs_to_exampletext(doc.text)
             if not text:
                 continue
-            examples.extend(self._format_examples(project, text, doc.uris))
+            examples.extend(self._format_examples(text, doc.uris))
         random.shuffle(examples)
         return examples
 
-    def _create_model(self, project):
+    def _create_model(self):
         self.info('creating VW model (algorithm: {})'.format(self.algorithm))
-        super()._create_model(project, {self.algorithm: len(project.subjects)})
+        super()._create_model({self.algorithm: len(self.project.subjects)})
 
     def _convert_result(self, result, project):
         if self.algorithm == 'multilabel_oaa':
@@ -139,7 +137,8 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
     def _suggest_chunks(self, chunktexts, project):
         results = []
         for chunktext in chunktexts:
-            exampletext = self._inputs_to_exampletext(project, chunktext)
+
+            exampletext = self._inputs_to_exampletext(chunktext)
             if not exampletext:
                 continue
             example = ' {}'.format(exampletext)

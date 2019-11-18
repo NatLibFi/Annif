@@ -85,20 +85,19 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                 else:
                     self.warning('no labels for document "{}"'.format(doc))
 
-    @staticmethod
-    def _normalize_text(project, text):
-        return ' '.join(project.analyzer.tokenize_words(text))
+    def _normalize_text(self, text):
+        return ' '.join(self.project.analyzer.tokenize_words(text))
 
-    def _create_train_file(self, corpus, project):
+    def _create_train_file(self, corpus):
         self.info('creating fastText training file')
 
         doc_subjects = collections.defaultdict(set)
 
         for doc in corpus.documents:
-            text = self._normalize_text(project, doc.text)
+            text = self._normalize_text(doc.text)
             if text == '':
                 continue
-            doc_subjects[text] = [project.subjects.by_uri(uri)
+            doc_subjects[text] = [self.project.subjects.by_uri(uri)
                                   for uri in doc.uris]
 
         annif.util.atomic_save(doc_subjects,
@@ -116,16 +115,16 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         self._model = fastText.train_supervised(trainpath, **params)
         self._model.save_model(modelpath)
 
-    def train(self, corpus, project):
+    def train(self, corpus):
         if corpus.is_empty():
             raise NotSupportedException('training backend {} with no documents'
                                         .format(self.backend_id))
-        self._create_train_file(corpus, project)
+        self._create_train_file(corpus)
         self._create_model()
 
     def _predict_chunks(self, chunktexts, project, limit):
         return self._model.predict(list(
-            filter(None, [self._normalize_text(project, chunktext)
+            filter(None, [self._normalize_text(chunktext)
                           for chunktext in chunktexts])), limit)
 
     def _suggest_chunks(self, chunktexts, project):

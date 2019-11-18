@@ -3,6 +3,7 @@
 import json
 import time
 import pytest
+import py.path
 import annif.backend
 import annif.corpus
 import annif.project
@@ -39,7 +40,8 @@ def test_vw_ensemble_suggest_no_model(project):
         results = vw_ensemble.suggest("example text", project)
 
 
-def test_vw_ensemble_train_and_learn(app, datadir, tmpdir, project):
+def test_vw_ensemble_train_and_learn(app, tmpdir):
+    project = annif.project.get_project('dummy-en')
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
@@ -51,10 +53,10 @@ def test_vw_ensemble_train_and_learn(app, datadir, tmpdir, project):
                   "another\thttp://example.org/dummy\n" +
                   "none\thttp://example.org/none")
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
-    project = annif.project.get_project('dummy-en')
 
     with app.app_context():
-        vw_ensemble.train(document_corpus, project)
+        vw_ensemble.train(document_corpus)
+    datadir = py.path.local(project.datadir)
     assert datadir.join('vw-train.txt').exists()
     assert datadir.join('vw-train.txt').size() > 0
     assert datadir.join('subject-freq.json').exists()
@@ -80,12 +82,12 @@ def test_vw_ensemble_train_and_learn(app, datadir, tmpdir, project):
         assert sum(json.load(freqf).values()) != old_totalfreq
 
 
-def test_vw_ensemble_initialize(app, project):
+def test_vw_ensemble_initialize(app, app_project):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
         config_params={'sources': 'dummy-en'},
-        project=project)
+        project=app_project)
 
     assert vw_ensemble._model is None
     with app.app_context():
@@ -96,12 +98,12 @@ def test_vw_ensemble_initialize(app, project):
         vw_ensemble.initialize()
 
 
-def test_vw_ensemble_suggest(app, project):
+def test_vw_ensemble_suggest(app, app_project):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
         config_params={'sources': 'dummy-en'},
-        project=project)
+        project=app_project)
 
     with app.app_context():
         results = vw_ensemble.suggest("""Arkeologiaa sanotaan joskus myös
@@ -109,18 +111,18 @@ def test_vw_ensemble_suggest(app, project):
             tiede tai oikeammin joukko tieteitä, jotka tutkivat ihmisen
             menneisyyttä. Tutkimusta tehdään analysoimalla muinaisjäännöksiä
             eli niitä jälkiä, joita ihmisten toiminta on jättänyt maaperään
-            tai vesistöjen pohjaan.""", project)
+            tai vesistöjen pohjaan.""", app_project)
 
     assert vw_ensemble._model is not None
     assert len(results) > 0
 
 
-def test_vw_ensemble_suggest_set_discount_rate(app, project):
+def test_vw_ensemble_suggest_set_discount_rate(app, app_project):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
         config_params={'sources': 'dummy-en', 'discount_rate': '0.02'},
-        project=project)
+        project=app_project)
 
     with app.app_context():
         results = vw_ensemble.suggest("""Arkeologiaa sanotaan joskus myös
@@ -128,7 +130,7 @@ def test_vw_ensemble_suggest_set_discount_rate(app, project):
             tiede tai oikeammin joukko tieteitä, jotka tutkivat ihmisen
             menneisyyttä. Tutkimusta tehdään analysoimalla muinaisjäännöksiä
             eli niitä jälkiä, joita ihmisten toiminta on jättänyt maaperään
-            tai vesistöjen pohjaan.""", project)
+            tai vesistöjen pohjaan.""", app_project)
 
     assert len(results) > 0
 

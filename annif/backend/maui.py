@@ -58,11 +58,11 @@ class MauiBackend(backend.AnnifBackend):
         except requests.exceptions.RequestException as err:
             raise OperationFailedException(err)
 
-    def _upload_vocabulary(self, project):
+    def _upload_vocabulary(self):
         self.info("Uploading vocabulary")
         try:
             resp = requests.put(self.tagger_url + '/vocab',
-                                data=project.vocab.as_skos())
+                                data=self.project.vocab.as_skos())
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
             raise OperationFailedException(err)
@@ -102,12 +102,12 @@ class MauiBackend(backend.AnnifBackend):
                 return
             time.sleep(1)
 
-    def train(self, corpus, project):
+    def train(self, corpus):
         if corpus.is_empty():
             raise NotSupportedException('training backend {} with no documents'
                                         .format(self.backend_id))
         self._initialize_tagger()
-        self._upload_vocabulary(project)
+        self._upload_vocabulary()
         self._create_train_file(corpus)
         self._upload_train_file()
         self._wait_for_train()
