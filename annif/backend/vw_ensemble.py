@@ -82,7 +82,7 @@ class VWEnsembleBackend(
         pred_score = (self._model.predict(ex) + 1.0) / 2.0
         return raw_score, pred_score
 
-    def _merge_hits_from_sources(self, hits_from_sources, project, params):
+    def _merge_hits_from_sources(self, hits_from_sources, params):
         score_vector = np.array([hits.vector
                                  for hits, _ in hits_from_sources],
                                 dtype=np.float32)
@@ -97,7 +97,7 @@ class VWEnsembleBackend(
                     ((discount_rate * self._subject_freq[subj_id]) + 1)
                 result[subj_id] = (raw_weight * raw_score) + \
                     (1.0 - raw_weight) * pred_score
-        return VectorSuggestionResult(result, project.subjects)
+        return VectorSuggestionResult(result, self.project.subjects)
 
     @property
     def _source_project_ids(self):
@@ -123,10 +123,10 @@ class VWEnsembleBackend(
             score_vectors.append(hits.vector)
         return np.array(score_vectors, dtype=np.float32)
 
-    def _doc_to_example(self, doc, project, source_projects):
+    def _doc_to_example(self, doc, source_projects):
         examples = []
         subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
-        true = subjects.as_vector(project.subjects)
+        true = subjects.as_vector(self.project.subjects)
         score_vector = self._doc_score_vector(doc, source_projects)
         for subj_id in range(len(true)):
             if true[subj_id] or score_vector[:, subj_id].sum() > 0.0:
@@ -137,12 +137,12 @@ class VWEnsembleBackend(
                 examples.append(ex)
         return examples
 
-    def _create_examples(self, corpus, project):
+    def _create_examples(self, corpus):
         source_projects = [annif.project.get_project(project_id)
                            for project_id in self._source_project_ids]
         examples = []
         for doc in corpus.documents:
-            examples += self._doc_to_example(doc, project, source_projects)
+            examples += self._doc_to_example(doc, source_projects)
         random.shuffle(examples)
         return examples
 
@@ -151,9 +151,9 @@ class VWEnsembleBackend(
         with open(filename, 'w') as freqfile:
             json.dump(subject_freq, freqfile)
 
-    def _create_train_file(self, corpus, project):
+    def _create_train_file(self, corpus):
         self.info('creating VW train file')
-        exampledata = self._create_examples(corpus, project)
+        exampledata = self._create_examples(corpus)
 
         subjects = [subj_id for subj_id, ex in exampledata]
         self._subject_freq = collections.Counter(subjects)
@@ -168,9 +168,9 @@ class VWEnsembleBackend(
                                self.TRAIN_FILE,
                                method=self._write_train_file)
 
-    def learn(self, corpus, project):
+    def learn(self, corpus):
         self.initialize()
-        exampledata = self._create_examples(corpus, project)
+        exampledata = self._create_examples(corpus)
         for subj_id, example in exampledata:
             self._model.learn(example)
             self._subject_freq[subj_id] += 1

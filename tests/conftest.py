@@ -75,10 +75,11 @@ def document_corpus(subject_index):
 
 
 @pytest.fixture(scope='module')
-def project(subject_index):
+def project(subject_index, datadir):
     proj = unittest.mock.Mock()
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
     proj.subjects = subject_index
+    proj.datadir = str(datadir)
     return proj
 
 

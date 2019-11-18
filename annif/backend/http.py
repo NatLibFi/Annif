@@ -11,7 +11,7 @@ from . import backend
 class HTTPBackend(backend.AnnifBackend):
     name = "http"
 
-    def _suggest(self, text, project, params):
+    def _suggest(self, text, params):
         data = {'text': text}
         if 'project' in params:
             data['project'] = params['project']
@@ -21,13 +21,13 @@ class HTTPBackend(backend.AnnifBackend):
             req.raise_for_status()
         except requests.exceptions.RequestException as err:
             self.warning("HTTP request failed: {}".format(err))
-            return ListSuggestionResult([], project.subjects)
+            return ListSuggestionResult([], self.project.subjects)
 
         try:
             response = req.json()
         except ValueError as err:
             self.warning("JSON decode failed: {}".format(err))
-            return ListSuggestionResult([], project.subjects)
+            return ListSuggestionResult([], self.project.subjects)
 
         if 'results' in response:
             results = response['results']
@@ -40,7 +40,7 @@ class HTTPBackend(backend.AnnifBackend):
                                                            score=h['score'])
                                          for h in results
                                          if h['score'] > 0.0],
-                                        project.subjects)
+                                        self.project.subjects)
         except (TypeError, ValueError) as err:
             self.warning("Problem interpreting JSON data: {}".format(err))
-            return ListSuggestionResult([], project.subjects)
+            return ListSuggestionResult([], self.project.subjects)
