@@ -310,4 +310,4 @@ def test_vw_multi_suggest_multilabel_oaa(project):
         pohjaan.""")
 
     # weak assertion, but often multilabel_oaa produces zero hits
-    assert len(results) >= 0
+    assert results is not None
