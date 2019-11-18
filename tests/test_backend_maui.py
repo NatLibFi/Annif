@@ -11,7 +11,7 @@ from annif.exception import OperationFailedException
 
 
 @pytest.fixture
-def maui(app):
+def maui(project):
     maui_type = annif.backend.get_backend("maui")
     maui = maui_type(
         backend_id='maui',
@@ -19,31 +19,31 @@ def maui(app):
             'endpoint': 'http://api.example.org/mauiservice/',
             'tagger': 'dummy',
             'language': 'en'},
-        datadir=app.config['DATADIR'])
+        project=project)
     return maui
 
 
-def test_maui_train_missing_endpoint(app, document_corpus, project):
+def test_maui_train_missing_endpoint(document_corpus, project):
     maui_type = annif.backend.get_backend("maui")
     maui = maui_type(
         backend_id='maui',
         config_params={
             'tagger': 'dummy',
             'language': 'en'},
-        datadir=app.config['DATADIR'])
+        project=project)
 
     with pytest.raises(ConfigurationException):
         maui.train(document_corpus, project)
 
 
-def test_maui_train_missing_tagger(app, document_corpus, project):
+def test_maui_train_missing_tagger(document_corpus, project):
     maui_type = annif.backend.get_backend("maui")
     maui = maui_type(
         backend_id='maui',
         config_params={
             'endpoint': 'http://api.example.org/mauiservice/',
             'language': 'en'},
-        datadir=app.config['DATADIR'])
+        project=project)
 
     with pytest.raises(ConfigurationException):
         maui.train(document_corpus, project)

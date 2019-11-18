@@ -8,12 +8,12 @@ from annif.exception import NotSupportedException
 fasttext = pytest.importorskip("annif.backend.fasttext")
 
 
-def test_fasttext_default_params(datadir, project):
+def test_fasttext_default_params(project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
         config_params={},
-        datadir=str(datadir))
+        project=project)
 
     expected_default_params = {
         'limit': 100,
@@ -28,7 +28,7 @@ def test_fasttext_default_params(datadir, project):
         assert param in actual_params and actual_params[param] == val
 
 
-def test_fasttext_train(datadir, document_corpus, project):
+def test_fasttext_train(document_corpus, project, datadir):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
@@ -38,7 +38,7 @@ def test_fasttext_train(datadir, document_corpus, project):
             'lr': 0.25,
             'epoch': 20,
             'loss': 'hs'},
-        datadir=str(datadir))
+        project=project)
 
     fasttext.train(document_corpus, project)
     assert fasttext._model is not None
@@ -56,7 +56,7 @@ def test_fasttext_train_unknown_subject(tmpdir, datadir, project):
             'lr': 0.25,
             'epoch': 20,
             'loss': 'hs'},
-        datadir=str(datadir))
+        project=project)
 
     tmpfile = tmpdir.join('document.tsv')
     tmpfile.write("nonexistent\thttp://example.com/nonexistent\n" +
@@ -69,7 +69,7 @@ def test_fasttext_train_unknown_subject(tmpdir, datadir, project):
     assert datadir.join('fasttext-model').size() > 0
 
 
-def test_fasttext_train_nodocuments(datadir, project, empty_corpus):
+def test_fasttext_train_nodocuments(project, empty_corpus):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
@@ -79,14 +79,14 @@ def test_fasttext_train_nodocuments(datadir, project, empty_corpus):
             'lr': 0.25,
             'epoch': 20,
             'loss': 'hs'},
-        datadir=str(datadir))
+        project=project)
 
     with pytest.raises(NotSupportedException) as excinfo:
         fasttext.train(empty_corpus, project)
     assert 'training backend fasttext with no documents' in str(excinfo.value)
 
 
-def test_fasttext_suggest(datadir, project):
+def test_fasttext_suggest(project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
@@ -97,7 +97,7 @@ def test_fasttext_suggest(datadir, project):
             'lr': 0.25,
             'epoch': 20,
             'loss': 'hs'},
-        datadir=str(datadir))
+        project=project)
 
     results = fasttext.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede

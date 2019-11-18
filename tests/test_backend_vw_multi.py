@@ -18,12 +18,12 @@ def vw_corpus(tmpdir):
     return annif.corpus.DocumentFile(str(tmpfile))
 
 
-def test_vw_multi_default_params(datadir, project):
+def test_vw_multi_default_params(project):
     vw_type = annif.backend.get_backend("vw_multi")
     vw = vw_type(
         backend_id='vw_multi',
         config_params={},
-        datadir=str(datadir))
+        project=project)
 
     expected_default_params = {
         'limit': 100,
@@ -36,12 +36,12 @@ def test_vw_multi_default_params(datadir, project):
         assert param in actual_params and actual_params[param] == val
 
 
-def test_vw_multi_suggest_no_model(datadir, project):
+def test_vw_multi_suggest_no_model(project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
         config_params={'chunksize': 4},
-        datadir=str(datadir))
+        project=project)
 
     with pytest.raises(NotInitializedException):
         results = vw.suggest("example text", project)
@@ -55,7 +55,7 @@ def test_vw_multi_train_and_learn(datadir, document_corpus, project):
             'chunksize': 4,
             'learning_rate': 0.5,
             'loss_function': 'hinge'},
-        datadir=str(datadir))
+        project=project)
 
     vw.train(document_corpus, project)
     assert vw._model is not None
@@ -81,7 +81,7 @@ def test_vw_multi_train_and_learn_nodocuments(datadir, project, empty_corpus):
             'chunksize': 4,
             'learning_rate': 0.5,
             'loss_function': 'hinge'},
-        datadir=str(datadir))
+        project=project)
 
     vw.train(empty_corpus, project)
     assert datadir.join('vw-train.txt').exists()
@@ -105,7 +105,7 @@ def test_vw_multi_train_from_project(app, datadir, document_corpus, project):
         config_params={
             'chunksize': 4,
             'inputs': '_text_,dummy-en'},
-        datadir=str(datadir))
+        project=project)
 
     with app.app_context():
         vw.train(document_corpus, project)
@@ -122,7 +122,7 @@ def test_vw_multi_train_multiple_passes(datadir, document_corpus, project):
             'chunksize': 4,
             'learning_rate': 0.5,
             'passes': 2},
-        datadir=str(datadir))
+        project=project)
 
     vw.train(document_corpus, project)
     assert vw._model is not None
@@ -130,7 +130,7 @@ def test_vw_multi_train_multiple_passes(datadir, document_corpus, project):
     assert datadir.join('vw-model').size() > 0
 
 
-def test_vw_multi_train_invalid_algorithm(datadir, document_corpus, project):
+def test_vw_multi_train_invalid_algorithm(document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -138,40 +138,40 @@ def test_vw_multi_train_invalid_algorithm(datadir, document_corpus, project):
             'chunksize': 4,
             'learning_rate': 0.5,
             'algorithm': 'invalid'},
-        datadir=str(datadir))
+        project=project)
 
     with pytest.raises(ConfigurationException):
         vw.train(document_corpus, project)
 
 
-def test_vw_multi_train_invalid_loss_function(datadir, project, vw_corpus):
+def test_vw_multi_train_invalid_loss_function(project, vw_corpus):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
         config_params={'chunksize': 4, 'loss_function': 'invalid'},
-        datadir=str(datadir))
+        project=project)
 
     with pytest.raises(ConfigurationException):
         vw.train(vw_corpus, project)
 
 
-def test_vw_multi_train_invalid_learning_rate(datadir, project, vw_corpus):
+def test_vw_multi_train_invalid_learning_rate(project, vw_corpus):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
         config_params={'chunksize': 4, 'learning_rate': 'high'},
-        datadir=str(datadir))
+        project=project)
 
     with pytest.raises(ConfigurationException):
         vw.train(vw_corpus, project)
 
 
-def test_vw_multi_suggest(datadir, project):
+def test_vw_multi_suggest(project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
         config_params={'chunksize': 4, 'probabilities': 1},
-        datadir=str(datadir))
+        project=project)
 
     results = vw.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
@@ -186,24 +186,24 @@ def test_vw_multi_suggest(datadir, project):
     assert 'arkeologia' in [result.label for result in results]
 
 
-def test_vw_multi_suggest_empty(datadir, project):
+def test_vw_multi_suggest_empty(project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
         config_params={'chunksize': 4},
-        datadir=str(datadir))
+        project=project)
 
     results = vw.suggest("...", project)
 
     assert len(results) == 0
 
 
-def test_vw_multi_suggest_multiple_passes(datadir, project):
+def test_vw_multi_suggest_multiple_passes(project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
         config_params={'chunksize': 4, 'passes': 2},
-        datadir=str(datadir))
+        project=project)
 
     results = vw.suggest("...", project)
 
@@ -218,7 +218,7 @@ def test_vw_multi_train_ect(datadir, document_corpus, project):
             'chunksize': 4,
             'learning_rate': 0.5,
             'algorithm': 'ect'},
-        datadir=str(datadir))
+        project=project)
 
     vw.train(document_corpus, project)
     assert vw._model is not None
@@ -226,13 +226,13 @@ def test_vw_multi_train_ect(datadir, document_corpus, project):
     assert datadir.join('vw-model').size() > 0
 
 
-def test_vw_multi_suggest_ect(datadir, project):
+def test_vw_multi_suggest_ect(project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
         config_params={'chunksize': 1,
                        'algorithm': 'ect'},
-        datadir=str(datadir))
+        project=project)
 
     results = vw.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
@@ -252,7 +252,7 @@ def test_vw_multi_train_log_multi(datadir, document_corpus, project):
             'chunksize': 4,
             'learning_rate': 0.5,
             'algorithm': 'log_multi'},
-        datadir=str(datadir))
+        project=project)
 
     vw.train(document_corpus, project)
     assert vw._model is not None
@@ -260,13 +260,13 @@ def test_vw_multi_train_log_multi(datadir, document_corpus, project):
     assert datadir.join('vw-model').size() > 0
 
 
-def test_vw_multi_suggest_log_multi(datadir, project):
+def test_vw_multi_suggest_log_multi(project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
         config_params={'chunksize': 1,
                        'algorithm': 'log_multi'},
-        datadir=str(datadir))
+        project=project)
 
     results = vw.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
@@ -286,7 +286,7 @@ def test_vw_multi_train_multilabel_oaa(datadir, document_corpus, project):
             'chunksize': 4,
             'learning_rate': 0.5,
             'algorithm': 'multilabel_oaa'},
-        datadir=str(datadir))
+        project=project)
 
     vw.train(document_corpus, project)
     assert vw._model is not None
@@ -294,13 +294,13 @@ def test_vw_multi_train_multilabel_oaa(datadir, document_corpus, project):
     assert datadir.join('vw-model').size() > 0
 
 
-def test_vw_multi_suggest_multilabel_oaa(datadir, project):
+def test_vw_multi_suggest_multilabel_oaa(project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
         config_params={'chunksize': 1,
                        'algorithm': 'multilabel_oaa'},
-        datadir=str(datadir))
+        project=project)
 
     results = vw.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede

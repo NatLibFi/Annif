@@ -11,12 +11,12 @@ from annif.exception import NotInitializedException
 pytest.importorskip("annif.backend.vw_ensemble")
 
 
-def test_vw_ensemble_default_params(datadir, project):
+def test_vw_ensemble_default_params(project):
     vw_type = annif.backend.get_backend("vw_ensemble")
     vw = vw_type(
         backend_id='vw_ensemble',
         config_params={},
-        datadir=str(datadir))
+        project=project)
 
     expected_default_params = {
         'limit': 100,
@@ -28,23 +28,23 @@ def test_vw_ensemble_default_params(datadir, project):
         assert param in actual_params and actual_params[param] == val
 
 
-def test_vw_ensemble_suggest_no_model(datadir, project):
+def test_vw_ensemble_suggest_no_model(project):
     vw_ensemble_type = annif.backend.get_backend('vw_ensemble')
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
         config_params={'sources': 'dummy-en'},
-        datadir=str(datadir))
+        project=project)
 
     with pytest.raises(NotInitializedException):
         results = vw_ensemble.suggest("example text", project)
 
 
-def test_vw_ensemble_train_and_learn(app, datadir, tmpdir):
+def test_vw_ensemble_train_and_learn(app, datadir, tmpdir, project):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
         config_params={'sources': 'dummy-en'},
-        datadir=str(datadir))
+        project=project)
 
     tmpfile = tmpdir.join('document.tsv')
     tmpfile.write("dummy\thttp://example.org/dummy\n" +
@@ -80,12 +80,12 @@ def test_vw_ensemble_train_and_learn(app, datadir, tmpdir):
         assert sum(json.load(freqf).values()) != old_totalfreq
 
 
-def test_vw_ensemble_initialize(app, datadir):
+def test_vw_ensemble_initialize(app, project):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
         config_params={'sources': 'dummy-en'},
-        datadir=str(datadir))
+        project=project)
 
     assert vw_ensemble._model is None
     with app.app_context():
@@ -96,62 +96,60 @@ def test_vw_ensemble_initialize(app, datadir):
         vw_ensemble.initialize()
 
 
-def test_vw_ensemble_suggest(app, datadir):
+def test_vw_ensemble_suggest(app, project):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
         config_params={'sources': 'dummy-en'},
-        datadir=str(datadir))
+        project=project)
 
-    project = annif.project.get_project('dummy-en')
-
-    results = vw_ensemble.suggest("""Arkeologiaa sanotaan joskus myös
-        muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
-        tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
-        Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
-        joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
-        pohjaan.""", project)
+    with app.app_context():
+        results = vw_ensemble.suggest("""Arkeologiaa sanotaan joskus myös
+            muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen
+            tiede tai oikeammin joukko tieteitä, jotka tutkivat ihmisen
+            menneisyyttä. Tutkimusta tehdään analysoimalla muinaisjäännöksiä
+            eli niitä jälkiä, joita ihmisten toiminta on jättänyt maaperään
+            tai vesistöjen pohjaan.""", project)
 
     assert vw_ensemble._model is not None
     assert len(results) > 0
 
 
-def test_vw_ensemble_suggest_set_discount_rate(app, datadir):
+def test_vw_ensemble_suggest_set_discount_rate(app, project):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
         config_params={'sources': 'dummy-en', 'discount_rate': '0.02'},
-        datadir=str(datadir))
+        project=project)
 
-    project = annif.project.get_project('dummy-en')
-
-    results = vw_ensemble.suggest("""Arkeologiaa sanotaan joskus myös
-        muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
-        tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
-        Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
-        joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
-        pohjaan.""", project)
+    with app.app_context():
+        results = vw_ensemble.suggest("""Arkeologiaa sanotaan joskus myös
+            muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen
+            tiede tai oikeammin joukko tieteitä, jotka tutkivat ihmisen
+            menneisyyttä. Tutkimusta tehdään analysoimalla muinaisjäännöksiä
+            eli niitä jälkiä, joita ihmisten toiminta on jättänyt maaperään
+            tai vesistöjen pohjaan.""", project)
 
     assert len(results) > 0
 
 
-def test_vw_ensemble_format_example(datadir):
+def test_vw_ensemble_format_example(project):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
         config_params={'sources': 'dummy-en'},
-        datadir=str(datadir))
+        project=project)
 
     ex = vw_ensemble._format_example(0, [0.5])
     assert ex == ' |0 dummy-en:0.500000'
 
 
-def test_vw_ensemble_format_example_avoid_sci_notation(datadir):
+def test_vw_ensemble_format_example_avoid_sci_notation(project):
     vw_ensemble_type = annif.backend.get_backend("vw_ensemble")
     vw_ensemble = vw_ensemble_type(
         backend_id='vw_ensemble',
         config_params={'sources': 'dummy-en'},
-        datadir=str(datadir))
+        project=project)
 
     ex = vw_ensemble._format_example(0, [7.24e-05])
     assert ex == ' |0 dummy-en:0.000072'

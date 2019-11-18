@@ -10,23 +10,23 @@ from annif.exception import NotInitializedException
 pytest.importorskip("annif.backend.nn_ensemble")
 
 
-def test_nn_ensemble_suggest_no_model(datadir, project):
+def test_nn_ensemble_suggest_no_model(project):
     nn_ensemble_type = annif.backend.get_backend('nn_ensemble')
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
         config_params={'sources': 'dummy-en'},
-        datadir=str(datadir))
+        project=project)
 
     with pytest.raises(NotInitializedException):
         results = nn_ensemble.suggest("example text", project)
 
 
-def test_nn_ensemble_train_and_learn(app, datadir, tmpdir):
+def test_nn_ensemble_train_and_learn(app, datadir, tmpdir, project):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
         config_params={'sources': 'dummy-en'},
-        datadir=str(datadir))
+        project=project)
 
     tmpfile = tmpdir.join('document.tsv')
     tmpfile.write("dummy\thttp://example.org/dummy\n" +
@@ -53,12 +53,12 @@ def test_nn_ensemble_train_and_learn(app, datadir, tmpdir):
     assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
 
 
-def test_nn_ensemble_initialize(app, datadir):
+def test_nn_ensemble_initialize(app, project):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
         config_params={'sources': 'dummy-en'},
-        datadir=str(datadir))
+        project=project)
 
     assert nn_ensemble._model is None
     with app.app_context():
@@ -69,21 +69,20 @@ def test_nn_ensemble_initialize(app, datadir):
         nn_ensemble.initialize()
 
 
-def test_nn_ensemble_suggest(app, datadir):
+def test_nn_ensemble_suggest(app, project):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
         config_params={'sources': 'dummy-en'},
-        datadir=str(datadir))
+        project=project)
 
-    project = annif.project.get_project('dummy-en')
-
-    results = nn_ensemble.suggest("""Arkeologiaa sanotaan joskus myös
-        muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
-        tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
-        Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
-        joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
-        pohjaan.""", project)
+    with app.app_context():
+        results = nn_ensemble.suggest("""Arkeologiaa sanotaan joskus myös
+            muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen
+            tiede tai oikeammin joukko tieteitä, jotka tutkivat ihmisen
+            menneisyyttä. Tutkimusta tehdään analysoimalla muinaisjäännöksiä
+            eli niitä jälkiä, joita ihmisten toiminta on jättänyt maaperään
+            tai vesistöjen pohjaan.""", project)
 
     assert nn_ensemble._model is not None
     assert len(results) > 0

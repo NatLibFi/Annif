@@ -8,20 +8,12 @@ import pytest
 import unittest.mock
 
 
-@pytest.fixture(scope='module')
-def project(document_corpus, subject_index):
-    proj = unittest.mock.Mock()
-    proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
-    proj.subjects = subject_index
-    return proj
-
-
-def test_tfidf_default_params(datadir, project):
+def test_tfidf_default_params(project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
         config_params={},
-        datadir=str(datadir))
+        project=project)
 
     expected_default_params = {
         'limit': 100  # From AnnifBackend class
@@ -36,7 +28,7 @@ def test_tfidf_train(datadir, document_corpus, project):
     tfidf = tfidf_type(
         backend_id='tfidf',
         config_params={'limit': 10},
-        datadir=str(datadir))
+        project=project)
 
     tfidf.train(document_corpus, project)
     assert len(tfidf._index) > 0
@@ -44,12 +36,12 @@ def test_tfidf_train(datadir, document_corpus, project):
     assert datadir.join('tfidf-index').size() > 0
 
 
-def test_tfidf_suggest(datadir, project):
+def test_tfidf_suggest(project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
         config_params={'limit': 10},
-        datadir=str(datadir))
+        project=project)
 
     results = tfidf.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
@@ -64,12 +56,12 @@ def test_tfidf_suggest(datadir, project):
     assert 'arkeologia' in [result.label for result in results]
 
 
-def test_tfidf_suggest_unknown(datadir, project):
+def test_tfidf_suggest_unknown(project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
         config_params={'limit': 10},
-        datadir=str(datadir))
+        project=project)
 
     results = tfidf.suggest("abcdefghijk", project)  # unknown word
 
