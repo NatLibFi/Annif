@@ -9,7 +9,6 @@ import annif.project
 from annif.suggestion import ListSuggestionResult, VectorSuggestionResult
 from annif.exception import ConfigurationException
 from annif.exception import NotInitializedException
-from . import vw_base
 from . import backend
 from . import mixins
 
