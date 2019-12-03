@@ -1,21 +1,29 @@
 """Annif backend using the Vowpal Wabbit multiclass and multilabel
 classifiers"""
 
+import os
 import random
 import numpy as np
+from vowpalwabbit import pyvw
 import annif.project
 from annif.suggestion import ListSuggestionResult, VectorSuggestionResult
 from annif.exception import ConfigurationException
-from . import vw_base
+from annif.exception import NotInitializedException
 from . import backend
 from . import mixins
 
 
-class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
+class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
     """Vowpal Wabbit multiclass/multilabel backend for Annif"""
 
     name = "vw_multi"
     needs_subject_index = True
+
+    MODEL_FILE = 'vw-model'
+    TRAIN_FILE = 'vw-train.txt'
+
+    # defaults for uninitialized instances
+    _model = None
 
     VW_PARAMS = {
         'bit_precision': (int, None),
@@ -33,6 +41,47 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
     DEFAULT_INPUTS = '_text_'
 
     DEFAULT_PARAMS = {'algorithm': 'oaa'}
+
+    def initialize(self):
+        if self._model is None:
+            path = os.path.join(self.datadir, self.MODEL_FILE)
+            if not os.path.exists(path):
+                raise NotInitializedException(
+                    'model {} not found'.format(path),
+                    backend_id=self.backend_id)
+            self.debug('loading VW model from {}'.format(path))
+            params = self._create_params({'i': path, 'quiet': True})
+            if 'passes' in params:
+                # don't confuse the model with passes
+                del params['passes']
+            self.debug("model parameters: {}".format(params))
+            self._model = pyvw.vw(**params)
+            self.debug('loaded model {}'.format(str(self._model)))
+
+    def _convert_param(self, param, val):
+        pspec, _ = self.VW_PARAMS[param]
+        if isinstance(pspec, list):
+            if val in pspec:
+                return val
+            raise ConfigurationException(
+                "{} is not a valid value for {} (allowed: {})".format(
+                    val, param, ', '.join(pspec)), backend_id=self.backend_id)
+        try:
+            return pspec(val)
+        except ValueError:
+            raise ConfigurationException(
+                "The {} value {} cannot be converted to {}".format(
+                    param, val, pspec), backend_id=self.backend_id)
+
+    def _create_params(self, params):
+        params = params.copy()  # don't mutate the original dict
+        params.update({param: defaultval
+                       for param, (_, defaultval) in self.VW_PARAMS.items()
+                       if defaultval is not None})
+        params.update({param: self._convert_param(param, val)
+                       for param, val in self.params.items()
+                       if param in self.VW_PARAMS})
+        return params
 
     def default_params(self):
         params = backend.AnnifBackend.DEFAULT_PARAMS.copy()
@@ -117,7 +166,17 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
 
     def _create_model(self):
         self.info('creating VW model (algorithm: {})'.format(self.algorithm))
-        super()._create_model({self.algorithm: len(self.project.subjects)})
+        trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
+        initial_params = {'data': trainpath,
+                          self.algorithm: len(self.project.subjects)}
+        params = self._create_params(initial_params)
+        if params.get('passes', 1) > 1:
+            # need a cache file when there are multiple passes
+            params.update({'cache': True, 'kill_cache': True})
+        self.debug("model parameters: {}".format(params))
+        self._model = pyvw.vw(**params)
+        modelpath = os.path.join(self.datadir, self.MODEL_FILE)
+        self._model.save(modelpath)
 
     def _convert_result(self, result):
         if self.algorithm == 'multilabel_oaa':
@@ -150,3 +209,29 @@ class VWMultiBackend(mixins.ChunkingBackend, vw_base.VWBaseBackend):
         return VectorSuggestionResult(
             np.array(results, dtype=np.float32).mean(axis=0),
             self.project.subjects)
+
+    @staticmethod
+    def _write_train_file(examples, filename):
+        with open(filename, 'w', encoding='utf-8') as trainfile:
+            for ex in examples:
+                print(ex, file=trainfile)
+
+    def _create_train_file(self, corpus):
+        self.info('creating VW train file')
+        examples = self._create_examples(corpus)
+        annif.util.atomic_save(examples,
+                               self.datadir,
+                               self.TRAIN_FILE,
+                               method=self._write_train_file)
+
+    def train(self, corpus):
+        self.info("creating VW model")
+        self._create_train_file(corpus)
+        self._create_model()
+
+    def learn(self, corpus):
+        self.initialize()
+        for example in self._create_examples(corpus):
+            self._model.learn(example)
+        modelpath = os.path.join(self.datadir, self.MODEL_FILE)
+        self._model.save(modelpath)
