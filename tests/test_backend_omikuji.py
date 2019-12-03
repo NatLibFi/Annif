@@ -64,7 +64,7 @@ def test_omikuji_suggest(project):
     omikuji_type = annif.backend.get_backend('omikuji')
     omikuji = omikuji_type(
         backend_id='omikuji',
-        config_params={'chunksize': 4, 'probabilities': 1},
+        config_params={'limit': 8},
         project=project)
 
     results = omikuji.suggest("""Arkeologiaa sanotaan joskus myös
@@ -75,6 +75,7 @@ def test_omikuji_suggest(project):
         pohjaan.""")
 
     assert len(results) > 0
+    assert len(results) <= 8
     assert 'http://www.yso.fi/onto/yso/p1265' in [
         result.uri for result in results]
     assert 'arkeologia' in [result.label for result in results]

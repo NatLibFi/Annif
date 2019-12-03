@@ -119,7 +119,8 @@ class OmikujiBackend(backend.AnnifBackend):
         feature_values = [(col, vector[row, col])
                           for row, col in zip(*vector.nonzero())]
         results = []
-        for subj_id, score in self._model.predict(feature_values):
+        limit = int(self.params['limit'])
+        for subj_id, score in self._model.predict(feature_values, top_k=limit):
             subject = self.project.subjects[subj_id]
             results.append(SubjectSuggestion(
                 uri=subject[0],
