@@ -23,6 +23,13 @@ class OmikujiBackend(backend.AnnifBackend):
     VECTORIZER_FILE = 'vectorizer'
     TRAIN_FILE = 'omikuji-train.txt'
     MODEL_FILE = 'omikuji-model'
+    
+    DEFAULT_PARAMS = {'min_df': 1}
+
+    def default_params(self):
+        params = backend.AnnifBackend.DEFAULT_PARAMS.copy()
+        params.update(self.DEFAULT_PARAMS)
+        return params
 
     def _initialize_vectorizer(self):
         if self._vectorizer is None:
@@ -100,7 +107,7 @@ class OmikujiBackend(backend.AnnifBackend):
                 'Cannot train omikuji project with no documents')
         self.info('creating vectorizer')
         self._vectorizer = TfidfVectorizer(
-            #            min_df=5,
+            min_df=int(self.params['min_df']),
             tokenizer=self.project.analyzer.tokenize_words)
         veccorpus = self._vectorizer.fit_transform(
             (doc.text for doc in corpus.documents))

@@ -19,6 +19,7 @@ def test_omikuji_default_params(project):
 
     expected_default_params = {
         'limit': 100,
+        'min_df': 1,
     }
     actual_params = omikuji.params
     for param, val in expected_default_params.items():
