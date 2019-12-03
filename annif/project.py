@@ -103,7 +103,7 @@ class AnnifProject(DatadirMixin):
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-        hits = self.backend.suggest(text, project=self, params=beparams)
+        hits = self.backend.suggest(text, params=beparams)
         logger.debug(
             'Got %d hits from backend %s',
             len(hits), self.backend.backend_id)
@@ -132,7 +132,7 @@ class AnnifProject(DatadirMixin):
                 backend_class = annif.backend.get_backend(backend_id)
                 self._backend = backend_class(
                     backend_id, config_params=self.config,
-                    datadir=self.datadir)
+                    project=self)
             except ValueError:
                 logger.warning(
                     "Could not create backend %s, "
@@ -168,7 +168,7 @@ class AnnifProject(DatadirMixin):
         """train the project using documents from a metadata source"""
 
         corpus.set_subject_index(self.subjects)
-        self.backend.train(corpus, project=self)
+        self.backend.train(corpus)
 
     def learn(self, corpus):
         """further train the project using documents from a metadata source"""
@@ -177,7 +177,7 @@ class AnnifProject(DatadirMixin):
         if isinstance(
                 self.backend,
                 annif.backend.backend.AnnifLearningBackend):
-            self.backend.learn(corpus, project=self)
+            self.backend.learn(corpus)
         else:
             raise NotSupportedException("Learning not supported by backend",
                                         project_id=self.project_id)

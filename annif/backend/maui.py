@@ -58,11 +58,11 @@ class MauiBackend(backend.AnnifBackend):
         except requests.exceptions.RequestException as err:
             raise OperationFailedException(err)
 
-    def _upload_vocabulary(self, project):
+    def _upload_vocabulary(self):
         self.info("Uploading vocabulary")
         try:
             resp = requests.put(self.tagger_url + '/vocab',
-                                data=project.vocab.as_skos())
+                                data=self.project.vocab.as_skos())
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
             raise OperationFailedException(err)
@@ -102,12 +102,12 @@ class MauiBackend(backend.AnnifBackend):
                 return
             time.sleep(1)
 
-    def train(self, corpus, project):
+    def train(self, corpus):
         if corpus.is_empty():
             raise NotSupportedException('training backend {} with no documents'
                                         .format(self.backend_id))
         self._initialize_tagger()
-        self._upload_vocabulary(project)
+        self._upload_vocabulary()
         self._create_train_file(corpus)
         self._upload_train_file()
         self._wait_for_train()
@@ -132,21 +132,21 @@ class MauiBackend(backend.AnnifBackend):
             self.warning("JSON decode failed: {}".format(err))
             return None
 
-    def _response_to_result(self, response, project):
+    def _response_to_result(self, response):
         try:
             return ListSuggestionResult(
                 [SubjectSuggestion(uri=h['id'],
                                    label=h['label'],
                                    score=h['probability'])
                  for h in response['topics']
-                 if h['probability'] > 0.0], project.subjects)
+                 if h['probability'] > 0.0], self.project.subjects)
         except (TypeError, ValueError) as err:
             self.warning("Problem interpreting JSON data: {}".format(err))
-            return ListSuggestionResult([], project.subjects)
+            return ListSuggestionResult([], self.project.subjects)
 
-    def _suggest(self, text, project, params):
+    def _suggest(self, text, params):
         response = self._suggest_request(text)
         if response:
-            return self._response_to_result(response, project)
+            return self._response_to_result(response)
         else:
-            return ListSuggestionResult([], project.subjects)
+            return ListSuggestionResult([], self.project.subjects)

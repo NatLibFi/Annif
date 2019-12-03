@@ -63,22 +63,22 @@ class TFIDFBackend(backend.AnnifBackend):
     VECTORIZER_FILE = 'vectorizer'
     INDEX_FILE = 'tfidf-index'
 
-    def _generate_subjects_from_documents(self, corpus, project):
+    def _generate_subjects_from_documents(self, corpus):
         with tempfile.TemporaryDirectory() as tempdir:
             subject_buffer = {}
-            for subject_id in range(len(project.subjects)):
+            for subject_id in range(len(self.project.subjects)):
                 subject_buffer[subject_id] = SubjectBuffer(tempdir,
                                                            subject_id)
 
             for doc in corpus.documents:
-                tokens = project.analyzer.tokenize_words(doc.text)
+                tokens = self.project.analyzer.tokenize_words(doc.text)
                 for uri in doc.uris:
-                    subject_id = project.subjects.by_uri(uri)
+                    subject_id = self.project.subjects.by_uri(uri)
                     if subject_id is None:
                         continue
                     subject_buffer[subject_id].write(" ".join(tokens))
 
-            for sid in range(len(project.subjects)):
+            for sid in range(len(self.project.subjects)):
                 yield subject_buffer[sid].read()
 
     def _initialize_vectorizer(self):
@@ -118,12 +118,12 @@ class TFIDFBackend(backend.AnnifBackend):
             self.datadir,
             self.INDEX_FILE)
 
-    def train(self, corpus, project):
+    def train(self, corpus):
         if corpus.is_empty():
             raise NotSupportedException(
                 'Cannot train tfidf project with no documents')
         self.info('transforming subject corpus')
-        subjects = self._generate_subjects_from_documents(corpus, project)
+        subjects = self._generate_subjects_from_documents(corpus)
         self.info('creating vectorizer')
         self._vectorizer = TfidfVectorizer()
         veccorpus = self._vectorizer.fit_transform(subjects)
@@ -134,11 +134,11 @@ class TFIDFBackend(backend.AnnifBackend):
             method=joblib.dump)
         self._create_index(veccorpus)
 
-    def _suggest(self, text, project, params):
+    def _suggest(self, text, params):
         self.debug('Suggesting subjects for text "{}..." (len={})'.format(
             text[:20], len(text)))
-        tokens = project.analyzer.tokenize_words(text)
+        tokens = self.project.analyzer.tokenize_words(text)
         vectors = self._vectorizer.transform([" ".join(tokens)])
         docsim = self._index[vectors[0]]
-        fullresult = VectorSuggestionResult(docsim, project.subjects)
+        fullresult = VectorSuggestionResult(docsim, self.project.subjects)
         return fullresult.filter(limit=int(self.params['limit']))

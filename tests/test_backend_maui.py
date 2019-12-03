@@ -11,7 +11,7 @@ from annif.exception import OperationFailedException
 
 
 @pytest.fixture
-def maui(app):
+def maui(app_project):
     maui_type = annif.backend.get_backend("maui")
     maui = maui_type(
         backend_id='maui',
@@ -19,34 +19,34 @@ def maui(app):
             'endpoint': 'http://api.example.org/mauiservice/',
             'tagger': 'dummy',
             'language': 'en'},
-        datadir=app.config['DATADIR'])
+        project=app_project)
     return maui
 
 
-def test_maui_train_missing_endpoint(app, document_corpus, project):
+def test_maui_train_missing_endpoint(document_corpus, project):
     maui_type = annif.backend.get_backend("maui")
     maui = maui_type(
         backend_id='maui',
         config_params={
             'tagger': 'dummy',
             'language': 'en'},
-        datadir=app.config['DATADIR'])
+        project=project)
 
     with pytest.raises(ConfigurationException):
-        maui.train(document_corpus, project)
+        maui.train(document_corpus)
 
 
-def test_maui_train_missing_tagger(app, document_corpus, project):
+def test_maui_train_missing_tagger(document_corpus, project):
     maui_type = annif.backend.get_backend("maui")
     maui = maui_type(
         backend_id='maui',
         config_params={
             'endpoint': 'http://api.example.org/mauiservice/',
             'language': 'en'},
-        datadir=app.config['DATADIR'])
+        project=project)
 
     with pytest.raises(ConfigurationException):
-        maui.train(document_corpus, project)
+        maui.train(document_corpus)
 
 
 @responses.activate
@@ -82,13 +82,13 @@ def test_maui_initialize_tagger_create_failed(maui):
 
 
 @responses.activate
-def test_maui_upload_vocabulary_failed(maui, app_project):
+def test_maui_upload_vocabulary_failed(maui):
     responses.add(responses.PUT,
                   'http://api.example.org/mauiservice/dummy/vocab',
                   body=requests.exceptions.RequestException())
 
     with pytest.raises(OperationFailedException):
-        maui._upload_vocabulary(app_project)
+        maui._upload_vocabulary()
 
 
 @responses.activate
@@ -114,7 +114,7 @@ def test_maui_wait_for_train_failed(maui):
 
 def test_maui_train_nodocuments(maui, project, empty_corpus):
     with pytest.raises(NotSupportedException) as excinfo:
-        maui.train(empty_corpus, project)
+        maui.train(empty_corpus)
     assert 'training backend maui with no documents' in str(excinfo.value)
 
 
@@ -144,7 +144,7 @@ def test_maui_train(maui, document_corpus, app_project):
                   status=200,
                   json={"completed": True})
 
-    maui.train(document_corpus, app_project)
+    maui.train(document_corpus)
 
 
 @responses.activate
@@ -156,7 +156,7 @@ def test_maui_suggest(maui, project):
                                     'label': 'maui',
                                     'probability': 1.0}]})
 
-    result = maui.suggest('this is some text', project=project)
+    result = maui.suggest('this is some text')
     assert len(result) == 1
     assert result[0].uri == 'http://example.org/maui'
     assert result[0].label == 'maui'
@@ -173,7 +173,7 @@ def test_maui_suggest_zero_score(maui, project):
                                     'label': 'maui',
                                     'probability': 0.0}]})
 
-    result = maui.suggest('this is some text', project=project)
+    result = maui.suggest('this is some text')
     assert len(result) == 0
     assert len(responses.calls) == 1
 
@@ -183,7 +183,7 @@ def test_maui_suggest_error(maui, project):
         mock_request.side_effect = requests.exceptions.RequestException(
             'failed')
 
-        result = maui.suggest('this is some text', project=project)
+        result = maui.suggest('this is some text')
         assert len(result) == 0
 
 
@@ -194,7 +194,7 @@ def test_maui_suggest_json_fails(maui, project):
         mock_response.json.side_effect = ValueError("JSON decode failed")
         mock_request.return_value = mock_response
 
-        result = maui.suggest('this is some text', project=project)
+        result = maui.suggest('this is some text')
         assert len(result) == 0
 
 
@@ -204,6 +204,6 @@ def test_maui_suggest_unexpected_json(maui, project):
                   'http://api.example.org/mauiservice/dummy/suggest',
                   json=["spanish inquisition"])
 
-    result = maui.suggest('this is some text', project=project)
+    result = maui.suggest('this is some text')
     assert len(result) == 0
     assert len(responses.calls) == 1
