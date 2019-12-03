@@ -36,7 +36,7 @@ services:
 
 
   data:
-    image: annif-data
+    image: quay.io/natlibfi/annif-data
     volumes:
       - data:/annif-projects
     deploy:

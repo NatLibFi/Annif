@@ -4,9 +4,8 @@ import collections
 import configparser
 import enum
 import os.path
-import joblib
-from sklearn.feature_extraction.text import TfidfVectorizer
 from flask import current_app
+from shutil import rmtree
 import annif
 import annif.analyzer
 import annif.corpus
@@ -35,7 +34,6 @@ class AnnifProject(DatadirMixin):
     _analyzer = None
     _backend = None
     _vocab = None
-    _vectorizer = None
     initialized = False
 
     # default values for configuration settings
@@ -44,7 +42,7 @@ class AnnifProject(DatadirMixin):
     def __init__(self, project_id, config, datadir):
         DatadirMixin.__init__(self, datadir, 'projects', project_id)
         self.project_id = project_id
-        self.name = config['name']
+        self.name = config.get('name', project_id)
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
         self.vocab_id = config.get('vocab', None)
@@ -62,10 +60,13 @@ class AnnifProject(DatadirMixin):
                 project_id=self.project_id)
 
     def _initialize_analyzer(self):
-        analyzer = self.analyzer
-        logger.debug("Project '%s': initialized analyzer: %s",
-                     self.project_id,
-                     str(analyzer))
+        try:
+            analyzer = self.analyzer
+            logger.debug("Project '%s': initialized analyzer: %s",
+                         self.project_id,
+                         str(analyzer))
+        except AnnifException as err:
+            logger.warning(err.format_message())
 
     def _initialize_subjects(self):
         try:
@@ -76,21 +77,12 @@ class AnnifProject(DatadirMixin):
         except AnnifException as err:
             logger.warning(err.format_message())
 
-    def _initialize_vectorizer(self):
-        try:
-            vectorizer = self.vectorizer
-            logger.debug("Project '%s': initialized vectorizer: %s",
-                         self.project_id,
-                         str(vectorizer))
-        except AnnifException as err:
-            logger.warning(err.format_message())
-
     def _initialize_backend(self):
         logger.debug("Project '%s': initializing backend", self.project_id)
-        if not self.backend:
-            logger.debug("Cannot initialize backend: does not exist")
-            return
         try:
+            if not self.backend:
+                logger.debug("Cannot initialize backend: does not exist")
+                return
             self.backend.initialize()
         except AnnifException as err:
             logger.warning(err.format_message())
@@ -103,7 +95,6 @@ class AnnifProject(DatadirMixin):
 
         self._initialize_analyzer()
         self._initialize_subjects()
-        self._initialize_vectorizer()
         self._initialize_backend()
 
         self.initialized = True
@@ -112,7 +103,7 @@ class AnnifProject(DatadirMixin):
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-        hits = self.backend.suggest(text, project=self, params=beparams)
+        hits = self.backend.suggest(text, params=beparams)
         logger.debug(
             'Got %d hits from backend %s',
             len(hits), self.backend.backend_id)
@@ -120,19 +111,28 @@ class AnnifProject(DatadirMixin):
 
     @property
     def analyzer(self):
-        if self._analyzer is None and self.analyzer_spec:
-            self._analyzer = annif.analyzer.get_analyzer(self.analyzer_spec)
+        if self._analyzer is None:
+            if self.analyzer_spec:
+                self._analyzer = annif.analyzer.get_analyzer(
+                    self.analyzer_spec)
+            else:
+                raise ConfigurationException(
+                    "analyzer setting is missing (and needed by the backend)",
+                    project_id=self.project_id)
         return self._analyzer
 
     @property
     def backend(self):
         if self._backend is None:
+            if 'backend' not in self.config:
+                raise ConfigurationException(
+                    "backend setting is missing", project_id=self.project_id)
             backend_id = self.config['backend']
             try:
                 backend_class = annif.backend.get_backend(backend_id)
                 self._backend = backend_class(
                     backend_id, config_params=self.config,
-                    datadir=self.datadir)
+                    project=self)
             except ValueError:
                 logger.warning(
                     "Could not create backend %s, "
@@ -154,19 +154,6 @@ class AnnifProject(DatadirMixin):
     def subjects(self):
         return self.vocab.subjects
 
-    @property
-    def vectorizer(self):
-        if self._vectorizer is None:
-            path = os.path.join(self.datadir, 'vectorizer')
-            if os.path.exists(path):
-                logger.debug('loading vectorizer from %s', path)
-                self._vectorizer = joblib.load(path)
-            else:
-                raise NotInitializedException(
-                    "vectorizer file '{}' not found".format(path),
-                    project_id=self.project_id)
-        return self._vectorizer
-
     def suggest(self, text, backend_params=None):
         """Suggest subjects the given text by passing it to the backend. Returns a
         list of SubjectSuggestion objects ordered by decreasing score."""
@@ -176,28 +163,12 @@ class AnnifProject(DatadirMixin):
         logger.debug('%d hits from backend', len(hits))
         return hits
 
-    def _create_vectorizer(self, subjectcorpus):
-        if not self.backend.needs_subject_vectorizer:
-            logger.debug('not creating vectorizer: not needed by backend')
-            return
-        logger.info('creating vectorizer')
-        self._vectorizer = TfidfVectorizer(
-            tokenizer=self.analyzer.tokenize_words)
-        self._vectorizer.fit((subj.text for subj in subjectcorpus.subjects))
-        annif.util.atomic_save(
-            self._vectorizer,
-            self.datadir,
-            'vectorizer',
-            method=joblib.dump)
-
     def train(self, corpus, backend_params=None):
         """train the project using documents from a metadata source"""
         if backend_params is None:
             backend_params = {}
-        corpus.set_subject_index(self.subjects)
-        self._create_vectorizer(corpus)
         beparams = backend_params.get(self.backend.backend_id, {})
-        self.backend.train(corpus, project=self, params=beparams)
+        self.backend.train(corpus, params=beparams)
 
     def learn(self, corpus, backend_params=None):
         """further train the project using documents from a metadata source"""
@@ -207,7 +178,7 @@ class AnnifProject(DatadirMixin):
         if isinstance(
                 self.backend,
                 annif.backend.backend.AnnifLearningBackend):
-            self.backend.learn(corpus, project=self, params=backend_params)
+            self.backend.learn(corpus, params=backend_params)
         else:
             raise NotSupportedException("Learning not supported by backend",
                                         project_id=self.project_id)
@@ -217,8 +188,19 @@ class AnnifProject(DatadirMixin):
         return {'project_id': self.project_id,
                 'name': self.name,
                 'language': self.language,
-                'backend': {'backend_id': self.config['backend']}
+                'backend': {'backend_id': self.config.get('backend')}
                 }
+
+    def remove_model_data(self):
+        """remove the data of this project"""
+        datadir_path = self._datadir_path
+        if os.path.isdir(datadir_path):
+            rmtree(datadir_path)
+            logger.info('Removed model data for project {}.'
+                        .format(self.project_id))
+        else:
+            logger.warning('No model data to remove for project {}.'
+                           .format(self.project_id))
 
 
 def _create_projects(projects_file, datadir, init_projects):
@@ -232,8 +214,12 @@ def _create_projects(projects_file, datadir, init_projects):
 
     config = configparser.ConfigParser()
     config.optionxform = lambda option: option
-    with open(projects_file, encoding='utf-8') as projf:
-        config.read_file(projf)
+    with open(projects_file, encoding='utf-8-sig') as projf:
+        try:
+            config.read_file(projf)
+        except (configparser.DuplicateOptionError,
+                configparser.DuplicateSectionError) as err:
+            raise ConfigurationException(err)
 
     # create AnnifProject objects from the configuration file
     projects = collections.OrderedDict()

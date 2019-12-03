@@ -68,6 +68,13 @@ def test_get_project_nonexistent(app):
             annif.project.get_project('nonexistent')
 
 
+def test_get_project_noanalyzer(app):
+    with app.app_context():
+        project = annif.project.get_project('noanalyzer')
+        with pytest.raises(ConfigurationException):
+            analyzer = project.analyzer
+
+
 def test_get_project_novocab(app):
     with app.app_context():
         project = annif.project.get_project('novocab')
@@ -75,10 +82,57 @@ def test_get_project_novocab(app):
             vocab = project.vocab
 
 
+def test_get_project_nobackend(app):
+    with app.app_context():
+        project = annif.project.get_project('nobackend')
+        with pytest.raises(ConfigurationException):
+            backend = project.backend
+
+
+def test_get_project_noname(app):
+    with app.app_context():
+        project = annif.project.get_project('noname')
+        assert project.name == project.project_id
+
+
+def test_get_project_default_params_tfidf(app):
+    with app.app_context():
+        project = annif.project.get_project('noparams-tfidf-fi')
+    expected_default_params = {
+        'limit': 100  # From AnnifBackend class
+    }
+    actual_params = project.backend.params
+    for param, val in expected_default_params.items():
+        assert param in actual_params and actual_params[param] == val
+
+
+def test_get_project_default_params_fasttext(app):
+    pytest.importorskip("annif.backend.fasttext")
+    with app.app_context():
+        project = annif.project.get_project('noparams-fasttext-fi')
+    expected_default_params = {
+        'limit': 100,  # From AnnifBackend class
+        'dim': 100,    # Rest from FastTextBackend class
+        'lr': 0.25,
+        'epoch': 5,
+        'loss': 'hs'}
+    actual_params = project.backend.params
+    for param, val in expected_default_params.items():
+        assert param in actual_params and actual_params[param] == val
+
+
+def test_get_project_invalid_config_file(app):
+    app = annif.create_app(
+        config_name='annif.default_config.TestingInvalidProjectsConfig')
+    with app.app_context():
+        with pytest.raises(ConfigurationException):
+            project = annif.project.get_project('duplicatedvocab')
+
+
 def test_project_load_vocabulary_tfidf(app, vocabulary, testdatadir):
     with app.app_context():
         project = annif.project.get_project('tfidf-fi')
-    project.vocab.load_vocabulary(vocabulary)
+    project.vocab.load_vocabulary(vocabulary, 'fi')
     assert testdatadir.join('vocabs/yso-fi/subjects').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
 
@@ -89,6 +143,14 @@ def test_project_train_tfidf(app, document_corpus, testdatadir):
     project.train(document_corpus)
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').exists()
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
+
+
+def test_project_train_tfidf_nodocuments(app, empty_corpus):
+    with app.app_context():
+        project = annif.project.get_project('tfidf-fi')
+    with pytest.raises(NotSupportedException) as excinfo:
+        project.train(empty_corpus)
+    assert 'Cannot train tfidf project with no documents' in str(excinfo.value)
 
 
 def test_project_learn(app, tmpdir):
@@ -125,7 +187,7 @@ def test_project_load_vocabulary_fasttext(app, vocabulary, testdatadir):
     pytest.importorskip("annif.backend.fasttext")
     with app.app_context():
         project = annif.project.get_project('fasttext-fi')
-    project.vocab.load_vocabulary(vocabulary)
+    project.vocab.load_vocabulary(vocabulary, 'fi')
     assert testdatadir.join('vocabs/yso-fi/subjects').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
 

@@ -11,7 +11,7 @@ import annif.corpus
 import annif.suggestion
 import annif.project
 import annif.util
-from annif.exception import NotInitializedException
+from annif.exception import NotInitializedException, NotSupportedException
 from . import ensemble
 
 
@@ -23,6 +23,8 @@ class PAVBackend(ensemble.EnsembleBackend):
 
     # defaults for uninitialized instances
     _models = None
+
+    DEFAULT_PARAMS = {'min-docs': 10}
 
     def initialize(self, params=None):
         if self._models is not None:
@@ -84,7 +86,7 @@ class PAVBackend(ensemble.EnsembleBackend):
             if true[:, cid].sum() < min_docs:
                 continue  # don't create model b/c of too few examples
             reg = IsotonicRegression(out_of_bounds='clip')
-            reg.fit(scores[:, cid], true[:, cid])
+            reg.fit(scores[:, cid].astype(np.float64), true[:, cid])
             pav_regressions[source_project.subjects[cid][0]] = reg
         self.info("created PAV model for {} concepts".format(
             len(pav_regressions)))
@@ -95,7 +97,10 @@ class PAVBackend(ensemble.EnsembleBackend):
             model_filename,
             method=joblib.dump)
 
-    def _train(self, corpus, project, params):
+    def _train(self, corpus, params):
+        if corpus.is_empty():
+            raise NotSupportedException('training backend {} with no documents'
+                                        .format(self.backend_id))
         self.info("creating PAV models")
         sources = annif.util.parse_sources(self.config_params['sources'])
         min_docs = int(self.config_params['min-docs'])

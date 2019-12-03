@@ -1,43 +1,30 @@
 """Classes for supporting subject corpora expressed as directories or files"""
 
-import glob
-import os.path
 import annif.util
 import numpy as np
 from annif import logger
-from .types import Subject, SubjectCorpus
-from .convert import SubjectToDocumentCorpusMixin
+from .types import Subject
+from .skos import serialize_subjects_to_skos
 
 
-class SubjectDirectory(SubjectCorpus, SubjectToDocumentCorpusMixin):
-    """A subject corpus in the form of a directory with .txt files."""
-
-    def __init__(self, path):
-        self.path = path
-        self._filenames = sorted(glob.glob(os.path.join(path, '*.txt')))
-
-    @property
-    def subjects(self):
-        for filename in self._filenames:
-            with open(filename, encoding='utf-8') as subjfile:
-                uri, label = subjfile.readline().strip().split(' ', 1)
-                text = ' '.join(subjfile.readlines())
-                yield Subject(uri=uri, label=label, text=text)
-
-
-class SubjectFileTSV(SubjectCorpus, SubjectToDocumentCorpusMixin):
-    """A subject corpus stored in a TSV file."""
+class SubjectFileTSV:
+    """A subject vocabulary stored in a TSV file."""
 
     def __init__(self, path):
         self.path = path
 
     @property
     def subjects(self):
-        with open(self.path, encoding='utf-8') as subjfile:
+        with open(self.path, encoding='utf-8-sig') as subjfile:
             for line in subjfile:
                 uri, label = line.strip().split(None, 1)
                 clean_uri = annif.util.cleanup_uri(uri)
                 yield Subject(uri=clean_uri, label=label, text=None)
+
+    def save_skos(self, path, language):
+        """Save the contents of the subject vocabulary into a SKOS/Turtle
+        file with the given path name."""
+        serialize_subjects_to_skos(self.subjects, language, path)
 
 
 class SubjectIndex:
@@ -77,6 +64,22 @@ class SubjectIndex:
         except KeyError:
             logger.warning('Unknown subject label "%s"', label)
             return None
+
+    def uris_to_labels(self, uris):
+        """return a list of labels corresponding to the given URIs; unknown
+        URIs are ignored"""
+
+        return [self[subject_id][1]
+                for subject_id in (self.by_uri(uri) for uri in uris)
+                if subject_id is not None]
+
+    def labels_to_uris(self, labels):
+        """return a list of URIs corresponding to the given labels; unknown
+        labels are ignored"""
+
+        return [self[subject_id][0]
+                for subject_id in (self.by_label(label) for label in labels)
+                if subject_id is not None]
 
     def save(self, path):
         """Save this subject index into a file."""
@@ -134,15 +137,15 @@ class SubjectSet:
            multilabel indicator format, using a subject index as the source
            of subjects."""
 
-        vector = np.zeros(len(subject_index), dtype=np.int8)
+        vector = np.zeros(len(subject_index), dtype=bool)
         if self.has_uris():
             for uri in self.subject_uris:
                 subject_id = subject_index.by_uri(uri)
                 if subject_id is not None:
-                    vector[subject_id] = 1
+                    vector[subject_id] = True
         else:
             for label in self.subject_labels:
                 subject_id = subject_index.by_label(label)
                 if subject_id is not None:
-                    vector[subject_id] = 1
+                    vector[subject_id] = True
         return vector

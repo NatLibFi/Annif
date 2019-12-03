@@ -11,17 +11,20 @@ class DummyBackend(backend.AnnifLearningBackend):
     uri = 'http://example.org/dummy'
     label = 'dummy'
 
-    def initialize(self, params=None):
+    def default_params(self):
+        return backend.AnnifBackend.DEFAULT_PARAMS
+
+    def initialize(self):
         self.initialized = True
 
-    def _suggest(self, text, project, params):
+    def _suggest(self, text, params):
         score = float(params.get('score', 1.0))
         return ListSuggestionResult([SubjectSuggestion(uri=self.uri,
                                                        label=self.label,
                                                        score=score)],
-                                    project.subjects)
+                                    self.project.subjects)
 
-    def _learn(self, corpus, project, params):
+    def _learn(self, corpus, params):
         # in this dummy backend we "learn" by picking up the URI and label
         # of the first subject of the first document in the learning set
         # and using that in subsequent analysis results

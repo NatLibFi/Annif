@@ -8,17 +8,22 @@ from annif.suggestion import ListSuggestionResult
 class ChunkingBackend(metaclass=abc.ABCMeta):
     """Annif backend mixin that implements chunking of input"""
 
+    DEFAULT_PARAMS = {'chunksize': 1}
+
+    def default_params(self):
+        return self.DEFAULT_PARAMS
+
     @abc.abstractmethod
-    def _suggest_chunks(self, chunktexts, project, params):
+    def _suggest_chunks(self, chunktexts, params):
         """Suggest subjects for the chunked text; should be implemented by
         the subclass inheriting this mixin"""
 
         pass  # pragma: no cover
 
-    def _suggest(self, text, project, params):
+    def _suggest(self, text, params):
         self.debug('Suggesting subjects for text "{}..." (len={})'.format(
             text[:20], len(text)))
-        sentences = project.analyzer.tokenize_sentences(text)
+        sentences = self.project.analyzer.tokenize_sentences(text)
         self.debug('Found {} sentences'.format(len(sentences)))
         chunksize = int(params['chunksize'])
         chunktexts = []
@@ -27,5 +32,5 @@ class ChunkingBackend(metaclass=abc.ABCMeta):
         self.debug('Split sentences into {} chunks'.format(len(chunktexts)))
         if len(chunktexts) == 0:  # no input, empty result
             return ListSuggestionResult(
-                hits=[], subject_index=project.subjects)
-        return self._suggest_chunks(chunktexts, project, params)
+                hits=[], subject_index=self.project.subjects)
+        return self._suggest_chunks(chunktexts, params)

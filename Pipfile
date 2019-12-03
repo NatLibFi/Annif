@@ -13,19 +13,21 @@ swagger-tester = "*"
 bumpversion = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"
+responses = "*"
 
 [packages]
-"e1839a8" = {editable = true, path = "."}
+"e1839a8" = {path = ".", editable = true}
 connexion = {extras = ["swagger-ui"]}
 swagger-ui-bundle = "*"
 flask-cors = "*"
 click-log = "*"
-joblib = "*"
+joblib = "==0.13.*"
 nltk = "*"
-gensim = "*"
-sklearn = "*"
+gensim = "==3.8.*"
+scikit-learn = "==0.21.*"
 rdflib = "*"
-gunicorn = "*"
+gunicorn = "!=20.0.0"
 sphinxcontrib-apidoc = "*"
+numpy = "==1.17.*"
 
 [requires]

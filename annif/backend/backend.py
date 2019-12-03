@@ -10,15 +10,27 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     name = None
     needs_subject_index = False
-    needs_subject_vectorizer = False
 
-    def __init__(self, backend_id, config_params, datadir):
+    DEFAULT_PARAMS = {'limit': 100}
+
+    def __init__(self, backend_id, config_params, project):
         """Initialize backend with specific parameters. The
         parameters are a dict. Keys and values depend on the specific
         backend type."""
         self.backend_id = backend_id
         self.config_params = config_params
-        self.datadir = datadir
+        self.project = project
+        self.datadir = project.datadir
+
+    def default_params(self):
+        return self.DEFAULT_PARAMS
+
+    @property
+    def params(self):
+        params = {}
+        params.update(self.default_params())
+        params.update(self.config_params)
+        return params
 
     def _get_backend_params(self, params):
         beparams = dict(self.config_params)
@@ -26,15 +38,15 @@ class AnnifBackend(metaclass=abc.ABCMeta):
             beparams.update(params)
         return beparams
 
-    def _train(self, corpus, project, params):
+    def _train(self, corpus, params):
         """This method should be implemented by backends. It implements
         the train functionality, with pre-processed parameters."""
         pass
 
-    def train(self, corpus, project, params=None):
+    def train(self, corpus, params=None):
         """Train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)
-        return self._train(corpus, project, params=beparams)
+        return self._train(corpus, params=beparams)
 
     def initialize(self, params=None):
         """This method can be overridden by backends. It should cause the
@@ -42,17 +54,19 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def _suggest(self, text, project, params):
+    def _suggest(self, text, params):
         """This method should implemented by backends. It implements
         the suggest functionality, with pre-processed parameters."""
         pass  # pragma: no cover
 
-    def suggest(self, text, project, params=None):
+    def suggest(self, text, params=None):
         """Suggest subjects for the input text and return a list of subjects
         represented as a list of SubjectSuggestion objects."""
-        beparams = self._get_backend_params(params)
-        self.initialize(beparams)
-        return self._suggest(text, project, params=beparams)
+        self.initialize()
+        beparams = dict(self.params)
+        if params:
+            beparams.update(params)
+        return self._suggest(text, params=beparams)
 
     def debug(self, message):
         """Log a debug message from this backend"""
@@ -71,12 +85,12 @@ class AnnifLearningBackend(AnnifBackend):
     """Base class for Annif backends that can perform online learning"""
 
     @abc.abstractmethod
-    def _learn(self, corpus, project, params):
+    def _learn(self, corpus, params):
         """This method should implemented by backends. It implements the learn
         functionality, with pre-processed parameters."""
         pass  # pragma: no cover
 
-    def learn(self, corpus, project, params=None):
+    def learn(self, corpus, params=None):
         """Further train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)
-        return self._learn(corpus, project, params=beparams)
+        return self._learn(corpus, params=beparams)

@@ -37,7 +37,14 @@ class AnnifVocabulary(DatadirMixin):
                     "subject file {} not found".format(path))
         return self._subjects
 
-    def load_vocabulary(self, subject_corpus):
-        """load subjects from a subject corpus"""
+    def load_vocabulary(self, subject_corpus, language):
+        """load subjects from a subject corpus and save them into a
+        SKOS/Turtle file for later use"""
 
         self._create_subject_index(subject_corpus)
+        subject_corpus.save_skos(os.path.join(self.datadir, 'subjects.ttl'),
+                                 language)
+
+    def as_skos(self):
+        """return the vocabulary as a file object, in SKOS/Turtle syntax"""
+        return open(os.path.join(self.datadir, 'subjects.ttl'), 'rb')

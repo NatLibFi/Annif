@@ -12,24 +12,32 @@ addons:
     - libboost-program-options-dev
     - libboost-python-dev
     - zlib1g-dev
+    - cmake
+    - libboost-system-dev
+    - libboost-thread-dev
+    - libboost-test-dev
 cache: pip
 before_install:
 - export BOTO_CONFIG=/dev/null
 install:
+- pip install --upgrade pip
 - pip install pipenv
 - pip install --upgrade pytest
 - pipenv install --dev --skip-lock
 - travis_wait 30 python -m nltk.downloader punkt
+# Install the optional neural network dependencies (Keras and TensorFlow)
+# - except for one Python version (3.6) so that we can test also without them
+- if [[ $TRAVIS_PYTHON_VERSION != '3.6' ]]; then pip install .[nn]; fi
 # For Python 3.5, also install optional dependencies that were not specified in Pipfile
 # For other Python versions we will only run the tests that depend on pure Python modules
 # - fastText dependencies
-- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install fasttextmirror; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install fasttextmirror==0.8.22; fi
 # - voikko dependencies
 - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install voikko; fi
 # - vw dependencies
-- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then sudo ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.a /usr/lib/x86_64-linux-gnu/libboost_python.a; fi
-- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then sudo ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.so /usr/lib/x86_64-linux-gnu/libboost_python.so; fi
-- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install vowpalwabbit; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then sudo ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.a /usr/lib/x86_64-linux-gnu/libboost_python3.a; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then sudo ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.so /usr/lib/x86_64-linux-gnu/libboost_python3.so; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install vowpalwabbit==8.7.*; fi
 script:
 - pytest --cov=./
 after_success:

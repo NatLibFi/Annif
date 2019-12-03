@@ -1,33 +1,66 @@
 kind: pipeline
 name: default
+
+globals:
+  - &docker_settings
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+    registry: quay.io
+    repo: quay.io/natlibfi/annif
+
 steps:
 
-  - name: docker
+  - name: dry_run_build
     image: plugins/docker
     settings:
-      dockerfile: Dockerfile
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      registry: quay.io
-      repo: quay.io/natlibfi/annif
+      <<: *docker_settings
+      tags: [dry-run-built]
+      cache_from:
+        - quay.io/natlibfi/annif:builder
+        - quay.io/natlibfi/annif:latest
+      dry_run: true
+    when:
+      event:
+      - push
+      - pull_request
+
+  - name: build_and_publish_builder
+    image: plugins/docker
+    settings:
+      <<: *docker_settings
+      tags: [builder]
+      cache_from:
+        - quay.io/natlibfi/annif:builder
+      target: builder
+    when:
+      branch:
+      - master
+      event:
+      - push
+
+  - name: build_and_publish
+    image: plugins/docker
+    settings:
+      <<: *docker_settings
       tags: [latest]
+      cache_from:
+        - quay.io/natlibfi/annif:builder
+        - quay.io/natlibfi/annif:latest
+    when:
+      branch:
+      - master
+      event:
+      - push
 
-  - name: docker-dev
+  - name: build_publish_and_tag_with_release_version
     image: plugins/docker
     settings:
-      dockerfile: Dockerfile-dev
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      registry: quay.io
-      repo: quay.io/natlibfi/annif
-      tags: [dev]
-
-trigger:
-  branch:
-  - master
-  event:
-  - push
+      <<: *docker_settings
+      auto_tag: true
+    when:
+      branch:
+      - master
+      event:
+      - tag

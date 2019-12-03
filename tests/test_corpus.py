@@ -83,6 +83,24 @@ def test_docdir_tsv(tmpdir):
     assert files[2][1] is None
 
 
+def test_docdir_tsv_bom(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1'.encode('utf-8-sig'))
+    tmpdir.join('doc1.tsv').write(
+        '<http://example.org/key1>\tkey1'.encode('utf-8-sig'))
+    tmpdir.join('doc2.txt').write('doc2'.encode('utf-8-sig'))
+    tmpdir.join('doc2.tsv').write(
+        '<http://example.org/key2>\tkey2'.encode('utf-8-sig'))
+
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir))
+    docs = list(docdir.documents)
+    assert docs[0].text == 'doc1'
+    assert list(docs[0].uris)[0] == 'http://example.org/key1'
+    assert list(docs[0].labels)[0] == 'key1'
+    assert docs[1].text == 'doc2'
+    assert list(docs[1].uris)[0] == 'http://example.org/key2'
+    assert list(docs[1].labels)[0] == 'key2'
+
+
 def test_docdir_key_require_subjects(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('<http://example.org/key1>\tkey1')
@@ -115,11 +133,11 @@ def test_docdir_tsv_require_subjects(tmpdir):
     assert files[1][1] == str(tmpdir.join('doc2.tsv'))
 
 
-def test_docdir_as_doccorpus(tmpdir):
+def test_docdir_tsv_as_doccorpus(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.tsv').write('<http://example.org/subj1>\tsubj1')
     tmpdir.join('doc2.txt').write('doc2')
-    tmpdir.join('doc2.tsv').write('<http://example.org/subj2>\tsubj1')
+    tmpdir.join('doc2.tsv').write('<http://example.org/subj2>\tsubj2')
     tmpdir.join('doc3.txt').write('doc3')
 
     docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=True)
@@ -131,44 +149,21 @@ def test_docdir_as_doccorpus(tmpdir):
     assert docs[1].uris == {'http://example.org/subj2'}
 
 
-def test_subjdir(tmpdir):
-    tmpdir.join('subj1.txt').write("""http://example.org/subj1 subject one
-        first subject
-        this is the first thing we know about""")
-    tmpdir.join('subj2.txt').write("""http://example.org/subj2 subject two
-        second subject
-        this is the second thing we know about""")
-    tmpdir.join('subj3.txt').write("""http://example.org/subj3 subject three
-        third subject
-        this is the third thing we know about""")
+def test_docdir_key_as_doccorpus(tmpdir, subject_index):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('arkeologit')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('kalliotaide')
+    tmpdir.join('doc3.txt').write('doc3')
 
-    subjdir = annif.corpus.SubjectDirectory(str(tmpdir))
-    subjects = sorted(list(subjdir.subjects), key=lambda subj: subj.uri)
-    assert len(subjects) == 3
-    assert subjects[0].uri == 'http://example.org/subj1'
-    assert subjects[0].label == 'subject one'
-    assert 'first' in subjects[0].text
-    assert subjects[1].uri == 'http://example.org/subj2'
-    assert subjects[1].label == 'subject two'
-    assert 'second' in subjects[1].text
-    assert subjects[2].uri == 'http://example.org/subj3'
-    assert subjects[2].label == 'subject three'
-    assert 'third' in subjects[2].text
-
-
-def test_subjdir_as_doccorpus(tmpdir):
-    tmpdir.join('subj1.txt').write("""http://example.org/subj1 subject one
-        first subject
-        this is the first thing we know about""")
-    tmpdir.join('subj2.txt').write("""http://example.org/subj2 subject two
-        second subject
-        this is the second thing we know about""")
-    tmpdir.join('subj3.txt').write("""http://example.org/subj3 subject three
-        third subject
-        this is the third thing we know about""")
-    subjdir = annif.corpus.SubjectDirectory(str(tmpdir))
-    documents = list(subjdir.documents)
-    assert len(documents) == 6
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=True)
+    docdir.set_subject_index(subject_index)
+    docs = list(docdir.documents)
+    assert len(docs) == 2
+    assert docs[0].text == 'doc1'
+    assert docs[0].uris == {'http://www.yso.fi/onto/yso/p10849'}
+    assert docs[1].text == 'doc2'
+    assert docs[1].uris == {'http://www.yso.fi/onto/yso/p13027'}
 
 
 def test_subject_by_uri(subject_index):
@@ -201,6 +196,35 @@ def test_docfile_plain(tmpdir):
     assert len(list(docs.documents)) == 3
 
 
+def test_docfile_bom(tmpdir):
+    docfile = tmpdir.join('documents_bom.tsv')
+    data = """Läntinen\t<http://www.yso.fi/onto/yso/p2557>
+        Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
+        Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>"""
+    docfile.write(data.encode('utf-8-sig'))
+
+    docs = annif.corpus.DocumentFile(str(docfile))
+    firstdoc = next(docs.documents)
+    assert firstdoc.text.startswith("Läntinen")
+
+
+def test_docfile_plain_invalid_lines(tmpdir, caplog):
+    logger = annif.logger
+    logger.propagate = True
+    docfile = tmpdir.join('documents_invalid.tsv')
+    docfile.write("""Läntinen\t<http://www.yso.fi/onto/yso/p2557>
+
+        Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
+        A line with no tabs
+        Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
+    docs = annif.corpus.DocumentFile(str(docfile))
+    assert len(list(docs.documents)) == 3
+    assert len(caplog.records) == 2
+    expected_msg = 'Skipping invalid line (missing tab):'
+    for record in caplog.records:
+        assert expected_msg in record.message
+
+
 def test_docfile_gzipped(tmpdir):
     docfile = tmpdir.join('documents.tsv.gz')
     with gzip.open(str(docfile), 'wt') as gzf:
@@ -210,3 +234,23 @@ def test_docfile_gzipped(tmpdir):
 
     docs = annif.corpus.DocumentFile(str(docfile))
     assert len(list(docs.documents)) == 3
+
+
+def test_docfile_is_empty(tmpdir):
+    empty_file = tmpdir.ensure('empty.tsv')
+    docs = annif.corpus.DocumentFile(str(empty_file))
+    assert docs.is_empty()
+
+
+def test_combinedcorpus(tmpdir):
+    docfile = tmpdir.join('documents.tsv')
+    docfile.write("""Läntinen\t<http://www.yso.fi/onto/yso/p2557>
+        Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
+        Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
+
+    corpus1 = annif.corpus.DocumentFile(str(docfile))
+    corpus2 = annif.corpus.DocumentFile(str(docfile))
+
+    combined = annif.corpus.CombinedCorpus([corpus1, corpus2])
+
+    assert len(list(combined.documents)) == 6

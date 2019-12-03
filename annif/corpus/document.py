@@ -5,12 +5,13 @@ import os.path
 import re
 import gzip
 import annif.util
-from .types import Document, DocumentCorpus
-from .convert import DocumentToSubjectCorpusMixin
+from .types import DocumentCorpus
 from .subject import SubjectSet
 
+logger = annif.logger
 
-class DocumentDirectory(DocumentCorpus, DocumentToSubjectCorpusMixin):
+
+class DocumentDirectory(DocumentCorpus):
     """A directory of files as a full text document corpus"""
 
     def __init__(self, path, require_subjects=False):
@@ -38,15 +39,16 @@ class DocumentDirectory(DocumentCorpus, DocumentToSubjectCorpusMixin):
     def documents(self):
         for docfilename, keyfilename in self:
             with open(docfilename, errors='replace',
-                      encoding='utf-8') as docfile:
+                      encoding='utf-8-sig') as docfile:
                 text = docfile.read()
-            with open(keyfilename, encoding='utf-8') as keyfile:
+            with open(keyfilename, encoding='utf-8-sig') as keyfile:
                 subjects = SubjectSet.from_string(keyfile.read())
-            yield Document(text=text, uris=subjects.subject_uris,
-                           labels=subjects.subject_labels)
+            yield self._create_document(text=text,
+                                        uris=subjects.subject_uris,
+                                        labels=subjects.subject_labels)
 
 
-class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
+class DocumentFile(DocumentCorpus):
     """A TSV file as a corpus of documents with subjects"""
 
     def __init__(self, path):
@@ -55,21 +57,27 @@ class DocumentFile(DocumentCorpus, DocumentToSubjectCorpusMixin):
     @property
     def documents(self):
         if self.path.endswith('.gz'):
-            def opener(path):
-                """open a gzip compressed file in text mode"""
-                return gzip.open(path, mode='rt')
+            opener = gzip.open
         else:
             opener = open
-
-        with opener(self.path) as tsvfile:
+        with opener(self.path, mode='rt', encoding='utf-8-sig') as tsvfile:
             for line in tsvfile:
-                text, uris = line.split('\t', maxsplit=1)
-                subjects = [annif.util.cleanup_uri(uri)
-                            for uri in uris.split()]
-                yield Document(text=text, uris=subjects, labels=[])
+                yield from self._parse_tsv_line(line)
+
+    def _parse_tsv_line(self, line):
+        if '\t' in line:
+            text, uris = line.split('\t', maxsplit=1)
+            subjects = [annif.util.cleanup_uri(uri)
+                        for uri in uris.split()]
+            yield self._create_document(text=text,
+                                        uris=subjects,
+                                        labels=[])
+        else:
+            logger.warning('Skipping invalid line (missing tab): "%s"',
+                           line.rstrip())
 
 
-class DocumentList(DocumentCorpus, DocumentToSubjectCorpusMixin):
+class DocumentList(DocumentCorpus):
     """A document corpus based on a list of other iterable of Document
     objects"""
 

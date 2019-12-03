@@ -47,11 +47,14 @@ def open_documents(paths):
             return annif.corpus.DocumentDirectory(path, require_subjects=True)
         return annif.corpus.DocumentFile(path)
 
-    if len(paths) > 1:
+    if len(paths) == 0:
+        logger.warning('Reading empty file')
+        docs = open_doc_path(os.path.devnull)
+    elif len(paths) == 1:
+        docs = open_doc_path(paths[0])
+    else:
         corpora = [open_doc_path(path) for path in paths]
         docs = annif.corpus.CombinedCorpus(corpora)
-    else:
-        docs = open_doc_path(paths[0])
     return docs
 
 
@@ -106,6 +109,7 @@ def common_options(f):
     """Decorator to add common options for all CLI commands"""
     f = click.option(
         '-p', '--projects', help='Set path to projects.cfg',
+        type=click.Path(dir_okay=False, exists=True),
         callback=set_project_config_file_path, expose_value=False,
         is_eager=True)(f)
     f = click_log.simple_verbosity_option(logger)(f)
@@ -152,9 +156,20 @@ def run_show_project(project_id):
     click.echo(template.format('Access:', proj.access.name))
 
 
+@cli.command('clear')
+@click.argument('project_id')
+@common_options
+def run_clear_project(project_id):
+    """
+    Initialize the project to its original, untrained state.
+    """
+    proj = get_project(project_id)
+    proj.remove_model_data()
+
+
 @cli.command('loadvoc')
 @click.argument('project_id')
-@click.argument('subjectfile', type=click.Path(dir_okay=False))
+@click.argument('subjectfile', type=click.Path(exists=True, dir_okay=False))
 @common_options
 def run_loadvoc(project_id, subjectfile):
     """
@@ -167,12 +182,12 @@ def run_loadvoc(project_id, subjectfile):
     else:
         # probably a TSV file
         subjects = annif.corpus.SubjectFileTSV(subjectfile)
-    proj.vocab.load_vocabulary(subjects)
+    proj.vocab.load_vocabulary(subjects, proj.language)
 
 
 @cli.command('train')
 @click.argument('project_id')
-@click.argument('paths', type=click.Path(), nargs=-1)
+@click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @common_option_backend_param
 @common_options
 def run_train(project_id, paths, backend_param):
@@ -187,7 +202,7 @@ def run_train(project_id, paths, backend_param):
 
 @cli.command('learn')
 @click.argument('project_id')
-@click.argument('paths', type=click.Path(), nargs=-1)
+@click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @common_option_backend_param
 @common_options
 def run_learn(project_id, paths, backend_param):
@@ -221,7 +236,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
 
 @cli.command('index')
 @click.argument('project_id')
-@click.argument('directory', type=click.Path(file_okay=False))
+@click.argument('directory', type=click.Path(exists=True, file_okay=False))
 @click.option(
     '--suffix',
     default='.annif',
@@ -244,7 +259,7 @@ def run_index(project_id, directory, suffix, force,
 
     for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
             directory, require_subjects=False):
-        with open(docfilename, encoding='utf-8') as docfile:
+        with open(docfilename, encoding='utf-8-sig') as docfile:
             text = docfile.read()
         subjectfilename = re.sub(r'\.txt$', suffix, docfilename)
         if os.path.exists(subjectfilename) and not force:
@@ -261,7 +276,7 @@ def run_index(project_id, directory, suffix, force,
 
 @cli.command('eval')
 @click.argument('project_id')
-@click.argument('paths', type=click.Path(), nargs=-1)
+@click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
 @common_option_backend_param
@@ -294,7 +309,9 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
 
 @cli.command('optimize')
 @click.argument('project_id')
-@click.argument('paths', type=click.Path(), nargs=-1)
+@click.argument('paths', type=click.Path(exists=True), nargs=-1)
+@click.option('--backend-param', '-b', multiple=True,
+              help='Backend parameters to override')
 @common_option_backend_param
 @common_options
 def run_optimize(project_id, paths, backend_param):

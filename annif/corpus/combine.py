@@ -1,20 +1,15 @@
 """Class for combining multiple corpora so they behave like a single corpus"""
 
 import itertools
-from .types import DocumentCorpus, SubjectCorpus
+from .types import DocumentCorpus
 
 
-class CombinedCorpus(SubjectCorpus, DocumentCorpus):
+class CombinedCorpus(DocumentCorpus):
     """Class for combining multiple corpora so they behave like a single
     corpus"""
 
     def __init__(self, corpora):
         self._corpora = corpora
-
-    @property
-    def subjects(self):
-        return itertools.chain.from_iterable(
-            [corpus.subjects for corpus in self._corpora])
 
     @property
     def documents(self):
