@@ -62,6 +62,13 @@ class OmikujiBackend(backend.AnnifBackend):
         self._initialize_vectorizer()
         self._initialize_model()
 
+    def _uris_to_subj_ids(self, uris):
+        subject_ids = [self.project.subjects.by_uri(uri)
+                       for uri in uris]
+        return [str(subj_id)
+                for subj_id in subject_ids
+                if subj_id is not None]
+
     def _create_train_file(self, veccorpus, corpus):
         self.info('creating train file')
         path = os.path.join(self.datadir, self.TRAIN_FILE)
@@ -74,16 +81,12 @@ class OmikujiBackend(backend.AnnifBackend):
                   file=trainfile)
             n_samples = 0
             for doc, vector in zip(corpus.documents, veccorpus):
-                subject_ids = [self.project.subjects.by_uri(uri)
-                               for uri in doc.uris]
-                subject_id_str = [str(subj_id)
-                                  for subj_id in subject_ids
-                                  if subj_id is not None]
+                subject_ids = self._uris_to_subj_ids(doc.uris)
                 feature_values = ['{}:{}'.format(col, vector[row, col])
                                   for row, col in zip(*vector.nonzero())]
-                if not subject_id_str or not feature_values:
+                if not subject_ids or not feature_values:
                     continue
-                print(','.join(subject_id_str),
+                print(','.join(subject_ids),
                       ' '.join(feature_values),
                       file=trainfile)
                 n_samples += 1
