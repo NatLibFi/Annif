@@ -1,4 +1,4 @@
-"""Unit tests for the fastText backend in Annif"""
+"""Unit tests for the vw_multi backend in Annif"""
 
 import pytest
 import annif.backend
