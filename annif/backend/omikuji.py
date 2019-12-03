@@ -50,7 +50,7 @@ class OmikujiBackend(backend.AnnifBackend):
         self._initialize_vectorizer()
         self._initialize_model()
 
-    def _create_train_file(self, veccorpus, corpus, project):
+    def _create_train_file(self, veccorpus, corpus):
         self.info('creating train file')
         path = os.path.join(self.datadir, self.TRAIN_FILE)
         with open(path, 'w', encoding='utf-8') as trainfile:
@@ -58,11 +58,11 @@ class OmikujiBackend(backend.AnnifBackend):
             # We don't yet know the number of samples, as some may be skipped
             print('00000000',
                   len(self._vectorizer.vocabulary_),
-                  len(project.subjects),
+                  len(self.project.subjects),
                   file=trainfile)
             n_samples = 0
             for doc, vector in zip(corpus.documents, veccorpus):
-                subject_ids = [project.subjects.by_uri(uri)
+                subject_ids = [self.project.subjects.by_uri(uri)
                                for uri in doc.uris]
                 subject_id_str = [str(subj_id)
                                   for subj_id in subject_ids
@@ -94,14 +94,14 @@ class OmikujiBackend(backend.AnnifBackend):
             shutil.rmtree(model_path)
         self._model.save(os.path.join(self.datadir, self.MODEL_FILE))
 
-    def train(self, corpus, project):
+    def train(self, corpus):
         if corpus.is_empty():
             raise NotSupportedException(
                 'Cannot train omikuji project with no documents')
         self.info('creating vectorizer')
         self._vectorizer = TfidfVectorizer(
-#            min_df=5,
-            tokenizer=project.analyzer.tokenize_words)
+            #            min_df=5,
+            tokenizer=self.project.analyzer.tokenize_words)
         veccorpus = self._vectorizer.fit_transform(
             (doc.text for doc in corpus.documents))
         annif.util.atomic_save(
@@ -109,10 +109,10 @@ class OmikujiBackend(backend.AnnifBackend):
             self.datadir,
             self.VECTORIZER_FILE,
             method=joblib.dump)
-        self._create_train_file(veccorpus, corpus, project)
+        self._create_train_file(veccorpus, corpus)
         self._create_model()
 
-    def _suggest(self, text, project, params):
+    def _suggest(self, text, params):
         self.debug('Suggesting subjects for text "{}..." (len={})'.format(
             text[:20], len(text)))
         vector = self._vectorizer.transform([text])
@@ -120,9 +120,9 @@ class OmikujiBackend(backend.AnnifBackend):
                           for row, col in zip(*vector.nonzero())]
         results = []
         for subj_id, score in self._model.predict(feature_values):
-            subject = project.subjects[subj_id]
+            subject = self.project.subjects[subj_id]
             results.append(SubjectSuggestion(
                 uri=subject[0],
                 label=subject[1],
                 score=score))
-        return ListSuggestionResult(results, project.subjects)
+        return ListSuggestionResult(results, self.project.subjects)
