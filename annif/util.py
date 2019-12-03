@@ -62,3 +62,11 @@ def parse_sources(sourcedef):
             weight = 1.0
         sources.append((src_id, weight))
     return sources
+
+
+def boolean(val):
+    """Convert the given value to a boolean True/False value, if it isn't already.
+    True values are '1', 'yes', 'true', and 'on' (case insensitive), everything
+    else is False."""
+
+    return str(val).lower() in ('1', 'yes', 'true', 'on')

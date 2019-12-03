@@ -23,8 +23,13 @@ class OmikujiBackend(backend.AnnifBackend):
     VECTORIZER_FILE = 'vectorizer'
     TRAIN_FILE = 'omikuji-train.txt'
     MODEL_FILE = 'omikuji-model'
-    
-    DEFAULT_PARAMS = {'min_df': 1}
+
+    DEFAULT_PARAMS = {
+        'min_df': 1,
+        'cluster_balanced': True,
+        'cluster_k': 2,
+        'max_depth': 20,
+    }
 
     def default_params(self):
         params = backend.AnnifBackend.DEFAULT_PARAMS.copy()
@@ -91,10 +96,10 @@ class OmikujiBackend(backend.AnnifBackend):
         model_path = os.path.join(self.datadir, self.MODEL_FILE)
         hyper_param = omikuji.Model.default_hyper_param()
 
-        # Bonsai hyperparameters
-        hyper_param.cluster_balanced = False
-        hyper_param.cluster_k = 100
-        hyper_param.max_depth = 3
+        hyper_param.cluster_balanced = annif.util.boolean(
+            self.params['cluster_balanced'])
+        hyper_param.cluster_k = int(self.params['cluster_k'])
+        hyper_param.max_depth = int(self.params['max_depth'])
 
         self._model = omikuji.Model.train_on_data(train_path, hyper_param)
         if os.path.exists(model_path):
