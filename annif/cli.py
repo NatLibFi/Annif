@@ -16,7 +16,7 @@ import annif.eval
 import annif.project
 from annif.project import Access
 from annif.suggestion import SuggestionFilter
-from annif.exception import AnnifException, NotSupportedException
+from annif.exception import NotSupportedException
 
 logger = annif.logger
 click_log.basic_config(logger)
@@ -82,7 +82,7 @@ def validate_backend_params(backend, beparam, project):
     if 'algorithm' in beparam:
         raise NotSupportedException('Algorithm overriding not supported.')
     if backend != project.config['backend']:
-        raise AnnifException(
+        raise NotSupportedException(
             'The backend {} in CLI option "-b {}" not matching the project'
             ' backend {}.'
             .format(backend, beparam, project.config['backend']))
