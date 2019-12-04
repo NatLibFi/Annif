@@ -39,9 +39,9 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         return beparams
 
     def _train(self, corpus, params):
-        """This method should be implemented by backends. It implements
+        """This method can be overridden by backends. It implements
         the train functionality, with pre-processed parameters."""
-        pass
+        pass  # default is to do nothing, subclasses may override
 
     def train(self, corpus, params=None):
         """Train the model on the given document or subject corpus."""
