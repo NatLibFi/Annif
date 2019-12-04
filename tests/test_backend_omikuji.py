@@ -49,6 +49,10 @@ def test_omikuji_train(datadir, document_corpus, project):
     assert datadir.join('omikuji-model').exists()
     assert datadir.join('omikuji-model').size() > 0
 
+    # try to try again, verifying that training works even when a model file
+    # from the previous train run exists
+    omikuji.train(document_corpus)
+
 
 def test_omikuji_train_nodocuments(datadir, project, empty_corpus):
     omikuji_type = annif.backend.get_backend('omikuji')
