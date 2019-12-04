@@ -26,7 +26,7 @@ def test_omikuji_default_params(project):
         assert param in actual_params and actual_params[param] == val
 
 
-def test_omikuji_suggest_no_model(project):
+def test_omikuji_suggest_no_vectorizer(project):
     omikuji_type = annif.backend.get_backend('omikuji')
     omikuji = omikuji_type(
         backend_id='omikuji',
@@ -84,3 +84,15 @@ def test_omikuji_suggest(project):
     assert 'http://www.yso.fi/onto/yso/p1265' in [
         result.uri for result in results]
     assert 'arkeologia' in [result.label for result in results]
+
+
+def test_omikuji_suggest_no_model(datadir, project):
+    omikuji_type = annif.backend.get_backend('omikuji')
+    omikuji = omikuji_type(
+        backend_id='omikuji',
+        config_params={},
+        project=project)
+
+    datadir.join('omikuji-model').remove()
+    with pytest.raises(NotInitializedException):
+        results = omikuji.suggest("example text")
