@@ -44,14 +44,15 @@ def test_omikuji_train(datadir, document_corpus, project):
         config_params={},
         project=project)
 
+    # verify that training works even if there is a preexisting model directory
+    # - to simulate this we will create an empty directory instead
+    datadir.join('omikuji-model').ensure(dir=True)
+    assert not datadir.join('omikuji-model').listdir()  # empty dir
+
     omikuji.train(document_corpus)
     assert omikuji._model is not None
     assert datadir.join('omikuji-model').exists()
-    assert datadir.join('omikuji-model').size() > 0
-
-    # try to try again, verifying that training works even when a model file
-    # from the previous train run exists
-    omikuji.train(document_corpus)
+    assert datadir.join('omikuji-model').listdir()  # non-empty dir
 
 
 def test_omikuji_train_nodocuments(datadir, project, empty_corpus):
