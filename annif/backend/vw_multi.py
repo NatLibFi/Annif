@@ -46,7 +46,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
 
     DEFAULT_PARAMS = {'algorithm': 'oaa'}
 
-    def initialize(self):
+    def initialize(self, params=None):
         if self._model is None:
             path = os.path.join(self.datadir, self.MODEL_FILE)
             if not os.path.exists(path):
@@ -54,7 +54,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
                     'model {} not found'.format(path),
                     backend_id=self.backend_id)
             self.debug('loading VW model from {}'.format(path))
-            params = self._create_params({'i': path, 'quiet': True})
+            params = self._create_params({'i': path, 'quiet': True, **params})
             if 'passes' in params:
                 # don't confuse the model with passes
                 del params['passes']

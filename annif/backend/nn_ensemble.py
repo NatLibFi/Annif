@@ -43,7 +43,7 @@ class NNEnsembleBackend(
         params.update(self.DEFAULT_PARAMS)
         return params
 
-    def initialize(self):
+    def initialize(self, params=None):
         if self._model is not None:
             return  # already initialized
         model_filename = os.path.join(self.datadir, self.MODEL_FILE)
