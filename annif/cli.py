@@ -65,9 +65,6 @@ def parse_backend_params(backend_param, project):
     for beparam in backend_param:
         backend, param = beparam.split('.', 1)
         key, val = param.split('=', 1)
-        logger.debug(
-            'CLI option overriding parameter for backend {}: {}'
-            .format(backend, param))
         validate_backend_params(backend, beparam, project)
         backend_params[backend][key] = val
     return backend_params
