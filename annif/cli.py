@@ -104,17 +104,15 @@ def common_options(f):
         type=click.Path(dir_okay=False, exists=True),
         callback=set_project_config_file_path, expose_value=False,
         is_eager=True)(f)
-    f = click_log.simple_verbosity_option(logger)(f)
-    return f
+    return click_log.simple_verbosity_option(logger)(f)
 
 
 def backend_param_option(f):
     """Decorator to add an option for CLI commands to override BE parameters"""
-    f = click.option(
+    return click.option(
         '--backend-param', '-b', multiple=True,
         help='Override backend parameter of the config file. ' +
         'Syntax: "-b <backend>.<parameter>=<value>".')(f)
-    return f
 
 
 @cli.command('list-projects')
