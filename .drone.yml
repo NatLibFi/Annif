@@ -23,7 +23,6 @@ steps:
       dry_run: true
     when:
       event:
-      - push
       - pull_request
 
   - name: build_and_publish_builder
