@@ -107,7 +107,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
 
     @property
     def inputs(self):
-        inputs = self.config_params.get('inputs', self.DEFAULT_INPUTS)
+        inputs = self.params.get('inputs', self.DEFAULT_INPUTS)
         return inputs.split(',')
 
     @staticmethod

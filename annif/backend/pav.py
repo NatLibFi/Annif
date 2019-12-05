@@ -30,7 +30,7 @@ class PAVBackend(ensemble.EnsembleBackend):
         if self._models is not None:
             return  # already initialized
         self._models = {}
-        sources = annif.util.parse_sources(self.config_params['sources'])
+        sources = annif.util.parse_sources(self.params['sources'])
         for source_project_id, _ in sources:
             model_filename = self.MODEL_FILE_PREFIX + source_project_id
             path = os.path.join(self.datadir, model_filename)
@@ -102,7 +102,7 @@ class PAVBackend(ensemble.EnsembleBackend):
             raise NotSupportedException('training backend {} with no documents'
                                         .format(self.backend_id))
         self.info("creating PAV models")
-        sources = annif.util.parse_sources(self.config_params['sources'])
-        min_docs = int(self.config_params['min-docs'])
+        sources = annif.util.parse_sources(self.params['sources'])
+        min_docs = int(self.params['min-docs'])
         for source_project_id, _ in sources:
             self._create_pav_model(source_project_id, min_docs, corpus)
