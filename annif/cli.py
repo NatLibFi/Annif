@@ -112,8 +112,8 @@ def backend_param_option(f):
     """Decorator to add an option for CLI commands to override BE parameters"""
     f = click.option(
         '--backend-param', '-b', multiple=True,
-        help='Backend parameters to override. Use syntax "-b <backend>' +
-        '.<parameter>=<value>".')(f)
+        help='Override backend parameter of the config file. ' +
+        'Syntax: "-b <backend>.<parameter>=<value>".')(f)
     return f
 
 
