@@ -74,10 +74,9 @@ def parse_backend_params(backend_param, project):
 
 
 def validate_backend_params(backend, beparam, project):
-    # TODO: Allow overriding a parameter of a specific backend of ensemble
-    if 'sources' in project.config:  # Ensemble or PAV backend
+    if 'sources' in project.config:  # Ensemble models
         raise NotSupportedException(
-            'Backend paramater overriding not supported for {} model.'
+            'Backend parameter overriding not supported for {} model.'
             .format(project.config['backend']))
     if 'algorithm' in beparam:
         raise NotSupportedException('Algorithm overriding not supported.')
