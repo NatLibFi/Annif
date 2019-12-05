@@ -91,10 +91,10 @@ class NNEnsembleBackend(
         self._model.summary(print_fn=summary.append)
         self.debug("Created model: \n" + "\n".join(summary))
 
-    def train(self, corpus, params):
+    def _train(self, corpus, params):
         sources = annif.util.parse_sources(self.params['sources'])
         self._create_model(sources)
-        self._learn(corpus, epochs=int(params['epochs']))
+        self._fit(corpus, epochs=int(params['epochs']))
 
     def _corpus_to_vectors(self, corpus):
         # pass corpus through all source projects
@@ -119,7 +119,7 @@ class NNEnsembleBackend(
         true = np.array(true_vectors, dtype=np.float32)
         return (scores, true)
 
-    def _learn(self, corpus, epochs):
+    def _fit(self, corpus, epochs):
         scores, true = self._corpus_to_vectors(corpus)
 
         # fit the model
@@ -131,6 +131,6 @@ class NNEnsembleBackend(
             self.datadir,
             self.MODEL_FILE)
 
-    def learn(self, corpus, params):
+    def _learn(self, corpus, params):
         self.initialize()
-        self._learn(corpus, int(params['learn-epochs']))
+        self._fit(corpus, int(params['learn-epochs']))
