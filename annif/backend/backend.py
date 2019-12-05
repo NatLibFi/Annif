@@ -33,7 +33,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         return params
 
     def _get_backend_params(self, params):
-        beparams = dict(self.config_params)
+        beparams = dict(self.params)
         if params:
             beparams.update(params)
         return beparams
