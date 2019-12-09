@@ -2,6 +2,11 @@
 
 
 import abc
+import os.path
+import joblib
+from sklearn.feature_extraction.text import TfidfVectorizer
+import annif.util
+from annif.exception import NotInitializedException
 from annif.suggestion import ListSuggestionResult
 
 
@@ -34,3 +39,33 @@ class ChunkingBackend(metaclass=abc.ABCMeta):
             return ListSuggestionResult(
                 hits=[], subject_index=self.project.subjects)
         return self._suggest_chunks(chunktexts)
+
+
+class TfidfVectorizerMixin:
+    """Annif backend mixin that implements TfidfVectorizer functionality"""
+
+    VECTORIZER_FILE = 'vectorizer'
+
+    vectorizer = None
+
+    def initialize_vectorizer(self):
+        if self.vectorizer is None:
+            path = os.path.join(self.datadir, self.VECTORIZER_FILE)
+            if os.path.exists(path):
+                self.debug('loading vectorizer from {}'.format(path))
+                self.vectorizer = joblib.load(path)
+            else:
+                raise NotInitializedException(
+                    "vectorizer file '{}' not found".format(path),
+                    backend_id=self.backend_id)
+
+    def create_vectorizer(self, input, params={}):
+        self.info('creating vectorizer')
+        self.vectorizer = TfidfVectorizer(**params)
+        veccorpus = self.vectorizer.fit_transform(input)
+        annif.util.atomic_save(
+            self.vectorizer,
+            self.datadir,
+            self.VECTORIZER_FILE,
+            method=joblib.dump)
+        return veccorpus

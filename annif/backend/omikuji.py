@@ -3,24 +3,21 @@
 import omikuji
 import os.path
 import shutil
-import joblib
-from sklearn.feature_extraction.text import TfidfVectorizer
 import annif.util
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 from annif.exception import NotInitializedException, NotSupportedException
 from . import backend
+from . import mixins
 
 
-class OmikujiBackend(backend.AnnifBackend):
+class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     """Omikuji based backend for Annif"""
     name = "omikuji"
     needs_subject_index = True
 
     # defaults for uninitialized instances
-    _vectorizer = None
     _model = None
 
-    VECTORIZER_FILE = 'vectorizer'
     TRAIN_FILE = 'omikuji-train.txt'
     MODEL_FILE = 'omikuji-model'
 
@@ -36,17 +33,6 @@ class OmikujiBackend(backend.AnnifBackend):
         params.update(self.DEFAULT_PARAMS)
         return params
 
-    def _initialize_vectorizer(self):
-        if self._vectorizer is None:
-            path = os.path.join(self.datadir, self.VECTORIZER_FILE)
-            if os.path.exists(path):
-                self.debug('loading vectorizer from {}'.format(path))
-                self._vectorizer = joblib.load(path)
-            else:
-                raise NotInitializedException(
-                    "vectorizer file '{}' not found".format(path),
-                    backend_id=self.backend_id)
-
     def _initialize_model(self):
         if self._model is None:
             path = os.path.join(self.datadir, self.MODEL_FILE)
@@ -59,7 +45,7 @@ class OmikujiBackend(backend.AnnifBackend):
                     backend_id=self.backend_id)
 
     def initialize(self):
-        self._initialize_vectorizer()
+        self.initialize_vectorizer()
         self._initialize_model()
 
     def _uris_to_subj_ids(self, uris):
@@ -76,7 +62,7 @@ class OmikujiBackend(backend.AnnifBackend):
             # Extreme Classification Repository format header line
             # We don't yet know the number of samples, as some may be skipped
             print('00000000',
-                  len(self._vectorizer.vocabulary_),
+                  len(self.vectorizer.vocabulary_),
                   len(self.project.subjects),
                   file=trainfile)
             n_samples = 0
@@ -113,24 +99,17 @@ class OmikujiBackend(backend.AnnifBackend):
         if corpus.is_empty():
             raise NotSupportedException(
                 'Cannot train omikuji project with no documents')
-        self.info('creating vectorizer')
-        self._vectorizer = TfidfVectorizer(
-            min_df=int(self.params['min_df']),
-            tokenizer=self.project.analyzer.tokenize_words)
-        veccorpus = self._vectorizer.fit_transform(
-            (doc.text for doc in corpus.documents))
-        annif.util.atomic_save(
-            self._vectorizer,
-            self.datadir,
-            self.VECTORIZER_FILE,
-            method=joblib.dump)
+        input = (doc.text for doc in corpus.documents)
+        params = {'min_df': int(self.params['min_df']),
+                  'tokenizer': self.project.analyzer.tokenize_words}
+        veccorpus = self.create_vectorizer(input, params)
         self._create_train_file(veccorpus, corpus)
         self._create_model()
 
     def _suggest(self, text, params):
         self.debug('Suggesting subjects for text "{}..." (len={})'.format(
             text[:20], len(text)))
-        vector = self._vectorizer.transform([text])
+        vector = self.vectorizer.transform([text])
         feature_values = [(col, vector[row, col])
                           for row, col in zip(*vector.nonzero())]
         results = []
