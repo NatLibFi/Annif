@@ -71,7 +71,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                 feature_values = ['{}:{}'.format(col, vector[row, col])
                                   for row, col in zip(*vector.nonzero())]
                 if not subject_ids or not feature_values:
-                    continue
+                    continue  # noqa
                 print(','.join(subject_ids),
                       ' '.join(feature_values),
                       file=trainfile)
