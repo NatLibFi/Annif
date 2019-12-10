@@ -62,13 +62,10 @@ class AnnifProject(DatadirMixin):
     def _initialize_analyzer(self):
         if not self.analyzer_spec:
             return  # not configured, so assume it's not needed
-        try:
-            analyzer = self.analyzer
-            logger.debug("Project '%s': initialized analyzer: %s",
-                         self.project_id,
-                         str(analyzer))
-        except AnnifException as err:
-            logger.warning(err.format_message())
+        analyzer = self.analyzer
+        logger.debug("Project '%s': initialized analyzer: %s",
+                     self.project_id,
+                     str(analyzer))
 
     def _initialize_subjects(self):
         try:
