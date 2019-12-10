@@ -60,6 +60,8 @@ class AnnifProject(DatadirMixin):
                 project_id=self.project_id)
 
     def _initialize_analyzer(self):
+        if not self.analyzer_spec:
+            return  # not configured, so assume it's not needed
         try:
             analyzer = self.analyzer
             logger.debug("Project '%s': initialized analyzer: %s",
