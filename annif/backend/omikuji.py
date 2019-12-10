@@ -44,7 +44,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                     'model {} not found'.format(path),
                     backend_id=self.backend_id)
 
-    def initialize(self):
+    def initialize(self, params=None):
         self.initialize_vectorizer()
         self._initialize_model()
 
@@ -80,31 +80,31 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             trainfile.seek(0)
             print('{:08d}'.format(n_samples), end='', file=trainfile)
 
-    def _create_model(self):
+    def _create_model(self, params):
         train_path = os.path.join(self.datadir, self.TRAIN_FILE)
         model_path = os.path.join(self.datadir, self.MODEL_FILE)
         hyper_param = omikuji.Model.default_hyper_param()
 
         hyper_param.cluster_balanced = annif.util.boolean(
-            self.params['cluster_balanced'])
-        hyper_param.cluster_k = int(self.params['cluster_k'])
-        hyper_param.max_depth = int(self.params['max_depth'])
+            params['cluster_balanced'])
+        hyper_param.cluster_k = int(params['cluster_k'])
+        hyper_param.max_depth = int(params['max_depth'])
 
         self._model = omikuji.Model.train_on_data(train_path, hyper_param)
         if os.path.exists(model_path):
             shutil.rmtree(model_path)
         self._model.save(os.path.join(self.datadir, self.MODEL_FILE))
 
-    def train(self, corpus):
+    def _train(self, corpus, params):
         if corpus.is_empty():
             raise NotSupportedException(
                 'Cannot train omikuji project with no documents')
         input = (doc.text for doc in corpus.documents)
-        params = {'min_df': int(self.params['min_df']),
-                  'tokenizer': self.project.analyzer.tokenize_words}
-        veccorpus = self.create_vectorizer(input, params)
+        vecparams = {'min_df': int(params['min_df']),
+                     'tokenizer': self.project.analyzer.tokenize_words}
+        veccorpus = self.create_vectorizer(input, vecparams)
         self._create_train_file(veccorpus, corpus)
-        self._create_model()
+        self._create_model(params)
 
     def _suggest(self, text, params):
         self.debug('Suggesting subjects for text "{}..." (len={})'.format(
@@ -113,7 +113,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         feature_values = [(col, vector[row, col])
                           for row, col in zip(*vector.nonzero())]
         results = []
-        limit = int(self.params['limit'])
+        limit = int(params['limit'])
         for subj_id, score in self._model.predict(feature_values, top_k=limit):
             subject = self.project.subjects[subj_id]
             results.append(SubjectSuggestion(
