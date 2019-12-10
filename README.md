@@ -90,6 +90,7 @@ pytest-watch by running `ptw`.
 Many resources are available:
 
  * [Usage documentation in the wiki](https://github.com/NatLibFi/Annif/wiki)
+ * [Annif tutorial](https://github.com/NatLibFi/Annif-tutorial) for learning to use Annif
  * [annif-users](https://groups.google.com/forum/#!forum/annif-users) discussion forum
  * [Internal API documentation](https://readthedocs.org/projects/annif/) on ReadTheDocs
  * [annif.org](http://annif.org) project web site
