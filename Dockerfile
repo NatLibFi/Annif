@@ -40,24 +40,21 @@ COPY --from=builder /usr/local/lib/python3.7 /usr/local/lib/python3.7
 
 ## Dependencies needed at runtime:
 RUN apt-get update \
-	## Voikko:
+	# Voikko dependencies:
 	&& apt-get install -y --no-install-recommends \
 		libvoikko1 \
 		voikko-fi \
-	&& pip install --no-cache-dir \
-		voikko \
-	## Vowpal Wabbit
+	# Vowpal Wabbit dependencies:
 	&& apt-get install -y --no-install-recommends \
 		libboost-program-options1.67.0 \
 		libboost-python1.67.0 \
 		libboost-system1.67.0 \
 	&& pip install --no-cache-dir \
+		voikko \
 		vowpalwabbit==8.7.* \
-	## Neural Network Ensemble
-	&& pip install --no-cache-dir \
 		tensorflow==2.0.* \
 		omikuji==0.1.3 \
-	## Clean up:
+	# Clean up:
 	&& rm -rf /var/lib/apt/lists/* /usr/include/* \
 	&& rm -rf /root/.cache/pip*/*
 
