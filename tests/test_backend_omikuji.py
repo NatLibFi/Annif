@@ -37,6 +37,29 @@ def test_omikuji_suggest_no_vectorizer(project):
         results = omikuji.suggest("example text")
 
 
+def test_omikuji_create_train_file(tmpdir, project, datadir):
+    tmpfile = tmpdir.join('document.tsv')
+    tmpfile.write("nonexistent\thttp://example.com/nonexistent\n" +
+                  "arkeologia\thttp://www.yso.fi/onto/yso/p1265\n" +
+                  "...\thttp://example.com/none")
+    corpus = annif.corpus.DocumentFile(str(tmpfile))
+    omikuji_type = annif.backend.get_backend('omikuji')
+    omikuji = omikuji_type(
+        backend_id='omikuji',
+        config_params={},
+        project=project)
+    input = (doc.text for doc in corpus.documents)
+    veccorpus = omikuji.create_vectorizer(input, {})
+    omikuji._create_train_file(veccorpus, corpus)
+    assert datadir.join('omikuji-train.txt').exists()
+    traindata = datadir.join('omikuji-train.txt').read().splitlines()
+    assert len(traindata) == 2  # header + 1 example
+    examples, features, labels = map(int, traindata[0].split())
+    assert examples == 1
+    assert features == 2
+    assert labels == 125
+
+
 def test_omikuji_train(datadir, document_corpus, project):
     omikuji_type = annif.backend.get_backend('omikuji')
     omikuji = omikuji_type(
