@@ -50,3 +50,9 @@ try:
 except ImportError:
     annif.logger.debug("Keras and TensorFlow not available, not enabling " +
                        "nn_ensemble backend")
+
+try:
+    from . import omikuji
+    register_backend(omikuji.OmikujiBackend)
+except ImportError:
+    annif.logger.debug("Omikuji not available, not enabling omikuji backend")
