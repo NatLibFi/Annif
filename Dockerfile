@@ -56,6 +56,7 @@ RUN apt-get update \
 	## Neural Network Ensemble
 	&& pip install --no-cache-dir \
 		tensorflow==2.0.* \
+		omikuji==0.1.3 \
 	## Clean up:
 	&& rm -rf /var/lib/apt/lists/* /usr/include/* \
 	&& rm -rf /root/.cache/pip*/*
