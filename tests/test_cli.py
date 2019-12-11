@@ -230,7 +230,7 @@ def test_train_fasttext_params():
         os.path.dirname(__file__),
         'corpora',
         'archaeology',
-        'documents_10_lines.tsv')
+        'documents.tsv')
     result = runner.invoke(
         annif.cli.cli,
         ['train', 'fasttext-fi', docfile,
@@ -255,7 +255,7 @@ def test_train_vw_multi_params():
         os.path.dirname(__file__),
         'corpora',
         'archaeology',
-        'documents_10_lines.tsv')
+        'documents.tsv')
     result = runner.invoke(
         annif.cli.cli,
         ['train', 'vw-multi-fi', docfile,
@@ -279,7 +279,7 @@ def test_train_vw_multi_param_algorithm_invalid():
         os.path.dirname(__file__),
         'corpora',
         'archaeology',
-        'documents_10_lines.tsv')
+        'documents.tsv')
     result = runner.invoke(
         annif.cli.cli,
         ['train', 'vw-multi-fi', docfile,
