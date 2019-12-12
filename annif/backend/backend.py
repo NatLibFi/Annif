@@ -89,7 +89,7 @@ class AnnifLearningBackend(AnnifBackend):
         functionality, with pre-processed parameters."""
         pass  # pragma: no cover
 
-    def learn(self, corpus, params=None):
+    def learn(self, corpus, cli_params=None):
         """Further train the model on the given document or subject corpus."""
-        beparams = self._get_backend_params(params)
+        beparams = self._get_backend_params(cli_params)
         return self._learn(corpus, params=beparams)
