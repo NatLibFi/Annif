@@ -45,7 +45,8 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     def train(self, corpus, params=None):
         """Train the model on the given document or subject corpus."""
-        return self._train(corpus, params=self._get_backend_params(params))
+        beparams = self._get_backend_params(params)
+        return self._train(corpus, params=beparams)
 
     def initialize(self, params=None):
         """This method can be overridden by backends. It should cause the
@@ -89,4 +90,5 @@ class AnnifLearningBackend(AnnifBackend):
 
     def learn(self, corpus, params=None):
         """Further train the model on the given document or subject corpus."""
-        return self._learn(corpus, params=self._get_backend_params(params))
+        beparams = self._get_backend_params(params)
+        return self._learn(corpus, params=beparams)
