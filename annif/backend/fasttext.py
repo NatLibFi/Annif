@@ -52,7 +52,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         params.update(self.DEFAULT_PARAMS)
         return params
 
-    def initialize(self, params=None):
+    def initialize(self):
         if self._model is None:
             path = os.path.join(self.datadir, self.MODEL_FILE)
             self.debug('loading fastText model from {}'.format(path))

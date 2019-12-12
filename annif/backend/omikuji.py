@@ -44,7 +44,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                     'model {} not found'.format(path),
                     backend_id=self.backend_id)
 
-    def initialize(self, params=None):
+    def initialize(self):
         self.initialize_vectorizer()
         self._initialize_model()
 

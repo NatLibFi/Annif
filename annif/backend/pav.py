@@ -26,7 +26,7 @@ class PAVBackend(ensemble.EnsembleBackend):
 
     DEFAULT_PARAMS = {'min-docs': 10}
 
-    def initialize(self, params=None):
+    def initialize(self):
         if self._models is not None:
             return  # already initialized
         self._models = {}

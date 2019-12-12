@@ -14,7 +14,7 @@ class DummyBackend(backend.AnnifLearningBackend):
     def default_params(self):
         return backend.AnnifBackend.DEFAULT_PARAMS
 
-    def initialize(self, params=None):
+    def initialize(self):
         self.initialized = True
 
     def _suggest(self, text, params):
