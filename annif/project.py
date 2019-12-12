@@ -168,6 +168,7 @@ class AnnifProject(DatadirMixin):
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
+        corpus.set_subject_index(self.subjects)
         self.backend.train(corpus, params=beparams)
 
     def learn(self, corpus, backend_params=None):
