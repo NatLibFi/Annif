@@ -100,10 +100,7 @@ class AnnifProject(DatadirMixin):
         self.initialized = True
 
     def _suggest_with_backend(self, text, backend_params):
-        if backend_params is None:
-            backend_params = {}
-        beparams = backend_params.get(self.backend.backend_id, {})
-        hits = self.backend.suggest(text, params=beparams)
+        hits = self.backend.suggest(text, params=backend_params)
         logger.debug(
             'Got %d hits from backend %s',
             len(hits), self.backend.backend_id)
@@ -165,16 +162,11 @@ class AnnifProject(DatadirMixin):
 
     def train(self, corpus, backend_params=None):
         """train the project using documents from a metadata source"""
-        if backend_params is None:
-            backend_params = {}
-        beparams = backend_params.get(self.backend.backend_id, {})
         corpus.set_subject_index(self.subjects)
-        self.backend.train(corpus, params=beparams)
+        self.backend.train(corpus, params=backend_params)
 
     def learn(self, corpus, backend_params=None):
         """further train the project using documents from a metadata source"""
-        if backend_params is None:
-            backend_params = {}
         corpus.set_subject_index(self.subjects)
         if isinstance(
                 self.backend,

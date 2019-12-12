@@ -34,7 +34,8 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     def _get_backend_params(self, params):
         beparams = dict(self.params)
-        if params:
+        if params is not None:
+            params = params.get(self.backend_id, {})
             beparams.update(params)
         return beparams
 
