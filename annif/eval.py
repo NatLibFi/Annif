@@ -6,6 +6,20 @@ import warnings
 import numpy as np
 from sklearn.metrics import precision_score, recall_score, f1_score
 from sklearn.metrics import label_ranking_average_precision_score
+from annif.exception import NotSupportedException
+
+
+def filter_pred_top_k(preds, limit):
+    """filter a 2D prediction vector, retaining only the top K suggestions
+    for each individual prediction; the rest will be set to zeros"""
+
+    masks = []
+    for pred in preds:
+        mask = np.zeros_like(pred, dtype=np.bool)
+        top_k = np.argsort(pred)[::-1][:limit]
+        mask[top_k] = True
+        masks.append(mask)
+    return preds * np.array(masks)
 
 
 def true_positives(y_true, y_pred):
@@ -108,6 +122,8 @@ class EvaluationBatch:
                     y_true, y_pred_binary, average='micro')
                 results['F1 score (microavg)'] = f1_score(
                     y_true, y_pred_binary, average='micro')
+            results['F1@5'] = f1_score(
+                y_true, filter_pred_top_k(y_pred, 5) > 0.0, average='samples')
             results['NDCG'] = ndcg_score(y_true, y_pred)
             results['NDCG@5'] = ndcg_score(y_true, y_pred, limit=5)
             results['NDCG@10'] = ndcg_score(y_true, y_pred, limit=10)
@@ -133,6 +149,9 @@ class EvaluationBatch:
         """evaluate a set of selected subjects against a gold standard using
         different metrics. The set of metrics can be either 'all' or
         'simple'."""
+
+        if not self._samples:
+            raise NotSupportedException("cannot evaluate empty corpus")
 
         y_true = np.array([gold_subjects.as_vector(self._subject_index)
                            for hits, gold_subjects in self._samples])

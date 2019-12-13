@@ -8,7 +8,7 @@ def read(fname):
 
 setup(
     name='annif',
-    version='0.44.0-dev',
+    version='0.45.0-dev',
     url='https://github.com/NatLibFi/Annif',
     author='Osma Suominen',
     author_email='osma.suominen@helsinki.fi',
@@ -38,6 +38,7 @@ setup(
         'voikko': ['voikko'],
         'vw': ['vowpalwabbit==8.7.*'],
         'nn': ['tensorflow==2.0.*'],
+        'omikuji': ['omikuji==0.1.3'],
     },
     entry_points={
         'console_scripts': ['annif=annif.cli:cli']},

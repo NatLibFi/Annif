@@ -97,7 +97,7 @@ class PAVBackend(ensemble.EnsembleBackend):
             model_filename,
             method=joblib.dump)
 
-    def train(self, corpus, project):
+    def train(self, corpus):
         if corpus.is_empty():
             raise NotSupportedException('training backend {} with no documents'
                                         .format(self.backend_id))

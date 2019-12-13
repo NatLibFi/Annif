@@ -83,6 +83,24 @@ def test_docdir_tsv(tmpdir):
     assert files[2][1] is None
 
 
+def test_docdir_tsv_bom(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1'.encode('utf-8-sig'))
+    tmpdir.join('doc1.tsv').write(
+        '<http://example.org/key1>\tkey1'.encode('utf-8-sig'))
+    tmpdir.join('doc2.txt').write('doc2'.encode('utf-8-sig'))
+    tmpdir.join('doc2.tsv').write(
+        '<http://example.org/key2>\tkey2'.encode('utf-8-sig'))
+
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir))
+    docs = list(docdir.documents)
+    assert docs[0].text == 'doc1'
+    assert list(docs[0].uris)[0] == 'http://example.org/key1'
+    assert list(docs[0].labels)[0] == 'key1'
+    assert docs[1].text == 'doc2'
+    assert list(docs[1].uris)[0] == 'http://example.org/key2'
+    assert list(docs[1].labels)[0] == 'key2'
+
+
 def test_docdir_key_require_subjects(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('<http://example.org/key1>\tkey1')
@@ -176,6 +194,18 @@ def test_docfile_plain(tmpdir):
 
     docs = annif.corpus.DocumentFile(str(docfile))
     assert len(list(docs.documents)) == 3
+
+
+def test_docfile_bom(tmpdir):
+    docfile = tmpdir.join('documents_bom.tsv')
+    data = """Läntinen\t<http://www.yso.fi/onto/yso/p2557>
+        Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
+        Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>"""
+    docfile.write(data.encode('utf-8-sig'))
+
+    docs = annif.corpus.DocumentFile(str(docfile))
+    firstdoc = next(docs.documents)
+    assert firstdoc.text.startswith("Läntinen")
 
 
 def test_docfile_plain_invalid_lines(tmpdir, caplog):

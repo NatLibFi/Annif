@@ -29,6 +29,9 @@ install:
 # Install the optional neural network dependencies (Keras and TensorFlow)
 # - except for one Python version (3.6) so that we can test also without them
 - if [[ $TRAVIS_PYTHON_VERSION != '3.6' ]]; then pip install .[nn]; fi
+# Install the optional Omikuji dependency
+# - except for one Python version (3.5) so that we can test also without them
+- if [[ $TRAVIS_PYTHON_VERSION != '3.5' ]]; then pip install .[omikuji]; fi
 # For Python 3.5, also install optional dependencies that were not specified in Pipfile
 # For other Python versions we will only run the tests that depend on pure Python modules
 # - fastText dependencies

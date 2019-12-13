@@ -60,13 +60,12 @@ class AnnifProject(DatadirMixin):
                 project_id=self.project_id)
 
     def _initialize_analyzer(self):
-        try:
-            analyzer = self.analyzer
-            logger.debug("Project '%s': initialized analyzer: %s",
-                         self.project_id,
-                         str(analyzer))
-        except AnnifException as err:
-            logger.warning(err.format_message())
+        if not self.analyzer_spec:
+            return  # not configured, so assume it's not needed
+        analyzer = self.analyzer
+        logger.debug("Project '%s': initialized analyzer: %s",
+                     self.project_id,
+                     str(analyzer))
 
     def _initialize_subjects(self):
         try:
@@ -103,7 +102,7 @@ class AnnifProject(DatadirMixin):
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-        hits = self.backend.suggest(text, project=self, params=beparams)
+        hits = self.backend.suggest(text, params=beparams)
         logger.debug(
             'Got %d hits from backend %s',
             len(hits), self.backend.backend_id)
@@ -132,7 +131,7 @@ class AnnifProject(DatadirMixin):
                 backend_class = annif.backend.get_backend(backend_id)
                 self._backend = backend_class(
                     backend_id, config_params=self.config,
-                    datadir=self.datadir)
+                    project=self)
             except ValueError:
                 logger.warning(
                     "Could not create backend %s, "
@@ -168,7 +167,7 @@ class AnnifProject(DatadirMixin):
         """train the project using documents from a metadata source"""
 
         corpus.set_subject_index(self.subjects)
-        self.backend.train(corpus, project=self)
+        self.backend.train(corpus)
 
     def learn(self, corpus):
         """further train the project using documents from a metadata source"""
@@ -177,7 +176,7 @@ class AnnifProject(DatadirMixin):
         if isinstance(
                 self.backend,
                 annif.backend.backend.AnnifLearningBackend):
-            self.backend.learn(corpus, project=self)
+            self.backend.learn(corpus)
         else:
             raise NotSupportedException("Learning not supported by backend",
                                         project_id=self.project_id)
@@ -213,7 +212,7 @@ def _create_projects(projects_file, datadir, init_projects):
 
     config = configparser.ConfigParser()
     config.optionxform = lambda option: option
-    with open(projects_file, encoding='utf-8') as projf:
+    with open(projects_file, encoding='utf-8-sig') as projf:
         try:
             config.read_file(projf)
         except (configparser.DuplicateOptionError,

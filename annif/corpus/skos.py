@@ -1,9 +1,24 @@
 """Support for subjects loaded from a SKOS/RDF file"""
 
+import shutil
 import rdflib
 import rdflib.util
 from rdflib.namespace import SKOS, RDF, OWL
 from .types import Subject, SubjectCorpus
+
+
+def serialize_subjects_to_skos(subjects, language, path):
+    """Create a SKOS representation of the given subjects and serialize it
+    into a SKOS/Turtle file with the given path name."""
+
+    graph = rdflib.Graph()
+    graph.namespace_manager.bind('skos', SKOS)
+    for subject in subjects:
+        graph.add((rdflib.URIRef(subject.uri), RDF.type, SKOS.Concept))
+        graph.add((rdflib.URIRef(subject.uri),
+                   SKOS.prefLabel,
+                   rdflib.Literal(subject.label, language)))
+    graph.serialize(destination=path, format='turtle')
 
 
 class SubjectFileSKOS(SubjectCorpus):
@@ -12,15 +27,15 @@ class SubjectFileSKOS(SubjectCorpus):
     def __init__(self, path, language):
         self.path = path
         self.language = language
+        self.graph = rdflib.Graph()
+        self.graph.load(self.path, format=rdflib.util.guess_format(self.path))
 
     @property
     def subjects(self):
-        graph = rdflib.Graph()
-        graph.load(self.path, format=rdflib.util.guess_format(self.path))
-        for concept in graph.subjects(RDF.type, SKOS.Concept):
-            if (concept, OWL.deprecated, rdflib.Literal(True)) in graph:
+        for concept in self.graph.subjects(RDF.type, SKOS.Concept):
+            if (concept, OWL.deprecated, rdflib.Literal(True)) in self.graph:
                 continue
-            labels = graph.preferredLabel(concept, lang=self.language)
+            labels = self.graph.preferredLabel(concept, lang=self.language)
             if not labels:
                 continue
             label = str(labels[0][1])
@@ -33,3 +48,14 @@ class SubjectFileSKOS(SubjectCorpus):
 
         fmt = rdflib.util.guess_format(path)
         return fmt is not None
+
+    def save_skos(self, path, language):
+        """Save the contents of the subject vocabulary into a SKOS/Turtle
+        file with the given path name."""
+
+        if self.path.endswith('.ttl'):
+            # input is already in Turtle syntax, no need to reserialize
+            shutil.copyfile(self.path, path)
+        else:
+            # need to serialize into Turtle
+            self.graph.serialize(destination=path, format='turtle')

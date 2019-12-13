@@ -13,13 +13,14 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     DEFAULT_PARAMS = {'limit': 100}
 
-    def __init__(self, backend_id, config_params, datadir):
+    def __init__(self, backend_id, config_params, project):
         """Initialize backend with specific parameters. The
         parameters are a dict. Keys and values depend on the specific
         backend type."""
         self.backend_id = backend_id
-        self.datadir = datadir
         self.config_params = config_params
+        self.project = project
+        self.datadir = project.datadir
 
     def default_params(self):
         return self.DEFAULT_PARAMS
@@ -31,7 +32,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         params.update(self.config_params)
         return params
 
-    def train(self, corpus, project):
+    def train(self, corpus):
         """train the model on the given document or subject corpus"""
         pass  # default is to do nothing, subclasses may override
 
@@ -41,19 +42,19 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def _suggest(self, text, project, params):
+    def _suggest(self, text, params):
         """This method should implemented by backends. It implements
         the suggest functionality, with pre-processed parameters."""
         pass  # pragma: no cover
 
-    def suggest(self, text, project, params=None):
+    def suggest(self, text, params=None):
         """Suggest subjects for the input text and return a list of subjects
         represented as a list of SubjectSuggestion objects."""
         self.initialize()
         beparams = dict(self.params)
         if params:
             beparams.update(params)
-        return self._suggest(text, project, params=beparams)
+        return self._suggest(text, params=beparams)
 
     def debug(self, message):
         """Log a debug message from this backend"""
@@ -72,6 +73,6 @@ class AnnifLearningBackend(AnnifBackend):
     """Base class for Annif backends that can perform online learning"""
 
     @abc.abstractmethod
-    def learn(self, corpus, project):
+    def learn(self, corpus):
         """further train the model on the given document or subject corpus"""
         pass  # pragma: no cover

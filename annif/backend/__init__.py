@@ -5,6 +5,7 @@ from . import ensemble
 from . import http
 from . import tfidf
 from . import pav
+from . import maui
 import annif
 
 
@@ -27,6 +28,7 @@ register_backend(ensemble.EnsembleBackend)
 register_backend(http.HTTPBackend)
 register_backend(tfidf.TFIDFBackend)
 register_backend(pav.PAVBackend)
+register_backend(maui.MauiBackend)
 
 # Optional backends
 try:
@@ -38,11 +40,9 @@ except ImportError:
 try:
     from . import vw_multi
     register_backend(vw_multi.VWMultiBackend)
-    from . import vw_ensemble
-    register_backend(vw_ensemble.VWEnsembleBackend)
 except ImportError:
     annif.logger.debug("vowpalwabbit not available, not enabling " +
-                       "vw_multi & vw_ensemble backends")
+                       "vw_multi backend")
 
 try:
     from . import nn_ensemble
@@ -50,3 +50,9 @@ try:
 except ImportError:
     annif.logger.debug("Keras and TensorFlow not available, not enabling " +
                        "nn_ensemble backend")
+
+try:
+    from . import omikuji
+    register_backend(omikuji.OmikujiBackend)
+except ImportError:
+    annif.logger.debug("Omikuji not available, not enabling omikuji backend")

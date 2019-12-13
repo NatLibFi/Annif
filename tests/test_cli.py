@@ -110,6 +110,8 @@ def test_clear_project_nonexistent_data(testdatadir, caplog):
 def test_loadvoc_tsv(testdatadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
     subjectfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
@@ -120,11 +122,34 @@ def test_loadvoc_tsv(testdatadir):
     assert result.exit_code == 0
     assert testdatadir.join('vocabs/yso-fi/subjects').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects.ttl').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects.ttl').size() > 0
+
+
+def test_loadvoc_tsv_with_bom(testdatadir):
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
+    subjectfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'subjects-bom.tsv')
+    result = runner.invoke(annif.cli.cli, ['loadvoc', 'tfidf-fi', subjectfile])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert testdatadir.join('vocabs/yso-fi/subjects').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects.ttl').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects.ttl').size() > 0
 
 
 def test_loadvoc_rdf(testdatadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
     subjectfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
@@ -135,6 +160,27 @@ def test_loadvoc_rdf(testdatadir):
     assert result.exit_code == 0
     assert testdatadir.join('vocabs/yso-fi/subjects').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects.ttl').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects.ttl').size() > 0
+
+
+def test_loadvoc_ttl(testdatadir):
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
+    subjectfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'yso-archaeology.ttl')
+    result = runner.invoke(annif.cli.cli, ['loadvoc', 'tfidf-fi', subjectfile])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert testdatadir.join('vocabs/yso-fi/subjects').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects.ttl').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects.ttl').size() > 0
 
 
 def test_loadvoc_nonexistent_path():
@@ -412,6 +458,16 @@ def test_eval_docfile():
     result = runner.invoke(annif.cli.cli, ['eval', 'dummy-fi', docfile])
     assert not result.exception
     assert result.exit_code == 0
+
+
+def test_eval_empty_file(tmpdir):
+    empty_file = tmpdir.ensure('empty.tsv')
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'eval', 'dummy-fi', str(empty_file)])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'cannot evaluate empty corpus' in failed_result.output
 
 
 def test_eval_nonexistent_path():

@@ -51,3 +51,9 @@ class NotSupportedException(AnnifException):
     backend."""
 
     prefix = "Not supported"
+
+
+class OperationFailedException(AnnifException):
+    """Exception raised when an operation fails for some unknown reason."""
+
+    prefix = "Operation failed"
