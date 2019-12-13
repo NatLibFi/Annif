@@ -28,7 +28,7 @@ setup(
         'joblib==0.13.*',
         'nltk',
         'gensim==3.8.*',
-        'scikit-learn==0.21.*',
+        'scikit-learn==0.22.*',
         'rdflib',
         'numpy==1.17.*',
     ],
