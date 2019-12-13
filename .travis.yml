@@ -27,8 +27,9 @@ install:
 - pipenv install --dev --skip-lock
 - travis_wait 30 python -m nltk.downloader punkt
 # Install the optional neural network dependencies (Keras and TensorFlow)
-# - except for one Python version (3.6) so that we can test also without them
-- if [[ $TRAVIS_PYTHON_VERSION != '3.6' ]]; then pip install .[nn]; fi
+# - except for one Python version (3.8) so that we can test also without them
+# (tensorflow 2.0.0 isn't available for python 3.8 anyway)
+- if [[ $TRAVIS_PYTHON_VERSION != '3.8' ]]; then pip install .[nn]; fi
 # Install the optional Omikuji dependency
 # - except for one Python version (3.5) so that we can test also without them
 - if [[ $TRAVIS_PYTHON_VERSION != '3.5' ]]; then pip install .[omikuji]; fi
