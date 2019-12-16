@@ -1,5 +1,6 @@
 """Unit tests for the PAV backend in Annif"""
 
+import logging
 import pytest
 import annif.backend
 import annif.corpus
@@ -38,6 +39,26 @@ def test_pav_train(app, datadir, tmpdir, project):
         pav.train(document_corpus)
     assert datadir.join('pav-model-dummy-fi').exists()
     assert datadir.join('pav-model-dummy-fi').size() > 0
+
+
+def test_pav_train_params(app, datadir, tmpdir, project, caplog):
+    pav_type = annif.backend.get_backend("pav")
+    pav = pav_type(
+        backend_id='pav',
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        project=project)
+
+    tmpfile = tmpdir.join('document.tsv')
+    tmpfile.write("dummy\thttp://example.org/dummy\n" +
+                  "another\thttp://example.org/dummy\n" +
+                  "none\thttp://example.org/none")
+    document_corpus = annif.corpus.DocumentFile(str(tmpfile))
+    params = {'vw_multi': {'min-docs': 5}}
+
+    with app.app_context(), caplog.at_level(logging.DEBUG):
+        pav.train(document_corpus, params)
+    parameters_spec = 'creating PAV model for source dummy-fi, min_docs=2'
+    assert parameters_spec in caplog.text
 
 
 def test_pav_train_nodocuments(project, empty_corpus):
