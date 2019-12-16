@@ -224,30 +224,6 @@ def test_train_multiple(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
-def test_train_vw_multi_params():
-    pytest.importorskip('annif.backend.vw_multi')
-    docfile = os.path.join(
-        os.path.dirname(__file__),
-        'corpora',
-        'archaeology',
-        'documents.tsv')
-    result = runner.invoke(
-        annif.cli.cli,
-        ['train', 'vw-multi-fi', docfile,
-         '--backend-param', 'vw_multi.loss_function=hinge',
-         '--backend-param', 'vw_multi.learning_rate=42.1',
-         '--backend-param', 'vw_multi.quiet=1',
-         '-v', 'DEBUG'])
-    assert not result.exception
-    parameters_clause = 'Backend vw_multi: model parameters:'
-    assert parameters_clause in result.output
-    for line in result.output.split("\n"):
-        if parameters_clause in line:
-            assert "'loss_function': 'hinge'" in line
-            assert "'learning_rate': 42.1" in line
-    assert result.exit_code == 0
-
-
 def test_train_vw_multi_param_algorithm_invalid():
     pytest.importorskip('annif.backend.vw_multi')
     docfile = os.path.join(
