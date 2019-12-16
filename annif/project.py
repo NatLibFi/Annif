@@ -15,7 +15,7 @@ import annif.util
 import annif.vocab
 from annif.datadir import DatadirMixin
 from annif.exception import AnnifException, ConfigurationException, \
-    NotInitializedException, NotSupportedException
+    NotSupportedException
 
 logger = annif.logger
 
