@@ -26,6 +26,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         'cluster_balanced': True,
         'cluster_k': 2,
         'max_depth': 20,
+        'collapse_every_n_layers': 0
     }
 
     def default_params(self):
