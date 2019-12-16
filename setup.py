@@ -38,7 +38,7 @@ setup(
         'voikko': ['voikko'],
         'vw': ['vowpalwabbit==8.7.*'],
         'nn': ['tensorflow==2.0.*'],
-        'omikuji': ['omikuji==0.1.3'],
+        'omikuji': ['omikuji==0.2.*'],
     },
     entry_points={
         'console_scripts': ['annif=annif.cli:cli']},

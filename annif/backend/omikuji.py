@@ -26,6 +26,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         'cluster_balanced': True,
         'cluster_k': 2,
         'max_depth': 20,
+        'collapse_every_n_layers': 0,
     }
 
     def default_params(self):
@@ -89,6 +90,8 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             self.params['cluster_balanced'])
         hyper_param.cluster_k = int(self.params['cluster_k'])
         hyper_param.max_depth = int(self.params['max_depth'])
+        hyper_param.collapse_every_n_layers = int(
+            self.params['collapse_every_n_layers'])
 
         self._model = omikuji.Model.train_on_data(train_path, hyper_param)
         if os.path.exists(model_path):
