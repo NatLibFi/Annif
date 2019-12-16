@@ -224,31 +224,6 @@ def test_train_multiple(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
-def test_train_fasttext_params():
-    pytest.importorskip('annif.backend.fasttext')
-    docfile = os.path.join(
-        os.path.dirname(__file__),
-        'corpora',
-        'archaeology',
-        'documents.tsv')
-    result = runner.invoke(
-        annif.cli.cli,
-        ['train', 'fasttext-fi', docfile,
-         '--backend-param', 'fasttext.dim=1',
-         '--backend-param', 'fasttext.lr=42.1',
-         '--backend-param', 'fasttext.epoch=0',
-         '-v', 'DEBUG'])
-    assert not result.exception
-    parameters_clause = 'Backend fasttext: Model parameters:'
-    assert parameters_clause in result.output
-    for line in result.output.split("\n"):
-        if parameters_clause in line:
-            assert "'dim': 1" in line
-            assert "'lr': 42.1" in line
-            assert "'epoch': 0" in line
-    assert result.exit_code == 0
-
-
 def test_train_vw_multi_params():
     pytest.importorskip('annif.backend.vw_multi')
     docfile = os.path.join(
