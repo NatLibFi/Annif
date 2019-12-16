@@ -32,10 +32,10 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         params.update(self.config_params)
         return params
 
-    def _get_backend_params(self, cli_params):
+    def _get_backend_params(self, params):
         backend_params = dict(self.params)
-        if cli_params is not None:
-            beparams = cli_params.get(self.backend_id, {})
+        if params is not None:
+            beparams = params.get(self.backend_id, {})
             backend_params.update(beparams)
         return backend_params
 
@@ -44,9 +44,9 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         the train functionality, with pre-processed parameters."""
         pass  # default is to do nothing, subclasses may override
 
-    def train(self, corpus, cli_params=None):
+    def train(self, corpus, params=None):
         """Train the model on the given document or subject corpus."""
-        beparams = self._get_backend_params(cli_params)
+        beparams = self._get_backend_params(params)
         return self._train(corpus, params=beparams)
 
     def initialize(self):
@@ -60,10 +60,10 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         the suggest functionality, with pre-processed parameters."""
         pass  # pragma: no cover
 
-    def suggest(self, text, cli_params=None):
+    def suggest(self, text, params=None):
         """Suggest subjects for the input text and return a list of subjects
         represented as a list of SubjectSuggestion objects."""
-        beparams = self._get_backend_params(cli_params)
+        beparams = self._get_backend_params(params)
         self.initialize()
         return self._suggest(text, params=beparams)
 
@@ -89,7 +89,7 @@ class AnnifLearningBackend(AnnifBackend):
         functionality, with pre-processed parameters."""
         pass  # pragma: no cover
 
-    def learn(self, corpus, cli_params=None):
+    def learn(self, corpus, params=None):
         """Further train the model on the given document or subject corpus."""
-        beparams = self._get_backend_params(cli_params)
+        beparams = self._get_backend_params(params)
         return self._learn(corpus, params=beparams)

@@ -87,7 +87,7 @@ def test_fasttext_train_nodocuments(project, empty_corpus):
     assert 'training backend fasttext with no documents' in str(excinfo.value)
 
 
-def test_train_fasttext_cli_params(document_corpus, project, caplog):
+def test_train_fasttext_params(document_corpus, project, caplog):
     logger = annif.logger
     logger.propagate = True
 
@@ -101,10 +101,10 @@ def test_train_fasttext_cli_params(document_corpus, project, caplog):
             'epoch': 21,
             'loss': 'hs'},
         project=project)
-    cli_params = {'fasttext': {'dim': 1, 'lr': 42.1, 'epoch': 0}}
+    params = {'fasttext': {'dim': 1, 'lr': 42.1, 'epoch': 0}}
 
     with caplog.at_level(logging.DEBUG):
-        fasttext.train(document_corpus, cli_params)
+        fasttext.train(document_corpus, params)
     parameters_heading = 'Backend fasttext: Model parameters:'
     assert parameters_heading in caplog.text
     for line in caplog.text.splitlines():

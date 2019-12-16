@@ -167,7 +167,7 @@ def test_vw_multi_train_invalid_learning_rate(project, vw_corpus):
         vw.train(vw_corpus)
 
 
-def test_train_vw_multi_cli_params(project, vw_corpus, caplog):
+def test_train_vw_multi_params(project, vw_corpus, caplog):
     logger = annif.logger
     logger.propagate = True
 
@@ -176,12 +176,12 @@ def test_train_vw_multi_cli_params(project, vw_corpus, caplog):
         backend_id='vw_multi',
         config_params={'chunksize': 4, 'learning_rate': 0.5},
         project=project)
-    cli_params = {'vw_multi': {
+    params = {'vw_multi': {
         'loss_function': 'logistic',
         'learning_rate': 42.1}}
 
     with caplog.at_level(logging.DEBUG):
-        vw.train(vw_corpus, cli_params)
+        vw.train(vw_corpus, params)
     parameters_heading = 'Backend vw_multi: model parameters:'
     assert parameters_heading in caplog.text
     for line in caplog.text.splitlines():
