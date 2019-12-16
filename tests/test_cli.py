@@ -224,7 +224,7 @@ def test_train_multiple(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
-def test_train_vw_multi_param_algorithm_invalid():
+def test_train_param_override_algo_notsupported():
     pytest.importorskip('annif.backend.vw_multi')
     docfile = os.path.join(
         os.path.dirname(__file__),
