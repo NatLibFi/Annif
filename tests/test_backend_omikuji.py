@@ -89,6 +89,26 @@ def test_omikuji_train_nodocuments(datadir, project, empty_corpus):
         omikuji.train(empty_corpus)
 
 
+def test_omikuji_train_params(datadir, document_corpus, project, capfd):
+    omikuji_type = annif.backend.get_backend('omikuji')
+    omikuji = omikuji_type(
+        backend_id='omikuji',
+        config_params={},
+        project=project)
+    params = {'omikuji': {
+        'cluster_k': 1, 'max_depth': 2, 'collapse_every_n_layers': 42}}
+    omikuji.train(document_corpus, params)
+
+    out, _ = capfd.readouterr()
+    parameters_heading = 'Training model with hyper-parameters HyperParam'
+    assert parameters_heading in out
+    for line in out.splitlines():
+        if parameters_heading in line:
+            assert 'k: 1' in line
+            assert 'max_depth: 2' in line
+            assert 'collapse_every_n_layers: 42' in line
+
+
 def test_omikuji_suggest(project):
     omikuji_type = annif.backend.get_backend('omikuji')
     omikuji = omikuji_type(
