@@ -167,7 +167,7 @@ def test_vw_multi_train_invalid_learning_rate(project, vw_corpus):
         vw.train(vw_corpus)
 
 
-def test_train_vw_multi_params(project, vw_corpus, caplog):
+def test_vw_multi_train_params(project, vw_corpus, caplog):
     logger = annif.logger
     logger.propagate = True
 
