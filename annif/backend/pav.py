@@ -103,6 +103,6 @@ class PAVBackend(ensemble.EnsembleBackend):
                                         .format(self.backend_id))
         self.info("creating PAV models")
         sources = annif.util.parse_sources(self.params['sources'])
-        min_docs = int(self.params['min-docs'])
+        min_docs = int(params['min-docs'])
         for source_project_id, _ in sources:
             self._create_pav_model(source_project_id, min_docs, corpus)
