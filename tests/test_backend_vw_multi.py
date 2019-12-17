@@ -176,9 +176,7 @@ def test_vw_multi_train_params(project, vw_corpus, caplog):
         backend_id='vw_multi',
         config_params={'chunksize': 4, 'learning_rate': 0.5},
         project=project)
-    params = {'vw_multi': {
-        'loss_function': 'logistic',
-        'learning_rate': 42.1}}
+    params = {'loss_function': 'logistic', 'learning_rate': 42.1}
 
     with caplog.at_level(logging.DEBUG):
         vw.train(vw_corpus, params)

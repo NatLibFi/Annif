@@ -95,8 +95,7 @@ def test_omikuji_train_params(datadir, document_corpus, project, capfd):
         backend_id='omikuji',
         config_params={},
         project=project)
-    params = {'omikuji': {
-        'cluster_k': 1, 'max_depth': 2, 'collapse_every_n_layers': 42}}
+    params = {'cluster_k': 1, 'max_depth': 2, 'collapse_every_n_layers': 42}
     omikuji.train(document_corpus, params)
 
     out, _ = capfd.readouterr()

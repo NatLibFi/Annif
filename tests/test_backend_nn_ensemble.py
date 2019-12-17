@@ -70,13 +70,13 @@ def test_nn_ensemble_train_and_learn_params(app, tmpdir, capfd):
                   "none\thttp://example.org/none")
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
-    train_params = {'nn_ensemble': {'epochs': 3}}
+    train_params = {'epochs': 3}
     with app.app_context():
         nn_ensemble.train(document_corpus, train_params)
     out, _ = capfd.readouterr()
     assert 'Epoch 3/3' in out
 
-    learn_params = {'nn_ensemble': {'learn-epochs': 2}}
+    learn_params = {'learn-epochs': 2}
     nn_ensemble.learn(document_corpus, learn_params)
     out, _ = capfd.readouterr()
     assert 'Epoch 2/2' in out

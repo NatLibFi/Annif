@@ -101,7 +101,7 @@ def test_train_fasttext_params(document_corpus, project, caplog):
             'epoch': 21,
             'loss': 'hs'},
         project=project)
-    params = {'fasttext': {'dim': 1, 'lr': 42.1, 'epoch': 0}}
+    params = {'dim': 1, 'lr': 42.1, 'epoch': 0}
 
     with caplog.at_level(logging.DEBUG):
         fasttext.train(document_corpus, params)

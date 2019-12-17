@@ -98,8 +98,11 @@ class AnnifProject(DatadirMixin):
 
         self.initialized = True
 
-    def _suggest_with_backend(self, text, be_params):
-        hits = self.backend.suggest(text, be_params)
+    def _suggest_with_backend(self, text, backend_params):
+        if backend_params is None:
+            backend_params = {}
+        beparams = backend_params.get(self.backend.backend_id, {})
+        hits = self.backend.suggest(text, beparams)
         logger.debug(
             'Got %d hits from backend %s',
             len(hits), self.backend.backend_id)
@@ -150,27 +153,33 @@ class AnnifProject(DatadirMixin):
     def subjects(self):
         return self.vocab.subjects
 
-    def suggest(self, text, be_params=None):
+    def suggest(self, text, backend_params=None):
         """Suggest subjects the given text by passing it to the backend. Returns a
         list of SubjectSuggestion objects ordered by decreasing score."""
         logger.debug('Suggesting subjects for text "%s..." (len=%d)',
                      text[:20], len(text))
-        hits = self._suggest_with_backend(text, be_params)
+        hits = self._suggest_with_backend(text, backend_params)
         logger.debug('%d hits from backend', len(hits))
         return hits
 
-    def train(self, corpus, be_params=None):
+    def train(self, corpus, backend_params=None):
         """train the project using documents from a metadata source"""
         corpus.set_subject_index(self.subjects)
-        self.backend.train(corpus, be_params)
+        if backend_params is None:
+            backend_params = {}
+        beparams = backend_params.get(self.backend.backend_id, {})
+        self.backend.train(corpus, beparams)
 
-    def learn(self, corpus, be_params=None):
+    def learn(self, corpus, backend_params=None):
         """further train the project using documents from a metadata source"""
         corpus.set_subject_index(self.subjects)
+        if backend_params is None:
+            backend_params = {}
+        beparams = backend_params.get(self.backend.backend_id, {})
         if isinstance(
                 self.backend,
                 annif.backend.backend.AnnifLearningBackend):
-            self.backend.learn(corpus, be_params)
+            self.backend.learn(corpus, beparams)
         else:
             raise NotSupportedException("Learning not supported by backend",
                                         project_id=self.project_id)

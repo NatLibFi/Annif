@@ -102,7 +102,7 @@ def test_pav_train_params(app, tmpdir, project, caplog):
                   "another\thttp://example.org/dummy\n" +
                   "none\thttp://example.org/none")
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
-    params = {'pav': {'min-docs': 5}}
+    params = {'min-docs': 5}
 
     with app.app_context(), caplog.at_level(logging.DEBUG):
         pav.train(document_corpus, params)
