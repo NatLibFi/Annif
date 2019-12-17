@@ -64,4 +64,4 @@ steps:
       branch:
       - release-0.45.1
       event:
-      - tag
+      - push
