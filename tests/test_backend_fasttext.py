@@ -1,5 +1,6 @@
 """Unit tests for the fastText backend in Annif"""
 
+import logging
 import pytest
 import annif.backend
 import annif.corpus
@@ -84,6 +85,33 @@ def test_fasttext_train_nodocuments(project, empty_corpus):
     with pytest.raises(NotSupportedException) as excinfo:
         fasttext.train(empty_corpus)
     assert 'training backend fasttext with no documents' in str(excinfo.value)
+
+
+def test_train_fasttext_params(document_corpus, project, caplog):
+    logger = annif.logger
+    logger.propagate = True
+
+    fasttext_type = annif.backend.get_backend("fasttext")
+    fasttext = fasttext_type(
+        backend_id='fasttext',
+        config_params={
+            'limit': 51,
+            'dim': 101,
+            'lr': 0.21,
+            'epoch': 21,
+            'loss': 'hs'},
+        project=project)
+    params = {'dim': 1, 'lr': 42.1, 'epoch': 0}
+
+    with caplog.at_level(logging.DEBUG):
+        fasttext.train(document_corpus, params)
+    parameters_heading = 'Backend fasttext: Model parameters:'
+    assert parameters_heading in caplog.text
+    for line in caplog.text.splitlines():
+        if parameters_heading in line:
+            assert "'dim': 1" in line
+            assert "'lr': 42.1" in line
+            assert "'epoch': 0" in line
 
 
 def test_fasttext_suggest(project):

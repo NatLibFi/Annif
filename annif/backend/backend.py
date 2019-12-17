@@ -32,9 +32,21 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         params.update(self.config_params)
         return params
 
-    def train(self, corpus):
-        """train the model on the given document or subject corpus"""
+    def _get_backend_params(self, params):
+        backend_params = dict(self.params)
+        if params is not None:
+            backend_params.update(params)
+        return backend_params
+
+    def _train(self, corpus, params):
+        """This method can be overridden by backends. It implements
+        the train functionality, with pre-processed parameters."""
         pass  # default is to do nothing, subclasses may override
+
+    def train(self, corpus, params=None):
+        """Train the model on the given document or subject corpus."""
+        beparams = self._get_backend_params(params)
+        return self._train(corpus, params=beparams)
 
     def initialize(self):
         """This method can be overridden by backends. It should cause the
@@ -50,10 +62,8 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def suggest(self, text, params=None):
         """Suggest subjects for the input text and return a list of subjects
         represented as a list of SubjectSuggestion objects."""
+        beparams = self._get_backend_params(params)
         self.initialize()
-        beparams = dict(self.params)
-        if params:
-            beparams.update(params)
         return self._suggest(text, params=beparams)
 
     def debug(self, message):
@@ -73,6 +83,12 @@ class AnnifLearningBackend(AnnifBackend):
     """Base class for Annif backends that can perform online learning"""
 
     @abc.abstractmethod
-    def learn(self, corpus):
-        """further train the model on the given document or subject corpus"""
+    def _learn(self, corpus, params):
+        """This method should implemented by backends. It implements the learn
+        functionality, with pre-processed parameters."""
         pass  # pragma: no cover
+
+    def learn(self, corpus, params=None):
+        """Further train the model on the given document or subject corpus."""
+        beparams = self._get_backend_params(params)
+        return self._learn(corpus, params=beparams)

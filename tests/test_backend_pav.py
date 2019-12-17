@@ -1,5 +1,6 @@
 """Unit tests for the PAV backend in Annif"""
 
+import logging
 import pytest
 import annif.backend
 import annif.corpus
@@ -84,3 +85,26 @@ def test_pav_suggest(app, project):
 
     assert len(pav._models['dummy-fi']) == 1
     assert len(results) > 0
+
+
+def test_pav_train_params(app, tmpdir, project, caplog):
+    logger = annif.logger
+    logger.propagate = True
+
+    pav_type = annif.backend.get_backend("pav")
+    pav = pav_type(
+        backend_id='pav',
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        project=project)
+
+    tmpfile = tmpdir.join('document.tsv')
+    tmpfile.write("dummy\thttp://example.org/dummy\n" +
+                  "another\thttp://example.org/dummy\n" +
+                  "none\thttp://example.org/none")
+    document_corpus = annif.corpus.DocumentFile(str(tmpfile))
+    params = {'min-docs': 5}
+
+    with app.app_context(), caplog.at_level(logging.DEBUG):
+        pav.train(document_corpus, params)
+    parameters_spec = 'creating PAV model for source dummy-fi, min_docs=5'
+    assert parameters_spec in caplog.text

@@ -24,7 +24,7 @@ class DummyBackend(backend.AnnifLearningBackend):
                                                        score=score)],
                                     self.project.subjects)
 
-    def learn(self, corpus):
+    def _learn(self, corpus, params):
         # in this dummy backend we "learn" by picking up the URI and label
         # of the first subject of the first document in the learning set
         # and using that in subsequent analysis results

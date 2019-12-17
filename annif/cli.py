@@ -16,6 +16,7 @@ import annif.eval
 import annif.project
 from annif.project import Access
 from annif.suggestion import SuggestionFilter
+from annif.exception import ConfigurationException, NotSupportedException
 
 logger = annif.logger
 click_log.basic_config(logger)
@@ -57,15 +58,26 @@ def open_documents(paths):
     return docs
 
 
-def parse_backend_params(backend_param):
+def parse_backend_params(backend_param, project):
     """Parse a list of backend parameters given with the --backend-param
     option into a nested dict structure"""
     backend_params = collections.defaultdict(dict)
     for beparam in backend_param:
         backend, param = beparam.split('.', 1)
         key, val = param.split('=', 1)
+        validate_backend_params(backend, beparam, project)
         backend_params[backend][key] = val
     return backend_params
+
+
+def validate_backend_params(backend, beparam, project):
+    if 'algorithm' in beparam:
+        raise NotSupportedException('Algorithm overriding not supported.')
+    if backend != project.config['backend']:
+        raise ConfigurationException(
+            'The backend {} in CLI option "-b {}" not matching the project'
+            ' backend {}.'
+            .format(backend, beparam, project.config['backend']))
 
 
 def generate_filter_batches(subjects):
@@ -92,8 +104,15 @@ def common_options(f):
         type=click.Path(dir_okay=False, exists=True),
         callback=set_project_config_file_path, expose_value=False,
         is_eager=True)(f)
-    f = click_log.simple_verbosity_option(logger)(f)
-    return f
+    return click_log.simple_verbosity_option(logger)(f)
+
+
+def backend_param_option(f):
+    """Decorator to add an option for CLI commands to override BE parameters"""
+    return click.option(
+        '--backend-param', '-b', multiple=True,
+        help='Override backend parameter of the config file. ' +
+        'Syntax: "-b <backend>.<parameter>=<value>".')(f)
 
 
 @cli.command('list-projects')
@@ -159,35 +178,38 @@ def run_loadvoc(project_id, subjectfile):
 @cli.command('train')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
+@backend_param_option
 @common_options
-def run_train(project_id, paths):
+def run_train(project_id, paths, backend_param):
     """
     Train a project on a collection of documents.
     """
     proj = get_project(project_id)
+    backend_params = parse_backend_params(backend_param, proj)
     documents = open_documents(paths)
-    proj.train(documents)
+    proj.train(documents, backend_params)
 
 
 @cli.command('learn')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
+@backend_param_option
 @common_options
-def run_learn(project_id, paths):
+def run_learn(project_id, paths, backend_param):
     """
     Further train an existing project on a collection of documents.
     """
     proj = get_project(project_id)
+    backend_params = parse_backend_params(backend_param, proj)
     documents = open_documents(paths)
-    proj.learn(documents)
+    proj.learn(documents, backend_params)
 
 
 @cli.command('suggest')
 @click.argument('project_id')
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
-@click.option('--backend-param', '-b', multiple=True,
-              help='Backend parameters to override')
+@backend_param_option
 @common_options
 def run_suggest(project_id, limit, threshold, backend_param):
     """
@@ -195,7 +217,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
     """
     project = get_project(project_id)
     text = sys.stdin.read()
-    backend_params = parse_backend_params(backend_param)
+    backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(limit, threshold)
     hits = hit_filter(project.suggest(text, backend_params))
     for hit in hits:
@@ -213,8 +235,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
               help='Force overwriting of existing result files')
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
-@click.option('--backend-param', '-b', multiple=True,
-              help='Backend parameters to override')
+@backend_param_option
 @common_options
 def run_index(project_id, directory, suffix, force,
               limit, threshold, backend_param):
@@ -223,7 +244,7 @@ def run_index(project_id, directory, suffix, force,
     Write the results in TSV files with the given suffix.
     """
     project = get_project(project_id)
-    backend_params = parse_backend_params(backend_param)
+    backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(limit, threshold)
 
     for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
@@ -248,8 +269,7 @@ def run_index(project_id, directory, suffix, force,
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
-@click.option('--backend-param', '-b', multiple=True,
-              help='Backend parameters to override')
+@backend_param_option
 @common_options
 def run_eval(project_id, paths, limit, threshold, backend_param):
     """
@@ -260,7 +280,7 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
     documents in separate files.
     """
     project = get_project(project_id)
-    backend_params = parse_backend_params(backend_param)
+    backend_params = parse_backend_params(backend_param, project)
 
     hit_filter = SuggestionFilter(limit=limit, threshold=threshold)
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
@@ -282,6 +302,7 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @click.option('--backend-param', '-b', multiple=True,
               help='Backend parameters to override')
+@backend_param_option
 @common_options
 def run_optimize(project_id, paths, backend_param):
     """
@@ -293,7 +314,7 @@ def run_optimize(project_id, paths, backend_param):
     of settings.
     """
     project = get_project(project_id)
-    backend_params = parse_backend_params(backend_param)
+    backend_params = parse_backend_params(backend_param, project)
 
     filter_batches = generate_filter_batches(project.subjects)
 

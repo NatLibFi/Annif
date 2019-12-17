@@ -224,6 +224,22 @@ def test_train_multiple(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
+def test_train_param_override_algo_notsupported():
+    pytest.importorskip('annif.backend.vw_multi')
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents.tsv')
+    result = runner.invoke(
+        annif.cli.cli,
+        ['train', 'vw-multi-fi', docfile,
+         '--backend-param', 'vw_multi.algorithm=oaa'])
+    assert result.exception
+    assert result.exit_code == 1
+    assert 'Algorithm overriding not supported.' in result.output
+
+
 def test_train_nonexistent_path():
     failed_result = runner.invoke(
         annif.cli.cli, [
@@ -306,6 +322,18 @@ def test_suggest_param():
     assert not result.exception
     assert result.output == "<http://example.org/dummy>\tdummy\t0.8\n"
     assert result.exit_code == 0
+
+
+def test_suggest_param_backend_nonexistent():
+    result = runner.invoke(
+        annif.cli.cli,
+        ['suggest', '--backend-param', 'not_a_backend.score=0.8', 'dummy-fi'],
+        input='kissa')
+    assert result.exception
+    assert 'The backend not_a_backend in CLI option ' + \
+        '"-b not_a_backend.score=0.8" not matching the project backend ' + \
+        'dummy.' in result.output
+    assert result.exit_code != 0
 
 
 def test_suggest_ensemble():

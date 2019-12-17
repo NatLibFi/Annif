@@ -104,7 +104,7 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             self.datadir,
             self.INDEX_FILE)
 
-    def train(self, corpus):
+    def _train(self, corpus, params):
         if corpus.is_empty():
             raise NotSupportedException(
                 'Cannot train tfidf project with no documents')
@@ -120,4 +120,4 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         vectors = self.vectorizer.transform([" ".join(tokens)])
         docsim = self._index[vectors[0]]
         fullresult = VectorSuggestionResult(docsim, self.project.subjects)
-        return fullresult.filter(limit=int(self.params['limit']))
+        return fullresult.filter(limit=int(params['limit']))

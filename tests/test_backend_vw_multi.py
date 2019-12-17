@@ -1,5 +1,6 @@
 """Unit tests for the vw_multi backend in Annif"""
 
+import logging
 import pytest
 import annif.backend
 import annif.corpus
@@ -164,6 +165,27 @@ def test_vw_multi_train_invalid_learning_rate(project, vw_corpus):
 
     with pytest.raises(ConfigurationException):
         vw.train(vw_corpus)
+
+
+def test_vw_multi_train_params(project, vw_corpus, caplog):
+    logger = annif.logger
+    logger.propagate = True
+
+    vw_type = annif.backend.get_backend('vw_multi')
+    vw = vw_type(
+        backend_id='vw_multi',
+        config_params={'chunksize': 4, 'learning_rate': 0.5},
+        project=project)
+    params = {'loss_function': 'logistic', 'learning_rate': 42.1}
+
+    with caplog.at_level(logging.DEBUG):
+        vw.train(vw_corpus, params)
+    parameters_heading = 'Backend vw_multi: model parameters:'
+    assert parameters_heading in caplog.text
+    for line in caplog.text.splitlines():
+        if parameters_heading in line:
+            assert "'loss_function': 'logistic'" in line
+            assert "'learning_rate': 42.1" in line
 
 
 def test_vw_multi_suggest(project):

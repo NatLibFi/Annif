@@ -104,31 +104,33 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                                self.TRAIN_FILE,
                                method=self._write_train_file)
 
-    def _create_model(self):
+    def _create_model(self, params):
         self.info('creating fastText model')
         trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
         modelpath = os.path.join(self.datadir, self.MODEL_FILE)
         params = {param: self.FASTTEXT_PARAMS[param](val)
-                  for param, val in self.params.items()
+                  for param, val in params.items()
                   if param in self.FASTTEXT_PARAMS}
+        self.debug('Model parameters: {}'.format(params))
         self._model = fastText.train_supervised(trainpath, **params)
         self._model.save_model(modelpath)
 
-    def train(self, corpus):
+    def _train(self, corpus, params):
         if corpus.is_empty():
             raise NotSupportedException('training backend {} with no documents'
                                         .format(self.backend_id))
         self._create_train_file(corpus)
-        self._create_model()
+        self._create_model(params)
 
     def _predict_chunks(self, chunktexts, limit):
         return self._model.predict(list(
             filter(None, [self._normalize_text(chunktext)
                           for chunktext in chunktexts])), limit)
 
-    def _suggest_chunks(self, chunktexts):
-        limit = int(self.params['limit'])
-        chunklabels, chunkscores = self._predict_chunks(chunktexts, limit)
+    def _suggest_chunks(self, chunktexts, params):
+        limit = int(params['limit'])
+        chunklabels, chunkscores = self._predict_chunks(
+            chunktexts, limit)
         label_scores = collections.defaultdict(float)
         for labels, scores in zip(chunklabels, chunkscores):
             for label, score in zip(labels, scores):

@@ -19,7 +19,7 @@ class ChunkingBackend(metaclass=abc.ABCMeta):
         return self.DEFAULT_PARAMS
 
     @abc.abstractmethod
-    def _suggest_chunks(self, chunktexts):
+    def _suggest_chunks(self, chunktexts, params):
         """Suggest subjects for the chunked text; should be implemented by
         the subclass inheriting this mixin"""
 
@@ -38,7 +38,7 @@ class ChunkingBackend(metaclass=abc.ABCMeta):
         if len(chunktexts) == 0:  # no input, empty result
             return ListSuggestionResult(
                 hits=[], subject_index=self.project.subjects)
-        return self._suggest_chunks(chunktexts)
+        return self._suggest_chunks(chunktexts, params)
 
 
 class TfidfVectorizerMixin:

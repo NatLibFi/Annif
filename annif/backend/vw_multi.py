@@ -33,10 +33,14 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
         'l1': (float, None),
         'l2': (float, None),
         'passes': (int, None),
-        'probabilities': (bool, None)
+        'probabilities': (bool, None),
+        'quiet': (bool, False),
+        'data': (str, None),
+        'i': (str, None),
     }
 
     SUPPORTED_ALGORITHMS = ('oaa', 'ect', 'log_multi', 'multilabel_oaa')
+    VW_PARAMS.update({alg: (int, None) for alg in SUPPORTED_ALGORITHMS})
 
     DEFAULT_INPUTS = '_text_'
 
@@ -73,13 +77,12 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
                 "The {} value {} cannot be converted to {}".format(
                     param, val, pspec), backend_id=self.backend_id)
 
-    def _create_params(self, params):
-        params = params.copy()  # don't mutate the original dict
-        params.update({param: defaultval
-                       for param, (_, defaultval) in self.VW_PARAMS.items()
-                       if defaultval is not None})
+    def _create_params(self, initial_params):
+        params = {param: self._convert_param(param, val)
+                  for param, val in self.params.items()
+                  if param in self.VW_PARAMS}
         params.update({param: self._convert_param(param, val)
-                       for param, val in self.params.items()
+                       for param, val in initial_params.items()
                        if param in self.VW_PARAMS})
         return params
 
@@ -164,11 +167,13 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
         random.shuffle(examples)
         return examples
 
-    def _create_model(self):
+    def _create_model(self, params):
         self.info('creating VW model (algorithm: {})'.format(self.algorithm))
         trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
         initial_params = {'data': trainpath,
-                          self.algorithm: len(self.project.subjects)}
+                          self.algorithm: len(self.project.subjects),
+                          **{key: val for key, val in params.items()
+                              if key in self.VW_PARAMS}}
         params = self._create_params(initial_params)
         if params.get('passes', 1) > 1:
             # need a cache file when there are multiple passes
@@ -193,7 +198,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
             # result is a list of scores (probabilities or binary 1/0)
             return np.array(result, dtype=np.float32)
 
-    def _suggest_chunks(self, chunktexts):
+    def _suggest_chunks(self, chunktexts, params):
         results = []
         for chunktext in chunktexts:
 
@@ -224,12 +229,12 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
                                self.TRAIN_FILE,
                                method=self._write_train_file)
 
-    def train(self, corpus):
+    def _train(self, corpus, params):
         self.info("creating VW model")
         self._create_train_file(corpus)
-        self._create_model()
+        self._create_model(params)
 
-    def learn(self, corpus):
+    def _learn(self, corpus, params):
         self.initialize()
         for example in self._create_examples(corpus):
             self._model.learn(example)

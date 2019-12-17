@@ -56,6 +56,23 @@ def test_tfidf_suggest(project):
     assert 'arkeologia' in [result.label for result in results]
 
 
+def test_suggest_params(project):
+    tfidf_type = annif.backend.get_backend("tfidf")
+    tfidf = tfidf_type(
+        backend_id='tfidf',
+        config_params={'limit': 10},
+        project=project)
+    params = {'limit': 3}
+
+    results = tfidf.suggest("""Arkeologiaa sanotaan joskus myös
+        muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
+        tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
+        Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
+        joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
+        pohjaan.""", params)
+    assert len(results) == 3
+
+
 def test_tfidf_suggest_unknown(project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
