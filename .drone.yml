@@ -57,7 +57,9 @@ steps:
     image: plugins/docker
     settings:
       <<: *docker_settings
-      auto_tag: true
+      tags:
+        - '0.45.1'
+        - '0.45'
     when:
       branch:
       - master
