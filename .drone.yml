@@ -62,6 +62,6 @@ steps:
         - '0.45'
     when:
       branch:
-      - master
+      - release-0.45.1
       event:
       - tag
