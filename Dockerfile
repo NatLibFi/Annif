@@ -30,7 +30,7 @@ RUN apt-get update \
 	&& ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.so \
 		/usr/lib/x86_64-linux-gnu/libboost_python3.so \
 	&& pip install --no-cache-dir \
-		vowpalwabbit
+		vowpalwabbit==8.7.*
 
 
 
