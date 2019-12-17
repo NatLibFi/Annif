@@ -88,6 +88,9 @@ def test_pav_suggest(app, project):
 
 
 def test_pav_train_params(app, tmpdir, project, caplog):
+    logger = annif.logger
+    logger.propagate = True
+
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
