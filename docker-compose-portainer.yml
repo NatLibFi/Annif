@@ -1,4 +1,4 @@
-version: "3"
+version: "3.6"
 
 services:
 
@@ -15,10 +15,11 @@ services:
     restart: always
     image: nginx
     volumes:
-      - data:/annif-projects
+      - apidata:/apidata:ro
     depends_on:
       - gunicorn_server
-    command: ["nginx", "-c", "/annif-projects/nginx.conf", "-g", "daemon off;"]
+    command: ["nginx", "-c", "/apidata/nginx.conf", "-g", "daemon off;"]
+
     networks:
     - default
     - traefik-net
@@ -48,8 +49,18 @@ services:
         constraints:
         - node.labels.environment == test
 
+  apidata:
+    image: quay.io/natlibfi/annif-data:api
+    volumes:
+      - apidata:/tmp
+    command: >
+      sh -c "echo Copying data from image to mounted volume... &&
+        cp -r --verbose /apidata/. /tmp/ &&
+        echo Copied!"
+
 volumes:
   data:
+  apidata:
 
 networks:
   traefik-net:
