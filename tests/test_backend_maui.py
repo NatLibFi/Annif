@@ -11,14 +11,18 @@ from annif.exception import OperationFailedException
 
 
 @pytest.fixture
-def maui(app_project):
+def maui_params():
+    return {'endpoint': 'http://api.example.org/mauiservice/',
+            'tagger': 'dummy',
+            'language': 'en'}
+
+
+@pytest.fixture
+def maui(app_project, maui_params):
     maui_type = annif.backend.get_backend("maui")
     maui = maui_type(
         backend_id='maui',
-        config_params={
-            'endpoint': 'http://api.example.org/mauiservice/',
-            'tagger': 'dummy',
-            'language': 'en'},
+        config_params=maui_params,
         project=app_project)
     return maui
 
@@ -50,7 +54,7 @@ def test_maui_train_missing_tagger(document_corpus, project):
 
 
 @responses.activate
-def test_maui_initialize_tagger_delete_non_existing(maui):
+def test_maui_initialize_tagger_delete_non_existing(maui, maui_params):
     responses.add(responses.DELETE,
                   'http://api.example.org/mauiservice/dummy',
                   status=404,
@@ -62,11 +66,11 @@ def test_maui_initialize_tagger_delete_non_existing(maui):
                   status=200,
                   json={})
 
-    maui._initialize_tagger()
+    maui._initialize_tagger(params=maui_params)
 
 
 @responses.activate
-def test_maui_initialize_tagger_create_failed(maui):
+def test_maui_initialize_tagger_create_failed(maui, maui_params):
     responses.add(responses.DELETE,
                   'http://api.example.org/mauiservice/dummy',
                   status=404,
@@ -78,38 +82,38 @@ def test_maui_initialize_tagger_create_failed(maui):
                   body=requests.exceptions.RequestException())
 
     with pytest.raises(OperationFailedException):
-        maui._initialize_tagger()
+        maui._initialize_tagger(params=maui_params)
 
 
 @responses.activate
-def test_maui_upload_vocabulary_failed(maui):
+def test_maui_upload_vocabulary_failed(maui, maui_params):
     responses.add(responses.PUT,
                   'http://api.example.org/mauiservice/dummy/vocab',
                   body=requests.exceptions.RequestException())
 
     with pytest.raises(OperationFailedException):
-        maui._upload_vocabulary()
+        maui._upload_vocabulary(params=maui_params)
 
 
 @responses.activate
-def test_maui_upload_train_file_failed(maui, document_corpus):
+def test_maui_upload_train_file_failed(maui, document_corpus, maui_params):
     responses.add(responses.POST,
                   'http://api.example.org/mauiservice/dummy/train',
                   body=requests.exceptions.RequestException())
 
     maui._create_train_file(document_corpus)
     with pytest.raises(OperationFailedException):
-        maui._upload_train_file()
+        maui._upload_train_file(params=maui_params)
 
 
 @responses.activate
-def test_maui_wait_for_train_failed(maui):
+def test_maui_wait_for_train_failed(maui, maui_params):
     responses.add(responses.GET,
                   'http://api.example.org/mauiservice/dummy/train',
                   body=requests.exceptions.RequestException())
 
     with pytest.raises(OperationFailedException):
-        maui._wait_for_train()
+        maui._wait_for_train(params=maui_params)
 
 
 def test_maui_train_nodocuments(maui, project, empty_corpus):
