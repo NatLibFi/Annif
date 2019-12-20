@@ -18,50 +18,49 @@ class MauiBackend(backend.AnnifBackend):
 
     TRAIN_FILE = 'maui-train.jsonl'
 
-    @property
-    def endpoint(self):
+    def endpoint(self, params):
         try:
-            return self.params['endpoint']
+            return params['endpoint']
         except KeyError:
             raise ConfigurationException(
                 "endpoint must be set in project configuration",
                 backend_id=self.backend_id)
 
-    @property
-    def tagger(self):
+    def tagger(self, params):
         try:
-            return self.params['tagger']
+            return params['tagger']
         except KeyError:
             raise ConfigurationException(
                 "tagger must be set in project configuration",
                 backend_id=self.backend_id)
 
-    @property
-    def tagger_url(self):
-        return self.endpoint + self.tagger
+    def tagger_url(self, params):
+        return self.endpoint(params) + self.tagger(params)
 
-    def _initialize_tagger(self):
-        self.info("Initializing Maui Service tagger '{}'".format(self.tagger))
+    def _initialize_tagger(self, params):
+        self.info(
+            "Initializing Maui Service tagger '{}'".format(
+                self.tagger(params)))
 
         # try to delete the tagger in case it already exists
-        resp = requests.delete(self.tagger_url)
+        resp = requests.delete(self.tagger_url(params))
         self.debug("Trying to delete tagger {} returned status code {}"
-                   .format(self.tagger, resp.status_code))
+                   .format(self.tagger(params), resp.status_code))
 
         # create a new tagger
-        data = {'id': self.tagger, 'lang': self.params['language']}
+        data = {'id': self.tagger(params), 'lang': params['language']}
         try:
-            resp = requests.post(self.endpoint, data=data)
+            resp = requests.post(self.endpoint(params), data=data)
             self.debug("Trying to create tagger {} returned status code {}"
-                       .format(self.tagger, resp.status_code))
+                       .format(self.tagger(params), resp.status_code))
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
             raise OperationFailedException(err)
 
-    def _upload_vocabulary(self):
+    def _upload_vocabulary(self, params):
         self.info("Uploading vocabulary")
         try:
-            resp = requests.put(self.tagger_url + '/vocab',
+            resp = requests.put(self.tagger_url(params) + '/vocab',
                                 data=self.project.vocab.as_skos())
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
@@ -76,22 +75,22 @@ class MauiBackend(backend.AnnifBackend):
                 json_doc = json.dumps(doc_obj)
                 print(json_doc, file=train_file)
 
-    def _upload_train_file(self):
+    def _upload_train_file(self, params):
         self.info("Uploading training documents")
         train_path = os.path.join(self.datadir, self.TRAIN_FILE)
         with open(train_path, 'rb') as train_file:
             try:
-                resp = requests.post(self.tagger_url + '/train',
+                resp = requests.post(self.tagger_url(params) + '/train',
                                      data=train_file)
                 resp.raise_for_status()
             except requests.exceptions.RequestException as err:
                 raise OperationFailedException(err)
 
-    def _wait_for_train(self):
+    def _wait_for_train(self, params):
         self.info("Waiting for training to be completed...")
         while True:
             try:
-                resp = requests.get(self.tagger_url + "/train")
+                resp = requests.get(self.tagger_url(params) + "/train")
                 resp.raise_for_status()
             except requests.exceptions.RequestException as err:
                 raise OperationFailedException(err)
@@ -102,23 +101,23 @@ class MauiBackend(backend.AnnifBackend):
                 return
             time.sleep(1)
 
-    def train(self, corpus):
+    def _train(self, corpus, params):
         if corpus.is_empty():
             raise NotSupportedException('training backend {} with no documents'
                                         .format(self.backend_id))
-        self._initialize_tagger()
-        self._upload_vocabulary()
+        self._initialize_tagger(params)
+        self._upload_vocabulary(params)
         self._create_train_file(corpus)
-        self._upload_train_file()
-        self._wait_for_train()
+        self._upload_train_file(params)
+        self._wait_for_train(params)
 
-    def _suggest_request(self, text):
+    def _suggest_request(self, text, params):
         data = {'text': text}
         headers = {"Content-Type":
                    "application/x-www-form-urlencoded; charset=UTF-8"}
 
         try:
-            resp = requests.post(self.tagger_url + '/suggest',
+            resp = requests.post(self.tagger_url(params) + '/suggest',
                                  data=data,
                                  headers=headers)
             resp.raise_for_status()
@@ -145,7 +144,7 @@ class MauiBackend(backend.AnnifBackend):
             return ListSuggestionResult([], self.project.subjects)
 
     def _suggest(self, text, params):
-        response = self._suggest_request(text)
+        response = self._suggest_request(text, params)
         if response:
             return self._response_to_result(response)
         else:
