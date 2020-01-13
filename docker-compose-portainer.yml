@@ -38,9 +38,14 @@ services:
         constraints:
         - node.labels.environment == test
       labels:
-      - 'traefik.port=80'
-      - 'traefik.docker.network=traefik-net'
-      - 'traefik.frontend.rule=Host:annif.dev.finto.fi'
+      - traefik.enable=true
+      - traefik.http.services.annif-test.loadbalancer.server.port=80
+      - traefik.http.routers.annif-test-http.rule=Host(`annif.dev.finto.fi`)
+      - traefik.http.routers.annif-test-http.entrypoints=http
+      - traefik.http.routers.annif-test-http.middlewares=redirect@file
+      - traefik.http.routers.annif-test-https.rule=Host(`annif.dev.finto.fi`)
+      - traefik.http.routers.annif-test-https.entrypoints=https
+      - traefik.http.routers.annif-test-https.tls=true
 
 
   data:
