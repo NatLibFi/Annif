@@ -3,7 +3,6 @@ version: "3.6"
 services:
 
   gunicorn_server:
-    restart: always
     image: quay.io/natlibfi/annif
     command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000"]
     volumes:
@@ -17,7 +16,6 @@ services:
         - node.labels.environment == test
 
   nginx:
-    restart: always
     image: nginx
     volumes:
       - apidata:/apidata:ro
