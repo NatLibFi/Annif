@@ -8,8 +8,6 @@ services:
     command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000"]
     volumes:
       - data:/annif-projects
-    depends_on:
-      - data
     deploy:
       replicas: 1
       restart_policy:
@@ -23,8 +21,6 @@ services:
     image: nginx
     volumes:
       - apidata:/apidata:ro
-    depends_on:
-      - gunicorn_server
     command: ["nginx", "-c", "/apidata/nginx.conf", "-g", "daemon off;"]
 
     networks:
