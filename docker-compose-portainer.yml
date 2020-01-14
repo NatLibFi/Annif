@@ -3,7 +3,7 @@ version: "3.6"
 services:
 
   gunicorn_server:
-    image: quay.io/natlibfi/annif:0.45.2
+    image: quay.io/natlibfi/annif:0.45.3
     command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000"]
     volumes:
       - data:/annif-projects
