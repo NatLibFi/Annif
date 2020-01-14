@@ -1,7 +1,7 @@
 FROM busybox
 
 COPY data /annif-projects/data
-COPY projects.cfg /annif-projects/
+COPY api.annif.org.projects.cfg /annif-projects/projects.cfg
 COPY mauidata /annif-projects/mauidata
 
 # Switch user to non-root:
