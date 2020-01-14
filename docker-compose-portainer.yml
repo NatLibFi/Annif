@@ -59,8 +59,10 @@ services:
     volumes:
       - data:/tmp
     command: >
-      sleep 1 &&
-      sh -c "echo Copying data from image to mounted volume... &&
+      sh -c "echo Removing old data... &&
+        rm -rf /tmp/* &&
+        echo Removed! &&
+        echo Copying data from image to mounted volume... &&
         cp -r --verbose /annif-projects/. /tmp/ &&
         echo Copied!"
     deploy:
