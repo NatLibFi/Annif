@@ -18,9 +18,8 @@ services:
   nginx:
     image: nginx
     volumes:
-      - apidata:/apidata:ro
+      - apidata:/apidata
     command: ["nginx", "-c", "/apidata/nginx.conf", "-g", "daemon off;"]
-
     networks:
     - default
     - traefik-net
