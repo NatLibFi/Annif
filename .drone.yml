@@ -58,10 +58,10 @@ steps:
     settings:
       <<: *docker_settings
       tags:
-        - '0.45.2'
+        - '0.45.3'
         - '0.45'
     when:
       branch:
-      - release-0.45.2
+      - release-0.45.3
       event:
       - push
