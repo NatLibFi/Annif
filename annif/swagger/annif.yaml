@@ -2,9 +2,6 @@ swagger: '2.0'
 info:
   title: Annif REST API
   version: v1
-schemes:
-  - http
-  - https
 basePath: /v1
 parameters:
   project_id:
