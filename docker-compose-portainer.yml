@@ -56,7 +56,7 @@ services:
         - node.labels.environment == test
 
   data:
-    image: quay.io/natlibfi/annif-data
+    image: quay.io/natlibfi/annif-data:juhos-local2
     volumes:
       - data:/annif-projects
     deploy:
