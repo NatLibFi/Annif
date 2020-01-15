@@ -54,6 +54,8 @@ RUN apt-get update \
 		vowpalwabbit==8.7.* \
 		tensorflow==2.0.* \
 		omikuji==0.2.* \
+	# For Docker healthcheck:
+	&& apt-get install -y --no-install-recommends curl \
 	# Clean up:
 	&& rm -rf /var/lib/apt/lists/* /usr/include/* \
 	&& rm -rf /root/.cache/pip*/*
