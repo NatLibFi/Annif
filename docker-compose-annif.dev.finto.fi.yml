@@ -14,6 +14,14 @@ services:
       placement:
         constraints:
         - node.labels.environment == test
+      update_config:
+        parallelism: 1
+        order: start-first
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "localhost:8000/v1/projects"]
+      interval: 15s
+      retries: 3
+      start_period: 600s
 
   nginx:
     image: nginx
