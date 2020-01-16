@@ -1,0 +1,107 @@
+version: "3.6"
+
+services:
+
+  annif_app:
+    image: quay.io/natlibfi/annif:0.45.3
+    command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000", "--timeout", "600"]
+    volumes:
+      - data:/annif-projects
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+        - node.labels.environment == production
+      update_config:
+        parallelism: 1
+        order: start-first
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "localhost:8000/v1/projects"]
+      interval: 15s
+      retries: 3
+      start_period: 600s
+
+  nginx:
+    image: nginx
+    volumes:
+      - apidata:/apidata
+    command: ["nginx", "-c", "/apidata/nginx.conf", "-g", "daemon off;"]
+    networks:
+    - default
+    - traefik-net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+        - node.labels.environment == production
+      labels:
+      - traefik.enable=true
+      - traefik.http.services.${STACK_NAME}.loadbalancer.server.port=80
+      - traefik.http.routers.${STACK_NAME}-http.rule=Host(`${SERVICE_DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-http.entrypoints=http
+      #- traefik.http.routers.${STACK_NAME}-http.middlewares=redirect@file
+      - traefik.http.routers.${STACK_NAME}-https.rule=Host(`${SERVICE_DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-https.entrypoints=https
+      - traefik.http.routers.${STACK_NAME}-https.tls=true
+  mauiserver:
+    image: quay.io/natlibfi/mauiserver:1.3.2
+    volumes:
+      - data:/annif-projects
+    environment:
+      - MAUI_SERVER_DATA_DIR=/annif-projects/mauidata
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+        - node.labels.environment == production
+
+  data:
+    image: quay.io/natlibfi/annif-data:2020-01-15
+    volumes:
+      - data:/tmp
+    command: >
+      sh -c "echo Removing old data... &&
+        rm -rf /tmp/* &&
+        echo Removed! &&
+        echo Copying data from image to mounted volume... &&
+        cp -r --verbose /annif-projects/. /tmp/ &&
+        echo Copied!"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      placement:
+        constraints:
+        - node.labels.environment == production
+
+  apidata:
+    image: quay.io/natlibfi/annif-data:api
+    volumes:
+      - apidata:/tmp
+    command: >
+      sh -c "echo Copying data from image to mounted volume... &&
+        cp -r --verbose /apidata/. /tmp/ &&
+        echo Copied!"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      placement:
+        constraints:
+        - node.labels.environment == production
+
+volumes:
+  data:
+  apidata:
+
+networks:
+  traefik-net:
+    external: true
