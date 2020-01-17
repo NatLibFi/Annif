@@ -1,5 +1,5 @@
 
-var base_url = 'http://api.annif.org/v1/';
+var base_url = 'https://api.annif.org/v1/';
 
 function clearResults() {
     $('#results').empty();
@@ -22,7 +22,7 @@ function fetch_projects() {
 
 function analyze() {
     $.ajax({
-        url: base_url + "projects/" + $('#project').val() + "/analyze",
+        url: base_url + "projects/" + $('#project').val() + "/suggest",
         method: 'POST',
         data: { 
           text: $('#text').val(),
