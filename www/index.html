@@ -73,7 +73,30 @@
       d-block my-4" alt="Annif Robot">  
     </div>
   </div>
+    <h2>Try Annif!</h2>
   
+  <div class="row mb-5">
+    <div class="col-md-8">
+      <div class="form-group">
+        <label for="text">Text to analyze:</label><br>
+        <textarea class="form-control" rows="15" name="text" id="text"></textarea>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="form-group">
+        <label for="project">Project (vocabulary and language):</label>
+        <select class="form-control" id="project">
+          <option></option>
+        </select>
+      </div>
+      <button type="button" class="btn btn-primary" id="analyze">Analyze</button>
+
+      <h2 class="mt-4">Results</h2>
+      <ul class="list-group list-group-flush" id="results">
+      </ul>
+    </div>
+  </div>
+
   <div class="row">
     <div class="col-md-8">
       <div class="jumbotron py-5">
@@ -137,29 +160,6 @@
     
   </div>
   
-  <h2>Try Annif!</h2>
-  
-  <div class="row mb-5">
-    <div class="col-md-8">
-      <div class="form-group">
-        <label for="text">Text to analyze:</label><br>
-        <textarea class="form-control" rows="15" name="text" id="text"></textarea>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="form-group">
-        <label for="project">Project (vocabulary and language):</label>
-        <select class="form-control" id="project">
-          <option></option>
-        </select>
-      </div>
-      <button type="button" class="btn btn-primary" id="analyze">Analyze</button>
-
-      <h2 class="mt-4">Results</h2>
-      <ul class="list-group list-group-flush" id="results">
-      </ul>
-    </div>
-  </div>
 
   <h2>Publications</h2>
   
