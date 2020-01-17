@@ -110,7 +110,7 @@
 
   <script>
 
-var annif_base_url = 'http://api.annif.org/v1/';
+var annif_base_url = 'https://api.annif.org/v1/';
 var finna_base_url = 'https://api.finna.fi/v1/';
 var finna_image_url = 'https://api.finna.fi';
 var finna_record_url = 'https://www.finna.fi/Record/'
@@ -121,9 +121,9 @@ function random_choice(arr) {
    return arr[Math.floor(Math.random()*arr.length)];
 }
 
-function analyze(text, callback) {
+function suggest(text, callback) {
     $.ajax({
-        url: annif_base_url + "projects/" + project + "/analyze",
+        url: annif_base_url + "projects/" + project + "/suggest",
         method: 'POST',
         data: { 
           text: text,
@@ -312,7 +312,7 @@ function get_subject() {
       placeholder: ''
     }
   }).then(function (res) { // get the result
-    analyze(res.value, function(results) {
+    suggest(res.value, function(results) {
       if(results.length > 0 &&
          results[0].label.toLowerCase() == res.value.toLowerCase()) {
         show_content(results[0].label); // shortcut
