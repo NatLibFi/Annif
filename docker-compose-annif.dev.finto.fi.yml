@@ -18,7 +18,7 @@ services:
         parallelism: 1
         order: start-first
     healthcheck:
-      test: ["CMD", "curl", "--fail", "localhost:8000/v1/projects"]
+      test: ["CMD", "curl", "-f", "localhost:8000/v1/projects"]
       interval: 15s
       retries: 3
       start_period: 600s
