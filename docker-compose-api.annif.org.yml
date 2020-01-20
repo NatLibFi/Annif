@@ -24,7 +24,7 @@ services:
       start_period: 600s
 
   nginx:
-    image: nginx
+    image: nginx:1.17.7
     volumes:
       - apidata:/apidata
     command: ["nginx", "-c", "/apidata/nginx.conf", "-g", "daemon off;"]
