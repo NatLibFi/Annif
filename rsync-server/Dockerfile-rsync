@@ -1,0 +1,9 @@
+FROM alpine:3.11
+#MAINTAINER "
+
+RUN apk add --no-cache --virtual .run-deps rsync openssh tzdata curl ca-certificates && rm -rf /var/cache/apk/*
+COPY docker-entrypoint.sh /
+RUN chmod 744 /docker-entrypoint.sh
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["rsync_server"]
