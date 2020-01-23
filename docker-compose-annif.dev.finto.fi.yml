@@ -62,17 +62,20 @@ services:
         constraints:
         - node.labels.environment == test
 
-  data:
-    image: quay.io/natlibfi/annif-data:2020-01-15
+  rsync_server:
+    image: quay.io/natlibfi/annif-data:rsync
     volumes:
-      - data:/tmp
-    command: >
-      sh -c "echo Removing old data... &&
-        rm -rf /tmp/* &&
-        echo Removed! &&
-        echo Copying data from image to mounted volume... &&
-        cp -r --verbose /annif-projects/. /tmp/ &&
-        echo Copied!"
+      - data:/annif-projects
+    ports:
+      - "9000:22"
+    secrets:
+      - source: juho_id_rsa_pub8
+        target: /root/.ssh/authorized_keys
+      - source: juho_ssh_host_rsa_key8
+        target: /etc/ssh/ssh_host_rsa_key
+        mode: 0400
+    networks:
+      - traefik-net
     deploy:
       replicas: 1
       restart_policy:
@@ -106,3 +109,9 @@ volumes:
 networks:
   traefik-net:
     external: true
+
+secrets:
+   juho_id_rsa_pub8:
+      external: true
+   juho_ssh_host_rsa_key8:
+      external: true
