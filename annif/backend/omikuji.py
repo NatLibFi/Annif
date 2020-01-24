@@ -99,14 +99,17 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self._model.save(os.path.join(self.datadir, self.MODEL_FILE))
 
     def _train(self, corpus, params):
-        if corpus.is_empty():
-            raise NotSupportedException(
-                'Cannot train omikuji project with no documents')
-        input = (doc.text for doc in corpus.documents)
-        vecparams = {'min_df': int(params['min_df']),
-                     'tokenizer': self.project.analyzer.tokenize_words}
-        veccorpus = self.create_vectorizer(input, vecparams)
-        self._create_train_file(veccorpus, corpus)
+        if corpus != 'cached':
+            if corpus.is_empty():
+                raise NotSupportedException(
+                    'Cannot train omikuji project with no documents')
+            input = (doc.text for doc in corpus.documents)
+            vecparams = {'min_df': int(params['min_df']),
+                         'tokenizer': self.project.analyzer.tokenize_words}
+            veccorpus = self.create_vectorizer(input, vecparams)
+            self._create_train_file(veccorpus, corpus)
+        else:
+            self.info("Reusing cached training data from previous run.")
         self._create_model(params)
 
     def _suggest(self, text, params):

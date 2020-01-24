@@ -47,6 +47,26 @@ def test_fasttext_train(document_corpus, project, datadir):
     assert datadir.join('fasttext-model').size() > 0
 
 
+def test_fasttext_train_cached(project, datadir):
+    assert datadir.join('fasttext-train.txt').exists()
+    datadir.join('fasttext-model').remove()
+    fasttext_type = annif.backend.get_backend("fasttext")
+    fasttext = fasttext_type(
+        backend_id='fasttext',
+        config_params={
+            'limit': 50,
+            'dim': 100,
+            'lr': 0.25,
+            'epoch': 20,
+            'loss': 'hs'},
+        project=project)
+
+    fasttext.train("cached")
+    assert fasttext._model is not None
+    assert datadir.join('fasttext-model').exists()
+    assert datadir.join('fasttext-model').size() > 0
+
+
 def test_fasttext_train_unknown_subject(tmpdir, datadir, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(

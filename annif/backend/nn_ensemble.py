@@ -92,6 +92,9 @@ class NNEnsembleBackend(
         self.debug("Created model: \n" + "\n".join(summary))
 
     def _train(self, corpus, params):
+        if corpus == 'cached':
+            raise NotSupportedException(
+                'Training nn_ensemble project from cached data not supported.')
         sources = annif.util.parse_sources(self.params['sources'])
         self._create_model(sources)
         self._fit_model(corpus, epochs=int(params['epochs']))

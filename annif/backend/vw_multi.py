@@ -230,8 +230,10 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
                                method=self._write_train_file)
 
     def _train(self, corpus, params):
-        self.info("creating VW model")
-        self._create_train_file(corpus)
+        if corpus != 'cached':
+            self._create_train_file(corpus)
+        else:
+            self.info("Reusing cached training data from previous run.")
         self._create_model(params)
 
     def _learn(self, corpus, params):
