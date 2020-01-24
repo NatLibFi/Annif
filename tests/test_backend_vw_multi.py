@@ -188,7 +188,7 @@ def test_vw_multi_train_params(project, vw_corpus, caplog):
             assert "'learning_rate': 42.1" in line
 
 
-def test_vw_multi_train_cached(project, vw_corpus):
+def test_vw_multi_train_cached(datadir, project, vw_corpus):
     assert datadir.join('vw-train.txt').exists()
     datadir.join('vw-model').remove()
     vw_type = annif.backend.get_backend('vw_multi')
