@@ -7,6 +7,7 @@ import annif.backend
 import annif.corpus
 import annif.project
 from annif.exception import NotInitializedException
+from annif.exception import NotSupportedException
 
 pytest.importorskip("annif.backend.nn_ensemble")
 
@@ -20,6 +21,17 @@ def test_nn_ensemble_suggest_no_model(project):
 
     with pytest.raises(NotInitializedException):
         results = nn_ensemble.suggest("example text")
+
+
+def test_nn_ensemble_train_cached(project):
+    nn_ensemble_type = annif.backend.get_backend('nn_ensemble')
+    nn_ensemble = nn_ensemble_type(
+        backend_id='nn_ensemble',
+        config_params={'sources': 'dummy-en'},
+        project=project)
+
+    with pytest.raises(NotSupportedException):
+        nn_ensemble.train("cached")
 
 
 def test_nn_ensemble_train_and_learn(app, tmpdir):
