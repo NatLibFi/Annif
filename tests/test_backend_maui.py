@@ -27,7 +27,7 @@ def maui(app_project, maui_params):
     return maui
 
 
-def test_maui_train_cached(maui, maui_params):
+def test_maui_train_cached(maui):
     with pytest.raises(NotSupportedException):
         maui.train("cached")
 
