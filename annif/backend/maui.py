@@ -102,6 +102,9 @@ class MauiBackend(backend.AnnifBackend):
             time.sleep(1)
 
     def _train(self, corpus, params):
+        if corpus == 'cached':
+            raise NotSupportedException(
+                'Training maui project from cached data not supported.')
         if corpus.is_empty():
             raise NotSupportedException('training backend {} with no documents'
                                         .format(self.backend_id))

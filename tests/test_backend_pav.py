@@ -41,6 +41,17 @@ def test_pav_train(app, datadir, tmpdir, project):
     assert datadir.join('pav-model-dummy-fi').size() > 0
 
 
+def test_pav_train_cached(project):
+    pav_type = annif.backend.get_backend("pav")
+    pav = pav_type(
+        backend_id='pav',
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        project=project)
+
+    with pytest.raises(NotSupportedException):
+        pav.train("cached")
+
+
 def test_pav_train_nodocuments(project, empty_corpus):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(

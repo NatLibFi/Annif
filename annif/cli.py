@@ -178,15 +178,23 @@ def run_loadvoc(project_id, subjectfile):
 @cli.command('train')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
+@click.option('--cached/--no-cached', default=False,
+              help='Reuse preprocessed training data from previous run')
 @backend_param_option
 @common_options
-def run_train(project_id, paths, backend_param):
+def run_train(project_id, paths, cached, backend_param):
     """
     Train a project on a collection of documents.
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
-    documents = open_documents(paths)
+    if cached:
+        if len(paths) > 0:
+            raise click.UsageError(
+                "Corpus paths cannot be given when using --cached option.")
+        documents = 'cached'
+    else:
+        documents = open_documents(paths)
     proj.train(documents, backend_params)
 
 

@@ -224,6 +224,29 @@ def test_train_multiple(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
+def test_train_cached(testdatadir):
+    result = runner.invoke(annif.cli.cli,
+                           ['train', '--cached', 'tfidf-fi'])
+    assert result.exception
+    assert result.exit_code == 1
+    assert 'Training tfidf project from cached data not supported.' \
+           in result.output
+
+
+def test_train_cached_with_corpus(testdatadir):
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents.tsv')
+    result = runner.invoke(annif.cli.cli,
+                           ['train', '--cached', 'tfidf-fi', docfile])
+    assert result.exception
+    assert result.exit_code == 2
+    assert 'Corpus paths cannot be given when using --cached option.' \
+           in result.output
+
+
 def test_train_param_override_algo_notsupported():
     pytest.importorskip('annif.backend.vw_multi')
     docfile = os.path.join(

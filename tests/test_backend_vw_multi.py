@@ -188,6 +188,20 @@ def test_vw_multi_train_params(project, vw_corpus, caplog):
             assert "'learning_rate': 42.1" in line
 
 
+def test_vw_multi_train_cached(datadir, project, vw_corpus):
+    assert datadir.join('vw-train.txt').exists()
+    datadir.join('vw-model').remove()
+    vw_type = annif.backend.get_backend('vw_multi')
+    vw = vw_type(
+        backend_id='vw_multi',
+        config_params={'chunksize': 4, 'learning_rate': 0.5},
+        project=project)
+    vw.train("cached")
+    assert vw._model is not None
+    assert datadir.join('vw-model').exists()
+    assert datadir.join('vw-model').size() > 0
+
+
 def test_vw_multi_suggest(project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(

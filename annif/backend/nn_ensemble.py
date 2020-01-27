@@ -10,7 +10,7 @@ import tensorflow.keras.backend as K
 import annif.corpus
 import annif.project
 import annif.util
-from annif.exception import NotInitializedException
+from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import VectorSuggestionResult
 from . import backend
 from . import ensemble
@@ -92,6 +92,9 @@ class NNEnsembleBackend(
         self.debug("Created model: \n" + "\n".join(summary))
 
     def _train(self, corpus, params):
+        if corpus == 'cached':
+            raise NotSupportedException(
+                'Training nn_ensemble project from cached data not supported.')
         sources = annif.util.parse_sources(self.params['sources'])
         self._create_model(sources)
         self._fit_model(corpus, epochs=int(params['epochs']))

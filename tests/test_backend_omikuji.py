@@ -78,6 +78,20 @@ def test_omikuji_train(datadir, document_corpus, project):
     assert datadir.join('omikuji-model').listdir()  # non-empty dir
 
 
+def test_omikuji_train_cached(datadir, project):
+    assert datadir.join('omikuji-train.txt').exists()
+    datadir.join('omikuji-model').remove()
+    omikuji_type = annif.backend.get_backend('omikuji')
+    omikuji = omikuji_type(
+        backend_id='omikuji',
+        config_params={},
+        project=project)
+    omikuji.train("cached")
+    assert omikuji._model is not None
+    assert datadir.join('omikuji-model').exists()
+    assert datadir.join('omikuji-model').listdir()  # non-empty dir
+
+
 def test_omikuji_train_nodocuments(datadir, project, empty_corpus):
     omikuji_type = annif.backend.get_backend('omikuji')
     omikuji = omikuji_type(
