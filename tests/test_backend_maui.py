@@ -27,6 +27,11 @@ def maui(app_project, maui_params):
     return maui
 
 
+def test_maui_train_cached(maui, maui_params):
+    with pytest.raises(NotSupportedException):
+        maui.train("cached")
+
+
 def test_maui_train_missing_endpoint(document_corpus, project):
     maui_type = annif.backend.get_backend("maui")
     maui = maui_type(
