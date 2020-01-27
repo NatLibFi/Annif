@@ -62,8 +62,8 @@ services:
         constraints:
         - node.labels.environment == test
 
-  rsync_server:
-    image: quay.io/natlibfi/annif-data:rsync
+  rsync_client:
+    image: quay.io/natlibfi/annif-rsync
     volumes:
       - data:/annif-projects
     ports:
