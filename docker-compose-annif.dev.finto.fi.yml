@@ -77,6 +77,7 @@ services:
         mode: 0600
         uid: '998'
         gid: '998'
+    command: rsync -avzLu annif@128.214.223.211:/srv/annif-data/annif.dev.finto.fi/* /annif-projects
     networks:
       - traefik-net
     deploy:
