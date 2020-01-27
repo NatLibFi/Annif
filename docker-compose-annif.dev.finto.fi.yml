@@ -66,8 +66,6 @@ services:
     image: quay.io/natlibfi/annif-rsync
     volumes:
       - data:/annif-projects
-    ports:
-      - "9000:22"
     secrets:
       - source: juho_id_rsa_pub8
         target: /root/.ssh/authorized_keys
