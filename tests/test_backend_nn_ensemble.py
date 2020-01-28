@@ -12,6 +12,12 @@ from annif.exception import NotSupportedException
 pytest.importorskip("annif.backend.nn_ensemble")
 
 
+def test_lmdb_sequence_idx_to_key_to_idx():
+    seq_class = annif.backend.nn_ensemble.LMDBSequence
+    assert seq_class.idx_to_key(42) == b'00000042'
+    assert seq_class.key_to_idx(b'00000042') == 42
+
+
 def test_nn_ensemble_suggest_no_model(project):
     nn_ensemble_type = annif.backend.get_backend('nn_ensemble')
     nn_ensemble = nn_ensemble_type(
