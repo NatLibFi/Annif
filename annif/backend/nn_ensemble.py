@@ -151,9 +151,6 @@ class NNEnsembleBackend(
         self.debug("Created model: \n" + "\n".join(summary))
 
     def _train(self, corpus, params):
-        if corpus == 'cached':
-            raise NotSupportedException(
-                'Training nn_ensemble project from cached data not supported.')
         sources = annif.util.parse_sources(self.params['sources'])
         self._create_model(sources)
         self._fit_model(corpus, epochs=int(params['epochs']))
@@ -180,7 +177,10 @@ class NNEnsembleBackend(
         env = lmdb.open(lmdb_path, map_size=self.LMDB_MAP_SIZE, writemap=True)
         with env.begin(write=True, buffers=True) as txn:
             seq = LMDBSequence(txn, batch_size=32)
-            self._corpus_to_vectors(corpus, seq)
+            if corpus != 'cached':
+                self._corpus_to_vectors(corpus, seq)
+            else:
+                self.info("Reusing cached training data from previous run.")
 
             # fit the model
             self._model.fit(seq, verbose=True, epochs=epochs)
