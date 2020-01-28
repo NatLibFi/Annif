@@ -28,22 +28,22 @@ class LMDBSequence(Sequence):
         self._txn = txn
         cursor = txn.cursor()
         if cursor.last():
-            self._counter = int(cursor.key())
+            self._counter = self.key_to_idx(cursor.key())
         else:  # empty database
             self._counter = 0
         self._batch_size = batch_size
 
     @staticmethod
-    def int_to_key(val):
+    def idx_to_key(val):
         return b'%08d' % val
 
     @staticmethod
-    def key_to_int(key):
+    def key_to_idx(key):
         return int(key)
 
     def add_sample(self, inputs, targets):
         # use zero-padded 8-digit key
-        key = self.int_to_key(self._counter)
+        key = self.idx_to_key(self._counter)
         self._counter += 1
         # convert the sample into a sparse matrix and serialize it as bytes
         sample = (csr_matrix(inputs), csr_matrix(targets))
@@ -57,11 +57,11 @@ class LMDBSequence(Sequence):
         cursor = self._txn.cursor()
         first_key = idx * self._batch_size
         last_key = first_key + self._batch_size
-        cursor.set_key(self.int_to_key(first_key))
+        cursor.set_key(self.idx_to_key(first_key))
         input_arrays = []
         target_arrays = []
         for key, value in cursor.iternext():
-            if self.key_to_int(key) >= last_key:
+            if self.key_to_idx(key) >= last_key:
                 break
             input_csr, target_csr = joblib.load(BytesIO(value))
             input_arrays.append(input_csr.toarray())
