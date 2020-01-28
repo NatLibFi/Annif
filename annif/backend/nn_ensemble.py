@@ -23,6 +23,7 @@ from . import ensemble
 
 class LMDBSequence(Sequence):
     """A sequence of samples stored in a LMDB database."""
+
     def __init__(self, txn, batch_size):
         self._txn = txn
         cursor = txn.cursor()
@@ -70,7 +71,7 @@ class LMDBSequence(Sequence):
     def __len__(self):
         """return the number of available batches"""
         return int(np.ceil(self._counter / self._batch_size))
-        
+
 
 class NNEnsembleBackend(
         backend.AnnifLearningBackend,
