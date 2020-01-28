@@ -1,0 +1,10 @@
+FROM alpine:3.11
+
+RUN apk add --no-cache --virtual .run-deps rsync openssh tzdata curl ca-certificates && rm -rf /var/cache/apk/*
+EXPOSE 22
+
+RUN addgroup -S -g 998 rsync-user && adduser -S -u 998 rsync-user -G rsync-user
+
+USER rsync-user
+RUN mkdir -p /home/rsync-user/.ssh /home/rsync-user/data
+CMD ["sh"]

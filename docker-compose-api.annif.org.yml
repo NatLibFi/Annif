@@ -61,17 +61,24 @@ services:
         constraints:
         - node.labels.environment == production
 
-  data:
-    image: quay.io/natlibfi/annif-data:2020-01-15
+  rsync_client:
+    image: quay.io/natlibfi/annif-rsync
     volumes:
-      - data:/tmp
-    command: >
-      sh -c "echo Removing old data... &&
-        rm -rf /tmp/* &&
-        echo Removed! &&
-        echo Copying data from image to mounted volume... &&
-        cp -r --verbose /annif-projects/. /tmp/ &&
-        echo Copied!"
+      - data:/annif-projects
+    secrets:
+      - source: annif-rsync-id-rsa
+        target: /home/rsync-user/.ssh/id_rsa
+        mode: 0400
+        uid: '998'
+        gid: '998'
+      - source: annif-kk-ssh-host-rsa-key
+        target: /home/rsync-user/.ssh/known_hosts
+        mode: 0600
+        uid: '998'
+        gid: '998'
+    command: rsync -avzLu --exclude '*omikuji-train.txt' annif@128.214.223.211:/srv/annif-data/api.annif.org/* /annif-projects
+    networks:
+      - traefik-net
     deploy:
       replicas: 1
       restart_policy:
@@ -104,4 +111,10 @@ volumes:
 
 networks:
   traefik-net:
+    external: true
+
+secrets:
+  annif-rsync-id-rsa:
+    external: true
+  annif-kk-ssh-host-rsa-key:
     external: true
