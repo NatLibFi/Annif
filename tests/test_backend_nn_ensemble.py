@@ -34,7 +34,7 @@ def test_nn_ensemble_train_and_learn(app, tmpdir):
     tmpfile = tmpdir.join('document.tsv')
     tmpfile.write("dummy\thttp://example.org/dummy\n" +
                   "another\thttp://example.org/dummy\n" +
-                  "none\thttp://example.org/none")
+                  "none\thttp://example.org/none\n" * 40)
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
     with app.app_context():

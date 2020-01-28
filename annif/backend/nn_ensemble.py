@@ -3,6 +3,7 @@ projects."""
 
 
 from io import BytesIO
+import shutil
 import os.path
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -173,6 +174,8 @@ class NNEnsembleBackend(
 
     def _fit_model(self, corpus, epochs):
         lmdb_path = os.path.join(self.datadir, self.LMDB_FILE)
+        if corpus != 'cached' and os.path.exists(lmdb_path):
+            shutil.rmtree(lmdb_path)
         env = lmdb.open(lmdb_path, map_size=self.LMDB_MAP_SIZE, writemap=True)
         with env.begin(write=True, buffers=True) as txn:
             seq = LMDBSequence(txn, batch_size=32)
