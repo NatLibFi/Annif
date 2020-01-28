@@ -56,12 +56,11 @@ class LMDBSequence(Sequence):
         """get a particular batch of samples"""
         cursor = self._txn.cursor()
         first_key = idx * self._batch_size
-        last_key = first_key + self._batch_size
         cursor.set_key(self.idx_to_key(first_key))
         input_arrays = []
         target_arrays = []
         for key, value in cursor.iternext():
-            if self.key_to_idx(key) >= last_key:
+            if self.key_to_idx(key) >= (first_key + self._batch_size):
                 break
             input_csr, target_csr = joblib.load(BytesIO(value))
             input_arrays.append(input_csr.toarray())
