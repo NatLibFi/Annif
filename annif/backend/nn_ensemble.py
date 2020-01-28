@@ -15,7 +15,7 @@ import tensorflow.keras.backend as K
 import annif.corpus
 import annif.project
 import annif.util
-from annif.exception import NotInitializedException, NotSupportedException
+from annif.exception import NotInitializedException
 from annif.suggestion import VectorSuggestionResult
 from . import backend
 from . import ensemble
