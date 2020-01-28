@@ -5,6 +5,7 @@ individual backends into probabilities."""
 
 import os.path
 import joblib
+from scipy.sparse import coo_matrix, csc_matrix
 from sklearn.isotonic import IsotonicRegression
 import numpy as np
 import annif.corpus
@@ -65,14 +66,20 @@ class PAVBackend(ensemble.EnsembleBackend):
 
     @staticmethod
     def _suggest_train_corpus(source_project, corpus):
-        scores = []
         true = []
-        for doc in corpus.documents:
+        data = []
+        row = []
+        col = []
+        for docid, doc in enumerate(corpus.documents):
             hits = source_project.suggest(doc.text)
-            scores.append(hits.vector)
+            for cid in np.flatnonzero(hits.vector):
+                data.append(hits.vector[cid])
+                row.append(docid)
+                col.append(cid)
             subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
             true.append(subjects.as_vector(source_project.subjects))
-        return np.array(scores), np.array(true)
+        scores = csc_matrix(coo_matrix((data, (row, col)), dtype=np.float32))
+        return scores, np.array(true)
 
     def _create_pav_model(self, source_project_id, min_docs, corpus):
         self.info("creating PAV model for source {}, min_docs={}".format(
@@ -86,7 +93,8 @@ class PAVBackend(ensemble.EnsembleBackend):
             if true[:, cid].sum() < min_docs:
                 continue  # don't create model b/c of too few examples
             reg = IsotonicRegression(out_of_bounds='clip')
-            reg.fit(scores[:, cid].astype(np.float64), true[:, cid])
+            cid_scores = scores[:, cid].toarray().flatten().astype(np.float64)
+            reg.fit(cid_scores, true[:, cid])
             pav_regressions[source_project.subjects[cid][0]] = reg
         self.info("created PAV model for {} concepts".format(
             len(pav_regressions)))
