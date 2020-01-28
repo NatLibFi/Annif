@@ -172,11 +172,14 @@ class NNEnsembleBackend(
             true_vector = subjects.as_vector(self.project.subjects)
             seq.add_sample(score_vector, true_vector)
 
-    def _fit_model(self, corpus, epochs):
+    def _open_lmdb(self, cached):
         lmdb_path = os.path.join(self.datadir, self.LMDB_FILE)
-        if corpus != 'cached' and os.path.exists(lmdb_path):
+        if not cached and os.path.exists(lmdb_path):
             shutil.rmtree(lmdb_path)
-        env = lmdb.open(lmdb_path, map_size=self.LMDB_MAP_SIZE, writemap=True)
+        return lmdb.open(lmdb_path, map_size=self.LMDB_MAP_SIZE, writemap=True)
+
+    def _fit_model(self, corpus, epochs):
+        env = self._open_lmdb(corpus == 'cached')
         with env.begin(write=True, buffers=True) as txn:
             seq = LMDBSequence(txn, batch_size=32)
             if corpus != 'cached':
