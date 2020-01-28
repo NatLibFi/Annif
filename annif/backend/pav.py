@@ -66,11 +66,11 @@ class PAVBackend(ensemble.EnsembleBackend):
 
     @staticmethod
     def _suggest_train_corpus(source_project, corpus):
-        data = []
-        row = []
-        col = []
-        trow = []
-        tcol = []
+        # lists for constructing score matrix
+        data, row, col = [], [], []
+        # lists for constructing true label matrix
+        trow, tcol = [], []
+
         ndocs = 0
         for docid, doc in enumerate(corpus.documents):
             hits = source_project.suggest(doc.text)
@@ -85,15 +85,13 @@ class PAVBackend(ensemble.EnsembleBackend):
                 trow.append(docid)
                 tcol.append(cid)
             ndocs += 1
-        scores = csc_matrix(
-            coo_matrix((data, (row, col)),
-                       shape=(ndocs, len(source_project.subjects)),
-                       dtype=np.float32))
-        true = csc_matrix(
-            coo_matrix((np.ones(len(trow), dtype=np.bool), (trow, tcol)),
-                       shape=(ndocs, len(source_project.subjects)),
-                       dtype=np.bool))
-        return scores, true
+        scores = coo_matrix((data, (row, col)),
+                            shape=(ndocs, len(source_project.subjects)),
+                            dtype=np.float32)
+        true = coo_matrix((np.ones(len(trow), dtype=np.bool), (trow, tcol)),
+                          shape=(ndocs, len(source_project.subjects)),
+                          dtype=np.bool)
+        return csc_matrix(scores), csc_matrix(true)
 
     def _create_pav_model(self, source_project_id, min_docs, corpus):
         self.info("creating PAV model for source {}, min_docs={}".format(
