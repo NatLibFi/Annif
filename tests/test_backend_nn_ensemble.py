@@ -25,7 +25,7 @@ def test_nn_ensemble_suggest_no_model(project):
         project=project)
 
     with pytest.raises(NotInitializedException):
-        results = nn_ensemble.suggest("example text")
+        nn_ensemble.suggest("example text")
 
 
 def test_nn_ensemble_train_and_learn(app, tmpdir):

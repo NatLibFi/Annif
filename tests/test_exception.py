@@ -7,7 +7,7 @@ from click import ClickException
 
 def test_annifexception_not_instantiable():
     with pytest.raises(TypeError):
-        exc = AnnifException("test message")
+        AnnifException("test message")
 
 
 def test_annifexception_is_clickexception():

@@ -445,11 +445,9 @@ def test_eval_label(tmpdir):
 
 def test_eval_uri(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
-    keyfile = tmpdir.join('doc1.key').write(
-        "<http://example.org/dummy>\tdummy\n")
+    tmpdir.join('doc1.key').write("<http://example.org/dummy>\tdummy\n")
     tmpdir.join('doc2.txt').write('doc2')
-    keyfile = tmpdir.join('doc2.key').write(
-        "<http://example.org/none>\tnone\n")
+    tmpdir.join('doc2.key').write("<http://example.org/none>\tnone\n")
     tmpdir.join('doc3.txt').write('doc3')
 
     result = runner.invoke(annif.cli.cli, ['eval', 'dummy-en', str(tmpdir)])

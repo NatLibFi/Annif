@@ -45,7 +45,7 @@ def test_vw_multi_suggest_no_model(project):
         project=project)
 
     with pytest.raises(NotInitializedException):
-        results = vw.suggest("example text")
+        vw.suggest("example text")
 
 
 def test_vw_multi_train_and_learn(datadir, document_corpus, project):
