@@ -6,7 +6,7 @@ from io import BytesIO
 import shutil
 import os.path
 import numpy as np
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, csc_matrix
 import joblib
 import lmdb
 from tensorflow.keras.layers import Input, Dense, Add, Flatten, Lambda, Dropout
@@ -49,7 +49,7 @@ class LMDBSequence(Sequence):
         key = idx_to_key(self._counter)
         self._counter += 1
         # convert the sample into a sparse matrix and serialize it as bytes
-        sample = (csr_matrix(inputs), csr_matrix(targets))
+        sample = (csc_matrix(inputs), csr_matrix(targets))
         buf = BytesIO()
         joblib.dump(sample, buf)
         buf.seek(0)
