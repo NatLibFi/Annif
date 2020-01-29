@@ -22,6 +22,16 @@ from . import backend
 from . import ensemble
 
 
+def idx_to_key(idx):
+    """convert an integer index to a binary key for use in LMDB"""
+    return b'%08d' % idx
+
+
+def key_to_idx(key):
+    """convert a binary LMDB key to an integer index"""
+    return int(key)
+
+
 class LMDBSequence(Sequence):
     """A sequence of samples stored in a LMDB database."""
 
@@ -29,22 +39,14 @@ class LMDBSequence(Sequence):
         self._txn = txn
         cursor = txn.cursor()
         if cursor.last():
-            self._counter = self.key_to_idx(cursor.key())
+            self._counter = key_to_idx(cursor.key())
         else:  # empty database
             self._counter = 0
         self._batch_size = batch_size
 
-    @staticmethod
-    def idx_to_key(val):
-        return b'%08d' % val
-
-    @staticmethod
-    def key_to_idx(key):
-        return int(key)
-
     def add_sample(self, inputs, targets):
         # use zero-padded 8-digit key
-        key = self.idx_to_key(self._counter)
+        key = idx_to_key(self._counter)
         self._counter += 1
         # convert the sample into a sparse matrix and serialize it as bytes
         sample = (csr_matrix(inputs), csr_matrix(targets))
@@ -57,11 +59,11 @@ class LMDBSequence(Sequence):
         """get a particular batch of samples"""
         cursor = self._txn.cursor()
         first_key = idx * self._batch_size
-        cursor.set_key(self.idx_to_key(first_key))
+        cursor.set_key(idx_to_key(first_key))
         input_arrays = []
         target_arrays = []
         for key, value in cursor.iternext():
-            if self.key_to_idx(key) >= (first_key + self._batch_size):
+            if key_to_idx(key) >= (first_key + self._batch_size):
                 break
             input_csr, target_csr = joblib.load(BytesIO(value))
             input_arrays.append(input_csr.toarray())
