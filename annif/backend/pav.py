@@ -25,7 +25,7 @@ class PAVBackend(ensemble.EnsembleBackend):
     # defaults for uninitialized instances
     _models = None
 
-    DEFAULT_PARAMS = {'min-docs': 10}
+    DEFAULT_PARAMETERS = {'min-docs': 10}
 
     def initialize(self):
         if self._models is not None:

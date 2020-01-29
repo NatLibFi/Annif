@@ -44,7 +44,6 @@ def precision_at_k_score(y_true, y_pred, limit):
     """calculate the precision at K, i.e. the number of relevant items
     among the top K predicted ones"""
     scores = []
-    origlimit = limit
     for true, pred in zip(y_true, y_pred):
         order = pred.argsort()[::-1]
         orderlimit = min(limit, np.count_nonzero(pred))

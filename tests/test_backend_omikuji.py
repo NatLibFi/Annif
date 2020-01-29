@@ -34,7 +34,7 @@ def test_omikuji_suggest_no_vectorizer(project):
         project=project)
 
     with pytest.raises(NotInitializedException):
-        results = omikuji.suggest("example text")
+        omikuji.suggest("example text")
 
 
 def test_omikuji_create_train_file(tmpdir, project, datadir):
@@ -152,4 +152,4 @@ def test_omikuji_suggest_no_model(datadir, project):
 
     datadir.join('omikuji-model').remove()
     with pytest.raises(NotInitializedException):
-        results = omikuji.suggest("example text")
+        omikuji.suggest("example text")
