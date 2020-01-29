@@ -30,7 +30,9 @@ RUN apt-get update \
 	&& ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.so \
 		/usr/lib/x86_64-linux-gnu/libboost_python3.so \
 	&& pip install --no-cache-dir \
-		vowpalwabbit==8.7.*
+		vowpalwabbit==8.7.* \
+        ## LMDB
+        && pip install --no-cache-dir lmdb==0.98
 
 
 
