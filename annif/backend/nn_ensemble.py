@@ -87,7 +87,7 @@ class NNEnsembleBackend(
     LMDB_FILE = 'nn-train.mdb'
     LMDB_MAP_SIZE = 1024 * 1024 * 1024
 
-    DEFAULT_PARAMS = {
+    DEFAULT_PARAMETERS = {
         'nodes': 100,
         'dropout_rate': 0.2,
         'optimizer': 'adam',
@@ -101,7 +101,7 @@ class NNEnsembleBackend(
     def default_params(self):
         params = {}
         params.update(super().default_params())
-        params.update(self.DEFAULT_PARAMS)
+        params.update(self.DEFAULT_PARAMETERS)
         return params
 
     def initialize(self):

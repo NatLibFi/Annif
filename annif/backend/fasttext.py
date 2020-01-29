@@ -33,7 +33,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         't': float
     }
 
-    DEFAULT_PARAMS = {
+    DEFAULT_PARAMETERS = {
         'dim': 100,
         'lr': 0.25,
         'epoch': 5,
@@ -47,9 +47,9 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     _model = None
 
     def default_params(self):
-        params = backend.AnnifBackend.DEFAULT_PARAMS.copy()
-        params.update(mixins.ChunkingBackend.DEFAULT_PARAMS)
-        params.update(self.DEFAULT_PARAMS)
+        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
+        params.update(mixins.ChunkingBackend.DEFAULT_PARAMETERS)
+        params.update(self.DEFAULT_PARAMETERS)
         return params
 
     def initialize(self):

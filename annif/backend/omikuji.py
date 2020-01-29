@@ -21,7 +21,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     TRAIN_FILE = 'omikuji-train.txt'
     MODEL_FILE = 'omikuji-model'
 
-    DEFAULT_PARAMS = {
+    DEFAULT_PARAMETERS = {
         'min_df': 1,
         'cluster_balanced': True,
         'cluster_k': 2,
@@ -30,8 +30,8 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     }
 
     def default_params(self):
-        params = backend.AnnifBackend.DEFAULT_PARAMS.copy()
-        params.update(self.DEFAULT_PARAMS)
+        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
+        params.update(self.DEFAULT_PARAMETERS)
         return params
 
     def _initialize_model(self):

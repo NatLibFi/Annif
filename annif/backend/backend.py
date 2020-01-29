@@ -11,7 +11,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     name = None
     needs_subject_index = False
 
-    DEFAULT_PARAMS = {'limit': 100}
+    DEFAULT_PARAMETERS = {'limit': 100}
 
     def __init__(self, backend_id, config_params, project):
         """Initialize backend with specific parameters. The
@@ -23,7 +23,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         self.datadir = project.datadir
 
     def default_params(self):
-        return self.DEFAULT_PARAMS
+        return self.DEFAULT_PARAMETERS
 
     @property
     def params(self):
