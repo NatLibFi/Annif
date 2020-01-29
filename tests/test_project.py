@@ -121,7 +121,7 @@ def test_get_project_default_params_fasttext(app):
         assert param in actual_params and actual_params[param] == val
 
 
-def test_get_project_invalid_config_file(app):
+def test_get_project_invalid_config_file():
     app = annif.create_app(
         config_name='annif.default_config.TestingInvalidProjectsConfig')
     with app.app_context():
