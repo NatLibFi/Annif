@@ -49,6 +49,13 @@ class SubjectIndex:
     def __getitem__(self, subject_id):
         return (self._uris[subject_id], self._labels[subject_id])
 
+    def append(self, uri, label):
+        subject_id = len(self._uris)
+        self._uris.append(uri)
+        self._labels.append(label)
+        self._uri_idx[uri] = subject_id
+        self._label_idx[label] = subject_id
+
     def by_uri(self, uri):
         """return the subject index of a subject by its URI"""
         try:
