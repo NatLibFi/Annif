@@ -31,7 +31,7 @@ def test_update_subject_index(testdatadir, tmpdir, subject_index):
     subjfile_new.write("<http://example.org/dummy>\tdummy\n" +
                        "<http://example.org/dummydummy>\tdummydummy\n" +
                        "<http://example.org/nonenone>\tnonenone\n")
-    subjects_new = annif.corpus.SubjectFileTSV(subjfile_new)
+    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new))
     vocab.load_vocabulary(subjects_new, 'en')
     assert len(vocab.subjects) == 4
     assert vocab.subjects.by_uri('http://example.org/dummy') == 0
