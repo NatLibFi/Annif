@@ -88,6 +88,12 @@ class SubjectIndex:
                 for subject_id in (self.by_label(label) for label in labels)
                 if subject_id is not None]
 
+    def empty_labels(self):
+        """return subject indices of subjects with empty labels"""
+
+        return [subject_id for subject_id, label in enumerate(self._labels)
+                if label == '']
+
     def save(self, path):
         """Save this subject index into a file."""
 
