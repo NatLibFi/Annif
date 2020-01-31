@@ -10,7 +10,7 @@ def test_update_subject_index(testdatadir, tmpdir, subject_index):
         os.path.dirname(__file__),
         'corpora',
         'dummy-subjects.tsv')
-    vocab = annif.vocab.AnnifVocabulary('vocab-id', tmpdir)
+    vocab = annif.vocab.AnnifVocabulary('vocab-id', str(tmpdir))
     subjects = annif.corpus.SubjectFileTSV(subjfile)
 
     # Load vocabulary first time
