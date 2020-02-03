@@ -31,10 +31,11 @@ class AnnifVocabulary(DatadirMixin):
         updated_subjects = annif.corpus.SubjectIndex.load(os.path.devnull)
 
         for uri, label in old_subjects:
-            if not new_subjects.contains_uri(uri):  # removed from new corpus
+            if new_subjects.contains_uri(uri):
+                label = new_subjects[new_subjects.by_uri(uri)][1]
+            else:  # subject removed from new corpus
                 label = ''
             updated_subjects.append(uri, label)
-
         for uri, label in new_subjects:
             if not old_subjects.contains_uri(uri):
                 updated_subjects.append(uri, label)
