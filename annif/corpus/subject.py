@@ -56,6 +56,9 @@ class SubjectIndex:
         self._uri_idx[uri] = subject_id
         self._label_idx[label] = subject_id
 
+    def contains_uri(self, uri):
+        return uri in self._uris
+
     def by_uri(self, uri):
         """return the subject index of a subject by its URI"""
         try:
