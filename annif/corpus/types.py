@@ -46,6 +46,7 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
             return True
 
 Subject = collections.namedtuple('Subject', 'uri label notation text')
+Subject.__new__.__defaults__ = (None,) * 4
 
 
 class SubjectCorpus(metaclass=abc.ABCMeta):
