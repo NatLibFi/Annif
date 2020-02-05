@@ -229,7 +229,11 @@ def run_suggest(project_id, limit, threshold, backend_param):
     hit_filter = SuggestionFilter(limit, threshold)
     hits = hit_filter(project.suggest(text, backend_params))
     for hit in hits:
-        click.echo("<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score))
+        click.echo(
+            "<{}>\t{}\t{}".format(
+                hit.uri,
+                '\t'.join(filter(None, (hit.label, hit.notation))),
+                hit.score))
 
 
 @cli.command('index')
