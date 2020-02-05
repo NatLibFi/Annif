@@ -45,8 +45,7 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
         except StopIteration:
             return True
 
-
-Subject = collections.namedtuple('Subject', 'uri label text')
+Subject = collections.namedtuple('Subject', 'uri label notation text')
 
 
 class SubjectCorpus(metaclass=abc.ABCMeta):

@@ -6,7 +6,7 @@ import numpy as np
 
 
 SubjectSuggestion = collections.namedtuple(
-    'SubjectSuggestion', 'uri label score')
+    'SubjectSuggestion', 'uri label notation score')
 WeightedSuggestion = collections.namedtuple(
     'WeightedSuggestion', 'hits weight')
 
@@ -115,6 +115,7 @@ class VectorSuggestionResult(SuggestionResult):
                 SubjectSuggestion(
                     uri=subject[0],
                     label=subject[1],
+                    notation=subject[2],
                     score=float(score)))
         return ListSuggestionResult(hits, self._subject_index)
 

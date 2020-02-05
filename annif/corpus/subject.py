@@ -35,11 +35,13 @@ class SubjectIndex:
         """Initialize the subject index from a subject corpus."""
         self._uris = []
         self._labels = []
+        self._notations = []
         self._uri_idx = {}
         self._label_idx = {}
         for subject_id, subject in enumerate(corpus.subjects):
             self._uris.append(subject.uri)
             self._labels.append(subject.label)
+            self._notations.append(subject.notation)
             self._uri_idx[subject.uri] = subject_id
             self._label_idx[subject.label] = subject_id
 
@@ -47,7 +49,8 @@ class SubjectIndex:
         return len(self._uris)
 
     def __getitem__(self, subject_id):
-        return (self._uris[subject_id], self._labels[subject_id])
+        return (self._uris[subject_id], self._labels[subject_id],
+                self._notations[subject_id])
 
     def by_uri(self, uri):
         """return the subject index of a subject by its URI"""
