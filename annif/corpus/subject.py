@@ -14,7 +14,7 @@ class SubjectFileTSV:
         self.path = path
 
     def _parse_line(self, line):
-        vals = line.strip().split('\t', line.count('\t'))
+        vals = line.strip().split('\t', 2)
         clean_uri = annif.util.cleanup_uri(vals[0])
         label = vals[1] if len(vals) >= 2 else ''
         notation = vals[2] if len(vals) >= 3 else None
