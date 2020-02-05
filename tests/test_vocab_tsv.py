@@ -11,10 +11,10 @@ def test_load_tsv_uri_brackets(tmpdir):
 
     index = SubjectIndex.load(str(tmpfile))
     assert len(index) == 2
-    assert index[0] == ('http://www.yso.fi/onto/yso/p8993', 'hylyt')
+    assert index[0] == ('http://www.yso.fi/onto/yso/p8993', 'hylyt', None)
     assert index[1] == (
         'http://www.yso.fi/onto/yso/p9285',
-        'neoliittinen kausi')
+        'neoliittinen kausi', None)
 
 
 def test_load_tsv_uri_nobrackets(tmpdir):
@@ -24,7 +24,7 @@ def test_load_tsv_uri_nobrackets(tmpdir):
 
     index = SubjectIndex.load(str(tmpfile))
     assert len(index) == 2
-    assert index[0] == ('http://www.yso.fi/onto/yso/p8993', 'hylyt')
+    assert index[0] == ('http://www.yso.fi/onto/yso/p8993', 'hylyt', None)
     assert index[1] == (
         'http://www.yso.fi/onto/yso/p9285',
-        'neoliittinen kausi')
+        'neoliittinen kausi', None)
