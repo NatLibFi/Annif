@@ -39,7 +39,7 @@ class MauiBackend(backend.AnnifBackend):
 
     def _initialize_tagger(self, params):
         self.info(
-            "Initializing Maui Service tagger '{}'".format(
+            "Initializing Maui Server tagger '{}'".format(
                 self.tagger(params)))
 
         # try to delete the tagger in case it already exists
