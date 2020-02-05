@@ -17,9 +17,12 @@ class SubjectFileTSV:
     def subjects(self):
         with open(self.path, encoding='utf-8-sig') as subjfile:
             for line in subjfile:
-                uri, label = line.strip().split(None, 1)
-                clean_uri = annif.util.cleanup_uri(uri)
-                yield Subject(uri=clean_uri, label=label, text=None)
+                vals = line.strip().split('\t', line.count('\t'))
+                clean_uri = annif.util.cleanup_uri(vals[0])
+                label = vals[1] if len(vals) >= 2 else ''
+                notation = vals[2] if len(vals) >= 3 else None
+                yield Subject(uri=clean_uri, label=label, notation=notation,
+                              text=None)
 
     def save_skos(self, path, language):
         """Save the contents of the subject vocabulary into a SKOS/Turtle
