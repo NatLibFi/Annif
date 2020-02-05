@@ -272,7 +272,10 @@ def run_index(project_id, directory, suffix, force,
         with open(subjectfilename, 'w', encoding='utf-8') as subjfile:
             results = project.suggest(text, backend_params)
             for hit in hit_filter(results):
-                line = "<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score)
+                line = "<{}>\t{}\t{}".format(
+                    hit.uri,
+                    '\t'.join(filter(None, (hit.label, hit.notation))),
+                    hit.score)
                 click.echo(line, file=subjfile)
 
 
