@@ -91,9 +91,10 @@ class SubjectIndex:
         """Save this subject index into a file."""
 
         with open(path, 'w', encoding='utf-8') as subjfile:
-            for subject_id in range(len(self)):
-                line = "<{}>\t{}".format(
-                    self._uris[subject_id], self._labels[subject_id])
+            for uri, label, notation in self:
+                line = "<{}>\t{}".format(uri, label)
+                if notation is not None:
+                    line += ('\t' + notation)
                 print(line, file=subjfile)
 
     @classmethod
