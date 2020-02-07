@@ -36,10 +36,12 @@ class SubjectFileSKOS(SubjectCorpus):
             if (concept, OWL.deprecated, rdflib.Literal(True)) in self.graph:
                 continue
             labels = self.graph.preferredLabel(concept, lang=self.language)
+            notation = self.graph.value(concept, SKOS.notation)
             if not labels:
                 continue
             label = str(labels[0][1])
-            yield Subject(uri=str(concept), label=label, text=None)
+            yield Subject(uri=str(concept), label=label, notation=notation,
+                          text=None)
 
     @staticmethod
     def is_rdf_file(path):
