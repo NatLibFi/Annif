@@ -18,6 +18,9 @@ def serialize_subjects_to_skos(subjects, language, path):
         graph.add((rdflib.URIRef(subject.uri),
                    SKOS.prefLabel,
                    rdflib.Literal(subject.label, language)))
+        graph.add((rdflib.URIRef(subject.uri),
+                   SKOS.notation,
+                   rdflib.Literal(subject.notation)))
     graph.serialize(destination=path, format='turtle')
 
 
