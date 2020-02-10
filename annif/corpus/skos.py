@@ -43,6 +43,7 @@ class SubjectFileSKOS(SubjectCorpus):
             if not labels:
                 continue
             label = str(labels[0][1])
+            notation = None if notation is None else str(notation)
             yield Subject(uri=str(concept), label=label, notation=notation,
                           text=None)
 
