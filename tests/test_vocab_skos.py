@@ -49,3 +49,4 @@ yso:p9285
     assert len(subjects) == 1  # one of the concepts was deprecated
     assert subjects[0].uri == 'http://www.yso.fi/onto/yso/p8993'
     assert subjects[0].label == 'hylyt'
+    assert subjects[0].notation is None
