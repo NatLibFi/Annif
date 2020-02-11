@@ -26,6 +26,7 @@ def test_http_suggest(project):
         assert result[0].uri == 'http://example.org/http'
         assert result[0].label == 'http'
         assert result[0].score == 1.0
+        assert result[0].notation is None
 
 
 def test_http_suggest_with_results(project):
@@ -49,6 +50,7 @@ def test_http_suggest_with_results(project):
         assert result[0].uri == 'http://example.org/http'
         assert result[0].label == 'http'
         assert result[0].score == 1.0
+        assert result[0].notation == '42.42'
 
 
 def test_http_suggest_zero_score(project):

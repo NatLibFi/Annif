@@ -169,6 +169,7 @@ def test_maui_suggest(maui, project):
     assert len(result) == 1
     assert result[0].uri == 'http://example.org/maui'
     assert result[0].label == 'maui'
+    assert result[0].notation is None
     assert result[0].score == 1.0
     assert len(responses.calls) == 1
 

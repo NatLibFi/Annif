@@ -12,6 +12,7 @@ def generate_suggestions(n, subject_index):
         uri = 'http://example.org/{}'.format(i)
         suggestions.append(SubjectSuggestion(uri=uri,
                                              label='hit {}'.format(i),
+                                             notation=None,
                                              score=1.0 / (i + 1)))
     return ListSuggestionResult(suggestions, subject_index)
 
@@ -32,7 +33,8 @@ def test_hitfilter_threshold(subject_index):
 
 def test_hitfilter_zero_score(subject_index):
     origsuggestions = ListSuggestionResult(
-        [SubjectSuggestion(uri='uri', label='label', score=0.0)],
+        [SubjectSuggestion(uri='uri', label='label', notation=None,
+                           score=0.0)],
         subject_index)
     suggestions = SuggestionFilter()(origsuggestions)
     assert isinstance(suggestions, SuggestionResult)
@@ -40,20 +42,23 @@ def test_hitfilter_zero_score(subject_index):
 
 
 def test_hitfilter_empty_labels_list_suggestion_results(subject_index):
-    subject_index.append('http://example.org/empty', '')
+    subject_index.append('http://example.org/empty', '', None)
     suggestions = ListSuggestionResult(
         [
             SubjectSuggestion(
                 uri='http://www.yso.fi/onto/yso/p7141',
                 label='sinetit',
+                notation=None,
                 score=1.0),
             SubjectSuggestion(
                 uri='http://www.yso.fi/onto/yso/p6479',
                 label='viikingit',
+                notation=None,
                 score=0.5),
             SubjectSuggestion(
                 uri='http://example.org/empty',
                 label='',
+                notation=None,
                 score=0.5)],
         subject_index)
     filtered_suggestions = SuggestionFilter()(suggestions)
@@ -64,7 +69,7 @@ def test_hitfilter_empty_labels_list_suggestion_results(subject_index):
 
 
 def test_hitfilter_empty_labels_vector_suggestion_results(subject_index):
-    subject_index.append('http://example.org/empty', '')
+    subject_index.append('http://example.org/empty', '', None)
     vector = np.ones(len(subject_index))
     suggestions = VectorSuggestionResult(vector, subject_index)
     filtered_suggestions = SuggestionFilter()(suggestions)
@@ -75,6 +80,7 @@ def test_hitfilter_empty_labels_vector_suggestion_results(subject_index):
     empty = SubjectSuggestion(
         uri='http://example.org/empty',
         label='',
+        notation=None,
         score=1.0)
     assert empty in list(suggestions.hits)
     assert empty not in list(filtered_suggestions.hits)
@@ -98,10 +104,12 @@ def test_list_suggestions_vector(document_corpus, subject_index):
             SubjectSuggestion(
                 uri='http://www.yso.fi/onto/yso/p7141',
                 label='sinetit',
+                notation=None,
                 score=1.0),
             SubjectSuggestion(
                 uri='http://www.yso.fi/onto/yso/p6479',
                 label='viikingit',
+                notation=None,
                 score=0.5)],
         subject_index)
     assert isinstance(suggestions.vector, np.ndarray)
@@ -122,6 +130,7 @@ def test_list_suggestions_vector_notfound(document_corpus, subject_index):
             SubjectSuggestion(
                 uri='http://example.com/notfound',
                 label='not found',
+                notation=None,
                 score=1.0)],
         subject_index)
     assert suggestions.vector.sum() == 0
