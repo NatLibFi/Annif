@@ -58,10 +58,11 @@ class SubjectIndex:
         return (self._uris[subject_id], self._labels[subject_id],
                 self._notations[subject_id])
 
-    def append(self, uri, label):
+    def append(self, uri, label, notation):
         subject_id = len(self._uris)
         self._uris.append(uri)
         self._labels.append(label)
+        self._notations.append(notation)
         self._uri_idx[uri] = subject_id
         self._label_idx[label] = subject_id
 
