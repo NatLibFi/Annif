@@ -7,7 +7,6 @@ import numpy as np
 
 SubjectSuggestion = collections.namedtuple(
     'SubjectSuggestion', 'uri label notation score')
-SubjectSuggestion.__new__.__defaults__ = (None,) * 4
 WeightedSuggestion = collections.namedtuple(
     'WeightedSuggestion', 'hits weight')
 
