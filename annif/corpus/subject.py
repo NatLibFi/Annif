@@ -31,17 +31,18 @@ class SubjectIndex:
     """An index that remembers the associations between integers subject IDs
     and their URIs and labels."""
 
-    def __init__(self, corpus):
+    def __init__(self, corpus=None):
         """Initialize the subject index from a subject corpus."""
         self._uris = []
         self._labels = []
         self._uri_idx = {}
         self._label_idx = {}
-        for subject_id, subject in enumerate(corpus.subjects):
-            self._uris.append(subject.uri)
-            self._labels.append(subject.label)
-            self._uri_idx[subject.uri] = subject_id
-            self._label_idx[subject.label] = subject_id
+        if corpus is not None:
+            for subject_id, subject in enumerate(corpus.subjects):
+                self._uris.append(subject.uri)
+                self._labels.append(subject.label)
+                self._uri_idx[subject.uri] = subject_id
+                self._label_idx[subject.label] = subject_id
 
     def __len__(self):
         return len(self._uris)
