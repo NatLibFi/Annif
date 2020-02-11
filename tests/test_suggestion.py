@@ -39,8 +39,9 @@ def test_hitfilter_zero_score(subject_index):
     assert len(suggestions) == 0
 
 
-def test_hitfilter_empty_labels_list_suggestion_results(subject_index):
-    subject_index.append('http://example.org/empty', '')
+def test_hitfilter_list_suggestion_results_with_deprecated_subjects(
+        subject_index):
+    subject_index.append('http://example.org/deprecated', '')
     suggestions = ListSuggestionResult(
         [
             SubjectSuggestion(
@@ -52,7 +53,7 @@ def test_hitfilter_empty_labels_list_suggestion_results(subject_index):
                 label='viikingit',
                 score=0.5),
             SubjectSuggestion(
-                uri='http://example.org/empty',
+                uri='http://example.org/deprecated',
                 label='',
                 score=0.5)],
         subject_index)
@@ -63,8 +64,9 @@ def test_hitfilter_empty_labels_list_suggestion_results(subject_index):
     assert filtered_suggestions[1] == suggestions[1]
 
 
-def test_hitfilter_empty_labels_vector_suggestion_results(subject_index):
-    subject_index.append('http://example.org/empty', '')
+def test_hitfilter_vector_suggestion_results_with_deprecated_subjects(
+        subject_index):
+    subject_index.append('http://example.org/deprecated', '')
     vector = np.ones(len(subject_index))
     suggestions = VectorSuggestionResult(vector, subject_index)
     filtered_suggestions = SuggestionFilter()(suggestions)
@@ -72,12 +74,12 @@ def test_hitfilter_empty_labels_vector_suggestion_results(subject_index):
     assert len(suggestions) == len(filtered_suggestions) \
         + len(subject_index.deprecated_ids())
 
-    empty = SubjectSuggestion(
-        uri='http://example.org/empty',
+    deprecated = SubjectSuggestion(
+        uri='http://example.org/deprecated',
         label='',
         score=1.0)
-    assert empty in list(suggestions.hits)
-    assert empty not in list(filtered_suggestions.hits)
+    assert deprecated in list(suggestions.hits)
+    assert deprecated not in list(filtered_suggestions.hits)
 
 
 def test_lazy_suggestion_result(subject_index):
