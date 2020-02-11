@@ -36,19 +36,20 @@ class SubjectIndex:
     """An index that remembers the associations between integers subject IDs
     and their URIs and labels."""
 
-    def __init__(self, corpus):
+    def __init__(self, corpus=None):
         """Initialize the subject index from a subject corpus."""
         self._uris = []
         self._labels = []
         self._notations = []
         self._uri_idx = {}
         self._label_idx = {}
-        for subject_id, subject in enumerate(corpus.subjects):
-            self._uris.append(subject.uri)
-            self._labels.append(subject.label)
-            self._notations.append(subject.notation)
-            self._uri_idx[subject.uri] = subject_id
-            self._label_idx[subject.label] = subject_id
+        if corpus is not None:
+            for subject_id, subject in enumerate(corpus.subjects):
+                self._uris.append(subject.uri)
+                self._labels.append(subject.label)
+                self._notations.append(subject.notation)
+                self._uri_idx[subject.uri] = subject_id
+                self._label_idx[subject.label] = subject_id
 
     def __len__(self):
         return len(self._uris)
@@ -56,6 +57,16 @@ class SubjectIndex:
     def __getitem__(self, subject_id):
         return (self._uris[subject_id], self._labels[subject_id],
                 self._notations[subject_id])
+
+    def append(self, uri, label):
+        subject_id = len(self._uris)
+        self._uris.append(uri)
+        self._labels.append(label)
+        self._uri_idx[uri] = subject_id
+        self._label_idx[label] = subject_id
+
+    def contains_uri(self, uri):
+        return uri in self._uris
 
     def by_uri(self, uri):
         """return the subject index of a subject by its URI"""
@@ -88,6 +99,12 @@ class SubjectIndex:
         return [self[subject_id][0]
                 for subject_id in (self.by_label(label) for label in labels)
                 if subject_id is not None]
+
+    def deprecated_ids(self):
+        """return indices of deprecated subjects"""
+
+        return [subject_id for subject_id, label in enumerate(self._labels)
+                if label == '']
 
     def save(self, path):
         """Save this subject index into a file."""

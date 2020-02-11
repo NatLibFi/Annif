@@ -1,8 +1,8 @@
 """Unit tests for suggestion processing in Annif"""
 
 from annif.suggestion import SubjectSuggestion, SuggestionResult, \
-    LazySuggestionResult, ListSuggestionResult, SuggestionFilter
-from annif.corpus import SubjectIndex
+    LazySuggestionResult, ListSuggestionResult, VectorSuggestionResult, \
+    SuggestionFilter
 import numpy as np
 
 
@@ -37,6 +37,47 @@ def test_hitfilter_zero_score(subject_index):
     suggestions = SuggestionFilter()(origsuggestions)
     assert isinstance(suggestions, SuggestionResult)
     assert len(suggestions) == 0
+
+
+def test_hitfilter_empty_labels_list_suggestion_results(subject_index):
+    subject_index.append('http://example.org/empty', '')
+    suggestions = ListSuggestionResult(
+        [
+            SubjectSuggestion(
+                uri='http://www.yso.fi/onto/yso/p7141',
+                label='sinetit',
+                score=1.0),
+            SubjectSuggestion(
+                uri='http://www.yso.fi/onto/yso/p6479',
+                label='viikingit',
+                score=0.5),
+            SubjectSuggestion(
+                uri='http://example.org/empty',
+                label='',
+                score=0.5)],
+        subject_index)
+    filtered_suggestions = SuggestionFilter()(suggestions)
+    assert isinstance(filtered_suggestions, SuggestionResult)
+    assert len(filtered_suggestions) == 2
+    assert filtered_suggestions[0] == suggestions[0]
+    assert filtered_suggestions[1] == suggestions[1]
+
+
+def test_hitfilter_empty_labels_vector_suggestion_results(subject_index):
+    subject_index.append('http://example.org/empty', '')
+    vector = np.ones(len(subject_index))
+    suggestions = VectorSuggestionResult(vector, subject_index)
+    filtered_suggestions = SuggestionFilter()(suggestions)
+
+    assert len(suggestions) == len(filtered_suggestions) \
+        + len(subject_index.deprecated_ids())
+
+    empty = SubjectSuggestion(
+        uri='http://example.org/empty',
+        label='',
+        score=1.0)
+    assert empty in list(suggestions.hits)
+    assert empty not in list(filtered_suggestions.hits)
 
 
 def test_lazy_suggestion_result(subject_index):
