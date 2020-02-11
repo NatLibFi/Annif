@@ -28,7 +28,7 @@ class AnnifVocabulary(DatadirMixin):
     def _update_subject_index(self, subject_corpus):
         old_subjects = self.subjects
         new_subjects = annif.corpus.SubjectIndex(subject_corpus)
-        updated_subjects = annif.corpus.SubjectIndex.load(os.path.devnull)
+        updated_subjects = annif.corpus.SubjectIndex()
 
         for uri, label in old_subjects:
             if new_subjects.contains_uri(uri):
