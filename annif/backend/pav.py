@@ -59,6 +59,7 @@ class PAVBackend(ensemble.EnsembleBackend):
                 annif.suggestion.SubjectSuggestion(
                     uri=hit.uri,
                     label=hit.label,
+                    notation=hit.notation,
                     score=score))
         pav_result.sort(key=lambda hit: hit.score, reverse=True)
         return annif.suggestion.ListSuggestionResult(

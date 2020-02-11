@@ -149,5 +149,6 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             results.append(SubjectSuggestion(
                 uri=subject[0],
                 label=subject[1],
+                notation=subject[2],
                 score=score / len(chunktexts)))
         return ListSuggestionResult(results, self.project.subjects)
