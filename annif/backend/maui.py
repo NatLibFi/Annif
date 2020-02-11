@@ -135,20 +135,23 @@ class MauiBackend(backend.AnnifBackend):
             return None
 
     def _response_to_result(self, response):
-        subject_suggestions = []
         try:
-            for hit in response['topics']:
-                if hit['probability'] > 0.0:
-                    subject = self.project.subjects[
-                        self.project.subjects.by_uri(hit['id'])]
-                    subject_suggestions.append(
-                        SubjectSuggestion(uri=subject[0],
-                                          label=subject[1],
-                                          notation=subject[2],
-                                          score=hit['probability']))
+            hits = [(hit['id'], float(hit['probability']))
+                    for hit in response['topics']]
         except (TypeError, ValueError) as err:
             self.warning("Problem interpreting JSON data: {}".format(err))
             return ListSuggestionResult([], self.project.subjects)
+
+        subject_suggestions = []
+        for uri, score in hits:
+            if score > 0.0:
+                subject = self.project.subjects[
+                    self.project.subjects.by_uri(uri)]
+                subject_suggestions.append(
+                    SubjectSuggestion(uri=uri,
+                                      label=subject[1],
+                                      notation=subject[2],
+                                      score=score))
         return ListSuggestionResult(subject_suggestions, self.project.subjects)
 
     def _suggest(self, text, params):
