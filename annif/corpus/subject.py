@@ -91,8 +91,8 @@ class SubjectIndex:
                 for subject_id in (self.by_label(label) for label in labels)
                 if subject_id is not None]
 
-    def empty_labels(self):
-        """return subject indices of subjects with empty labels"""
+    def deprecated_ids(self):
+        """return indices of deprecated subjects"""
 
         return [subject_id for subject_id, label in enumerate(self._labels)
                 if label == '']

@@ -70,7 +70,7 @@ def test_hitfilter_empty_labels_vector_suggestion_results(subject_index):
     filtered_suggestions = SuggestionFilter()(suggestions)
 
     assert len(suggestions) == len(filtered_suggestions) \
-        + len(subject_index.empty_labels())
+        + len(subject_index.deprecated_ids())
 
     empty = SubjectSuggestion(
         uri='http://example.org/empty',

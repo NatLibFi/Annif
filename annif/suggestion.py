@@ -136,17 +136,17 @@ class VectorSuggestionResult(SuggestionResult):
 
     def filter(self, limit=None, threshold=0.0):
         mask = (self._vector > threshold)
-        empty_labels = self._subject_index.empty_labels()
+        deprecated_ids = self._subject_index.deprecated_ids()
         if limit is not None:
             limit_mask = np.zeros_like(self._vector, dtype=np.bool)
             top_k_subjects = [subj for subj in self.subject_order
-                              if subj not in empty_labels][:limit]
+                              if subj not in deprecated_ids][:limit]
             limit_mask[top_k_subjects] = True
             mask = mask & limit_mask
         else:
-            empty_mask = np.ones_like(self._vector, dtype=np.bool)
-            empty_mask[empty_labels] = False
-            mask = mask & empty_mask
+            deprecated_mask = np.ones_like(self._vector, dtype=np.bool)
+            deprecated_mask[deprecated_ids] = False
+            mask = mask & deprecated_mask
         return VectorSuggestionResult(self._vector * mask, self._subject_index)
 
     def __len__(self):
@@ -181,11 +181,12 @@ class ListSuggestionResult(SuggestionResult):
 
     def filter(self, limit=None, threshold=0.0):
         hits = sorted(self.hits, key=lambda hit: hit.score, reverse=True)
-        hits = [hit for hit in hits if
-                hit.score >= threshold and hit.score > 0.0 and hit.label != '']
+        filtered_hits = [hit for hit in hits
+                         if hit.score >= threshold and hit.score > 0.0 and
+                         hit.label != '']
         if limit is not None:
-            hits = hits[:limit]
-        return ListSuggestionResult(hits, self._subject_index)
+            filtered_hits = filtered_hits[:limit]
+        return ListSuggestionResult(filtered_hits, self._subject_index)
 
     def __len__(self):
         return len(self._hits)
