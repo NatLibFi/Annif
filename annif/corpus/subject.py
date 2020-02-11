@@ -45,11 +45,8 @@ class SubjectIndex:
         self._label_idx = {}
         if corpus is not None:
             for subject_id, subject in enumerate(corpus.subjects):
-                self._uris.append(subject.uri)
-                self._labels.append(subject.label)
-                self._notations.append(subject.notation)
-                self._uri_idx[subject.uri] = subject_id
-                self._label_idx[subject.label] = subject_id
+                self._append(subject_id, subject.uri, subject.label,
+                             subject.notation)
 
     def __len__(self):
         return len(self._uris)
@@ -58,13 +55,16 @@ class SubjectIndex:
         return (self._uris[subject_id], self._labels[subject_id],
                 self._notations[subject_id])
 
-    def append(self, uri, label, notation):
-        subject_id = len(self._uris)
+    def _append(self, subject_id, uri, label, notation):
         self._uris.append(uri)
         self._labels.append(label)
         self._notations.append(notation)
         self._uri_idx[uri] = subject_id
         self._label_idx[label] = subject_id
+
+    def append(self, uri, label, notation):
+        subject_id = len(self._uris)
+        self._append(subject_id, uri, label, notation)
 
     def contains_uri(self, uri):
         return uri in self._uris
