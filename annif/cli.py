@@ -315,8 +315,6 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
 @cli.command('optimize')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
-@click.option('--backend-param', '-b', multiple=True,
-              help='Backend parameters to override')
 @backend_param_option
 @common_options
 def run_optimize(project_id, paths, backend_param):
