@@ -57,7 +57,7 @@ def test_hitfilter_empty_labels_list_suggestion_results(subject_index):
                 score=0.5),
             SubjectSuggestion(
                 uri='http://example.org/empty',
-                label='',
+                label=None,
                 notation=None,
                 score=0.5)],
         subject_index)
@@ -69,7 +69,7 @@ def test_hitfilter_empty_labels_list_suggestion_results(subject_index):
 
 
 def test_hitfilter_empty_labels_vector_suggestion_results(subject_index):
-    subject_index.append('http://example.org/empty', '', None)
+    subject_index.append('http://example.org/empty', None, None)
     vector = np.ones(len(subject_index))
     suggestions = VectorSuggestionResult(vector, subject_index)
     filtered_suggestions = SuggestionFilter()(suggestions)
@@ -79,7 +79,7 @@ def test_hitfilter_empty_labels_vector_suggestion_results(subject_index):
 
     empty = SubjectSuggestion(
         uri='http://example.org/empty',
-        label='',
+        label=None,
         notation=None,
         score=1.0)
     assert empty in list(suggestions.hits)

@@ -34,7 +34,7 @@ class AnnifVocabulary(DatadirMixin):
             if new_subjects.contains_uri(uri):
                 label, notation = new_subjects[new_subjects.by_uri(uri)][1:3]
             else:  # subject removed from new corpus
-                label, notation = '', None
+                label, notation = None, None
             updated_subjects.append(uri, label, notation)
         for uri, label, notation in new_subjects:
             if not old_subjects.contains_uri(uri):

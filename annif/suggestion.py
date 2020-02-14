@@ -196,7 +196,7 @@ class ListSuggestionResult(SuggestionResult):
         hits = sorted(self.hits, key=lambda hit: hit.score, reverse=True)
         filtered_hits = [hit for hit in hits
                          if hit.score >= threshold and hit.score > 0.0 and
-                         hit.label != '']
+                         hit.label is not None]
         if limit is not None:
             filtered_hits = filtered_hits[:limit]
         return ListSuggestionResult(filtered_hits, self._subject_index)

@@ -16,7 +16,7 @@ class SubjectFileTSV:
     def _parse_line(self, line):
         vals = line.strip().split('\t', 2)
         clean_uri = annif.util.cleanup_uri(vals[0])
-        label = vals[1] if len(vals) >= 2 else ''
+        label = vals[1] if len(vals) >= 2 else None
         notation = vals[2] if len(vals) >= 3 else None
         yield Subject(uri=clean_uri, label=label, notation=notation, text=None)
 
@@ -105,16 +105,18 @@ class SubjectIndex:
         """return indices of deprecated subjects"""
 
         return [subject_id for subject_id, label in enumerate(self._labels)
-                if label == '']
+                if label is None]
 
     def save(self, path):
         """Save this subject index into a file."""
 
         with open(path, 'w', encoding='utf-8') as subjfile:
             for uri, label, notation in self:
-                line = "<{}>\t{}".format(uri, label)
-                if notation is not None:
-                    line += ('\t' + notation)
+                line = "<{}>".format(uri)
+                if label is not None:
+                    line += ('\t' + label)
+                    if notation is not None:
+                        line += ('\t' + notation)
                 print(line, file=subjfile)
 
     @classmethod
