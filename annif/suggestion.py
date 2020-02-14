@@ -162,6 +162,18 @@ class ListSuggestionResult(SuggestionResult):
         self._subject_index = subject_index
         self._vector = None
 
+    @classmethod
+    def create_from_index(cls, hits, subject_index):
+        subject_suggestions = []
+        for hit in hits:
+            subject = subject_index[subject_index.by_uri(hit.uri)]
+            subject_suggestions.append(
+                SubjectSuggestion(uri=hit.uri,
+                                  label=subject[1],
+                                  notation=subject[2],
+                                  score=hit.score))
+        return ListSuggestionResult(subject_suggestions, subject_index)
+
     def _hits_to_vector(self):
         vector = np.zeros(len(self._subject_index), dtype=np.float32)
         for hit in self._hits:
