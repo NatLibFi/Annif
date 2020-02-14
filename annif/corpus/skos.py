@@ -39,7 +39,7 @@ class SubjectFileSKOS(SubjectCorpus):
             if (concept, OWL.deprecated, rdflib.Literal(True)) in self.graph:
                 continue
             labels = self.graph.preferredLabel(concept, lang=self.language)
-            notation = self.graph.value(concept, SKOS.notation)
+            notation = self.graph.value(concept, SKOS.notation, None, any=True)
             if not labels:
                 continue
             label = str(labels[0][1])
