@@ -19,8 +19,10 @@ class DummyBackend(backend.AnnifLearningBackend):
 
     def _suggest(self, text, params):
         score = float(params.get('score', 1.0))
+        notation = params.get('notation', None)
         return ListSuggestionResult([SubjectSuggestion(uri=self.uri,
                                                        label=self.label,
+                                                       notation=notation,
                                                        score=score)],
                                     self.project.subjects)
 

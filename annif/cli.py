@@ -229,7 +229,11 @@ def run_suggest(project_id, limit, threshold, backend_param):
     hit_filter = SuggestionFilter(limit, threshold)
     hits = hit_filter(project.suggest(text, backend_params))
     for hit in hits:
-        click.echo("<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score))
+        click.echo(
+            "<{}>\t{}\t{}".format(
+                hit.uri,
+                '\t'.join(filter(None, (hit.label, hit.notation))),
+                hit.score))
 
 
 @cli.command('index')
@@ -268,7 +272,10 @@ def run_index(project_id, directory, suffix, force,
         with open(subjectfilename, 'w', encoding='utf-8') as subjfile:
             results = project.suggest(text, backend_params)
             for hit in hit_filter(results):
-                line = "<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score)
+                line = "<{}>\t{}\t{}".format(
+                    hit.uri,
+                    '\t'.join(filter(None, (hit.label, hit.notation))),
+                    hit.score)
                 click.echo(line, file=subjfile)
 
 

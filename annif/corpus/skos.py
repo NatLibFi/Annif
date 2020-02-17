@@ -18,6 +18,9 @@ def serialize_subjects_to_skos(subjects, language, path):
         graph.add((rdflib.URIRef(subject.uri),
                    SKOS.prefLabel,
                    rdflib.Literal(subject.label, language)))
+        graph.add((rdflib.URIRef(subject.uri),
+                   SKOS.notation,
+                   rdflib.Literal(subject.notation)))
     graph.serialize(destination=path, format='turtle')
 
 
@@ -36,10 +39,14 @@ class SubjectFileSKOS(SubjectCorpus):
             if (concept, OWL.deprecated, rdflib.Literal(True)) in self.graph:
                 continue
             labels = self.graph.preferredLabel(concept, lang=self.language)
+            notation = self.graph.value(concept, SKOS.notation, None, any=True)
             if not labels:
                 continue
             label = str(labels[0][1])
-            yield Subject(uri=str(concept), label=label, text=None)
+            if notation is not None:
+                notation = str(notation)
+            yield Subject(uri=str(concept), label=label, notation=notation,
+                          text=None)
 
     @staticmethod
     def is_rdf_file(path):

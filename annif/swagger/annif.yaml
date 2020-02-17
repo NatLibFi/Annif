@@ -164,6 +164,9 @@ definitions:
       label:
         type: string
         example: Archaeology
+      notation:
+        type: string
+        example: '42.42'
       score:
         type: number
         example: 0.85

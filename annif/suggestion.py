@@ -6,7 +6,7 @@ import numpy as np
 
 
 SubjectSuggestion = collections.namedtuple(
-    'SubjectSuggestion', 'uri label score')
+    'SubjectSuggestion', 'uri label notation score')
 WeightedSuggestion = collections.namedtuple(
     'WeightedSuggestion', 'hits weight')
 
@@ -115,6 +115,7 @@ class VectorSuggestionResult(SuggestionResult):
                 SubjectSuggestion(
                     uri=subject[0],
                     label=subject[1],
+                    notation=subject[2],
                     score=float(score)))
         return ListSuggestionResult(hits, self._subject_index)
 
@@ -161,6 +162,18 @@ class ListSuggestionResult(SuggestionResult):
         self._subject_index = subject_index
         self._vector = None
 
+    @classmethod
+    def create_from_index(cls, hits, subject_index):
+        subject_suggestions = []
+        for hit in hits:
+            subject = subject_index[subject_index.by_uri(hit.uri)]
+            subject_suggestions.append(
+                SubjectSuggestion(uri=hit.uri,
+                                  label=subject[1],
+                                  notation=subject[2],
+                                  score=hit.score))
+        return ListSuggestionResult(subject_suggestions, subject_index)
+
     def _hits_to_vector(self):
         vector = np.zeros(len(self._subject_index), dtype=np.float32)
         for hit in self._hits:
@@ -183,7 +196,7 @@ class ListSuggestionResult(SuggestionResult):
         hits = sorted(self.hits, key=lambda hit: hit.score, reverse=True)
         filtered_hits = [hit for hit in hits
                          if hit.score >= threshold and hit.score > 0.0 and
-                         hit.label != '']
+                         hit.label is not None]
         if limit is not None:
             filtered_hits = filtered_hits[:limit]
         return ListSuggestionResult(filtered_hits, self._subject_index)

@@ -30,16 +30,15 @@ class AnnifVocabulary(DatadirMixin):
         new_subjects = annif.corpus.SubjectIndex(subject_corpus)
         updated_subjects = annif.corpus.SubjectIndex()
 
-        for uri, label in old_subjects:
+        for uri, label, notation in old_subjects:
             if new_subjects.contains_uri(uri):
-                label = new_subjects[new_subjects.by_uri(uri)][1]
+                label, notation = new_subjects[new_subjects.by_uri(uri)][1:3]
             else:  # subject removed from new corpus
-                label = ''
-            updated_subjects.append(uri, label)
-        for uri, label in new_subjects:
+                label, notation = None, None
+            updated_subjects.append(uri, label, notation)
+        for uri, label, notation in new_subjects:
             if not old_subjects.contains_uri(uri):
-                updated_subjects.append(uri, label)
-
+                updated_subjects.append(uri, label, notation)
         self._subjects = updated_subjects
         annif.util.atomic_save(self._subjects, self.datadir, 'subjects')
 

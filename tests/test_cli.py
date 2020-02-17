@@ -326,6 +326,16 @@ def test_suggest():
     assert result.exit_code == 0
 
 
+def test_suggest_with_notations():
+    result = runner.invoke(
+        annif.cli.cli,
+        ['suggest', '--backend-param', 'dummy.notation=42.42', 'dummy-fi'],
+        input='kissa')
+    assert not result.exception
+    assert result.output == "<http://example.org/dummy>\tdummy\t42.42\t1.0\n"
+    assert result.exit_code == 0
+
+
 def test_suggest_nonexistent():
     result = runner.invoke(
         annif.cli.cli,

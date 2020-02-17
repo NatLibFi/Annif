@@ -157,18 +157,40 @@ def test_maui_train(maui, document_corpus, app_project):
 
 
 @responses.activate
-def test_maui_suggest(maui, project):
+def test_maui_suggest(maui):
     responses.add(responses.POST,
                   'http://api.example.org/mauiservice/dummy/suggest',
                   json={'title': '1 recommendation from dummy',
-                        'topics': [{'id': 'http://example.org/maui',
-                                    'label': 'maui',
+                        'topics': [{'id': 'http://example.org/dummy',
+                                    'label': 'dummy',
                                     'probability': 1.0}]})
 
     result = maui.suggest('this is some text')
     assert len(result) == 1
-    assert result[0].uri == 'http://example.org/maui'
-    assert result[0].label == 'maui'
+    assert result[0].uri == 'http://example.org/dummy'
+    assert result[0].label == 'dummy'
+    assert result[0].notation is None
+    assert result[0].score == 1.0
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_maui_suggest_with_notation(maui):
+    responses.add(responses.POST,
+                  'http://api.example.org/mauiservice/dummy/suggest',
+                  json={'title': '1 recommendation from dummy',
+                        'topics': [
+                            {'id': 'http://example.org/dummy-with-notation',
+                             'label': 'dummy',
+                             'probability': 1.0}]})
+
+    maui.project.subjects.append(
+        'http://example.org/dummy-with-notation', 'dummy', '42.42')
+    result = maui.suggest('this is some text')
+    assert len(result) == 1
+    assert result[0].uri == 'http://example.org/dummy-with-notation'
+    assert result[0].label == 'dummy'
+    assert result[0].notation == '42.42'
     assert result[0].score == 1.0
     assert len(responses.calls) == 1
 
