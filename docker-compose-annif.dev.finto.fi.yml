@@ -85,10 +85,9 @@ services:
     networks:
       - traefik-net
     deploy:
-      replicas: 1
+      replicas: 0
       restart_policy:
-        condition: on-failure
-        max_attempts: 3
+        condition: none
       placement:
         constraints:
         - node.labels.environment == test
