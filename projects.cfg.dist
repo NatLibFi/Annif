@@ -89,6 +89,26 @@ endpoint=http://localhost:8080/mauiserver/
 #endpoint=http://mauiserver:8080/mauiserver/
 tagger=maui-en
 vocab=yso-en
+
+[omikuji-parabel-fi]
+name=Omikuji Parabel Finnish
+language=fi
+backend=omikuji
+analyzer=voikko(fi)
+vocab=yso-fi
+
+[omikuji-parabel-sv]
+name=Omikuji Parabel Swedish
+language=sv
+backend=omikuji
+analyzer=snowball(swedish)
+vocab=yso-sv
+
+[omikuji-parabel-en]
+name=Omikuji Parabel English
+language=en
+backend=omikuji
+analyzer=snowball(english)
 vocab=yso-en
 
 [ensemble-fi]
