@@ -29,7 +29,10 @@ services:
     volumes:
       - apidata:/apidata
       - /etc/localtime:/etc/localtime:ro
-    command: ["nginx", "-c", "/apidata/nginx.conf", "-g", "daemon off;"]
+      - logs:/tmp
+    command: ["nginx", "-c", "/nginx.conf", "-g", "daemon off;"]
+    configs:
+      -  nginx.conf
     networks:
     - default
     - traefik-net
@@ -93,7 +96,7 @@ services:
         - node.labels.environment == test
 
   apidata:
-    image: quay.io/natlibfi/annif-data:api
+    image: quay.io/natlibfi/annif-data:api-without-nginx-conf
     volumes:
       - apidata:/tmp
       - /etc/localtime:/etc/localtime:ro
@@ -109,17 +112,44 @@ services:
       placement:
         constraints:
         - node.labels.environment == test
+  matomo-importer:
+    image: quay.io/natlibfi/annif-logs-matomo-importer
+    volumes:
+      - logs:/tmp
+    #stdin_open: true
+    command: >
+      sh -c "
+      tail -f tmp/access.log | python2 import_logs.py --url=https://tilasto.lib.helsinki.fi --idsite=14 --token-auth $$(cat /run/secrets/annif-test-matomo-token) --enable-http-errors --enable-http-redirects --enable-static --enable-bots --recorder-max-payload-size=5 -
+      "
+    secrets:
+      - annif-test-matomo-token
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.labels.environment == test
 
 volumes:
   data:
   apidata:
+  logs:
 
 networks:
   traefik-net:
     external: true
 
+configs:
+  nginx.conf:
+    external: true
+    name: annif-test-nginx-proxy2
+
 secrets:
   annif-rsync-id-rsa:
     external: true
   annif-kk-ssh-host-rsa-key:
+    external: true
+  annif-test-matomo-token:
     external: true
