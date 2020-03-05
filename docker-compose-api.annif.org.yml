@@ -33,8 +33,8 @@ services:
       -  nginx.conf
     command: ["nginx", "-c", "/nginx.conf", "-g", "daemon off;"]
     networks:
-    - default
-    - traefik-net
+      - default
+      - traefik-net
     deploy:
       replicas: 1
       restart_policy:
@@ -43,14 +43,15 @@ services:
         constraints:
         - node.labels.environment == production
       labels:
-      - traefik.enable=true
-      - traefik.http.services.${STACK_NAME}.loadbalancer.server.port=80
-      - traefik.http.routers.${STACK_NAME}-http.rule=Host(`${SERVICE_DOMAIN}`)
-      - traefik.http.routers.${STACK_NAME}-http.entrypoints=http
-      #- traefik.http.routers.${STACK_NAME}-http.middlewares=redirect@file
-      - traefik.http.routers.${STACK_NAME}-https.rule=Host(`${SERVICE_DOMAIN}`)
-      - traefik.http.routers.${STACK_NAME}-https.entrypoints=https
-      - traefik.http.routers.${STACK_NAME}-https.tls=true
+        - traefik.enable=true
+        - traefik.http.services.${STACK_NAME}.loadbalancer.server.port=80
+        - traefik.http.routers.${STACK_NAME}-http.rule=Host(`${SERVICE_DOMAIN}`)
+        - traefik.http.routers.${STACK_NAME}-http.entrypoints=http
+        #- traefik.http.routers.${STACK_NAME}-http.middlewares=redirect@file
+        - traefik.http.routers.${STACK_NAME}-https.rule=Host(`${SERVICE_DOMAIN}`)
+        - traefik.http.routers.${STACK_NAME}-https.entrypoints=https
+        - traefik.http.routers.${STACK_NAME}-https.tls=true
+
   mauiserver:
     image: quay.io/natlibfi/mauiserver:1.3.2
     volumes:
@@ -64,7 +65,7 @@ services:
         condition: any
       placement:
         constraints:
-        - node.labels.environment == production
+          - node.labels.environment == production
 
   rsync_client:
     image: quay.io/natlibfi/annif-rsync
@@ -91,7 +92,7 @@ services:
         condition: none
       placement:
         constraints:
-        - node.labels.environment == production
+          - node.labels.environment == production
 
   webdata_sync:
     image: quay.io/natlibfi/annif-svn
@@ -105,8 +106,8 @@ services:
         condition: on-failure
         max_attempts: 3
       placement:
-        constraints:
-        - node.labels.environment == production
+         constraints:
+           - node.labels.environment == production
 
 volumes:
   data:
