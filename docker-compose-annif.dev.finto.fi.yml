@@ -114,7 +114,7 @@ services:
     image: quay.io/natlibfi/annif-logs-matomo-importer
     volumes:
       - logs:/tmp
-    #stdin_open: true
+      - /etc/localtime:/etc/localtime:ro
     command: >
       sh -c "
       tail -f tmp/access.log | python2 import_logs.py --url=https://tilasto.lib.helsinki.fi --idsite=14 --token-auth $$(cat /run/secrets/annif-test-matomo-token) --enable-http-errors --enable-http-redirects --enable-static --enable-bots --recorder-max-payload-size=5 -
