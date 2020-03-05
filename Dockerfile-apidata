@@ -1,7 +1,0 @@
-FROM busybox
-
-COPY api /apidata/api
-COPY nginx.conf /apidata/.
-COPY www/static /apidata/api/static
-
-CMD sh
