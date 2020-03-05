@@ -27,7 +27,7 @@ services:
   nginx:
     image: nginx:1.17.7
     volumes:
-      - apidata:/apidata
+      - webdata:/webdata
       - /etc/localtime:/etc/localtime:ro
       - logs:/tmp
     command: ["nginx", "-c", "/nginx.conf", "-g", "daemon off;"]
@@ -95,23 +95,20 @@ services:
         constraints:
           - node.labels.environment == test
 
-  apidata:
-    image: quay.io/natlibfi/annif-data:api-without-nginx-conf
-    volumes:
-      - apidata:/tmp
-      - /etc/localtime:/etc/localtime:ro
-    command: >
-      sh -c "echo Copying data from image to mounted volume... &&
-        cp -r --verbose /apidata/. /tmp/ &&
-        echo Copied!"
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-        max_attempts: 3
-      placement:
-        constraints:
-          - node.labels.environment == test
+  webdata_sync:
+   image: quay.io/natlibfi/annif-svn
+   volumes:
+     - webdata:/tmp
+     - /etc/localtime:/etc/localtime:ro
+   command: svn checkout https://github.com/NatLibFi/Annif/branches/api-instances/annif.dev.finto.fi/ .
+   deploy:
+     replicas: 1
+     restart_policy:
+       condition: on-failure
+       max_attempts: 3
+     placement:
+       constraints:
+        - node.labels.environment == test
 
   matomo-importer:
     image: quay.io/natlibfi/annif-logs-matomo-importer
@@ -135,7 +132,7 @@ services:
 
 volumes:
   data:
-  apidata:
+  webdata:
   logs:
 
 networks:
@@ -145,7 +142,7 @@ networks:
 configs:
   nginx.conf:
     external: true
-    name: annif-test-nginx-proxy2
+    name: annif-test-nginx-proxy3
 
 secrets:
   annif-rsync-id-rsa:
