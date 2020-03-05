@@ -1,0 +1,14 @@
+.cache
+.eggs
+annif.egg-info
+.coverage
+.coveralls.yml
+.git
+__pycache__
+.pytest_cache
+*.pyc
+data
+docs/_build/
+Pipfile.lock
+projects.cfg
+venv/
