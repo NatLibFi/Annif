@@ -25,7 +25,7 @@ services:
       start_period: 600s
 
   nginx:
-    image: nginx:1.17.7
+    image: nginx:1.17-alpine
     volumes:
       - webdata:/webdata
       - /etc/localtime:/etc/localtime:ro
