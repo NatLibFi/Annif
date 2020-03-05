@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Annif REST API</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="static/css/bootstrap.min.css">
+  <script src="static/js/jquery.min.js"></script>
+  <script src="static/js/bootstrap.min.js"></script>
+  <style type="text/css">
+    header { background-color: #3f9a88; }
+    h1 { color: white; font-size: 2rem; }
+  </style>
+
+<!-- Matomo -->
+<script type="text/javascript">
+  var _paq = window._paq || [];
+  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+  _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+  _paq.push(["setCookieDomain", "*.annif.dev.finto.fi"]);
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="https://tilasto.lib.helsinki.fi/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '14']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Matomo Code -->
+
+</head>
+<body>
+
+<header class="mb-4 mt-0">
+  <div class="container">
+    <h1 class="py-3">Annif REST API</h1>
+  </div>
+</header>
+  
+<div class="container">
+
+  <div class="row">
+    <div class="col-md-8">
+      <p class="lead">This is the API service of <a
+      href="http://annif.org">Annif</a>. We provide an open REST-style API
+      for automated subject indexing.</p>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-8">
+      <div class="jumbotron py-5">
+      <h2>API documentation for v1</h2>
+
+      <p>See the interactive <a href="v1/ui/">Swagger/OpenAPI
+      documentation</a>.</p>
+      
+      <p>You can also use the <a href="v1/swagger.json">swagger.json</a>
+      file directly in OpenAPI compliant tools.</p> </div>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-8">
+      <h2>Usage policy</h2>
+      
+      <p>Usage of the API is currently unrestricted. API keys are not used.
+      Please be gentle with our server! In future, we may require
+      registration and API keys for heavy use.</p>
+      
+      <p>The data returned by the API may be used for any purpose without
+      restriction.</p>
+
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
