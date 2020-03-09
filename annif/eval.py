@@ -145,10 +145,43 @@ class EvaluationBatch:
 
         return results
 
-    def results(self, metrics='all'):
+    def output_result_per_label(self, y_true, y_pred, results_file):
+        """Write results per label (non-aggregated) to outputfile"""
+
+        y_pred = y_pred.T > 0.0
+        y_true = y_true.T > 0.0
+
+        tp = (y_true & y_pred)
+        fp = (~y_true & y_pred)
+        fn = (y_true & ~y_pred)
+
+        r = len(y_true)
+
+        with open(results_file, 'w') as f:
+            f.write('\t'.join(['URI', 'Label', 'Support', 'True_positives',
+                               'False_positives', 'False_negatives',
+                               'Precision', 'Recall', 'F1_score']) + '\n')
+            zipped = zip(self._subject_index._uris,       # URI
+                         self._subject_index._labels,     # Label
+                         [sum(tp[i]) + sum(fn[i])
+                          for i in range(r)],             # Support
+                         [sum(tp[i]) for i in range(r)],  # True_positives
+                         [sum(fp[i]) for i in range(r)],  # False_positives
+                         [sum(fn[i]) for i in range(r)],  # False_negatives
+                         [precision_score(y_true[i], y_pred[i], zero_division=0)
+                          for i in range(r)],             # Precision
+                         [recall_score(y_true[i], y_pred[i], zero_division=0)
+                          for i in range(r)],             # Recall
+                         [f1_score(y_true[i], y_pred[i], zero_division=0)
+                          for i in range(r)])             # F1
+            f.write('\n'.join('\t'.join(str(e) for e in row)
+                              for row in zipped))
+
+
+    def results(self, metrics='all', results_file=None):
         """evaluate a set of selected subjects against a gold standard using
-        different metrics. The set of metrics can be either 'all' or
-        'simple'."""
+        different metrics. The set of metrics can be either 'all' or 'simple'.
+        If an output_per_label_file (str) is given, write results per label to it"""
 
         if not self._samples:
             raise NotSupportedException("cannot evaluate empty corpus")
@@ -162,4 +195,12 @@ class EvaluationBatch:
         results = self._evaluate_samples(
             y_true, y_pred, metrics)
         results['Documents evaluated'] = y_true.shape[0]
+
+        if results_file:
+            dirname = os.path.dirname(results_file)
+            if dirname:
+                if not os.path.isdir(dirname):
+                    os.makedirs(dirname)
+            self.output_result_per_label(y_true, y_pred, results_file)
         return results
+
