@@ -55,8 +55,8 @@ def test_list_projects_config_path_option_nonexistent():
         annif.cli.cli, ["list-projects", "--projects", "nonexistent.cfg"])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Error: Invalid value for "-p" / "--projects": ' \
-           'File "nonexistent.cfg" does not exist.' in failed_result.output
+    assert "Error: Invalid value for '-p' / '--projects': " \
+           "File 'nonexistent.cfg' does not exist." in failed_result.output
 
 
 def test_show_project():
@@ -189,8 +189,8 @@ def test_loadvoc_nonexistent_path():
             'loadvoc', 'dummy-fi', 'nonexistent_path'])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Invalid value for "SUBJECTFILE": ' \
-           'File "nonexistent_path" does not exist.' in failed_result.output
+    assert "Invalid value for 'SUBJECTFILE': " \
+           "File 'nonexistent_path' does not exist." in failed_result.output
 
 
 def test_train(testdatadir):
@@ -269,8 +269,8 @@ def test_train_nonexistent_path():
             'train', 'dummy-fi', 'nonexistent_path'])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Invalid value for "[PATHS]...": ' \
-           'Path "nonexistent_path" does not exist.' in failed_result.output
+    assert "Invalid value for '[PATHS]...': " \
+           "Path 'nonexistent_path' does not exist." in failed_result.output
 
 
 def test_train_no_path(caplog):
@@ -312,8 +312,8 @@ def test_learn_nonexistent_path():
             'learn', 'dummy-fi', 'nonexistent_path'])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Invalid value for "[PATHS]...": ' \
-           'Path "nonexistent_path" does not exist.' in failed_result.output
+    assert "Invalid value for '[PATHS]...': " \
+           "Path 'nonexistent_path' does not exist." in failed_result.output
 
 
 def test_suggest():
@@ -413,8 +413,8 @@ def test_index_nonexistent_path():
             'index', 'dummy-fi', 'nonexistent_path'])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Invalid value for "DIRECTORY": ' \
-           'Directory "nonexistent_path" does not exist.' \
+    assert "Invalid value for 'DIRECTORY': " \
+           "Directory 'nonexistent_path' does not exist." \
            in failed_result.output
 
 
@@ -535,8 +535,8 @@ def test_eval_nonexistent_path():
             'eval', 'dummy-fi', 'nonexistent_path'])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Invalid value for "[PATHS]...": ' \
-           'Path "nonexistent_path" does not exist.' in failed_result.output
+    assert "Invalid value for '[PATHS]...': " \
+           "Path 'nonexistent_path' does not exist." in failed_result.output
 
 
 def test_optimize_dir(tmpdir):
@@ -583,5 +583,5 @@ def test_optimize_nonexistent_path():
             'optimize', 'dummy-fi', 'nonexistent_path'])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Invalid value for "[PATHS]...": ' \
-           'Path "nonexistent_path" does not exist.' in failed_result.output
+    assert "Invalid value for '[PATHS]...': " \
+           "Path 'nonexistent_path' does not exist." in failed_result.output

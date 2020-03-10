@@ -20,6 +20,7 @@ responses = "*"
 connexion = {extras = ["swagger-ui"]}
 swagger-ui-bundle = "*"
 flask-cors = "*"
+click = "==7.1.*"
 click-log = "*"
 joblib = "==0.14.*"
 nltk = "*"
