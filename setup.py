@@ -23,7 +23,7 @@ setup(
         'swagger_ui_bundle',
         'flask',
         'flask-cors',
-        'click',
+        'click==7.1.*',
         'click-log',
         'joblib==0.14.*',
         'nltk',
