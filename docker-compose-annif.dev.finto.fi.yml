@@ -60,6 +60,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     environment:
       - MAUI_SERVER_DATA_DIR=/annif-projects/mauidata
+      - JAVA_OPTS="-Duser.timezone=Europe/Helsinki"
     deploy:
       replicas: 1
       placement:
