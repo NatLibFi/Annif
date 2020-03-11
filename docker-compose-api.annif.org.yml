@@ -6,7 +6,7 @@ services:
     image: quay.io/natlibfi/annif:0.46.0
     command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000", "--timeout", "600"]
     volumes:
-      - data:/annif-projects
+      - data:/annif-projects:ro
       - /etc/localtime:/etc/localtime:ro
     deploy:
       replicas: 1
@@ -27,7 +27,7 @@ services:
   nginx:
     image: nginx:1.17-alpine
     volumes:
-      - webdata:/webdata
+      - webdata:/webdata:ro
       - /etc/localtime:/etc/localtime:ro
     configs:
       -  nginx.conf
