@@ -10,13 +10,10 @@ services:
       - /etc/localtime:/etc/localtime:ro
     deploy:
       replicas: 1
-      restart_policy:
-        condition: any
       placement:
         constraints:
-        - node.labels.environment == production
+          - node.labels.environment == production
       update_config:
-        parallelism: 1
         order: start-first
     healthcheck:
       test: ["CMD", "curl", "--fail", "localhost:8000/v1/projects"]
@@ -38,14 +35,12 @@ services:
       - traefik-net
     deploy:
       replicas: 1
-      restart_policy:
-        condition: any
       update_config:
         failure_action: rollback
         order: start-first
       placement:
         constraints:
-        - node.labels.environment == production
+          - node.labels.environment == production
       labels:
         - traefik.enable=true
         - traefik.http.services.${STACK_NAME}.loadbalancer.server.port=80
@@ -65,13 +60,11 @@ services:
       - MAUI_SERVER_DATA_DIR=/annif-projects/mauidata
     deploy:
       replicas: 1
-      restart_policy:
-        condition: any
       placement:
         constraints:
           - node.labels.environment == production
 
-  rsync_client:
+  modeldata_sync:
     image: quay.io/natlibfi/annif-rsync
     volumes:
       - data:/annif-projects
@@ -105,7 +98,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     command: svn checkout https://github.com/NatLibFi/Annif/branches/api-instances/api.annif.org/ /tmp
     deploy:
-      replicas: 1
+      replicas: 0
       restart_policy:
         condition: on-failure
         max_attempts: 3
@@ -145,7 +138,7 @@ networks:
 configs:
   nginx.conf:
     external: true
-    name: api-annif-org-nginx-proxy3
+    name: api-annif-org-nginx-proxy5
 
 secrets:
   annif-rsync-id-rsa:

@@ -10,13 +10,10 @@ services:
       - /etc/localtime:/etc/localtime:ro
     deploy:
       replicas: 1
-      restart_policy:
-        condition: any
       placement:
         constraints:
-        - node.labels.environment == test
+          - node.labels.environment == test
       update_config:
-        parallelism: 1
         order: start-first
     healthcheck:
       test: ["CMD", "curl", "--fail", "localhost:8000/v1/projects"]
@@ -32,7 +29,7 @@ services:
       - logs:/tmp
     command: ["nginx", "-c", "/nginx.conf", "-g", "daemon off;"]
     configs:
-      -  nginx.conf
+      - nginx.conf
     networks:
       - default
       - traefik-net
@@ -65,13 +62,11 @@ services:
       - MAUI_SERVER_DATA_DIR=/annif-projects/mauidata
     deploy:
       replicas: 1
-      restart_policy:
-        condition: any
       placement:
         constraints:
           - node.labels.environment == test
 
-  rsync_client:
+  modeldata_sync:
     image: quay.io/natlibfi/annif-rsync
     volumes:
       - data:/annif-projects
@@ -113,17 +108,17 @@ services:
        constraints:
         - node.labels.environment == test
 
-  matomo-importer:
+  matomo_importer:
     image: quay.io/natlibfi/annif-logs-matomo-importer
     volumes:
       - logs:/tmp:ro
       - /etc/localtime:/etc/localtime:ro
     command: >
       sh -c "
-      tail -f tmp/access.log | python2 import_logs.py --url=https://tilasto.lib.helsinki.fi --idsite=14 --token-auth $$(cat /run/secrets/annif-test-matomo-token) --enable-http-errors --enable-http-redirects --enable-static --enable-bots --recorder-max-payload-size=5 -
+      tail -f tmp/access.log | python2 import_logs.py --url=https://tilasto.lib.helsinki.fi --idsite=14 --token-auth $$(cat /run/secrets/matomo-token) --enable-http-errors --enable-http-redirects --enable-static --enable-bots --recorder-max-payload-size=1 -
       "
     secrets:
-      - annif-test-matomo-token
+      - matomo-token
     deploy:
       replicas: 1
       restart_policy:
@@ -145,12 +140,13 @@ networks:
 configs:
   nginx.conf:
     external: true
-    name: annif-test-nginx-proxy3
+    name: annif-test-nginx-proxy5
 
 secrets:
   annif-rsync-id-rsa:
     external: true
   annif-kk-ssh-host-rsa-key:
     external: true
-  annif-test-matomo-token:
+  matomo-token:
     external: true
+    name: annif-test-matomo-token
