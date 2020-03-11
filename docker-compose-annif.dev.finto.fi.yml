@@ -40,6 +40,9 @@ services:
       replicas: 1
       restart_policy:
         condition: any
+      update_config:
+        failure_action: rollback
+        order: start-first
       placement:
         constraints:
         - node.labels.environment == test
