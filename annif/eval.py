@@ -157,9 +157,16 @@ class EvaluationBatch:
 
         r = len(y_true)
 
-        print('\t'.join(['URI', 'Label', 'Support', 'True_positives',
-                         'False_positives', 'False_negatives',
-                         'Precision', 'Recall', 'F1_score']), file=results_file)
+        print('\t'.join(['URI',
+                         'Label',
+                         'Support',
+                         'True_positives',
+                         'False_positives',
+                         'False_negatives',
+                         'Precision',
+                         'Recall',
+                         'F1_score']),
+              file=results_file)
         zipped = zip(self._subject_index._uris,       # URI
                      self._subject_index._labels,     # Label
                      [sum(tp[i]) + sum(fn[i])
