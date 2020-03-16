@@ -98,9 +98,7 @@ class EvaluationBatch:
         self._samples.append((hits, gold_subjects))
 
     def _evaluate_samples(self, y_true, y_pred, metrics='all'):
-
         y_pred_binary = y_pred > 0.0
-
         results = collections.OrderedDict()
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
@@ -111,7 +109,6 @@ class EvaluationBatch:
                 y_true, y_pred_binary, average='samples')
             results['F1 score (doc avg)'] = f1_score(
                 y_true, y_pred_binary, average='samples')
-
             if metrics == 'all':
                 results['Precision (subj avg)'] = precision_score(
                     y_true, y_pred_binary, average='macro')
@@ -119,21 +116,18 @@ class EvaluationBatch:
                     y_true, y_pred_binary, average='macro')
                 results['F1 score (subj avg)'] = f1_score(
                     y_true, y_pred_binary, average='macro')
-
                 results['Precision (weighted subj avg)'] = precision_score(
                     y_true, y_pred_binary, average='weighted')
                 results['Recall (weighted subj avg)'] = recall_score(
                     y_true, y_pred_binary, average='weighted')
                 results['F1 score (weighted subj avg)'] = f1_score(
                     y_true, y_pred_binary, average='weighted')
-
                 results['Precision (microavg)'] = precision_score(
                     y_true, y_pred_binary, average='micro')
                 results['Recall (microavg)'] = recall_score(
                     y_true, y_pred_binary, average='micro')
                 results['F1 score (microavg)'] = f1_score(
                     y_true, y_pred_binary, average='micro')
-
             results['F1@5'] = f1_score(
                 y_true, filter_pred_top_k(y_pred, 5) > 0.0, average='samples')
             results['NDCG'] = ndcg_score(y_true, y_pred)
@@ -154,6 +148,7 @@ class EvaluationBatch:
                     y_true, y_pred_binary)
                 results['False negatives'] = false_negatives(
                     y_true, y_pred_binary)
+
         return results
 
     def results(self, metrics='all'):
