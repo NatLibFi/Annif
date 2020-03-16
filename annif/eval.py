@@ -151,9 +151,9 @@ class EvaluationBatch:
         y_pred = y_pred.T > 0.0
         y_true = y_true.T > 0.0
 
-        tp = (y_true & y_pred)
-        fp = (~y_true & y_pred)
-        fn = (y_true & ~y_pred)
+        true_pos = (y_true & y_pred)
+        false_pos = (~y_true & y_pred)
+        false_neg = (y_true & ~y_pred)
 
         r = len(y_true)
 
@@ -169,11 +169,11 @@ class EvaluationBatch:
               file=results_file)
         zipped = zip(self._subject_index._uris,       # URI
                      self._subject_index._labels,     # Label
-                     [sum(tp[i]) + sum(fn[i])
+                     [sum(true_pos[i]) + sum(false_neg[i])
                       for i in range(r)],             # Support
-                     [sum(tp[i]) for i in range(r)],  # True_positives
-                     [sum(fp[i]) for i in range(r)],  # False_positives
-                     [sum(fn[i]) for i in range(r)],  # False_negatives
+                     [sum(true_pos[i]) for i in range(r)],  # True_positives
+                     [sum(false_pos[i]) for i in range(r)],  # False_positives
+                     [sum(false_neg[i]) for i in range(r)],  # False_negatives
                      [precision_score(y_true[i], y_pred[i], zero_division=0)
                       for i in range(r)],             # Precision
                      [recall_score(y_true[i], y_pred[i], zero_division=0)
@@ -182,8 +182,6 @@ class EvaluationBatch:
                       for i in range(r)])
         for row in zipped:
             print('\t'.join((str(e) for e in row)), file=results_file)
-            # f.write('\n'.join('\t'.join(str(e) for e in row)
-            #                  for row in zipped))
 
     def results(self, metrics='all', results_file=None):
         """evaluate a set of selected subjects against a gold standard using
