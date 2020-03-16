@@ -167,19 +167,19 @@ class EvaluationBatch:
                          'Recall',
                          'F1_score']),
               file=results_file)
-        zipped = zip(self._subject_index._uris,       # URI
-                     self._subject_index._labels,     # Label
-                     [sum(true_pos[i]) + sum(false_neg[i])
-                      for i in range(r)],             # Support
-                     [sum(true_pos[i]) for i in range(r)],  # True_positives
-                     [sum(false_pos[i]) for i in range(r)],  # False_positives
-                     [sum(false_neg[i]) for i in range(r)],  # False_negatives
+
+        zipped = zip(self._subject_index._uris,               # URI
+                     self._subject_index._labels,             # Label
+                     np.sum((true_pos +false_neg), axis = 1), # Support
+                     np.sum(true_pos, axis = 1),              # True_positives
+                     np.sum(false_pos, axis = 1),             # False_positives
+                     np.sum(false_neg, axis = 1),             # False_negatives
                      [precision_score(y_true[i], y_pred[i], zero_division=0)
-                      for i in range(r)],             # Precision
+                      for i in range(r)],                     # Precision
                      [recall_score(y_true[i], y_pred[i], zero_division=0)
-                      for i in range(r)],             # Recall
+                      for i in range(r)],                     # Recall
                      [f1_score(y_true[i], y_pred[i], zero_division=0)
-                      for i in range(r)])
+                      for i in range(r)])                     # F1
         for row in zipped:
             print('\t'.join((str(e) for e in row)), file=results_file)
 
