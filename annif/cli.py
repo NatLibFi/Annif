@@ -269,7 +269,8 @@ def run_index(project_id, directory, suffix, force,
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
-@click.option('--results-file', default='', help='Specify file in order to write non-aggregated results per subject')
+@click.option('--results-file', type=click.File('w', encoding='utf-8', lazy=True),
+              help='Specify file in order to write non-aggregated results per subject')
 @backend_param_option
 @common_options
 def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
