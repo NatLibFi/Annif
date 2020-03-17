@@ -109,12 +109,18 @@ class EvaluationBatch:
             results['F1 score (doc avg)'] = f1_score(
                 y_true, y_pred_binary, average='samples')
             if metrics == 'all':
-                results['Precision (conc avg)'] = precision_score(
+                results['Precision (subj avg)'] = precision_score(
                     y_true, y_pred_binary, average='macro')
-                results['Recall (conc avg)'] = recall_score(
+                results['Recall (subj avg)'] = recall_score(
                     y_true, y_pred_binary, average='macro')
-                results['F1 score (conc avg)'] = f1_score(
+                results['F1 score (subj avg)'] = f1_score(
                     y_true, y_pred_binary, average='macro')
+                results['Precision (weighted subj avg)'] = precision_score(
+                    y_true, y_pred_binary, average='weighted')
+                results['Recall (weighted subj avg)'] = recall_score(
+                    y_true, y_pred_binary, average='weighted')
+                results['F1 score (weighted subj avg)'] = f1_score(
+                    y_true, y_pred_binary, average='weighted')
                 results['Precision (microavg)'] = precision_score(
                     y_true, y_pred_binary, average='micro')
                 results['Recall (microavg)'] = recall_score(
