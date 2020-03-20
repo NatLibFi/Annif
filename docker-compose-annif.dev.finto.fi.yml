@@ -95,19 +95,19 @@ services:
           - node.labels.environment == $NODE_LABELS_ENVIRONMENT
 
   webdata_sync:
-   image: quay.io/natlibfi/annif-svn
-   volumes:
-     - webdata:/tmp
-     - /etc/localtime:/etc/localtime:ro
-   command: svn checkout https://github.com/NatLibFi/Annif/branches/api-instances/annif.dev.finto.fi/ /tmp
-   deploy:
-     replicas: 1
-     restart_policy:
-       condition: on-failure
-       max_attempts: 3
-     placement:
-       constraints:
-         - node.labels.environment == $NODE_LABELS_ENVIRONMENT
+    image: quay.io/natlibfi/annif-svn
+    volumes:
+      - webdata:/tmp
+      - /etc/localtime:/etc/localtime:ro
+    command: svn checkout https://github.com/NatLibFi/Annif/branches/api-instances/annif.dev.finto.fi/ /tmp
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.labels.environment == $NODE_LABELS_ENVIRONMENT
 
   matomo_importer:
     image: quay.io/natlibfi/annif-logs-matomo-importer
