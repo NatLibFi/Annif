@@ -54,7 +54,7 @@ services:
         - traefik.http.routers.annif-test-https.tls=true
 
   mauiserver:
-    image: quay.io/natlibfi/mauiserver:1.3.2
+    image: quay.io/natlibfi/mauiserver:1.3.2-tomcat-8.5.53-jdk11-openjdk-slim
     volumes:
       - data:/annif-projects
       - /etc/localtime:/etc/localtime:ro
