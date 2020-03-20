@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+
+<!-- TODO items
+
+Dependencies
+* use local Bootstrap instead of relying on CDN
+* use local Fira Sans font instead of relying on Google Fonts API
+* add jQuery (local)
+
+Basic layout
+* logo, navigation links etc. for header
+* arrow styling for sidebar dropdowns (select elements)
+* add missing elements to sidebar
+* add the links in the top and bottom boxes
+
+Dynamic functionality
+* load projects from API into dropdown list
+* get suggestions from API and render them
+
+-->
+
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    
+    <!-- Fira Sans font -->
+    <link href="https://fonts.googleapis.com/css?family=Fira+Sans&display=swap" rel="stylesheet"> 
+
+    <title>Hello, world!</title>
+    <style type="text/css">
+      body {
+        background-color: #83cfc8;
+        font-family: 'Fira Sans', sans-serif;
+      }
+      header { background-color: white; }
+      .widget { padding: 8px 10px; }
+      #splash, #footer {
+        color: white;
+        background-color: #75889f;
+      }
+      #text-box {
+        background-color: white;
+        border-top: 2px solid black;
+      }
+      #text-box { font-weight: bold; padding-bottom: 16px; }
+      .row { margin-bottom: 24px; }
+      
+      #sidebar, #sidebar-tab { background-color: #eaf6f4; }
+      #sidebar-tabs { background-color: #a9dcd7;}
+      #sidebar-tab { float: left; border-top: 2px solid black; }
+      .form-control { border-radius: 0px; }
+      select { -moz-appearance: none; }
+    </style>
+  </head>
+  <body>
+
+<header class="mb-4 mt-0">
+  <div class="container">
+    <h1 class="py-3">Finto AI</h1>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="row">
+    <div class="col-md-12">
+      <div id="splash" class="widget">
+        Finto AI ehdottaa tekstille sopivia aiheita. Sitä käytetään lomakkeella tai rajapintapalveluna.
+        Palvelu perustuu Annif-työkaluun. Lue lisää...
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8 pr-md-3">
+      <div id="text-box" class="form-group widget">
+        <label for="text">Kuvailtava teksti</label><br>
+        <textarea class="form-control" rows="20" name="text" id="text"></textarea>
+      </div>
+    </div>
+
+    <div class="col-md-4 pl-md-2">
+      <ul id="sidebar-tabs" class="nav nav-tabs">
+        <li id="sidebar-tab" class="nav-item">
+          <a class="nav-link">Sisällönkuvailu</a>
+        </li>
+      </ul>
+      <div id="sidebar" class="widget">
+        <div class="form-group">
+          <label for="project">Sanasto ja tekstin kieli</label>
+          <select class="form-control" id="project">
+            <option></option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="limit">Aihe-ehdotusten lukumäärä</label>
+          <select class="form-control" id="limit">
+            <option>10</option>
+            <option>15</option>
+            <option>20</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <div id="footer" class="widget">
+        Lomakkeen ja rajapintapalveluiden kautta lähettyjä tietoja ei
+        talleteta.  Palvelun käyttöä seurataan ja tilastoidaan palvelun
+        kehittämiseksi.  Lue tarkempi tietosuojaseloste
+      </div>
+    </div>
+  </div>
+
+</div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!--    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+-->
+  </body>
+</html>
