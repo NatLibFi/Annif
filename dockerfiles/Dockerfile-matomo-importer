@@ -1,0 +1,5 @@
+FROM python:2-alpine
+
+RUN wget -O /import_logs.py https://raw.githubusercontent.com/matomo-org/matomo-log-analytics/master/import_logs.py
+
+CMD sh
