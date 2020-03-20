@@ -145,8 +145,9 @@ class EvaluationBatch:
 
         return results
 
-    def output_result_per_label(self, y_true, y_pred, results_file):
-        """Write results per label (non-aggregated) to outputfile"""
+    def output_result_per_subject(self, y_true, y_pred, results_file):
+        """Write results per subject (non-aggregated) 
+        to outputfile results_file"""
 
         y_pred = y_pred.T > 0.0
         y_true = y_true.T > 0.0
@@ -186,7 +187,7 @@ class EvaluationBatch:
     def results(self, metrics='all', results_file=None):
         """evaluate a set of selected subjects against a gold standard using
         different metrics. The set of metrics can be either 'all' or 'simple'.
-        If results_file (file object) is given, write results per label to it"""
+        If results_file (file object) is given, write results per subject to it"""
 
         if not self._samples:
             raise NotSupportedException("cannot evaluate empty corpus")
@@ -202,5 +203,5 @@ class EvaluationBatch:
         results['Documents evaluated'] = y_true.shape[0]
 
         if results_file:
-            self.output_result_per_label(y_true, y_pred, results_file)
+            self.output_result_per_subject(y_true, y_pred, results_file)
         return results
