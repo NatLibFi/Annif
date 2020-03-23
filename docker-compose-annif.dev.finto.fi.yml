@@ -43,13 +43,13 @@ services:
           - node.labels.environment == $NODE_LABELS_ENVIRONMENT
       labels:
         - traefik.enable=true
-        - traefik.http.services.annif-test.loadbalancer.server.port=80
-        - traefik.http.routers.annif-test-http.rule=Host(`annif.dev.finto.fi`)
-        - traefik.http.routers.annif-test-http.entrypoints=http
-        - traefik.http.routers.annif-test-http.middlewares=redirect@file
-        - traefik.http.routers.annif-test-https.rule=Host(`annif.dev.finto.fi`)
-        - traefik.http.routers.annif-test-https.entrypoints=https
-        - traefik.http.routers.annif-test-https.tls=true
+        - traefik.http.services.${STACK_NAME}.loadbalancer.server.port=80
+        - traefik.http.routers.${STACK_NAME}-http.rule=Host(`${SERVICE_DOMAIN}`)
+        - traefik.http.routers.${STACK_NAME}-http.entrypoints=http
+        - traefik.http.routers.${STACK_NAME}-http.middlewares=redirect@file
+        - traefik.http.routers.${STACK_NAME}-https.rule=Host(`${SERVICE_DOMAIN}`)
+        - traefik.http.routers.${STACK_NAME}-https.entrypoints=https
+        - traefik.http.routers.${STACK_NAME}-https.tls=true
 
   mauiserver:
     image: quay.io/natlibfi/mauiserver:1.3.2-tomcat-8.5.53-jdk11-openjdk-slim
@@ -81,7 +81,7 @@ services:
         mode: 0600
         uid: '998'
         gid: '998'
-    command: rsync -avzLu --exclude '*omikuji-train.txt' annif@128.214.223.211:/srv/annif-data/annif.dev.finto.fi/* /annif-projects
+    command: rsync -avzLu --exclude '*omikuji-train.txt' annif@128.214.223.211:/srv/annif-data/$SERVICE_DOMAIN/* /annif-projects
     networks:
       - traefik-net
     deploy:
@@ -97,7 +97,7 @@ services:
     volumes:
       - webdata:/tmp
       - /etc/localtime:/etc/localtime:ro
-    command: svn checkout https://github.com/NatLibFi/Annif/branches/api-instances/annif.dev.finto.fi/ /tmp
+    command: svn checkout https://github.com/NatLibFi/Annif/branches/api-instances/$SERVICE_DOMAIN/ /tmp
     deploy:
       replicas: 1
       restart_policy:
@@ -139,7 +139,7 @@ networks:
 configs:
   nginx.conf:
     external: true
-    name: annif-test-nginx-proxy5
+    name: ${STACK_NAME}-nginx-proxy5
 
 secrets:
   annif-rsync-id-rsa:
@@ -148,4 +148,4 @@ secrets:
     external: true
   matomo-token:
     external: true
-    name: annif-test-matomo-token
+    name: ${STACK_NAME}-matomo-token

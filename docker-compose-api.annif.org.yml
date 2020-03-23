@@ -12,7 +12,7 @@ services:
       replicas: 1
       placement:
         constraints:
-          - node.labels.environment == production
+          - node.labels.environment == $NODE_LABELS_ENVIRONMENT
       update_config:
         order: start-first
     healthcheck:
@@ -28,7 +28,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - logs:/tmp
     configs:
-      -  nginx.conf
+      - nginx.conf
     command: ["nginx", "-c", "/nginx.conf", "-g", "daemon off;"]
     networks:
       - default
@@ -40,7 +40,7 @@ services:
         order: start-first
       placement:
         constraints:
-          - node.labels.environment == production
+          - node.labels.environment == $NODE_LABELS_ENVIRONMENT
       labels:
         - traefik.enable=true
         - traefik.http.services.${STACK_NAME}.loadbalancer.server.port=80
@@ -63,7 +63,7 @@ services:
       replicas: 1
       placement:
         constraints:
-          - node.labels.environment == production
+          - node.labels.environment == $NODE_LABELS_ENVIRONMENT
 
   modeldata_sync:
     image: quay.io/natlibfi/annif-rsync
@@ -81,7 +81,7 @@ services:
         mode: 0600
         uid: '998'
         gid: '998'
-    command: rsync -avzLu --exclude '*omikuji-train.txt' annif@128.214.223.211:/srv/annif-data/api.annif.org/* /annif-projects
+    command: rsync -avzLu --exclude '*omikuji-train.txt' annif@128.214.223.211:/srv/annif-data/$SERVICE_DOMAIN/* /annif-projects
     networks:
       - traefik-net
     deploy:
@@ -90,22 +90,22 @@ services:
         condition: none
       placement:
         constraints:
-          - node.labels.environment == production
+          - node.labels.environment == $NODE_LABELS_ENVIRONMENT
 
   webdata_sync:
     image: quay.io/natlibfi/annif-svn
     volumes:
       - webdata:/tmp
       - /etc/localtime:/etc/localtime:ro
-    command: svn checkout https://github.com/NatLibFi/Annif/branches/api-instances/api.annif.org/ /tmp
+    command: svn checkout https://github.com/NatLibFi/Annif/branches/api-instances/$SERVICE_DOMAIN/ /tmp
     deploy:
       replicas: 0
       restart_policy:
         condition: on-failure
         max_attempts: 3
       placement:
-         constraints:
-           - node.labels.environment == production
+        constraints:
+          - node.labels.environment == $NODE_LABELS_ENVIRONMENT
 
   matomo_importer:
     image: quay.io/natlibfi/annif-logs-matomo-importer
@@ -125,7 +125,7 @@ services:
         max_attempts: 3
       placement:
         constraints:
-          - node.labels.environment == production
+          - node.labels.environment == $NODE_LABELS_ENVIRONMENT
 
 volumes:
   data:
@@ -139,7 +139,7 @@ networks:
 configs:
   nginx.conf:
     external: true
-    name: api-annif-org-nginx-proxy5
+    name: ${STACK_NAME}-nginx-proxy5
 
 secrets:
   annif-rsync-id-rsa:
@@ -148,4 +148,4 @@ secrets:
     external: true
   matomo-token:
     external: true
-    name: api-annif-org-matomo-token
+    name: ${STACK_NAME}-matomo-token
