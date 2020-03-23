@@ -150,6 +150,8 @@ class MauiBackend(backend.AnnifBackend):
                                                       self.project.subjects)
 
     def _suggest(self, text, params):
+        if len(text.strip()) == 0:
+            return ListSuggestionResult([], self.project.subjects)
         response = self._suggest_request(text, params)
         if response:
             return self._response_to_result(response)
