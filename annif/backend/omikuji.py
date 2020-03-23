@@ -116,6 +116,8 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self.debug('Suggesting subjects for text "{}..." (len={})'.format(
             text[:20], len(text)))
         vector = self.vectorizer.transform([text])
+        if vector.nnz == 0:  # All zero vector, empty result
+            return ListSuggestionResult([], self.project.subjects)
         feature_values = [(col, vector[row, col])
                           for row, col in zip(*vector.nonzero())]
         results = []
