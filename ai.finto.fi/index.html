@@ -9,6 +9,7 @@ Dependencies
 
 Basic layout
 * logo, navigation links etc. for header
+* define link colors
 * arrow styling for sidebar dropdowns (select elements)
 * add missing elements to sidebar
 * add the links in the top and bottom boxes
@@ -31,17 +32,23 @@ Dynamic functionality
     <!-- Fira Sans font -->
     <link rel="stylesheet" href="static/css/fonts.css">
 
-    <title>Hello, world!</title>
+    <title>Finto AI</title>
     <style type="text/css">
       body {
-        background-color: #83cfc8;
+        background-color: #80d5e9;
         font-family: 'Fira Sans', sans-serif;
       }
-      header { background-color: white; }
-      .widget { padding: 8px 10px; }
-      #splash, #footer {
+      header, #footer {
         color: white;
-        background-color: #75889f;
+        background-color: #394554;
+      }
+      .widget { padding: 8px 10px; }
+      #splash {
+      
+      }
+      #api {
+        color: black;
+        background-color: #dff5f9;
       }
       #text-box {
         background-color: white;
@@ -50,8 +57,8 @@ Dynamic functionality
       #text-box { font-weight: bold; padding-bottom: 16px; }
       .row { margin-bottom: 24px; }
       
-      #sidebar, #sidebar-tab { background-color: #eaf6f4; }
-      #sidebar-tabs { background-color: #a9dcd7;}
+      #sidebar, #sidebar-tab { background-color: #dff5f9; }
+      #sidebar-tabs { background-color: #bfeaf4;}
       #sidebar-tab { float: left; border-top: 2px solid black; }
       .form-control { border-radius: 0px; }
       select { -moz-appearance: none; }
@@ -61,20 +68,43 @@ Dynamic functionality
 
 <header class="mb-4 mt-0">
   <div class="container">
-    <h1 class="py-3">Finto AI</h1>
+
+
+    <div class="row">
+      <div class="col-md-12 text-right">
+        <div id="languages">
+          på svenska | in English
+        </div>
+      </div>
+    </div>
+
+    <div class="row align-items-end">
+      <div class="col-md-4">
+        <h1 class="py-3">Finto AI</h1>
+      </div>
+      <div class="col-md-4">
+        <div id="splash" class="widget">
+          <p>Finto AI ehdottaa tekstille sopivia aiheita.
+          Palvelu perustuu Annif-työkaluun. 
+          <a href="#">Lue lisää...</a></p>
+        </div>
+      </div>
+      <div class="col-md-4 pl-md-2 mb-md-4">
+        <div id="api" class="widget">
+          <h2>API-palvelu</h2>
+          <p>Finto AI toimii myös rajapintapalveluna, joka voidaan integroida omiin
+          järjestelmiin.</p>
+          <p><a href="#">Lisätietoja</a> | <a href="#">OpenAPI-kuvaus</a></p>
+        </div>
+      </div>
+    </div>
+
+
   </div>
 </header>
 
 <div class="container">
 
-  <div class="row">
-    <div class="col-md-12">
-      <div id="splash" class="widget">
-        Finto AI ehdottaa tekstille sopivia aiheita. Sitä käytetään lomakkeella tai rajapintapalveluna.
-        Palvelu perustuu Annif-työkaluun. Lue lisää...
-      </div>
-    </div>
-  </div>
 
   <div class="row">
     <div class="col-md-8 pr-md-3">
