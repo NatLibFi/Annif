@@ -15,6 +15,12 @@ sphinx:
 # Optionally set the version of Python and requirements required to build your docs
 python:
    install:
+      - method: pip
+      path: .
+      extra_requirements:
+        - voikko
+        - nn
+        - omikuji
       - requirements: docs/requirements.txt
       - method: setuptools
         path: .
