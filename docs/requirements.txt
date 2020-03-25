@@ -1,3 +1,4 @@
 sphinxcontrib-apidoc==0.3.0
 flask
 PyYAML>=5.1
+Werkzeug==0.16.1
