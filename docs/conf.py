@@ -26,7 +26,7 @@ author = 'Osma Suominen'
 release = re.sub(
     '^v',
     '',
-    os.popen('git describe --tags --abbrev=0').read().strip()
+    os.popen('git describe --tags').read().strip()
 )
 # The short X.Y version.
 version = release
