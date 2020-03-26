@@ -8,8 +8,7 @@ Dependencies
 * add jQuery.i18n (local)
 
 Basic layout
-* logo, navigation links etc. for header
-* define link colors
+* logo for header
 * arrow styling for sidebar dropdowns (select elements)
 * add missing elements to sidebar
 * add the links in the top and bottom boxes
@@ -38,24 +37,48 @@ Dynamic functionality
         background-color: #80d5e9;
         font-family: 'Fira Sans', sans-serif;
       }
+      a { color: #006288; }
+      a:hover { color: #00acd4; }
       header, #footer {
         color: white;
         background-color: #394554;
       }
+      #navlinks a {
+        background-position: left center;
+        background-repeat: no-repeat;
+        padding-left: 26px;
+        padding-top: 10px;
+      }
+      #navlinks a, #languages a {
+        color: white;
+        margin: auto 10px;
+      }
+      #navlinks a:hover, #languages a:hover { color: #dff5f9; }
+      #nav-about { background-image: url('static/img/about.png'); }
+      #nav-feedback { background-image: url('static/img/feedback.png'); }
       .widget { padding: 8px 10px; }
       #splash {
       
       }
+      #splash a, #footer a { color: #83c1cf; }
+      #splash a:hover, #footer a:hover { color: #dff5f9; }
       #api {
         color: black;
         background-color: #dff5f9;
+      }
+      #api h2 {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 0;
+      }
+      #api p {
+        margin-bottom: 0;
       }
       #text-box {
         background-color: white;
         border-top: 2px solid black;
       }
       #text-box { font-weight: bold; padding-bottom: 16px; }
-      .row { margin-bottom: 24px; }
       
       #sidebar, #sidebar-tab { background-color: #dff5f9; }
       #sidebar-tabs { background-color: #bfeaf4;}
@@ -70,10 +93,17 @@ Dynamic functionality
   <div class="container">
 
 
-    <div class="row">
-      <div class="col-md-12 text-right">
+    <div class="row pt-md-3 pb-md-3">
+      <div class="col-md-8 text-right">
+        <div id="navlinks">
+          <a id="nav-about" href="#">Tietoja</a>
+          <a id="nav-feedback" href="#">Palaute</a>
+        </div>
+      </div>
+      <div class="col-md-4 text-right">
         <div id="languages">
-          på svenska | in English
+          <a href="#">på svenska</a>
+          <a href="#">in English</a>
         </div>
       </div>
     </div>
@@ -106,7 +136,7 @@ Dynamic functionality
 <div class="container">
 
 
-  <div class="row">
+  <div class="row mb-md-2">
     <div class="col-md-8 pr-md-3">
       <div id="text-box" class="form-group widget">
         <label for="text">Kuvailtava teksti</label><br>
@@ -140,11 +170,12 @@ Dynamic functionality
   </div>
 
   <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-12 mb-md-4">
       <div id="footer" class="widget">
         Lomakkeen ja rajapintapalveluiden kautta lähettyjä tietoja ei
         talleteta.  Palvelun käyttöä seurataan ja tilastoidaan palvelun
-        kehittämiseksi.  Lue tarkempi tietosuojaseloste
+        kehittämiseksi.
+        <a href="#">Lue tarkempi tietosuojaseloste</a>
       </div>
     </div>
   </div>
