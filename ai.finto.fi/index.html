@@ -85,6 +85,16 @@ Dynamic functionality
       #sidebar-tab { float: left; border-top: 2px solid black; }
       .form-control { border-radius: 0px; }
       select { -moz-appearance: none; }
+      .select-wrapper { position: relative; }
+      .select-wrapper:after {
+        content: '▼';
+        font-size: 10px;
+        position: absolute;
+        top: 11px;
+        right: 11px;
+        color: black;
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
@@ -153,17 +163,21 @@ Dynamic functionality
       <div id="sidebar" class="widget">
         <div class="form-group">
           <label for="project">Sanasto ja tekstin kieli</label>
-          <select class="form-control" id="project">
-            <option></option>
-          </select>
+          <div class="select-wrapper">
+            <select class="form-control" id="project">
+              <option></option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
           <label for="limit">Aihe-ehdotusten lukumäärä</label>
-          <select class="form-control" id="limit">
-            <option>10</option>
-            <option>15</option>
-            <option>20</option>
-          </select>
+          <div class="select-wrapper">
+            <select class="form-control" id="limit">
+              <option>10</option>
+              <option>15</option>
+              <option>20</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
