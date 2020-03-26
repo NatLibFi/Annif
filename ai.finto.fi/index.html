@@ -84,16 +84,26 @@ Dynamic functionality
       #sidebar-tabs { background-color: #bfeaf4;}
       #sidebar-tab { float: left; border-top: 2px solid black; }
       .form-control { border-radius: 0px; }
-      select { -moz-appearance: none; }
+      select {
+        -moz-appearance: none;
+        -webkit-appearance: none;
+        appearance: none;
+      }
       .select-wrapper { position: relative; }
       .select-wrapper:after {
         content: '▼';
         font-size: 10px;
         position: absolute;
         top: 11px;
-        right: 11px;
+        right: 9px;
         color: black;
         pointer-events: none;
+      }
+      #get-suggestions {
+        margin-top: 24px;
+        background-color: #006288;
+        border: none;
+        border-radius: 0;
       }
     </style>
   </head>
@@ -179,6 +189,7 @@ Dynamic functionality
             </select>
           </div>
         </div>
+        <button id="get-suggestions" type="button" class="btn btn-primary btn-block">Anna aihe-ehdotukset</button>
       </div>
     </div>
   </div>
