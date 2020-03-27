@@ -78,6 +78,7 @@ RUN pip install pipenv --no-cache-dir \
 
 COPY annif annif
 COPY projects.cfg.dist projects.cfg.dist
+COPY LICENSE.txt LICENSE.txt
 
 WORKDIR /annif-projects
 
