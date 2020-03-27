@@ -27,15 +27,18 @@ function getSuggestions() {
         data: {
           text: $('#text').val(),
           limit: $('input[name="limit"]:checked').val(),
+          threshold: 0.01
         },
         success: function(data) {
-            console.log(data);
-            var firstscore = null;
+            if (data.results.length == 0) {
+                $('#results').append(
+                    $('<li class="list-group-item p-0">Ei tuloksia</li>')
+                );
+            }
             $.each(data.results, function(idx, value) {
-                if (firstscore == null) { firstscore = value.score }
                 $('#results').append(
                     $('<li class="list-group-item p-0">').append(
-                        $('<meter class="mr-2">').attr('value',value.score).attr('max',firstscore).attr('title',value.score),
+                        $('<meter class="mr-2">').attr('value',value.score).attr('max',1.0).attr('title',value.score.toFixed(4)),
                         $('<a>').attr('href',value.uri).append(value.label)
                     )
                 );
