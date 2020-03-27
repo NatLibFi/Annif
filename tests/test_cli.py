@@ -477,6 +477,35 @@ def test_eval_param(tmpdir):
     assert float(recall.group(1)) == 0.0
 
 
+def test_eval_resultsfile(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    tmpdir.join('doc3.txt').write('doc3')
+    result = runner.invoke(
+        annif.cli.cli, [
+            'eval', '--results-file', 'test_output_file.txt', 'dummy-en',
+            str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+
+def test_eval_badresultsfile(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    tmpdir.join('doc3.txt').write('doc3')
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'eval', '--results-file', 'newdir/test_output_file.txt', 'dummy-en',
+            str(tmpdir)])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'cannot open results-file for writing' in failed_result.output
+
+
 def test_eval_docfile():
     docfile = os.path.join(
         os.path.dirname(__file__),
