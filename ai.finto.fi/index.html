@@ -190,13 +190,20 @@ Dynamic functionality
           </div>
         </div>
         <div class="form-group">
-          <label for="limit">Aihe-ehdotusten lukumäärä</label>
-          <div class="select-wrapper">
-            <select class="form-control" id="limit">
-              <option>10</option>
-              <option>15</option>
-              <option>20</option>
-            </select>
+          <label for="limit">Ehdotusten lukumäärä</label>
+          <div class="btn-group btn-group-toggle" data-toggle="buttons">
+            <label class="btn btn-secondary">
+              <input type="radio" name="limit" value="10" autocomplete="off" checked>
+              10
+            </label>
+            <label class="btn btn-secondary">
+              <input type="radio" name="limit" value="15" autocomplete="off">
+              15
+            </label>
+            <label class="btn btn-secondary">
+              <input type="radio" name="limit" value="20" autocomplete="off">
+              20
+            </label>
           </div>
         </div>
         <button id="get-suggestions" type="button" class="btn btn-primary btn-block">Anna aihe-ehdotukset</button>
@@ -221,6 +228,7 @@ Dynamic functionality
 </div>
 
     <script src="static/js/jquery-3.4.1.min.js"></script>
+    <script src="static/js/bootstrap.min.js"></script>
     <script src="static/js/annif.js"></script>
   </body>
 </html>

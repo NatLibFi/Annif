@@ -26,7 +26,7 @@ function getSuggestions() {
         method: 'POST',
         data: {
           text: $('#text').val(),
-          limit: $('#limit').val(),
+          limit: $('input[name="limit"]:checked').val(),
         },
         success: function(data) {
             console.log(data);
