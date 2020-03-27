@@ -8,14 +8,11 @@ Dependencies
 
 Basic layout
 * logo for header
-* arrow styling for sidebar dropdowns (select elements)
-* add missing elements to sidebar
 * add the links in the top and bottom boxes
 
 Dynamic functionality
 * dynamic translations for UI strings using jQuery.i18n
-* load projects from API into dropdown list
-* get suggestions from API and render them
+* switch to ai.finto.fi API instead of api.annif.org
 
 -->
 
@@ -65,8 +62,8 @@ Dynamic functionality
         color: black;
         background-color: #dff5f9;
       }
-      #api h2 {
-        font-size: 1.2rem;
+      #api h2, #sidebar h2 {
+        font-size: 1rem;
         font-weight: bold;
         margin-bottom: 0;
       }
@@ -100,9 +97,22 @@ Dynamic functionality
       }
       #get-suggestions {
         margin-top: 24px;
-        background-color: #006288;
+        background-color: #394554;
         border: none;
         border-radius: 0;
+      }
+      #sidebar h2 {
+        margin-top: 24px;
+      }
+      #results {
+        min-height: 250px;
+      }
+      meter { width: 24px; }
+      meter:-moz-meter-optimum::-moz-meter-bar {
+        background: #394554;
+      }
+      meter::-webkit-meter-optimum-value {
+        background: #394554;
       }
     </style>
   </head>
@@ -189,6 +199,9 @@ Dynamic functionality
           </div>
         </div>
         <button id="get-suggestions" type="button" class="btn btn-primary btn-block">Anna aihe-ehdotukset</button>
+        <h2>Ehdotetut aiheet</h2>
+        <ul class="list-group" id="results">
+        </ul>
       </div>
     </div>
   </div>
@@ -206,10 +219,7 @@ Dynamic functionality
 
 </div>
 
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="static/js/jquery-3.4.1.min.js"></script>
-<!--    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
--->
+    <script src="static/js/annif.js"></script>
   </body>
 </html>
