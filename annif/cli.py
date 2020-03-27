@@ -274,8 +274,10 @@ def run_index(project_id, directory, suffix, force,
     type=click.File(
         'w',
         encoding='utf-8',
+        errors='ignore',
         lazy=True),
-    help='Specify file in order to write non-aggregated results per subject')
+    help="""Specify file in order to write non-aggregated results per subject.
+    File directory must exists, existing file will be overwritten.""")
 @backend_param_option
 @common_options
 def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
@@ -286,11 +288,19 @@ def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
     path may be either a TSV file with short documents or a directory with
     documents in separate files.
     """
+
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
 
     hit_filter = SuggestionFilter(limit=limit, threshold=threshold)
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
+
+    if results_file:
+        try:
+            print('', file=results_file)
+        except Exception as e:
+            raise NotSupportedException(
+                "cannot open results-file for writing: " + str(e))
 
     docs = open_documents(paths)
     for doc in docs.documents:
