@@ -485,7 +485,7 @@ def test_eval_resultsfile(tmpdir):
     tmpdir.join('doc3.txt').write('doc3')
     result = runner.invoke(
         annif.cli.cli, [
-            'eval', '--results-file', 'test_output_file.txt', 'dummy-en',
+            'eval', '--results-file', 'test_file.txt', 'dummy-en',
             str(tmpdir)])
     assert not result.exception
     assert result.exit_code == 0
@@ -499,7 +499,7 @@ def test_eval_badresultsfile(tmpdir):
     tmpdir.join('doc3.txt').write('doc3')
     failed_result = runner.invoke(
         annif.cli.cli, [
-            'eval', '--results-file', 'newdir/test_output_file.txt', 'dummy-en',
+            'eval', '--results-file', 'newdir/test_file.txt', 'dummy-en',
             str(tmpdir)])
     assert failed_result.exception
     assert failed_result.exit_code != 0
