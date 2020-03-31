@@ -130,7 +130,7 @@ Vue.component('annif-results', {
   <ul class="list-group list-group-flush" id="results">\
     <li class="list-group-item p-0" v-for="result in results">\
       <meter class="mr-2" v-bind:value="result.score"></meter>\
-      <a v-bind:href="result.uri"><% result.label %></a>\
+      <a v-bind:href="result.uri"><% result.notation %> <% result.label %></a>\
     </li>\
   </ul>\
 </div>'
