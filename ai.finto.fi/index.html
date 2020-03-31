@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="fi">
 
 <!-- TODO items
 
@@ -131,14 +131,17 @@ Dynamic functionality
       <div class="col-md-8 text-right">
         <div id="navlinks">
           <a id="nav-about" href="#">Tietoja</a>
-          <a id="nav-feedback" href="#">Palaute</a>
+          <a id="nav-feedback" href "#">Palaute</a>
         </div>
       </div>
       <div class="col-md-4 text-right">
         <div id="languages">
-          <a href="#">på svenska</a>
-          <a href="#">in English</a>
+		<ul class ="switch-locale">
+		   <a href="#" data-locale="fi">Suomeksi</a></li>
+		   <a href="#" data-locale="sv">på svenska</a></li>
+		  <a href="#" data-locale="en">in English</a></li></ul>
         </div>
+      </div>
       </div>
     </div>
 
@@ -148,15 +151,15 @@ Dynamic functionality
       </div>
       <div class="col-md-4">
         <div id="splash" class="widget">
-          <p>Finto AI ehdottaa tekstille sopivia aiheita.
-          Palvelu perustuu Annif-työkaluun. 
+          <p data-i18n="splash">Finto AI ehdottaa tekstille sopivia aiheita.
+          Palvelu perustuu Annif-työkaluun.
           <a href="#">Lue lisää...</a></p>
         </div>
       </div>
       <div class="col-md-4 pl-md-2 mb-md-4">
         <div id="api" class="widget">
-          <h2>API-palvelu</h2>
-          <p>Finto AI toimii myös rajapintapalveluna, joka voidaan integroida omiin
+          <h2 id="api-h2">API-palvelu</h2>
+          <p id="api">Finto AI toimii myös rajapintapalveluna, joka voidaan integroida omiin
           järjestelmiin.</p>
           <p><a href="#">Lisätietoja</a> | <a href="#">OpenAPI-kuvaus</a></p>
         </div>
@@ -173,7 +176,7 @@ Dynamic functionality
   <div class="row mb-md-2">
     <div class="col-md-8 pr-md-3">
       <div id="text-box" class="form-group widget">
-        <label for="text">Kuvailtava teksti</label><br>
+        <label for="text" id="text-box-label-text">Kuvailtava teksti</label><br>
         <textarea class="form-control" rows="20" name="text" id="text"></textarea>
       </div>
     </div>
@@ -181,12 +184,12 @@ Dynamic functionality
     <div class="col-md-4 pl-md-2">
       <ul id="sidebar-tabs" class="nav nav-tabs">
         <li id="sidebar-tab" class="nav-item">
-          <a class="nav-link">Sisällönkuvailu</a>
+          <a class="nav-link" id="nav-link">Sisällönkuvailu</a>
         </li>
       </ul>
       <div id="sidebar" class="widget">
         <div class="form-group">
-          <label for="project">Sanasto ja tekstin kieli</label>
+          <label for="project" id="label-for-project">Sanasto ja tekstin kieli</label>
           <div class="select-wrapper">
             <select class="form-control" id="project">
               <option></option>
@@ -194,7 +197,7 @@ Dynamic functionality
           </div>
         </div>
         <div class="form-group">
-          <label for="limit">Ehdotusten lukumäärä</label>
+          <label for="limit" id="limit">Ehdotusten lukumäärä</label>
           <div class="btn-group btn-group-toggle" data-toggle="buttons">
             <label class="btn btn-secondary">
               <input type="radio" name="limit" value="10" autocomplete="off" checked>
@@ -211,7 +214,7 @@ Dynamic functionality
           </div>
         </div>
         <button id="get-suggestions" type="button" class="btn btn-primary btn-block">Anna aihe-ehdotukset</button>
-        <h2>Ehdotetut aiheet</h2>
+        <h2 id="suggestions">Ehdotetut aiheet</h2>
         <ul class="list-group" id="results">
         </ul>
       </div>
@@ -234,5 +237,21 @@ Dynamic functionality
     <script src="static/js/jquery-3.4.1.min.js"></script>
     <script src="static/js/bootstrap.min.js"></script>
     <script src="static/js/annif.js"></script>
+	<!-- i18n scripts -->
+	<script src="static/jquery.i18n/jquery-3.4.1.min.js"></script>
+	<script src="static/jquery.i18n/CLDRPluralRuleParser.js"></script>
+	<script src="static/jquery.i18n/jquery.i18n.js"></script>		
+	<script src="static/jquery.i18n/jquery.i18n.messagestore.js"></script>
+	<script src="static/jquery.i18n/jquery.i18n.fallbacks.js"></script>
+	<script src="static/jquery.i18n/jquery.i18n.language.js"></script>
+	<script src="static/jquery.i18n/jquery.i18n.parser.js"></script>
+	<script src="static/jquery.i18n/jquery.i18n.emitter.js"></script>	
+	<script src="static/jquery.i18n/jquery.i18n.emitter.bidi.js"></script>
+    <script src="static/js/global.js"></script>
+	<!-- more i18n scripts -->
+	
+  <script src="static/jquery.i18n/history.js-master/scripts/bundled-uncompressed/html4+html5/jquery.history.js"></script>
+  <script src="static/jquery.i18n/js-url-master/dist/url.min.js"></script> 
+
   </body>
 </html>

@@ -1,0 +1,20 @@
+{
+    "name": "js-url",
+    "authors": [
+        "Rob Nova <rob@websanova.com>"
+    ],
+    "description": "A simple url parser for JavaScript.",
+    "keywords": ["js", "javascript", "url", "parser"],
+    "homepage": "https://github.com/websanova/js-url",
+    "license": "MIT",
+    "main": [
+        "./dist/es5-url.min.js"
+    ],
+    "ignore": [
+        "demo",
+        "test",
+        "src",
+        "gruntfile.js"
+    ],
+    "dependencies": {}
+}
