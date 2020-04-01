@@ -62,9 +62,14 @@ class MauiBackend(backend.AnnifBackend):
         try:
             resp = requests.put(self.tagger_url(params) + '/vocab',
                                 data=self.project.vocab.as_skos())
+            try:
+                json = resp.json()
+            except ValueError:
+                json = None
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
-            raise OperationFailedException(err)
+            msg = "Uploading vocabulary failed: {}".format(json)
+            raise OperationFailedException(msg) from err
 
     def _create_train_file(self, corpus):
         self.info("Creating train file")

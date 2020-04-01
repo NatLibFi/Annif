@@ -92,11 +92,16 @@ def test_maui_initialize_tagger_create_failed(maui, maui_params):
 
 @responses.activate
 def test_maui_upload_vocabulary_failed(maui, maui_params):
+    json = {"status": 400,
+            "status_text": "Bad Request",
+            "message": "No stemmer class registered for language 'nl'"}
     responses.add(responses.PUT,
                   'http://api.example.org/mauiservice/dummy/vocab',
-                  body=requests.exceptions.RequestException())
+                  json=json,
+                  status=400)
 
-    with pytest.raises(OperationFailedException):
+    msg_re = r"No stemmer class registered"
+    with pytest.raises(OperationFailedException, match=msg_re):
         maui._upload_vocabulary(params=maui_params)
 
 
