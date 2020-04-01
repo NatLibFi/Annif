@@ -49,23 +49,30 @@ class MauiBackend(backend.AnnifBackend):
 
         # create a new tagger
         data = {'id': self.tagger(params), 'lang': params['language']}
+        json = {}
         try:
             resp = requests.post(self.endpoint(params), data=data)
             self.debug("Trying to create tagger {} returned status code {}"
                        .format(self.tagger(params), resp.status_code))
+            try:
+                json = resp.json()
+            except ValueError:
+                pass
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
-            raise OperationFailedException(err)
+            msg = "Creating tagger failed: {}".format(json)
+            raise OperationFailedException(msg) from err
 
     def _upload_vocabulary(self, params):
         self.info("Uploading vocabulary")
+        json = {}
         try:
             resp = requests.put(self.tagger_url(params) + '/vocab',
                                 data=self.project.vocab.as_skos())
             try:
                 json = resp.json()
             except ValueError:
-                json = None
+                pass
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
             msg = "Uploading vocabulary failed: {}".format(json)
@@ -82,23 +89,31 @@ class MauiBackend(backend.AnnifBackend):
 
     def _upload_train_file(self, params):
         self.info("Uploading training documents")
+        json = {}
         train_path = os.path.join(self.datadir, self.TRAIN_FILE)
         with open(train_path, 'rb') as train_file:
             try:
                 resp = requests.post(self.tagger_url(params) + '/train',
                                      data=train_file)
+                try:
+                    json = resp.json()
+                except ValueError:
+                    pass
                 resp.raise_for_status()
             except requests.exceptions.RequestException as err:
-                raise OperationFailedException(err)
+                msg = "Uploading training documents failed: {}".format(json)
+                raise OperationFailedException(msg) from err
 
     def _wait_for_train(self, params):
         self.info("Waiting for training to be completed...")
+        json = {}
         while True:
             try:
                 resp = requests.get(self.tagger_url(params) + "/train")
                 resp.raise_for_status()
             except requests.exceptions.RequestException as err:
-                raise OperationFailedException(err)
+                msg = "Training failed: {}".format(json)
+                raise OperationFailedException(msg) from err
 
             response = resp.json()
             if response['completed']:
