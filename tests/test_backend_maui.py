@@ -91,6 +91,27 @@ def test_maui_initialize_tagger_create_failed(maui, maui_params):
 
 
 @responses.activate
+def test_maui_initialize_tagger_create_error(maui, maui_params):
+    responses.add(responses.DELETE,
+                  'http://api.example.org/mauiservice/dummy',
+                  status=404,
+                  json={"status": 404,
+                        "status_text": "Not Found",
+                        "message": "The resource does not exist"})
+    responses.add(responses.POST,
+                  'http://api.example.org/mauiservice/',
+                  status=400,
+                  json={"status": 400,
+                        "status_text": "Bad Request",
+                        "field": "id",
+                        "message": "Missing POST parameter: id"})
+
+    msg_re = r'Missing POST parameter'
+    with pytest.raises(OperationFailedException, match=msg_re):
+        maui._initialize_tagger(params=maui_params)
+
+
+@responses.activate
 def test_maui_upload_vocabulary_failed(maui, maui_params):
     json = {"status": 400,
             "status_text": "Bad Request",
