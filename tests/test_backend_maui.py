@@ -230,6 +230,20 @@ def test_maui_suggest_zero_score(maui, project):
     assert len(responses.calls) == 1
 
 
+@responses.activate
+def test_maui_suggest_unknown_uri(maui, project):
+    responses.add(responses.POST,
+                  'http://api.example.org/mauiservice/dummy/suggest',
+                  json={'title': '1 recommendation from dummy',
+                        'topics': [{'id': 'http://example.org/unknown',
+                                    'label': 'unknown',
+                                    'probability': 1.0}]})
+
+    result = maui.suggest('this is some text')
+    assert len(result) == 0
+    assert len(responses.calls) == 1
+
+
 def test_maui_suggest_error(maui, project):
     with unittest.mock.patch('requests.post') as mock_request:
         mock_request.side_effect = requests.exceptions.RequestException(

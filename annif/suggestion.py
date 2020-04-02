@@ -166,7 +166,10 @@ class ListSuggestionResult(SuggestionResult):
     def create_from_index(cls, hits, subject_index):
         subject_suggestions = []
         for hit in hits:
-            subject = subject_index[subject_index.by_uri(hit.uri)]
+            subject_id = subject_index.by_uri(hit.uri)
+            if subject_id is None:
+                continue
+            subject = subject_index[subject_id]
             subject_suggestions.append(
                 SubjectSuggestion(uri=hit.uri,
                                   label=subject[1],
