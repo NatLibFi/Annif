@@ -52,25 +52,22 @@ for details.
 
 A development version of Annif can be installed by cloning the [GitHub
 repository](https://github.com/NatLibFi/Annif).
-[Pipenv](https://docs.pipenv.org/) is used for managing dependencies for the
-development version.
 
 ## Installation and setup
 
 Clone the repository.
 
 Switch into the repository directory.
-Install pipenv if you don't have it:
 
-    pip install pipenv  # or pip3 install pipenv
+Create and activate a virtual environment (optional, but highly recommended):
 
-Install dependencies and download NLTK data:
+    python3 -m venv venv
+    . venv/bin/activate
 
-    pipenv install  # use --dev if you want to run tests etc.
+Install dependencies (including development) and make the installation editable:
 
-Enter the virtual environment:
-
-    pipenv shell
+    pip install .[dev]
+    pip install -e ,
 
 You will also need NLTK data files:
 
@@ -82,7 +79,7 @@ Start up the application:
 
 ## Unit tests
 
-Run `pipenv shell` to enter the virtual environment and then run `pytest`.
+Run `. venv/bin/activate` to enter the virtual environment and then run `pytest`.
 To have the test suite watch for changes in code and run automatically, use
 pytest-watch by running `ptw`.
 
