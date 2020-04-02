@@ -91,12 +91,33 @@ def test_maui_initialize_tagger_create_failed(maui, maui_params):
 
 
 @responses.activate
-def test_maui_upload_vocabulary_failed(maui, maui_params):
-    responses.add(responses.PUT,
-                  'http://api.example.org/mauiservice/dummy/vocab',
-                  body=requests.exceptions.RequestException())
+def test_maui_initialize_tagger_create_error(maui, maui_params):
+    responses.add(responses.DELETE,
+                  'http://api.example.org/mauiservice/dummy',
+                  status=404,
+                  json={"status": 404,
+                        "status_text": "Not Found",
+                        "message": "The resource does not exist"})
+    responses.add(responses.POST,
+                  'http://api.example.org/mauiservice/',
+                  status=500)
 
     with pytest.raises(OperationFailedException):
+        maui._initialize_tagger(params=maui_params)
+
+
+@responses.activate
+def test_maui_upload_vocabulary_failed(maui, maui_params):
+    json = {"status": 400,
+            "status_text": "Bad Request",
+            "message": "No stemmer class registered for language 'nl'"}
+    responses.add(responses.PUT,
+                  'http://api.example.org/mauiservice/dummy/vocab',
+                  json=json,
+                  status=400)
+
+    msg_re = r"No stemmer class registered"
+    with pytest.raises(OperationFailedException, match=msg_re):
         maui._upload_vocabulary(params=maui_params)
 
 
@@ -203,6 +224,20 @@ def test_maui_suggest_zero_score(maui, project):
                         'topics': [{'id': 'http://example.org/maui',
                                     'label': 'maui',
                                     'probability': 0.0}]})
+
+    result = maui.suggest('this is some text')
+    assert len(result) == 0
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_maui_suggest_unknown_uri(maui, project):
+    responses.add(responses.POST,
+                  'http://api.example.org/mauiservice/dummy/suggest',
+                  json={'title': '1 recommendation from dummy',
+                        'topics': [{'id': 'http://example.org/unknown',
+                                    'label': 'unknown',
+                                    'probability': 1.0}]})
 
     result = maui.suggest('this is some text')
     assert len(result) == 0
