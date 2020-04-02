@@ -100,14 +100,9 @@ def test_maui_initialize_tagger_create_error(maui, maui_params):
                         "message": "The resource does not exist"})
     responses.add(responses.POST,
                   'http://api.example.org/mauiservice/',
-                  status=400,
-                  json={"status": 400,
-                        "status_text": "Bad Request",
-                        "field": "id",
-                        "message": "Missing POST parameter: id"})
+                  status=500)
 
-    msg_re = r'Missing POST parameter'
-    with pytest.raises(OperationFailedException, match=msg_re):
+    with pytest.raises(OperationFailedException):
         maui._initialize_tagger(params=maui_params)
 
 
