@@ -63,25 +63,20 @@ RUN apt-get update \
 	&& rm -rf /root/.cache/pip*/*
 
 
-## Install Annif:
-# Files needed by pipenv install:
-COPY Pipfile README.md setup.py /Annif/
+## Install Annif (including development packages and making the installation editable):
+
+COPY setup.py README.md LICENSE.txt projects.cfg.dist /Annif/
+COPY annif /Annif/annif
+COPY tests /Annif/tests
 WORKDIR /Annif
 
-# Handle occasional timeout in nltk.downloader with 3 tries
-RUN pip install pipenv --no-cache-dir \
-	&& pipenv install --dev --system --skip-lock \
-	&& for i in 1 2 3; do python -m nltk.downloader punkt -d /usr/share/nltk_data && break || sleep 1; done \
-	&& pip uninstall -y pipenv \
-	&& rm -rf /root/.cache/pip*/*
+RUN pip install .[dev] --no-cache-dir \
+	&& pip install -e . \
+	# Handle occasional timeout in nltk.downloader with 3 tries
+	&& for i in 1 2 3; do python -m nltk.downloader punkt -d /usr/share/nltk_data && break || sleep 1; done
 
-
-COPY annif annif
-COPY projects.cfg.dist projects.cfg.dist
-COPY LICENSE.txt LICENSE.txt
 
 WORKDIR /annif-projects
-
 
 # Switch user to non-root:
 RUN groupadd -g 998 annif_user \
