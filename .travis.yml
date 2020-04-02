@@ -1,7 +1,6 @@
-dist: xenial
+dist: bionic
 language: python
 python:
-- '3.5'
 - '3.6'
 - '3.7'
 - '3.8'
@@ -31,18 +30,16 @@ install:
 # (tensorflow 2.0.0 isn't available for python 3.8 anyway)
 - if [[ $TRAVIS_PYTHON_VERSION != '3.8' ]]; then pip install .[nn]; fi
 # Install the optional Omikuji dependency
-# - except for one Python version (3.6) so that we can test also without them
-- if [[ $TRAVIS_PYTHON_VERSION != '3.6' ]]; then pip install .[omikuji]; fi
-# For Python 3.5, also install optional dependencies that were not specified in Pipfile
+# - except for one Python version (3.7) so that we can test also without them
+- if [[ $TRAVIS_PYTHON_VERSION != '3.7' ]]; then pip install .[omikuji]; fi
+# For Python 3.6, also install optional dependencies that were not specified in Pipfile
 # For other Python versions we will only run the tests that depend on pure Python modules
 # - fastText dependencies
-- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install fasttextmirror==0.8.22; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then pip install .[fasttext]; fi
 # - voikko dependencies
-- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install voikko; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then pip install .[voikko]; fi
 # - vw dependencies
-- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then sudo ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.a /usr/lib/x86_64-linux-gnu/libboost_python3.a; fi
-- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then sudo ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.so /usr/lib/x86_64-linux-gnu/libboost_python3.so; fi
-- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then pip install vowpalwabbit==8.7.*; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then pip install .[vw]; fi
 script:
 - pytest --cov=./
 after_success:
