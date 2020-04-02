@@ -20,10 +20,7 @@ cache: pip
 before_install:
 - export BOTO_CONFIG=/dev/null
 install:
-- pip install --upgrade pip
-- pip install pipenv
-- pip install --upgrade pytest
-- pipenv install --dev --skip-lock
+- pip install .[dev]
 - travis_wait 30 python -m nltk.downloader punkt
 # Install the optional neural network dependencies (TensorFlow and LMDB)
 # - except for one Python version (3.8) so that we can test also without them

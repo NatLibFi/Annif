@@ -30,6 +30,7 @@ setup(
         'gensim==3.8.*',
         'scikit-learn==0.22.*',
         'rdflib',
+        'gunicorn',
         'numpy==1.17.*',
     ],
     tests_require=['py', 'pytest', 'requests'],
@@ -37,8 +38,19 @@ setup(
         'fasttext': ['fasttextmirror==0.8.22'],
         'voikko': ['voikko'],
         'vw': ['vowpalwabbit==8.7.*'],
-        'nn': ['tensorflow==2.0.*', 'lmdb==0.98'],
+        'nn': ['tensorflow==2.2.*', 'lmdb==0.98'],
         'omikuji': ['omikuji==0.2.*'],
+        'dev': [
+          'codecov',
+          'pytest-cov',
+          'pytest-watch',
+          'pytest-flask',
+          'pytest-pep8',
+          'swagger-tester',
+          'bumpversion',
+          'responses',
+          'autopep8'
+        ]
     },
     entry_points={
         'console_scripts': ['annif=annif.cli:cli']},
