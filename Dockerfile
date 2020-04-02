@@ -72,7 +72,7 @@ WORKDIR /Annif
 
 RUN pip install .[dev] --no-cache-dir \
 	&& pip install -e . \
-	# Handle occasional timeout in nltk.downloader with 3 tries
+	# Download nltk data (handle occasional timeout in with 3 tries)
 	&& for i in 1 2 3; do python -m nltk.downloader punkt -d /usr/share/nltk_data && break || sleep 1; done
 
 
