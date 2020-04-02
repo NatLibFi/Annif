@@ -67,7 +67,7 @@ Create and activate a virtual environment (optional, but highly recommended):
 Install dependencies (including development) and make the installation editable:
 
     pip install .[dev]
-    pip install -e ,
+    pip install -e .
 
 You will also need NLTK data files:
 
