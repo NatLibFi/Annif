@@ -33,17 +33,17 @@ jQuery(function() {
             "api-title": "API service",
             "nav-about": "About",
             "nav-feedback": "Feedback",
-            "annif": "Read more.",
-            "splash": "Finto AI will suggest subjects for a given text. It's based on Annif, a tool for automated subject indexing.",
+            "annif": "Read more",
+            "splash": "Finto AI suggests subjects for a given text. It's based on Annif, a tool for automated subject indexing.",
             "api-h2": "API Service",
             "api": "Finto AI is also an API service that can be integrated to other systems.",
-            "text-box-label-text": "Submit text to be indexed below",
+            "text-box-label-text": "Enter text to be indexed",
             "nav-link": "Subject indexing",
             "limit": "Number of suggestions",
             "label-for-project": "Vocabulary and language",
             "get-suggestions": "Get suggestions",
             "suggestions": "Suggestions",
-            "footer": "The data submitted via the above form or the API will not be saved anywhere. The use of the service is being monitored for development purposes."
+            "footer": "The data submitted via the above form or the API will not be saved anywhere. Usage of the service is being monitored for development purposes."
 
         },
         'sv': {
@@ -51,22 +51,22 @@ jQuery(function() {
             "nav-about": "Information",
             "nav-feedback": "Respons",
             "annif": "Läs mer",
-            "splash": "Finto AI föreslår deskriptorer / indexeringstermer / ämnesord för text. Det är baserat på Annif, som är ett verktyg för automatiskt indexering.",
+            "splash": "Finto AI föreslår ämnesord för text. Det är baserat på Annif, ett verktyg för automatisk indexering.",
             "api-h2": "API Service",
-            "api": "Finto AI är också ett API service som man kan integrera med sina egna system.",
+            "api": "Finto AI är också en API-tjänst som kan integreras med andra system.",
             "text-box-label-text": "Text",
-            "nav-link": "Innehållsbeskrivning / ämnesordsindexering",
-            "limit": "Antal föreslag",
+            "nav-link": "Ämnesordsindexering",
+            "limit": "Antal förslag",
             "label-for-project": "Volabulär och språk",
-            "get-suggestions": "Analysera",
-            "suggestions": "Föreslag",
-            "footer": "Uppgifterna som skickas via ovanstående formuläret eller API kommer inte att sparas eller lagras. Användningen av tjänsten övervakas för utvecklingsändamål."
+            "get-suggestions": "Ge förslag till ämnesord",
+            "suggestions": "Förslag",
+            "footer": "Uppgifterna som skickas via formuläret eller API-tjänsten sparas inte. Användningen av tjänsten övervakas för utvecklingsändamål."
         },
 
         'fi': {
             "api-title": "API service",
-            "nav-about": "Lisätietoa",
-            "nav-feedback": "Anna palautetta",
+            "nav-about": "Tietoja",
+            "nav-feedback": "Palaute",
             "annif": "Lisätietoa",
             "splash": "Finto AI ehdottaa tekstille sopivia aiheita. Palvelu perustuu Annif-työkaluun.",
             "api-h2": "API-palvelu",
