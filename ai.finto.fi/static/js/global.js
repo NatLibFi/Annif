@@ -8,21 +8,6 @@ var set_locale_to = function(locale) {
 
     $('body').i18n();
 
-    $('#splash').text($.i18n('splash'));
-    $('#nav-about').text($.i18n('nav-about'));
-    $('#nav-feedback').text($.i18n('nav-feedback'));
-    $('#api-title').text($.i18n('api-title'));
-    $('#text-box-label-text').text($.i18n('text-box-label-text'));
-    $('#nav-link').text($.i18n('nav-link'));
-    $('#limit').text($.i18n('limit'));
-    $('#label-for-project').text($.i18n('label-for-project'));
-    $('#footer').text($.i18n('footer'));
-    $('#api').text($.i18n('api'));
-    $('#api-h2').text($.i18n('api-h2'));
-    $('#get-suggestions').text($.i18n('get-suggestions'));
-    $('#suggestions').text($.i18n('suggestions'));
-    $('#annif').text($.i18n('annif'));
-
 };
 
 jQuery(function() {
@@ -30,54 +15,53 @@ jQuery(function() {
     $.i18n().load({
 
         'en': {
-            "api-title": "API service",
             "nav-about": "About",
             "nav-feedback": "Feedback",
-            "annif": "Read more",
+            "read-more": "Read more",
             "splash": "Finto AI suggests subjects for a given text. It's based on Annif, a tool for automated subject indexing.",
-            "api-h2": "API Service",
-            "api": "Finto AI is also an API service that can be integrated to other systems.",
+            "api-title": "API service",
+            "api-desc": "Finto AI is also an API service that can be integrated to other systems.",
             "text-box-label-text": "Enter text to be indexed",
-            "nav-link": "Subject indexing",
+            "nav-subject-indexing": "Subject indexing",
+            "project": "Vocabulary and text language",
             "limit": "Number of suggestions",
-            "label-for-project": "Vocabulary and language",
-            "get-suggestions": "Get suggestions",
+            "get-suggestions": "Get subject suggestions",
             "suggestions": "Suggestions",
-            "footer": "The data submitted via the above form or the API will not be saved anywhere. Usage of the service is being monitored for development purposes."
-
+            "footer-text": "The data submitted via the above form or the API will not be saved anywhere. Usage of the service is being monitored for development purposes.",
+            "footer-link": "See our privacy policy"
         },
         'sv': {
-            "api-title": "API service",
             "nav-about": "Information",
             "nav-feedback": "Respons",
-            "annif": "Läs mer",
+            "read-more": "Läs mer",
             "splash": "Finto AI föreslår ämnesord för text. Det är baserat på Annif, ett verktyg för automatisk indexering.",
-            "api-h2": "API Service",
-            "api": "Finto AI är också en API-tjänst som kan integreras med andra system.",
-            "text-box-label-text": "Text",
-            "nav-link": "Ämnesordsindexering",
+            "api-title": "API-tjänst",
+            "api-desc": "Finto AI är också en API-tjänst som kan integreras med andra system.",
+            "text-box-label-text": "Text för indexering",
+            "nav-subject-indexing": "Ämnesordsindexering",
+            "project": "Volabulär och textens språk",
             "limit": "Antal förslag",
-            "label-for-project": "Volabulär och språk",
             "get-suggestions": "Ge förslag till ämnesord",
             "suggestions": "Förslag",
-            "footer": "Uppgifterna som skickas via formuläret eller API-tjänsten sparas inte. Användningen av tjänsten övervakas för utvecklingsändamål."
+            "footer-text": "Uppgifterna som skickas via formuläret eller API-tjänsten sparas inte. Användningen av tjänsten övervakas för utvecklingsändamål.",
+            "footer-link": "Läs vår sekretesspolicy"
         },
 
         'fi': {
-            "api-title": "API service",
             "nav-about": "Tietoja",
             "nav-feedback": "Palaute",
-            "annif": "Lisätietoa",
+            "read-more": "Lue lisää",
             "splash": "Finto AI ehdottaa tekstille sopivia aiheita. Palvelu perustuu Annif-työkaluun.",
-            "api-h2": "API-palvelu",
-            "api": "Finto AI toimii myös rajapintapalveluna, joka voidaan integroida omiin järjestelmiin",
+            "api-title": "API-palvelu",
+            "api-desc": "Finto AI toimii myös rajapintapalveluna, joka voidaan integroida omiin järjestelmiin",
             "text-box-label-text": "Kuvailtava teksti",
-            "nav-link": "Sisällonkuvailu",
+            "nav-subject-indexing": "Sisällonkuvailu",
+            "project": "Sanasto ja tekstin kieli",
             "limit": "Ehdotusten määrä",
-            "label-for-project": "Sanasto ja kieli",
             "get-suggestions": "Anna aihe-ehdotukset",
             "suggestions": "Ehdotetut aiheet",
-            "footer": "Lomakkeen ja rajapintapalveluiden kautta lähettyjä tietoja ei talleteta.  Palvelun käyttöä seurataan ja tilastoidaan palvelun kehittämiseksi."
+            "footer-text": "Lomakkeen ja rajapintapalveluiden kautta lähettyjä tietoja ei talleteta.  Palvelun käyttöä seurataan ja tilastoidaan palvelun kehittämiseksi.",
+            "footer-link": "Lue tietosuojaseloste"
         }
 
 
@@ -91,7 +75,7 @@ jQuery(function() {
 
         });
 
-        $('.switch-locale').on('click', 'a', function(e) {
+        $('#switch-locale').on('click', 'a', function(e) {
 
             e.preventDefault();
 
