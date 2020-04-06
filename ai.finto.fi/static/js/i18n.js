@@ -7,7 +7,7 @@ var set_locale_to = function(locale) {
     $('body').i18n();
     
     $('#switch-locale a').show();
-    $('a[data-locale=' + locale + ']').hide();
+    $('a[data-locale=' + $.i18n().locale + ']').hide();
 
 };
 
