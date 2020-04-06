@@ -54,7 +54,7 @@ jQuery(function() {
             "read-more": "Lue lisää",
             "splash": "Finto AI ehdottaa tekstille sopivia aiheita. Palvelu perustuu Annif-työkaluun.",
             "api-title": "API-palvelu",
-            "api-desc": "Finto AI toimii myös rajapintapalveluna, joka voidaan integroida omiin järjestelmiin",
+            "api-desc": "Finto AI toimii myös rajapintapalveluna, joka voidaan integroida omiin järjestelmiin.",
             "text-box-label-text": "Kuvailtava teksti",
             "nav-subject-indexing": "Sisällonkuvailu",
             "project": "Sanasto ja tekstin kieli",
