@@ -1,7 +1,22 @@
-var set_locale_to = function(locale) {
+function defaultLanguage() {
+    var locale = $.i18n.locale;
+    var languages = ["fi", "sv", "en"];
+    for (let i = 0; i < languages.length; ++i) {
+        if (locale == languages[i])
+            return languages[i];
+        if (locale.startsWith(languages[i] + "-"))
+            return languages[i];
+    }
+    return languages[0];
+}
+
+
+var setLocale = function(locale) {
 
     if (locale) {
         $.i18n().locale = locale;
+    } else {
+        $.i18n().locale = defaultLanguage();
     }
 
     $('body').i18n();
@@ -65,27 +80,18 @@ jQuery(function() {
             "footer-link": "Lue tietosuojaseloste"
         }
 
-
     }).done(function() {
-
-        set_locale_to(url('?locale'));
+        setLocale(url('?locale'));
 
         History.Adapter.bind(window, 'statechange', function() {
-
-            set_locale_to(url('?locale'));
-
+            setLocale(url('?locale'));
         });
 
         $('#switch-locale').on('click', 'a', function(e) {
-
             e.preventDefault();
-
             History.pushState(null, null, "?locale=" + $(this).data('locale'));
-
         });
-
     });
-
 });
 
 
