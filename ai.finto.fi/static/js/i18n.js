@@ -1,5 +1,5 @@
 function defaultLanguage() {
-    var locale = $.i18n.locale;
+    var locale = $.i18n().locale;
     var languages = ["fi", "sv", "en"];
     for (let i = 0; i < languages.length; ++i) {
         if (locale == languages[i])
