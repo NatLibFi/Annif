@@ -42,20 +42,27 @@ Dynamic functionality
         color: white;
         background-color: #394554;
       }
+      #navlinks, #switch-locale {
+        padding-top: 20px;
+        padding-left: 0;
+      }
       #navlinks a {
         background-position: left center;
         background-repeat: no-repeat;
         padding-left: 26px;
         padding-top: 10px;
       }
-      #navlinks a, #languages a {
+      #navlinks a, #switch-locale a {
         color: white;
         margin: auto 10px;
         text-decoration: none;
       }
-      #navlinks a:hover, #languages a:hover { color: #dff5f9; }
+      #navlinks a:hover, #switch-locale a:hover { color: #dff5f9; }
       #nav-about { background-image: url('static/img/about.png'); }
       #nav-feedback { background-image: url('static/img/feedback.png'); }
+      #navlinks li, #switch-locale li {
+        display: inline;
+      }
       .widget { padding: 8px 10px; }
       #splash {
       
@@ -65,6 +72,7 @@ Dynamic functionality
       #api {
         color: black;
         background-color: #dff5f9;
+        margin-top: 20px;
       }
       #api h2, #sidebar h2 {
         font-size: 1rem;
@@ -126,34 +134,34 @@ Dynamic functionality
 <header class="mb-4 mt-0">
   <div class="container">
 
-
-    <div class="row pt-md-3 pb-md-3">
-      <div class="col-md-8 text-right">
-        <div id="navlinks">
-          <a id="nav-about" data-i18n="nav-about" href="#">Tietoja</a>
-          <a id="nav-feedback" data-i18n="nav-feedback" href="#">Palaute</a>
+    <div class="row">
+      <div class="col-md-8">
+        <div class="row align-items-end">
+          <div class="col text-right">
+            <ul id="navlinks">
+              <li><a id="nav-about" data-i18n="nav-about" href="#">Tietoja</a></li>
+              <li><a id="nav-feedback" data-i18n="nav-feedback" href="#">Palaute</a></li>
+            </ul>
+          </div>
+          <div class="col-md-auto text-right">
+            <ul id="switch-locale">
+              <li><a href="#" data-locale="fi">suomeksi</a></li>
+              <li><a href="#" data-locale="sv">på svenska</a></li>
+              <li><a href="#" data-locale="en">in English</a></li></ul>
+            </ul>
+          </div>
         </div>
-      </div>
-      <div class="col-md-4 text-right">
-        <div id="languages">
-          <ul id="switch-locale">
-            <a href="#" data-locale="fi">suomeksi</a></li>
-            <a href="#" data-locale="sv">på svenska</a></li>
-            <a href="#" data-locale="en">in English</a></li></ul>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <div class="row align-items-end">
-      <div class="col-md-4">
-        <h1 class="py-3">Finto AI</h1>
-      </div>
-      <div class="col-md-4">
-        <div id="splash" class="widget">
-          <p data-i18n="splash">Finto AI ehdottaa tekstille sopivia aiheita.
-          Palvelu perustuu Annif-työkaluun.</p>
-          <a data-i18n="read-more" href="#">Lue lisää...</a>
+        <div class="row mt-md-4">
+          <div class="col-md-4 align-items-end">
+            <h1 class="py-3">Finto AI</h1>
+          </div>
+          <div class="col-md-8 align-items-end">
+            <div id="splash" class="widget">
+              <p><span data-i18n="splash">Finto AI ehdottaa tekstille sopivia aiheita.
+              Palvelu perustuu Annif-työkaluun.</span>
+              <a data-i18n="read-more" href="#">Lue lisää...</a></p>
+            </div>
+          </div>
         </div>
       </div>
       <div class="col-md-4 pl-md-2 mb-md-4">
@@ -165,8 +173,6 @@ Dynamic functionality
         </div>
       </div>
     </div>
-
-
   </div>
 </header>
 
