@@ -1,5 +1,5 @@
 
-var base_url = 'https://api.annif.org/v1/';
+var base_url = 'http://ai.dev.finto.fi/v1/';
 
 function clearResults() {
     $('#results').empty();
