@@ -18,7 +18,7 @@ jQuery(function() {
         'en': {
             "nav-about": "About",
             "nav-feedback": "Feedback",
-            "read-more": "Read more",
+            "read-more": "Read more...",
             "splash": "Finto AI suggests subjects for a given text. It's based on Annif, a tool for automated subject indexing.",
             "api-title": "API service",
             "api-desc": "Finto AI is also an API service that can be integrated to other systems.",
@@ -34,7 +34,7 @@ jQuery(function() {
         'sv': {
             "nav-about": "Information",
             "nav-feedback": "Respons",
-            "read-more": "Läs mer",
+            "read-more": "Läs mer...",
             "splash": "Finto AI föreslår ämnesord för text. Det är baserat på Annif, ett verktyg för automatisk indexering.",
             "api-title": "API-tjänst",
             "api-desc": "Finto AI är också en API-tjänst som kan integreras med andra system.",
@@ -51,7 +51,7 @@ jQuery(function() {
         'fi': {
             "nav-about": "Tietoja",
             "nav-feedback": "Palaute",
-            "read-more": "Lue lisää",
+            "read-more": "Lue lisää...",
             "splash": "Finto AI ehdottaa tekstille sopivia aiheita. Palvelu perustuu Annif-työkaluun.",
             "api-title": "API-palvelu",
             "api-desc": "Finto AI toimii myös rajapintapalveluna, joka voidaan integroida omiin järjestelmiin.",
