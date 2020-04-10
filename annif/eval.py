@@ -150,6 +150,22 @@ class EvaluationBatch:
 
         return results
 
+    def _result_per_subject_header(self, results_file):
+        print('\t'.join(['URI',
+                         'Label',
+                         'Support',
+                         'True_positives',
+                         'False_positives',
+                         'False_negatives',
+                         'Precision',
+                         'Recall',
+                         'F1_score']),
+              file=results_file)
+
+    def _result_per_subject_body(self, zipped_results, results_file):
+        for row in zipped_results:
+            print('\t'.join((str(e) for e in row)), file=results_file)
+
     def output_result_per_subject(self, y_true, y_pred, results_file):
         """Write results per subject (non-aggregated)
         to outputfile results_file"""
@@ -163,17 +179,6 @@ class EvaluationBatch:
 
         r = len(y_true)
 
-        print('\t'.join(['URI',
-                         'Label',
-                         'Support',
-                         'True_positives',
-                         'False_positives',
-                         'False_negatives',
-                         'Precision',
-                         'Recall',
-                         'F1_score']),
-              file=results_file)
-
         zipped = zip(self._subject_index._uris,               # URI
                      self._subject_index._labels,             # Label
                      np.sum((true_pos + false_neg), axis=1),  # Support
@@ -186,8 +191,8 @@ class EvaluationBatch:
                       for i in range(r)],                     # Recall
                      [f1_score(y_true[i], y_pred[i], zero_division=0)
                       for i in range(r)])                     # F1
-        for row in zipped:
-            print('\t'.join((str(e) for e in row)), file=results_file)
+        self._result_per_subject_header(results_file)
+        self._result_per_subject_body(zipped, results_file)
 
     def results(self, metrics='all', results_file=None):
         """evaluate a set of selected subjects against a gold standard using

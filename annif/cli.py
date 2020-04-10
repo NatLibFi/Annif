@@ -312,7 +312,7 @@ def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
 
     if results_file:
         try:
-            print('', file=results_file)
+            print('', end='', file=results_file)
         except Exception as e:
             raise NotSupportedException(
                 "cannot open results-file for writing: " + str(e))
