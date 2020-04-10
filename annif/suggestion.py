@@ -6,7 +6,7 @@ import numpy as np
 
 
 SubjectSuggestion = collections.namedtuple(
-    'SubjectSuggestion', 'uri label score')
+    'SubjectSuggestion', 'uri label notation score')
 WeightedSuggestion = collections.namedtuple(
     'WeightedSuggestion', 'hits weight')
 
@@ -115,6 +115,7 @@ class VectorSuggestionResult(SuggestionResult):
                 SubjectSuggestion(
                     uri=subject[0],
                     label=subject[1],
+                    notation=subject[2],
                     score=float(score)))
         return ListSuggestionResult(hits, self._subject_index)
 
@@ -136,11 +137,17 @@ class VectorSuggestionResult(SuggestionResult):
 
     def filter(self, limit=None, threshold=0.0):
         mask = (self._vector > threshold)
+        deprecated_ids = self._subject_index.deprecated_ids()
         if limit is not None:
-            limit_mask = np.zeros(len(self._vector), dtype=np.bool)
-            top_k_subjects = self.subject_order[:limit]
+            limit_mask = np.zeros_like(self._vector, dtype=np.bool)
+            top_k_subjects = [subj for subj in self.subject_order
+                              if subj not in deprecated_ids][:limit]
             limit_mask[top_k_subjects] = True
             mask = mask & limit_mask
+        else:
+            deprecated_mask = np.ones_like(self._vector, dtype=np.bool)
+            deprecated_mask[deprecated_ids] = False
+            mask = mask & deprecated_mask
         return VectorSuggestionResult(self._vector * mask, self._subject_index)
 
     def __len__(self):
@@ -154,6 +161,21 @@ class ListSuggestionResult(SuggestionResult):
         self._hits = [hit for hit in hits if hit.score > 0.0]
         self._subject_index = subject_index
         self._vector = None
+
+    @classmethod
+    def create_from_index(cls, hits, subject_index):
+        subject_suggestions = []
+        for hit in hits:
+            subject_id = subject_index.by_uri(hit.uri)
+            if subject_id is None:
+                continue
+            subject = subject_index[subject_id]
+            subject_suggestions.append(
+                SubjectSuggestion(uri=hit.uri,
+                                  label=subject[1],
+                                  notation=subject[2],
+                                  score=hit.score))
+        return ListSuggestionResult(subject_suggestions, subject_index)
 
     def _hits_to_vector(self):
         vector = np.zeros(len(self._subject_index), dtype=np.float32)
@@ -175,12 +197,12 @@ class ListSuggestionResult(SuggestionResult):
 
     def filter(self, limit=None, threshold=0.0):
         hits = sorted(self.hits, key=lambda hit: hit.score, reverse=True)
+        filtered_hits = [hit for hit in hits
+                         if hit.score >= threshold and hit.score > 0.0 and
+                         hit.label is not None]
         if limit is not None:
-            hits = hits[:limit]
-        return ListSuggestionResult([hit for hit in hits
-                                     if hit.score >= threshold and
-                                     hit.score > 0.0],
-                                    self._subject_index)
+            filtered_hits = filtered_hits[:limit]
+        return ListSuggestionResult(filtered_hits, self._subject_index)
 
     def __len__(self):
         return len(self._hits)

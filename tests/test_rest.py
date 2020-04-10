@@ -97,6 +97,16 @@ def test_rest_suggest_novocab(app):
         assert result.status_code == 503
 
 
+def test_rest_suggest_with_notations(app):
+    with app.app_context():
+        result = annif.rest.suggest(
+            'dummy-fi',
+            text='example text',
+            limit=10,
+            threshold=0.0)
+        assert result['results'][0]['notation'] is None
+
+
 def test_rest_learn_empty(app):
     with app.app_context():
         response = annif.rest.learn('dummy-en', [])

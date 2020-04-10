@@ -49,3 +49,25 @@ yso:p9285
     assert len(subjects) == 1  # one of the concepts was deprecated
     assert subjects[0].uri == 'http://www.yso.fi/onto/yso/p8993'
     assert subjects[0].label == 'hylyt'
+    assert subjects[0].notation is None
+
+
+def test_load_turtle_with_notation(tmpdir):
+    tmpfile = tmpdir.join('subjects.ttl')
+    tmpfile.write("""
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix yso: <http://www.yso.fi/onto/yso/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+yso:p8993
+    a skos:Concept ;
+    skos:prefLabel "hylyt"@fi, "shipwrecks (objects)"@en, "vrak"@sv ;
+    skos:notation "42.42" ;
+    skos:related yso:p8869 .
+    """)
+
+    corpus = SubjectFileSKOS(str(tmpfile), 'fi')
+    subjects = list(corpus.subjects)
+    assert subjects[0].uri == 'http://www.yso.fi/onto/yso/p8993'
+    assert subjects[0].label == 'hylyt'
+    assert subjects[0].notation == '42.42'

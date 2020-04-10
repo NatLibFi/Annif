@@ -44,7 +44,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
 
     DEFAULT_INPUTS = '_text_'
 
-    DEFAULT_PARAMS = {'algorithm': 'oaa'}
+    DEFAULT_PARAMETERS = {'algorithm': 'oaa'}
 
     def initialize(self):
         if self._model is None:
@@ -87,9 +87,9 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
         return params
 
     def default_params(self):
-        params = backend.AnnifBackend.DEFAULT_PARAMS.copy()
-        params.update(mixins.ChunkingBackend.DEFAULT_PARAMS)
-        params.update(self.DEFAULT_PARAMS)
+        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
+        params.update(mixins.ChunkingBackend.DEFAULT_PARAMETERS)
+        params.update(self.DEFAULT_PARAMETERS)
         params.update({param: default_val
                        for param, (_, default_val) in self.VW_PARAMS.items()
                        if default_val is not None})
@@ -230,8 +230,10 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
                                method=self._write_train_file)
 
     def _train(self, corpus, params):
-        self.info("creating VW model")
-        self._create_train_file(corpus)
+        if corpus != 'cached':
+            self._create_train_file(corpus)
+        else:
+            self.info("Reusing cached training data from previous run.")
         self._create_model(params)
 
     def _learn(self, corpus, params):

@@ -35,12 +35,15 @@ class HTTPBackend(backend.AnnifBackend):
             results = response
 
         try:
-            return ListSuggestionResult([SubjectSuggestion(uri=h['uri'],
-                                                           label=h['label'],
-                                                           score=h['score'])
-                                         for h in results
-                                         if h['score'] > 0.0],
-                                        self.project.subjects)
+            subject_suggestions = [SubjectSuggestion(
+                uri=hit['uri'],
+                label=None,
+                notation=None,
+                score=hit['score'])
+                for hit in results if hit['score'] > 0.0]
         except (TypeError, ValueError) as err:
             self.warning("Problem interpreting JSON data: {}".format(err))
             return ListSuggestionResult([], self.project.subjects)
+
+        return ListSuggestionResult.create_from_index(subject_suggestions,
+                                                      self.project.subjects)

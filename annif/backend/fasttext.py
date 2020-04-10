@@ -33,7 +33,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         't': float
     }
 
-    DEFAULT_PARAMS = {
+    DEFAULT_PARAMETERS = {
         'dim': 100,
         'lr': 0.25,
         'epoch': 5,
@@ -47,9 +47,9 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     _model = None
 
     def default_params(self):
-        params = backend.AnnifBackend.DEFAULT_PARAMS.copy()
-        params.update(mixins.ChunkingBackend.DEFAULT_PARAMS)
-        params.update(self.DEFAULT_PARAMS)
+        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
+        params.update(mixins.ChunkingBackend.DEFAULT_PARAMETERS)
+        params.update(self.DEFAULT_PARAMETERS)
         return params
 
     def initialize(self):
@@ -116,10 +116,14 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         self._model.save_model(modelpath)
 
     def _train(self, corpus, params):
-        if corpus.is_empty():
-            raise NotSupportedException('training backend {} with no documents'
-                                        .format(self.backend_id))
-        self._create_train_file(corpus)
+        if corpus != 'cached':
+            if corpus.is_empty():
+                raise NotSupportedException(
+                    'training backend {} with no documents' .format(
+                        self.backend_id))
+            self._create_train_file(corpus)
+        else:
+            self.info("Reusing cached training data from previous run.")
         self._create_model(params)
 
     def _predict_chunks(self, chunktexts, limit):
@@ -145,5 +149,6 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             results.append(SubjectSuggestion(
                 uri=subject[0],
                 label=subject[1],
+                notation=subject[2],
                 score=score / len(chunktexts)))
         return ListSuggestionResult(results, self.project.subjects)

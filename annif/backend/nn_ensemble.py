@@ -2,10 +2,16 @@
 projects."""
 
 
+from io import BytesIO
+import shutil
 import os.path
 import numpy as np
+from scipy.sparse import csr_matrix, csc_matrix
+import joblib
+import lmdb
 from tensorflow.keras.layers import Input, Dense, Add, Flatten, Lambda, Dropout
 from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.utils import Sequence
 import tensorflow.keras.backend as K
 import annif.corpus
 import annif.project
@@ -14,6 +20,59 @@ from annif.exception import NotInitializedException
 from annif.suggestion import VectorSuggestionResult
 from . import backend
 from . import ensemble
+
+
+def idx_to_key(idx):
+    """convert an integer index to a binary key for use in LMDB"""
+    return b'%08d' % idx
+
+
+def key_to_idx(key):
+    """convert a binary LMDB key to an integer index"""
+    return int(key)
+
+
+class LMDBSequence(Sequence):
+    """A sequence of samples stored in a LMDB database."""
+
+    def __init__(self, txn, batch_size):
+        self._txn = txn
+        cursor = txn.cursor()
+        if cursor.last():
+            self._counter = key_to_idx(cursor.key())
+        else:  # empty database
+            self._counter = 0
+        self._batch_size = batch_size
+
+    def add_sample(self, inputs, targets):
+        # use zero-padded 8-digit key
+        key = idx_to_key(self._counter)
+        self._counter += 1
+        # convert the sample into a sparse matrix and serialize it as bytes
+        sample = (csc_matrix(inputs), csr_matrix(targets))
+        buf = BytesIO()
+        joblib.dump(sample, buf)
+        buf.seek(0)
+        self._txn.put(key, buf.read())
+
+    def __getitem__(self, idx):
+        """get a particular batch of samples"""
+        cursor = self._txn.cursor()
+        first_key = idx * self._batch_size
+        cursor.set_key(idx_to_key(first_key))
+        input_arrays = []
+        target_arrays = []
+        for key, value in cursor.iternext():
+            if key_to_idx(key) >= (first_key + self._batch_size):
+                break
+            input_csr, target_csr = joblib.load(BytesIO(value))
+            input_arrays.append(input_csr.toarray())
+            target_arrays.append(target_csr.toarray().flatten())
+        return np.array(input_arrays), np.array(target_arrays)
+
+    def __len__(self):
+        """return the number of available batches"""
+        return int(np.ceil(self._counter / self._batch_size))
 
 
 class NNEnsembleBackend(
@@ -25,8 +84,10 @@ class NNEnsembleBackend(
     name = "nn_ensemble"
 
     MODEL_FILE = "nn-model.h5"
+    LMDB_FILE = 'nn-train.mdb'
+    LMDB_MAP_SIZE = 1024 * 1024 * 1024
 
-    DEFAULT_PARAMS = {
+    DEFAULT_PARAMETERS = {
         'nodes': 100,
         'dropout_rate': 0.2,
         'optimizer': 'adam',
@@ -40,7 +101,7 @@ class NNEnsembleBackend(
     def default_params(self):
         params = {}
         params.update(super().default_params())
-        params.update(self.DEFAULT_PARAMS)
+        params.update(self.DEFAULT_PARAMETERS)
         return params
 
     def initialize(self):
@@ -96,35 +157,40 @@ class NNEnsembleBackend(
         self._create_model(sources)
         self._fit_model(corpus, epochs=int(params['epochs']))
 
-    def _corpus_to_vectors(self, corpus):
+    def _corpus_to_vectors(self, corpus, seq):
         # pass corpus through all source projects
         sources = [(annif.project.get_project(project_id), weight)
                    for project_id, weight
                    in annif.util.parse_sources(self.params['sources'])]
 
-        score_vectors = []
-        true_vectors = []
         for doc in corpus.documents:
             doc_scores = []
             for source_project, weight in sources:
                 hits = source_project.suggest(doc.text)
                 doc_scores.append(hits.vector * weight)
-            score_vectors.append(np.array(doc_scores,
-                                          dtype=np.float32).transpose())
+            score_vector = np.array(doc_scores,
+                                    dtype=np.float32).transpose()
             subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
-            true_vectors.append(subjects.as_vector(self.project.subjects))
-        # collect the results into a single vector, considering weights
-        scores = np.array(score_vectors, dtype=np.float32)
-        # collect the gold standard values into another vector
-        true = np.array(true_vectors, dtype=np.float32)
-        return (scores, true)
+            true_vector = subjects.as_vector(self.project.subjects)
+            seq.add_sample(score_vector, true_vector)
+
+    def _open_lmdb(self, cached):
+        lmdb_path = os.path.join(self.datadir, self.LMDB_FILE)
+        if not cached and os.path.exists(lmdb_path):
+            shutil.rmtree(lmdb_path)
+        return lmdb.open(lmdb_path, map_size=self.LMDB_MAP_SIZE, writemap=True)
 
     def _fit_model(self, corpus, epochs):
-        scores, true = self._corpus_to_vectors(corpus)
+        env = self._open_lmdb(corpus == 'cached')
+        with env.begin(write=True, buffers=True) as txn:
+            seq = LMDBSequence(txn, batch_size=32)
+            if corpus != 'cached':
+                self._corpus_to_vectors(corpus, seq)
+            else:
+                self.info("Reusing cached training data from previous run.")
 
-        # fit the model
-        self._model.fit(scores, true, batch_size=32, verbose=True,
-                        epochs=epochs)
+            # fit the model
+            self._model.fit(seq, verbose=True, epochs=epochs)
 
         annif.util.atomic_save(
             self._model,

@@ -66,22 +66,49 @@ vocab=yso-en
 [maui-fi]
 name=Maui Finnish
 language=fi
-backend=http
-endpoint=http://localhost:8080/maui/jyu-fin/analyze
+backend=maui
+endpoint=http://localhost:8080/mauiserver/
+#endpoint=http://mauiserver:8080/mauiserver/
+tagger=maui-fi
 vocab=yso-fi
 
 [maui-sv]
 name=Maui Swedish
 language=sv
-backend=http
-endpoint=http://localhost:8080/maui/jyu-swe/analyze
+backend=maui
+endpoint=http://localhost:8080/mauiserver/
+#endpoint=http://mauiserver:8080/mauiserver/
+tagger=maui-sv
 vocab=yso-sv
 
 [maui-en]
 name=Maui English
 language=en
-backend=http
-endpoint=http://localhost:8080/maui/jyu-eng/analyze
+backend=maui
+endpoint=http://localhost:8080/mauiserver/
+#endpoint=http://mauiserver:8080/mauiserver/
+tagger=maui-en
+vocab=yso-en
+
+[omikuji-parabel-fi]
+name=Omikuji Parabel Finnish
+language=fi
+backend=omikuji
+analyzer=voikko(fi)
+vocab=yso-fi
+
+[omikuji-parabel-sv]
+name=Omikuji Parabel Swedish
+language=sv
+backend=omikuji
+analyzer=snowball(swedish)
+vocab=yso-sv
+
+[omikuji-parabel-en]
+name=Omikuji Parabel English
+language=en
+backend=omikuji
+analyzer=snowball(english)
 vocab=yso-en
 
 [ensemble-fi]

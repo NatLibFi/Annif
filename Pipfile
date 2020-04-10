@@ -11,8 +11,6 @@ pytest-flask = "*"
 "pytest-pep8" = "*"
 swagger-tester = "*"
 bumpversion = "*"
-sphinx = "*"
-sphinx-rtd-theme = "*"
 responses = "*"
 
 [packages]
@@ -20,6 +18,7 @@ responses = "*"
 connexion = {extras = ["swagger-ui"]}
 swagger-ui-bundle = "*"
 flask-cors = "*"
+click = "==7.1.*"
 click-log = "*"
 joblib = "==0.14.*"
 nltk = "*"
@@ -27,7 +26,6 @@ gensim = "==3.8.*"
 scikit-learn = "==0.22.*"
 rdflib = "*"
 gunicorn = "!=20.0.0"
-sphinxcontrib-apidoc = "*"
 numpy = "==1.17.*"
 
 [requires]

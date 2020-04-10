@@ -8,7 +8,7 @@ def read(fname):
 
 setup(
     name='annif',
-    version='0.46.0-dev',
+    version='0.47.0-dev',
     url='https://github.com/NatLibFi/Annif',
     author='Osma Suominen',
     author_email='osma.suominen@helsinki.fi',
@@ -23,7 +23,7 @@ setup(
         'swagger_ui_bundle',
         'flask',
         'flask-cors',
-        'click',
+        'click==7.1.*',
         'click-log',
         'joblib==0.14.*',
         'nltk',
@@ -34,10 +34,10 @@ setup(
     ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
-        'fasttext': ['fasttext', 'fasttextmirror==0.8.22'],
+        'fasttext': ['fasttextmirror==0.8.22'],
         'voikko': ['voikko'],
         'vw': ['vowpalwabbit==8.7.*'],
-        'nn': ['tensorflow==2.0.*'],
+        'nn': ['tensorflow==2.0.*', 'lmdb==0.98'],
         'omikuji': ['omikuji==0.2.*'],
     },
     entry_points={

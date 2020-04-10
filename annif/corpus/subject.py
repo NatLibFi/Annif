@@ -13,13 +13,18 @@ class SubjectFileTSV:
     def __init__(self, path):
         self.path = path
 
+    def _parse_line(self, line):
+        vals = line.strip().split('\t', 2)
+        clean_uri = annif.util.cleanup_uri(vals[0])
+        label = vals[1] if len(vals) >= 2 else None
+        notation = vals[2] if len(vals) >= 3 else None
+        yield Subject(uri=clean_uri, label=label, notation=notation, text=None)
+
     @property
     def subjects(self):
         with open(self.path, encoding='utf-8-sig') as subjfile:
             for line in subjfile:
-                uri, label = line.strip().split(None, 1)
-                clean_uri = annif.util.cleanup_uri(uri)
-                yield Subject(uri=clean_uri, label=label, text=None)
+                yield from self._parse_line(line)
 
     def save_skos(self, path, language):
         """Save the contents of the subject vocabulary into a SKOS/Turtle
@@ -31,23 +36,38 @@ class SubjectIndex:
     """An index that remembers the associations between integers subject IDs
     and their URIs and labels."""
 
-    def __init__(self, corpus):
+    def __init__(self, corpus=None):
         """Initialize the subject index from a subject corpus."""
         self._uris = []
         self._labels = []
+        self._notations = []
         self._uri_idx = {}
         self._label_idx = {}
-        for subject_id, subject in enumerate(corpus.subjects):
-            self._uris.append(subject.uri)
-            self._labels.append(subject.label)
-            self._uri_idx[subject.uri] = subject_id
-            self._label_idx[subject.label] = subject_id
+        if corpus is not None:
+            for subject_id, subject in enumerate(corpus.subjects):
+                self._append(subject_id, subject.uri, subject.label,
+                             subject.notation)
 
     def __len__(self):
         return len(self._uris)
 
     def __getitem__(self, subject_id):
-        return (self._uris[subject_id], self._labels[subject_id])
+        return (self._uris[subject_id], self._labels[subject_id],
+                self._notations[subject_id])
+
+    def _append(self, subject_id, uri, label, notation):
+        self._uris.append(uri)
+        self._labels.append(label)
+        self._notations.append(notation)
+        self._uri_idx[uri] = subject_id
+        self._label_idx[label] = subject_id
+
+    def append(self, uri, label, notation):
+        subject_id = len(self._uris)
+        self._append(subject_id, uri, label, notation)
+
+    def contains_uri(self, uri):
+        return uri in self._uris
 
     def by_uri(self, uri):
         """return the subject index of a subject by its URI"""
@@ -81,13 +101,22 @@ class SubjectIndex:
                 for subject_id in (self.by_label(label) for label in labels)
                 if subject_id is not None]
 
+    def deprecated_ids(self):
+        """return indices of deprecated subjects"""
+
+        return [subject_id for subject_id, label in enumerate(self._labels)
+                if label is None]
+
     def save(self, path):
         """Save this subject index into a file."""
 
         with open(path, 'w', encoding='utf-8') as subjfile:
-            for subject_id in range(len(self)):
-                line = "<{}>\t{}".format(
-                    self._uris[subject_id], self._labels[subject_id])
+            for uri, label, notation in self:
+                line = "<{}>".format(uri)
+                if label is not None:
+                    line += ('\t' + label)
+                    if notation is not None:
+                        line += ('\t' + notation)
                 print(line, file=subjfile)
 
     @classmethod

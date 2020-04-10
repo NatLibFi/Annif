@@ -178,15 +178,23 @@ def run_loadvoc(project_id, subjectfile):
 @cli.command('train')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
+@click.option('--cached/--no-cached', default=False,
+              help='Reuse preprocessed training data from previous run')
 @backend_param_option
 @common_options
-def run_train(project_id, paths, backend_param):
+def run_train(project_id, paths, cached, backend_param):
     """
     Train a project on a collection of documents.
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
-    documents = open_documents(paths)
+    if cached:
+        if len(paths) > 0:
+            raise click.UsageError(
+                "Corpus paths cannot be given when using --cached option.")
+        documents = 'cached'
+    else:
+        documents = open_documents(paths)
     proj.train(documents, backend_params)
 
 
@@ -221,7 +229,11 @@ def run_suggest(project_id, limit, threshold, backend_param):
     hit_filter = SuggestionFilter(limit, threshold)
     hits = hit_filter(project.suggest(text, backend_params))
     for hit in hits:
-        click.echo("<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score))
+        click.echo(
+            "<{}>\t{}\t{}".format(
+                hit.uri,
+                '\t'.join(filter(None, (hit.label, hit.notation))),
+                hit.score))
 
 
 @cli.command('index')
@@ -260,7 +272,10 @@ def run_index(project_id, directory, suffix, force,
         with open(subjectfilename, 'w', encoding='utf-8') as subjfile:
             results = project.suggest(text, backend_params)
             for hit in hit_filter(results):
-                line = "<{}>\t{}\t{}".format(hit.uri, hit.label, hit.score)
+                line = "<{}>\t{}\t{}".format(
+                    hit.uri,
+                    '\t'.join(filter(None, (hit.label, hit.notation))),
+                    hit.score)
                 click.echo(line, file=subjfile)
 
 
@@ -317,8 +332,6 @@ def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
 @cli.command('optimize')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
-@click.option('--backend-param', '-b', multiple=True,
-              help='Backend parameters to override')
 @backend_param_option
 @common_options
 def run_optimize(project_id, paths, backend_param):

@@ -102,12 +102,14 @@ def test_evaluation_batch(subject_index):
         annif.suggestion.SubjectSuggestion(
             uri='http://www.yso.fi/onto/yso/p10849',
             label='arkeologit',
+            notation=None,
             score=1.0)], subject_index)
     batch.evaluate(hits1, gold_set)
     hits2 = annif.suggestion.ListSuggestionResult([
         annif.suggestion.SubjectSuggestion(
             uri='http://www.yso.fi/onto/yso/p1747',
             label='egyptologit',
+            notation=None,
             score=1.0)], subject_index)
     batch.evaluate(hits2, gold_set)
     results = batch.results()

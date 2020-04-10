@@ -12,15 +12,17 @@ class DummyBackend(backend.AnnifLearningBackend):
     label = 'dummy'
 
     def default_params(self):
-        return backend.AnnifBackend.DEFAULT_PARAMS
+        return backend.AnnifBackend.DEFAULT_PARAMETERS
 
     def initialize(self):
         self.initialized = True
 
     def _suggest(self, text, params):
         score = float(params.get('score', 1.0))
+        notation = params.get('notation', None)
         return ListSuggestionResult([SubjectSuggestion(uri=self.uri,
                                                        label=self.label,
+                                                       notation=notation,
                                                        score=score)],
                                     self.project.subjects)
 

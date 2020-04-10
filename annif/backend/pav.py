@@ -5,6 +5,7 @@ individual backends into probabilities."""
 
 import os.path
 import joblib
+from scipy.sparse import coo_matrix, csc_matrix
 from sklearn.isotonic import IsotonicRegression
 import numpy as np
 import annif.corpus
@@ -24,7 +25,7 @@ class PAVBackend(ensemble.EnsembleBackend):
     # defaults for uninitialized instances
     _models = None
 
-    DEFAULT_PARAMS = {'min-docs': 10}
+    DEFAULT_PARAMETERS = {'min-docs': 10}
 
     def initialize(self):
         if self._models is not None:
@@ -58,6 +59,7 @@ class PAVBackend(ensemble.EnsembleBackend):
                 annif.suggestion.SubjectSuggestion(
                     uri=hit.uri,
                     label=hit.label,
+                    notation=hit.notation,
                     score=score))
         pav_result.sort(key=lambda hit: hit.score, reverse=True)
         return annif.suggestion.ListSuggestionResult(
@@ -65,14 +67,32 @@ class PAVBackend(ensemble.EnsembleBackend):
 
     @staticmethod
     def _suggest_train_corpus(source_project, corpus):
-        scores = []
-        true = []
-        for doc in corpus.documents:
+        # lists for constructing score matrix
+        data, row, col = [], [], []
+        # lists for constructing true label matrix
+        trow, tcol = [], []
+
+        ndocs = 0
+        for docid, doc in enumerate(corpus.documents):
             hits = source_project.suggest(doc.text)
-            scores.append(hits.vector)
+            for cid in np.flatnonzero(hits.vector):
+                data.append(hits.vector[cid])
+                row.append(docid)
+                col.append(cid)
             subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
-            true.append(subjects.as_vector(source_project.subjects))
-        return np.array(scores), np.array(true)
+            for cid in np.flatnonzero(
+                    subjects.as_vector(source_project.subjects)):
+
+                trow.append(docid)
+                tcol.append(cid)
+            ndocs += 1
+        scores = coo_matrix((data, (row, col)),
+                            shape=(ndocs, len(source_project.subjects)),
+                            dtype=np.float32)
+        true = coo_matrix((np.ones(len(trow), dtype=np.bool), (trow, tcol)),
+                          shape=(ndocs, len(source_project.subjects)),
+                          dtype=np.bool)
+        return csc_matrix(scores), csc_matrix(true)
 
     def _create_pav_model(self, source_project_id, min_docs, corpus):
         self.info("creating PAV model for source {}, min_docs={}".format(
@@ -86,7 +106,8 @@ class PAVBackend(ensemble.EnsembleBackend):
             if true[:, cid].sum() < min_docs:
                 continue  # don't create model b/c of too few examples
             reg = IsotonicRegression(out_of_bounds='clip')
-            reg.fit(scores[:, cid].astype(np.float64), true[:, cid])
+            cid_scores = scores[:, cid].toarray().flatten().astype(np.float64)
+            reg.fit(cid_scores, true[:, cid].toarray().flatten())
             pav_regressions[source_project.subjects[cid][0]] = reg
         self.info("created PAV model for {} concepts".format(
             len(pav_regressions)))
@@ -98,6 +119,9 @@ class PAVBackend(ensemble.EnsembleBackend):
             method=joblib.dump)
 
     def _train(self, corpus, params):
+        if corpus == 'cached':
+            raise NotSupportedException(
+                'Training pav project from cached data not supported.')
         if corpus.is_empty():
             raise NotSupportedException('training backend {} with no documents'
                                         .format(self.backend_id))

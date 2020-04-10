@@ -39,7 +39,7 @@ class MauiBackend(backend.AnnifBackend):
 
     def _initialize_tagger(self, params):
         self.info(
-            "Initializing Maui Service tagger '{}'".format(
+            "Initializing Maui Server tagger '{}'".format(
                 self.tagger(params)))
 
         # try to delete the tagger in case it already exists
@@ -49,22 +49,34 @@ class MauiBackend(backend.AnnifBackend):
 
         # create a new tagger
         data = {'id': self.tagger(params), 'lang': params['language']}
+        json = {}
         try:
             resp = requests.post(self.endpoint(params), data=data)
             self.debug("Trying to create tagger {} returned status code {}"
                        .format(self.tagger(params), resp.status_code))
+            try:
+                json = resp.json()
+            except ValueError:
+                pass
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
-            raise OperationFailedException(err)
+            msg = "Creating tagger failed: {}".format(json)
+            raise OperationFailedException(msg) from err
 
     def _upload_vocabulary(self, params):
         self.info("Uploading vocabulary")
+        json = {}
         try:
             resp = requests.put(self.tagger_url(params) + '/vocab',
                                 data=self.project.vocab.as_skos())
+            try:
+                json = resp.json()
+            except ValueError:
+                pass
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
-            raise OperationFailedException(err)
+            msg = "Uploading vocabulary failed: {}".format(json)
+            raise OperationFailedException(msg) from err
 
     def _create_train_file(self, corpus):
         self.info("Creating train file")
@@ -77,23 +89,31 @@ class MauiBackend(backend.AnnifBackend):
 
     def _upload_train_file(self, params):
         self.info("Uploading training documents")
+        json = {}
         train_path = os.path.join(self.datadir, self.TRAIN_FILE)
         with open(train_path, 'rb') as train_file:
             try:
                 resp = requests.post(self.tagger_url(params) + '/train',
                                      data=train_file)
+                try:
+                    json = resp.json()
+                except ValueError:
+                    pass
                 resp.raise_for_status()
             except requests.exceptions.RequestException as err:
-                raise OperationFailedException(err)
+                msg = "Uploading training documents failed: {}".format(json)
+                raise OperationFailedException(msg) from err
 
     def _wait_for_train(self, params):
         self.info("Waiting for training to be completed...")
+        json = {}
         while True:
             try:
                 resp = requests.get(self.tagger_url(params) + "/train")
                 resp.raise_for_status()
             except requests.exceptions.RequestException as err:
-                raise OperationFailedException(err)
+                msg = "Training failed: {}".format(json)
+                raise OperationFailedException(msg) from err
 
             response = resp.json()
             if response['completed']:
@@ -102,6 +122,9 @@ class MauiBackend(backend.AnnifBackend):
             time.sleep(1)
 
     def _train(self, corpus, params):
+        if corpus == 'cached':
+            raise NotSupportedException(
+                'Training maui project from cached data not supported.')
         if corpus.is_empty():
             raise NotSupportedException('training backend {} with no documents'
                                         .format(self.backend_id))
@@ -133,15 +156,18 @@ class MauiBackend(backend.AnnifBackend):
 
     def _response_to_result(self, response):
         try:
-            return ListSuggestionResult(
-                [SubjectSuggestion(uri=h['id'],
-                                   label=h['label'],
-                                   score=h['probability'])
-                 for h in response['topics']
-                 if h['probability'] > 0.0], self.project.subjects)
+            subject_suggestions = [SubjectSuggestion(
+                uri=hit['id'],
+                label=None,
+                notation=None,
+                score=hit['probability'])
+                for hit in response['topics'] if hit['probability'] > 0.0]
         except (TypeError, ValueError) as err:
             self.warning("Problem interpreting JSON data: {}".format(err))
             return ListSuggestionResult([], self.project.subjects)
+
+        return ListSuggestionResult.create_from_index(subject_suggestions,
+                                                      self.project.subjects)
 
     def _suggest(self, text, params):
         response = self._suggest_request(text, params)

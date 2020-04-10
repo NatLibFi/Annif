@@ -30,7 +30,9 @@ RUN apt-get update \
 	&& ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.so \
 		/usr/lib/x86_64-linux-gnu/libboost_python3.so \
 	&& pip install --no-cache-dir \
-		vowpalwabbit==8.7.*
+		vowpalwabbit==8.7.* \
+        ## LMDB
+        && pip install --no-cache-dir lmdb==0.98
 
 
 
@@ -54,6 +56,8 @@ RUN apt-get update \
 		vowpalwabbit==8.7.* \
 		tensorflow==2.0.* \
 		omikuji==0.2.* \
+	# For Docker healthcheck:
+	&& apt-get install -y --no-install-recommends curl \
 	# Clean up:
 	&& rm -rf /var/lib/apt/lists/* /usr/include/* \
 	&& rm -rf /root/.cache/pip*/*
@@ -66,7 +70,7 @@ WORKDIR /Annif
 
 # Handle occasional timeout in nltk.downloader with 3 tries
 RUN pip install pipenv --no-cache-dir \
-	&& pipenv install --system --skip-lock \
+	&& pipenv install --dev --system --skip-lock \
 	&& for i in 1 2 3; do python -m nltk.downloader punkt -d /usr/share/nltk_data && break || sleep 1; done \
 	&& pip uninstall -y pipenv \
 	&& rm -rf /root/.cache/pip*/*
@@ -74,6 +78,7 @@ RUN pip install pipenv --no-cache-dir \
 
 COPY annif annif
 COPY projects.cfg.dist projects.cfg.dist
+COPY LICENSE.txt LICENSE.txt
 
 WORKDIR /annif-projects
 

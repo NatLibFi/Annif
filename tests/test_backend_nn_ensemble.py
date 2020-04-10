@@ -7,8 +7,14 @@ import annif.backend
 import annif.corpus
 import annif.project
 from annif.exception import NotInitializedException
+from annif.exception import NotSupportedException
 
 pytest.importorskip("annif.backend.nn_ensemble")
+
+
+def test_lmdb_idx_to_key_to_idx():
+    assert annif.backend.nn_ensemble.idx_to_key(42) == b'00000042'
+    assert annif.backend.nn_ensemble.key_to_idx(b'00000042') == 42
 
 
 def test_nn_ensemble_suggest_no_model(project):
@@ -19,7 +25,7 @@ def test_nn_ensemble_suggest_no_model(project):
         project=project)
 
     with pytest.raises(NotInitializedException):
-        results = nn_ensemble.suggest("example text")
+        nn_ensemble.suggest("example text")
 
 
 def test_nn_ensemble_train_and_learn(app, tmpdir):
@@ -27,13 +33,13 @@ def test_nn_ensemble_train_and_learn(app, tmpdir):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
-        config_params={'sources': 'dummy-en'},
+        config_params={'sources': 'dummy-en', 'epochs': 1},
         project=project)
 
     tmpfile = tmpdir.join('document.tsv')
     tmpfile.write("dummy\thttp://example.org/dummy\n" +
                   "another\thttp://example.org/dummy\n" +
-                  "none\thttp://example.org/none")
+                  "none\thttp://example.org/none\n" * 40)
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
     with app.app_context():
@@ -56,12 +62,33 @@ def test_nn_ensemble_train_and_learn(app, tmpdir):
     assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
 
 
+def test_nn_ensemble_train_cached(app):
+    # make sure we have the cached training data from the previous test
+    project = annif.project.get_project('dummy-en')
+    datadir = py.path.local(project.datadir)
+    assert datadir.join('nn-train.mdb').exists()
+
+    datadir.join('nn-model.h5').remove()
+
+    nn_ensemble_type = annif.backend.get_backend('nn_ensemble')
+    nn_ensemble = nn_ensemble_type(
+        backend_id='nn_ensemble',
+        config_params={'sources': 'dummy-en', 'epochs': 2},
+        project=project)
+
+    with app.app_context():
+        nn_ensemble.train("cached")
+
+    assert datadir.join('nn-model.h5').exists()
+    assert datadir.join('nn-model.h5').size() > 0
+
+
 def test_nn_ensemble_train_and_learn_params(app, tmpdir, capfd):
     project = annif.project.get_project('dummy-en')
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
-        config_params={'sources': 'dummy-en'},
+        config_params={'sources': 'dummy-en', 'epochs': 3},
         project=project)
 
     tmpfile = tmpdir.join('document.tsv')

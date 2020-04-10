@@ -25,6 +25,23 @@ class AnnifVocabulary(DatadirMixin):
         self._subjects = annif.corpus.SubjectIndex(subject_corpus)
         annif.util.atomic_save(self._subjects, self.datadir, 'subjects')
 
+    def _update_subject_index(self, subject_corpus):
+        old_subjects = self.subjects
+        new_subjects = annif.corpus.SubjectIndex(subject_corpus)
+        updated_subjects = annif.corpus.SubjectIndex()
+
+        for uri, label, notation in old_subjects:
+            if new_subjects.contains_uri(uri):
+                label, notation = new_subjects[new_subjects.by_uri(uri)][1:3]
+            else:  # subject removed from new corpus
+                label, notation = None, None
+            updated_subjects.append(uri, label, notation)
+        for uri, label, notation in new_subjects:
+            if not old_subjects.contains_uri(uri):
+                updated_subjects.append(uri, label, notation)
+        self._subjects = updated_subjects
+        annif.util.atomic_save(self._subjects, self.datadir, 'subjects')
+
     @property
     def subjects(self):
         if self._subjects is None:
@@ -41,7 +58,11 @@ class AnnifVocabulary(DatadirMixin):
         """load subjects from a subject corpus and save them into a
         SKOS/Turtle file for later use"""
 
-        self._create_subject_index(subject_corpus)
+        if os.path.exists(os.path.join(self.datadir, 'subjects')):
+            logger.info('updating existing vocabulary')
+            self._update_subject_index(subject_corpus)
+        else:
+            self._create_subject_index(subject_corpus)
         subject_corpus.save_skos(os.path.join(self.datadir, 'subjects.ttl'),
                                  language)
 

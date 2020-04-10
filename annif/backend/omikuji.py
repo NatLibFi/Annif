@@ -21,7 +21,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     TRAIN_FILE = 'omikuji-train.txt'
     MODEL_FILE = 'omikuji-model'
 
-    DEFAULT_PARAMS = {
+    DEFAULT_PARAMETERS = {
         'min_df': 1,
         'cluster_balanced': True,
         'cluster_k': 2,
@@ -30,8 +30,8 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     }
 
     def default_params(self):
-        params = backend.AnnifBackend.DEFAULT_PARAMS.copy()
-        params.update(self.DEFAULT_PARAMS)
+        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
+        params.update(self.DEFAULT_PARAMETERS)
         return params
 
     def _initialize_model(self):
@@ -99,14 +99,17 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self._model.save(os.path.join(self.datadir, self.MODEL_FILE))
 
     def _train(self, corpus, params):
-        if corpus.is_empty():
-            raise NotSupportedException(
-                'Cannot train omikuji project with no documents')
-        input = (doc.text for doc in corpus.documents)
-        vecparams = {'min_df': int(params['min_df']),
-                     'tokenizer': self.project.analyzer.tokenize_words}
-        veccorpus = self.create_vectorizer(input, vecparams)
-        self._create_train_file(veccorpus, corpus)
+        if corpus != 'cached':
+            if corpus.is_empty():
+                raise NotSupportedException(
+                    'Cannot train omikuji project with no documents')
+            input = (doc.text for doc in corpus.documents)
+            vecparams = {'min_df': int(params['min_df']),
+                         'tokenizer': self.project.analyzer.tokenize_words}
+            veccorpus = self.create_vectorizer(input, vecparams)
+            self._create_train_file(veccorpus, corpus)
+        else:
+            self.info("Reusing cached training data from previous run.")
         self._create_model(params)
 
     def _suggest(self, text, params):
@@ -122,5 +125,6 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             results.append(SubjectSuggestion(
                 uri=subject[0],
                 label=subject[1],
+                notation=subject[2],
                 score=score))
         return ListSuggestionResult(results, self.project.subjects)

@@ -105,6 +105,9 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             self.INDEX_FILE)
 
     def _train(self, corpus, params):
+        if corpus == 'cached':
+            raise NotSupportedException(
+                'Training tfidf project from cached data not supported.')
         if corpus.is_empty():
             raise NotSupportedException(
                 'Cannot train tfidf project with no documents')

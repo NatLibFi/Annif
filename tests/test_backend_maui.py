@@ -27,6 +27,11 @@ def maui(app_project, maui_params):
     return maui
 
 
+def test_maui_train_cached(maui):
+    with pytest.raises(NotSupportedException):
+        maui.train("cached")
+
+
 def test_maui_train_missing_endpoint(document_corpus, project):
     maui_type = annif.backend.get_backend("maui")
     maui = maui_type(
@@ -86,12 +91,33 @@ def test_maui_initialize_tagger_create_failed(maui, maui_params):
 
 
 @responses.activate
-def test_maui_upload_vocabulary_failed(maui, maui_params):
-    responses.add(responses.PUT,
-                  'http://api.example.org/mauiservice/dummy/vocab',
-                  body=requests.exceptions.RequestException())
+def test_maui_initialize_tagger_create_error(maui, maui_params):
+    responses.add(responses.DELETE,
+                  'http://api.example.org/mauiservice/dummy',
+                  status=404,
+                  json={"status": 404,
+                        "status_text": "Not Found",
+                        "message": "The resource does not exist"})
+    responses.add(responses.POST,
+                  'http://api.example.org/mauiservice/',
+                  status=500)
 
     with pytest.raises(OperationFailedException):
+        maui._initialize_tagger(params=maui_params)
+
+
+@responses.activate
+def test_maui_upload_vocabulary_failed(maui, maui_params):
+    json = {"status": 400,
+            "status_text": "Bad Request",
+            "message": "No stemmer class registered for language 'nl'"}
+    responses.add(responses.PUT,
+                  'http://api.example.org/mauiservice/dummy/vocab',
+                  json=json,
+                  status=400)
+
+    msg_re = r"No stemmer class registered"
+    with pytest.raises(OperationFailedException, match=msg_re):
         maui._upload_vocabulary(params=maui_params)
 
 
@@ -152,18 +178,40 @@ def test_maui_train(maui, document_corpus, app_project):
 
 
 @responses.activate
-def test_maui_suggest(maui, project):
+def test_maui_suggest(maui):
     responses.add(responses.POST,
                   'http://api.example.org/mauiservice/dummy/suggest',
                   json={'title': '1 recommendation from dummy',
-                        'topics': [{'id': 'http://example.org/maui',
-                                    'label': 'maui',
+                        'topics': [{'id': 'http://example.org/dummy',
+                                    'label': 'dummy',
                                     'probability': 1.0}]})
 
     result = maui.suggest('this is some text')
     assert len(result) == 1
-    assert result[0].uri == 'http://example.org/maui'
-    assert result[0].label == 'maui'
+    assert result[0].uri == 'http://example.org/dummy'
+    assert result[0].label == 'dummy'
+    assert result[0].notation is None
+    assert result[0].score == 1.0
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_maui_suggest_with_notation(maui):
+    responses.add(responses.POST,
+                  'http://api.example.org/mauiservice/dummy/suggest',
+                  json={'title': '1 recommendation from dummy',
+                        'topics': [
+                            {'id': 'http://example.org/dummy-with-notation',
+                             'label': 'dummy',
+                             'probability': 1.0}]})
+
+    maui.project.subjects.append(
+        'http://example.org/dummy-with-notation', 'dummy', '42.42')
+    result = maui.suggest('this is some text')
+    assert len(result) == 1
+    assert result[0].uri == 'http://example.org/dummy-with-notation'
+    assert result[0].label == 'dummy'
+    assert result[0].notation == '42.42'
     assert result[0].score == 1.0
     assert len(responses.calls) == 1
 
@@ -176,6 +224,20 @@ def test_maui_suggest_zero_score(maui, project):
                         'topics': [{'id': 'http://example.org/maui',
                                     'label': 'maui',
                                     'probability': 0.0}]})
+
+    result = maui.suggest('this is some text')
+    assert len(result) == 0
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_maui_suggest_unknown_uri(maui, project):
+    responses.add(responses.POST,
+                  'http://api.example.org/mauiservice/dummy/suggest',
+                  json={'title': '1 recommendation from dummy',
+                        'topics': [{'id': 'http://example.org/unknown',
+                                    'label': 'unknown',
+                                    'probability': 1.0}]})
 
     result = maui.suggest('this is some text')
     assert len(result) == 0

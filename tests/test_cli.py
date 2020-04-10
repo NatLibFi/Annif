@@ -55,8 +55,8 @@ def test_list_projects_config_path_option_nonexistent():
         annif.cli.cli, ["list-projects", "--projects", "nonexistent.cfg"])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Error: Invalid value for "-p" / "--projects": ' \
-           'File "nonexistent.cfg" does not exist.' in failed_result.output
+    assert "Error: Invalid value for '-p' / '--projects': " \
+           "File 'nonexistent.cfg' does not exist." in failed_result.output
 
 
 def test_show_project():
@@ -189,8 +189,8 @@ def test_loadvoc_nonexistent_path():
             'loadvoc', 'dummy-fi', 'nonexistent_path'])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Invalid value for "SUBJECTFILE": ' \
-           'File "nonexistent_path" does not exist.' in failed_result.output
+    assert "Invalid value for 'SUBJECTFILE': " \
+           "File 'nonexistent_path' does not exist." in failed_result.output
 
 
 def test_train(testdatadir):
@@ -224,6 +224,29 @@ def test_train_multiple(testdatadir):
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
 
 
+def test_train_cached(testdatadir):
+    result = runner.invoke(annif.cli.cli,
+                           ['train', '--cached', 'tfidf-fi'])
+    assert result.exception
+    assert result.exit_code == 1
+    assert 'Training tfidf project from cached data not supported.' \
+           in result.output
+
+
+def test_train_cached_with_corpus(testdatadir):
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents.tsv')
+    result = runner.invoke(annif.cli.cli,
+                           ['train', '--cached', 'tfidf-fi', docfile])
+    assert result.exception
+    assert result.exit_code == 2
+    assert 'Corpus paths cannot be given when using --cached option.' \
+           in result.output
+
+
 def test_train_param_override_algo_notsupported():
     pytest.importorskip('annif.backend.vw_multi')
     docfile = os.path.join(
@@ -246,8 +269,8 @@ def test_train_nonexistent_path():
             'train', 'dummy-fi', 'nonexistent_path'])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Invalid value for "[PATHS]...": ' \
-           'Path "nonexistent_path" does not exist.' in failed_result.output
+    assert "Invalid value for '[PATHS]...': " \
+           "Path 'nonexistent_path' does not exist." in failed_result.output
 
 
 def test_train_no_path(caplog):
@@ -289,8 +312,8 @@ def test_learn_nonexistent_path():
             'learn', 'dummy-fi', 'nonexistent_path'])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Invalid value for "[PATHS]...": ' \
-           'Path "nonexistent_path" does not exist.' in failed_result.output
+    assert "Invalid value for '[PATHS]...': " \
+           "Path 'nonexistent_path' does not exist." in failed_result.output
 
 
 def test_suggest():
@@ -300,6 +323,16 @@ def test_suggest():
         input='kissa')
     assert not result.exception
     assert result.output == "<http://example.org/dummy>\tdummy\t1.0\n"
+    assert result.exit_code == 0
+
+
+def test_suggest_with_notations():
+    result = runner.invoke(
+        annif.cli.cli,
+        ['suggest', '--backend-param', 'dummy.notation=42.42', 'dummy-fi'],
+        input='kissa')
+    assert not result.exception
+    assert result.output == "<http://example.org/dummy>\tdummy\t42.42\t1.0\n"
     assert result.exit_code == 0
 
 
@@ -380,8 +413,8 @@ def test_index_nonexistent_path():
             'index', 'dummy-fi', 'nonexistent_path'])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Invalid value for "DIRECTORY": ' \
-           'Directory "nonexistent_path" does not exist.' \
+    assert "Invalid value for 'DIRECTORY': " \
+           "Directory 'nonexistent_path' does not exist." \
            in failed_result.output
 
 
@@ -422,11 +455,9 @@ def test_eval_label(tmpdir):
 
 def test_eval_uri(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
-    keyfile = tmpdir.join('doc1.key').write(
-        "<http://example.org/dummy>\tdummy\n")
+    tmpdir.join('doc1.key').write("<http://example.org/dummy>\tdummy\n")
     tmpdir.join('doc2.txt').write('doc2')
-    keyfile = tmpdir.join('doc2.key').write(
-        "<http://example.org/none>\tnone\n")
+    tmpdir.join('doc2.key').write("<http://example.org/none>\tnone\n")
     tmpdir.join('doc3.txt').write('doc3')
 
     result = runner.invoke(annif.cli.cli, ['eval', 'dummy-en', str(tmpdir)])
@@ -533,8 +564,8 @@ def test_eval_nonexistent_path():
             'eval', 'dummy-fi', 'nonexistent_path'])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Invalid value for "[PATHS]...": ' \
-           'Path "nonexistent_path" does not exist.' in failed_result.output
+    assert "Invalid value for '[PATHS]...': " \
+           "Path 'nonexistent_path' does not exist." in failed_result.output
 
 
 def test_optimize_dir(tmpdir):
@@ -581,5 +612,5 @@ def test_optimize_nonexistent_path():
             'optimize', 'dummy-fi', 'nonexistent_path'])
     assert failed_result.exception
     assert failed_result.exit_code != 0
-    assert 'Invalid value for "[PATHS]...": ' \
-           'Path "nonexistent_path" does not exist.' in failed_result.output
+    assert "Invalid value for '[PATHS]...': " \
+           "Path 'nonexistent_path' does not exist." in failed_result.output

@@ -9,7 +9,7 @@ from annif.project import Access
 
 def test_create_project_wrong_access(app):
     with pytest.raises(ConfigurationException):
-        project = annif.project.AnnifProject(
+        annif.project.AnnifProject(
             'example',
             {'name': 'Example', 'language': 'en', 'access': 'invalid'},
             '.')
@@ -72,21 +72,21 @@ def test_get_project_noanalyzer(app):
     with app.app_context():
         project = annif.project.get_project('noanalyzer')
         with pytest.raises(ConfigurationException):
-            analyzer = project.analyzer
+            project.analyzer
 
 
 def test_get_project_novocab(app):
     with app.app_context():
         project = annif.project.get_project('novocab')
         with pytest.raises(ConfigurationException):
-            vocab = project.vocab
+            project.vocab
 
 
 def test_get_project_nobackend(app):
     with app.app_context():
         project = annif.project.get_project('nobackend')
         with pytest.raises(ConfigurationException):
-            backend = project.backend
+            project.backend
 
 
 def test_get_project_noname(app):
@@ -121,12 +121,12 @@ def test_get_project_default_params_fasttext(app):
         assert param in actual_params and actual_params[param] == val
 
 
-def test_get_project_invalid_config_file(app):
+def test_get_project_invalid_config_file():
     app = annif.create_app(
         config_name='annif.default_config.TestingInvalidProjectsConfig')
     with app.app_context():
         with pytest.raises(ConfigurationException):
-            project = annif.project.get_project('duplicatedvocab')
+            annif.project.get_project('duplicatedvocab')
 
 
 def test_project_load_vocabulary_tfidf(app, vocabulary, testdatadir):
@@ -239,4 +239,4 @@ def test_project_file_not_found():
         config_name='annif.default_config.TestingNoProjectsConfig')
     with app.app_context():
         with pytest.raises(ValueError):
-            project = annif.project.get_project('dummy-en')
+            annif.project.get_project('dummy-en')
