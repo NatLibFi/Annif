@@ -23,6 +23,7 @@ var setLocale = function(locale) {
     
     /* switch link targets */
     $('#nav-feedback').attr("href", $.i18n('url-feedback'));
+     $('#read-more').attr("href", $.i18n('url-read-more'));
 
     $('#switch-locale a').show();
     $('a[data-locale=' + $.i18n().locale + ']').hide();
@@ -48,7 +49,8 @@ jQuery(function() {
             "suggestions": "Suggestions",
             "footer-text": "The data submitted via the above form or the API will not be saved anywhere. Usage of the service is being monitored for development purposes.",
             "footer-link": "See our privacy policy",
-            "url-feedback": "http://finto.fi/en/feedback"
+            "url-feedback": "http://finto.fi/en/feedback",
+            "url-read-more": "https://www.kiwi.fi/x/DYDbCQ"
         },
         'sv': {
             "nav-about": "Information",
@@ -65,7 +67,8 @@ jQuery(function() {
             "suggestions": "Förslag",
             "footer-text": "Uppgifterna som skickas via formuläret eller API-tjänsten sparas inte. Användningen av tjänsten övervakas för utvecklingsändamål.",
             "footer-link": "Läs vår sekretesspolicy",
-            "url-feedback": "http://finto.fi/sv/feedback"
+            "url-feedback": "http://finto.fi/sv/feedback",
+            "url-read-more": "https://www.kiwi.fi/x/FoDbCQ"
         },
 
         'fi': {
@@ -83,7 +86,9 @@ jQuery(function() {
             "suggestions": "Ehdotetut aiheet",
             "footer-text": "Lomakkeen ja rajapintapalveluiden kautta lähettyjä tietoja ei talleteta.  Palvelun käyttöä seurataan ja tilastoidaan palvelun kehittämiseksi.",
             "footer-link": "Lue tietosuojaseloste",
-            "url-feedback": "http://finto.fi/fi/feedback"
+            "url-feedback": "http://finto.fi/fi/feedback",
+            "url-read-more": "https://www.kiwi.fi/x/-oHbCQ"
+            
         }
 
     }).done(function() {
