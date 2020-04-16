@@ -313,10 +313,11 @@ def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
     if results_file:
         try:
             print('', end='', file=results_file)
+            click.echo('Writing per subject evaluation results to {!s}'.format(
+                results_file.name))
         except Exception as e:
             raise NotSupportedException(
                 "cannot open results-file for writing: " + str(e))
-
     docs = open_documents(paths)
     for doc in docs.documents:
         results = project.suggest(doc.text, backend_params)
@@ -324,7 +325,7 @@ def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
         eval_batch.evaluate(hits,
                             annif.corpus.SubjectSet((doc.uris, doc.labels)))
 
-    template = "{0:<20}\t{1}"
+    template = "{0:<30}\t{1}"
     for metric, score in eval_batch.results(results_file=results_file).items():
         click.echo(template.format(metric + ":", score))
 
