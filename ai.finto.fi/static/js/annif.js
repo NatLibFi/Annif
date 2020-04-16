@@ -1,5 +1,11 @@
 
-var base_url = 'http://ai.dev.finto.fi/v1/';
+if (window.location.protocol.startsWith('http')) {
+    // http or https - use API of current Annif instance
+    var base_url = '/v1/'; 
+} else {
+    // local development case - use Finto AI dev API
+    var base_url = 'https://ai.dev.finto.fi/v1/';
+}
 
 function clearResults() {
     $('#results').empty();
