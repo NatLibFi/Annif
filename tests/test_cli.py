@@ -514,9 +514,10 @@ def test_eval_resultsfile(tmpdir):
     tmpdir.join('doc2.txt').write('doc2')
     tmpdir.join('doc2.key').write('none')
     tmpdir.join('doc3.txt').write('doc3')
+    resultfile = tmpdir.join('results.tsv')
     result = runner.invoke(
         annif.cli.cli, [
-            'eval', '--results-file', 'test_file.txt', 'dummy-en',
+            'eval', '--results-file', str(resultfile), 'dummy-en',
             str(tmpdir)])
     assert not result.exception
     assert result.exit_code == 0
@@ -532,7 +533,7 @@ def test_eval_resultsfile(tmpdir):
     recall_numerator = 0
     f_measure_numerator = 0
     denominator = 0
-    with open('test_file.txt') as f:
+    with resultfile.open() as f:
         header = next(f)
         assert header.strip('\n') == '\t'.join(['URI',
                                                 'Label',
@@ -551,7 +552,7 @@ def test_eval_resultsfile(tmpdir):
                 assert int(parts[3]) == 1
                 assert int(parts[4]) == 1
                 assert int(parts[5]) == 0
-            if parts[1] == 'nothing':
+            if parts[1] == 'none':
                 assert int(parts[2]) == 1
                 assert int(parts[3]) == 0
                 assert int(parts[4]) == 0
