@@ -53,4 +53,9 @@ $(document).ready(function() {
         clearResults();
         getSuggestions();
     });
+    $('#button-clear').click(function() {
+        $('#text').val('');
+        $('#text').focus();
+        clearResults();
+    });
 });

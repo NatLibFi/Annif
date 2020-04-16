@@ -85,8 +85,20 @@ Dynamic functionality
       #text-box {
         background-color: white;
         border-top: 2px solid black;
+        font-weight: bold;
+        padding-bottom: 16px;
       }
-      #text-box { font-weight: bold; padding-bottom: 16px; }
+      #text-box-wrapper {
+        position: relative;
+      }
+      #text-box button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #394554;
+        border: none;
+        padding: 2px 7px;
+      }
       
       #sidebar, #sidebar-tab { background-color: #dff5f9; }
       #sidebar-tabs { background-color: #bfeaf4;}
@@ -111,7 +123,6 @@ Dynamic functionality
         margin-top: 24px;
         background-color: #394554;
         border: none;
-        border-radius: 0;
       }
       #sidebar h2 {
         margin-top: 24px;
@@ -183,8 +194,11 @@ Dynamic functionality
     <div class="col-md-8 pr-md-3">
       <div id="text-box" class="form-group widget">
         <label for="text" data-i18n="text-box-label-text">Kuvailtava teksti</label><br>
-        <textarea class="form-control" rows="20" name="text" id="text"></textarea>
-      </div>
+        <div id="text-box-wrapper">
+          <textarea class="form-control" rows="20" name="text" id="text"></textarea>
+          <button id="button-clear" type="button" class="btn btn-danger">🞪</button>
+        </div>
+     </div>
     </div>
 
     <div class="col-md-4 pl-md-2">
