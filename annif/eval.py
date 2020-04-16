@@ -150,10 +150,54 @@ class EvaluationBatch:
 
         return results
 
-    def results(self, metrics='all'):
+    def _result_per_subject_header(self, results_file):
+        print('\t'.join(['URI',
+                         'Label',
+                         'Support',
+                         'True_positives',
+                         'False_positives',
+                         'False_negatives',
+                         'Precision',
+                         'Recall',
+                         'F1_score']),
+              file=results_file)
+
+    def _result_per_subject_body(self, zipped_results, results_file):
+        for row in zipped_results:
+            print('\t'.join((str(e) for e in row)), file=results_file)
+
+    def output_result_per_subject(self, y_true, y_pred, results_file):
+        """Write results per subject (non-aggregated)
+        to outputfile results_file"""
+
+        y_pred = y_pred.T > 0.0
+        y_true = y_true.T > 0.0
+
+        true_pos = (y_true & y_pred)
+        false_pos = (~y_true & y_pred)
+        false_neg = (y_true & ~y_pred)
+
+        r = len(y_true)
+
+        zipped = zip(self._subject_index._uris,               # URI
+                     self._subject_index._labels,             # Label
+                     np.sum((true_pos + false_neg), axis=1),  # Support
+                     np.sum(true_pos, axis=1),                # True_positives
+                     np.sum(false_pos, axis=1),               # False_positives
+                     np.sum(false_neg, axis=1),               # False_negatives
+                     [precision_score(y_true[i], y_pred[i], zero_division=0)
+                      for i in range(r)],                     # Precision
+                     [recall_score(y_true[i], y_pred[i], zero_division=0)
+                      for i in range(r)],                     # Recall
+                     [f1_score(y_true[i], y_pred[i], zero_division=0)
+                      for i in range(r)])                     # F1
+        self._result_per_subject_header(results_file)
+        self._result_per_subject_body(zipped, results_file)
+
+    def results(self, metrics='all', results_file=None):
         """evaluate a set of selected subjects against a gold standard using
-        different metrics. The set of metrics can be either 'all' or
-        'simple'."""
+        different metrics. The set of metrics can be either 'all' or 'simple'.
+        If results_file (file object) given, write results per subject to it"""
 
         if not self._samples:
             raise NotSupportedException("cannot evaluate empty corpus")
@@ -167,4 +211,7 @@ class EvaluationBatch:
         results = self._evaluate_samples(
             y_true, y_pred, metrics)
         results['Documents evaluated'] = y_true.shape[0]
+
+        if results_file:
+            self.output_result_per_subject(y_true, y_pred, results_file)
         return results

@@ -284,9 +284,18 @@ def run_index(project_id, directory, suffix, force,
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
+@click.option(
+    '--results-file',
+    type=click.File(
+        'w',
+        encoding='utf-8',
+        errors='ignore',
+        lazy=True),
+    help="""Specify file in order to write non-aggregated results per subject.
+    File directory must exists, existing file will be overwritten.""")
 @backend_param_option
 @common_options
-def run_eval(project_id, paths, limit, threshold, backend_param):
+def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
     """
     Analyze documents and evaluate the result.
 
@@ -294,12 +303,21 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
     path may be either a TSV file with short documents or a directory with
     documents in separate files.
     """
+
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
 
     hit_filter = SuggestionFilter(limit=limit, threshold=threshold)
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
 
+    if results_file:
+        try:
+            print('', end='', file=results_file)
+            click.echo('Writing per subject evaluation results to {!s}'.format(
+                results_file.name))
+        except Exception as e:
+            raise NotSupportedException(
+                "cannot open results-file for writing: " + str(e))
     docs = open_documents(paths)
     for doc in docs.documents:
         results = project.suggest(doc.text, backend_params)
@@ -307,8 +325,8 @@ def run_eval(project_id, paths, limit, threshold, backend_param):
         eval_batch.evaluate(hits,
                             annif.corpus.SubjectSet((doc.uris, doc.labels)))
 
-    template = "{0:<20}\t{1}"
-    for metric, score in eval_batch.results().items():
+    template = "{0:<30}\t{1}"
+    for metric, score in eval_batch.results(results_file=results_file).items():
         click.echo(template.format(metric + ":", score))
 
 

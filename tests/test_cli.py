@@ -508,6 +508,79 @@ def test_eval_param(tmpdir):
     assert float(recall.group(1)) == 0.0
 
 
+def test_eval_resultsfile(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    tmpdir.join('doc3.txt').write('doc3')
+    resultfile = tmpdir.join('results.tsv')
+    result = runner.invoke(
+        annif.cli.cli, [
+            'eval', '--results-file', str(resultfile), 'dummy-en',
+            str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    # subject average should equal average of all subject scores in outputfile
+    precision = float(
+        re.search(r'Precision .*subj.*:\s+(\d.\d+)', result.output).group(1))
+    recall = float(
+        re.search(r'Recall .*subj.*:\s+(\d.\d+)', result.output).group(1))
+    f_measure = float(
+        re.search(r'F1 score .*subj.*:\s+(\d.\d+)', result.output).group(1))
+    precision_numerator = 0
+    recall_numerator = 0
+    f_measure_numerator = 0
+    denominator = 0
+    with resultfile.open() as f:
+        header = next(f)
+        assert header.strip('\n') == '\t'.join(['URI',
+                                                'Label',
+                                                'Support',
+                                                'True_positives',
+                                                'False_positives',
+                                                'False_negatives',
+                                                'Precision',
+                                                'Recall',
+                                                'F1_score'])
+        for line in f:
+            assert line.strip() != ''
+            parts = line.split('\t')
+            if parts[1] == 'dummy':
+                assert int(parts[2]) == 1
+                assert int(parts[3]) == 1
+                assert int(parts[4]) == 1
+                assert int(parts[5]) == 0
+            if parts[1] == 'none':
+                assert int(parts[2]) == 1
+                assert int(parts[3]) == 0
+                assert int(parts[4]) == 0
+                assert int(parts[5]) == 1
+            precision_numerator += float(parts[6])
+            recall_numerator += float(parts[7])
+            f_measure_numerator += float(parts[8])
+            denominator += 1
+    assert precision_numerator / denominator == precision
+    assert recall_numerator / denominator == recall
+    assert f_measure_numerator / denominator == f_measure
+
+
+def test_eval_badresultsfile(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    tmpdir.join('doc3.txt').write('doc3')
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'eval', '--results-file', 'newdir/test_file.txt', 'dummy-en',
+            str(tmpdir)])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'cannot open results-file for writing' in failed_result.output
+
+
 def test_eval_docfile():
     docfile = os.path.join(
         os.path.dirname(__file__),
