@@ -42,8 +42,12 @@ Dynamic functionality
         color: white;
         background-color: #394554;
       }
+      h1 {
+        margin: 0 0 0 -90px;
+        padding: 10px 0;
+      }
       #navlinks, #switch-locale {
-        padding-top: 20px;
+        padding-top: 10px;
         padding-left: 0;
       }
       #navlinks a {
@@ -54,7 +58,7 @@ Dynamic functionality
       }
       #navlinks a, #switch-locale a {
         color: white;
-        margin: auto 10px;
+        margin: auto 5px;
         text-decoration: none;
       }
       #navlinks a:hover, #switch-locale a:hover { color: #dff5f9; }
@@ -65,19 +69,17 @@ Dynamic functionality
       }
       .widget { padding: 8px 10px; }
       #splash {
-      
       }
       #splash a, #footer a { color: #83c1cf; }
       #splash a:hover, #footer a:hover { color: #dff5f9; }
       #api {
         color: black;
         background-color: #dff5f9;
-        margin-top: 20px;
       }
       #api h2, #sidebar h2 {
         font-size: 1rem;
         font-weight: bold;
-        margin-bottom: 0;
+        margin-bottom: 0px;
       }
       #splash p, #api p, #footer p {
         margin-bottom: 0;
@@ -142,12 +144,15 @@ Dynamic functionality
   </head>
   <body>
 
-<header class="mb-4 mt-0">
+<header class="mb-4 mt-0 pb-3">
   <div class="container">
 
-    <div class="row">
-      <div class="col-md-8 mb-md-2">
-        <div class="row align-items-end">
+    <div class="row align-items-end">
+      <div class="col-md-3">
+        <h1><img src="static/img/finto-ai-logo.png" class="img-fluid" alt="Finto AI"></h1>
+      </div>
+      <div class="col-md-5">
+        <div class="row">
           <div class="col text-right">
             <ul id="navlinks">
               <li><a id="nav-about" data-i18n="nav-about" href="#">Tietoja</a></li>
@@ -162,11 +167,8 @@ Dynamic functionality
             </ul>
           </div>
         </div>
-        <div class="row mt-md-4">
-          <div class="col-md-4 align-items-end">
-            <h1 class="py-3">Finto AI</h1>
-          </div>
-          <div class="col-md-8 align-items-end">
+        <div class="row align-items-end">
+          <div class="col-md-12 align-items-end">
             <div id="splash" class="widget">
               <p><span data-i18n="splash">Finto AI ehdottaa tekstille sopivia aiheita.
               Palvelu perustuu Annif-työkaluun.</span>
@@ -175,8 +177,8 @@ Dynamic functionality
           </div>
         </div>
       </div>
-      <div class="col-md-4 pl-md-2 mb-md-4">
-        <div id="api" class="widget">
+      <div class="col-md-4 pt-md-4 pl-md-2">
+        <div id="api" class="widget mb-md-2">
           <h2 data-i18n="api-title">API-palvelu</h2>
           <p data-i18n="api-desc">Finto AI toimii myös rajapintapalveluna, joka voidaan integroida omiin
           järjestelmiin.</p>
