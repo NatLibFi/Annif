@@ -39,7 +39,7 @@ function getSuggestions() {
                 $('#results').append(
                     $('<li class="list-group-item p-0">').append(
                         $('<meter class="mr-2">').attr('value',value.score).attr('max',1.0).attr('title',value.score.toFixed(4)),
-                        $('<a>').attr('href',value.uri).append(value.label)
+                        $('<a target="_blank">').attr('href',value.uri).append(value.label)
                     )
                 );
             });
