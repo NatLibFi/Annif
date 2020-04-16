@@ -143,6 +143,17 @@ def test_omikuji_suggest(project):
     assert 'arkeologia' in [result.label for result in results]
 
 
+def test_omikuji_suggest_no_input(project):
+    omikuji_type = annif.backend.get_backend('omikuji')
+    omikuji = omikuji_type(
+        backend_id='omikuji',
+        config_params={'limit': 8},
+        project=project)
+
+    results = omikuji.suggest("ja")
+    assert len(results) == 0
+
+
 def test_omikuji_suggest_no_model(datadir, project):
     omikuji_type = annif.backend.get_backend('omikuji')
     omikuji = omikuji_type(

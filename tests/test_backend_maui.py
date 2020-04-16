@@ -196,6 +196,20 @@ def test_maui_suggest(maui):
 
 
 @responses.activate
+def test_maui_suggest_no_input(maui):
+    responses.add(responses.POST,
+                  'http://api.example.org/mauiservice/dummy/suggest',
+                  json={'title': '1 recommendation from dummy',
+                        'topics': [{'id': 'http://example.org/dummy',
+                                    'label': 'dummy',
+                                    'probability': 1.0}]})
+
+    result = maui.suggest('')
+    assert len(result) == 0
+    assert len(responses.calls) == 0
+
+
+@responses.activate
 def test_maui_suggest_with_notation(maui):
     responses.add(responses.POST,
                   'http://api.example.org/mauiservice/dummy/suggest',
