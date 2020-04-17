@@ -284,6 +284,8 @@ def run_index(project_id, directory, suffix, force,
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @click.option('--limit', default=10, help='Maximum number of subjects')
 @click.option('--threshold', default=0.0, help='Minimum score threshold')
+@click.option('--metrics', type=click.Choice(['all', 'simple']), default='all',
+              help='The set of metrics to calculate, default all.')
 @click.option(
     '--results-file',
     type=click.File(
@@ -295,7 +297,8 @@ def run_index(project_id, directory, suffix, force,
     File directory must exists, existing file will be overwritten.""")
 @backend_param_option
 @common_options
-def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
+def run_eval(project_id, paths, limit, threshold, metrics, results_file,
+             backend_param):
     """
     Analyze documents and evaluate the result.
 
@@ -326,7 +329,8 @@ def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
                             annif.corpus.SubjectSet((doc.uris, doc.labels)))
 
     template = "{0:<30}\t{1}"
-    for metric, score in eval_batch.results(results_file=results_file).items():
+    for metric, score in eval_batch.results(metrics=metrics,
+                                            results_file=results_file).items():
         click.echo(template.format(metric + ":", score))
 
 
