@@ -27,6 +27,7 @@ function fetchProjects() {
 }
 
 function getSuggestions() {
+    $('#suggestions').show();
     $('#results-spinner').show();
     $.ajax({
         url: base_url + "projects/" + $('#project').val() + "/suggest",
@@ -38,7 +39,6 @@ function getSuggestions() {
         },
         success: function(data) {
             $('#results-spinner').hide();
-            $('#suggestions').show();
 
             if (data.results.length == 0) {
                 $('#results').hide();
