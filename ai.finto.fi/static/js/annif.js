@@ -36,6 +36,8 @@ function getSuggestions() {
           threshold: 0.01
         },
         success: function(data) {
+            $('#suggestions').show();
+
             if (data.results.length == 0) {
                 $('#results').append(
                     $('<li class="list-group-item p-0">Ei tuloksia</li>')
@@ -53,7 +55,18 @@ function getSuggestions() {
     });
 }
 
+function disableButton() {
+    $('#get-suggestions').prop("disabled", true);
+    $('#suggestions').hide();
+}
+
+function enableButton() {
+    console.log("enabling button");
+    $('#get-suggestions').prop("disabled", false);
+}
+
 $(document).ready(function() {
+    disableButton();
     fetchProjects();
     $('#get-suggestions').click(function() {
         clearResults();
@@ -63,5 +76,9 @@ $(document).ready(function() {
         $('#text').val('');
         $('#text').focus();
         clearResults();
+        disableButton();
+    });
+    $('#text').on("input", function() {
+        enableButton();
     });
 });

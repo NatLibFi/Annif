@@ -93,7 +93,7 @@ Dynamic functionality
         background-color: white;
         border-top: 2px solid black;
         font-weight: bold;
-        padding-bottom: 16px;
+        margin-bottom: 0;
       }
       #text-box-wrapper {
         position: relative;
@@ -131,11 +131,14 @@ Dynamic functionality
         background-color: #394554;
         border: none;
       }
+      #get-suggestions:disabled {
+        cursor: default;
+      }
       #sidebar h2 {
         margin-top: 24px;
       }
-      #results {
-        min-height: 250px;
+      #sidebar {
+        min-height: 500px;
       }
       #results li { border-radius: 0; }
       meter { width: 24px; }
@@ -243,15 +246,17 @@ Dynamic functionality
           </div>
         </div>
         <button id="get-suggestions" data-i18n="get-suggestions" type="button" class="btn btn-primary btn-block">Anna aihe-ehdotukset</button>
-        <h2 id="suggestions" data-i18n="suggestions">Ehdotetut aiheet</h2>
-        <ul class="list-group" id="results">
-        </ul>
+        <div id="suggestions-wrapper">
+          <h2 id="suggestions" data-i18n="suggestions">Ehdotetut aiheet</h2>
+          <ul class="list-group" id="results">
+          </ul>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="row">
-    <div class="col-md-12 mb-md-4">
+    <div class="col-md-12 mb-md-4 mt-md-3">
       <div id="footer" class="widget">
         <p data-i18n="footer-text">
           Lomakkeen ja rajapintapalveluiden kautta lähettyjä tietoja ei
