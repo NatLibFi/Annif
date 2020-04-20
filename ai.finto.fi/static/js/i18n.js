@@ -47,6 +47,7 @@ jQuery(function() {
             "limit": "Number of suggestions",
             "get-suggestions": "Get subject suggestions",
             "suggestions": "Suggestions",
+            "no-results": "No results",
             "footer-text": "The data submitted via the above form or the API will not be saved anywhere. Usage of the service is being monitored for development purposes.",
             "footer-link": "See our privacy policy",
             "url-feedback": "http://finto.fi/en/feedback"
@@ -65,6 +66,7 @@ jQuery(function() {
             "limit": "Antal förslag",
             "get-suggestions": "Ge förslag till ämnesord",
             "suggestions": "Förslag",
+            "no-results": "Inga resultat",
             "footer-text": "Uppgifterna som skickas via formuläret eller API-tjänsten sparas inte. Användningen av tjänsten övervakas för utvecklingsändamål.",
             "footer-link": "Läs vår sekretesspolicy",
             "url-feedback": "http://finto.fi/sv/feedback"
@@ -84,6 +86,7 @@ jQuery(function() {
             "limit": "Ehdotusten määrä",
             "get-suggestions": "Anna aihe-ehdotukset",
             "suggestions": "Ehdotetut aiheet",
+            "no-results": "Ei tuloksia",
             "footer-text": "Lomakkeen ja rajapintapalveluiden kautta lähettyjä tietoja ei talleteta.  Palvelun käyttöä seurataan ja tilastoidaan palvelun kehittämiseksi.",
             "footer-link": "Lue tietosuojaseloste",
             "url-feedback": "http://finto.fi/fi/feedback"

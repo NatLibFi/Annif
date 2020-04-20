@@ -39,17 +39,18 @@ function getSuggestions() {
             $('#suggestions').show();
 
             if (data.results.length == 0) {
-                $('#results').append(
-                    $('<li class="list-group-item p-0">Ei tuloksia</li>')
-                );
+                $('#results').hide();
+                $('#no-results').show();
             }
             $.each(data.results, function(idx, value) {
+                $('#no-results').hide();
                 $('#results').append(
                     $('<li class="list-group-item p-0">').append(
                         $('<meter class="mr-2">').attr('value',value.score).attr('max',1.0).attr('title',value.score.toFixed(4)),
                         $('<a target="_blank">').attr('href',value.uri).append(value.label)
                     )
                 );
+                $('#results').show();
             });
         }
     });
@@ -68,6 +69,7 @@ function enableButton() {
 $(document).ready(function() {
     disableButton();
     fetchProjects();
+    $('#no-results').hide();
     $('#get-suggestions').click(function() {
         clearResults();
         getSuggestions();

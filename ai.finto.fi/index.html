@@ -140,7 +140,7 @@ Dynamic functionality
       #sidebar {
         min-height: 500px;
       }
-      #results li { border-radius: 0; }
+      #results li, #no-results li { border-radius: 0; }
       meter { width: 24px; }
       meter:-moz-meter-optimum::-moz-meter-bar {
         background: #394554;
@@ -249,6 +249,9 @@ Dynamic functionality
         <div id="suggestions-wrapper">
           <h2 id="suggestions" data-i18n="suggestions">Ehdotetut aiheet</h2>
           <ul class="list-group" id="results">
+          </ul>
+          <ul class="list-group" id="no-results">
+            <li class="list-group-item p-0" data-i18n="no-results">Ei tuloksia</li>
           </ul>
         </div>
       </div>
