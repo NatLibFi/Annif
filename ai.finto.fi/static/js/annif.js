@@ -27,6 +27,7 @@ function fetchProjects() {
 }
 
 function getSuggestions() {
+    $('#results-spinner').show();
     $.ajax({
         url: base_url + "projects/" + $('#project').val() + "/suggest",
         method: 'POST',
@@ -36,6 +37,7 @@ function getSuggestions() {
           threshold: 0.01
         },
         success: function(data) {
+            $('#results-spinner').hide();
             $('#suggestions').show();
 
             if (data.results.length == 0) {
@@ -67,9 +69,10 @@ function enableButton() {
 }
 
 $(document).ready(function() {
+    $('#no-results').hide();
+    $('#results-spinner').hide();
     disableButton();
     fetchProjects();
-    $('#no-results').hide();
     $('#get-suggestions').click(function() {
         clearResults();
         getSuggestions();
