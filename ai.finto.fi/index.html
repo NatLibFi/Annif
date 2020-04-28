@@ -90,8 +90,10 @@ Basic layout
         position: absolute;
         top: 10px;
         right: 10px;
-        background-color: #394554;
+        background-color: #009cca;
+        color: black;
         border: none;
+        border-radius: 0px;
         padding: 2px 7px;
       }
       
@@ -114,13 +116,25 @@ Basic layout
         color: black;
         pointer-events: none;
       }
+      #limit-buttons label {
+        border-radius: 0px;
+      }
+      #limit-buttons .active {
+        background-color: #009cca;
+        color: black;
+        border-width: 0px;
+      }
       #get-suggestions {
         margin-top: 24px;
-        background-color: #394554;
+        background-color: #009cca;
+        color: black;
         border: none;
+        border-radius: 0px;
       }
       #get-suggestions:disabled {
         cursor: default;
+        background-color: #6c757d;
+        color: white;
       }
       #sidebar h2 {
         margin-top: 24px;
@@ -218,7 +232,7 @@ Basic layout
         </div>
         <div class="form-group">
           <label for="limit" data-i18n="limit">Ehdotusten enimmäismäärä</label>
-          <div class="btn-group btn-group-toggle" data-toggle="buttons">
+          <div id="limit-buttons" class="btn-group btn-group-toggle" data-toggle="buttons">
             <label class="btn btn-secondary">
               <input type="radio" name="limit" value="10" autocomplete="off" checked>
               10

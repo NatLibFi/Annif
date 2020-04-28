@@ -9,6 +9,7 @@ if (window.location.protocol.startsWith('http')) {
 
 function clearResults() {
     $('#results').empty();
+    $('#suggestions').hide();
 }
 
 function fetchProjects() {
@@ -60,18 +61,21 @@ function getSuggestions() {
 
 function disableButton() {
     $('#get-suggestions').prop("disabled", true);
-    $('#suggestions').hide();
 }
 
 function enableButton() {
-    console.log("enabling button");
     $('#get-suggestions').prop("disabled", false);
 }
 
 $(document).ready(function() {
     $('#no-results').hide();
     $('#results-spinner').hide();
-    disableButton();
+    clearResults();
+    if ($.trim($('#text').val()) != "") {
+        enableButton();
+    } else {
+        disableButton();
+    }
     fetchProjects();
     $('#get-suggestions').click(function() {
         clearResults();
