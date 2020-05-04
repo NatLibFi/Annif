@@ -63,3 +63,12 @@ steps:
       - master
       event:
       - tag
+
+---
+kind: secret
+name: docker_username
+data: oheObzdd1LO5wRaJ3s4KjTWv28czYEykUEff28/wnElY3+2yeBCNa4QnY+4g8iUtv+ChwleiPoDoeQ==
+---
+kind: secret
+name: docker_password
+data: AVT0+HVr3/gGKoinBv2ebQBVQ59WErQw48YEEQvY+y7vfFQPjS7M8jkoiNCcPATfT1/qg3pbGl3Da0JlBqw+UxLB2y5OeF7ABrj3lpWdIE1QcPy/E/TdKc7QCGg=
