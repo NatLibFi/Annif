@@ -22,15 +22,14 @@ before_install:
 install:
 - pip install .[dev]
 - travis_wait 30 python -m nltk.downloader punkt
+# Selectively install the optional dependencies for some Python versions
 # Install the optional neural network dependencies (TensorFlow and LMDB)
-# - except for one Python version (3.8) so that we can test also without them
-# (tensorflow 2.0.0 isn't available for python 3.8 anyway)
-- if [[ $TRAVIS_PYTHON_VERSION != '3.8' ]]; then pip install .[nn]; fi
+# - except for one Python version (3.7) so that we can test also without them
+- if [[ $TRAVIS_PYTHON_VERSION != '3.7' ]]; then pip install .[nn]; fi
 # Install the optional Omikuji dependency
 # - except for one Python version (3.7) so that we can test also without them
 - if [[ $TRAVIS_PYTHON_VERSION != '3.7' ]]; then pip install .[omikuji]; fi
-# For Python 3.6, also install optional dependencies that were not specified in Pipfile
-# For other Python versions we will only run the tests that depend on pure Python modules
+# For Python 3.6, install the optional dependencies that depend on system libraries
 # - fastText dependencies
 - if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then pip install .[fasttext]; fi
 # - voikko dependencies
