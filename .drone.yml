@@ -57,12 +57,14 @@ steps:
     image: plugins/docker
     settings:
       <<: *docker_settings
-      auto_tag: true
+      tags:
+        - '0.47.1'
+        - '0.47'
     when:
       branch:
-      - master
+      - r0.47
       event:
-      - tag
+      - push
 
 ---
 kind: secret
