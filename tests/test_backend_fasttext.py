@@ -142,7 +142,7 @@ def test_fasttext_train_pretrained(datadir, document_corpus, project,
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
-        params={
+        config_params={
             'limit': 50,
             'dim': 100,
             'lr': 0.25,
@@ -151,7 +151,7 @@ def test_fasttext_train_pretrained(datadir, document_corpus, project,
             'pretrainedVectors': str(pretrained_vectors)},
         project=project)
 
-    fasttext.train(document_corpus, project)
+    fasttext.train(document_corpus)
     assert fasttext._model is not None
     assert datadir.join('fasttext-model').exists()
     assert datadir.join('fasttext-model').size() > 0
@@ -165,7 +165,7 @@ def test_fasttext_train_pretrained_wrong_dim(datadir, document_corpus, project,
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id='fasttext',
-        params={
+        config_params={
             'limit': 50,
             'dim': 50,
             'lr': 0.25,
@@ -175,7 +175,7 @@ def test_fasttext_train_pretrained_wrong_dim(datadir, document_corpus, project,
         project=project)
 
     with pytest.raises(ValueError):
-        fasttext.train(document_corpus, project)
+        fasttext.train(document_corpus)
     assert fasttext._model is None
 
 
