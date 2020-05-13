@@ -54,7 +54,7 @@ RUN apt-get update \
 		voikko \
 		vowpalwabbit==8.7.* \
 		tensorflow-cpu==2.2.0 \
-		omikuji==0.2.* \
+		omikuji==0.3.* \
 	# For Docker healthcheck:
 	&& apt-get install -y --no-install-recommends curl \
 	# Clean up:
