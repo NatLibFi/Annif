@@ -58,7 +58,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         # monkey patch fasttext.FastText.eprint to avoid spurious warning
         # see https://github.com/facebookresearch/fastText/issues/1067
         orig_eprint = fasttext.FastText.eprint
-        fasttext.FastText.eprint = lambda x:None
+        fasttext.FastText.eprint = lambda x: None
         model = fasttext.load_model(path)
         # restore the original eprint
         fasttext.FastText.eprint = orig_eprint
