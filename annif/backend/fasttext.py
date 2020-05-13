@@ -99,7 +99,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                 if labels:
                     print(' '.join(labels), text, file=trainfile)
                 else:
-                    self.warning('no labels for document "{}"'.format(doc.text))
+                    self.warning(f'no labels for document "{doc.text}"')
 
     def _normalize_text(self, text):
         return ' '.join(self.project.analyzer.tokenize_words(text))
