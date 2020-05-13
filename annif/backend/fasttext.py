@@ -53,12 +53,23 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         params.update(self.DEFAULT_PARAMETERS)
         return params
 
+    @staticmethod
+    def _load_model(path):
+        # monkey patch fasttext.FastText.eprint to avoid spurious warning
+        # see https://github.com/facebookresearch/fastText/issues/1067
+        orig_eprint = fasttext.FastText.eprint
+        fasttext.FastText.eprint = lambda x:None
+        model = fasttext.load_model(path)
+        # restore the original eprint
+        fasttext.FastText.eprint = orig_eprint
+        return model
+
     def initialize(self):
         if self._model is None:
             path = os.path.join(self.datadir, self.MODEL_FILE)
             self.debug('loading fastText model from {}'.format(path))
             if os.path.exists(path):
-                self._model = fasttext.load_model(path)
+                self._model = self._load_model(path)
                 self.debug('loaded model {}'.format(str(self._model)))
                 self.debug('dim: {}'.format(self._model.get_dimension()))
             else:
