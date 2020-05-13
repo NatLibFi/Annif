@@ -86,15 +86,20 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         subject_id = int(labelnum)
         return self.project.subjects[subject_id]
 
-    def _write_train_file(self, doc_subjects, filename):
+    def _write_train_file(self, corpus, filename):
         with open(filename, 'w', encoding='utf-8') as trainfile:
-            for doc, subject_ids in doc_subjects.items():
+            for doc in corpus.documents:
+                text = self._normalize_text(doc.text)
+                if text == '':
+                    continue
+                subject_ids = [self.project.subjects.by_uri(uri)
+                               for uri in doc.uris]
                 labels = [self._id_to_label(sid) for sid in subject_ids
                           if sid is not None]
                 if labels:
-                    print(' '.join(labels), doc, file=trainfile)
+                    print(' '.join(labels), text, file=trainfile)
                 else:
-                    self.warning('no labels for document "{}"'.format(doc))
+                    self.warning('no labels for document "{}"'.format(doc.text))
 
     def _normalize_text(self, text):
         return ' '.join(self.project.analyzer.tokenize_words(text))
@@ -102,16 +107,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     def _create_train_file(self, corpus):
         self.info('creating fastText training file')
 
-        doc_subjects = collections.defaultdict(set)
-
-        for doc in corpus.documents:
-            text = self._normalize_text(doc.text)
-            if text == '':
-                continue
-            doc_subjects[text] = [self.project.subjects.by_uri(uri)
-                                  for uri in doc.uris]
-
-        annif.util.atomic_save(doc_subjects,
+        annif.util.atomic_save(corpus,
                                self.datadir,
                                self.TRAIN_FILE,
                                method=self._write_train_file)
