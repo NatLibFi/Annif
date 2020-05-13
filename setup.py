@@ -35,7 +35,7 @@ setup(
     ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
-        'fasttext': ['fasttextmirror==0.8.22'],
+        'fasttext': ['fasttext'],
         'voikko': ['voikko'],
         'vw': ['vowpalwabbit==8.7.*'],
         'nn': ['tensorflow-cpu==2.2.0', 'lmdb==0.98'],
