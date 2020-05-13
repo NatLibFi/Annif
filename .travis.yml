@@ -29,9 +29,9 @@ install:
 # Install the optional Omikuji dependency
 # - except for one Python version (3.7) so that we can test also without them
 - if [[ $TRAVIS_PYTHON_VERSION != '3.7' ]]; then pip install .[omikuji]; fi
+# Install the optional fastText dependencies for Python 3.7 only
+- if [[ $TRAVIS_PYTHON_VERSION == '3.7' ]]; then pip install .[fasttext]; fi
 # For Python 3.6, install the optional dependencies that depend on system libraries
-# - fastText dependencies
-- if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then pip install .[fasttext]; fi
 # - voikko dependencies
 - if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then pip install .[voikko]; fi
 # - vw dependencies
