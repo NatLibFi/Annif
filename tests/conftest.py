@@ -75,6 +75,15 @@ def document_corpus(subject_index):
 
 
 @pytest.fixture(scope='module')
+def pretrained_vectors():
+    return py.path.local(os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'fasttext.vec'))
+
+
+@pytest.fixture(scope='module')
 def project(subject_index, datadir):
     proj = unittest.mock.Mock()
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
