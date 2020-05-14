@@ -14,7 +14,7 @@ RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		build-essential \
 	&& pip install --no-cache-dir \
-		fasttextmirror==0.8.22 \
+		fasttext==0.9.2 \
 	## Vowpal Wabbit
 	&& apt-get install -y --no-install-recommends \
 		libboost-program-options-dev \
