@@ -32,6 +32,7 @@ setup(
         'rdflib',
         'gunicorn',
         'numpy==1.17.*',
+        'hyperopt==0.2.4'
     ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
@@ -41,15 +42,15 @@ setup(
         'nn': ['tensorflow-cpu==2.2.0', 'lmdb==0.98'],
         'omikuji': ['omikuji==0.3.*'],
         'dev': [
-          'codecov',
-          'pytest-cov',
-          'pytest-watch',
-          'pytest-flask',
-          'pytest-pep8',
-          'swagger-tester',
-          'bumpversion',
-          'responses',
-          'autopep8'
+            'codecov',
+            'pytest-cov',
+            'pytest-watch',
+            'pytest-flask',
+            'pytest-pep8',
+            'swagger-tester',
+            'bumpversion',
+            'responses',
+            'autopep8'
         ]
     },
     entry_points={

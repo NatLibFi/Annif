@@ -398,5 +398,22 @@ def run_optimize(project_id, paths, backend_param):
     click.echo("Documents evaluated:\t{}".format(ndocs))
 
 
+@cli.command('hyperopt')
+@click.argument('project_id')
+@click.argument('paths', type=click.Path(exists=True), nargs=-1)
+@click.option('--trials', default=10, help='Number of trials')
+@common_options
+def run_hyperopt(project_id, paths, trials):
+    """
+    Optimize the hyperparameters of a project using a validation corpus.
+    """
+    proj = get_project(project_id)
+    documents = open_documents(paths)
+    best, score = proj.hyperopt(documents, trials)
+    click.echo(f"Best NDCG score {score} with the following hyperparameters:")
+    for param, value in best.items():
+        click.echo(f"{param}:\t{value}")
+
+
 if __name__ == '__main__':
     cli()
