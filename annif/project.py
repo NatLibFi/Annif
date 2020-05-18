@@ -157,7 +157,7 @@ class AnnifProject(DatadirMixin):
 
     @property
     def is_trained(self):
-        return bool(glob(self._datadir_path))
+        return bool(glob(os.path.join(self._datadir_path, '*')))
 
     @property
     def modification_time(self):
