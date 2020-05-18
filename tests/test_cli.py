@@ -675,3 +675,18 @@ def test_hyperopt_ensemble(tmpdir):
     assert re.search(
         r'sources=dummy-en:0.\d+,dummydummy:0.\d+',
         result.output) is not None
+
+
+def test_hyperopt_not_supported(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'hyperopt', 'tfidf-en', str(tmpdir)])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+
+    assert 'Hyperparameter optimization not supported' in failed_result.output

@@ -194,9 +194,9 @@ class AnnifProject(DatadirMixin):
             optimizer = self.backend.get_hp_optimizer(corpus)
             return optimizer.optimize(trials)
 
-            raise NotSupportedException(
-                "Hyperparameter optimization not supported "
-                "by backend", project_id=self.project_id)
+        raise NotSupportedException(
+            "Hyperparameter optimization not supported "
+            "by backend", project_id=self.project_id)
 
     def dump(self):
         """return this project as a dict"""
