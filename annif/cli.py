@@ -409,10 +409,13 @@ def run_hyperopt(project_id, paths, trials):
     """
     proj = get_project(project_id)
     documents = open_documents(paths)
-    best, score = proj.hyperopt(documents, trials)
-    click.echo(f"Best NDCG score {score} with the following hyperparameters:")
-    for param, value in best.items():
-        click.echo(f"{param}:\t{value}")
+    click.echo(f"Looking for optimal hyperparameters using {trials} trials")
+    rec = proj.hyperopt(documents, trials)
+    click.echo(f"Best NDCG score {rec.score:.4f} with the hyperparameters:")
+    click.echo("---")
+    for line in rec.lines:
+        click.echo(line)
+    click.echo("---")
 
 
 if __name__ == '__main__':

@@ -57,7 +57,10 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
     def _postprocess(self, best, trials):
         total = sum(best.values())
         scaled = {source: best[source] / total for source in best}
-        return (scaled, 1 - trials.best_trial['result']['loss'])
+        lines = 'sources=' + ','.join([f"{src}:{weight:.4f}"
+                                       for src, weight in scaled.items()])
+        score = 1 - trials.best_trial['result']['loss']
+        return hyperopt.HPRecommendation(lines=[lines], score=score)
 
 
 class EnsembleBackend(hyperopt.AnnifHyperoptBackend):

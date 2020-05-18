@@ -1,8 +1,12 @@
 """Hyperparameter optimization functionality for backends"""
 
 import abc
+import collections
 import hyperopt
 from .backend import AnnifBackend
+
+
+HPRecommendation = collections.namedtuple('HPRecommendation', 'lines score')
 
 
 class HyperparameterOptimizer:
@@ -26,14 +30,14 @@ class HyperparameterOptimizer:
         """Evaluate a set of hyperparameters"""
         pass  # pragma: no cover
 
+    @abc.abstractmethod
     def _postprocess(self, best, trials):
-        """Convert the trial results into final hyperparameter
-        recommendation"""
-        return (best, 1 - trials.best_trial['result']['loss'])
+        """Convert the trial results into hyperparameter recommendations"""
+        pass  # pragma: no cover
 
     def optimize(self, n_trials):
-        """Find the optimal hyperparameters by testing up to the given number of
-        hyperparameter combinations"""
+        """Find the optimal hyperparameters by testing up to the given number
+        of hyperparameter combinations"""
 
         self._prepare()
         space = self.get_hp_space()
