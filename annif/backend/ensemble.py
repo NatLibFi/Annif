@@ -1,7 +1,6 @@
 """Ensemble backend that combines results from multiple projects"""
 
 
-import collections
 from hyperopt import hp
 import annif.suggestion
 import annif.project
