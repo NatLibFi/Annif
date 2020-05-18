@@ -34,7 +34,6 @@ class HyperparameterOptimizer:
         space = self.get_hp_space()
         trials = hyperopt.Trials()
         best = hyperopt.fmin(
-            show_progressbar=False,
             fn=self._test,
             space=space,
             algo=hyperopt.tpe.suggest,

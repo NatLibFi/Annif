@@ -69,12 +69,13 @@ class SubjectIndex:
     def contains_uri(self, uri):
         return uri in self._uris
 
-    def by_uri(self, uri):
+    def by_uri(self, uri, suppress_warnings=False):
         """return the subject index of a subject by its URI"""
         try:
             return self._uri_idx[uri]
         except KeyError:
-            logger.warning('Unknown subject URI <%s>', uri)
+            if not suppress_warnings:
+                logger.warning('Unknown subject URI <%s>', uri)
             return None
 
     def by_label(self, label):
@@ -161,7 +162,7 @@ class SubjectSet:
         """returns True if the URIs for all subjects are known"""
         return len(self.subject_uris) >= len(self.subject_labels)
 
-    def as_vector(self, subject_index):
+    def as_vector(self, subject_index, suppress_warnings=False):
         """Return the hits as a one-dimensional NumPy array in sklearn
            multilabel indicator format, using a subject index as the source
            of subjects."""
@@ -169,7 +170,8 @@ class SubjectSet:
         vector = np.zeros(len(subject_index), dtype=bool)
         if self.has_uris():
             for uri in self.subject_uris:
-                subject_id = subject_index.by_uri(uri)
+                subject_id = subject_index.by_uri(
+                    uri, suppress_warnings=suppress_warnings)
                 if subject_id is not None:
                     vector[subject_id] = True
         else:

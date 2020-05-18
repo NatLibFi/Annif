@@ -194,7 +194,11 @@ class EvaluationBatch:
         self._result_per_subject_header(results_file)
         self._result_per_subject_body(zipped, results_file)
 
-    def results(self, metrics='all', results_file=None):
+    def results(
+            self,
+            metrics='all',
+            results_file=None,
+            suppress_warnings=True):
         """evaluate a set of selected subjects against a gold standard using
         different metrics. The set of metrics can be either 'all' or 'simple'.
         If results_file (file object) given, write results per subject to it"""
@@ -202,8 +206,10 @@ class EvaluationBatch:
         if not self._samples:
             raise NotSupportedException("cannot evaluate empty corpus")
 
-        y_true = np.array([gold_subjects.as_vector(self._subject_index)
-                           for hits, gold_subjects in self._samples])
+        y_true = np.array([gold_subjects.as_vector(
+            self._subject_index,
+            suppress_warnings=suppress_warnings)
+            for hits, gold_subjects in self._samples])
         y_pred = np.array([hits.vector
                            for hits, gold_subjects in self._samples],
                           dtype=np.float32)
