@@ -54,6 +54,11 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         results = batch.results()
         return 1 - results['NDCG']
 
+    def _postprocess(self, best, trials):
+        total = sum(best.values())
+        scaled = {source: best[source] / total for source in best}
+        return (scaled, 1 - trials.best_trial['result']['loss'])
+
 
 class EnsembleBackend(hyperopt.AnnifHyperoptBackend):
     """Ensemble backend that combines results from multiple projects"""

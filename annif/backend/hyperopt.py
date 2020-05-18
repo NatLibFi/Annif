@@ -26,6 +26,11 @@ class HyperparameterOptimizer:
         """Evaluate a set of hyperparameters"""
         pass  # pragma: no cover
 
+    def _postprocess(self, best, trials):
+        """Convert the trial results into final hyperparameter
+        recommendation"""
+        return (best, 1 - trials.best_trial['result']['loss'])
+
     def optimize(self, n_trials):
         """Find the optimal hyperparameters by testing up to the given number of
         hyperparameter combinations"""
@@ -39,7 +44,7 @@ class HyperparameterOptimizer:
             algo=hyperopt.tpe.suggest,
             max_evals=n_trials,
             trials=trials)
-        return (best, 1 - trials.best_trial['result']['loss'])
+        return self._postprocess(best, trials)
 
 
 class AnnifHyperoptBackend(AnnifBackend):
