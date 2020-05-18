@@ -162,7 +162,7 @@ class AnnifProject(DatadirMixin):
     @property
     def modification_time(self):
         mtimes = [datetime.fromtimestamp(os.path.getmtime(p))
-                  for p in glob(self._datadir_path)]
+                  for p in glob(os.path.join(self._datadir_path, '*'))]
         return max(mtimes, default=None)
 
     def suggest(self, text, backend_params=None):
