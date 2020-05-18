@@ -44,6 +44,10 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         total = sum(hps.values())
         return {source: hps[source] / total for source in hps}
 
+    def _format_cfg_line(self, hps):
+        return 'sources=' + ','.join([f"{src}:{weight:.4f}"
+                                      for src, weight in hps.items()])
+
     def _test(self, hps):
         batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
         for goldsubj, srchits in zip(self._gold_subjects, self._source_hits):
@@ -57,16 +61,14 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                     self._backend.project.subjects),
                 goldsubj)
         results = batch.results()
-        scaled = self._normalize(hps)
-        tqdm.write(f"Trial: {scaled} score: {results['NDCG']}")
+        line = self._format_cfg_line(self._normalize(hps))
+        tqdm.write(f"Trial: {line} # score: {results['NDCG']:.4f}")
         return 1 - results['NDCG']
 
     def _postprocess(self, best, trials):
-        scaled = self._normalize(best)
-        lines = 'sources=' + ','.join([f"{src}:{weight:.4f}"
-                                       for src, weight in scaled.items()])
+        line = self._format_cfg_line(self._normalize(best))
         score = 1 - trials.best_trial['result']['loss']
-        return hyperopt.HPRecommendation(lines=[lines], score=score)
+        return hyperopt.HPRecommendation(lines=[line], score=score)
 
 
 class EnsembleBackend(hyperopt.AnnifHyperoptBackend):
