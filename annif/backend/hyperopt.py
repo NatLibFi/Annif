@@ -4,6 +4,8 @@ import abc
 import collections
 import hyperopt
 from .backend import AnnifBackend
+from annif import logger
+from logging import DEBUG
 
 
 HPRecommendation = collections.namedtuple('HPRecommendation', 'lines score')
@@ -44,6 +46,7 @@ class HyperparameterOptimizer:
         space = self.get_hp_space()
         trials = hyperopt.Trials()
         best = hyperopt.fmin(
+            verbose=not logger.isEnabledFor(DEBUG),
             fn=self._test,
             space=space,
             algo=hyperopt.tpe.suggest,
