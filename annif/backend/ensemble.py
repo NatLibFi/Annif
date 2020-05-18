@@ -2,6 +2,7 @@
 
 
 from hyperopt import hp
+from tqdm.auto import tqdm
 import annif.suggestion
 import annif.project
 import annif.util
@@ -39,6 +40,10 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                 srchits[project_id] = hits
             self._source_hits.append(srchits)
 
+    def _normalize(self, hps):
+        total = sum(hps.values())
+        return {source: hps[source] / total for source in hps}
+
     def _test(self, hps):
         batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
         for goldsubj, srchits in zip(self._gold_subjects, self._source_hits):
@@ -52,11 +57,12 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                     self._backend.project.subjects),
                 goldsubj)
         results = batch.results()
+        scaled = self._normalize(hps)
+        tqdm.write(f"Trial: {scaled} score: {results['NDCG']}")
         return 1 - results['NDCG']
 
     def _postprocess(self, best, trials):
-        total = sum(best.values())
-        scaled = {source: best[source] / total for source in best}
+        scaled = self._normalize(best)
         lines = 'sources=' + ','.join([f"{src}:{weight:.4f}"
                                        for src, weight in scaled.items()])
         score = 1 - trials.best_trial['result']['loss']
