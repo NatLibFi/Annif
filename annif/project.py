@@ -4,7 +4,9 @@ import collections
 import configparser
 import enum
 import os.path
+from datetime import datetime
 from flask import current_app
+from glob import glob
 from shutil import rmtree
 import annif
 import annif.analyzer
@@ -152,6 +154,16 @@ class AnnifProject(DatadirMixin):
     @property
     def subjects(self):
         return self.vocab.subjects
+
+    @property
+    def is_trained(self):
+        return bool(glob(self._datadir_path))
+
+    @property
+    def modification_time(self):
+        mtimes = [datetime.fromtimestamp(os.path.getmtime(p))
+                  for p in glob(self._datadir_path)]
+        return max(mtimes, default=None)
 
     def suggest(self, text, backend_params=None):
         """Suggest subjects the given text by passing it to the backend. Returns a
