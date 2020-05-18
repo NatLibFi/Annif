@@ -14,8 +14,8 @@ from annif.exception import NotSupportedException
 class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
     """Hyperparameter optimizer for the ensemble backend"""
 
-    def __init__(self, backend, corpus):
-        super().__init__(backend, corpus)
+    def __init__(self, backend, corpus, metric):
+        super().__init__(backend, corpus, metric)
         self._sources = [project_id for project_id, _
                          in annif.util.parse_sources(
                              backend.config_params['sources'])]
@@ -62,8 +62,9 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                 goldsubj)
         results = batch.results()
         line = self._format_cfg_line(self._normalize(hps))
-        tqdm.write(f"Trial: {line} # score: {results['NDCG']:.4f}")
-        return 1 - results['NDCG']
+        metric = self._metric
+        tqdm.write(f"Trial: {line} # {metric}: {results[metric]:.4f}")
+        return 1 - results[metric]
 
     def _postprocess(self, best, trials):
         line = self._format_cfg_line(self._normalize(best))
@@ -75,8 +76,8 @@ class EnsembleBackend(hyperopt.AnnifHyperoptBackend):
     """Ensemble backend that combines results from multiple projects"""
     name = "ensemble"
 
-    def get_hp_optimizer(self, corpus):
-        return EnsembleOptimizer(self, corpus)
+    def get_hp_optimizer(self, corpus, metric):
+        return EnsembleOptimizer(self, corpus, metric)
 
     def _normalize_hits(self, hits, source_project):
         """Hook for processing hits from backends. Intended to be overridden

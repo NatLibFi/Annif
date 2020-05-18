@@ -12,9 +12,10 @@ HPRecommendation = collections.namedtuple('HPRecommendation', 'lines score')
 class HyperparameterOptimizer:
     """Base class for hyperparameter optimizers"""
 
-    def __init__(self, backend, corpus):
+    def __init__(self, backend, corpus, metric):
         self._backend = backend
         self._corpus = corpus
+        self._metric = metric
 
     @abc.abstractmethod
     def get_hp_space(self):
