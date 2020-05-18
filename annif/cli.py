@@ -122,12 +122,14 @@ def run_list_projects():
     List available projects.
     """
 
-    template = "{0: <25}{1: <45}{2: <8}"
-    header = template.format("Project ID", "Project Name", "Language")
+    template = "{0: <25}{1: <45}{2: <10}{3: <10}"
+    header = template.format(
+        "Project ID", "Project Name", "Language", "Is trained")
     click.echo(header)
     click.echo("-" * len(header))
     for proj in annif.project.get_projects(min_access=Access.private).values():
-        click.echo(template.format(proj.project_id, proj.name, proj.language))
+        click.echo(template.format(
+            proj.project_id, proj.name, proj.language, str(proj.is_trained)))
 
 
 @cli.command('show-project')
@@ -144,6 +146,8 @@ def run_show_project(project_id):
     click.echo(template.format('Project Name:', proj.name))
     click.echo(template.format('Language:', proj.language))
     click.echo(template.format('Access:', proj.access.name))
+    click.echo(template.format('Is trained:', proj.is_trained))
+    click.echo(template.format('Modification time:', proj.modification_time))
 
 
 @cli.command('clear')
