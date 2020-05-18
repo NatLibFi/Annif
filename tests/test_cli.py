@@ -658,3 +658,20 @@ def test_optimize_nonexistent_path():
     assert failed_result.exit_code != 0
     assert "Invalid value for '[PATHS]...': " \
            "Path 'nonexistent_path' does not exist." in failed_result.output
+
+
+def test_hyperopt_ensemble(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+
+    result = runner.invoke(
+        annif.cli.cli, [
+            'hyperopt', 'ensemble', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    assert re.search(
+        r'sources=dummy-en:0.\d+,dummydummy:0.\d+',
+        result.output) is not None
