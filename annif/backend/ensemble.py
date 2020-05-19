@@ -56,7 +56,6 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                     self._backend.project.subjects),
                 goldsubj)
         results = batch.results()
-        line = self._format_cfg_line(self._normalize(weights))
         return results[self._metric]
 
     def _postprocess(self, study):
