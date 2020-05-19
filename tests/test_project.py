@@ -1,6 +1,7 @@
 """Unit tests for projects in Annif"""
 
 import pytest
+from datetime import datetime, timedelta
 import annif.project
 import annif.backend.dummy
 from annif.exception import ConfigurationException, NotSupportedException
@@ -137,12 +138,30 @@ def test_project_load_vocabulary_tfidf(app, vocabulary, testdatadir):
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
 
 
+def test_project_tfidf_is_not_trained(app):
+    with app.app_context():
+        project = annif.project.get_project('tfidf-fi')
+    assert not project.is_trained
+
+
 def test_project_train_tfidf(app, document_corpus, testdatadir):
     with app.app_context():
         project = annif.project.get_project('tfidf-fi')
     project.train(document_corpus)
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').exists()
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
+
+
+def test_project_tfidf_is_trained(app):
+    with app.app_context():
+        project = annif.project.get_project('tfidf-fi')
+    assert project.is_trained
+
+
+def test_project_tfidf_modification_time(app):
+    with app.app_context():
+        project = annif.project.get_project('tfidf-fi')
+    assert datetime.now() - project.modification_time < timedelta(1)
 
 
 def test_project_train_tfidf_nodocuments(app, empty_corpus):
