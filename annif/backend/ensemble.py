@@ -1,7 +1,6 @@
 """Ensemble backend that combines results from multiple projects"""
 
 
-from hyperopt import hp
 from tqdm.auto import tqdm
 import annif.suggestion
 import annif.project
@@ -19,12 +18,6 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         self._sources = [project_id for project_id, _
                          in annif.util.parse_sources(
                              backend.config_params['sources'])]
-
-    def get_hp_space(self):
-        space = {}
-        for project_id in self._sources:
-            space[project_id] = hp.uniform(project_id, 0.0, 1.0)
-        return space
 
     def _prepare(self):
         self._gold_subjects = []
@@ -48,28 +41,27 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         return 'sources=' + ','.join([f"{src}:{weight:.4f}"
                                       for src, weight in hps.items()])
 
-    def _test(self, hps):
+    def _objective(self, trial):
         batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
+        weights = {project_id: trial.suggest_uniform(project_id, 0.0, 1.0)
+                   for project_id in self._sources}
         for goldsubj, srchits in zip(self._gold_subjects, self._source_hits):
             weighted_hits = []
             for project_id, hits in srchits.items():
                 weighted_hits.append(annif.suggestion.WeightedSuggestion(
-                    hits=hits, weight=hps[project_id]))
+                    hits=hits, weight=weights[project_id]))
             batch.evaluate(
                 annif.util.merge_hits(
                     weighted_hits,
                     self._backend.project.subjects),
                 goldsubj)
         results = batch.results()
-        line = self._format_cfg_line(self._normalize(hps))
-        metric = self._metric
-        tqdm.write(f"Trial: {line} # {metric}: {results[metric]:.4f}")
-        return 1 - results[metric]
+        line = self._format_cfg_line(self._normalize(weights))
+        return results[self._metric]
 
-    def _postprocess(self, best, trials):
-        line = self._format_cfg_line(self._normalize(best))
-        score = 1 - trials.best_trial['result']['loss']
-        return hyperopt.HPRecommendation(lines=[line], score=score)
+    def _postprocess(self, study):
+        line = self._format_cfg_line(self._normalize(study.best_params))
+        return hyperopt.HPRecommendation(lines=[line], score=study.best_value)
 
 
 class EnsembleBackend(hyperopt.AnnifHyperoptBackend):
