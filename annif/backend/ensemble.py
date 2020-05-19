@@ -1,7 +1,6 @@
 """Ensemble backend that combines results from multiple projects"""
 
 
-from tqdm.auto import tqdm
 import annif.suggestion
 import annif.project
 import annif.util

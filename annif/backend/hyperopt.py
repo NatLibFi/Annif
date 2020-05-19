@@ -5,7 +5,6 @@ import collections
 import optuna
 from .backend import AnnifBackend
 from annif import logger
-from logging import DEBUG
 
 
 HPRecommendation = collections.namedtuple('HPRecommendation', 'lines score')
