@@ -369,7 +369,12 @@ def run_optimize(project_id, paths, backend_param):
     filter_batches = list(filter_batches.items())
     while filter_batches:
         params, filter_batch = filter_batches.pop(0)
-        results = filter_batch[1].results(metrics='simple')
+        metrics = ['Precision (doc avg)',
+                   'Recall (doc avg)',
+                   'F1 score (doc avg)',
+                   'NDCG@5',
+                   'NDCG@10']
+        results = filter_batch[1].results(metrics=metrics)
         for metric, score in results.items():
             if score >= best_scores[metric]:
                 best_scores[metric] = score
@@ -384,11 +389,7 @@ def run_optimize(project_id, paths, backend_param):
 
     click.echo()
     template2 = "Best {:>19}: {:.04f}\tLimit: {:d}\tThreshold: {:.02f}"
-    for metric in ('Precision (doc avg)',
-                   'Recall (doc avg)',
-                   'F1 score (doc avg)',
-                   'NDCG@5',
-                   'NDCG@10'):
+    for metric in metrics:
         click.echo(
             template2.format(
                 metric,

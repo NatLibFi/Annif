@@ -54,7 +54,7 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                     weighted_hits,
                     self._backend.project.subjects),
                 goldsubj)
-        results = batch.results(metrics='simple')
+        results = batch.results(metrics=[self._metric])
         return results[self._metric]
 
     def _postprocess(self, study):
