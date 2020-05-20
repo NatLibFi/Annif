@@ -185,14 +185,14 @@ class AnnifProject(DatadirMixin):
             raise NotSupportedException("Learning not supported by backend",
                                         project_id=self.project_id)
 
-    def hyperopt(self, corpus, trials, metric):
+    def hyperopt(self, corpus, trials, jobs, metric):
         """optimize the hyperparameters of the project using a validation
         corpus against a given metric"""
         if isinstance(
                 self.backend,
                 annif.backend.hyperopt.AnnifHyperoptBackend):
             optimizer = self.backend.get_hp_optimizer(corpus, metric)
-            return optimizer.optimize(trials)
+            return optimizer.optimize(trials, jobs)
 
         raise NotSupportedException(
             "Hyperparameter optimization not supported "

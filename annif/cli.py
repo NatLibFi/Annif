@@ -402,16 +402,19 @@ def run_optimize(project_id, paths, backend_param):
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @click.option('--trials', default=10, help='Number of trials')
+@click.option('--jobs',
+              default=1,
+              help='Number of parallel runs (-1 means all CPUs)')
 @click.option('--metric', default='NDCG', help='Metric to optimize')
 @common_options
-def run_hyperopt(project_id, paths, trials, metric):
+def run_hyperopt(project_id, paths, trials, jobs, metric):
     """
     Optimize the hyperparameters of a project using a validation corpus.
     """
     proj = get_project(project_id)
     documents = open_documents(paths)
     click.echo(f"Looking for optimal hyperparameters using {trials} trials")
-    rec = proj.hyperopt(documents, trials, metric)
+    rec = proj.hyperopt(documents, trials, jobs, metric)
     click.echo(f"Got best {metric} score {rec.score:.4f} with:")
     click.echo("---")
     for line in rec.lines:

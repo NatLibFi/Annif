@@ -32,7 +32,7 @@ class HyperparameterOptimizer:
         """Convert the study results into hyperparameter recommendations"""
         pass  # pragma: no cover
 
-    def optimize(self, n_trials):
+    def optimize(self, n_trials, n_jobs):
         """Find the optimal hyperparameters by testing up to the given number
         of hyperparameter combinations"""
 
@@ -40,6 +40,7 @@ class HyperparameterOptimizer:
         study = optuna.create_study(direction='maximize')
         study.optimize(self._objective,
                        n_trials=n_trials,
+                       n_jobs=n_jobs,
                        gc_after_trial=False,
                        show_progress_bar=True)
         return self._postprocess(study)
