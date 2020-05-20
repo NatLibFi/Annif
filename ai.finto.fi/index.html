@@ -23,7 +23,7 @@ Basic layout
     <link rel="icon" href="favicon.ico">
 
     <title>Finto AI</title>
-    <style type="text/css">
+    <style>
       body {
         background-color: #80d5e9;
         font-family: 'Fira Sans', sans-serif;
@@ -173,7 +173,7 @@ Basic layout
             <ul id="switch-locale">
               <li><a href="#" data-locale="fi">suomeksi</a></li>
               <li><a href="#" data-locale="sv">på svenska</a></li>
-              <li><a href="#" data-locale="en">in English</a></li></ul>
+              <li><a href="#" data-locale="en">in English</a></li>
             </ul>
           </div>
         </div>
@@ -226,7 +226,6 @@ Basic layout
           <label for="project" data-i18n="project">Sanasto ja tekstin kieli</label>
           <div class="select-wrapper">
             <select class="form-control" id="project">
-              <option></option>
             </select>
           </div>
         </div>
@@ -234,15 +233,15 @@ Basic layout
           <label for="limit" data-i18n="limit">Ehdotusten enimmäismäärä</label>
           <div id="limit-buttons" class="btn-group btn-group-toggle" data-toggle="buttons">
             <label class="btn btn-secondary">
-              <input type="radio" name="limit" value="10" autocomplete="off" checked>
+              <input type="radio" name="limit" value="10" checked>
               10
             </label>
             <label class="btn btn-secondary">
-              <input type="radio" name="limit" value="15" autocomplete="off">
+              <input type="radio" name="limit" value="15">
               15
             </label>
             <label class="btn btn-secondary">
-              <input type="radio" name="limit" value="20" autocomplete="off">
+              <input type="radio" name="limit" value="20">
               20
             </label>
           </div>
