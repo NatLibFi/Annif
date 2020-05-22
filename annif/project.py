@@ -198,7 +198,9 @@ class AnnifProject(DatadirMixin):
         return {'project_id': self.project_id,
                 'name': self.name,
                 'language': self.language,
-                'backend': {'backend_id': self.config.get('backend')}
+                'backend': {'backend_id': self.config.get('backend')},
+                'is_trained': self.is_trained,
+                'modification_time': self.modification_time
                 }
 
     def remove_model_data(self):
