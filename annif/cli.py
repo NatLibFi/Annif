@@ -141,13 +141,12 @@ def run_show_project(project_id):
     """
 
     proj = get_project(project_id)
-    template = "{0:<20}{1}"
-    click.echo(template.format('Project ID:', proj.project_id))
-    click.echo(template.format('Project Name:', proj.name))
-    click.echo(template.format('Language:', proj.language))
-    click.echo(template.format('Access:', proj.access.name))
-    click.echo(template.format('Trained:', proj.is_trained))
-    click.echo(template.format('Modification time:', proj.modification_time))
+    click.echo(f'Project ID:        {proj.project_id}')
+    click.echo(f'Project Name:      {proj.name}')
+    click.echo(f'Language:          {proj.language}')
+    click.echo(f'Access:            {proj.access.name}')
+    click.echo(f'Trained:           {proj.is_trained}')
+    click.echo(f'Modification time: {proj.modification_time}')
 
 
 @cli.command('clear')
