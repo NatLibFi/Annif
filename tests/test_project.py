@@ -59,7 +59,9 @@ def test_get_project_fi_dump(app):
         'language': 'fi',
         'backend': {
             'backend_id': 'dummy',
-        }
+        },
+        'is_trained': False,
+        'modification_time': None,
     }
 
 
