@@ -128,8 +128,9 @@ def run_list_projects():
     click.echo(header)
     click.echo("-" * len(header))
     for proj in annif.project.get_projects(min_access=Access.private).values():
-        click.echo(template.format(
-            proj.project_id, proj.name, proj.language, str(proj.is_trained)))
+        click.echo(
+            f'{proj.project_id: <25}{proj.name: <45}{proj.language: <10}'
+            f'{str(proj.is_trained): <7}')
 
 
 @cli.command('show-project')
