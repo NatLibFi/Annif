@@ -124,7 +124,7 @@ def run_list_projects():
 
     template = "{0: <25}{1: <45}{2: <10}{3: <10}"
     header = template.format(
-        "Project ID", "Project Name", "Language", "Is trained")
+        "Project ID", "Project Name", "Language", "Trained")
     click.echo(header)
     click.echo("-" * len(header))
     for proj in annif.project.get_projects(min_access=Access.private).values():
@@ -146,7 +146,7 @@ def run_show_project(project_id):
     click.echo(template.format('Project Name:', proj.name))
     click.echo(template.format('Language:', proj.language))
     click.echo(template.format('Access:', proj.access.name))
-    click.echo(template.format('Is trained:', proj.is_trained))
+    click.echo(template.format('Trained:', proj.is_trained))
     click.echo(template.format('Modification time:', proj.modification_time))
 
 
