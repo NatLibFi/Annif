@@ -18,6 +18,26 @@ class MauiBackend(backend.AnnifBackend):
 
     TRAIN_FILE = 'maui-train.jsonl'
 
+    @property
+    def is_trained(self):
+        params = self._get_backend_params(None)
+        try:
+            resp = requests.get(self.tagger_url(params))
+            resp.raise_for_status()
+        except requests.exceptions.RequestException as err:
+            self.warning("HTTP request failed: {}".format(err))
+            return None
+        try:
+            return resp.json()['is_trained']
+        except ValueError as err:
+            self.warning("JSON decode failed: {}".format(err))
+            return None
+
+    @property
+    def modification_time(self):
+        # TODO Should mtime of Maui project always be None or how to get it?
+        return None
+
     def endpoint(self, params):
         try:
             return params['endpoint']
