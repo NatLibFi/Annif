@@ -157,15 +157,15 @@ class AnnifProject(DatadirMixin):
     def is_trained(self):
         try:
             return self.backend.is_trained
-        except AnnifException as err:
-            logger.warning(err.format_message())
+        except AttributeError:
+            return None
 
     @property
     def modification_time(self):
         try:
             return self.backend.modification_time
-        except AnnifException as err:
-            logger.warning(err.format_message())
+        except AttributeError:
+            return None
 
     def suggest(self, text, backend_params=None):
         """Suggest subjects the given text by passing it to the backend. Returns a
