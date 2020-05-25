@@ -11,6 +11,36 @@ from . import backend
 class HTTPBackend(backend.AnnifBackend):
     name = "http"
 
+    @property
+    def is_trained(self):
+        response = self._get_project_info()
+        if 'is_trained' in response:
+            return response['is_trained']
+        else:
+            return None
+
+    @property
+    def modification_time(self):
+        response = self._get_project_info()
+        if 'modification_time' in response:
+            return response['modification_time']
+        else:
+            return None
+
+    def _get_project_info(self):
+        params = self._get_backend_params(None)
+        try:
+            req = requests.get(params['endpoint'].replace('/suggest', ''))
+            req.raise_for_status()
+        except requests.exceptions.RequestException as err:
+            self.warning("HTTP request failed: {}".format(err))
+            return {}
+        try:
+            return req.json()
+        except ValueError as err:
+            self.warning("JSON decode failed: {}".format(err))
+            return {}
+
     def _suggest(self, text, params):
         data = {'text': text}
         if 'project' in params:
