@@ -157,6 +157,8 @@ class AnnifProject(DatadirMixin):
     def is_trained(self):
         try:
             return self.backend.is_trained
+        except AnnifException as err:
+            logger.warning(err.format_message())
         except AttributeError:
             return None
 
@@ -164,6 +166,8 @@ class AnnifProject(DatadirMixin):
     def modification_time(self):
         try:
             return self.backend.modification_time
+        except AnnifException as err:
+            logger.warning(err.format_message())
         except AttributeError:
             return None
 
