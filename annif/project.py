@@ -205,59 +205,74 @@ class AnnifProject(DatadirMixin):
                            .format(self.project_id))
 
 
-def _create_projects(projects_file, datadir, init_projects):
-    if not os.path.exists(projects_file):
-        logger.warning(
-            'Project configuration file "%s" is missing. Please provide one.' +
-            ' You can set the path to the project configuration file using ' +
-            'the ANNIF_PROJECTS environment variable or the command-line ' +
-            'option "--projects".', projects_file)
-        return {}
+class AnnifRegistry:
+    """Class that keeps track of the Annif projects"""
 
-    config = configparser.ConfigParser()
-    config.optionxform = lambda option: option
-    with open(projects_file, encoding='utf-8-sig') as projf:
-        try:
-            config.read_file(projf)
-        except (configparser.DuplicateOptionError,
-                configparser.DuplicateSectionError) as err:
-            raise ConfigurationException(err)
+    _projects = {}
 
-    # create AnnifProject objects from the configuration file
-    projects = collections.OrderedDict()
-    for project_id in config.sections():
-        projects[project_id] = AnnifProject(project_id,
-                                            config[project_id],
-                                            datadir)
-        if init_projects:
-            projects[project_id].initialize()
-    return projects
+    def __init__(self, projects_file, datadir, init_projects):
+        self._projects[id(self)] = \
+            self._create_projects(projects_file, datadir, init_projects)
+
+    def _create_projects(self, projects_file, datadir, init_projects):
+        if not os.path.exists(projects_file):
+            logger.warning(
+                'Project configuration file "%s" is missing. ' +
+                'Please provide one. You can set the path to the project ' +
+                'configuration file using the ANNIF_PROJECTS environment ' +
+                'variable or the command-line option "--projects".',
+                projects_file)
+            return {}
+
+        config = configparser.ConfigParser()
+        config.optionxform = lambda option: option
+        with open(projects_file, encoding='utf-8-sig') as projf:
+            try:
+                config.read_file(projf)
+            except (configparser.DuplicateOptionError,
+                    configparser.DuplicateSectionError) as err:
+                raise ConfigurationException(err)
+
+        # create AnnifProject objects from the configuration file
+        projects = collections.OrderedDict()
+        for project_id in config.sections():
+            projects[project_id] = AnnifProject(project_id,
+                                                config[project_id],
+                                                datadir)
+            if init_projects:
+                projects[project_id].initialize()
+        return projects
+
+    def get_projects(self, min_access=Access.private):
+        """Return the available projects as a dict of project_id ->
+        AnnifProject. The min_access parameter may be used to set the minimum
+        access level required for the returned projects."""
+
+        return {project_id: project
+                for project_id, project in self._projects[id(self)].items()
+                if project.access >= min_access}
 
 
 def initialize_projects(app):
     projects_file = app.config['PROJECTS_FILE']
     datadir = app.config['DATADIR']
     init_projects = app.config['INITIALIZE_PROJECTS']
-    app.annif_projects = _create_projects(
-        projects_file, datadir, init_projects)
+    app.annif_registry = AnnifRegistry(projects_file, datadir, init_projects)
 
 
 def get_projects(min_access=Access.private):
     """Return the available projects as a dict of project_id ->
     AnnifProject. The min_access parameter may be used to set the minimum
     access level required for the returned projects."""
-
-    if not hasattr(current_app, 'annif_projects'):
+    if not hasattr(current_app, 'annif_registry'):
         initialize_projects(current_app)
 
-    projects = [(project_id, project)
-                for project_id, project in current_app.annif_projects.items()
-                if project.access >= min_access]
-    return collections.OrderedDict(projects)
+    return current_app.annif_registry.get_projects(min_access)
 
 
 def get_project(project_id, min_access=Access.private):
     """return the definition of a single Project by project_id"""
+
     projects = get_projects(min_access)
     try:
         return projects[project_id]
