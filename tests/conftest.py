@@ -6,7 +6,9 @@ import pytest
 import py.path
 import unittest.mock
 import annif
+import annif.analyzer
 import annif.corpus
+import annif.project
 
 
 @pytest.fixture(scope='module')
@@ -29,6 +31,12 @@ def app_with_initialize():
     app = annif.create_app(
         config_name='annif.default_config.TestingInitializeConfig')
     return app
+
+
+@pytest.fixture(scope='module')
+def registry(app):
+    with app.app_context():
+        return app.annif_registry
 
 
 @pytest.fixture(scope='module')
@@ -84,11 +92,12 @@ def pretrained_vectors():
 
 
 @pytest.fixture(scope='module')
-def project(subject_index, datadir):
+def project(subject_index, datadir, registry):
     proj = unittest.mock.Mock()
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
     proj.subjects = subject_index
     proj.datadir = str(datadir)
+    proj.registry = registry
     return proj
 
 

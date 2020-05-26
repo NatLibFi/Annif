@@ -5,7 +5,6 @@ import os
 import random
 import numpy as np
 from vowpalwabbit import pyvw
-import annif.project
 from annif.suggestion import ListSuggestionResult, VectorSuggestionResult
 from annif.exception import ConfigurationException
 from annif.exception import NotInitializedException
@@ -139,7 +138,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
         if input == '_text_':
             return self._normalize_text(text)
         else:
-            proj = annif.project.get_project(input)
+            proj = self.project.registry.get_project(input)
             result = proj.suggest(text)
             features = [
                 '{}:{}'.format(self._cleanup_text(hit.uri), hit.score)

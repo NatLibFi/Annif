@@ -7,12 +7,13 @@ from annif.exception import ConfigurationException, NotSupportedException
 from annif.project import Access
 
 
-def test_create_project_wrong_access(app):
+def test_create_project_wrong_access(app, registry):
     with pytest.raises(ConfigurationException):
         annif.project.AnnifProject(
             'example',
             {'name': 'Example', 'language': 'en', 'access': 'invalid'},
-            '.')
+            '.',
+            registry)
 
 
 def test_get_project_en(app):

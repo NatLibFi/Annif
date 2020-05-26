@@ -39,7 +39,7 @@ class AnnifProject(DatadirMixin):
     # default values for configuration settings
     DEFAULT_ACCESS = 'public'
 
-    def __init__(self, project_id, config, datadir):
+    def __init__(self, project_id, config, datadir, registry):
         DatadirMixin.__init__(self, datadir, 'projects', project_id)
         self.project_id = project_id
         self.name = config.get('name', project_id)
@@ -48,6 +48,7 @@ class AnnifProject(DatadirMixin):
         self.vocab_id = config.get('vocab', None)
         self.config = config
         self._base_datadir = datadir
+        self.registry = registry
         self._init_access()
 
     def _init_access(self):
@@ -238,7 +239,8 @@ class AnnifRegistry:
         for project_id in config.sections():
             projects[project_id] = AnnifProject(project_id,
                                                 config[project_id],
-                                                datadir)
+                                                datadir,
+                                                self)
             if init_projects:
                 projects[project_id].initialize()
         return projects
@@ -251,6 +253,15 @@ class AnnifRegistry:
         return {project_id: project
                 for project_id, project in self._projects[id(self)].items()
                 if project.access >= min_access}
+
+    def get_project(self, project_id, min_access=Access.private):
+        """return the definition of a single Project by project_id"""
+
+        projects = self.get_projects(min_access)
+        try:
+            return projects[project_id]
+        except KeyError:
+            raise ValueError("No such project {}".format(project_id))
 
 
 def initialize_projects(app):
