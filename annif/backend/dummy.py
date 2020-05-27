@@ -11,6 +11,14 @@ class DummyBackend(backend.AnnifLearningBackend):
     uri = 'http://example.org/dummy'
     label = 'dummy'
 
+    @property
+    def is_trained(self):
+        return True
+
+    @property
+    def modification_time(self):
+        return None
+
     def default_params(self):
         return backend.AnnifBackend.DEFAULT_PARAMETERS
 
