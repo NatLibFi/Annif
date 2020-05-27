@@ -174,6 +174,11 @@ class AnnifProject(DatadirMixin):
     def suggest(self, text, backend_params=None):
         """Suggest subjects the given text by passing it to the backend. Returns a
         list of SubjectSuggestion objects ordered by decreasing score."""
+        if not self.is_trained:
+            if self.is_trained is None:
+                logger.warn('Could not get train state information.')
+            else:
+                raise ConfigurationException('Project is not trained.')
         logger.debug('Suggesting subjects for text "%s..." (len=%d)',
                      text[:20], len(text))
         hits = self._suggest_with_backend(text, backend_params)
