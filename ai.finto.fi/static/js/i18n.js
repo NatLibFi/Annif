@@ -23,6 +23,7 @@ var setLocale = function(locale) {
     
     /* switch link targets */
     $('#nav-feedback').attr("href", $.i18n('url-feedback'));
+     $('#read-more').attr("href", $.i18n('url-read-more'));
 
     $('#switch-locale a').show();
     $('a[data-locale=' + $.i18n().locale + ']').hide();
@@ -40,6 +41,7 @@ jQuery(function() {
             "splash": "Finto AI suggests subjects for a given text. It's based on Annif, a tool for automated subject indexing.",
             "api-title": "API service",
             "api-desc": "Finto AI is also an API service that can be integrated to other systems.",
+            "api-desc-link": "OpenAPI description",
             "text-box-label-text": "Enter text to be indexed",
             "text-box-placeholder": 'Copy text here and press the button "Get subject suggestions"',
             "nav-subject-indexing": "Subject indexing",
@@ -50,7 +52,8 @@ jQuery(function() {
             "no-results": "No results",
             "footer-text": "The data submitted via the above form or the API will not be saved anywhere. Usage of the service is being monitored for development purposes.",
             "footer-link": "See our privacy policy",
-            "url-feedback": "http://finto.fi/en/feedback"
+            "url-feedback": "http://finto.fi/en/feedback",
+            "url-read-more": "https://www.kiwi.fi/x/DYDbCQ"
         },
         'sv': {
             "nav-about": "Information",
@@ -59,6 +62,7 @@ jQuery(function() {
             "splash": "Finto AI föreslår ämnesord för text. Det är baserat på Annif, ett verktyg för automatisk indexering.",
             "api-title": "API-tjänst",
             "api-desc": "Finto AI är också en API-tjänst som kan integreras med andra system.",
+            "api-desc-link": "OpenAPI -beskrivning",
             "text-box-label-text": "Text för indexering",
             "text-box-placeholder": 'Kopiera text hit och tryck på knappen "Ge förslag till ämnesord"',
             "nav-subject-indexing": "Innehållsbeskrivning",
@@ -69,7 +73,8 @@ jQuery(function() {
             "no-results": "Inga resultat",
             "footer-text": "Uppgifterna som skickas via formuläret eller API-tjänsten sparas inte. Användningen av tjänsten följs upp och statistikförs för utvecklingsändamål.",
             "footer-link": "Läs vår sekretesspolicy",
-            "url-feedback": "http://finto.fi/sv/feedback"
+            "url-feedback": "http://finto.fi/sv/feedback",
+            "url-read-more": "https://www.kiwi.fi/x/FoDbCQ"
         },
 
         'fi': {
@@ -79,6 +84,7 @@ jQuery(function() {
             "splash": "Finto AI ehdottaa tekstille sopivia aiheita. Palvelu perustuu Annif-työkaluun.",
             "api-title": "API-palvelu",
             "api-desc": "Finto AI toimii myös rajapintapalveluna, joka voidaan integroida omiin järjestelmiin.",
+            "api-desc-link": "OpenAPI-kuvaus",
             "text-box-label-text": "Kuvailtava teksti",
             "text-box-placeholder": 'Kopioi tähän tekstiä ja paina "Anna aihe-ehdotukset"-nappia',
             "nav-subject-indexing": "Sisällönkuvailu",
@@ -89,7 +95,9 @@ jQuery(function() {
             "no-results": "Ei tuloksia",
             "footer-text": "Lomakkeen ja rajapintapalveluiden kautta lähettyjä tietoja ei talleteta.  Palvelun käyttöä seurataan ja tilastoidaan palvelun kehittämiseksi.",
             "footer-link": "Lue tietosuojaseloste",
-            "url-feedback": "http://finto.fi/fi/feedback"
+            "url-feedback": "http://finto.fi/fi/feedback",
+            "url-read-more": "https://www.kiwi.fi/x/-oHbCQ"
+            
         }
 
     }).done(function() {
