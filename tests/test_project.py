@@ -60,7 +60,7 @@ def test_get_project_fi_dump(app):
         'backend': {
             'backend_id': 'dummy',
         },
-        'is_trained': False,
+        'is_trained': True,
         'modification_time': None,
     }
 
