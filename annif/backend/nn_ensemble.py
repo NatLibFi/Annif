@@ -98,6 +98,14 @@ class NNEnsembleBackend(
     # defaults for uninitialized instances
     _model = None
 
+    @property
+    def is_trained(self):
+        return super(ensemble.EnsembleBackend, self).is_trained
+
+    @property
+    def modification_time(self):
+        return super(ensemble.EnsembleBackend, self).modification_time
+
     def default_params(self):
         params = {}
         params.update(super().default_params())
