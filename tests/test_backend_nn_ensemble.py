@@ -8,7 +8,6 @@ import annif.backend
 import annif.corpus
 import annif.project
 from annif.exception import NotInitializedException
-from annif.exception import NotSupportedException
 
 pytest.importorskip("annif.backend.nn_ensemble")
 
