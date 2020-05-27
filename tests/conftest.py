@@ -9,6 +9,15 @@ import annif
 import annif.corpus
 
 
+@pytest.fixture(scope='session', autouse=True)
+def clear_app_datadir():
+    # clean up state of app datadir left from previous test run
+    app = annif.create_app(config_name='annif.default_config.TestingConfig')
+    with app.app_context():
+        dir = py.path.local(app.config['DATADIR'])
+    shutil.rmtree(os.path.join(str(dir), 'projects'), ignore_errors=True)
+
+
 @pytest.fixture(scope='module')
 def app():
     # make sure the dummy vocab is in place because many tests depend on it
