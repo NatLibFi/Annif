@@ -130,3 +130,40 @@ def test_http_suggest_unexpected_json(project):
             project=project)
         result = http.suggest('this is some text')
         assert len(result) == 0
+
+
+def test_http_is_trained(project):
+    with unittest.mock.patch('requests.get') as mock_request:
+        # create a mock response whose .json() method returns the dict that we
+        # define here
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {'is_trained': True}
+        mock_request.return_value = mock_response
+
+        http_type = annif.backend.get_backend("http")
+        http = http_type(
+            backend_id='http',
+            config_params={
+                'endpoint': 'http://api.example.org/analyze',
+                'project': 'dummy'},
+            project=project)
+        assert http.is_trained
+
+
+def test_http_modification_time(project):
+    with unittest.mock.patch('requests.get') as mock_request:
+        # create a mock response whose .json() method returns the dict that we
+        # define here
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {'modification_time':
+                                           '1970-1-1 00:00:00'}
+        mock_request.return_value = mock_response
+
+        http_type = annif.backend.get_backend("http")
+        http = http_type(
+            backend_id='http',
+            config_params={
+                'endpoint': 'http://api.example.org/analyze',
+                'project': 'dummy'},
+            project=project)
+        assert http.modification_time == '1970-1-1 00:00:00'
