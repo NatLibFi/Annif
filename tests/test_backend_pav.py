@@ -22,7 +22,7 @@ def test_pav_default_params(document_corpus, project):
         assert param in actual_params and actual_params[param] == val
 
 
-def test_pav_train(app, datadir, tmpdir, project):
+def test_pav_train(datadir, tmpdir, project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
@@ -35,8 +35,7 @@ def test_pav_train(app, datadir, tmpdir, project):
                   "none\thttp://example.org/none")
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
-    with app.app_context():
-        pav.train(document_corpus)
+    pav.train(document_corpus)
     assert datadir.join('pav-model-dummy-fi').exists()
     assert datadir.join('pav-model-dummy-fi').size() > 0
 
@@ -64,7 +63,7 @@ def test_pav_train_nodocuments(project, empty_corpus):
     assert 'training backend pav with no documents' in str(excinfo.value)
 
 
-def test_pav_initialize(app, project):
+def test_pav_initialize(project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
@@ -72,15 +71,13 @@ def test_pav_initialize(app, project):
         project=project)
 
     assert pav._models is None
-    with app.app_context():
-        pav.initialize()
+    pav.initialize()
     assert pav._models is not None
     # initialize a second time - this shouldn't do anything
-    with app.app_context():
-        pav.initialize()
+    pav.initialize()
 
 
-def test_pav_suggest(app, project):
+def test_pav_suggest(project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
@@ -98,7 +95,7 @@ def test_pav_suggest(app, project):
     assert len(results) > 0
 
 
-def test_pav_train_params(app, tmpdir, project, caplog):
+def test_pav_train_params(tmpdir, project, caplog):
     logger = annif.logger
     logger.propagate = True
 
@@ -115,7 +112,7 @@ def test_pav_train_params(app, tmpdir, project, caplog):
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
     params = {'min-docs': 5}
 
-    with app.app_context(), caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.DEBUG):
         pav.train(document_corpus, params)
     parameters_spec = 'creating PAV model for source dummy-fi, min_docs=5'
     assert parameters_spec in caplog.text
