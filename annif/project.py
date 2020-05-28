@@ -209,10 +209,18 @@ class AnnifProject(DatadirMixin):
 class AnnifRegistry:
     """Class that keeps track of the Annif projects"""
 
+    # Note: The individual projects are stored in a shared static variable,
+    # keyed by the "registry ID" which is unique to the registry instance.
+    # This is done to make it possible to serialize AnnifRegistry instances
+    # without including the potentially huge project objects (which contain
+    # backends with large models, vocabularies with lots of concepts etc).
+    # Serialized AnnifRegistry instances can then be passed between
+    # processes when using the multiprocessing module.
     _projects = {}
 
     def __init__(self, projects_file, datadir, init_projects):
-        self._projects[id(self)] = \
+        self._rid = id(self)
+        self._projects[self._rid] = \
             self._create_projects(projects_file, datadir, init_projects)
 
     def _create_projects(self, projects_file, datadir, init_projects):
@@ -226,7 +234,7 @@ class AnnifRegistry:
             return {}
 
         config = configparser.ConfigParser()
-        config.optionxform = lambda option: option
+        config.optionxform = annif.util.identity
         with open(projects_file, encoding='utf-8-sig') as projf:
             try:
                 config.read_file(projf)
@@ -251,7 +259,7 @@ class AnnifRegistry:
         access level required for the returned projects."""
 
         return {project_id: project
-                for project_id, project in self._projects[id(self)].items()
+                for project_id, project in self._projects[self._rid].items()
                 if project.access >= min_access}
 
     def get_project(self, project_id, min_access=Access.private):
