@@ -23,6 +23,7 @@ var setLocale = function(locale) {
     
     /* switch link targets */
     $('#nav-feedback').attr("href", $.i18n('url-feedback'));
+    $('#nav-about').attr("href", $.i18n('url-read-more'));
     $('#read-more').attr("href", $.i18n('url-read-more'));
     $('#api-more-info').attr("href", $.i18n('url-api-more-info'));
 
