@@ -53,7 +53,6 @@ jQuery(function() {
             "suggestions": "Suggestions",
             "no-results": "No results",
             "footer-text": "The data submitted via the above form or the API will not be saved anywhere. Usage of the service is being monitored for development purposes.",
-            "footer-link": "See our privacy policy",
             "url-feedback": "http://finto.fi/en/feedback",
             "url-read-more": "https://www.kiwi.fi/x/DYDbCQ",
             "url-api-more-info": "https://www.kiwi.fi/x/h4A_Cg"
@@ -76,7 +75,6 @@ jQuery(function() {
             "suggestions": "Förslag",
             "no-results": "Inga resultat",
             "footer-text": "Uppgifterna som skickas via formuläret eller API-tjänsten sparas inte. Användningen av tjänsten följs upp och statistikförs för utvecklingsändamål.",
-            "footer-link": "Läs vår sekretesspolicy",
             "url-feedback": "http://finto.fi/sv/feedback",
             "url-read-more": "https://www.kiwi.fi/x/FoDbCQ",
             "url-api-more-info": "https://www.kiwi.fi/x/iIA_Cg"
@@ -100,7 +98,6 @@ jQuery(function() {
             "suggestions": "Ehdotetut aiheet",
             "no-results": "Ei tuloksia",
             "footer-text": "Lomakkeen ja rajapintapalveluiden kautta lähettyjä tietoja ei talleteta.  Palvelun käyttöä seurataan ja tilastoidaan palvelun kehittämiseksi.",
-            "footer-link": "Lue tietosuojaseloste",
             "url-feedback": "http://finto.fi/fi/feedback",
             "url-read-more": "https://www.kiwi.fi/x/-oHbCQ",
             "url-api-more-info": "https://www.kiwi.fi/x/VYA_Cg"
