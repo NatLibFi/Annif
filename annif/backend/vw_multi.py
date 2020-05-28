@@ -5,6 +5,7 @@ import os
 import random
 import numpy as np
 from vowpalwabbit import pyvw
+import annif.util
 from annif.suggestion import ListSuggestionResult, VectorSuggestionResult
 from annif.exception import ConfigurationException
 from annif.exception import NotInitializedException
