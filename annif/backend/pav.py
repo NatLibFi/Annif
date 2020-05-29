@@ -10,7 +10,6 @@ from sklearn.isotonic import IsotonicRegression
 import numpy as np
 import annif.corpus
 import annif.suggestion
-import annif.project
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
 from . import ensemble
@@ -97,7 +96,7 @@ class PAVBackend(ensemble.EnsembleBackend):
     def _create_pav_model(self, source_project_id, min_docs, corpus):
         self.info("creating PAV model for source {}, min_docs={}".format(
             source_project_id, min_docs))
-        source_project = annif.project.get_project(source_project_id)
+        source_project = self.project.registry.get_project(source_project_id)
         # suggest subjects for the training corpus
         scores, true = self._suggest_train_corpus(source_project, corpus)
         # create the concept-specific PAV regression models

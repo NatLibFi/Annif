@@ -14,7 +14,6 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.utils import Sequence
 import tensorflow.keras.backend as K
 import annif.corpus
-import annif.project
 import annif.util
 from annif.exception import NotInitializedException
 from annif.suggestion import VectorSuggestionResult
@@ -159,7 +158,7 @@ class NNEnsembleBackend(
 
     def _corpus_to_vectors(self, corpus, seq):
         # pass corpus through all source projects
-        sources = [(annif.project.get_project(project_id), weight)
+        sources = [(self.project.registry.get_project(project_id), weight)
                    for project_id, weight
                    in annif.util.parse_sources(self.params['sources'])]
 

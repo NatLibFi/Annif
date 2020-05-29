@@ -70,3 +70,8 @@ def boolean(val):
     else is False."""
 
     return str(val).lower() in ('1', 'yes', 'true', 'on')
+
+
+def identity(x):
+    """Identity function: return the given argument unchanged"""
+    return x
