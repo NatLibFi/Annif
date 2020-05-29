@@ -292,9 +292,7 @@ def test_maui_suggest_unexpected_json(maui, project):
 @responses.activate
 def test_maui_is_trained(maui, project):
     responses.add(responses.GET,
-                  'http://api.example.org/mauiservice/dummy',
+                  'http://api.example.org/mauiservice/dummy/train',
                   json={"is_trained": True})
+    assert maui.is_trained
 
-    result = maui.is_trained
-    assert result
-    assert len(responses.calls) == 1
