@@ -20,7 +20,6 @@ class EnsembleBackend(backend.AnnifBackend):
     @property
     def modification_time(self):
         mtimes = self._get_sources_attribute('modification_time')
-        # TODO: Should ensemble mtime be None if mtime of any source is None?
         return max(filter(None, mtimes), default=None)
 
     def _get_sources_attribute(self, attr):
