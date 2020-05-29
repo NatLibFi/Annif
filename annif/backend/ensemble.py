@@ -2,7 +2,6 @@
 
 
 import annif.suggestion
-import annif.project
 import annif.util
 from . import backend
 from annif.exception import NotSupportedException
@@ -36,7 +35,7 @@ class EnsembleBackend(backend.AnnifBackend):
     def _suggest_with_sources(self, text, sources):
         hits_from_sources = []
         for project_id, weight in sources:
-            source_project = annif.project.get_project(project_id)
+            source_project = self.project.registry.get_project(project_id)
             hits = source_project.suggest(text)
             self.debug(
                 'Got {} hits from project {}'.format(

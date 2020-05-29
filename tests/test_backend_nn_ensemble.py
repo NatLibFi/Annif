@@ -6,7 +6,6 @@ import py.path
 from datetime import datetime, timedelta
 import annif.backend
 import annif.corpus
-import annif.project
 from annif.exception import NotInitializedException
 
 pytest.importorskip("annif.backend.nn_ensemble")
@@ -37,8 +36,8 @@ def test_nn_ensemble_is_not_trained(app_project):
     assert not nn_ensemble.is_trained
 
 
-def test_nn_ensemble_train_and_learn(app, tmpdir):
-    project = annif.project.get_project('dummy-en')
+def test_nn_ensemble_train_and_learn(registry, tmpdir):
+    project = registry.get_project('dummy-en')
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
@@ -51,8 +50,7 @@ def test_nn_ensemble_train_and_learn(app, tmpdir):
                   "none\thttp://example.org/none\n" * 40)
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
-    with app.app_context():
-        nn_ensemble.train(document_corpus)
+    nn_ensemble.train(document_corpus)
 
     datadir = py.path.local(project.datadir)
     assert datadir.join('nn-model.h5').exists()
@@ -71,9 +69,9 @@ def test_nn_ensemble_train_and_learn(app, tmpdir):
     assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
 
 
-def test_nn_ensemble_train_cached(app):
+def test_nn_ensemble_train_cached(registry):
     # make sure we have the cached training data from the previous test
-    project = annif.project.get_project('dummy-en')
+    project = registry.get_project('dummy-en')
     datadir = py.path.local(project.datadir)
     assert datadir.join('nn-train.mdb').exists()
 
@@ -85,15 +83,14 @@ def test_nn_ensemble_train_cached(app):
         config_params={'sources': 'dummy-en', 'epochs': 2},
         project=project)
 
-    with app.app_context():
-        nn_ensemble.train("cached")
+    nn_ensemble.train("cached")
 
     assert datadir.join('nn-model.h5').exists()
     assert datadir.join('nn-model.h5').size() > 0
 
 
-def test_nn_ensemble_train_and_learn_params(app, tmpdir, capfd):
-    project = annif.project.get_project('dummy-en')
+def test_nn_ensemble_train_and_learn_params(registry, tmpdir, capfd):
+    project = registry.get_project('dummy-en')
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
@@ -107,8 +104,7 @@ def test_nn_ensemble_train_and_learn_params(app, tmpdir, capfd):
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
     train_params = {'epochs': 3}
-    with app.app_context():
-        nn_ensemble.train(document_corpus, train_params)
+    nn_ensemble.train(document_corpus, train_params)
     out, _ = capfd.readouterr()
     assert 'Epoch 3/3' in out
 
@@ -136,7 +132,7 @@ def test_pav_modification_time(app_project):
     assert datetime.now() - nn_ensemble.modification_time < timedelta(1)
 
 
-def test_nn_ensemble_initialize(app, app_project):
+def test_nn_ensemble_initialize(app_project):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
@@ -144,28 +140,25 @@ def test_nn_ensemble_initialize(app, app_project):
         project=app_project)
 
     assert nn_ensemble._model is None
-    with app.app_context():
-        nn_ensemble.initialize()
+    nn_ensemble.initialize()
     assert nn_ensemble._model is not None
     # initialize a second time - this shouldn't do anything
-    with app.app_context():
-        nn_ensemble.initialize()
+    nn_ensemble.initialize()
 
 
-def test_nn_ensemble_suggest(app, app_project):
+def test_nn_ensemble_suggest(app_project):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
         config_params={'sources': 'dummy-en'},
         project=app_project)
 
-    with app.app_context():
-        results = nn_ensemble.suggest("""Arkeologiaa sanotaan joskus myös
-            muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen
-            tiede tai oikeammin joukko tieteitä, jotka tutkivat ihmisen
-            menneisyyttä. Tutkimusta tehdään analysoimalla muinaisjäännöksiä
-            eli niitä jälkiä, joita ihmisten toiminta on jättänyt maaperään
-            tai vesistöjen pohjaan.""")
+    results = nn_ensemble.suggest("""Arkeologiaa sanotaan joskus myös
+        muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen
+        tiede tai oikeammin joukko tieteitä, jotka tutkivat ihmisen
+        menneisyyttä. Tutkimusta tehdään analysoimalla muinaisjäännöksiä
+        eli niitä jälkiä, joita ihmisten toiminta on jättänyt maaperään
+        tai vesistöjen pohjaan.""")
 
     assert nn_ensemble._model is not None
     assert len(results) > 0
