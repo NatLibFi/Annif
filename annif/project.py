@@ -154,26 +154,22 @@ class AnnifProject(DatadirMixin):
     def subjects(self):
         return self.vocab.subjects
 
-    @property
-    def _info(self):
+    def _get_info(self, key):
         try:
             be = self.backend
         except ConfigurationException as err:
             logger.warning(err.format_message())
-            return {}
+            return None
         if be is not None:
-            return {'is_trained': be.is_trained,
-                    'modification_time': be.modification_time}
-        else:
-            return {}
+            return getattr(be, key)
 
     @property
     def is_trained(self):
-        return self._info.get('is_trained')
+        return self._get_info('is_trained')
 
     @property
     def modification_time(self):
-        return self._info.get('modification_time')
+        return self._get_info('modification_time')
 
     def suggest(self, text, backend_params=None):
         """Suggest subjects the given text by passing it to the backend. Returns a
