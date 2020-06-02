@@ -14,14 +14,16 @@ WeightedSuggestion = collections.namedtuple(
 class SuggestionFilter:
     """A reusable filter for filtering SubjectSuggestion objects."""
 
-    def __init__(self, limit=None, threshold=0.0):
+    def __init__(self, subject_index, limit=None, threshold=0.0):
+        self._subject_index = subject_index
         self._limit = limit
         self._threshold = threshold
 
     def __call__(self, orighits):
         return LazySuggestionResult(
-            lambda: orighits.filter(
-                self._limit, self._threshold))
+            lambda: orighits.filter(self._subject_index,
+                                    self._limit,
+                                    self._threshold))
 
 
 class SuggestionResult(metaclass=abc.ABCMeta):
@@ -43,7 +45,7 @@ class SuggestionResult(metaclass=abc.ABCMeta):
         pass  # pragma: no cover
 
     @abc.abstractmethod
-    def filter(self, limit=None, threshold=0.0):
+    def filter(self, subject_index, limit=None, threshold=0.0):
         """Return a subset of the hits, filtered by the given limit and
         score threshold, as another SuggestionResult object."""
         pass  # pragma: no cover
@@ -82,9 +84,9 @@ class LazySuggestionResult(SuggestionResult):
         self._initialize()
         return self._object.vector
 
-    def filter(self, limit=None, threshold=0.0):
+    def filter(self, subject_index, limit=None, threshold=0.0):
         self._initialize()
-        return self._object.filter(limit, threshold)
+        return self._object.filter(subject_index, limit, threshold)
 
     def __len__(self):
         self._initialize()
@@ -135,9 +137,9 @@ class VectorSuggestionResult(SuggestionResult):
     def vector(self):
         return self._vector
 
-    def filter(self, limit=None, threshold=0.0):
+    def filter(self, subject_index, limit=None, threshold=0.0):
         mask = (self._vector > threshold)
-        deprecated_ids = self._subject_index.deprecated_ids()
+        deprecated_ids = subject_index.deprecated_ids()
         if limit is not None:
             limit_mask = np.zeros_like(self._vector, dtype=np.bool)
             top_k_subjects = [subj for subj in self.subject_order
@@ -148,7 +150,7 @@ class VectorSuggestionResult(SuggestionResult):
             deprecated_mask = np.ones_like(self._vector, dtype=np.bool)
             deprecated_mask[deprecated_ids] = False
             mask = mask & deprecated_mask
-        return VectorSuggestionResult(self._vector * mask, self._subject_index)
+        return VectorSuggestionResult(self._vector * mask, subject_index)
 
     def __len__(self):
         return (self._vector > 0.0).sum()
@@ -195,14 +197,14 @@ class ListSuggestionResult(SuggestionResult):
             self._vector = self._hits_to_vector()
         return self._vector
 
-    def filter(self, limit=None, threshold=0.0):
+    def filter(self, subject_index, limit=None, threshold=0.0):
         hits = sorted(self.hits, key=lambda hit: hit.score, reverse=True)
         filtered_hits = [hit for hit in hits
                          if hit.score >= threshold and hit.score > 0.0 and
                          hit.label is not None]
         if limit is not None:
             filtered_hits = filtered_hits[:limit]
-        return ListSuggestionResult(filtered_hits, self._subject_index)
+        return ListSuggestionResult(filtered_hits, subject_index)
 
     def __len__(self):
         return len(self._hits)

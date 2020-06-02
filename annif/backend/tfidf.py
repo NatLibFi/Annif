@@ -123,4 +123,5 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         vectors = self.vectorizer.transform([" ".join(tokens)])
         docsim = self._index[vectors[0]]
         fullresult = VectorSuggestionResult(docsim, self.project.subjects)
-        return fullresult.filter(limit=int(params['limit']))
+        return fullresult.filter(self.project.subjects,
+                                 limit=int(params['limit']))

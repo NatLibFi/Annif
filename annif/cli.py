@@ -84,7 +84,7 @@ def generate_filter_batches(subjects):
     filter_batches = collections.OrderedDict()
     for limit in range(1, 16):
         for threshold in [i * 0.05 for i in range(20)]:
-            hit_filter = SuggestionFilter(limit, threshold)
+            hit_filter = SuggestionFilter(subjects, limit, threshold)
             batch = annif.eval.EvaluationBatch(subjects)
             filter_batches[(limit, threshold)] = (hit_filter, batch)
     return filter_batches
@@ -230,7 +230,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
     project = get_project(project_id)
     text = sys.stdin.read()
     backend_params = parse_backend_params(backend_param, project)
-    hit_filter = SuggestionFilter(limit, threshold)
+    hit_filter = SuggestionFilter(project.subjects, limit, threshold)
     hits = hit_filter(project.suggest(text, backend_params))
     for hit in hits:
         click.echo(
@@ -261,7 +261,7 @@ def run_index(project_id, directory, suffix, force,
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
-    hit_filter = SuggestionFilter(limit, threshold)
+    hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
     for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
             directory, require_subjects=False):
@@ -311,7 +311,7 @@ def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
 
-    hit_filter = SuggestionFilter(limit=limit, threshold=threshold)
+    hit_filter = SuggestionFilter(project.subjects, limit, threshold)
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
 
     if results_file:

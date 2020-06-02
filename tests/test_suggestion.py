@@ -19,14 +19,15 @@ def generate_suggestions(n, subject_index):
 
 def test_hitfilter_limit(subject_index):
     origsuggestions = generate_suggestions(10, subject_index)
-    suggestions = SuggestionFilter(limit=5)(origsuggestions)
+    suggestions = SuggestionFilter(subject_index, limit=5)(origsuggestions)
     assert isinstance(suggestions, SuggestionResult)
     assert len(suggestions) == 5
 
 
 def test_hitfilter_threshold(subject_index):
     origsuggestions = generate_suggestions(10, subject_index)
-    suggestions = SuggestionFilter(threshold=0.5)(origsuggestions)
+    suggestions = SuggestionFilter(subject_index,
+                                   threshold=0.5)(origsuggestions)
     assert isinstance(suggestions, SuggestionResult)
     assert len(suggestions) == 2
 
@@ -36,7 +37,7 @@ def test_hitfilter_zero_score(subject_index):
         [SubjectSuggestion(uri='uri', label='label', notation=None,
                            score=0.0)],
         subject_index)
-    suggestions = SuggestionFilter()(origsuggestions)
+    suggestions = SuggestionFilter(subject_index)(origsuggestions)
     assert isinstance(suggestions, SuggestionResult)
     assert len(suggestions) == 0
 
@@ -62,7 +63,7 @@ def test_hitfilter_list_suggestion_results_with_deprecated_subjects(
                 notation=None,
                 score=0.5)],
         subject_index)
-    filtered_suggestions = SuggestionFilter()(suggestions)
+    filtered_suggestions = SuggestionFilter(subject_index)(suggestions)
     assert isinstance(filtered_suggestions, SuggestionResult)
     assert len(filtered_suggestions) == 2
     assert filtered_suggestions[0] == suggestions[0]
@@ -74,7 +75,7 @@ def test_hitfilter_vector_suggestion_results_with_deprecated_subjects(
     subject_index.append('http://example.org/deprecated', None, None)
     vector = np.ones(len(subject_index))
     suggestions = VectorSuggestionResult(vector, subject_index)
-    filtered_suggestions = SuggestionFilter()(suggestions)
+    filtered_suggestions = SuggestionFilter(subject_index)(suggestions)
 
     assert len(suggestions) == len(filtered_suggestions) \
         + len(subject_index.deprecated_ids())
@@ -95,7 +96,7 @@ def test_lazy_suggestion_result(subject_index):
     assert len(lar.hits) == 10
     assert lar.vector is not None
     assert lar[0] is not None
-    filtered = lar.filter(limit=5, threshold=0.0)
+    filtered = lar.filter(subject_index, limit=5, threshold=0.0)
     assert len(filtered) == 5
     assert lar._object is not None
 

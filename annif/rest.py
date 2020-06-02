@@ -58,8 +58,8 @@ def suggest(project_id, text, limit, threshold):
     except ValueError:
         return project_not_found_error(project_id)
 
-    hit_filter = SuggestionFilter(limit, threshold)
     try:
+        hit_filter = SuggestionFilter(project.subjects, limit, threshold)
         result = project.suggest(text)
     except AnnifException as err:
         return server_error(err)
