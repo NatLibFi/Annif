@@ -155,22 +155,25 @@ class AnnifProject(DatadirMixin):
         return self.vocab.subjects
 
     @property
-    def is_trained(self):
+    def _info(self):
         try:
-            return self.backend.is_trained
-        except AnnifException as err:
+            be = self.backend
+        except ConfigurationException as err:
             logger.warning(err.format_message())
-        except AttributeError:
-            return None
+            return {}
+        if be is not None:
+            return {'is_trained': be.is_trained,
+                    'modification_time': be.modification_time}
+        else:
+            return {}
+
+    @property
+    def is_trained(self):
+        return self._info.get('is_trained')
 
     @property
     def modification_time(self):
-        try:
-            return self.backend.modification_time
-        except AnnifException as err:
-            logger.warning(err.format_message())
-        except AttributeError:
-            return None
+        return self._info.get('modification_time')
 
     def suggest(self, text, backend_params=None):
         """Suggest subjects the given text by passing it to the backend. Returns a
