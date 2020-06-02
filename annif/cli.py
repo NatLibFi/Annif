@@ -117,6 +117,7 @@ def backend_param_option(f):
 
 @cli.command('list-projects')
 @common_options
+@click_log.simple_verbosity_option(logger, default='ERROR')
 def run_list_projects():
     """
     List available projects.
