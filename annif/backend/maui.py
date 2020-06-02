@@ -26,7 +26,8 @@ class MauiBackend(backend.AnnifBackend):
     @property
     def modification_time(self):
         mtime = self._get_project_info('end_time')
-        return datetime.strptime(mtime, '%Y-%m-%dT%H:%M:%S.%fZ')
+        if mtime is not None:
+            return datetime.strptime(mtime, '%Y-%m-%dT%H:%M:%S.%fZ')
 
     def _get_project_info(self, key):
         params = self._get_backend_params(None)
