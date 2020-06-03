@@ -123,7 +123,7 @@ def test_nn_ensemble_is_trained(app_project):
     assert nn_ensemble.is_trained
 
 
-def test_pav_modification_time(app_project):
+def test_nn_ensemble_modification_time(app_project):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
