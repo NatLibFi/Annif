@@ -24,7 +24,7 @@ class EnsembleBackend(backend.AnnifBackend):
     def _get_sources_attribute(self, attr):
         params = self._get_backend_params(None)
         sources = annif.util.parse_sources(params['sources'])
-        return [getattr(annif.project.get_project(project_id), attr)
+        return [getattr(self.project.registry.get_project(project_id), attr)
                 for project_id, _ in sources]
 
     def _normalize_hits(self, hits, source_project):
