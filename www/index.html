@@ -10,10 +10,10 @@
   <script src="static/js/jquery.min.js"></script>
   <script src="static/js/bootstrap.min.js"></script>
   <script src="static/js/annif.js"></script>
-  <style type="text/css">
-    header { background-color: white; }
-    h1 { color: #343260 font-size: 2rem; }
-    body { background-color: white; font-family: Jost, sans-serif; }
+  <style>
+    header { background-color: white; color: #343260; }
+    h1 { color: #343260 }
+    body { background-color: white; color: #343260; font-family: Jost, sans-serif; }
     #robot { max-width: 15rem; }
     #video h2 { font-size: 1rem; font-weight: bold; }
     #video p { font-size: 0.85rem; }
@@ -62,10 +62,14 @@
 
   <div class="row justify-content-center">
     <div class="col-md-6">
-      <p class="lead text-center">
-      Feed Annif a controlled vocabulary (subject headings, thesaurus or
-      classification) and existing metadata - Annif then knows how to assign
-      subjects for new documents!</p>
+      <p class="text-center" style="font-size: 200%; font-weight: 500; line-height: 100%">
+        Feed Annif a controlled vocabulary
+        (ontology, subject headings, thesaurus or
+        classification) and train it on documents
+        already indexed with subjects from the
+        vocabulary – Annif can then assign
+        subjects for new documents!
+      </p>
     </div>
   </div>
 
