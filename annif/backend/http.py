@@ -5,6 +5,7 @@ and returns the results"""
 import requests
 import requests.exceptions
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
+from annif.exception import OperationFailedException
 from . import backend
 
 
@@ -25,13 +26,13 @@ class HTTPBackend(backend.AnnifBackend):
             req = requests.get(params['endpoint'].replace('/suggest', ''))
             req.raise_for_status()
         except requests.exceptions.RequestException as err:
-            self.warning("HTTP request failed: {}".format(err))
-            return None
+            msg = f"HTTP request failed: {err}"
+            raise OperationFailedException(msg) from err
         try:
             response = req.json()
         except ValueError as err:
-            self.warning("JSON decode failed: {}".format(err))
-            return None
+            msg = f"JSON decode failed: {err}"
+            raise OperationFailedException(msg) from err
 
         if key in response:
             return response[key]

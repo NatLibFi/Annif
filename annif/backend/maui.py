@@ -35,13 +35,13 @@ class MauiBackend(backend.AnnifBackend):
             resp = requests.get(self.tagger_url(params) + '/train')
             resp.raise_for_status()
         except requests.exceptions.RequestException as err:
-            self.warning("HTTP request failed: {}".format(err))
-            return None
+            msg = f"HTTP request failed: {err}"
+            raise OperationFailedException(msg) from err
         try:
             response = resp.json()
         except ValueError as err:
-            self.warning("JSON decode failed: {}".format(err))
-            return None
+            msg = f"JSON decode failed: {err}"
+            raise OperationFailedException(msg) from err
 
         if key in response:
             return response[key]
