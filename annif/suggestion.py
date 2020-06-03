@@ -30,9 +30,8 @@ class SuggestionResult(metaclass=abc.ABCMeta):
     """Abstract base class for a set of hits returned by an analysis
     operation."""
 
-    @property
     @abc.abstractmethod
-    def hits(self):
+    def as_list(self, subject_index):
         """Return the hits as an ordered sequence of SubjectSuggestion objects,
         highest scores first."""
         pass  # pragma: no cover
@@ -55,9 +54,6 @@ class SuggestionResult(metaclass=abc.ABCMeta):
         """Return the number of hits with non-zero scores."""
         pass  # pragma: no cover
 
-    def __getitem__(self, idx):
-        return self.hits[idx]
-
 
 class LazySuggestionResult(SuggestionResult):
     """SuggestionResult implementation that wraps another SuggestionResult which
@@ -74,10 +70,9 @@ class LazySuggestionResult(SuggestionResult):
         if self._object is None:
             self._object = self._construct()
 
-    @property
-    def hits(self):
+    def as_list(self, subject_index):
         self._initialize()
-        return self._object.hits
+        return self._object.as_list(subject_index)
 
     @property
     def vector(self):
@@ -92,10 +87,6 @@ class LazySuggestionResult(SuggestionResult):
         self._initialize()
         return len(self._object)
 
-    def __getitem__(self, idx):
-        self._initialize()
-        return self._object[idx]
-
 
 class VectorSuggestionResult(SuggestionResult):
     """SuggestionResult implementation based primarily on NumPy vectors."""
@@ -104,22 +95,23 @@ class VectorSuggestionResult(SuggestionResult):
         self._vector = vector.astype(np.float32)
         self._subject_index = subject_index
         self._subject_order = None
-        self._hits = None
+        self._list = None
 
-    def _vector_to_hits(self):
+    def _vector_to_list(self, subject_index):
         hits = []
         for subject_id in self.subject_order:
             score = self._vector[subject_id]
             if score <= 0.0:
                 continue  # we can skip the remaining ones
-            subject = self._subject_index[subject_id]
+            subject = subject_index[subject_id]
             hits.append(
                 SubjectSuggestion(
                     uri=subject[0],
                     label=subject[1],
                     notation=subject[2],
                     score=float(score)))
-        return ListSuggestionResult(hits, self._subject_index)
+        return ListSuggestionResult(hits,
+                                    subject_index).as_list(subject_index)
 
     @property
     def subject_order(self):
@@ -127,11 +119,10 @@ class VectorSuggestionResult(SuggestionResult):
             self._subject_order = np.argsort(self._vector)[::-1]
         return self._subject_order
 
-    @property
-    def hits(self):
-        if self._hits is None:
-            self._hits = self._vector_to_hits()
-        return self._hits
+    def as_list(self, subject_index):
+        if self._list is None:
+            self._list = self._vector_to_list(subject_index)
+        return self._list
 
     @property
     def vector(self):
@@ -160,7 +151,7 @@ class ListSuggestionResult(SuggestionResult):
     """SuggestionResult implementation based primarily on lists of hits."""
 
     def __init__(self, hits, subject_index):
-        self._hits = [hit for hit in hits if hit.score > 0.0]
+        self._list = [hit for hit in hits if hit.score > 0.0]
         self._subject_index = subject_index
         self._vector = None
 
@@ -179,26 +170,25 @@ class ListSuggestionResult(SuggestionResult):
                                   score=hit.score))
         return ListSuggestionResult(subject_suggestions, subject_index)
 
-    def _hits_to_vector(self):
+    def _list_to_vector(self):
         vector = np.zeros(len(self._subject_index), dtype=np.float32)
-        for hit in self._hits:
+        for hit in self._list:
             subject_id = self._subject_index.by_uri(hit.uri)
             if subject_id is not None:
                 vector[subject_id] = hit.score
         return vector
 
-    @property
-    def hits(self):
-        return self._hits
+    def as_list(self, subject_index):
+        return self._list
 
     @property
     def vector(self):
         if self._vector is None:
-            self._vector = self._hits_to_vector()
+            self._vector = self._list_to_vector()
         return self._vector
 
     def filter(self, subject_index, limit=None, threshold=0.0):
-        hits = sorted(self.hits, key=lambda hit: hit.score, reverse=True)
+        hits = sorted(self._list, key=lambda hit: hit.score, reverse=True)
         filtered_hits = [hit for hit in hits
                          if hit.score >= threshold and hit.score > 0.0 and
                          hit.label is not None]
@@ -207,4 +197,4 @@ class ListSuggestionResult(SuggestionResult):
         return ListSuggestionResult(filtered_hits, subject_index)
 
     def __len__(self):
-        return len(self._hits)
+        return len(self._list)

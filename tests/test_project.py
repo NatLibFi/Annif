@@ -170,9 +170,10 @@ def test_project_learn(registry, tmpdir):
     project.learn(docdir)
     result = project.suggest('this is some text')
     assert len(result) == 1
-    assert result[0].uri == 'http://example.org/key1'
-    assert result[0].label == 'key1'
-    assert result[0].score == 1.0
+    hits = result.as_list(project.subjects)
+    assert hits[0].uri == 'http://example.org/key1'
+    assert hits[0].label == 'key1'
+    assert hits[0].score == 1.0
 
 
 def test_project_learn_not_supported(registry, tmpdir):
@@ -207,18 +208,20 @@ def test_project_suggest(registry):
     project = registry.get_project('dummy-en')
     result = project.suggest('this is some text')
     assert len(result) == 1
-    assert result[0].uri == 'http://example.org/dummy'
-    assert result[0].label == 'dummy'
-    assert result[0].score == 1.0
+    hits = result.as_list(project.subjects)
+    assert hits[0].uri == 'http://example.org/dummy'
+    assert hits[0].label == 'dummy'
+    assert hits[0].score == 1.0
 
 
 def test_project_suggest_combine(registry):
     project = registry.get_project('dummydummy')
     result = project.suggest('this is some text')
     assert len(result) == 1
-    assert result[0].uri == 'http://example.org/dummy'
-    assert result[0].label == 'dummy'
-    assert result[0].score == 1.0
+    hits = result.as_list(project.subjects)
+    assert hits[0].uri == 'http://example.org/dummy'
+    assert hits[0].label == 'dummy'
+    assert hits[0].score == 1.0
 
 
 def test_project_train_state_not_available(registry, caplog):

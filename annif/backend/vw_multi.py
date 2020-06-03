@@ -143,7 +143,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
             result = proj.suggest(text)
             features = [
                 '{}:{}'.format(self._cleanup_text(hit.uri), hit.score)
-                for hit in result.hits]
+                for hit in result.as_list(self.project.subjects)]
             return ' '.join(features)
 
     def _inputs_to_exampletext(self, text):

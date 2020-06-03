@@ -26,10 +26,11 @@ def test_http_suggest(app_project):
             project=app_project)
         result = http.suggest('this is some text')
         assert len(result) == 1
-        assert result[0].uri == 'http://example.org/dummy'
-        assert result[0].label == 'dummy'
-        assert result[0].score == 1.0
-        assert result[0].notation is None
+        hits = result.as_list(app_project.subjects)
+        assert hits[0].uri == 'http://example.org/dummy'
+        assert hits[0].label == 'dummy'
+        assert hits[0].score == 1.0
+        assert hits[0].notation is None
 
 
 def test_http_suggest_with_results(app_project):
@@ -54,10 +55,11 @@ def test_http_suggest_with_results(app_project):
 
         result = http.suggest('this is some text')
         assert len(result) == 1
-        assert result[0].uri == 'http://example.org/dummy-with-notation'
-        assert result[0].label == 'dummy'
-        assert result[0].score == 1.0
-        assert result[0].notation == '42.42'
+        hits = result.as_list(app_project.subjects)
+        assert hits[0].uri == 'http://example.org/dummy-with-notation'
+        assert hits[0].label == 'dummy'
+        assert hits[0].score == 1.0
+        assert hits[0].notation == '42.42'
 
 
 def test_http_suggest_zero_score(project):

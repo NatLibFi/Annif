@@ -66,8 +66,10 @@ def test_hitfilter_list_suggestion_results_with_deprecated_subjects(
     filtered_suggestions = SuggestionFilter(subject_index)(suggestions)
     assert isinstance(filtered_suggestions, SuggestionResult)
     assert len(filtered_suggestions) == 2
-    assert filtered_suggestions[0] == suggestions[0]
-    assert filtered_suggestions[1] == suggestions[1]
+    assert filtered_suggestions.as_list(
+        subject_index)[0] == suggestions.as_list(subject_index)[0]
+    assert filtered_suggestions.as_list(
+        subject_index)[1] == suggestions.as_list(subject_index)[1]
 
 
 def test_hitfilter_vector_suggestion_results_with_deprecated_subjects(
@@ -85,20 +87,20 @@ def test_hitfilter_vector_suggestion_results_with_deprecated_subjects(
         label=None,
         notation=None,
         score=1.0)
-    assert deprecated in list(suggestions.hits)
-    assert deprecated not in list(filtered_suggestions.hits)
+    assert deprecated in suggestions.as_list(subject_index)
+    assert deprecated not in filtered_suggestions.as_list(subject_index)
 
 
 def test_lazy_suggestion_result(subject_index):
-    lar = LazySuggestionResult(lambda: generate_suggestions(10, subject_index))
-    assert lar._object is None
-    assert len(lar) == 10
-    assert len(lar.hits) == 10
-    assert lar.vector is not None
-    assert lar[0] is not None
-    filtered = lar.filter(subject_index, limit=5, threshold=0.0)
+    lsr = LazySuggestionResult(lambda: generate_suggestions(10, subject_index))
+    assert lsr._object is None
+    assert len(lsr) == 10
+    assert len(lsr.as_list(subject_index)) == 10
+    assert lsr.vector is not None
+    assert lsr.as_list(subject_index)[0] is not None
+    filtered = lsr.filter(subject_index, limit=5, threshold=0.0)
     assert len(filtered) == 5
-    assert lar._object is not None
+    assert lsr._object is not None
 
 
 def test_list_suggestions_vector(document_corpus, subject_index):
