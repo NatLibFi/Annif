@@ -157,11 +157,11 @@ class AnnifProject(DatadirMixin):
     def _get_info(self, key):
         try:
             be = self.backend
-        except ConfigurationException as err:
+            if be is not None:
+                return getattr(be, key)
+        except AnnifException as err:
             logger.warning(err.format_message())
             return None
-        if be is not None:
-            return getattr(be, key)
 
     @property
     def is_trained(self):
