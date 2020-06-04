@@ -12,7 +12,7 @@
   <script src="static/js/annif.js"></script>
   <style>
     header { background-color: white; color: #343260; }
-    h1 { color: #343260 }
+    h1 { color: #343260; font-size: 2rem; padding: 10px 0; }
     body { background-color: white; color: #343260; font-family: Jost, sans-serif; }
     #robot { max-width: 15rem; }
     #video h2 { font-size: 1rem; font-weight: bold; }
@@ -44,14 +44,13 @@
 
 <header class="mb-4 mt-0">
   <div class="container">
-
     <div class="row">
       <div class="col-md-2">
-        <h1><img src="static/img/annif-RGB.svg" class="img-fluid" alt="Annif"></h1>
+        <img src="static/img/annif-RGB.svg" class="img-fluid" alt="Annif">
       </div>
       <div class="col-md my-auto">
         <div class="row float-right">
-        <p>Tool for automated subject indexing and classification</p>
+          <p>Tool for automated subject indexing and classification</p>
         </div>
       </div>
     </div>
@@ -74,7 +73,8 @@
   </div>
 
   <div class="row justify-content-center">
-    <img src="static/img/workflow-draft.svg" class="img-fluid" alt="workflow">  <!TODO replace draft with final >
+   <img src="static/img/workflow-draft.png" class="img-fluid" alt="workflow">  <!TODO replace draft with final >
+   
   </div>
 
   <div class="row justify-content-end">
@@ -94,10 +94,16 @@
 
     </div>
   </div>
-    <h2>Try Annif!</h2>
+ 
+<div class="row mb-5"> 
+<div class="col-md-8 ml-2">
+  <h2>Try Annif!</h2>
+</div>  
+</div>
   
-  <div class="row mb-5">
-    <div class="col-md-8">
+  <div class="row mb-5 ml-auto">
+    
+    <div class="col-md-8 mr-auto">
       <div class="form-group">
         <label for="text">Text to analyze:</label><br>
         <textarea class="form-control" rows="15" name="text" id="text"></textarea>
