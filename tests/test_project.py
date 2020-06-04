@@ -1,5 +1,6 @@
 """Unit tests for projects in Annif"""
 
+import logging
 import pytest
 from datetime import datetime, timedelta
 import annif.project
@@ -218,6 +219,19 @@ def test_project_suggest_combine(registry):
     assert result[0].uri == 'http://example.org/dummy'
     assert result[0].label == 'dummy'
     assert result[0].score == 1.0
+
+
+def test_project_train_state_not_available(registry, caplog):
+    project = registry.get_project('dummydummy')
+    project.backend.is_trained = None
+    with caplog.at_level(logging.WARNING):
+        result = project.suggest('this is some text')
+    assert project.is_trained is None
+    assert len(result) == 1
+    assert result[0].uri == 'http://example.org/dummy'
+    assert result[0].label == 'dummy'
+    assert result[0].score == 1.0
+    assert 'Could not get train state information' in caplog.text
 
 
 def test_project_not_initialized(registry):
