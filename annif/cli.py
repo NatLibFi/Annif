@@ -4,6 +4,7 @@ operations and printing the results to console."""
 
 import collections
 import multiprocessing
+import multiprocessing.dummy
 import os.path
 import re
 import sys
@@ -336,10 +337,17 @@ def run_eval(
 
     if jobs < 1:
         jobs = None
+        pool_class = multiprocessing.Pool
+    elif jobs == 1:
+        # use the dummy wrapper around threading to avoid subprocess overhead
+        pool_class = multiprocessing.dummy.Pool
+    else:
+        pool_class = multiprocessing.Pool
+
     map = annif.project.ProjectSuggestMap(
         project, backend_params, limit, threshold)
 
-    with multiprocessing.Pool(jobs) as pool:
+    with pool_class(jobs) as pool:
         for hits, uris, labels in pool.imap_unordered(
                 map.suggest, docs.documents):
             eval_batch.evaluate(hits,
