@@ -92,9 +92,9 @@ class VectorSuggestionResult(SuggestionResult):
     def __init__(self, vector):
         self._vector = vector.astype(np.float32)
         self._subject_order = None
-        self._list = None
+        self._lsr = None
 
-    def _vector_to_list(self, subject_index):
+    def _vector_to_list_suggestion(self, subject_index):
         hits = []
         for subject_id in self.subject_order:
             score = self._vector[subject_id]
@@ -107,7 +107,7 @@ class VectorSuggestionResult(SuggestionResult):
                     label=subject[1],
                     notation=subject[2],
                     score=float(score)))
-        return ListSuggestionResult(hits).as_list(subject_index)
+        return ListSuggestionResult(hits)
 
     @property
     def subject_order(self):
@@ -116,9 +116,9 @@ class VectorSuggestionResult(SuggestionResult):
         return self._subject_order
 
     def as_list(self, subject_index):
-        if self._list is None:
-            self._list = self._vector_to_list(subject_index)
-        return self._list
+        if self._lsr is None:
+            self._lsr = self._vector_to_list_suggestion(subject_index)
+        return self._lsr.as_list(subject_index)
 
     def as_vector(self, subject_index):
         return self._vector
@@ -136,7 +136,8 @@ class VectorSuggestionResult(SuggestionResult):
             deprecated_mask = np.ones_like(self._vector, dtype=np.bool)
             deprecated_mask[deprecated_ids] = False
             mask = mask & deprecated_mask
-        return VectorSuggestionResult(self._vector * mask)
+        vsr = VectorSuggestionResult(self._vector * mask)
+        return ListSuggestionResult(vsr.as_list(subject_index))
 
     def __len__(self):
         return (self._vector > 0.0).sum()
