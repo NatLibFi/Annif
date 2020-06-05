@@ -298,9 +298,19 @@ def run_index(project_id, directory, suffix, force,
         lazy=True),
     help="""Specify file in order to write non-aggregated results per subject.
     File directory must exist, existing file will be overwritten.""")
+@click.option('--jobs',
+              default=0,
+              help='Number of parallel jobs (0 means all CPUs)')
 @backend_param_option
 @common_options
-def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
+def run_eval(
+        project_id,
+        paths,
+        limit,
+        threshold,
+        results_file,
+        jobs,
+        backend_param):
     """
     Analyze documents and evaluate the result.
 
@@ -324,9 +334,12 @@ def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
                 "cannot open results-file for writing: " + str(e))
     docs = open_documents(paths)
 
+    if jobs < 1:
+        jobs = None
     map = annif.project.ProjectSuggestMap(
         project, backend_params, limit, threshold)
-    with multiprocessing.Pool() as pool:
+
+    with multiprocessing.Pool(jobs) as pool:
         for hits, uris, labels in pool.imap_unordered(
                 map.suggest, docs.documents):
             eval_batch.evaluate(hits,
