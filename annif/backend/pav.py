@@ -69,8 +69,7 @@ class PAVBackend(ensemble.EnsembleBackend):
                     notation=hit.notation,
                     score=score))
         pav_result.sort(key=lambda hit: hit.score, reverse=True)
-        return annif.suggestion.ListSuggestionResult(
-            pav_result, source_project.subjects)
+        return annif.suggestion.ListSuggestionResult(pav_result)
 
     @staticmethod
     def _suggest_train_corpus(source_project, corpus):

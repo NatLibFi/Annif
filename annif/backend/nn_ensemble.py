@@ -129,7 +129,7 @@ class NNEnsembleBackend(
                                 dtype=np.float32)
         results = self._model.predict(
             np.expand_dims(score_vector.transpose(), 0))
-        return VectorSuggestionResult(results[0], self.project.subjects)
+        return VectorSuggestionResult(results[0])
 
     def _create_model(self, sources):
         self.info("creating NN ensemble model")

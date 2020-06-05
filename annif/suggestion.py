@@ -89,9 +89,8 @@ class LazySuggestionResult(SuggestionResult):
 class VectorSuggestionResult(SuggestionResult):
     """SuggestionResult implementation based primarily on NumPy vectors."""
 
-    def __init__(self, vector, subject_index):
+    def __init__(self, vector):
         self._vector = vector.astype(np.float32)
-        self._subject_index = subject_index
         self._subject_order = None
         self._list = None
 
@@ -108,8 +107,7 @@ class VectorSuggestionResult(SuggestionResult):
                     label=subject[1],
                     notation=subject[2],
                     score=float(score)))
-        return ListSuggestionResult(hits,
-                                    subject_index).as_list(subject_index)
+        return ListSuggestionResult(hits).as_list(subject_index)
 
     @property
     def subject_order(self):
@@ -138,7 +136,7 @@ class VectorSuggestionResult(SuggestionResult):
             deprecated_mask = np.ones_like(self._vector, dtype=np.bool)
             deprecated_mask[deprecated_ids] = False
             mask = mask & deprecated_mask
-        return VectorSuggestionResult(self._vector * mask, subject_index)
+        return VectorSuggestionResult(self._vector * mask)
 
     def __len__(self):
         return (self._vector > 0.0).sum()
@@ -147,9 +145,8 @@ class VectorSuggestionResult(SuggestionResult):
 class ListSuggestionResult(SuggestionResult):
     """SuggestionResult implementation based primarily on lists of hits."""
 
-    def __init__(self, hits, subject_index):
+    def __init__(self, hits):
         self._list = [hit for hit in hits if hit.score > 0.0]
-        self._subject_index = subject_index
         self._vector = None
 
     @classmethod
@@ -165,7 +162,7 @@ class ListSuggestionResult(SuggestionResult):
                                   label=subject[1],
                                   notation=subject[2],
                                   score=hit.score))
-        return ListSuggestionResult(subject_suggestions, subject_index)
+        return ListSuggestionResult(subject_suggestions)
 
     def _list_to_vector(self, subject_index):
         vector = np.zeros(len(subject_index), dtype=np.float32)
@@ -190,7 +187,7 @@ class ListSuggestionResult(SuggestionResult):
                          hit.label is not None]
         if limit is not None:
             filtered_hits = filtered_hits[:limit]
-        return ListSuggestionResult(filtered_hits, subject_index)
+        return ListSuggestionResult(filtered_hits)
 
     def __len__(self):
         return len(self._list)

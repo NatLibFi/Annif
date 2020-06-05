@@ -209,11 +209,9 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
             result = self._model.predict(example)
             results.append(self._convert_result(result))
         if not results:  # empty result
-            return ListSuggestionResult(
-                hits=[], subject_index=self.project.subjects)
+            return ListSuggestionResult([])
         return VectorSuggestionResult(
-            np.array(results, dtype=np.float32).mean(axis=0),
-            self.project.subjects)
+            np.array(results, dtype=np.float32).mean(axis=0))
 
     @staticmethod
     def _write_train_file(examples, filename):

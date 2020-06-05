@@ -49,13 +49,13 @@ class HTTPBackend(backend.AnnifBackend):
             req.raise_for_status()
         except requests.exceptions.RequestException as err:
             self.warning("HTTP request failed: {}".format(err))
-            return ListSuggestionResult([], self.project.subjects)
+            return ListSuggestionResult([])
 
         try:
             response = req.json()
         except ValueError as err:
             self.warning("JSON decode failed: {}".format(err))
-            return ListSuggestionResult([], self.project.subjects)
+            return ListSuggestionResult([])
 
         if 'results' in response:
             results = response['results']
@@ -71,7 +71,7 @@ class HTTPBackend(backend.AnnifBackend):
                 for hit in results if hit['score'] > 0.0]
         except (TypeError, ValueError) as err:
             self.warning("Problem interpreting JSON data: {}".format(err))
-            return ListSuggestionResult([], self.project.subjects)
+            return ListSuggestionResult([])
 
         return ListSuggestionResult.create_from_index(subject_suggestions,
                                                       self.project.subjects)

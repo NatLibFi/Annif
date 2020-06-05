@@ -14,7 +14,7 @@ def generate_suggestions(n, subject_index):
                                              label='hit {}'.format(i),
                                              notation=None,
                                              score=1.0 / (i + 1)))
-    return ListSuggestionResult(suggestions, subject_index)
+    return ListSuggestionResult(suggestions)
 
 
 def test_hitfilter_limit(subject_index):
@@ -35,8 +35,7 @@ def test_hitfilter_threshold(subject_index):
 def test_hitfilter_zero_score(subject_index):
     origsuggestions = ListSuggestionResult(
         [SubjectSuggestion(uri='uri', label='label', notation=None,
-                           score=0.0)],
-        subject_index)
+                           score=0.0)])
     suggestions = SuggestionFilter(subject_index)(origsuggestions)
     assert isinstance(suggestions, SuggestionResult)
     assert len(suggestions) == 0
@@ -61,8 +60,7 @@ def test_hitfilter_list_suggestion_results_with_deprecated_subjects(
                 uri='http://example.org/deprecated',
                 label=None,
                 notation=None,
-                score=0.5)],
-        subject_index)
+                score=0.5)])
     filtered_suggestions = SuggestionFilter(subject_index)(suggestions)
     assert isinstance(filtered_suggestions, SuggestionResult)
     assert len(filtered_suggestions) == 2
@@ -76,7 +74,7 @@ def test_hitfilter_vector_suggestion_results_with_deprecated_subjects(
         subject_index):
     subject_index.append('http://example.org/deprecated', None, None)
     vector = np.ones(len(subject_index))
-    suggestions = VectorSuggestionResult(vector, subject_index)
+    suggestions = VectorSuggestionResult(vector)
     filtered_suggestions = SuggestionFilter(subject_index)(suggestions)
 
     assert len(suggestions) == len(filtered_suggestions) \
@@ -115,8 +113,7 @@ def test_list_suggestions_vector(document_corpus, subject_index):
                 uri='http://www.yso.fi/onto/yso/p6479',
                 label='viikingit',
                 notation=None,
-                score=0.5)],
-        subject_index)
+                score=0.5)])
     vector = suggestions.as_vector(subject_index)
     assert isinstance(vector, np.ndarray)
     assert len(vector) == len(subject_index)
@@ -137,6 +134,5 @@ def test_list_suggestions_vector_notfound(document_corpus, subject_index):
                 uri='http://example.com/notfound',
                 label='not found',
                 notation=None,
-                score=1.0)],
-        subject_index)
+                score=1.0)])
     assert suggestions.as_vector(subject_index).sum() == 0
