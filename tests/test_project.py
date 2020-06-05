@@ -231,9 +231,10 @@ def test_project_train_state_not_available(registry, caplog):
         result = project.suggest('this is some text')
     assert project.is_trained is None
     assert len(result) == 1
-    assert result[0].uri == 'http://example.org/dummy'
-    assert result[0].label == 'dummy'
-    assert result[0].score == 1.0
+    hits = result.as_list(project.subjects)
+    assert hits[0].uri == 'http://example.org/dummy'
+    assert hits[0].label == 'dummy'
+    assert hits[0].score == 1.0
     assert 'Could not get train state information' in caplog.text
 
 

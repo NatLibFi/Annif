@@ -130,19 +130,19 @@ def test_pav_train_params(tmpdir, app_project, caplog):
     assert parameters_spec in caplog.text
 
 
-def test_pav_is_trained(project):
+def test_pav_is_trained(app_project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
         config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
-        project=project)
+        project=app_project)
     assert pav.is_trained
 
 
-def test_pav_modification_time(project):
+def test_pav_modification_time(app_project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
         config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
-        project=project)
+        project=app_project)
     assert datetime.now() - pav.modification_time < timedelta(1)
