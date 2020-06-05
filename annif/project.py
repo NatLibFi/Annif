@@ -15,7 +15,7 @@ import annif.util
 import annif.vocab
 from annif.datadir import DatadirMixin
 from annif.exception import AnnifException, ConfigurationException, \
-    NotSupportedException
+    NotSupportedException, NotInitializedException
 
 logger = annif.logger
 
@@ -154,9 +154,31 @@ class AnnifProject(DatadirMixin):
     def subjects(self):
         return self.vocab.subjects
 
+    def _get_info(self, key):
+        try:
+            be = self.backend
+            if be is not None:
+                return getattr(be, key)
+        except AnnifException as err:
+            logger.warning(err.format_message())
+            return None
+
+    @property
+    def is_trained(self):
+        return self._get_info('is_trained')
+
+    @property
+    def modification_time(self):
+        return self._get_info('modification_time')
+
     def suggest(self, text, backend_params=None):
         """Suggest subjects the given text by passing it to the backend. Returns a
         list of SubjectSuggestion objects ordered by decreasing score."""
+        if not self.is_trained:
+            if self.is_trained is None:
+                logger.warn('Could not get train state information.')
+            else:
+                raise NotInitializedException('Project is not trained.')
         logger.debug('Suggesting subjects for text "%s..." (len=%d)',
                      text[:20], len(text))
         hits = self._suggest_with_backend(text, backend_params)
@@ -191,7 +213,9 @@ class AnnifProject(DatadirMixin):
         return {'project_id': self.project_id,
                 'name': self.name,
                 'language': self.language,
-                'backend': {'backend_id': self.config.get('backend')}
+                'backend': {'backend_id': self.config.get('backend')},
+                'is_trained': self.is_trained,
+                'modification_time': self.modification_time
                 }
 
     def remove_model_data(self):

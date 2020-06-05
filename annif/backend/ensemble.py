@@ -11,6 +11,22 @@ class EnsembleBackend(backend.AnnifBackend):
     """Ensemble backend that combines results from multiple projects"""
     name = "ensemble"
 
+    @property
+    def is_trained(self):
+        sources_trained = self._get_sources_attribute('is_trained')
+        return all(sources_trained)
+
+    @property
+    def modification_time(self):
+        mtimes = self._get_sources_attribute('modification_time')
+        return max(filter(None, mtimes), default=None)
+
+    def _get_sources_attribute(self, attr):
+        params = self._get_backend_params(None)
+        sources = annif.util.parse_sources(params['sources'])
+        return [getattr(self.project.registry.get_project(project_id), attr)
+                for project_id, _ in sources]
+
     def _normalize_hits(self, hits, source_project):
         """Hook for processing hits from backends. Intended to be overridden
         by subclasses."""

@@ -1,6 +1,8 @@
 """Unit tests for projects in Annif"""
 
+import logging
 import pytest
+from datetime import datetime, timedelta
 import annif.project
 import annif.backend.dummy
 from annif.exception import ConfigurationException, NotSupportedException
@@ -55,7 +57,9 @@ def test_get_project_fi_dump(registry):
         'language': 'fi',
         'backend': {
             'backend_id': 'dummy',
-        }
+        },
+        'is_trained': True,
+        'modification_time': None,
     }
 
 
@@ -126,11 +130,26 @@ def test_project_load_vocabulary_tfidf(registry, vocabulary, testdatadir):
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
 
 
+def test_project_tfidf_is_not_trained(registry):
+    project = registry.get_project('tfidf-fi')
+    assert not project.is_trained
+
+
 def test_project_train_tfidf(registry, document_corpus, testdatadir):
     project = registry.get_project('tfidf-fi')
     project.train(document_corpus)
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').exists()
     assert testdatadir.join('projects/tfidf-fi/tfidf-index').size() > 0
+
+
+def test_project_tfidf_is_trained(registry):
+    project = registry.get_project('tfidf-fi')
+    assert project.is_trained
+
+
+def test_project_tfidf_modification_time(registry):
+    project = registry.get_project('tfidf-fi')
+    assert datetime.now() - project.modification_time < timedelta(1)
 
 
 def test_project_train_tfidf_nodocuments(registry, empty_corpus):
@@ -200,6 +219,19 @@ def test_project_suggest_combine(registry):
     assert result[0].uri == 'http://example.org/dummy'
     assert result[0].label == 'dummy'
     assert result[0].score == 1.0
+
+
+def test_project_train_state_not_available(registry, caplog):
+    project = registry.get_project('dummydummy')
+    project.backend.is_trained = None
+    with caplog.at_level(logging.WARNING):
+        result = project.suggest('this is some text')
+    assert project.is_trained is None
+    assert len(result) == 1
+    assert result[0].uri == 'http://example.org/dummy'
+    assert result[0].label == 'dummy'
+    assert result[0].score == 1.0
+    assert 'Could not get train state information' in caplog.text
 
 
 def test_project_not_initialized(registry):

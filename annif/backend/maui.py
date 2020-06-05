@@ -6,6 +6,7 @@ import os.path
 import json
 import requests
 import requests.exceptions
+from datetime import datetime
 from annif.exception import ConfigurationException
 from annif.exception import NotSupportedException
 from annif.exception import OperationFailedException
@@ -17,6 +18,35 @@ class MauiBackend(backend.AnnifBackend):
     name = "maui"
 
     TRAIN_FILE = 'maui-train.jsonl'
+
+    @property
+    def is_trained(self):
+        return self._get_project_info('is_trained')
+
+    @property
+    def modification_time(self):
+        mtime = self._get_project_info('end_time')
+        if mtime is not None:
+            return datetime.strptime(mtime, '%Y-%m-%dT%H:%M:%S.%fZ')
+
+    def _get_project_info(self, key):
+        params = self._get_backend_params(None)
+        try:
+            resp = requests.get(self.tagger_url(params) + '/train')
+            resp.raise_for_status()
+        except requests.exceptions.RequestException as err:
+            msg = f"HTTP request failed: {err}"
+            raise OperationFailedException(msg) from err
+        try:
+            response = resp.json()
+        except ValueError as err:
+            msg = f"JSON decode failed: {err}"
+            raise OperationFailedException(msg) from err
+
+        if key in response:
+            return response[key]
+        else:
+            return None
 
     def endpoint(self, params):
         try:

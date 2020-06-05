@@ -2,6 +2,7 @@
 
 import logging
 import pytest
+from datetime import datetime, timedelta
 import annif.backend
 import annif.corpus
 from annif.exception import NotSupportedException
@@ -20,6 +21,15 @@ def test_pav_default_params(document_corpus, project):
     actual_params = pav.params
     for param, val in expected_default_params.items():
         assert param in actual_params and actual_params[param] == val
+
+
+def test_pav_is_not_trained(project):
+    pav_type = annif.backend.get_backend("pav")
+    pav = pav_type(
+        backend_id='pav',
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        project=project)
+    assert not pav.is_trained
 
 
 def test_pav_train(datadir, tmpdir, project):
@@ -116,3 +126,21 @@ def test_pav_train_params(tmpdir, project, caplog):
         pav.train(document_corpus, params)
     parameters_spec = 'creating PAV model for source dummy-fi, min_docs=5'
     assert parameters_spec in caplog.text
+
+
+def test_pav_is_trained(project):
+    pav_type = annif.backend.get_backend("pav")
+    pav = pav_type(
+        backend_id='pav',
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        project=project)
+    assert pav.is_trained
+
+
+def test_pav_modification_time(project):
+    pav_type = annif.backend.get_backend("pav")
+    pav = pav_type(
+        backend_id='pav',
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        project=project)
+    assert datetime.now() - pav.modification_time < timedelta(1)

@@ -1,8 +1,10 @@
 """Unit tests for the HTTP backend in Annif"""
 
+import pytest
 import requests.exceptions
 import unittest.mock
 import annif.backend.http
+from annif.exception import OperationFailedException
 
 
 def test_http_suggest(app_project):
@@ -130,3 +132,73 @@ def test_http_suggest_unexpected_json(project):
             project=project)
         result = http.suggest('this is some text')
         assert len(result) == 0
+
+
+def test_http_is_trained(project):
+    with unittest.mock.patch('requests.get') as mock_request:
+        # create a mock response whose .json() method returns the dict that we
+        # define here
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {'is_trained': True}
+        mock_request.return_value = mock_response
+
+        http_type = annif.backend.get_backend("http")
+        http = http_type(
+            backend_id='http',
+            config_params={
+                'endpoint': 'http://api.example.org/analyze',
+                'project': 'dummy'},
+            project=project)
+        assert http.is_trained
+
+
+def test_http_modification_time(project):
+    with unittest.mock.patch('requests.get') as mock_request:
+        # create a mock response whose .json() method returns the dict that we
+        # define here
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {'modification_time':
+                                           '1970-1-1 00:00:00'}
+        mock_request.return_value = mock_response
+
+        http_type = annif.backend.get_backend("http")
+        http = http_type(
+            backend_id='http',
+            config_params={
+                'endpoint': 'http://api.example.org/analyze',
+                'project': 'dummy'},
+            project=project)
+        assert http.modification_time == '1970-1-1 00:00:00'
+
+
+def test_http_get_project_info_http_error(project):
+    with unittest.mock.patch('requests.get') as mock_request:
+        mock_request.side_effect = requests.exceptions.RequestException(
+            'failed')
+
+        http_type = annif.backend.get_backend("http")
+        http = http_type(
+            backend_id='http',
+            config_params={
+                'endpoint': 'http://api.example.org/analyze',
+                'project': 'dummy'},
+            project=project)
+        with pytest.raises(OperationFailedException):
+            http._get_project_info('is_trained')
+
+
+def test_http_get_project_info_json_decode_error(project):
+    with unittest.mock.patch('requests.get') as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.side_effect = ValueError("JSON decode failed")
+        mock_request.return_value = mock_response
+
+        http_type = annif.backend.get_backend("http")
+        http = http_type(
+            backend_id='http',
+            config_params={
+                'endpoint': 'http://api.example.org/analyze',
+                'project': 'dummy'},
+            project=project)
+        with pytest.raises(OperationFailedException):
+            http._get_project_info('is_trained')

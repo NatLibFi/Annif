@@ -117,17 +117,20 @@ def backend_param_option(f):
 
 @cli.command('list-projects')
 @common_options
+@click_log.simple_verbosity_option(logger, default='ERROR')
 def run_list_projects():
     """
     List available projects.
     """
 
-    template = "{0: <25}{1: <45}{2: <8}"
-    header = template.format("Project ID", "Project Name", "Language")
+    template = "{0: <25}{1: <45}{2: <10}{3: <7}"
+    header = template.format(
+        "Project ID", "Project Name", "Language", "Trained")
     click.echo(header)
     click.echo("-" * len(header))
     for proj in annif.project.get_projects(min_access=Access.private).values():
-        click.echo(template.format(proj.project_id, proj.name, proj.language))
+        click.echo(template.format(
+            proj.project_id, proj.name, proj.language, str(proj.is_trained)))
 
 
 @cli.command('show-project')
@@ -139,11 +142,12 @@ def run_show_project(project_id):
     """
 
     proj = get_project(project_id)
-    template = "{0:<20}{1}"
-    click.echo(template.format('Project ID:', proj.project_id))
-    click.echo(template.format('Project Name:', proj.name))
-    click.echo(template.format('Language:', proj.language))
-    click.echo(template.format('Access:', proj.access.name))
+    click.echo(f'Project ID:        {proj.project_id}')
+    click.echo(f'Project Name:      {proj.name}')
+    click.echo(f'Language:          {proj.language}')
+    click.echo(f'Access:            {proj.access.name}')
+    click.echo(f'Trained:           {proj.is_trained}')
+    click.echo(f'Modification time: {proj.modification_time}')
 
 
 @cli.command('clear')

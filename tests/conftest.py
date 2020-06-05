@@ -104,6 +104,8 @@ def project(subject_index, datadir, registry):
 @pytest.fixture(scope='module')
 def app_project(app):
     with app.app_context():
+        dir = py.path.local(app.config['DATADIR'])
+        shutil.rmtree(os.path.join(str(dir), 'projects'), ignore_errors=True)
         return annif.project.get_project('dummy-en')
 
 

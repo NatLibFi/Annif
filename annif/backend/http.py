@@ -5,11 +5,39 @@ and returns the results"""
 import requests
 import requests.exceptions
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
+from annif.exception import OperationFailedException
 from . import backend
 
 
 class HTTPBackend(backend.AnnifBackend):
     name = "http"
+
+    @property
+    def is_trained(self):
+        return self._get_project_info('is_trained')
+
+    @property
+    def modification_time(self):
+        return self._get_project_info('modification_time')
+
+    def _get_project_info(self, key):
+        params = self._get_backend_params(None)
+        try:
+            req = requests.get(params['endpoint'].replace('/suggest', ''))
+            req.raise_for_status()
+        except requests.exceptions.RequestException as err:
+            msg = f"HTTP request failed: {err}"
+            raise OperationFailedException(msg) from err
+        try:
+            response = req.json()
+        except ValueError as err:
+            msg = f"JSON decode failed: {err}"
+            raise OperationFailedException(msg) from err
+
+        if key in response:
+            return response[key]
+        else:
+            return None
 
     def _suggest(self, text, params):
         data = {'text': text}

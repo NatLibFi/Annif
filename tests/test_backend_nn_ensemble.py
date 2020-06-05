@@ -3,10 +3,10 @@
 import time
 import pytest
 import py.path
+from datetime import datetime, timedelta
 import annif.backend
 import annif.corpus
 from annif.exception import NotInitializedException
-from annif.exception import NotSupportedException
 
 pytest.importorskip("annif.backend.nn_ensemble")
 
@@ -25,6 +25,15 @@ def test_nn_ensemble_suggest_no_model(project):
 
     with pytest.raises(NotInitializedException):
         nn_ensemble.suggest("example text")
+
+
+def test_nn_ensemble_is_not_trained(app_project):
+    nn_ensemble_type = annif.backend.get_backend('nn_ensemble')
+    nn_ensemble = nn_ensemble_type(
+        backend_id='nn_ensemble',
+        config_params={'sources': 'dummy-en'},
+        project=app_project)
+    assert not nn_ensemble.is_trained
 
 
 def test_nn_ensemble_train_and_learn(registry, tmpdir):
@@ -103,6 +112,24 @@ def test_nn_ensemble_train_and_learn_params(registry, tmpdir, capfd):
     nn_ensemble.learn(document_corpus, learn_params)
     out, _ = capfd.readouterr()
     assert 'Epoch 2/2' in out
+
+
+def test_nn_ensemble_is_trained(app_project):
+    nn_ensemble_type = annif.backend.get_backend('nn_ensemble')
+    nn_ensemble = nn_ensemble_type(
+        backend_id='nn_ensemble',
+        config_params={'sources': 'dummy-en'},
+        project=app_project)
+    assert nn_ensemble.is_trained
+
+
+def test_nn_ensemble_modification_time(app_project):
+    nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
+    nn_ensemble = nn_ensemble_type(
+        backend_id='nn_ensemble',
+        config_params={'sources': 'dummy-en'},
+        project=app_project)
+    assert datetime.now() - nn_ensemble.modification_time < timedelta(1)
 
 
 def test_nn_ensemble_initialize(app_project):
