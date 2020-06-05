@@ -321,3 +321,23 @@ def get_project(project_id, min_access=Access.private):
         return projects[project_id]
     except KeyError:
         raise ValueError("No such project {}".format(project_id))
+
+
+class ProjectSuggestMap:
+    """A utility class that can be used to wrap a project and provide a
+    mapping method that converts Document objects to suggestions. Intended
+    to be used with the multiprocessing module."""
+
+    def __init__(self, project, backend_params, limit, threshold):
+        self.project_id = project.project_id
+        self.registry = project.registry
+        self.backend_params = backend_params
+        self.limit = limit
+        self.threshold = threshold
+
+    def suggest(self, doc):
+        project = self.registry.get_project(self.project_id)
+        hits = project.suggest(doc.text, self.backend_params)
+        filtered_hits = hits.filter(
+            project.subjects, self.limit, self.threshold)
+        return (filtered_hits, doc.uris, doc.labels)

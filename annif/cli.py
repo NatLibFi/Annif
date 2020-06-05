@@ -3,6 +3,7 @@ operations and printing the results to console."""
 
 
 import collections
+import multiprocessing
 import os.path
 import re
 import sys
@@ -296,7 +297,7 @@ def run_index(project_id, directory, suffix, force,
         errors='ignore',
         lazy=True),
     help="""Specify file in order to write non-aggregated results per subject.
-    File directory must exists, existing file will be overwritten.""")
+    File directory must exist, existing file will be overwritten.""")
 @backend_param_option
 @common_options
 def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
@@ -311,7 +312,6 @@ def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
 
-    hit_filter = SuggestionFilter(project.subjects, limit, threshold)
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
 
     if results_file:
@@ -323,11 +323,14 @@ def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
             raise NotSupportedException(
                 "cannot open results-file for writing: " + str(e))
     docs = open_documents(paths)
-    for doc in docs.documents:
-        results = project.suggest(doc.text, backend_params)
-        hits = hit_filter(results)
-        eval_batch.evaluate(hits,
-                            annif.corpus.SubjectSet((doc.uris, doc.labels)))
+
+    map = annif.project.ProjectSuggestMap(
+        project, backend_params, limit, threshold)
+    with multiprocessing.Pool() as pool:
+        for hits, uris, labels in pool.imap_unordered(
+                map.suggest, docs.documents):
+            eval_batch.evaluate(hits,
+                                annif.corpus.SubjectSet((uris, labels)))
 
     template = "{0:<30}\t{1}"
     for metric, score in eval_batch.results(results_file=results_file).items():
