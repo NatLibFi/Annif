@@ -33,7 +33,7 @@ def test_pav_is_not_trained(app_project):
     assert not pav.is_trained
 
 
-def test_pav_train(datadir, tmpdir, app_project):
+def test_pav_train(tmpdir, app_project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
