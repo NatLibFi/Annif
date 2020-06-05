@@ -8,7 +8,7 @@ import numpy as np
 SubjectSuggestion = collections.namedtuple(
     'SubjectSuggestion', 'uri label notation score')
 WeightedSuggestion = collections.namedtuple(
-    'WeightedSuggestion', 'hits weight')
+    'WeightedSuggestion', 'hits weight subjects')
 
 
 class SuggestionFilter:
@@ -36,9 +36,8 @@ class SuggestionResult(metaclass=abc.ABCMeta):
         highest scores first."""
         pass  # pragma: no cover
 
-    @property
     @abc.abstractmethod
-    def vector(self):
+    def as_vector(self, subject_index):
         """Return the hits as a one-dimensional score vector
         where the indexes match the given subject index."""
         pass  # pragma: no cover
@@ -74,10 +73,9 @@ class LazySuggestionResult(SuggestionResult):
         self._initialize()
         return self._object.as_list(subject_index)
 
-    @property
-    def vector(self):
+    def as_vector(self, subject_index):
         self._initialize()
-        return self._object.vector
+        return self._object.as_vector(subject_index)
 
     def filter(self, subject_index, limit=None, threshold=0.0):
         self._initialize()
@@ -124,8 +122,7 @@ class VectorSuggestionResult(SuggestionResult):
             self._list = self._vector_to_list(subject_index)
         return self._list
 
-    @property
-    def vector(self):
+    def as_vector(self, subject_index):
         return self._vector
 
     def filter(self, subject_index, limit=None, threshold=0.0):
@@ -170,10 +167,10 @@ class ListSuggestionResult(SuggestionResult):
                                   score=hit.score))
         return ListSuggestionResult(subject_suggestions, subject_index)
 
-    def _list_to_vector(self):
-        vector = np.zeros(len(self._subject_index), dtype=np.float32)
+    def _list_to_vector(self, subject_index):
+        vector = np.zeros(len(subject_index), dtype=np.float32)
         for hit in self._list:
-            subject_id = self._subject_index.by_uri(hit.uri)
+            subject_id = subject_index.by_uri(hit.uri)
             if subject_id is not None:
                 vector[subject_id] = hit.score
         return vector
@@ -181,10 +178,9 @@ class ListSuggestionResult(SuggestionResult):
     def as_list(self, subject_index):
         return self._list
 
-    @property
-    def vector(self):
+    def as_vector(self, subject_index):
         if self._vector is None:
-            self._vector = self._list_to_vector()
+            self._vector = self._list_to_vector(subject_index)
         return self._vector
 
     def filter(self, subject_index, limit=None, threshold=0.0):

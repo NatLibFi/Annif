@@ -43,7 +43,9 @@ class EnsembleBackend(backend.AnnifBackend):
             norm_hits = self._normalize_hits(hits, source_project)
             hits_from_sources.append(
                 annif.suggestion.WeightedSuggestion(
-                    hits=norm_hits, weight=weight))
+                    hits=norm_hits,
+                    weight=weight,
+                    subjects=source_project.subjects))
         return hits_from_sources
 
     def _merge_hits_from_sources(self, hits_from_sources, params):

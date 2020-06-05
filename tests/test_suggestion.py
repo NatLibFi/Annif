@@ -96,7 +96,7 @@ def test_lazy_suggestion_result(subject_index):
     assert lsr._object is None
     assert len(lsr) == 10
     assert len(lsr.as_list(subject_index)) == 10
-    assert lsr.vector is not None
+    assert lsr.as_vector(subject_index) is not None
     assert lsr.as_list(subject_index)[0] is not None
     filtered = lsr.filter(subject_index, limit=5, threshold=0.0)
     assert len(filtered) == 5
@@ -117,10 +117,11 @@ def test_list_suggestions_vector(document_corpus, subject_index):
                 notation=None,
                 score=0.5)],
         subject_index)
-    assert isinstance(suggestions.vector, np.ndarray)
-    assert len(suggestions.vector) == len(subject_index)
-    assert suggestions.vector.sum() == 1.5
-    for subject_id, score in enumerate(suggestions.vector):
+    vector = suggestions.as_vector(subject_index)
+    assert isinstance(vector, np.ndarray)
+    assert len(vector) == len(subject_index)
+    assert vector.sum() == 1.5
+    for subject_id, score in enumerate(vector):
         if subject_index[subject_id][1] == 'sinetit':
             assert score == 1.0
         elif subject_index[subject_id][1] == 'viikingit':
@@ -138,4 +139,4 @@ def test_list_suggestions_vector_notfound(document_corpus, subject_index):
                 notation=None,
                 score=1.0)],
         subject_index)
-    assert suggestions.vector.sum() == 0
+    assert suggestions.as_vector(subject_index).sum() == 0

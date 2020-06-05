@@ -82,8 +82,9 @@ class PAVBackend(ensemble.EnsembleBackend):
         ndocs = 0
         for docid, doc in enumerate(corpus.documents):
             hits = source_project.suggest(doc.text)
-            for cid in np.flatnonzero(hits.vector):
-                data.append(hits.vector[cid])
+            vector = hits.as_vector(source_project.subjects)
+            for cid in np.flatnonzero(vector):
+                data.append(vector[cid])
                 row.append(docid)
                 col.append(cid)
             subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
