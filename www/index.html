@@ -28,25 +28,6 @@
     #discuss-annif { background-image: url('static/img/discuss-annif.svg'); }
   </style>
 
-<!-- Matomo -->
-<script type="text/javascript">
-  var _paq = _paq || [];
-  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-  _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
-  _paq.push(["setCookieDomain", "*.annif.org"]);
-  _paq.push(["setDomains", ["*.annif.org","*.annif.org"]]);
-  _paq.push(['trackPageView']);
-  _paq.push(['enableLinkTracking']);
-  (function() {
-    var u="//analytics.finto.fi/";
-    _paq.push(['setTrackerUrl', u+'piwik.php']);
-    _paq.push(['setSiteId', '8']);
-    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
-  })();
-</script>
-<noscript><p><img src="//analytics.finto.fi/piwik.php?idsite=8&rec=1" style="border:0;" alt="" /></p></noscript>
-<!-- End Matomo Code -->
 
 </head>
 <body>
@@ -82,7 +63,8 @@
   </div>
 
   <div class="row justify-content-center">
-    <img src="static/img/workflow-draft.png" class="img-fluid" alt="workflow">  <!TODO replace draft with final > 
+    <img src="static/img/workflow-draft.png" class="img-fluid" alt="workflow">
+    <!-- TODO replace draft with final --> 
   </div>
 
   <div class="row">
@@ -119,7 +101,6 @@
       <div class="form-group">
         <label for="project">Project (vocabulary and language):</label>
         <select class="form-control" id="project">
-          <option></option>
         </select>
       </div>
       <button type="button" class="btn btn-primary" id="analyze">Analyze</button>
@@ -191,7 +172,7 @@
       <h2>Watch the videos</h2>
         <div class="row">
           <div class="col-md-4">
-		    <iframe width="350px" height="200px"
+		    <iframe width="350" height="200"
 		    src="https://www.youtube.com/embed/lSrFP3D-uTg" frameborder="0"
 		    allow="accelerometer; autoplay; encrypted-media; gyroscope;
 		    picture-in-picture" allowfullscreen></iframe>
@@ -201,8 +182,8 @@
 		  </div>
 		  <div class="col-md-2"></div>
 		  <div class="col-md-4">
-	        <iframe src="https://player.vimeo.com/video/212577974" width="350px"
-	        height="200px" frameborder="0" webkitallowfullscreen
+	        <iframe src="https://player.vimeo.com/video/212577974" width="350"
+	        height="200" frameborder="0" webkitallowfullscreen
 	        mozallowfullscreen allowfullscreen></iframe>
 
 	        <p>The video above demonstrates the <a
@@ -220,6 +201,26 @@
     </div>
   </div>
 </div>
+
+<!-- Matomo -->
+<script type="text/javascript">
+  var _paq = _paq || [];
+  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+  _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+  _paq.push(["setCookieDomain", "*.annif.org"]);
+  _paq.push(["setDomains", ["*.annif.org","*.annif.org"]]);
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="//analytics.finto.fi/";
+    _paq.push(['setTrackerUrl', u+'piwik.php']);
+    _paq.push(['setSiteId', '8']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript><p><img src="//analytics.finto.fi/piwik.php?idsite=8&rec=1" style="border:0;" alt="" /></p></noscript>
+<!-- End Matomo Code -->
 
 </body>
 </html>
