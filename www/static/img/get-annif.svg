@@ -3,11 +3,17 @@
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 viewBox="0 0 500 500" style="enable-background:new 0 0 500 500;" xml:space="preserve">
 <style type="text/css">
-	.st0{fill:#FFC9A5;}
+	.st0{clip-path:url(#SVGID_2_);fill:#87EDA3;}
 	.st1{fill:#FFFFFF;}
 	.st2{fill:#333361;}
 </style>
 <g>
+	<defs>
+		<rect id="SVGID_1_" width="500" height="500"/>
+	</defs>
+	<clipPath id="SVGID_2_">
+		<use xlink:href="#SVGID_1_"  style="overflow:visible;"/>
+	</clipPath>
 	<path class="st0" d="M250,497.5c136.69,0,247.5-110.81,247.5-247.5C497.5,113.31,386.69,2.5,250,2.5S2.5,113.31,2.5,250
 		C2.5,386.69,113.31,497.5,250,497.5"/>
 </g>
