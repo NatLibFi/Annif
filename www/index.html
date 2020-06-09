@@ -12,13 +12,23 @@
   <script src="static/js/annif.js"></script>
   <style>
     header { background-color: white; color: #343260; }
-    h1 { color: #343260; font-size: 2rem; padding: 10px 0; }
-    body { background-color: white; color: #343260; font-family: Jost, sans-serif; }
+    h1 { font-size: 2rem; padding: 1rem 0; }
+    h2 { font-size: 1.5rem; padding: 0.5rem 0; }
+    body { background-color: white; color: #343260; font-family: Jost, sans-serif; line-height: 1.2 }
     .form_bg { background-color: #f3f3f6; }
     .footer_bg { background-color: #e7e7ec; }
     #robot { max-width: 15rem; }
     #video h2 { font-size: 1rem; font-weight: bold; }
     #video p { font-size: 0.85rem; }
+    #get-learn-discuss h2 {
+        background-position: left top;
+        background-repeat: no-repeat;
+        padding-top: 4rem;
+        background-size: 3.5rem;
+    }
+    #get-annif { background-image: url('static/img/get-annif.svg'); }
+    #learn-annif { background-image: url('static/img/learn-annif.svg'); }
+    #discuss-annif { background-image: url('static/img/discuss-annif.svg'); }
   </style>
 
 <!-- Matomo -->
@@ -124,11 +134,10 @@
 
   </div>
 
-  <div class="row">
+  <div class="row" id="get-learn-discuss">
 
     <div class="col-md-4">
-    	<img src="static/img/get-annif.svg" class="float-right ml-5 mt-4 mr-3" alt="Get Annif">
-    	<h2>Get Annif</h2>
+    	<h2 id="get-annif">Get Annif</h2>
     	<p>Code and documentation for Annif is <a
         href="https://github.com/NatLibFi/Annif/">available on Github</a>
         (Apache 2.0 license). Annif is being developed at the <a
@@ -140,8 +149,7 @@
     </div>
 
     <div class="col-md-4">
-    	<img src="static/img/learn-annif.svg" class="float-right ml-5 mt-4 mr-3" alt="Learn Annif">
-    	<h2>Learn Annif</h2>
+    	<h2 id="learn-annif">Learn Annif</h2>
     	<p>To get a hands-on experience of Annif, study the <a
         href="https://github.com/NatLibFi/Annif-tutorial">Annif tutorial
         materials</a>, which include preinstalled Annif VM and Docker images,
@@ -152,8 +160,7 @@
     </div>
 
     <div class="col-md-4">
-    	<img src="static/img/discuss-annif.svg" class="float-right ml-5 mt-4 mr-3" alt="Discuss Annif">
-    	<h2>Discuss Annif</h2>
+    	<h2 id="discuss-annif">Discuss Annif</h2>
         <p>The <a
         href="https://groups.google.com/forum/#!forum/annif-users">annif-users</a>
         mailing list and web forum is available on Google Groups. This list is
