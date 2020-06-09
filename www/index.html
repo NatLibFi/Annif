@@ -11,12 +11,19 @@
   <script src="static/js/bootstrap.min.js"></script>
   <script src="static/js/annif.js"></script>
   <style>
-    body { background-color: white; color: #343260; font-family: Jost, sans-serif; line-height: 1.2 }
+    body {
+        background-color: white;
+        color: #343260;
+        font-family: Jost, sans-serif;
+        font-weight: 400;
+        line-height: 1.2
+    }
     a { color: #343260; text-decoration: underline; }
-    h1 { font-size: 2rem; padding: 1rem 0; }
-    h2 { font-size: 1.5rem; padding: 0.5rem 0; }
+    h1 { font-weight: 500; font-size: 2rem; padding: 1rem 0; }
+    h2 { font-weight: 500; font-size: 1.5rem; padding: 0.5rem 0; }
     .form_bg { background-color: #f3f3f6; }
     .footer_bg { background-color: #e7e7ec; }
+    #blurb { font-size: 200%; font-weight: 500; line-height: 1; }
     #get-learn-discuss h2 {
         background-position: left top;
         background-repeat: no-repeat;
@@ -50,7 +57,7 @@
 
   <div class="row justify-content-center">
     <div class="col-md-6">
-      <p class="text-center" style="font-size: 200%; font-weight: 500; line-height: 100%">
+      <p id="blurb" class="text-center">
         Feed Annif a controlled vocabulary
         (ontology, subject headings, thesaurus or
         classification) and train it on documents
