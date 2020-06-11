@@ -114,7 +114,6 @@ Vue.component('annif-projects', {
   <div class="form-group">\
     <label for="project">Project (vocabulary and language):</label>\
     <select class="form-control" id="project" @input="handleProjectSelected">\
-      <option></option>\
       <option v-for="project in projects" v-bind:value="project.project_id"><% project.name %></option>\
     </select>\
   </div>\
