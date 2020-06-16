@@ -1,5 +1,4 @@
-/* Generated using google-webfonts-helper, then manually edited to keep only
- * TTF, WOFF and WOFF2 formats */
+/* TTF fonts downloaded from https://fontsarena.com/jost-by-owen-earl/ */
 
 /* jost-regular - latin-ext_latin */
 @font-face {
@@ -7,7 +6,8 @@
   font-style: normal;
   font-weight: 400;
   src: local(''),
-       url('../fonts/jost-v2-latin-ext_latin-regular.ttf') format('truetype'); /* Safari, Android, iOS */
+       url('../fonts/Jost-400-Book.otf') format('opentype'),
+       url('../fonts/Jost-400-Book.ttf') format('truetype');
 }
 
 /* jost-500 - latin-ext_latin */
@@ -16,5 +16,6 @@
   font-style: normal;
   font-weight: 500;
   src: local(''),
-       url('../fonts/jost-v2-latin-ext_latin-500.ttf') format('truetype'); /* Safari, Android, iOS */
+       url('../fonts/Jost-500-Medium.otf') format('opentype'),
+       url('../fonts/Jost-500-Medium.ttf') format('truetype');
 }
