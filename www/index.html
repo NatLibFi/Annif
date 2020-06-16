@@ -36,6 +36,14 @@
     }
     #bottom-half, footer { background-color: #e7e7ec; }
     #blurb { font-size: 200%; font-weight: 500; line-height: 1; }
+    .diagram { padding: 3rem 1.5rem; position: relative; }
+    .diagram-img { max-width: 50%; }
+    .arrow { width: 2rem; position: absolute; left: -1rem; top: 30%; }
+    .diagram p { margin: 1rem 0 0 0; }
+    #diagram-vocab { background-color: #ffba85; }
+    #diagram-prepare-data { background-color: #ff9182; }
+    #diagram-load-train { background-color: #86eda2; }
+    #diagram-index { background-color: #5dbe66; }
     #get-learn-discuss h2 {
         background-position: left top;
         background-repeat: no-repeat;
@@ -78,9 +86,26 @@
     </div>
   </div>
 
-  <div class="row justify-content-center">
-    <img src="static/img/workflow-draft.png" class="img-fluid" alt="workflow">
-    <!-- TODO replace draft with final --> 
+  <div class="row my-4">
+    <div class="col-md-3 diagram text-center" id="diagram-vocab">
+      <img src="static/img/choose-vocabulary.svg" class="diagram-img">
+      <p>Choose subject vocabulary</p>
+    </div>
+    <div class="col-md-3 diagram text-center" id="diagram-prepare-data">
+      <img src="static/img/arrow.svg" class="arrow">
+      <img src="static/img/prepare-training-data.svg" class="diagram-img">
+      <p>Prepare a corpus from training data</p>
+    </div>
+    <div class="col-md-3 diagram text-center" id="diagram-load-train">
+      <img src="static/img/arrow.svg" class="arrow">
+      <img src="static/img/load-vocabulary-and-train.svg" class="diagram-img">
+      <p>Load vocabulary and train models</p>
+    </div>
+    <div class="col-md-3 diagram text-center" id="diagram-index">
+      <img src="static/img/arrow.svg" class="arrow">
+      <img src="static/img/index-new-documents.svg" class="diagram-img">
+      <p>Suggest subjects for new documents</p>
+    </div>
   </div>
 
   <div class="row">
