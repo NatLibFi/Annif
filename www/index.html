@@ -29,7 +29,7 @@
     h1 { font-weight: 500; font-size: 2rem; padding: 1rem 0; }
     h2 { font-weight: 500; font-size: 1.5rem; padding: 0.5rem 0; }
     .form_bg { background-color: #f3f3f6; }
-    .footer_bg { background-color: #e7e7ec; }
+    #bottom-half, footer { background-color: #e7e7ec; }
     #blurb { font-size: 200%; font-weight: 500; line-height: 1; }
     #get-learn-discuss h2 {
         background-position: left top;
@@ -158,59 +158,69 @@
       welcome to join!</p>
     </div>
   </div>
+</div>
 
-  <div class="row footer_bg">
-    <div class="col-md-4">
+<div id="bottom-half">
+  <div class="container pt-4">
+    <div class="row">
+      <div class="col-md-4">
 
-      <h2>Current users</h2>
-      <p><a href="https://ai.finto.fi"><img id="finto-ai" src="static/img/finto-ai-logo.png" class="img-fluid" alt="Finto AI"></a>
-      </p>
-       
-      <h2>Publications</h2>
-      <p><a href="https://doi.org/10.18352/lq.10285"> An article about
-      Annif</a> has been published in the peer-reviewed Open Access journal
-      LIBER Quarterly. The software itself is also archived on Zenodo and
-      has a <a href="https://doi.org/10.5281/zenodo.2578948">citable
-      DOI</a>. See the <a
-      href="https://github.com/NatLibFi/Annif#publications--how-to-cite">README</a>
-      on the Annif GitHub project site for more details including BiBTeX
-      snippets.</p>
+        <h2>Current users</h2>
+        <p><a href="https://ai.finto.fi"><img id="finto-ai" src="static/img/finto-ai-logo.png" class="img-fluid" alt="Finto AI"></a>
+        </p>
+         
+        <h2>Publications</h2>
+        <p><a href="https://doi.org/10.18352/lq.10285"> An article about
+        Annif</a> has been published in the peer-reviewed Open Access journal
+        LIBER Quarterly. The software itself is also archived on Zenodo and
+        has a <a href="https://doi.org/10.5281/zenodo.2578948">citable
+        DOI</a>. See the <a
+        href="https://github.com/NatLibFi/Annif#publications--how-to-cite">README</a>
+        on the Annif GitHub project site for more details including BiBTeX
+        snippets.</p>
 
-    </div>
-  
-    <div class="col-md-8">
-      <h2>Watch the videos</h2>
-      <div class="row">
-        <div class="col-md-4">
-          <iframe width="350" height="200"
-          src="https://www.youtube.com/embed/lSrFP3D-uTg" frameborder="0"
-          allow="accelerometer; autoplay; encrypted-media; gyroscope;
-          picture-in-picture" allowfullscreen></iframe>
+      </div>
+    
+      <div class="col-md-8">
+        <h2>Watch the videos</h2>
+        <div class="row">
+          <div class="col-md-4">
+            <iframe width="350" height="200"
+            src="https://www.youtube.com/embed/lSrFP3D-uTg" frameborder="0"
+            allow="accelerometer; autoplay; encrypted-media; gyroscope;
+            picture-in-picture" allowfullscreen></iframe>
 
-          <p>The SWIB18 presentation explains the basics of Annif and shows
-          examples of where it is being used.</p>
-        </div>
-        <div class="col-md-2"></div>
-        <div class="col-md-4">
-          <iframe src="https://player.vimeo.com/video/212577974" width="350"
-          height="200" frameborder="0" webkitallowfullscreen
-          mozallowfullscreen allowfullscreen></iframe>
+            <p>The SWIB18 presentation explains the basics of Annif and shows
+            examples of where it is being used.</p>
+          </div>
+          <div class="col-md-2"></div>
+          <div class="col-md-4">
+            <iframe src="https://player.vimeo.com/video/212577974" width="350"
+            height="200" frameborder="0" webkitallowfullscreen
+            mozallowfullscreen allowfullscreen></iframe>
 
-          <p>The video above demonstrates the <a
-          href="https://github.com/osma/annif">first prototype of Annif</a>
-          which is no longer being maintained.</p>
+            <p>The video above demonstrates the <a
+            href="https://github.com/osma/annif">first prototype of Annif</a>
+            which is no longer being maintained.</p>
 
+          </div>
         </div>
       </div>
     </div>
   </div>
-  <div class="row justify-content-center footer_bg">
-    <div class="col-md-">
-      <img src="static/img/nationallibrary.gif" alt="National Library of Finland">
-      <p>2020 National Library of Finland</p>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-4 text-center">
+        <a href="https://www.kansalliskirjasto.fi/en/"><img src="static/img/nationallibrary.gif" alt="National Library of Finland"
+        class="p-4"></a>
+        <p>2020 National Library of Finland</p>
+      </div>
     </div>
   </div>
-</div>
+</footer>
 
 <!-- Matomo -->
 <script type="text/javascript">
