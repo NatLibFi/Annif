@@ -28,7 +28,12 @@
     a { color: #343260; text-decoration: underline; }
     h1 { font-weight: 500; font-size: 2rem; padding: 1rem 0; }
     h2 { font-weight: 500; font-size: 1.5rem; padding: 0.5rem 0; }
-    .form_bg { background-color: #f3f3f6; }
+    #form {
+        background-color: #f3f3f6;
+        background: -moz-linear-gradient(top, #ffffff 0%, #d9dfe3 1%, #f3f3f6 1%, #f3f3f6 99%, #d9dfe3 99%, #ffffff 100%);
+        background: -webkit-linear-gradient(top, #ffffff 0%, #d9dfe3 1%, #f3f3f6 1%, #f3f3f6 99%, #d9dfe3 99%, #ffffff 100%);
+        background: linear-gradient(to bottom, #ffffff 0%, #d9dfe3 1%, #f3f3f6 1%, #f3f3f6 99%, #d9dfe3 99%, #ffffff 100%);
+    }
     #bottom-half, footer { background-color: #e7e7ec; }
     #blurb { font-size: 200%; font-weight: 500; line-height: 1; }
     #get-learn-discuss h2 {
@@ -79,7 +84,7 @@
   </div>
 
   <div class="row">
-    <div class="col-md-4 py-5 offset-md-6">
+    <div class="col-md-4 py-4 offset-md-6">
       <p>Annif is built upon a combination of existing
       <strong>natural language processing</strong> and <strong>machine
       learning</strong> tools including <a
@@ -93,37 +98,49 @@
       app</a> that can analyse physical documents such as printed books.</p>
     </div>
   </div>
-  
-  <div class="row mb-5 justify-content-center">
-    <div class="col-md-">
-      <h2>TRY IT!</h2>
-    </div>
-  </div>
 
-  <div class="row mb-5 form_bg">
+</div>
 
-    <div class="col-md-8 mr-auto">
-      <div class="form-group">
-        <label for="text">Text to analyze:</label><br>
-        <textarea class="form-control" rows="15" name="text" id="text"></textarea>
+<div id="form">
+
+  <div class="container">
+
+    <div class="row justify-content-center pt-4">
+      <div class="col-md-">
+        <h2>TRY IT!</h2>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="form-group">
-        <label for="project">Project (vocabulary and language):</label>
-        <select class="form-control" id="project">
-        </select>
+
+
+    <div class="row pb-4">
+
+      <div class="col-md-8 mr-auto">
+        <div class="form-group">
+          <label for="text">Text to analyze:</label><br>
+          <textarea class="form-control" rows="15" name="text" id="text"></textarea>
+        </div>
       </div>
-      <button type="button" class="btn btn-primary" id="analyze">Analyze</button>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label for="project">Project (vocabulary and language):</label>
+          <select class="form-control" id="project">
+          </select>
+        </div>
+        <button type="button" class="btn btn-primary" id="analyze">Analyze</button>
 
-      <h2 class="mt-4">Results</h2>
-      <ul class="list-group list-group-flush" id="results">
-      </ul>
+        <h2 class="mt-4">Results</h2>
+        <ul class="list-group list-group-flush" id="results">
+        </ul>
+      </div>
+
     </div>
-
+    
   </div>
+</div>
 
-  <div class="row" id="get-learn-discuss">
+<div class="container">
+
+  <div class="row my-4" id="get-learn-discuss">
 
     <div class="col-md-4">
       <h2 id="get-annif">Get Annif</h2>
