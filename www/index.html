@@ -27,16 +27,13 @@
         padding-bottom: 5px;
     }
     a { color: #343260; text-decoration: underline; }
+    a:hover, a:active { color: #6280dc; }
+    a:visited { color: #6982ab; }
     h1 { font-weight: 500; font-size: 2rem; padding: 1rem 0; }
     h2 { font-weight: 500; font-size: 1.5rem; padding: 0.5rem 0; }
-    #form {
-        background-color: #f3f3f6;
-        background: -moz-linear-gradient(top, #ffffff 0%, #d9dfe3 1%, #f3f3f6 1%, #f3f3f6 99%, #d9dfe3 99%, #ffffff 100%);
-        background: -webkit-linear-gradient(top, #ffffff 0%, #d9dfe3 1%, #f3f3f6 1%, #f3f3f6 99%, #d9dfe3 99%, #ffffff 100%);
-        background: linear-gradient(to bottom, #ffffff 0%, #d9dfe3 1%, #f3f3f6 1%, #f3f3f6 99%, #d9dfe3 99%, #ffffff 100%);
-    }
-    #bottom-half, footer { background-color: #e7e7ec; }
+
     #blurb { font-size: 2.0rem; font-weight: 500; line-height: 1; }
+
     .diagram { padding: 3rem 1.5rem; position: relative; }
     .diagram-img { max-width: 50%; }
     .arrow { width: 2rem; position: absolute; left: -1rem; top: 30%; }
@@ -45,6 +42,88 @@
     #diagram-prepare-data { background-color: #ff9182; }
     #diagram-load-train { background-color: #86eda2; }
     #diagram-index { background-color: #5dbe66; }
+
+    #form {
+        background-color: #f3f3f6;
+        background: -moz-linear-gradient(top, #ffffff 0%, #d9dfe3 1%, #f3f3f6 1%, #f3f3f6 99%, #d9dfe3 99%, #ffffff 100%);
+        background: -webkit-linear-gradient(top, #ffffff 0%, #d9dfe3 1%, #f3f3f6 1%, #f3f3f6 99%, #d9dfe3 99%, #ffffff 100%);
+        background: linear-gradient(to bottom, #ffffff 0%, #d9dfe3 1%, #f3f3f6 1%, #f3f3f6 99%, #d9dfe3 99%, #ffffff 100%);
+    }
+    #text-box-wrapper {
+      position: relative;
+    }
+    #text-box button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #ff9182;
+      color: black;
+      border: none;
+      border-radius: 0px;
+      padding: 2px 7px;
+    }
+    label, #suggestions {
+      border-top: 1px solid #343260;
+      padding-top: 0.5rem;
+      text-transform: uppercase;
+      font-size: 1.1rem;
+      display: block;
+    }
+    .form-control { border-radius: 0px; }
+    select {
+      -moz-appearance: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .select-wrapper { position: relative; }
+    .select-wrapper:after {
+      content: '▼';
+      font-size: 10px;
+      position: absolute;
+      top: 11px;
+      right: 9px;
+      color: black;
+      pointer-events: none;
+    }
+    #limit-buttons label {
+      border-radius: 50%;
+      margin-right: 0.4rem;
+      width: 2rem;
+      height: 2rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #c7d9ed;
+      color: #343260;
+      border-width: 0px;
+      font-weight: 500;
+    }
+    #limit-buttons .active {
+      background-color: #6280dc;
+      color: white;
+    }
+    #get-suggestions {
+      margin: 2rem 0;
+      background-color: #6280dc;
+      color: white;
+      border: none;
+      border-radius: 0px;
+    }
+    #get-suggestions:disabled {
+      cursor: default;
+      background-color: #6c757d;
+      color: white;
+    }
+    #results li, #no-results li { border-radius: 0; }
+    meter { width: 24px; }
+    meter:-moz-meter-optimum::-moz-meter-bar {
+      background: #6280dc;
+    }
+    meter::-webkit-meter-optimum-value {
+      background: #6280dc;
+    }
+
+    #bottom-half, footer { background-color: #e7e7ec; }
     #get-learn-discuss h2 {
         background-position: left top;
         background-repeat: no-repeat;
@@ -137,25 +216,57 @@
       </div>
     </div>
 
-
     <div class="row pb-4">
-
       <div class="col-md-8 mr-auto">
-        <div class="form-group">
-          <label for="text">Text to analyze:</label><br>
-          <textarea class="form-control" rows="15" name="text" id="text"></textarea>
+        <div id="text-box" class="form-group">
+          <div id="text-box-wrapper">
+            <textarea class="form-control" rows="20" name="text" id="text"
+            placeholder='Copy text here and press the button "Get subject suggestions"'></textarea>
+            <button id="button-clear" type="button" class="btn btn-danger">🞪</button>
+          </div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="form-group">
-          <label for="project">Project (vocabulary and language):</label>
-          <select class="form-control" id="project">
-          </select>
+          <label for="project">Project (vocabulary and language)</label>
+          <div class="select-wrapper">
+            <select class="form-control" id="project">
+            </select>
+          </div>
         </div>
-        <button type="button" class="btn btn-primary" id="analyze">Analyze</button>
+        <div class="form-group">
+          <label data-i18n="limit">Max # of suggestions</label>
+          <div id="limit-buttons" class="btn-group btn-group-toggle" data-toggle="buttons">
+            <label class="btn btn-secondary">
+              <input type="radio" name="limit" value="10" checked>
+              10
+            </label>
+            <label class="btn btn-secondary">
+              <input type="radio" name="limit" value="15">
+              15
+            </label>
+            <label class="btn btn-secondary">
+              <input type="radio" name="limit" value="20">
+              20
+            </label>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary" id="get-suggestions"
+        class="btn btn-primary btn-block">Get subject suggestions </button>
+        <div id="suggestions-wrapper">
+          <h2 id="suggestions" data-i18n="suggestions">Suggested subjects</h2>
+          <div class="d-flex justify-content-center">
+            <div id="results-spinner" class="spinner-border m-2" role="status">
+              <span class="sr-only">Loading...</span>
+            </div>
+          </div>
+          <ul class="list-group" id="results">
+          </ul>
+          <ul class="list-group" id="no-results">
+            <li class="list-group-item p-0" data-i18n="no-results">Ei tuloksia</li>
+          </ul>
+        </div>
 
-        <h2 class="mt-4">Results</h2>
-        <ul class="list-group list-group-flush" id="results">
         </ul>
       </div>
 
