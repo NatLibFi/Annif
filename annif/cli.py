@@ -344,6 +344,7 @@ def run_eval(
     else:
         pool_class = multiprocessing.Pool
 
+    project.initialize()
     map = annif.project.ProjectSuggestMap(
         project, backend_params, limit, threshold)
 
