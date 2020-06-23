@@ -35,6 +35,7 @@ class PAVBackend(ensemble.EnsembleBackend):
         return super(ensemble.EnsembleBackend, self).modification_time
 
     def initialize(self):
+        super().initialize()
         if self._models is not None:
             return  # already initialized
         self._models = {}
