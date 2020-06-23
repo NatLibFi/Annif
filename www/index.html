@@ -34,14 +34,35 @@
 
     #blurb { font-size: 2.0rem; font-weight: 500; line-height: 1; }
 
-    .diagram { padding: 3rem 1.5rem; position: relative; }
-    .diagram-img { max-width: 50%; }
-    .arrow { width: 2rem; position: absolute; left: -1rem; top: 30%; }
-    .diagram p { margin: 1rem 0 0 0; }
-    #diagram-vocab { background-color: #ffba85; }
-    #diagram-prepare-data { background-color: #ff9182; }
-    #diagram-load-train { background-color: #86eda2; }
-    #diagram-index { background-color: #5dbe66; }
+    #howto { text-align: center; text-transform: uppercase; margin: 3rem 0 1rem 0; }
+    #diagram { padding: 0; margin: 0 -15px; }
+    #diagram li {
+        list-style-type: none;
+        padding: 11rem 1.5rem 3rem 1.5rem;
+        margin: 0;
+        text-align: center;
+        background-position: center 3rem;
+        background-repeat: no-repeat;
+        background-size: 7.5rem;
+        position: relative;
+    }
+    #diagram li:after {
+        content: "";
+        display: block;
+        background-image: url('static/img/arrow.svg');
+        background-size: 2rem;
+        background-repeat: no-repeat;
+        width: 5rem;
+        height: 5rem;
+        position: absolute;
+        left: -1rem;
+        top: 30%;
+    }
+    #diagram li:first-child:after { display: none; }
+    #diagram-vocab { background-color: #ffba85; background-image: url('static/img/choose-vocabulary.svg'); }
+    #diagram-prepare { background-color: #ff9182; background-image: url('static/img/prepare-training-data.svg'); }
+    #diagram-train { background-color: #86eda2; background-image: url('static/img/load-vocabulary-and-train.svg'); }
+    #diagram-index { background-color: #5dbe66; background-image: url('static/img/index-new-documents.svg'); }
 
     #form {
         background-color: #f3f3f6;
@@ -170,27 +191,14 @@
     </div>
   </div>
 
-  <div class="row my-4">
-    <div class="col-md-3 diagram text-center" id="diagram-vocab">
-      <img src="static/img/choose-vocabulary.svg" class="diagram-img">
-      <p>Choose subject vocabulary</p>
-    </div>
-    <div class="col-md-3 diagram text-center" id="diagram-prepare-data">
-      <img src="static/img/arrow.svg" class="arrow">
-      <img src="static/img/prepare-training-data.svg" class="diagram-img">
-      <p>Prepare a corpus from training data</p>
-    </div>
-    <div class="col-md-3 diagram text-center" id="diagram-load-train">
-      <img src="static/img/arrow.svg" class="arrow">
-      <img src="static/img/load-vocabulary-and-train.svg" class="diagram-img">
-      <p>Load vocabulary and train models</p>
-    </div>
-    <div class="col-md-3 diagram text-center" id="diagram-index">
-      <img src="static/img/arrow.svg" class="arrow">
-      <img src="static/img/index-new-documents.svg" class="diagram-img">
-      <p>Suggest subjects for new documents</p>
-    </div>
-  </div>
+  <h2 id="howto">How to use Annif</h2>
+
+  <ol class="row mb-4" id="diagram">
+    <li class="col-md-3" id="diagram-vocab">Choose subject vocabulary</li>
+    <li class="col-md-3" id="diagram-prepare">Prepare a corpus from training data</li>
+    <li class="col-md-3" id="diagram-train">Load the vocabulary and train a model</li>
+    <li class="col-md-3" id="diagram-index">Suggest subjects for new documents</li>
+  </ol>
 
   <div class="row">
     <div class="col-md-4 py-4 offset-md-6">
