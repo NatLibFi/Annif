@@ -438,15 +438,24 @@ def run_optimize(project_id, paths, backend_param):
               default=1,
               help='Number of parallel runs (-1 means all CPUs)')
 @click.option('--metric', default='NDCG', help='Metric to optimize')
+@click.option(
+    '--results-file',
+    type=click.File(
+        'w',
+        encoding='utf-8',
+        errors='ignore',
+        lazy=True),
+    help="""Specify file path to write trial results as CSV.
+    File directory must exist, existing file will be overwritten.""")
 @common_options
-def run_hyperopt(project_id, paths, trials, jobs, metric):
+def run_hyperopt(project_id, paths, trials, jobs, metric, results_file):
     """
     Optimize the hyperparameters of a project using a validation corpus.
     """
     proj = get_project(project_id)
     documents = open_documents(paths)
     click.echo(f"Looking for optimal hyperparameters using {trials} trials")
-    rec = proj.hyperopt(documents, trials, jobs, metric)
+    rec = proj.hyperopt(documents, trials, jobs, metric, results_file)
     click.echo(f"Got best {metric} score {rec.score:.4f} with:")
     click.echo("---")
     for line in rec.lines:

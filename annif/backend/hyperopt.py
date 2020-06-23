@@ -32,7 +32,7 @@ class HyperparameterOptimizer:
         """Convert the study results into hyperparameter recommendations"""
         pass  # pragma: no cover
 
-    def optimize(self, n_trials, n_jobs):
+    def optimize(self, n_trials, n_jobs, results_file):
         """Find the optimal hyperparameters by testing up to the given number
         of hyperparameter combinations"""
 
@@ -43,6 +43,9 @@ class HyperparameterOptimizer:
                        n_jobs=n_jobs,
                        gc_after_trial=False,
                        show_progress_bar=True)
+        if results_file:
+            df = study.trials_dataframe()
+            df.to_csv(results_file)
         return self._postprocess(study)
 
 
