@@ -65,6 +65,8 @@ Basic layout
       #splash { padding: 8px 0; }
       #splash a, #footer a { color: #83c1cf; }
       #splash a:hover, #footer a:hover { color: #dff5f9; }
+      #annif-logo { background: #dff5f9; }
+      #annif-logo img:hover { background: #bfeaf4; }
       #api {
         color: black;
         background-color: #dff5f9;
@@ -178,11 +180,16 @@ Basic layout
           </div>
         </div>
         <div class="row align-items-end">
-          <div class="col-md-12 align-items-end">
+          <div class="col-md-7 align-items-end">
             <div id="splash">
               <p><span data-i18n="splash">Finto AI ehdottaa tekstille sopivia aiheita.
               Palvelu perustuu Annif-työkaluun.</span>
               <a id="read-more" data-i18n="read-more" href="#">Lue lisää...</a></p>
+            </div>
+          </div>
+          <div class="col-sm-5 mb-2">
+            <div id="annif-logo">
+              <a href="https://www.annif.org"><img src="static/img/annif-RGB.svg" class="img-fluid" alt="Annif"></a>
             </div>
           </div>
         </div>
