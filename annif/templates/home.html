@@ -170,6 +170,9 @@ new Vue({
         method: 'GET',
         success: function(data) {
           this_.projects = data.projects;
+          if(data.projects && data.projects.length > 0){
+            this_.project = data.projects[0].project_id
+          }
         },
         error: function(data) {
           if (data.responseJSON == null) {
