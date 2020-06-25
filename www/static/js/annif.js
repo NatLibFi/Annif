@@ -24,6 +24,7 @@ function fetchProjects() {
 function getSuggestions() {
     $('#suggestions').show();
     $('#results-spinner').show();
+    $('#animation').attr('src', 'static/img/annif-animated.gif');
     $.ajax({
         url: base_url + "projects/" + $('#project').val() + "/suggest",
         method: 'POST',
