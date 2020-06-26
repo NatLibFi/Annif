@@ -120,7 +120,7 @@ def test_get_project_invalid_config_file():
         config_name='annif.default_config.TestingInvalidProjectsConfig')
     with app.app_context():
         with pytest.raises(ConfigurationException):
-            annif.project.get_project('duplicatedvocab')
+            annif.registry.get_project('duplicatedvocab')
 
 
 def test_project_load_vocabulary_tfidf(registry, vocabulary, testdatadir):
@@ -245,7 +245,7 @@ def test_project_not_initialized(registry):
 
 def test_project_initialized(app_with_initialize):
     with app_with_initialize.app_context():
-        project = annif.project.get_project('dummy-en')
+        project = annif.registry.get_project('dummy-en')
     assert project.initialized
     assert project.backend.initialized
 
@@ -255,4 +255,4 @@ def test_project_file_not_found():
         config_name='annif.default_config.TestingNoProjectsConfig')
     with app.app_context():
         with pytest.raises(ValueError):
-            annif.project.get_project('dummy-en')
+            annif.registry.get_project('dummy-en')
