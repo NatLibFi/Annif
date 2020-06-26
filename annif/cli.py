@@ -347,12 +347,12 @@ def run_eval(
         pool_class = multiprocessing.Pool
 
     project.initialize()
-    map = annif.project.ProjectSuggestMap(
+    psmap = annif.project.ProjectSuggestMap(
         project, backend_params, limit, threshold)
 
     with pool_class(jobs) as pool:
         for hits, uris, labels in pool.imap_unordered(
-                map.suggest, docs.documents):
+                psmap.suggest, docs.documents):
             eval_batch.evaluate(hits,
                                 annif.corpus.SubjectSet((uris, labels)))
 
