@@ -25,8 +25,7 @@ class DummyBackend(backend.AnnifLearningBackend):
         return ListSuggestionResult([SubjectSuggestion(uri=self.uri,
                                                        label=self.label,
                                                        notation=notation,
-                                                       score=score)],
-                                    self.project.subjects)
+                                                       score=score)])
 
     def _learn(self, corpus, params):
         # in this dummy backend we "learn" by picking up the URI and label

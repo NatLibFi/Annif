@@ -27,6 +27,13 @@ class EnsembleBackend(backend.AnnifBackend):
         return [getattr(self.project.registry.get_project(project_id), attr)
                 for project_id, _ in sources]
 
+    def initialize(self):
+        # initialize all the source projects
+        params = self._get_backend_params(None)
+        for project_id, _ in annif.util.parse_sources(params['sources']):
+            project = self.project.registry.get_project(project_id)
+            project.initialize()
+
     def _normalize_hits(self, hits, source_project):
         """Hook for processing hits from backends. Intended to be overridden
         by subclasses."""
@@ -43,7 +50,9 @@ class EnsembleBackend(backend.AnnifBackend):
             norm_hits = self._normalize_hits(hits, source_project)
             hits_from_sources.append(
                 annif.suggestion.WeightedSuggestion(
-                    hits=norm_hits, weight=weight))
+                    hits=norm_hits,
+                    weight=weight,
+                    subjects=source_project.subjects))
         return hits_from_sources
 
     def _merge_hits_from_sources(self, hits_from_sources, params):

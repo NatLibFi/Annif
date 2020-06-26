@@ -120,7 +120,7 @@ def test_get_project_invalid_config_file():
         config_name='annif.default_config.TestingInvalidProjectsConfig')
     with app.app_context():
         with pytest.raises(ConfigurationException):
-            annif.project.get_project('duplicatedvocab')
+            annif.registry.get_project('duplicatedvocab')
 
 
 def test_project_load_vocabulary_tfidf(registry, vocabulary, testdatadir):
@@ -170,9 +170,10 @@ def test_project_learn(registry, tmpdir):
     project.learn(docdir)
     result = project.suggest('this is some text')
     assert len(result) == 1
-    assert result[0].uri == 'http://example.org/key1'
-    assert result[0].label == 'key1'
-    assert result[0].score == 1.0
+    hits = result.as_list(project.subjects)
+    assert hits[0].uri == 'http://example.org/key1'
+    assert hits[0].label == 'key1'
+    assert hits[0].score == 1.0
 
 
 def test_project_learn_not_supported(registry, tmpdir):
@@ -207,18 +208,20 @@ def test_project_suggest(registry):
     project = registry.get_project('dummy-en')
     result = project.suggest('this is some text')
     assert len(result) == 1
-    assert result[0].uri == 'http://example.org/dummy'
-    assert result[0].label == 'dummy'
-    assert result[0].score == 1.0
+    hits = result.as_list(project.subjects)
+    assert hits[0].uri == 'http://example.org/dummy'
+    assert hits[0].label == 'dummy'
+    assert hits[0].score == 1.0
 
 
 def test_project_suggest_combine(registry):
     project = registry.get_project('dummydummy')
     result = project.suggest('this is some text')
     assert len(result) == 1
-    assert result[0].uri == 'http://example.org/dummy'
-    assert result[0].label == 'dummy'
-    assert result[0].score == 1.0
+    hits = result.as_list(project.subjects)
+    assert hits[0].uri == 'http://example.org/dummy'
+    assert hits[0].label == 'dummy'
+    assert hits[0].score == 1.0
 
 
 def test_project_train_state_not_available(registry, caplog):
@@ -228,9 +231,10 @@ def test_project_train_state_not_available(registry, caplog):
         result = project.suggest('this is some text')
     assert project.is_trained is None
     assert len(result) == 1
-    assert result[0].uri == 'http://example.org/dummy'
-    assert result[0].label == 'dummy'
-    assert result[0].score == 1.0
+    hits = result.as_list(project.subjects)
+    assert hits[0].uri == 'http://example.org/dummy'
+    assert hits[0].label == 'dummy'
+    assert hits[0].score == 1.0
     assert 'Could not get train state information' in caplog.text
 
 
@@ -241,7 +245,7 @@ def test_project_not_initialized(registry):
 
 def test_project_initialized(app_with_initialize):
     with app_with_initialize.app_context():
-        project = annif.project.get_project('dummy-en')
+        project = annif.registry.get_project('dummy-en')
     assert project.initialized
     assert project.backend.initialized
 
@@ -251,4 +255,4 @@ def test_project_file_not_found():
         config_name='annif.default_config.TestingNoProjectsConfig')
     with app.app_context():
         with pytest.raises(ValueError):
-            annif.project.get_project('dummy-en')
+            annif.registry.get_project('dummy-en')

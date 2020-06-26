@@ -117,7 +117,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             text[:20], len(text)))
         vector = self.vectorizer.transform([text])
         if vector.nnz == 0:  # All zero vector, empty result
-            return ListSuggestionResult([], self.project.subjects)
+            return ListSuggestionResult([])
         feature_values = [(col, vector[row, col])
                           for row, col in zip(*vector.nonzero())]
         results = []
@@ -129,4 +129,4 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                 label=subject[1],
                 notation=subject[2],
                 score=score))
-        return ListSuggestionResult(results, self.project.subjects)
+        return ListSuggestionResult(results)
