@@ -300,7 +300,7 @@ def run_index(project_id, directory, suffix, force,
     help="""Specify file in order to write non-aggregated results per subject.
     File directory must exist, existing file will be overwritten.""")
 @click.option('--jobs',
-              default=0,
+              default=1,
               help='Number of parallel jobs (0 means all CPUs)')
 @backend_param_option
 @common_options
