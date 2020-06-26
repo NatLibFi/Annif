@@ -245,9 +245,12 @@ class AnnifRegistry:
     def __init__(self, projects_file, datadir, init_projects):
         self._rid = id(self)
         self._projects[self._rid] = \
-            self._create_projects(projects_file, datadir, init_projects)
+            self._create_projects(projects_file, datadir)
+        if init_projects:
+            for project in self._projects[self._rid].values():
+                project.initialize()
 
-    def _create_projects(self, projects_file, datadir, init_projects):
+    def _create_projects(self, projects_file, datadir):
         if not os.path.exists(projects_file):
             logger.warning(
                 'Project configuration file "%s" is missing. ' +
@@ -273,8 +276,6 @@ class AnnifRegistry:
                                                 config[project_id],
                                                 datadir,
                                                 self)
-            if init_projects:
-                projects[project_id].initialize()
         return projects
 
     def get_projects(self, min_access=Access.private):
