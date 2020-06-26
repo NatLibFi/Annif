@@ -1,6 +1,9 @@
 """Common functionality for backends."""
 
 import abc
+import os.path
+from datetime import datetime
+from glob import glob
 from annif import logger
 
 
@@ -31,6 +34,16 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         params.update(self.default_params())
         params.update(self.config_params)
         return params
+
+    @property
+    def is_trained(self):
+        return bool(glob(os.path.join(self.datadir, '*')))
+
+    @property
+    def modification_time(self):
+        mtimes = [datetime.fromtimestamp(os.path.getmtime(p))
+                  for p in glob(os.path.join(self.datadir, '*'))]
+        return max(mtimes, default=None)
 
     def _get_backend_params(self, params):
         backend_params = dict(self.params)

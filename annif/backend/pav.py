@@ -10,7 +10,6 @@ from sklearn.isotonic import IsotonicRegression
 import numpy as np
 import annif.corpus
 import annif.suggestion
-import annif.project
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
 from . import ensemble
@@ -27,7 +26,16 @@ class PAVBackend(ensemble.EnsembleBackend):
 
     DEFAULT_PARAMETERS = {'min-docs': 10}
 
+    @property
+    def is_trained(self):
+        return super(ensemble.EnsembleBackend, self).is_trained
+
+    @property
+    def modification_time(self):
+        return super(ensemble.EnsembleBackend, self).modification_time
+
     def initialize(self):
+        super().initialize()
         if self._models is not None:
             return  # already initialized
         self._models = {}
@@ -50,7 +58,7 @@ class PAVBackend(ensemble.EnsembleBackend):
     def _normalize_hits(self, hits, source_project):
         reg_models = self._get_model(source_project.project_id)
         pav_result = []
-        for hit in hits.hits:
+        for hit in hits.as_list(source_project.subjects):
             if hit.uri in reg_models:
                 score = reg_models[hit.uri].predict([hit.score])[0]
             else:  # default to raw score
@@ -62,8 +70,7 @@ class PAVBackend(ensemble.EnsembleBackend):
                     notation=hit.notation,
                     score=score))
         pav_result.sort(key=lambda hit: hit.score, reverse=True)
-        return annif.suggestion.ListSuggestionResult(
-            pav_result, source_project.subjects)
+        return annif.suggestion.ListSuggestionResult(pav_result)
 
     @staticmethod
     def _suggest_train_corpus(source_project, corpus):
@@ -75,8 +82,9 @@ class PAVBackend(ensemble.EnsembleBackend):
         ndocs = 0
         for docid, doc in enumerate(corpus.documents):
             hits = source_project.suggest(doc.text)
-            for cid in np.flatnonzero(hits.vector):
-                data.append(hits.vector[cid])
+            vector = hits.as_vector(source_project.subjects)
+            for cid in np.flatnonzero(vector):
+                data.append(vector[cid])
                 row.append(docid)
                 col.append(cid)
             subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
@@ -97,7 +105,7 @@ class PAVBackend(ensemble.EnsembleBackend):
     def _create_pav_model(self, source_project_id, min_docs, corpus):
         self.info("creating PAV model for source {}, min_docs={}".format(
             source_project_id, min_docs))
-        source_project = annif.project.get_project(source_project_id)
+        source_project = self.project.registry.get_project(source_project_id)
         # suggest subjects for the training corpus
         scores, true = self._suggest_train_corpus(source_project, corpus)
         # create the concept-specific PAV regression models

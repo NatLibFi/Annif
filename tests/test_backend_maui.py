@@ -4,6 +4,7 @@ import requests.exceptions
 import responses
 import unittest.mock
 import pytest
+from datetime import datetime
 import annif.backend.maui
 from annif.exception import ConfigurationException
 from annif.exception import NotSupportedException
@@ -178,7 +179,7 @@ def test_maui_train(maui, document_corpus, app_project):
 
 
 @responses.activate
-def test_maui_suggest(maui):
+def test_maui_suggest(maui, subject_index):
     responses.add(responses.POST,
                   'http://api.example.org/mauiservice/dummy/suggest',
                   json={'title': '1 recommendation from dummy',
@@ -188,10 +189,11 @@ def test_maui_suggest(maui):
 
     result = maui.suggest('this is some text')
     assert len(result) == 1
-    assert result[0].uri == 'http://example.org/dummy'
-    assert result[0].label == 'dummy'
-    assert result[0].notation is None
-    assert result[0].score == 1.0
+    hits = result.as_list(subject_index)
+    assert hits[0].uri == 'http://example.org/dummy'
+    assert hits[0].label == 'dummy'
+    assert hits[0].notation is None
+    assert hits[0].score == 1.0
     assert len(responses.calls) == 1
 
 
@@ -210,7 +212,7 @@ def test_maui_suggest_no_input(maui):
 
 
 @responses.activate
-def test_maui_suggest_with_notation(maui):
+def test_maui_suggest_with_notation(maui, subject_index):
     responses.add(responses.POST,
                   'http://api.example.org/mauiservice/dummy/suggest',
                   json={'title': '1 recommendation from dummy',
@@ -223,10 +225,11 @@ def test_maui_suggest_with_notation(maui):
         'http://example.org/dummy-with-notation', 'dummy', '42.42')
     result = maui.suggest('this is some text')
     assert len(result) == 1
-    assert result[0].uri == 'http://example.org/dummy-with-notation'
-    assert result[0].label == 'dummy'
-    assert result[0].notation == '42.42'
-    assert result[0].score == 1.0
+    hits = result.as_list(subject_index)
+    assert hits[0].uri == 'http://example.org/dummy-with-notation'
+    assert hits[0].label == 'dummy'
+    assert hits[0].notation == '42.42'
+    assert hits[0].score == 1.0
     assert len(responses.calls) == 1
 
 
@@ -287,3 +290,39 @@ def test_maui_suggest_unexpected_json(maui, project):
     result = maui.suggest('this is some text')
     assert len(result) == 0
     assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_maui_is_trained(maui, project):
+    responses.add(responses.GET,
+                  'http://api.example.org/mauiservice/dummy/train',
+                  json={"is_trained": True})
+    assert maui.is_trained
+
+
+@responses.activate
+def test_maui_modification_time(maui, project):
+    responses.add(responses.GET,
+                  'http://api.example.org/mauiservice/dummy/train',
+                  json={"end_time": '1970-01-01T00:00:00.000Z'})
+    assert maui.modification_time == datetime(1970, 1, 1, 0, 0, 0)
+
+
+def test_maui_get_project_info_http_error(maui, project):
+    with unittest.mock.patch('requests.get') as mock_request:
+        mock_request.side_effect = requests.exceptions.RequestException(
+            'failed')
+
+        with pytest.raises(OperationFailedException):
+            maui._get_project_info('is_trained')
+
+
+def test_maui_get_project_info_json_decode_error(maui, project):
+    with unittest.mock.patch('requests.get') as mock_request:
+        # create a mock response whose .json() method raises a ValueError
+        mock_response = unittest.mock.Mock()
+        mock_response.json.side_effect = ValueError("JSON decode failed")
+        mock_request.return_value = mock_response
+
+        with pytest.raises(OperationFailedException):
+            maui._get_project_info('is_trained')

@@ -5,7 +5,7 @@ import os
 import random
 import numpy as np
 from vowpalwabbit import pyvw
-import annif.project
+import annif.util
 from annif.suggestion import ListSuggestionResult, VectorSuggestionResult
 from annif.exception import ConfigurationException
 from annif.exception import NotInitializedException
@@ -139,11 +139,11 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
         if input == '_text_':
             return self._normalize_text(text)
         else:
-            proj = annif.project.get_project(input)
+            proj = self.project.registry.get_project(input)
             result = proj.suggest(text)
             features = [
                 '{}:{}'.format(self._cleanup_text(hit.uri), hit.score)
-                for hit in result.hits]
+                for hit in result.as_list(self.project.subjects)]
             return ' '.join(features)
 
     def _inputs_to_exampletext(self, text):
@@ -209,11 +209,9 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
             result = self._model.predict(example)
             results.append(self._convert_result(result))
         if not results:  # empty result
-            return ListSuggestionResult(
-                hits=[], subject_index=self.project.subjects)
+            return ListSuggestionResult([])
         return VectorSuggestionResult(
-            np.array(results, dtype=np.float32).mean(axis=0),
-            self.project.subjects)
+            np.array(results, dtype=np.float32).mean(axis=0))
 
     @staticmethod
     def _write_train_file(examples, filename):

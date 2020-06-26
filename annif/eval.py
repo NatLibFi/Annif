@@ -214,7 +214,7 @@ class EvaluationBatch:
             self._subject_index,
             suppress_warnings=suppress_warnings)
             for hits, gold_subjects in self._samples])
-        y_pred = np.array([hits.vector
+        y_pred = np.array([hits.as_vector(self._subject_index)
                            for hits, gold_subjects in self._samples],
                           dtype=np.float32)
 

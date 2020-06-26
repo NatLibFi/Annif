@@ -1,21 +1,17 @@
 """Project management functionality for Annif"""
 
-import collections
-import configparser
 import enum
 import os.path
-from flask import current_app
 from shutil import rmtree
 import annif
 import annif.analyzer
 import annif.corpus
 import annif.suggestion
 import annif.backend
-import annif.util
 import annif.vocab
 from annif.datadir import DatadirMixin
 from annif.exception import AnnifException, ConfigurationException, \
-    NotSupportedException
+    NotSupportedException, NotInitializedException
 
 logger = annif.logger
 
@@ -39,7 +35,7 @@ class AnnifProject(DatadirMixin):
     # default values for configuration settings
     DEFAULT_ACCESS = 'public'
 
-    def __init__(self, project_id, config, datadir):
+    def __init__(self, project_id, config, datadir, registry):
         DatadirMixin.__init__(self, datadir, 'projects', project_id)
         self.project_id = project_id
         self.name = config.get('name', project_id)
@@ -48,6 +44,7 @@ class AnnifProject(DatadirMixin):
         self.vocab_id = config.get('vocab', None)
         self.config = config
         self._base_datadir = datadir
+        self.registry = registry
         self._init_access()
 
     def _init_access(self):
@@ -153,9 +150,31 @@ class AnnifProject(DatadirMixin):
     def subjects(self):
         return self.vocab.subjects
 
+    def _get_info(self, key):
+        try:
+            be = self.backend
+            if be is not None:
+                return getattr(be, key)
+        except AnnifException as err:
+            logger.warning(err.format_message())
+            return None
+
+    @property
+    def is_trained(self):
+        return self._get_info('is_trained')
+
+    @property
+    def modification_time(self):
+        return self._get_info('modification_time')
+
     def suggest(self, text, backend_params=None):
         """Suggest subjects the given text by passing it to the backend. Returns a
         list of SubjectSuggestion objects ordered by decreasing score."""
+        if not self.is_trained:
+            if self.is_trained is None:
+                logger.warn('Could not get train state information.')
+            else:
+                raise NotInitializedException('Project is not trained.')
         logger.debug('Suggesting subjects for text "%s..." (len=%d)',
                      text[:20], len(text))
         hits = self._suggest_with_backend(text, backend_params)
@@ -203,7 +222,9 @@ class AnnifProject(DatadirMixin):
         return {'project_id': self.project_id,
                 'name': self.name,
                 'language': self.language,
-                'backend': {'backend_id': self.config.get('backend')}
+                'backend': {'backend_id': self.config.get('backend')},
+                'is_trained': self.is_trained,
+                'modification_time': self.modification_time
                 }
 
     def remove_model_data(self):
@@ -218,61 +239,21 @@ class AnnifProject(DatadirMixin):
                            .format(self.project_id))
 
 
-def _create_projects(projects_file, datadir, init_projects):
-    if not os.path.exists(projects_file):
-        logger.warning(
-            'Project configuration file "%s" is missing. Please provide one.' +
-            ' You can set the path to the project configuration file using ' +
-            'the ANNIF_PROJECTS environment variable or the command-line ' +
-            'option "--projects".', projects_file)
-        return {}
+class ProjectSuggestMap:
+    """A utility class that can be used to wrap a project and provide a
+    mapping method that converts Document objects to suggestions. Intended
+    to be used with the multiprocessing module."""
 
-    config = configparser.ConfigParser()
-    config.optionxform = lambda option: option
-    with open(projects_file, encoding='utf-8-sig') as projf:
-        try:
-            config.read_file(projf)
-        except (configparser.DuplicateOptionError,
-                configparser.DuplicateSectionError) as err:
-            raise ConfigurationException(err)
+    def __init__(self, project, backend_params, limit, threshold):
+        self.project_id = project.project_id
+        self.registry = project.registry
+        self.backend_params = backend_params
+        self.limit = limit
+        self.threshold = threshold
 
-    # create AnnifProject objects from the configuration file
-    projects = collections.OrderedDict()
-    for project_id in config.sections():
-        projects[project_id] = AnnifProject(project_id,
-                                            config[project_id],
-                                            datadir)
-        if init_projects:
-            projects[project_id].initialize()
-    return projects
-
-
-def initialize_projects(app):
-    projects_file = app.config['PROJECTS_FILE']
-    datadir = app.config['DATADIR']
-    init_projects = app.config['INITIALIZE_PROJECTS']
-    app.annif_projects = _create_projects(
-        projects_file, datadir, init_projects)
-
-
-def get_projects(min_access=Access.private):
-    """Return the available projects as a dict of project_id ->
-    AnnifProject. The min_access parameter may be used to set the minimum
-    access level required for the returned projects."""
-
-    if not hasattr(current_app, 'annif_projects'):
-        initialize_projects(current_app)
-
-    projects = [(project_id, project)
-                for project_id, project in current_app.annif_projects.items()
-                if project.access >= min_access]
-    return collections.OrderedDict(projects)
-
-
-def get_project(project_id, min_access=Access.private):
-    """return the definition of a single Project by project_id"""
-    projects = get_projects(min_access)
-    try:
-        return projects[project_id]
-    except KeyError:
-        raise ValueError("No such project {}".format(project_id))
+    def suggest(self, doc):
+        project = self.registry.get_project(self.project_id)
+        hits = project.suggest(doc.text, self.backend_params)
+        filtered_hits = hits.filter(
+            project.subjects, self.limit, self.threshold)
+        return (filtered_hits, doc.uris, doc.labels)

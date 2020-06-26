@@ -6,7 +6,10 @@ import pytest
 import py.path
 import unittest.mock
 import annif
+import annif.analyzer
 import annif.corpus
+import annif.project
+import annif.registry
 
 
 @pytest.fixture(scope='module')
@@ -19,7 +22,7 @@ def app():
     vocab = annif.corpus.SubjectFileTSV(subjfile)
     app = annif.create_app(config_name='annif.default_config.TestingConfig')
     with app.app_context():
-        project = annif.project.get_project('dummy-en')
+        project = annif.registry.get_project('dummy-en')
         project.vocab.load_vocabulary(vocab, 'en')
     return app
 
@@ -29,6 +32,12 @@ def app_with_initialize():
     app = annif.create_app(
         config_name='annif.default_config.TestingInitializeConfig')
     return app
+
+
+@pytest.fixture(scope='module')
+def registry(app):
+    with app.app_context():
+        return app.annif_registry
 
 
 @pytest.fixture(scope='module')
@@ -84,18 +93,21 @@ def pretrained_vectors():
 
 
 @pytest.fixture(scope='module')
-def project(subject_index, datadir):
+def project(subject_index, datadir, registry):
     proj = unittest.mock.Mock()
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
     proj.subjects = subject_index
     proj.datadir = str(datadir)
+    proj.registry = registry
     return proj
 
 
 @pytest.fixture(scope='module')
 def app_project(app):
     with app.app_context():
-        return annif.project.get_project('dummy-en')
+        dir = py.path.local(app.config['DATADIR'])
+        shutil.rmtree(os.path.join(str(dir), 'projects'), ignore_errors=True)
+        return annif.registry.get_project('dummy-en')
 
 
 @pytest.fixture(scope='function')

@@ -10,6 +10,8 @@ class DummyBackend(backend.AnnifLearningBackend):
     initialized = False
     uri = 'http://example.org/dummy'
     label = 'dummy'
+    is_trained = True
+    modification_time = None
 
     def default_params(self):
         return backend.AnnifBackend.DEFAULT_PARAMETERS
@@ -23,8 +25,7 @@ class DummyBackend(backend.AnnifLearningBackend):
         return ListSuggestionResult([SubjectSuggestion(uri=self.uri,
                                                        label=self.label,
                                                        notation=notation,
-                                                       score=score)],
-                                    self.project.subjects)
+                                                       score=score)])
 
     def _learn(self, corpus, params):
         # in this dummy backend we "learn" by picking up the URI and label

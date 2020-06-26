@@ -71,6 +71,10 @@ def test_show_project():
     assert project_lang.group(1) == 'en'
     access = re.search(r'Access:\s+(.+)', result.output)
     assert access.group(1) == 'hidden'
+    is_trained = re.search(r'Trained:\s+(.+)', result.output)
+    assert is_trained.group(1) == 'True'
+    modification_time = re.search(r'Modification time:\s+(.+)', result.output)
+    assert modification_time.group(1) == 'None'
 
 
 def test_show_project_nonexistent():
@@ -610,6 +614,32 @@ def test_eval_nonexistent_path():
     assert failed_result.exit_code != 0
     assert "Invalid value for '[PATHS]...': " \
            "Path 'nonexistent_path' does not exist." in failed_result.output
+
+
+def test_eval_single_process(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    tmpdir.join('doc3.txt').write('doc3')
+
+    result = runner.invoke(
+        annif.cli.cli, ['eval', '--jobs', '1', 'dummy-en', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+
+def test_eval_two_jobs(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    tmpdir.join('doc3.txt').write('doc3')
+
+    result = runner.invoke(
+        annif.cli.cli, ['eval', '--jobs', '2', 'dummy-en', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
 
 
 def test_optimize_dir(tmpdir):

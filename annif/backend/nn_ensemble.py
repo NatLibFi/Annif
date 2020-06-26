@@ -14,7 +14,6 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.utils import Sequence
 import tensorflow.keras.backend as K
 import annif.corpus
-import annif.project
 import annif.util
 from annif.exception import NotInitializedException
 from annif.suggestion import VectorSuggestionResult
@@ -98,6 +97,14 @@ class NNEnsembleBackend(
     # defaults for uninitialized instances
     _model = None
 
+    @property
+    def is_trained(self):
+        return super(ensemble.EnsembleBackend, self).is_trained
+
+    @property
+    def modification_time(self):
+        return super(ensemble.EnsembleBackend, self).modification_time
+
     def default_params(self):
         params = {}
         params.update(super().default_params())
@@ -105,6 +112,7 @@ class NNEnsembleBackend(
         return params
 
     def initialize(self):
+        super().initialize()
         if self._model is not None:
             return  # already initialized
         model_filename = os.path.join(self.datadir, self.MODEL_FILE)
@@ -116,12 +124,13 @@ class NNEnsembleBackend(
         self._model = load_model(model_filename)
 
     def _merge_hits_from_sources(self, hits_from_sources, params):
-        score_vector = np.array([hits.vector * weight
-                                 for hits, weight in hits_from_sources],
+        score_vector = np.array([hits.as_vector(subjects) * weight
+                                 for hits, weight, subjects
+                                 in hits_from_sources],
                                 dtype=np.float32)
         results = self._model.predict(
             np.expand_dims(score_vector.transpose(), 0))
-        return VectorSuggestionResult(results[0], self.project.subjects)
+        return VectorSuggestionResult(results[0])
 
     def _create_model(self, sources):
         self.info("creating NN ensemble model")
@@ -159,7 +168,7 @@ class NNEnsembleBackend(
 
     def _corpus_to_vectors(self, corpus, seq):
         # pass corpus through all source projects
-        sources = [(annif.project.get_project(project_id), weight)
+        sources = [(self.project.registry.get_project(project_id), weight)
                    for project_id, weight
                    in annif.util.parse_sources(self.params['sources'])]
 
@@ -167,7 +176,8 @@ class NNEnsembleBackend(
             doc_scores = []
             for source_project, weight in sources:
                 hits = source_project.suggest(doc.text)
-                doc_scores.append(hits.vector * weight)
+                doc_scores.append(
+                    hits.as_vector(source_project.subjects) * weight)
             score_vector = np.array(doc_scores,
                                     dtype=np.float32).transpose()
             subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))

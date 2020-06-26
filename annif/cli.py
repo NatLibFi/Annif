@@ -3,6 +3,8 @@ operations and printing the results to console."""
 
 
 import collections
+import multiprocessing
+import multiprocessing.dummy
 import os.path
 import re
 import sys
@@ -14,6 +16,7 @@ import annif
 import annif.corpus
 import annif.eval
 import annif.project
+import annif.registry
 from annif.project import Access
 from annif.suggestion import SuggestionFilter
 from annif.exception import ConfigurationException, NotSupportedException
@@ -28,7 +31,7 @@ def get_project(project_id):
     """
     Helper function to get a project by ID and bail out if it doesn't exist"""
     try:
-        return annif.project.get_project(project_id, min_access=Access.hidden)
+        return annif.registry.get_project(project_id, min_access=Access.hidden)
     except ValueError:
         click.echo(
             "No projects found with id \'{0}\'.".format(project_id),
@@ -84,7 +87,7 @@ def generate_filter_batches(subjects):
     filter_batches = collections.OrderedDict()
     for limit in range(1, 16):
         for threshold in [i * 0.05 for i in range(20)]:
-            hit_filter = SuggestionFilter(limit, threshold)
+            hit_filter = SuggestionFilter(subjects, limit, threshold)
             batch = annif.eval.EvaluationBatch(subjects)
             filter_batches[(limit, threshold)] = (hit_filter, batch)
     return filter_batches
@@ -117,17 +120,21 @@ def backend_param_option(f):
 
 @cli.command('list-projects')
 @common_options
+@click_log.simple_verbosity_option(logger, default='ERROR')
 def run_list_projects():
     """
     List available projects.
     """
 
-    template = "{0: <25}{1: <45}{2: <8}"
-    header = template.format("Project ID", "Project Name", "Language")
+    template = "{0: <25}{1: <45}{2: <10}{3: <7}"
+    header = template.format(
+        "Project ID", "Project Name", "Language", "Trained")
     click.echo(header)
     click.echo("-" * len(header))
-    for proj in annif.project.get_projects(min_access=Access.private).values():
-        click.echo(template.format(proj.project_id, proj.name, proj.language))
+    for proj in annif.registry.get_projects(
+            min_access=Access.private).values():
+        click.echo(template.format(
+            proj.project_id, proj.name, proj.language, str(proj.is_trained)))
 
 
 @cli.command('show-project')
@@ -139,11 +146,12 @@ def run_show_project(project_id):
     """
 
     proj = get_project(project_id)
-    template = "{0:<20}{1}"
-    click.echo(template.format('Project ID:', proj.project_id))
-    click.echo(template.format('Project Name:', proj.name))
-    click.echo(template.format('Language:', proj.language))
-    click.echo(template.format('Access:', proj.access.name))
+    click.echo(f'Project ID:        {proj.project_id}')
+    click.echo(f'Project Name:      {proj.name}')
+    click.echo(f'Language:          {proj.language}')
+    click.echo(f'Access:            {proj.access.name}')
+    click.echo(f'Trained:           {proj.is_trained}')
+    click.echo(f'Modification time: {proj.modification_time}')
 
 
 @cli.command('clear')
@@ -226,9 +234,9 @@ def run_suggest(project_id, limit, threshold, backend_param):
     project = get_project(project_id)
     text = sys.stdin.read()
     backend_params = parse_backend_params(backend_param, project)
-    hit_filter = SuggestionFilter(limit, threshold)
+    hit_filter = SuggestionFilter(project.subjects, limit, threshold)
     hits = hit_filter(project.suggest(text, backend_params))
-    for hit in hits:
+    for hit in hits.as_list(project.subjects):
         click.echo(
             "<{}>\t{}\t{}".format(
                 hit.uri,
@@ -257,7 +265,7 @@ def run_index(project_id, directory, suffix, force,
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
-    hit_filter = SuggestionFilter(limit, threshold)
+    hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
     for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
             directory, require_subjects=False):
@@ -271,7 +279,7 @@ def run_index(project_id, directory, suffix, force,
             continue
         with open(subjectfilename, 'w', encoding='utf-8') as subjfile:
             results = project.suggest(text, backend_params)
-            for hit in hit_filter(results):
+            for hit in hit_filter(results).as_list(project.subjects):
                 line = "<{}>\t{}\t{}".format(
                     hit.uri,
                     '\t'.join(filter(None, (hit.label, hit.notation))),
@@ -292,10 +300,20 @@ def run_index(project_id, directory, suffix, force,
         errors='ignore',
         lazy=True),
     help="""Specify file in order to write non-aggregated results per subject.
-    File directory must exists, existing file will be overwritten.""")
+    File directory must exist, existing file will be overwritten.""")
+@click.option('--jobs',
+              default=1,
+              help='Number of parallel jobs (0 means all CPUs)')
 @backend_param_option
 @common_options
-def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
+def run_eval(
+        project_id,
+        paths,
+        limit,
+        threshold,
+        results_file,
+        jobs,
+        backend_param):
     """
     Analyze documents and evaluate the result.
 
@@ -307,7 +325,6 @@ def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
 
-    hit_filter = SuggestionFilter(limit=limit, threshold=threshold)
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
 
     if results_file:
@@ -319,11 +336,25 @@ def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
             raise NotSupportedException(
                 "cannot open results-file for writing: " + str(e))
     docs = open_documents(paths)
-    for doc in docs.documents:
-        results = project.suggest(doc.text, backend_params)
-        hits = hit_filter(results)
-        eval_batch.evaluate(hits,
-                            annif.corpus.SubjectSet((doc.uris, doc.labels)))
+
+    if jobs < 1:
+        jobs = None
+        pool_class = multiprocessing.Pool
+    elif jobs == 1:
+        # use the dummy wrapper around threading to avoid subprocess overhead
+        pool_class = multiprocessing.dummy.Pool
+    else:
+        pool_class = multiprocessing.Pool
+
+    project.initialize()
+    psmap = annif.project.ProjectSuggestMap(
+        project, backend_params, limit, threshold)
+
+    with pool_class(jobs) as pool:
+        for hits, uris, labels in pool.imap_unordered(
+                psmap.suggest, docs.documents):
+            eval_batch.evaluate(hits,
+                                annif.corpus.SubjectSet((uris, labels)))
 
     template = "{0:<30}\t{1}"
     for metric, score in eval_batch.results(results_file=results_file).items():

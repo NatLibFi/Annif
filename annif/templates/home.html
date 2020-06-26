@@ -114,7 +114,6 @@ Vue.component('annif-projects', {
   <div class="form-group">\
     <label for="project">Project (vocabulary and language):</label>\
     <select class="form-control" id="project" @input="handleProjectSelected">\
-      <option></option>\
       <option v-for="project in projects" v-bind:value="project.project_id"><% project.name %></option>\
     </select>\
   </div>\
@@ -171,6 +170,9 @@ new Vue({
         method: 'GET',
         success: function(data) {
           this_.projects = data.projects;
+          if(data.projects && data.projects.length > 0){
+            this_.project = data.projects[0].project_id
+          }
         },
         error: function(data) {
           if (data.responseJSON == null) {

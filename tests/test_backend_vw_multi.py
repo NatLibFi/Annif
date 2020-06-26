@@ -99,7 +99,7 @@ def test_vw_multi_train_and_learn_nodocuments(datadir, project, empty_corpus):
     assert datadir.join('vw-train.txt').size() == 0
 
 
-def test_vw_multi_train_from_project(app, datadir, document_corpus, project):
+def test_vw_multi_train_from_project(datadir, document_corpus, project):
     vw_type = annif.backend.get_backend('vw_multi')
     vw = vw_type(
         backend_id='vw_multi',
@@ -108,8 +108,7 @@ def test_vw_multi_train_from_project(app, datadir, document_corpus, project):
             'inputs': '_text_,dummy-en'},
         project=project)
 
-    with app.app_context():
-        vw.train(document_corpus)
+    vw.train(document_corpus)
     assert vw._model is not None
     assert datadir.join('vw-model').exists()
     assert datadir.join('vw-model').size() > 0
@@ -217,9 +216,10 @@ def test_vw_multi_suggest(project):
         pohjaan.""")
 
     assert len(results) > 0
+    hits = results.as_list(project.subjects)
     assert 'http://www.yso.fi/onto/yso/p1265' in [
-        result.uri for result in results]
-    assert 'arkeologia' in [result.label for result in results]
+        result.uri for result in hits]
+    assert 'arkeologia' in [result.label for result in hits]
 
 
 def test_vw_multi_suggest_empty(project):

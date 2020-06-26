@@ -51,9 +51,10 @@ def test_tfidf_suggest(project):
         pohjaan.""")
 
     assert len(results) == 10
+    hits = results.as_list(project.subjects)
     assert 'http://www.yso.fi/onto/yso/p1265' in [
-        result.uri for result in results]
-    assert 'arkeologia' in [result.label for result in results]
+        result.uri for result in hits]
+    assert 'arkeologia' in [result.label for result in hits]
 
 
 def test_suggest_params(project):
