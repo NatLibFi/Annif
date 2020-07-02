@@ -3,7 +3,7 @@ version: "3.6"
 services:
 
   annif_app:
-    image: quay.io/natlibfi/annif:0.46.0
+    image: quay.io/natlibfi/annif:0.47.1
     command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000", "--timeout", "600"]
     volumes:
       - data:/annif-projects:ro
@@ -52,7 +52,7 @@ services:
         - traefik.http.routers.${STACK_NAME}-https.tls=true
 
   mauiserver:
-    image: quay.io/natlibfi/mauiserver:1.3.2
+    image: quay.io/natlibfi/mauiserver:1.3.2-tomcat-8.5.53-jdk11-openjdk-slim
     volumes:
       - data:/annif-projects
       - /etc/localtime:/etc/localtime:ro
@@ -120,9 +120,6 @@ services:
       - matomo-token
     deploy:
       replicas: 1
-      restart_policy:
-        condition: on-failure
-        max_attempts: 3
       placement:
         constraints:
           - node.labels.environment == $NODE_LABELS_ENVIRONMENT
@@ -139,7 +136,7 @@ networks:
 configs:
   nginx.conf:
     external: true
-    name: ${STACK_NAME}-nginx-proxy5
+    name: ${STACK_NAME}-prod-nginx-proxy7
 
 secrets:
   annif-rsync-id-rsa:
@@ -148,4 +145,4 @@ secrets:
     external: true
   matomo-token:
     external: true
-    name: ${STACK_NAME}-matomo-token
+    name: annif-matomo-token
