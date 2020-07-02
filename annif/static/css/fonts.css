@@ -1,0 +1,21 @@
+/* TTF fonts downloaded from https://fontsarena.com/jost-by-owen-earl/ */
+
+/* jost-regular - latin-ext_latin */
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-weight: 400;
+  src: local(''),
+       url('../fonts/Jost-400-Book.otf') format('opentype'),
+       url('../fonts/Jost-400-Book.ttf') format('truetype');
+}
+
+/* jost-500 - latin-ext_latin */
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-weight: 500;
+  src: local(''),
+       url('../fonts/Jost-500-Medium.otf') format('opentype'),
+       url('../fonts/Jost-500-Medium.ttf') format('truetype');
+}
