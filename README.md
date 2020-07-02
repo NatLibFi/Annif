@@ -3,8 +3,8 @@
 The components of the API instances are combined in Docker Stacks, which are set up using Portainer GUI. 
 The Stacks do not automatically follow the docker-compose files in this branch, the files are here to allow easier referencing to them. 
 
-The content for the API web pages are in directories with the name of the service domain. 
-[ai.dev.finto.fi](ai.dev.finto.fi) uses the content of `ai.finto.fi` directory.
+The content for the production API web pages are in directories with the name of the service domain. 
+Testing domain [ai.dev.finto.fi](https://ai.dev.finto.fi) uses the content of `ai.finto.fi` directory and [annif.dev.finto.fi](https://annif.dev.finto.fi) uses the content of `api.annif.org` directory.
 
 
 ## Data deployment for the APIs
