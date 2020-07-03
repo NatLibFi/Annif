@@ -1,3 +1,19 @@
-header { background-color: #3f9a88; }
-h1 { color: white; font-size: 2rem; }
-body { font-family: 'Jost', sans-serif; }
+body {
+  background-color: white;
+  color: #343260;
+  font-family: Jost, sans-serif;
+  font-weight: 400;
+  font-size: 1.2rem;
+  line-height: 1.2
+}
+header {
+  background: #ffffff;
+  background: -moz-linear-gradient(top, #ffffff 92%, #d9dfe3 92%, #ffffff 100%);
+  background: -webkit-linear-gradient(top, #ffffff 92%, #d9dfe3 92%, #ffffff 100%);
+  background: linear-gradient(to bottom, #ffffff 92%, #d9dfe3 92%, #ffffff 100%);
+  padding-bottom: 5px;
+}
+a { color: #343260; text-decoration: underline; }
+a:hover, a:active { color: #6280dc; }
+a:visited { color: #536f9f }
+h1 { font-size: 2rem; }
