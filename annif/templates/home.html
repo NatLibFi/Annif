@@ -46,7 +46,7 @@
     </template>
     <div class="row mb-5">
       <div class="col-md-8">
-        <annif-textarea @text-changed="onTextChanged"></annif-textarea>
+        <annif-textarea @text-changed="onTextChanged" @text-cleared="onTextCleared"></annif-textarea>
       </div>
       <div class="col-md-4">
         <annif-projects :projects="projects" @project-selected="onProjectSelected"></annif-projects>
@@ -95,15 +95,28 @@ Vue.config.devtools = true;
 // Component with text area for input
 Vue.component('annif-textarea', {
   delimiters: ["<%","%>"],
+  data: function() {
+    return {
+      text: '',
+    }
+  },
   methods: {
     handleTextInput: function(event) {
       this.$emit('text-changed', event.target.value);
+      this.text = event.target.value;
+    },
+    clearTextInput: function(event) {
+      this.$emit('text-cleared');
+      this.text = '';
     }
   },
-  template: '<div class="form-group">\
-  <textarea class="form-control" rows="15" name="text" id="text" @input="handleTextInput"\
+  template: '<div id="text-box" class="form-group">\
+  <div id="text-box-wrapper">\
+  <button type="button" class="btn btn-danger" @click="clearTextInput" style="float: right;">&#x2715;</button>\
+  <textarea class="form-control" rows="15" name="text" id="text" @input="handleTextInput" :value="text"\
   placeholder="Copy text here and press the button &quot;Get suggestions&quot;"></textarea>\
-</div>'
+  </div>\
+  </div>'
 });
 
 // Component with list of projects
@@ -168,6 +181,10 @@ new Vue({
     },
     onTextChanged(text) {
       this.text = text;
+    },
+    onTextCleared() {
+      this.text = '';
+      this.clearResults();
     },
     loadProjects: function() {
       var this_ = this;

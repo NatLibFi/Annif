@@ -17,3 +17,16 @@ a { color: #343260; text-decoration: underline; }
 a:hover, a:active { color: #6280dc; }
 a:visited { color: #536f9f }
 h1 { font-size: 2rem; }
+#text-box-wrapper {
+  position: relative;
+}
+#text-box button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #ff9182;
+  color: black;
+  border: none;
+  border-radius: 0px;
+  padding: 2px 7px;
+}
