@@ -52,14 +52,13 @@
         <annif-projects :projects="projects" @project-selected="onProjectSelected"></annif-projects>
         <button type="button" class="btn btn-primary" @click="suggest" :disabled="loading">
           <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="loading"></span>
-          <span v-if="!loading">Analyze</span>
+          <span v-if="!loading">Get suggestions</span>
           <span v-else>Loading...</span>
         </button>
         <annif-results :results="results"></annif-results>
       </div>
     </div>
   </div>
-
 </div> <!-- container -->
 
 <script src="/static/js/vue.min.js"></script>
@@ -211,7 +210,7 @@ new Vue({
     suggest: function(event) {
       this.problems = [];
       if (this.text.trim() === "") {
-        this.problems.push(new Problem('', 'You need to enter the text to analyze', false));
+        this.problems.push(new Problem('', 'You need to enter the text to get suggestions for', false));
       }
       if (this.project.trim() === "") {
         this.problems.push(new Problem('', 'You need to select one project', false));
