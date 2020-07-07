@@ -62,6 +62,23 @@ select {
   color: black;
   pointer-events: none;
 }
+#limit-buttons label {
+  border-radius: 50%;
+  margin-right: 0.4rem;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #c7d9ed;
+  color: #343260;
+  border-width: 0px;
+  font-weight: 500;
+}
+#limit-buttons .active {
+  background-color: #6280dc;
+  color: white;
+}
 #get-suggestions {
   margin: 2rem 0;
   background-color: #6280dc;

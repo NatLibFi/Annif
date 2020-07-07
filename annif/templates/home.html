@@ -52,6 +52,7 @@
       </div>
       <div class="col-md-4">
         <annif-projects :projects="projects" @project-selected="onProjectSelected"></annif-projects>
+        <annif-limit :limit="limit" @limit-selected="onLimitSelected"></annif-limit>
         <button id="get-suggestions" type="button" class="btn btn-primary" @click="suggest" :disabled="loading">
           <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="loading"></span>
           <span v-if="!loading">Get suggestions</span>
@@ -142,6 +143,35 @@ Vue.component('annif-projects', {
 </div>'
 });
 
+// Component with limit buttons
+Vue.component('annif-limit', {
+  delimiters: ["<%","%>"],
+  props: ['limit'],
+  methods: {
+    handleLimitSelected: function(event) {
+      // User selected a limit for suggestions, so we use the bus to emit the value. This will be picked up by the parent component
+      this.$emit('limit-selected', event.target.value);
+    }
+  },
+  template: '<div class="form-group">\
+      <label>Max # of suggestions</label>\
+      <div id="limit-buttons" class="btn-group btn-group-toggle" data-toggle="buttons" @click="handleLimitSelected">\
+        <label class="btn btn-secondary">\
+          <input v-bind="limit" type="radio" name="limit" value="10" checked>\
+          10\
+        </label>\
+        <label class="btn btn-secondary">\
+          <input v-bind="limit" type="radio" name="limit" value="15">\
+          15\
+        </label>\
+        <label class="btn btn-secondary">\
+          <input v-bind="limit" type="radio" name="limit" value="20">\
+          20\
+        </label>\
+      </div>\
+    </div>'
+});
+
 // Component with the list of results
 Vue.component('annif-results', {
   delimiters: ["<%","%>"],
@@ -164,6 +194,7 @@ new Vue({
   data: {
     text: '',
     project: '',
+    limit: 10,
     projects: [],
     results: [],
     problems: [],
@@ -188,6 +219,9 @@ new Vue({
     onTextCleared() {
       this.text = '';
       this.clearResults();
+    },
+    onLimitSelected(limit) {
+      this.limit = limit;
     },
     loadProjects: function() {
       var this_ = this;
@@ -230,6 +264,7 @@ new Vue({
         method: 'POST',
         data: {
           text: this_.text,
+          limit: this_.limit,
         },
         beforeSend: function() {
           this_.loading = true;
