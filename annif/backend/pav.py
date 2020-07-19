@@ -15,7 +15,7 @@ from annif.exception import NotInitializedException, NotSupportedException
 from . import ensemble
 
 
-class PAVBackend(ensemble.EnsembleBackend):
+class PAVBackend(ensemble.BaseEnsembleBackend):
     """PAV ensemble backend that combines results from multiple projects"""
     name = "pav"
 
@@ -25,14 +25,6 @@ class PAVBackend(ensemble.EnsembleBackend):
     _models = None
 
     DEFAULT_PARAMETERS = {'min-docs': 10}
-
-    @property
-    def is_trained(self):
-        return super(ensemble.EnsembleBackend, self).is_trained
-
-    @property
-    def modification_time(self):
-        return super(ensemble.EnsembleBackend, self).modification_time
 
     def initialize(self):
         super().initialize()
