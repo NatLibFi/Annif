@@ -44,7 +44,7 @@ class HyperparameterOptimizer:
         """Find the optimal hyperparameters by testing up to the given number
         of hyperparameter combinations"""
 
-        self._prepare()
+        self._prepare(n_jobs)
         study = optuna.create_study(direction='maximize')
         study.optimize(self._objective,
                        n_trials=n_trials,

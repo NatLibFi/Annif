@@ -1,6 +1,7 @@
 """Ensemble backend that combines results from multiple projects"""
 
 
+import multiprocessing
 import annif.suggestion
 import annif.util
 import annif.eval
@@ -68,20 +69,35 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                          in annif.util.parse_sources(
                              backend.config_params['sources'])]
 
-    def _prepare(self):
+    def _prepare(self, n_jobs):
         self._gold_subjects = []
         self._source_hits = []
 
-        for doc in self._corpus.documents:
-            self._gold_subjects.append(
-                annif.corpus.SubjectSet((doc.uris, doc.labels)))
-            srchits = {}
-            for project_id in self._sources:
-                registry = self._backend.project.registry
-                source_project = registry.get_project(project_id)
-                hits = source_project.suggest(doc.text)
-                srchits[project_id] = hits
-            self._source_hits.append(srchits)
+        for project_id in self._sources:
+            project = self._backend.project.registry.get_project(project_id)
+            project.initialize()
+
+        if n_jobs < 1:
+            n_jobs = None
+            pool_class = multiprocessing.Pool
+        elif n_jobs == 1:
+            pool_class = multiprocessing.dummy.Pool
+        else:
+            pool_class = multiprocessing.Pool
+
+        psmap = annif.project.ProjectSuggestMap(
+            self._backend.project.registry,
+            self._sources,
+            backend_params=None,
+            limit=int(self._backend.params['limit']),
+            threshold=0.0)
+
+        with pool_class(n_jobs) as pool:
+            for hits, uris, labels in pool.imap_unordered(
+                    psmap.suggest, self._corpus.documents):
+                self._gold_subjects.append(
+                    annif.corpus.SubjectSet((uris, labels)))
+                self._source_hits.append(hits)
 
     def _normalize(self, hps):
         total = sum(hps.values())

@@ -348,12 +348,12 @@ def run_eval(
 
     project.initialize()
     psmap = annif.project.ProjectSuggestMap(
-        project, backend_params, limit, threshold)
+        project.registry, [project_id], backend_params, limit, threshold)
 
     with pool_class(jobs) as pool:
         for hits, uris, labels in pool.imap_unordered(
                 psmap.suggest, docs.documents):
-            eval_batch.evaluate(hits,
+            eval_batch.evaluate(hits[project_id],
                                 annif.corpus.SubjectSet((uris, labels)))
 
     template = "{0:<30}\t{1}"

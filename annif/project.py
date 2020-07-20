@@ -240,20 +240,28 @@ class AnnifProject(DatadirMixin):
 
 
 class ProjectSuggestMap:
-    """A utility class that can be used to wrap a project and provide a
-    mapping method that converts Document objects to suggestions. Intended
-    to be used with the multiprocessing module."""
+    """A utility class that can be used to wrap one or more projects and
+    provide a mapping method that converts Document objects to suggestions.
+    Intended to be used with the multiprocessing module."""
 
-    def __init__(self, project, backend_params, limit, threshold):
-        self.project_id = project.project_id
-        self.registry = project.registry
+    def __init__(
+            self,
+            registry,
+            project_ids,
+            backend_params,
+            limit,
+            threshold):
+        self.registry = registry
+        self.project_ids = project_ids
         self.backend_params = backend_params
         self.limit = limit
         self.threshold = threshold
 
     def suggest(self, doc):
-        project = self.registry.get_project(self.project_id)
-        hits = project.suggest(doc.text, self.backend_params)
-        filtered_hits = hits.filter(
-            project.subjects, self.limit, self.threshold)
+        filtered_hits = {}
+        for project_id in self.project_ids:
+            project = self.registry.get_project(project_id)
+            hits = project.suggest(doc.text, self.backend_params)
+            filtered_hits[project_id] = hits.filter(
+                project.subjects, self.limit, self.threshold)
         return (filtered_hits, doc.uris, doc.labels)
