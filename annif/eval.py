@@ -202,11 +202,13 @@ class EvaluationBatch:
         if not self._samples:
             raise NotSupportedException("cannot evaluate empty corpus")
 
-        y_true = np.array([gold_subjects.as_vector(self._subject_index)
-                           for hits, gold_subjects in self._samples])
-        y_pred = np.array([hits.as_vector(self._subject_index)
-                           for hits, gold_subjects in self._samples],
-                          dtype=np.float32)
+        shape = (len(self._samples), len(self._subject_index))
+        y_true = np.zeros(shape, dtype=bool)
+        y_pred = np.zeros(shape, dtype=np.float32)
+
+        for idx, (hits, gold_subjects) in enumerate(self._samples):
+            gold_subjects.as_vector(self._subject_index, target=y_true[idx])
+            hits.as_vector(self._subject_index, target=y_pred[idx])
 
         results = self._evaluate_samples(
             y_true, y_pred, metrics)

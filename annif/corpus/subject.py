@@ -161,20 +161,23 @@ class SubjectSet:
         """returns True if the URIs for all subjects are known"""
         return len(self.subject_uris) >= len(self.subject_labels)
 
-    def as_vector(self, subject_index):
+    def as_vector(self, subject_index, target=None):
         """Return the hits as a one-dimensional NumPy array in sklearn
            multilabel indicator format, using a subject index as the source
-           of subjects."""
+           of subjects. Use target array if given (not None), otherwise create
+           and return a new one."""
 
-        vector = np.zeros(len(subject_index), dtype=bool)
+        if target is None:
+            target = np.zeros(len(subject_index), dtype=bool)
+
         if self.has_uris():
             for uri in self.subject_uris:
                 subject_id = subject_index.by_uri(uri)
                 if subject_id is not None:
-                    vector[subject_id] = True
+                    target[subject_id] = True
         else:
             for label in self.subject_labels:
                 subject_id = subject_index.by_label(label)
                 if subject_id is not None:
-                    vector[subject_id] = True
-        return vector
+                    target[subject_id] = True
+        return target
