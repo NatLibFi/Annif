@@ -1,6 +1,7 @@
 """Unit tests for corpus functionality in Annif"""
 
 import gzip
+import numpy as np
 import annif.corpus
 
 
@@ -45,6 +46,16 @@ def test_subjectset_as_vector(subject_index):
     sset = annif.corpus.SubjectSet((uris, labels))
     vector = sset.as_vector(subject_index)
     assert vector.sum() == 1  # only one known subject
+
+
+def test_subjectset_as_vector_target(subject_index):
+    uris = ['http://www.yso.fi/onto/yso/p10849', 'http://example.org/unknown']
+    labels = ['arkeologit', 'unknown-subject']
+    sset = annif.corpus.SubjectSet((uris, labels))
+    target = np.zeros(len(subject_index), dtype=np.float32)
+    vector = sset.as_vector(subject_index, target=target)
+    assert vector.sum() == 1  # only one known subject
+    assert vector is target
 
 
 def test_docdir_key(tmpdir):
