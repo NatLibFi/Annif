@@ -32,6 +32,14 @@ class HyperparameterOptimizer:
         """Convert the study results into hyperparameter recommendations"""
         pass  # pragma: no cover
 
+    def _write_trials_header(self, results_file, param_names):
+        print('\t'.join(['trial', 'value'] + param_names), file=results_file)
+
+    def _write_trial(self, results_file, trial):
+        print('\t'.join((str(e) for e in [trial.number, trial.value] +
+                         list(trial.params.values()))),
+              file=results_file)
+
     def optimize(self, n_trials, n_jobs, results_file):
         """Find the optimal hyperparameters by testing up to the given number
         of hyperparameter combinations"""
@@ -44,8 +52,10 @@ class HyperparameterOptimizer:
                        gc_after_trial=False,
                        show_progress_bar=True)
         if results_file:
-            df = study.trials_dataframe()
-            df.to_csv(results_file)
+            self._write_trials_header(results_file,
+                                      list(study.best_params.keys()))
+            for trial in study.trials:
+                self._write_trial(results_file, trial)
         return self._postprocess(study)
 
 
