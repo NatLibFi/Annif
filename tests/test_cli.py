@@ -707,6 +707,33 @@ def test_hyperopt_ensemble(tmpdir):
         result.output) is not None
 
 
+def test_hyperopt_ensemble_resultsfile(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    resultfile = tmpdir.join('results.tsv')
+
+    result = runner.invoke(
+        annif.cli.cli, [
+            'hyperopt', '--results-file', str(resultfile), 'ensemble',
+            str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    with resultfile.open() as f:
+        header = next(f)
+        assert header.strip('\n') == '\t'.join(['trial',
+                                                'value',
+                                                'dummy-en',
+                                                'dummydummy'])
+        for idx, line in enumerate(f):
+            assert line.strip() != ''
+            parts = line.split('\t')
+            assert len(parts) == 4
+            assert int(parts[0]) == idx
+
+
 def test_hyperopt_not_supported(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('dummy')
