@@ -12,6 +12,29 @@ from annif import logger
 HPRecommendation = collections.namedtuple('HPRecommendation', 'lines score')
 
 
+class TrialWriter:
+    """Object that writes hyperparameter optimization trial results into a
+    TSV file."""
+
+    def __init__(self, results_file, normalize_func):
+        self.results_file = results_file
+        self.normalize_func = normalize_func
+        self.header_written = False
+
+    def write(self, study, trial):
+        """Write the results of one trial into the results file.  On the
+        first run, write the header line first."""
+
+        if not self.header_written:
+            param_names = list(trial.params.keys())
+            print('\t'.join(['trial', 'value'] + param_names),
+                  file=self.results_file)
+            self.header_written = True
+        print('\t'.join((str(e) for e in [trial.number, trial.value] +
+                         list(self.normalize_func(trial.params).values()))),
+              file=self.results_file)
+
+
 class HyperparameterOptimizer:
     """Base class for hyperparameter optimizers"""
 
@@ -37,19 +60,22 @@ class HyperparameterOptimizer:
         """Convert the study results into hyperparameter recommendations"""
         pass  # pragma: no cover
 
-    def _write_trials_header(self, results_file, param_names):
-        print('\t'.join(['trial', 'value'] + param_names), file=results_file)
-
-    def _write_trial(self, results_file, trial):
-        print('\t'.join((str(e) for e in [trial.number, trial.value] +
-                         list(trial.params.values()))),
-              file=results_file)
+    def _normalize(self, hps):
+        """Normalize the given raw hyperparameters. Intended to be overridden
+        by subclasses when necessary. The default is to keep them as-is."""
+        return hps
 
     def optimize(self, n_trials, n_jobs, results_file):
         """Find the optimal hyperparameters by testing up to the given number
         of hyperparameter combinations"""
 
         self._prepare(n_jobs)
+
+        if results_file:
+            callbacks = [TrialWriter(results_file, self._normalize).write]
+        else:
+            callbacks = []
+
         study = optuna.create_study(direction='maximize')
         # silence the ExperimentalWarning when using the Optuna progress bar
         warnings.filterwarnings("ignore",
@@ -57,13 +83,9 @@ class HyperparameterOptimizer:
         study.optimize(self._objective,
                        n_trials=n_trials,
                        n_jobs=n_jobs,
+                       callbacks=callbacks,
                        gc_after_trial=False,
                        show_progress_bar=(n_jobs == 1))
-        if results_file:
-            self._write_trials_header(results_file,
-                                      list(study.best_params.keys()))
-            for trial in study.trials:
-                self._write_trial(results_file, trial)
         return self._postprocess(study)
 
 
