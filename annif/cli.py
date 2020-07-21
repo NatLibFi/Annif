@@ -185,7 +185,7 @@ def run_loadvoc(project_id, subjectfile):
 @cli.command('train')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
-@click.option('--cached/--no-cached', default=False,
+@click.option('--cached/--no-cached', '-c/-C', default=False,
               help='Reuse preprocessed training data from previous run')
 @backend_param_option
 @common_options
@@ -222,8 +222,8 @@ def run_learn(project_id, paths, backend_param):
 
 @cli.command('suggest')
 @click.argument('project_id')
-@click.option('--limit', default=10, help='Maximum number of subjects')
-@click.option('--threshold', default=0.0, help='Minimum score threshold')
+@click.option('--limit', '-l', default=10, help='Maximum number of subjects')
+@click.option('--threshold', '-t', default=0.0, help='Minimum score threshold')
 @backend_param_option
 @common_options
 def run_suggest(project_id, limit, threshold, backend_param):
@@ -248,12 +248,13 @@ def run_suggest(project_id, limit, threshold, backend_param):
 @click.argument('directory', type=click.Path(exists=True, file_okay=False))
 @click.option(
     '--suffix',
+    '-s',
     default='.annif',
     help='File name suffix for result files')
-@click.option('--force/--no-force', default=False,
+@click.option('--force/--no-force', '-f/-F', default=False,
               help='Force overwriting of existing result files')
-@click.option('--limit', default=10, help='Maximum number of subjects')
-@click.option('--threshold', default=0.0, help='Minimum score threshold')
+@click.option('--limit', '-l', default=10, help='Maximum number of subjects')
+@click.option('--threshold', '-t', default=0.0, help='Minimum score threshold')
 @backend_param_option
 @common_options
 def run_index(project_id, directory, suffix, force,
@@ -289,10 +290,11 @@ def run_index(project_id, directory, suffix, force,
 @cli.command('eval')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
-@click.option('--limit', default=10, help='Maximum number of subjects')
-@click.option('--threshold', default=0.0, help='Minimum score threshold')
+@click.option('--limit', '-l', default=10, help='Maximum number of subjects')
+@click.option('--threshold', '-t', default=0.0, help='Minimum score threshold')
 @click.option(
     '--results-file',
+    '-r',
     type=click.File(
         'w',
         encoding='utf-8',
@@ -301,6 +303,7 @@ def run_index(project_id, directory, suffix, force,
     help="""Specify file in order to write non-aggregated results per subject.
     File directory must exist, existing file will be overwritten.""")
 @click.option('--jobs',
+              '-j',
               default=1,
               help='Number of parallel jobs (0 means all CPUs)')
 @backend_param_option
@@ -425,13 +428,15 @@ def run_optimize(project_id, paths, backend_param):
 @cli.command('hyperopt')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
-@click.option('--trials', default=10, help='Number of trials')
+@click.option('--trials', '-T', default=10, help='Number of trials')
 @click.option('--jobs',
+              '-j',
               default=1,
-              help='Number of parallel runs (-1 means all CPUs)')
-@click.option('--metric', default='NDCG', help='Metric to optimize')
+              help='Number of parallel runs (0 means all CPUs)')
+@click.option('--metric', '-m', default='NDCG', help='Metric to optimize (default: NDCG)')
 @click.option(
     '--results-file',
+    '-r',
     type=click.File(
         'w',
         encoding='utf-8',
