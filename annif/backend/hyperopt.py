@@ -18,8 +18,11 @@ class HyperparameterOptimizer:
         self._corpus = corpus
         self._metric = metric
 
-    def _prepare(self):
-        """Prepare the optimizer for hyperparameter evaluation"""
+    def _prepare(self, n_jobs=1):
+        """Prepare the optimizer for hyperparameter evaluation.  Up to
+        n_jobs parallel threads or processes may be used during the
+        operation."""
+
         pass  # pragma: no cover
 
     @abc.abstractmethod

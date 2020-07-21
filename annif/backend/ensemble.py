@@ -69,7 +69,7 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                          in annif.util.parse_sources(
                              backend.config_params['sources'])]
 
-    def _prepare(self, n_jobs):
+    def _prepare(self, n_jobs=1):
         self._gold_subjects = []
         self._source_hits = []
 
