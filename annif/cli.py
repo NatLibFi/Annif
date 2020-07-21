@@ -433,7 +433,8 @@ def run_optimize(project_id, paths, backend_param):
               '-j',
               default=1,
               help='Number of parallel runs (0 means all CPUs)')
-@click.option('--metric', '-m', default='NDCG', help='Metric to optimize (default: NDCG)')
+@click.option('--metric', '-m', default='NDCG',
+              help='Metric to optimize (default: NDCG)')
 @click.option(
     '--results-file',
     '-r',
