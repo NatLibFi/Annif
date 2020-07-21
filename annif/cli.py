@@ -3,8 +3,6 @@ operations and printing the results to console."""
 
 
 import collections
-import multiprocessing
-import multiprocessing.dummy
 import os.path
 import re
 import sys
@@ -15,6 +13,7 @@ from flask.cli import FlaskGroup, ScriptInfo
 import annif
 import annif.corpus
 import annif.eval
+import annif.parallel
 import annif.project
 import annif.registry
 from annif.project import Access
@@ -337,23 +336,16 @@ def run_eval(
                 "cannot open results-file for writing: " + str(e))
     docs = open_documents(paths)
 
-    if jobs < 1:
-        jobs = None
-        pool_class = multiprocessing.Pool
-    elif jobs == 1:
-        # use the dummy wrapper around threading to avoid subprocess overhead
-        pool_class = multiprocessing.dummy.Pool
-    else:
-        pool_class = multiprocessing.Pool
+    jobs, pool_class = annif.parallel.get_pool(jobs)
 
     project.initialize()
-    psmap = annif.project.ProjectSuggestMap(
-        project, backend_params, limit, threshold)
+    psmap = annif.parallel.ProjectSuggestMap(
+        project.registry, [project_id], backend_params, limit, threshold)
 
     with pool_class(jobs) as pool:
         for hits, uris, labels in pool.imap_unordered(
                 psmap.suggest, docs.documents):
-            eval_batch.evaluate(hits,
+            eval_batch.evaluate(hits[project_id],
                                 annif.corpus.SubjectSet((uris, labels)))
 
     template = "{0:<30}\t{1}"
@@ -400,7 +392,12 @@ def run_optimize(project_id, paths, backend_param):
     filter_batches = list(filter_batches.items())
     while filter_batches:
         params, filter_batch = filter_batches.pop(0)
-        results = filter_batch[1].results(metrics='simple')
+        metrics = ['Precision (doc avg)',
+                   'Recall (doc avg)',
+                   'F1 score (doc avg)',
+                   'NDCG@5',
+                   'NDCG@10']
+        results = filter_batch[1].results(metrics=metrics)
         for metric, score in results.items():
             if score >= best_scores[metric]:
                 best_scores[metric] = score
@@ -415,11 +412,7 @@ def run_optimize(project_id, paths, backend_param):
 
     click.echo()
     template2 = "Best {:>19}: {:.04f}\tLimit: {:d}\tThreshold: {:.02f}"
-    for metric in ('Precision (doc avg)',
-                   'Recall (doc avg)',
-                   'F1 score (doc avg)',
-                   'NDCG@5',
-                   'NDCG@10'):
+    for metric in metrics:
         click.echo(
             template2.format(
                 metric,
@@ -427,6 +420,39 @@ def run_optimize(project_id, paths, backend_param):
                 best_params[metric][0],
                 best_params[metric][1]))
     click.echo("Documents evaluated:\t{}".format(ndocs))
+
+
+@cli.command('hyperopt')
+@click.argument('project_id')
+@click.argument('paths', type=click.Path(exists=True), nargs=-1)
+@click.option('--trials', default=10, help='Number of trials')
+@click.option('--jobs',
+              default=1,
+              help='Number of parallel runs (-1 means all CPUs)')
+@click.option('--metric', default='NDCG', help='Metric to optimize')
+@click.option(
+    '--results-file',
+    type=click.File(
+        'w',
+        encoding='utf-8',
+        errors='ignore',
+        lazy=True),
+    help="""Specify file path to write trial results as CSV.
+    File directory must exist, existing file will be overwritten.""")
+@common_options
+def run_hyperopt(project_id, paths, trials, jobs, metric, results_file):
+    """
+    Optimize the hyperparameters of a project using a validation corpus.
+    """
+    proj = get_project(project_id)
+    documents = open_documents(paths)
+    click.echo(f"Looking for optimal hyperparameters using {trials} trials")
+    rec = proj.hyperopt(documents, trials, jobs, metric, results_file)
+    click.echo(f"Got best {metric} score {rec.score:.4f} with:")
+    click.echo("---")
+    for line in rec.lines:
+        click.echo(line)
+    click.echo("---")
 
 
 if __name__ == '__main__':
