@@ -2,7 +2,9 @@
 
 import abc
 import collections
+import warnings
 import optuna
+import optuna.exceptions
 from .backend import AnnifBackend
 from annif import logger
 
@@ -49,11 +51,14 @@ class HyperparameterOptimizer:
 
         self._prepare(n_jobs)
         study = optuna.create_study(direction='maximize')
+        # silence the ExperimentalWarning when using the Optuna progress bar
+        warnings.filterwarnings("ignore",
+                                category=optuna.exceptions.ExperimentalWarning)
         study.optimize(self._objective,
                        n_trials=n_trials,
                        n_jobs=n_jobs,
                        gc_after_trial=False,
-                       show_progress_bar=True)
+                       show_progress_bar=(n_jobs == 1))
         if results_file:
             self._write_trials_header(results_file,
                                       list(study.best_params.keys()))
