@@ -207,11 +207,11 @@ class EvaluationBatch:
         y_pred = np.zeros(shape, dtype=np.float32)
 
         for idx, (hits, gold_subjects) in enumerate(self._samples):
-            gold_subjects.as_vector(self._subject_index, target=y_true[idx])
-            hits.as_vector(self._subject_index, target=y_pred[idx])
+            gold_subjects.as_vector(self._subject_index,
+                                    destination=y_true[idx])
+            hits.as_vector(self._subject_index, destination=y_pred[idx])
 
-        results = self._evaluate_samples(
-            y_true, y_pred, metrics)
+        results = self._evaluate_samples(y_true, y_pred, metrics)
         results['Documents evaluated'] = y_true.shape[0]
 
         if results_file:
