@@ -3,8 +3,6 @@ operations and printing the results to console."""
 
 
 import collections
-import multiprocessing
-import multiprocessing.dummy
 import os.path
 import re
 import sys
@@ -15,6 +13,7 @@ from flask.cli import FlaskGroup, ScriptInfo
 import annif
 import annif.corpus
 import annif.eval
+import annif.parallel
 import annif.project
 import annif.registry
 from annif.project import Access
@@ -337,17 +336,10 @@ def run_eval(
                 "cannot open results-file for writing: " + str(e))
     docs = open_documents(paths)
 
-    if jobs < 1:
-        jobs = None
-        pool_class = multiprocessing.Pool
-    elif jobs == 1:
-        # use the dummy wrapper around threading to avoid subprocess overhead
-        pool_class = multiprocessing.dummy.Pool
-    else:
-        pool_class = multiprocessing.Pool
+    jobs, pool_class = annif.parallel.get_pool(jobs)
 
     project.initialize()
-    psmap = annif.project.ProjectSuggestMap(
+    psmap = annif.parallel.ProjectSuggestMap(
         project.registry, [project_id], backend_params, limit, threshold)
 
     with pool_class(jobs) as pool:

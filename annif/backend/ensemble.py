@@ -1,7 +1,7 @@
 """Ensemble backend that combines results from multiple projects"""
 
 
-import multiprocessing
+import annif.parallel
 import annif.suggestion
 import annif.util
 import annif.eval
@@ -77,22 +77,16 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
             project = self._backend.project.registry.get_project(project_id)
             project.initialize()
 
-        if n_jobs < 1:
-            n_jobs = None
-            pool_class = multiprocessing.Pool
-        elif n_jobs == 1:
-            pool_class = multiprocessing.dummy.Pool
-        else:
-            pool_class = multiprocessing.Pool
-
-        psmap = annif.project.ProjectSuggestMap(
+        psmap = annif.parallel.ProjectSuggestMap(
             self._backend.project.registry,
             self._sources,
             backend_params=None,
             limit=int(self._backend.params['limit']),
             threshold=0.0)
 
-        with pool_class(n_jobs) as pool:
+        jobs, pool_class = annif.parallel.get_pool(n_jobs)
+
+        with pool_class(jobs) as pool:
             for hits, uris, labels in pool.imap_unordered(
                     psmap.suggest, self._corpus.documents):
                 self._gold_subjects.append(
