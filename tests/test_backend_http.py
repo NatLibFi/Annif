@@ -175,6 +175,24 @@ def test_http_modification_time(project):
             1970, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
 
 
+def test_http_modification_time_none(project):
+    with unittest.mock.patch('requests.get') as mock_request:
+        # create a mock response whose .json() method returns the dict that we
+        # define here
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {}
+        mock_request.return_value = mock_response
+
+        http_type = annif.backend.get_backend("http")
+        http = http_type(
+            backend_id='http',
+            config_params={
+                'endpoint': 'http://api.example.org/analyze',
+                'project': 'dummy'},
+            project=project)
+        assert http.modification_time is None
+
+
 def test_http_get_project_info_http_error(project):
     with unittest.mock.patch('requests.get') as mock_request:
         mock_request.side_effect = requests.exceptions.RequestException(

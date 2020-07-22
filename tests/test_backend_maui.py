@@ -318,6 +318,14 @@ def test_maui_modification_time_offset(maui, project):
         1970, 1, 1, 21, 0, 0, tzinfo=timezone.utc)
 
 
+@responses.activate
+def test_maui_modification_time_none(maui, project):
+    responses.add(responses.GET,
+                  'http://api.example.org/mauiservice/dummy/train',
+                  json={})
+    assert maui.modification_time is None
+
+
 def test_maui_get_project_info_http_error(maui, project):
     with unittest.mock.patch('requests.get') as mock_request:
         mock_request.side_effect = requests.exceptions.RequestException(
