@@ -1,5 +1,6 @@
 """Unit tests for the HTTP backend in Annif"""
 
+from datetime import datetime, timezone
 import pytest
 import requests.exceptions
 import unittest.mock
@@ -160,7 +161,7 @@ def test_http_modification_time(project):
         # define here
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {'modification_time':
-                                           '1970-1-1 00:00:00'}
+                                           '1970-01-01T00:00:00.000Z'}
         mock_request.return_value = mock_response
 
         http_type = annif.backend.get_backend("http")
@@ -170,7 +171,8 @@ def test_http_modification_time(project):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             project=project)
-        assert http.modification_time == '1970-1-1 00:00:00'
+        assert http.modification_time == datetime(
+            1970, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
 
 
 def test_http_get_project_info_http_error(project):

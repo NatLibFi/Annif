@@ -4,7 +4,7 @@ import requests.exceptions
 import responses
 import unittest.mock
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 import annif.backend.maui
 from annif.exception import ConfigurationException
 from annif.exception import NotSupportedException
@@ -301,11 +301,21 @@ def test_maui_is_trained(maui, project):
 
 
 @responses.activate
-def test_maui_modification_time(maui, project):
+def test_maui_modification_time_utc(maui, project):
     responses.add(responses.GET,
                   'http://api.example.org/mauiservice/dummy/train',
                   json={"end_time": '1970-01-01T00:00:00.000Z'})
-    assert maui.modification_time == datetime(1970, 1, 1, 0, 0, 0)
+    assert maui.modification_time == datetime(
+        1970, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+
+
+@responses.activate
+def test_maui_modification_time_offset(maui, project):
+    responses.add(responses.GET,
+                  'http://api.example.org/mauiservice/dummy/train',
+                  json={"end_time": '1970-01-02T00:00:00.000+03:00'})
+    assert maui.modification_time == datetime(
+        1970, 1, 1, 21, 0, 0, tzinfo=timezone.utc)
 
 
 def test_maui_get_project_info_http_error(maui, project):
