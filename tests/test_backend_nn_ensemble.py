@@ -3,7 +3,7 @@
 import time
 import pytest
 import py.path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import annif.backend
 import annif.corpus
 from annif.exception import NotInitializedException
@@ -129,7 +129,8 @@ def test_nn_ensemble_modification_time(app_project):
         backend_id='nn_ensemble',
         config_params={'sources': 'dummy-en'},
         project=app_project)
-    assert datetime.now() - nn_ensemble.modification_time < timedelta(1)
+    assert datetime.now(timezone.utc) - \
+        nn_ensemble.modification_time < timedelta(1)
 
 
 def test_nn_ensemble_initialize(app_project):

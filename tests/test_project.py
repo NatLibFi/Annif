@@ -2,7 +2,7 @@
 
 import logging
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import annif.project
 import annif.backend.dummy
 from annif.exception import ConfigurationException, NotSupportedException
@@ -149,7 +149,8 @@ def test_project_tfidf_is_trained(registry):
 
 def test_project_tfidf_modification_time(registry):
     project = registry.get_project('tfidf-fi')
-    assert datetime.now() - project.modification_time < timedelta(1)
+    assert datetime.now(timezone.utc) - \
+        project.modification_time < timedelta(1)
 
 
 def test_project_train_tfidf_nodocuments(registry, empty_corpus):

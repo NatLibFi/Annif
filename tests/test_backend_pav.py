@@ -3,7 +3,7 @@
 import logging
 import py.path
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import annif.backend
 import annif.corpus
 from annif.exception import NotSupportedException
@@ -145,4 +145,4 @@ def test_pav_modification_time(app_project):
         backend_id='pav',
         config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
         project=app_project)
-    assert datetime.now() - pav.modification_time < timedelta(1)
+    assert datetime.now(timezone.utc) - pav.modification_time < timedelta(1)
