@@ -37,32 +37,36 @@
   <p>See the <a href="v1/ui/">Swagger documentation</a> for API specification.</p>
 </div>
 
-<div class="container-fluid" id="form">
-  <div id="app">
-    <template v-if="problems.length">
-      <strong>Please correct the following error(s):</strong>
-      <div :class="['alert', (problem.isError ? 'alert-danger' : 'alert-warning')]"  role="alert" v-for="problem in problems">
-        <h2 v-if="problem.hasTitle()"><% problem.title %></h2>
-        <span v-if="problem.hasDetail()"><% problem.detail %></span>
-      </div>
-    </template>
-    <div class="row mb-5">
-      <div class="col-md-8">
-        <annif-textarea @text-changed="onTextChanged" @text-cleared="onTextCleared"></annif-textarea>
-      </div>
-      <div class="col-md-4">
-        <annif-projects :projects="projects" @project-selected="onProjectSelected"></annif-projects>
-        <annif-limit :limit="limit" @limit-selected="onLimitSelected"></annif-limit>
-        <button id="get-suggestions" type="button" class="btn btn-primary" @click="suggest" :disabled="loading">
-          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="loading"></span>
-          <span v-if="!loading">Get suggestions</span>
-          <span v-else>Loading...</span>
-        </button>
-        <annif-results :results="results"></annif-results>
+<div id="form">
+
+  <div class="container">
+    <div id="app">
+      <template v-if="problems.length">
+        <strong>Please correct the following error(s):</strong>
+        <div :class="['alert', (problem.isError ? 'alert-danger' : 'alert-warning')]"  role="alert" v-for="problem in problems">
+          <h2 v-if="problem.hasTitle()"><% problem.title %></h2>
+          <span v-if="problem.hasDetail()"><% problem.detail %></span>
+        </div>
+      </template>
+      <div class="row mb-5">
+        <div class="col-md-8">
+          <annif-textarea @text-changed="onTextChanged" @text-cleared="onTextCleared"></annif-textarea>
+        </div>
+        <div class="col-md-4">
+          <annif-projects :projects="projects" @project-selected="onProjectSelected"></annif-projects>
+          <annif-limit :limit="limit" @limit-selected="onLimitSelected"></annif-limit>
+          <button id="get-suggestions" type="button" class="btn btn-primary" @click="suggest" :disabled="loading">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="loading"></span>
+            <span v-if="!loading">Get suggestions</span>
+            <span v-else>Loading...</span>
+          </button>
+          <annif-results :results="results"></annif-results>
+        </div>
       </div>
     </div>
-  </div>
-</div> <!-- container -->
+  </div> <!-- container -->
+
+</div>
 
 <script src="/static/js/vue.min.js"></script>
 <!-- bootstrap dependencies -->
@@ -115,7 +119,7 @@ Vue.component('annif-textarea', {
   template: '<div id="text-box" class="form-group">\
   <div id="text-box-wrapper">\
   <button type="button" class="btn btn-danger" @click="clearTextInput" style="float: right;">&#x2715;</button>\
-  <textarea class="form-control" rows="15" name="text" id="text" @input="handleTextInput" :value="text"\
+  <textarea class="form-control" rows="20" name="text" id="text" @input="handleTextInput" :value="text"\
   placeholder="Copy text here and press the button &quot;Get suggestions&quot;"></textarea>\
   </div>\
   </div>'
