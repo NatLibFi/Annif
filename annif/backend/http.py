@@ -2,6 +2,7 @@
 and returns the results"""
 
 
+import dateutil.parser
 import requests
 import requests.exceptions
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
@@ -18,7 +19,10 @@ class HTTPBackend(backend.AnnifBackend):
 
     @property
     def modification_time(self):
-        return self._get_project_info('modification_time')
+        mtime = self._get_project_info('modification_time')
+        if mtime is None:
+            return None
+        return dateutil.parser.parse(mtime)
 
     def _get_project_info(self, key):
         params = self._get_backend_params(None)

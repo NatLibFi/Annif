@@ -69,12 +69,14 @@ class SubjectIndex:
     def contains_uri(self, uri):
         return uri in self._uris
 
-    def by_uri(self, uri):
-        """return the subject index of a subject by its URI"""
+    def by_uri(self, uri, warnings=True):
+        """return the subject index of a subject by its URI, or None if not found.
+        If warnings=True, log a warning message if the URI cannot be found."""
         try:
             return self._uri_idx[uri]
         except KeyError:
-            logger.warning('Unknown subject URI <%s>', uri)
+            if warnings:
+                logger.warning('Unknown subject URI <%s>', uri)
             return None
 
     def by_label(self, label):
@@ -161,20 +163,25 @@ class SubjectSet:
         """returns True if the URIs for all subjects are known"""
         return len(self.subject_uris) >= len(self.subject_labels)
 
-    def as_vector(self, subject_index):
+    def as_vector(self, subject_index, destination=None, warnings=True):
         """Return the hits as a one-dimensional NumPy array in sklearn
            multilabel indicator format, using a subject index as the source
-           of subjects."""
+           of subjects. Use destination array if given (not None), otherwise
+           create and return a new one. If warnings=True, log warnings for
+           unknown URIs."""
 
-        vector = np.zeros(len(subject_index), dtype=bool)
+        if destination is None:
+            destination = np.zeros(len(subject_index), dtype=bool)
+
         if self.has_uris():
             for uri in self.subject_uris:
-                subject_id = subject_index.by_uri(uri)
+                subject_id = subject_index.by_uri(
+                    uri, warnings=warnings)
                 if subject_id is not None:
-                    vector[subject_id] = True
+                    destination[subject_id] = True
         else:
             for label in self.subject_labels:
                 subject_id = subject_index.by_label(label)
                 if subject_id is not None:
-                    vector[subject_id] = True
-        return vector
+                    destination[subject_id] = True
+        return destination

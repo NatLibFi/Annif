@@ -33,6 +33,7 @@ setup(
         'rdflib',
         'gunicorn',
         'numpy==1.17.*',
+        'optuna==1.5.*'
     ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={

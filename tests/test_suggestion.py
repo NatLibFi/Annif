@@ -127,6 +127,24 @@ def test_list_suggestions_vector(document_corpus, subject_index):
             assert score == 0.0
 
 
+def test_list_suggestions_vector_destination(document_corpus, subject_index):
+    suggestions = ListSuggestionResult(
+        [
+            SubjectSuggestion(
+                uri='http://www.yso.fi/onto/yso/p7141',
+                label='sinetit',
+                notation=None,
+                score=1.0),
+            SubjectSuggestion(
+                uri='http://www.yso.fi/onto/yso/p6479',
+                label='viikingit',
+                notation=None,
+                score=0.5)])
+    destination = np.zeros(len(subject_index), dtype=np.float32)
+    vector = suggestions.as_vector(subject_index, destination=destination)
+    assert vector is destination
+
+
 def test_list_suggestions_vector_notfound(document_corpus, subject_index):
     suggestions = ListSuggestionResult(
         [
@@ -136,3 +154,21 @@ def test_list_suggestions_vector_notfound(document_corpus, subject_index):
                 notation=None,
                 score=1.0)])
     assert suggestions.as_vector(subject_index).sum() == 0
+
+
+def test_vector_suggestions_as_vector(subject_index):
+    orig_vector = np.ones(len(subject_index), dtype=np.float32)
+    suggestions = VectorSuggestionResult(orig_vector)
+    vector = suggestions.as_vector(subject_index)
+    assert (vector == orig_vector).all()
+
+
+def test_vector_suggestions_as_vector_destination(subject_index):
+    orig_vector = np.ones(len(subject_index), dtype=np.float32)
+    suggestions = VectorSuggestionResult(orig_vector)
+    destination = np.zeros(len(subject_index), dtype=np.float32)
+    assert not (destination == orig_vector).all()  # destination is all zeros
+
+    vector = suggestions.as_vector(subject_index, destination=destination)
+    assert vector is destination
+    assert (destination == orig_vector).all()      # destination now all ones

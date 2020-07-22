@@ -76,7 +76,7 @@ class LMDBSequence(Sequence):
 
 class NNEnsembleBackend(
         backend.AnnifLearningBackend,
-        ensemble.EnsembleBackend):
+        ensemble.BaseEnsembleBackend):
     """Neural network ensemble backend that combines results from multiple
     projects"""
 
@@ -96,14 +96,6 @@ class NNEnsembleBackend(
 
     # defaults for uninitialized instances
     _model = None
-
-    @property
-    def is_trained(self):
-        return super(ensemble.EnsembleBackend, self).is_trained
-
-    @property
-    def modification_time(self):
-        return super(ensemble.EnsembleBackend, self).modification_time
 
     def default_params(self):
         params = {}

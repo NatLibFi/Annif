@@ -1,6 +1,5 @@
 """Evaluation metrics for Annif"""
 
-import collections
 import statistics
 import warnings
 import numpy as np
@@ -98,57 +97,62 @@ class EvaluationBatch:
 
     def _evaluate_samples(self, y_true, y_pred, metrics='all'):
         y_pred_binary = y_pred > 0.0
-        results = collections.OrderedDict()
+
+        # define the available metrics as lazy lambda functions
+        # so we can execute only the ones actually requested
+        all_metrics = {
+            'Precision (doc avg)': lambda: precision_score(
+                y_true, y_pred_binary, average='samples'),
+            'Recall (doc avg)': lambda: recall_score(
+                y_true, y_pred_binary, average='samples'),
+            'F1 score (doc avg)': lambda: f1_score(
+                y_true, y_pred_binary, average='samples'),
+            'Precision (subj avg)': lambda: precision_score(
+                y_true, y_pred_binary, average='macro'),
+            'Recall (subj avg)': lambda: recall_score(
+                y_true, y_pred_binary, average='macro'),
+            'F1 score (subj avg)': lambda: f1_score(
+                y_true, y_pred_binary, average='macro'),
+            'Precision (weighted subj avg)': lambda: precision_score(
+                y_true, y_pred_binary, average='weighted'),
+            'Recall (weighted subj avg)': lambda: recall_score(
+                y_true, y_pred_binary, average='weighted'),
+            'F1 score (weighted subj avg)': lambda: f1_score(
+                y_true, y_pred_binary, average='weighted'),
+            'Precision (microavg)': lambda: precision_score(
+                y_true, y_pred_binary, average='micro'),
+            'Recall (microavg)': lambda: recall_score(
+                y_true, y_pred_binary, average='micro'),
+            'F1 score (microavg)': lambda: f1_score(
+                y_true, y_pred_binary, average='micro'),
+            'F1@5': lambda: f1_score(
+                y_true, filter_pred_top_k(y_pred, 5) > 0.0, average='samples'),
+            'NDCG': lambda: ndcg_score(y_true, y_pred),
+            'NDCG@5': lambda: ndcg_score(y_true, y_pred, limit=5),
+            'NDCG@10': lambda: ndcg_score(y_true, y_pred, limit=10),
+            'Precision@1': lambda: precision_at_k_score(
+                y_true, y_pred, limit=1),
+            'Precision@3': lambda: precision_at_k_score(
+                y_true, y_pred, limit=3),
+            'Precision@5': lambda: precision_at_k_score(
+                y_true, y_pred, limit=5),
+            'LRAP': lambda: label_ranking_average_precision_score(
+                y_true, y_pred),
+            'True positives': lambda: true_positives(
+                y_true, y_pred_binary),
+            'False positives': lambda: false_positives(
+                y_true, y_pred_binary),
+            'False negatives': lambda: false_negatives(
+                y_true, y_pred_binary),
+        }
+
+        if metrics == 'all':
+            metrics = all_metrics.keys()
+
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
 
-            results['Precision (doc avg)'] = precision_score(
-                y_true, y_pred_binary, average='samples')
-            results['Recall (doc avg)'] = recall_score(
-                y_true, y_pred_binary, average='samples')
-            results['F1 score (doc avg)'] = f1_score(
-                y_true, y_pred_binary, average='samples')
-            if metrics == 'all':
-                results['Precision (subj avg)'] = precision_score(
-                    y_true, y_pred_binary, average='macro')
-                results['Recall (subj avg)'] = recall_score(
-                    y_true, y_pred_binary, average='macro')
-                results['F1 score (subj avg)'] = f1_score(
-                    y_true, y_pred_binary, average='macro')
-                results['Precision (weighted subj avg)'] = precision_score(
-                    y_true, y_pred_binary, average='weighted')
-                results['Recall (weighted subj avg)'] = recall_score(
-                    y_true, y_pred_binary, average='weighted')
-                results['F1 score (weighted subj avg)'] = f1_score(
-                    y_true, y_pred_binary, average='weighted')
-                results['Precision (microavg)'] = precision_score(
-                    y_true, y_pred_binary, average='micro')
-                results['Recall (microavg)'] = recall_score(
-                    y_true, y_pred_binary, average='micro')
-                results['F1 score (microavg)'] = f1_score(
-                    y_true, y_pred_binary, average='micro')
-            results['F1@5'] = f1_score(
-                y_true, filter_pred_top_k(y_pred, 5) > 0.0, average='samples')
-            results['NDCG'] = ndcg_score(y_true, y_pred)
-            results['NDCG@5'] = ndcg_score(y_true, y_pred, limit=5)
-            results['NDCG@10'] = ndcg_score(y_true, y_pred, limit=10)
-            if metrics == 'all':
-                results['Precision@1'] = precision_at_k_score(
-                    y_true, y_pred, limit=1)
-                results['Precision@3'] = precision_at_k_score(
-                    y_true, y_pred, limit=3)
-                results['Precision@5'] = precision_at_k_score(
-                    y_true, y_pred, limit=5)
-                results['LRAP'] = label_ranking_average_precision_score(
-                    y_true, y_pred)
-                results['True positives'] = true_positives(
-                    y_true, y_pred_binary)
-                results['False positives'] = false_positives(
-                    y_true, y_pred_binary)
-                results['False negatives'] = false_negatives(
-                    y_true, y_pred_binary)
-
-        return results
+            return {metric: all_metrics[metric]() for metric in metrics}
 
     def _result_per_subject_header(self, results_file):
         print('\t'.join(['URI',
@@ -194,7 +198,7 @@ class EvaluationBatch:
         self._result_per_subject_header(results_file)
         self._result_per_subject_body(zipped, results_file)
 
-    def results(self, metrics='all', results_file=None):
+    def results(self, metrics='all', results_file=None, warnings=False):
         """evaluate a set of selected subjects against a gold standard using
         different metrics. The set of metrics can be either 'all' or 'simple'.
         If results_file (file object) given, write results per subject to it"""
@@ -202,14 +206,17 @@ class EvaluationBatch:
         if not self._samples:
             raise NotSupportedException("cannot evaluate empty corpus")
 
-        y_true = np.array([gold_subjects.as_vector(self._subject_index)
-                           for hits, gold_subjects in self._samples])
-        y_pred = np.array([hits.as_vector(self._subject_index)
-                           for hits, gold_subjects in self._samples],
-                          dtype=np.float32)
+        shape = (len(self._samples), len(self._subject_index))
+        y_true = np.zeros(shape, dtype=bool)
+        y_pred = np.zeros(shape, dtype=np.float32)
 
-        results = self._evaluate_samples(
-            y_true, y_pred, metrics)
+        for idx, (hits, gold_subjects) in enumerate(self._samples):
+            gold_subjects.as_vector(self._subject_index,
+                                    destination=y_true[idx],
+                                    warnings=warnings)
+            hits.as_vector(self._subject_index, destination=y_pred[idx])
+
+        results = self._evaluate_samples(y_true, y_pred, metrics)
         results['Documents evaluated'] = y_true.shape[0]
 
         if results_file:

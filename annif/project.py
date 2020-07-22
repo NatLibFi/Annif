@@ -204,6 +204,19 @@ class AnnifProject(DatadirMixin):
             raise NotSupportedException("Learning not supported by backend",
                                         project_id=self.project_id)
 
+    def hyperopt(self, corpus, trials, jobs, metric, results_file):
+        """optimize the hyperparameters of the project using a validation
+        corpus against a given metric"""
+        if isinstance(
+                self.backend,
+                annif.backend.hyperopt.AnnifHyperoptBackend):
+            optimizer = self.backend.get_hp_optimizer(corpus, metric)
+            return optimizer.optimize(trials, jobs, results_file)
+
+        raise NotSupportedException(
+            "Hyperparameter optimization not supported "
+            "by backend", project_id=self.project_id)
+
     def dump(self):
         """return this project as a dict"""
         return {'project_id': self.project_id,
@@ -224,23 +237,3 @@ class AnnifProject(DatadirMixin):
         else:
             logger.warning('No model data to remove for project {}.'
                            .format(self.project_id))
-
-
-class ProjectSuggestMap:
-    """A utility class that can be used to wrap a project and provide a
-    mapping method that converts Document objects to suggestions. Intended
-    to be used with the multiprocessing module."""
-
-    def __init__(self, project, backend_params, limit, threshold):
-        self.project_id = project.project_id
-        self.registry = project.registry
-        self.backend_params = backend_params
-        self.limit = limit
-        self.threshold = threshold
-
-    def suggest(self, doc):
-        project = self.registry.get_project(self.project_id)
-        hits = project.suggest(doc.text, self.backend_params)
-        filtered_hits = hits.filter(
-            project.subjects, self.limit, self.threshold)
-        return (filtered_hits, doc.uris, doc.labels)
