@@ -7,7 +7,6 @@ body {
   line-height: 1.2
 }
 header {
-  background: #ffffff;
   background: linear-gradient(to bottom, #ffffff 92%, #d9dfe3 92%, #ffffff 100%);
   padding-bottom: 5px;
 }
@@ -17,7 +16,6 @@ a:visited { color: #536f9f }
 h1 { font-size: 2rem; }
 #form {
   padding: 2rem;
-  background-color: #f3f3f6;
   background: linear-gradient(to bottom, #ffffff 0%, #d9dfe3 1%, #f3f3f6 1%, #f3f3f6 99%, #d9dfe3 99%, #ffffff 100%);
 }
 #text-box-wrapper {
