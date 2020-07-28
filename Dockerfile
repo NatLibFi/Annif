@@ -53,7 +53,7 @@ RUN apt-get update \
 	&& pip install --no-cache-dir \
 		voikko \
 		vowpalwabbit==8.7.* \
-		tensorflow-cpu==2.2.0 \
+		tensorflow-cpu==2.3.0 \
 		omikuji==0.3.* \
 	# For Docker healthcheck:
 	&& apt-get install -y --no-install-recommends curl \
