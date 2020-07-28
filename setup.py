@@ -40,7 +40,7 @@ setup(
         'fasttext': ['fasttext==0.9.2'],
         'voikko': ['voikko'],
         'vw': ['vowpalwabbit==8.7.*'],
-        'nn': ['tensorflow-cpu==2.2.0', 'lmdb==0.98'],
+        'nn': ['tensorflow-cpu==2.3.0', 'lmdb==0.98'],
         'omikuji': ['omikuji==0.3.*'],
         'dev': [
             'codecov',
