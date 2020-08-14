@@ -13,5 +13,9 @@ class DatadirMixin:
     @property
     def datadir(self):
         if not os.path.exists(self._datadir_path):
-            os.makedirs(self._datadir_path)
+            try:
+                os.makedirs(self._datadir_path)
+            except FileExistsError:
+                # apparently the datadir was created by another thread!
+                pass
         return self._datadir_path

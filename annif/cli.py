@@ -13,7 +13,9 @@ from flask.cli import FlaskGroup, ScriptInfo
 import annif
 import annif.corpus
 import annif.eval
+import annif.parallel
 import annif.project
+import annif.registry
 from annif.project import Access
 from annif.suggestion import SuggestionFilter
 from annif.exception import ConfigurationException, NotSupportedException
@@ -28,7 +30,7 @@ def get_project(project_id):
     """
     Helper function to get a project by ID and bail out if it doesn't exist"""
     try:
-        return annif.project.get_project(project_id, min_access=Access.hidden)
+        return annif.registry.get_project(project_id, min_access=Access.hidden)
     except ValueError:
         click.echo(
             "No projects found with id \'{0}\'.".format(project_id),
@@ -84,7 +86,7 @@ def generate_filter_batches(subjects):
     filter_batches = collections.OrderedDict()
     for limit in range(1, 16):
         for threshold in [i * 0.05 for i in range(20)]:
-            hit_filter = SuggestionFilter(limit, threshold)
+            hit_filter = SuggestionFilter(subjects, limit, threshold)
             batch = annif.eval.EvaluationBatch(subjects)
             filter_batches[(limit, threshold)] = (hit_filter, batch)
     return filter_batches
@@ -128,7 +130,8 @@ def run_list_projects():
         "Project ID", "Project Name", "Language", "Trained")
     click.echo(header)
     click.echo("-" * len(header))
-    for proj in annif.project.get_projects(min_access=Access.private).values():
+    for proj in annif.registry.get_projects(
+            min_access=Access.private).values():
         click.echo(template.format(
             proj.project_id, proj.name, proj.language, str(proj.is_trained)))
 
@@ -182,7 +185,7 @@ def run_loadvoc(project_id, subjectfile):
 @cli.command('train')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
-@click.option('--cached/--no-cached', default=False,
+@click.option('--cached/--no-cached', '-c/-C', default=False,
               help='Reuse preprocessed training data from previous run')
 @backend_param_option
 @common_options
@@ -219,8 +222,8 @@ def run_learn(project_id, paths, backend_param):
 
 @cli.command('suggest')
 @click.argument('project_id')
-@click.option('--limit', default=10, help='Maximum number of subjects')
-@click.option('--threshold', default=0.0, help='Minimum score threshold')
+@click.option('--limit', '-l', default=10, help='Maximum number of subjects')
+@click.option('--threshold', '-t', default=0.0, help='Minimum score threshold')
 @backend_param_option
 @common_options
 def run_suggest(project_id, limit, threshold, backend_param):
@@ -230,9 +233,9 @@ def run_suggest(project_id, limit, threshold, backend_param):
     project = get_project(project_id)
     text = sys.stdin.read()
     backend_params = parse_backend_params(backend_param, project)
-    hit_filter = SuggestionFilter(limit, threshold)
+    hit_filter = SuggestionFilter(project.subjects, limit, threshold)
     hits = hit_filter(project.suggest(text, backend_params))
-    for hit in hits:
+    for hit in hits.as_list(project.subjects):
         click.echo(
             "<{}>\t{}\t{}".format(
                 hit.uri,
@@ -245,12 +248,13 @@ def run_suggest(project_id, limit, threshold, backend_param):
 @click.argument('directory', type=click.Path(exists=True, file_okay=False))
 @click.option(
     '--suffix',
+    '-s',
     default='.annif',
     help='File name suffix for result files')
-@click.option('--force/--no-force', default=False,
+@click.option('--force/--no-force', '-f/-F', default=False,
               help='Force overwriting of existing result files')
-@click.option('--limit', default=10, help='Maximum number of subjects')
-@click.option('--threshold', default=0.0, help='Minimum score threshold')
+@click.option('--limit', '-l', default=10, help='Maximum number of subjects')
+@click.option('--threshold', '-t', default=0.0, help='Minimum score threshold')
 @backend_param_option
 @common_options
 def run_index(project_id, directory, suffix, force,
@@ -261,7 +265,7 @@ def run_index(project_id, directory, suffix, force,
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
-    hit_filter = SuggestionFilter(limit, threshold)
+    hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
     for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
             directory, require_subjects=False):
@@ -275,7 +279,7 @@ def run_index(project_id, directory, suffix, force,
             continue
         with open(subjectfilename, 'w', encoding='utf-8') as subjfile:
             results = project.suggest(text, backend_params)
-            for hit in hit_filter(results):
+            for hit in hit_filter(results).as_list(project.subjects):
                 line = "<{}>\t{}\t{}".format(
                     hit.uri,
                     '\t'.join(filter(None, (hit.label, hit.notation))),
@@ -286,20 +290,32 @@ def run_index(project_id, directory, suffix, force,
 @cli.command('eval')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
-@click.option('--limit', default=10, help='Maximum number of subjects')
-@click.option('--threshold', default=0.0, help='Minimum score threshold')
+@click.option('--limit', '-l', default=10, help='Maximum number of subjects')
+@click.option('--threshold', '-t', default=0.0, help='Minimum score threshold')
 @click.option(
     '--results-file',
+    '-r',
     type=click.File(
         'w',
         encoding='utf-8',
         errors='ignore',
         lazy=True),
     help="""Specify file in order to write non-aggregated results per subject.
-    File directory must exists, existing file will be overwritten.""")
+    File directory must exist, existing file will be overwritten.""")
+@click.option('--jobs',
+              '-j',
+              default=1,
+              help='Number of parallel jobs (0 means all CPUs)')
 @backend_param_option
 @common_options
-def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
+def run_eval(
+        project_id,
+        paths,
+        limit,
+        threshold,
+        results_file,
+        jobs,
+        backend_param):
     """
     Analyze documents and evaluate the result.
 
@@ -311,7 +327,6 @@ def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
 
-    hit_filter = SuggestionFilter(limit=limit, threshold=threshold)
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
 
     if results_file:
@@ -323,11 +338,18 @@ def run_eval(project_id, paths, limit, threshold, results_file, backend_param):
             raise NotSupportedException(
                 "cannot open results-file for writing: " + str(e))
     docs = open_documents(paths)
-    for doc in docs.documents:
-        results = project.suggest(doc.text, backend_params)
-        hits = hit_filter(results)
-        eval_batch.evaluate(hits,
-                            annif.corpus.SubjectSet((doc.uris, doc.labels)))
+
+    jobs, pool_class = annif.parallel.get_pool(jobs)
+
+    project.initialize()
+    psmap = annif.parallel.ProjectSuggestMap(
+        project.registry, [project_id], backend_params, limit, threshold)
+
+    with pool_class(jobs) as pool:
+        for hits, uris, labels in pool.imap_unordered(
+                psmap.suggest, docs.documents):
+            eval_batch.evaluate(hits[project_id],
+                                annif.corpus.SubjectSet((uris, labels)))
 
     template = "{0:<30}\t{1}"
     for metric, score in eval_batch.results(results_file=results_file).items():
@@ -373,7 +395,12 @@ def run_optimize(project_id, paths, backend_param):
     filter_batches = list(filter_batches.items())
     while filter_batches:
         params, filter_batch = filter_batches.pop(0)
-        results = filter_batch[1].results(metrics='simple')
+        metrics = ['Precision (doc avg)',
+                   'Recall (doc avg)',
+                   'F1 score (doc avg)',
+                   'NDCG@5',
+                   'NDCG@10']
+        results = filter_batch[1].results(metrics=metrics)
         for metric, score in results.items():
             if score >= best_scores[metric]:
                 best_scores[metric] = score
@@ -388,11 +415,7 @@ def run_optimize(project_id, paths, backend_param):
 
     click.echo()
     template2 = "Best {:>19}: {:.04f}\tLimit: {:d}\tThreshold: {:.02f}"
-    for metric in ('Precision (doc avg)',
-                   'Recall (doc avg)',
-                   'F1 score (doc avg)',
-                   'NDCG@5',
-                   'NDCG@10'):
+    for metric in metrics:
         click.echo(
             template2.format(
                 metric,
@@ -400,6 +423,42 @@ def run_optimize(project_id, paths, backend_param):
                 best_params[metric][0],
                 best_params[metric][1]))
     click.echo("Documents evaluated:\t{}".format(ndocs))
+
+
+@cli.command('hyperopt')
+@click.argument('project_id')
+@click.argument('paths', type=click.Path(exists=True), nargs=-1)
+@click.option('--trials', '-T', default=10, help='Number of trials')
+@click.option('--jobs',
+              '-j',
+              default=1,
+              help='Number of parallel runs (0 means all CPUs)')
+@click.option('--metric', '-m', default='NDCG',
+              help='Metric to optimize (default: NDCG)')
+@click.option(
+    '--results-file',
+    '-r',
+    type=click.File(
+        'w',
+        encoding='utf-8',
+        errors='ignore',
+        lazy=True),
+    help="""Specify file path to write trial results as CSV.
+    File directory must exist, existing file will be overwritten.""")
+@common_options
+def run_hyperopt(project_id, paths, trials, jobs, metric, results_file):
+    """
+    Optimize the hyperparameters of a project using a validation corpus.
+    """
+    proj = get_project(project_id)
+    documents = open_documents(paths)
+    click.echo(f"Looking for optimal hyperparameters using {trials} trials")
+    rec = proj.hyperopt(documents, trials, jobs, metric, results_file)
+    click.echo(f"Got best {metric} score {rec.score:.4f} with:")
+    click.echo("---")
+    for line in rec.lines:
+        click.echo(line)
+    click.echo("---")
 
 
 if __name__ == '__main__':

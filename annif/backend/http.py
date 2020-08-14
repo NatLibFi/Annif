@@ -2,6 +2,7 @@
 and returns the results"""
 
 
+import dateutil.parser
 import requests
 import requests.exceptions
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
@@ -18,7 +19,10 @@ class HTTPBackend(backend.AnnifBackend):
 
     @property
     def modification_time(self):
-        return self._get_project_info('modification_time')
+        mtime = self._get_project_info('modification_time')
+        if mtime is None:
+            return None
+        return dateutil.parser.parse(mtime)
 
     def _get_project_info(self, key):
         params = self._get_backend_params(None)
@@ -49,13 +53,13 @@ class HTTPBackend(backend.AnnifBackend):
             req.raise_for_status()
         except requests.exceptions.RequestException as err:
             self.warning("HTTP request failed: {}".format(err))
-            return ListSuggestionResult([], self.project.subjects)
+            return ListSuggestionResult([])
 
         try:
             response = req.json()
         except ValueError as err:
             self.warning("JSON decode failed: {}".format(err))
-            return ListSuggestionResult([], self.project.subjects)
+            return ListSuggestionResult([])
 
         if 'results' in response:
             results = response['results']
@@ -71,7 +75,7 @@ class HTTPBackend(backend.AnnifBackend):
                 for hit in results if hit['score'] > 0.0]
         except (TypeError, ValueError) as err:
             self.warning("Problem interpreting JSON data: {}".format(err))
-            return ListSuggestionResult([], self.project.subjects)
+            return ListSuggestionResult([])
 
         return ListSuggestionResult.create_from_index(subject_suggestions,
                                                       self.project.subjects)

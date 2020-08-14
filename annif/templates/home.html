@@ -11,54 +11,66 @@
   {% endif %}
   <!-- Latest compiled and minified CSS -->
   <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/css/fonts.css">
   <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="shortcut icon" href="/static/favicon.ico">
   {% block head %}{% endblock %}
 </head>
 <body>
 
 <header class="mb-4 mt-0">
   <div class="container">
-    <h1 class="py-3">Annif</h1>
-  </div>
-</header>
+    <div class="row justify-content-between">
+      <div class="col-2">
+        <img src="static/img/annif-RGB.svg" class="img-fluid" alt="Annif">
+      </div>
+      <div class="col-10 my-auto px-0">
+        <h1 class="text-right my-0">Web UI</h1>
+      </div>
+    </div>
+  </div></header>
 
 <div class="container">
 
   <p>Welcome!</p>
 
-  <h2>REST API</h2>
+  <p>See the <a href="v1/ui/">Swagger documentation</a> for an interactive REST API specification.</p>
+</div>
 
-  <p>See the <a href="v1/ui/">Swagger documentation</a> for API specification.</p>
+<div id="form">
 
-  <div id="app">
-    <template v-if="problems.length">
-      <strong>Please correct the following error(s):</strong>
-      <div :class="['alert', (problem.isError ? 'alert-danger' : 'alert-warning')]"  role="alert" v-for="problem in problems">
-        <h2 v-if="problem.hasTitle()"><% problem.title %></h2>
-        <span v-if="problem.hasDetail()"><% problem.detail %></span>
-      </div>
-    </template>
-    <div class="row mb-5">
-      <div class="col-md-8">
-        <annif-textarea @text-changed="onTextChanged"></annif-textarea>
-      </div>
-      <div class="col-md-4">
-        <annif-projects :projects="projects" @project-selected="onProjectSelected"></annif-projects>
-        <button type="button" class="btn btn-primary" @click="suggest" :disabled="loading">
-          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="loading"></span>
-          <span v-if="!loading">Analyze</span>
-          <span v-else>Loading...</span>
-        </button>
-        <annif-results :results="results"></annif-results>
+  <div class="container">
+    <div id="app">
+      <template v-if="problems.length">
+        <strong>Please correct the following error(s):</strong>
+        <div :class="['alert', (problem.isError ? 'alert-danger' : 'alert-warning')]"  role="alert" v-for="problem in problems">
+          <h2 v-if="problem.hasTitle()"><% problem.title %></h2>
+          <span v-if="problem.hasDetail()"><% problem.detail %></span>
+        </div>
+      </template>
+      <div class="row mb-5">
+        <div class="col-md-8">
+          <annif-textarea @text-changed="onTextChanged" @text-cleared="onTextCleared"></annif-textarea>
+        </div>
+        <div class="col-md-4">
+          <annif-projects :projects="projects" @project-selected="onProjectSelected"></annif-projects>
+          <annif-limit :limit="limit" @limit-selected="onLimitSelected"></annif-limit>
+          <button id="get-suggestions" type="button" class="btn btn-primary" @click="suggest" :disabled="loading">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="loading"></span>
+            <span v-if="!loading">Get suggestions</span>
+            <span v-else>Loading...</span>
+          </button>
+          <annif-results :results="results"></annif-results>
+        </div>
       </div>
     </div>
-  </div>
+  </div> <!-- container -->
 
-</div> <!-- container -->
+</div>
 
 <script src="/static/js/vue.min.js"></script>
 <!-- bootstrap dependencies -->
-<script src="/static/js/jquery-3.3.1.min.js"></script>
+<script src="/static/js/jquery-3.5.1.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
 <script type="text/javascript">
 // NB: using delimiters <% %> due to Jinja's syntax taking precedence
@@ -89,15 +101,28 @@ Vue.config.devtools = true;
 // Component with text area for input
 Vue.component('annif-textarea', {
   delimiters: ["<%","%>"],
+  data: function() {
+    return {
+      text: '',
+    }
+  },
   methods: {
     handleTextInput: function(event) {
       this.$emit('text-changed', event.target.value);
+      this.text = event.target.value;
+    },
+    clearTextInput: function(event) {
+      this.$emit('text-cleared');
+      this.text = '';
     }
   },
-  template: '<div class="form-group">\
-  <label for="text">Text to analyze:</label><br>\
-  <textarea class="form-control" rows="15" name="text" id="text" @input="handleTextInput"></textarea>\
-</div>'
+  template: '<div id="text-box" class="form-group">\
+  <div id="text-box-wrapper">\
+  <button type="button" class="btn btn-danger" @click="clearTextInput" style="float: right;">&#x2715;</button>\
+  <textarea class="form-control" rows="20" name="text" id="text" @input="handleTextInput" :value="text"\
+  placeholder="Copy text here and press the button &quot;Get suggestions&quot;"></textarea>\
+  </div>\
+  </div>'
 });
 
 // Component with list of projects
@@ -112,20 +137,51 @@ Vue.component('annif-projects', {
   },
   template: '<div>\
   <div class="form-group">\
-    <label for="project">Project (vocabulary and language):</label>\
+    <label for="project">Project (vocabulary and language)</label>\
+    <div class="select-wrapper">\
     <select class="form-control" id="project" @input="handleProjectSelected">\
       <option v-for="project in projects" v-bind:value="project.project_id"><% project.name %></option>\
     </select>\
+    </div>\
   </div>\
 </div>'
+});
+
+// Component with limit buttons
+Vue.component('annif-limit', {
+  delimiters: ["<%","%>"],
+  props: ['limit'],
+  methods: {
+    handleLimitSelected: function(event) {
+      // User selected a limit for suggestions, so we use the bus to emit the value. This will be picked up by the parent component
+      this.$emit('limit-selected', event.target.value);
+    }
+  },
+  template: '<div class="form-group">\
+      <label>Max # of suggestions</label>\
+      <div id="limit-buttons" class="btn-group btn-group-toggle" data-toggle="buttons" @click="handleLimitSelected">\
+        <label class="btn btn-secondary">\
+          <input v-bind="limit" type="radio" name="limit" value="10" checked>\
+          10\
+        </label>\
+        <label class="btn btn-secondary">\
+          <input v-bind="limit" type="radio" name="limit" value="15">\
+          15\
+        </label>\
+        <label class="btn btn-secondary">\
+          <input v-bind="limit" type="radio" name="limit" value="20">\
+          20\
+        </label>\
+      </div>\
+    </div>'
 });
 
 // Component with the list of results
 Vue.component('annif-results', {
   delimiters: ["<%","%>"],
   props: ['results'],
-  template: '<div>\
-  <h2 class="mt-4">Results</h2>\
+  template: '<div v-if="results.length">\
+  <h2 class="mt-4" id="suggestions">Suggested subjects</h2>\
   <ul class="list-group list-group-flush" id="results">\
     <li class="list-group-item p-0" v-for="result in results">\
       <meter class="mr-2" v-bind:value="result.score"></meter>\
@@ -142,6 +198,7 @@ new Vue({
   data: {
     text: '',
     project: '',
+    limit: 10,
     projects: [],
     results: [],
     problems: [],
@@ -162,6 +219,13 @@ new Vue({
     },
     onTextChanged(text) {
       this.text = text;
+    },
+    onTextCleared() {
+      this.text = '';
+      this.clearResults();
+    },
+    onLimitSelected(limit) {
+      this.limit = limit;
     },
     loadProjects: function() {
       var this_ = this;
@@ -188,7 +252,7 @@ new Vue({
     suggest: function(event) {
       this.problems = [];
       if (this.text.trim() === "") {
-        this.problems.push(new Problem('', 'You need to enter the text to analyze', false));
+        this.problems.push(new Problem('', 'You need to enter the text to get suggestions for', false));
       }
       if (this.project.trim() === "") {
         this.problems.push(new Problem('', 'You need to select one project', false));
@@ -204,6 +268,7 @@ new Vue({
         method: 'POST',
         data: {
           text: this_.text,
+          limit: this_.limit,
         },
         beforeSend: function() {
           this_.loading = true;

@@ -8,7 +8,7 @@ def read(fname):
 
 setup(
     name='annif',
-    version='0.48.0-dev',
+    version='0.50.0-dev',
     url='https://github.com/NatLibFi/Annif',
     author='Osma Suominen',
     author_email='osma.suominen@helsinki.fi',
@@ -33,13 +33,14 @@ setup(
         'rdflib',
         'gunicorn',
         'numpy==1.17.*',
+        'optuna==1.5.*'
     ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
         'fasttext': ['fasttext==0.9.2'],
         'voikko': ['voikko'],
         'vw': ['vowpalwabbit==8.7.*'],
-        'nn': ['tensorflow-cpu==2.2.0', 'lmdb==0.98'],
+        'nn': ['tensorflow-cpu==2.3.0', 'lmdb==0.98'],
         'omikuji': ['omikuji==0.3.*'],
         'dev': [
             'codecov',

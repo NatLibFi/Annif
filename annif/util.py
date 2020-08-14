@@ -43,9 +43,9 @@ def merge_hits(weighted_hits, subject_index):
     Returns an SuggestionResult object."""
 
     weights = [whit.weight for whit in weighted_hits]
-    scores = [whit.hits.vector for whit in weighted_hits]
+    scores = [whit.hits.as_vector(subject_index) for whit in weighted_hits]
     result = np.average(scores, axis=0, weights=weights)
-    return VectorSuggestionResult(result, subject_index)
+    return VectorSuggestionResult(result)
 
 
 def parse_sources(sourcedef):

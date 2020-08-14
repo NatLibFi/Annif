@@ -1,19 +1,20 @@
 """Unit tests for the PAV backend in Annif"""
 
 import logging
+import py.path
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import annif.backend
 import annif.corpus
 from annif.exception import NotSupportedException
 
 
-def test_pav_default_params(document_corpus, project):
+def test_pav_default_params(document_corpus, app_project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
         config_params={},
-        project=project)
+        project=app_project)
 
     expected_default_params = {
         'min-docs': 10,
@@ -23,21 +24,21 @@ def test_pav_default_params(document_corpus, project):
         assert param in actual_params and actual_params[param] == val
 
 
-def test_pav_is_not_trained(project):
+def test_pav_is_not_trained(app_project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
         config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
-        project=project)
+        project=app_project)
     assert not pav.is_trained
 
 
-def test_pav_train(datadir, tmpdir, project):
+def test_pav_train(tmpdir, app_project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
         config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
-        project=project)
+        project=app_project)
 
     tmpfile = tmpdir.join('document.tsv')
     tmpfile.write("dummy\thttp://example.org/dummy\n" +
@@ -46,39 +47,40 @@ def test_pav_train(datadir, tmpdir, project):
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
     pav.train(document_corpus)
+    datadir = py.path.local(app_project.datadir)
     assert datadir.join('pav-model-dummy-fi').exists()
     assert datadir.join('pav-model-dummy-fi').size() > 0
 
 
-def test_pav_train_cached(project):
+def test_pav_train_cached(app_project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
         config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
-        project=project)
+        project=app_project)
 
     with pytest.raises(NotSupportedException):
         pav.train("cached")
 
 
-def test_pav_train_nodocuments(project, empty_corpus):
+def test_pav_train_nodocuments(app_project, empty_corpus):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
         config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
-        project=project)
+        project=app_project)
 
     with pytest.raises(NotSupportedException) as excinfo:
         pav.train(empty_corpus)
     assert 'training backend pav with no documents' in str(excinfo.value)
 
 
-def test_pav_initialize(project):
+def test_pav_initialize(app_project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
         config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
-        project=project)
+        project=app_project)
 
     assert pav._models is None
     pav.initialize()
@@ -87,12 +89,12 @@ def test_pav_initialize(project):
     pav.initialize()
 
 
-def test_pav_suggest(project):
+def test_pav_suggest(app_project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
         config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
-        project=project)
+        project=app_project)
 
     results = pav.suggest("""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
@@ -105,7 +107,7 @@ def test_pav_suggest(project):
     assert len(results) > 0
 
 
-def test_pav_train_params(tmpdir, project, caplog):
+def test_pav_train_params(tmpdir, app_project, caplog):
     logger = annif.logger
     logger.propagate = True
 
@@ -113,7 +115,7 @@ def test_pav_train_params(tmpdir, project, caplog):
     pav = pav_type(
         backend_id='pav',
         config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
-        project=project)
+        project=app_project)
 
     tmpfile = tmpdir.join('document.tsv')
     tmpfile.write("dummy\thttp://example.org/dummy\n" +
@@ -128,19 +130,19 @@ def test_pav_train_params(tmpdir, project, caplog):
     assert parameters_spec in caplog.text
 
 
-def test_pav_is_trained(project):
+def test_pav_is_trained(app_project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
         config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
-        project=project)
+        project=app_project)
     assert pav.is_trained
 
 
-def test_pav_modification_time(project):
+def test_pav_modification_time(app_project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
         config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
-        project=project)
-    assert datetime.now() - pav.modification_time < timedelta(1)
+        project=app_project)
+    assert datetime.now(timezone.utc) - pav.modification_time < timedelta(1)

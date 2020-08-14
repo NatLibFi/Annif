@@ -2,7 +2,7 @@
 methods defined in the Swagger specification."""
 
 import connexion
-import annif.project
+import annif.registry
 from annif.corpus import Document, DocumentList
 from annif.suggestion import SuggestionFilter
 from annif.exception import AnnifException
@@ -33,7 +33,7 @@ def list_projects():
 
     return {
         'projects': [
-            proj.dump() for proj in annif.project.get_projects(
+            proj.dump() for proj in annif.registry.get_projects(
                 min_access=Access.public).values()]}
 
 
@@ -41,7 +41,7 @@ def show_project(project_id):
     """return a single project formatted according to Swagger spec"""
 
     try:
-        project = annif.project.get_project(
+        project = annif.registry.get_project(
             project_id, min_access=Access.hidden)
     except ValueError:
         return project_not_found_error(project_id)
@@ -53,17 +53,17 @@ def suggest(project_id, text, limit, threshold):
     formatted according to Swagger spec"""
 
     try:
-        project = annif.project.get_project(
+        project = annif.registry.get_project(
             project_id, min_access=Access.hidden)
     except ValueError:
         return project_not_found_error(project_id)
 
-    hit_filter = SuggestionFilter(limit, threshold)
     try:
+        hit_filter = SuggestionFilter(project.subjects, limit, threshold)
         result = project.suggest(text)
     except AnnifException as err:
         return server_error(err)
-    hits = hit_filter(result)
+    hits = hit_filter(result).as_list(project.subjects)
     return {'results': [hit._asdict() for hit in hits]}
 
 
@@ -80,7 +80,7 @@ def learn(project_id, documents):
     """learn from documents and return an empty 204 response if succesful"""
 
     try:
-        project = annif.project.get_project(
+        project = annif.registry.get_project(
             project_id, min_access=Access.hidden)
     except ValueError:
         return project_not_found_error(project_id)

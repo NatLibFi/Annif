@@ -616,6 +616,32 @@ def test_eval_nonexistent_path():
            "Path 'nonexistent_path' does not exist." in failed_result.output
 
 
+def test_eval_single_process(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    tmpdir.join('doc3.txt').write('doc3')
+
+    result = runner.invoke(
+        annif.cli.cli, ['eval', '--jobs', '1', 'dummy-en', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+
+def test_eval_two_jobs(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    tmpdir.join('doc3.txt').write('doc3')
+
+    result = runner.invoke(
+        annif.cli.cli, ['eval', '--jobs', '2', 'dummy-en', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+
 def test_optimize_dir(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('dummy')
@@ -662,3 +688,62 @@ def test_optimize_nonexistent_path():
     assert failed_result.exit_code != 0
     assert "Invalid value for '[PATHS]...': " \
            "Path 'nonexistent_path' does not exist." in failed_result.output
+
+
+def test_hyperopt_ensemble(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+
+    result = runner.invoke(
+        annif.cli.cli, [
+            'hyperopt', 'ensemble', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    assert re.search(
+        r'sources=dummy-en:0.\d+,dummydummy:0.\d+',
+        result.output) is not None
+
+
+def test_hyperopt_ensemble_resultsfile(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    resultfile = tmpdir.join('results.tsv')
+
+    result = runner.invoke(
+        annif.cli.cli, [
+            'hyperopt', '--results-file', str(resultfile), 'ensemble',
+            str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    with resultfile.open() as f:
+        header = next(f)
+        assert header.strip('\n') == '\t'.join(['trial',
+                                                'value',
+                                                'dummy-en',
+                                                'dummydummy'])
+        for idx, line in enumerate(f):
+            assert line.strip() != ''
+            parts = line.split('\t')
+            assert len(parts) == 4
+            assert int(parts[0]) == idx
+
+
+def test_hyperopt_not_supported(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'hyperopt', 'tfidf-en', str(tmpdir)])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+
+    assert 'Hyperparameter optimization not supported' in failed_result.output

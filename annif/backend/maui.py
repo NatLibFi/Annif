@@ -4,9 +4,9 @@
 import time
 import os.path
 import json
+import dateutil.parser
 import requests
 import requests.exceptions
-from datetime import datetime
 from annif.exception import ConfigurationException
 from annif.exception import NotSupportedException
 from annif.exception import OperationFailedException
@@ -26,8 +26,9 @@ class MauiBackend(backend.AnnifBackend):
     @property
     def modification_time(self):
         mtime = self._get_project_info('end_time')
-        if mtime is not None:
-            return datetime.strptime(mtime, '%Y-%m-%dT%H:%M:%S.%fZ')
+        if mtime is None:
+            return None
+        return dateutil.parser.parse(mtime)
 
     def _get_project_info(self, key):
         params = self._get_backend_params(None)
@@ -194,16 +195,16 @@ class MauiBackend(backend.AnnifBackend):
                 for hit in response['topics'] if hit['probability'] > 0.0]
         except (TypeError, ValueError) as err:
             self.warning("Problem interpreting JSON data: {}".format(err))
-            return ListSuggestionResult([], self.project.subjects)
+            return ListSuggestionResult([])
 
         return ListSuggestionResult.create_from_index(subject_suggestions,
                                                       self.project.subjects)
 
     def _suggest(self, text, params):
         if len(text.strip()) == 0:
-            return ListSuggestionResult([], self.project.subjects)
+            return ListSuggestionResult([])
         response = self._suggest_request(text, params)
         if response:
             return self._response_to_result(response)
         else:
-            return ListSuggestionResult([], self.project.subjects)
+            return ListSuggestionResult([])

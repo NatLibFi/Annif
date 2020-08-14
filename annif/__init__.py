@@ -34,7 +34,7 @@ def create_app(script_info=None, config_name=None):
     CORS(cxapp.app)
 
     if cxapp.app.config['INITIALIZE_PROJECTS']:
-        annif.project.initialize_projects(cxapp.app)
+        annif.registry.initialize_projects(cxapp.app)
 
     # register the views via blueprints
     from annif.views import bp

@@ -9,6 +9,7 @@ import annif
 import annif.analyzer
 import annif.corpus
 import annif.project
+import annif.registry
 
 
 @pytest.fixture(scope='module')
@@ -21,7 +22,7 @@ def app():
     vocab = annif.corpus.SubjectFileTSV(subjfile)
     app = annif.create_app(config_name='annif.default_config.TestingConfig')
     with app.app_context():
-        project = annif.project.get_project('dummy-en')
+        project = annif.registry.get_project('dummy-en')
         project.vocab.load_vocabulary(vocab, 'en')
     return app
 
@@ -106,7 +107,7 @@ def app_project(app):
     with app.app_context():
         dir = py.path.local(app.config['DATADIR'])
         shutil.rmtree(os.path.join(str(dir), 'projects'), ignore_errors=True)
-        return annif.project.get_project('dummy-en')
+        return annif.registry.get_project('dummy-en')
 
 
 @pytest.fixture(scope='function')

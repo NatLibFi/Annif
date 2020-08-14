@@ -1,5 +1,6 @@
 """Unit tests for the HTTP backend in Annif"""
 
+from datetime import datetime, timezone
 import pytest
 import requests.exceptions
 import unittest.mock
@@ -26,10 +27,11 @@ def test_http_suggest(app_project):
             project=app_project)
         result = http.suggest('this is some text')
         assert len(result) == 1
-        assert result[0].uri == 'http://example.org/dummy'
-        assert result[0].label == 'dummy'
-        assert result[0].score == 1.0
-        assert result[0].notation is None
+        hits = result.as_list(app_project.subjects)
+        assert hits[0].uri == 'http://example.org/dummy'
+        assert hits[0].label == 'dummy'
+        assert hits[0].score == 1.0
+        assert hits[0].notation is None
 
 
 def test_http_suggest_with_results(app_project):
@@ -54,10 +56,11 @@ def test_http_suggest_with_results(app_project):
 
         result = http.suggest('this is some text')
         assert len(result) == 1
-        assert result[0].uri == 'http://example.org/dummy-with-notation'
-        assert result[0].label == 'dummy'
-        assert result[0].score == 1.0
-        assert result[0].notation == '42.42'
+        hits = result.as_list(app_project.subjects)
+        assert hits[0].uri == 'http://example.org/dummy-with-notation'
+        assert hits[0].label == 'dummy'
+        assert hits[0].score == 1.0
+        assert hits[0].notation == '42.42'
 
 
 def test_http_suggest_zero_score(project):
@@ -158,7 +161,7 @@ def test_http_modification_time(project):
         # define here
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {'modification_time':
-                                           '1970-1-1 00:00:00'}
+                                           '1970-01-01T00:00:00.000Z'}
         mock_request.return_value = mock_response
 
         http_type = annif.backend.get_backend("http")
@@ -168,7 +171,26 @@ def test_http_modification_time(project):
                 'endpoint': 'http://api.example.org/analyze',
                 'project': 'dummy'},
             project=project)
-        assert http.modification_time == '1970-1-1 00:00:00'
+        assert http.modification_time == datetime(
+            1970, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+
+
+def test_http_modification_time_none(project):
+    with unittest.mock.patch('requests.get') as mock_request:
+        # create a mock response whose .json() method returns the dict that we
+        # define here
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {}
+        mock_request.return_value = mock_response
+
+        http_type = annif.backend.get_backend("http")
+        http = http_type(
+            backend_id='http',
+            config_params={
+                'endpoint': 'http://api.example.org/analyze',
+                'project': 'dummy'},
+            project=project)
+        assert http.modification_time is None
 
 
 def test_http_get_project_info_http_error(project):

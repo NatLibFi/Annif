@@ -2,7 +2,7 @@
 
 import abc
 import os.path
-from datetime import datetime
+from datetime import datetime, timezone
 from glob import glob
 from annif import logger
 
@@ -41,9 +41,12 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     @property
     def modification_time(self):
-        mtimes = [datetime.fromtimestamp(os.path.getmtime(p))
+        mtimes = [datetime.utcfromtimestamp(os.path.getmtime(p))
                   for p in glob(os.path.join(self.datadir, '*'))]
-        return max(mtimes, default=None)
+        most_recent = max(mtimes, default=None)
+        if most_recent is None:
+            return None
+        return most_recent.replace(tzinfo=timezone.utc)
 
     def _get_backend_params(self, params):
         backend_params = dict(self.params)

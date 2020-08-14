@@ -18,9 +18,10 @@ def test_get_backend_dummy(project):
                        project=project)
     result = dummy.suggest(text='this is some text')
     assert len(result) == 1
-    assert result[0].uri == 'http://example.org/dummy'
-    assert result[0].label == 'dummy'
-    assert result[0].score == 1.0
+    hits = result.as_list(project.subjects)
+    assert hits[0].uri == 'http://example.org/dummy'
+    assert hits[0].label == 'dummy'
+    assert hits[0].score == 1.0
 
 
 def test_learn_dummy(project, tmpdir):
@@ -38,9 +39,10 @@ def test_learn_dummy(project, tmpdir):
 
     result = dummy.suggest(text='this is some text')
     assert len(result) == 1
-    assert result[0].uri == 'http://example.org/key1'
-    assert result[0].label == 'key1'
-    assert result[0].score == 1.0
+    hits = result.as_list(project.subjects)
+    assert hits[0].uri == 'http://example.org/key1'
+    assert hits[0].label == 'key1'
+    assert hits[0].score == 1.0
 
 
 def test_fill_params_with_defaults(project):
