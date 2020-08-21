@@ -3,6 +3,7 @@
 import os
 import annif.corpus
 import annif.vocab
+import rdflib.term
 
 
 def load_dummy_vocab(tmpdir):
@@ -81,3 +82,11 @@ def test_update_subject_index_with_added_subjects(tmpdir):
     assert vocab.subjects.by_uri('http://example.org/new-dummy') == 2
     assert vocab.subjects[2] == ('http://example.org/new-dummy', 'new dummy',
                                  '42.42')
+
+
+def test_as_graph(tmpdir):
+    vocab = load_dummy_vocab(tmpdir)
+    graph = vocab.as_graph()
+    tpls = list(graph[
+        :rdflib.term.URIRef('http://www.w3.org/2004/02/skos/core#prefLabel'):])
+    assert len(tpls) == 2
