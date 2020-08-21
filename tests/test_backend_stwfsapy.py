@@ -1,19 +1,30 @@
 import os
 from annif.backend import get_backend
+from rdflib import Graph
 import annif.corpus
 from annif.backend.stwfsapy import StwfsapyBackend
 from annif.exception import NotSupportedException
 
 import pytest
+from unittest.mock import Mock
 
-_rdf_file_path = os.path.join(
-    os.path.dirname(__file__),
-    'corpora',
-    'archaeology',
-    'yso-archaeology.rdf')
+
+@pytest.fixture
+def graph_project(project):
+    _rdf_file_path = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'yso-archaeology.rdf')
+    g = Graph()
+    g.load(_rdf_file_path)
+    mock_vocab = Mock()
+    mock_vocab.as_graph.return_value = g
+    project.vocab = mock_vocab
+    return project
+
 
 _backend_conf = {
-    'graph_path': _rdf_file_path,
     'language': 'fi',
     'concept_type_uri': 'http://www.w3.org/2004/02/skos/core#Concept',
     'sub_thesaurus_type_uri':
@@ -45,12 +56,12 @@ def test_stwfsapy_default_params(project):
     assert expected_default_params == actual_params
 
 
-def test_stwfsapy_train(document_corpus, project, datadir):
+def test_stwfsapy_train(document_corpus, graph_project, datadir):
     stwfsapy_type = get_backend(StwfsapyBackend.name)
     stwfsapy = stwfsapy_type(
         backend_id=StwfsapyBackend.name,
         config_params=_backend_conf,
-        project=project)
+        project=graph_project)
     stwfsapy.train(document_corpus)
     assert stwfsapy._model is not None
     model_file = datadir.join(stwfsapy.MODEL_FILE)

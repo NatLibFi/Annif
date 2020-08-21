@@ -1,6 +1,4 @@
 import os
-from rdflib import Graph
-from rdflib.util import guess_format
 from stwfsapy.predictor import StwfsapyPredictor
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import ListSuggestionResult, SubjectSuggestion
@@ -8,7 +6,6 @@ from . import backend
 from annif.util import boolean
 
 
-_KEY_GRAPH_PATH = 'graph_path'
 _KEY_CONCEPT_TYPE_URI = 'concept_type_uri'
 _KEY_SUBTHESAURUS_TYPE_URI = 'sub_thesaurus_type_uri'
 _KEY_THESAURUS_RELATION_TYPE_URI = 'thesaurus_relation_type_uri'
@@ -27,10 +24,9 @@ _KEY_SIMPLE_ENGLISH_PLURAL_RULES = 'simple_english_plural_rules'
 class StwfsapyBackend(backend.AnnifBackend):
 
     name = "stwfsapy"
-    needs_subject_index = False
+    needs_subject_index = True
 
     STWFSAPY_PARAMETERS = {
-        _KEY_GRAPH_PATH: str,
         _KEY_CONCEPT_TYPE_URI: str,
         _KEY_SUBTHESAURUS_TYPE_URI: str,
         _KEY_THESAURUS_RELATION_TYPE_URI: str,
@@ -81,16 +77,13 @@ class StwfsapyBackend(backend.AnnifBackend):
         self.debug("Transforming training data.")
         X = [doc.text for doc in corpus.documents]
         y = [doc.uris for doc in corpus.documents]
-        graph = Graph()
-        graph_path = params[_KEY_GRAPH_PATH]
-        graph.load(graph_path, format=guess_format(graph_path))
+        graph = self.project.vocab.as_graph()
         new_params = {
                 key: self.STWFSAPY_PARAMETERS[key](val)
                 for key, val
                 in params.items()
                 if key in self.STWFSAPY_PARAMETERS
             }
-        new_params.pop(_KEY_GRAPH_PATH)
         p = StwfsapyPredictor(
             graph=graph,
             langs=frozenset([params['language']]),
