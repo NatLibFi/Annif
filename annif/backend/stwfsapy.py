@@ -75,8 +75,11 @@ class StwfsapyBackend(backend.AnnifBackend):
             raise NotSupportedException(
                 'Cannot train stwfsapy project with no documents.')
         self.debug("Transforming training data.")
-        X = [doc.text for doc in corpus.documents]
-        y = [doc.uris for doc in corpus.documents]
+        X = []
+        y = []
+        for doc in corpus.documents:
+            X.append(doc.text)
+            y.append(doc.uris)
         graph = self.project.vocab.as_graph()
         new_params = {
                 key: self.STWFSAPY_PARAMETERS[key](val)
