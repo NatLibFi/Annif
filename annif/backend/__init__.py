@@ -56,3 +56,9 @@ try:
     register_backend(omikuji.OmikujiBackend)
 except ImportError:
     annif.logger.debug("Omikuji not available, not enabling omikuji backend")
+
+try:
+    from . import stwfsapy
+    register_backend(stwfsapy.StwfsapyBackend)
+except ImportError:
+    annif.logger.debug("STWFSAPY not available, not enabling STWFSAPY backend")
