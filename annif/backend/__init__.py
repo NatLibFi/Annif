@@ -6,6 +6,7 @@ from . import http
 from . import tfidf
 from . import pav
 from . import maui
+from . import stwfsapy
 import annif
 
 
@@ -29,6 +30,7 @@ register_backend(http.HTTPBackend)
 register_backend(tfidf.TFIDFBackend)
 register_backend(pav.PAVBackend)
 register_backend(maui.MauiBackend)
+register_backend(stwfsapy.StwfsapyBackend)
 
 # Optional backends
 try:
@@ -56,9 +58,3 @@ try:
     register_backend(omikuji.OmikujiBackend)
 except ImportError:
     annif.logger.debug("Omikuji not available, not enabling omikuji backend")
-
-try:
-    from . import stwfsapy
-    register_backend(stwfsapy.StwfsapyBackend)
-except ImportError:
-    annif.logger.debug("STWFSAPY not available, not enabling STWFSAPY backend")

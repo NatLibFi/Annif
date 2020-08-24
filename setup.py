@@ -35,6 +35,7 @@ setup(
         'gunicorn',
         'numpy==1.18.*',
         'optuna==2.2.0'
+        'stwfsapy==0.1.3',
     ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
@@ -43,7 +44,6 @@ setup(
         'vw': ['vowpalwabbit==8.8.1'],
         'nn': ['tensorflow-cpu==2.3.1', 'lmdb==1.0.0'],
         'omikuji': ['omikuji==0.3.*'],
-        'stwfsapy': ['stwfsapy==0.1.2'],
         'dev': [
             'codecov',
             'pytest-cov',
