@@ -41,6 +41,8 @@ class StwfsapyBackend(backend.AnnifBackend):
     }
 
     DEFAULT_PARAMETERS = {
+        _KEY_SUBTHESAURUS_TYPE_URI: '',
+        _KEY_THESAURUS_RELATION_TYPE_URI: '',
         _KEY_THESAURUS_RELATION_IS_SPECIALISATION: False,
         _KEY_REMOVE_DEPRECATED: True,
         _KEY_HANDLE_TITLE_CASE: True,

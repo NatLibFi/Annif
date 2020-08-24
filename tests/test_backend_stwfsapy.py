@@ -43,6 +43,8 @@ def test_stwfsapy_default_params(project):
         project=project
     )
     expected_default_params = {
+        'sub_thesaurus_type_uri': '',
+        'thesaurus_relation_type_uri': '',
         'thesaurus_relation_is_specialisation': False,
         'remove_deprecated': True,
         'handle_title_case': True,
