@@ -39,9 +39,7 @@ function makeLabelLanguageOptions() {
 function getLabelPromise(uri, lang) {
     return $.ajax({
         // TODO: Define base url for api.finto somewhere else?
-        // TODO: How to handle URI to YSO-places, which is not found from YSO?
-        // TODO: Also modify the URI to point to the language version of YSO corresponding to UI language (via data-i18n)?
-        url: "http://api.finto.fi/rest/v1/yso/label?uri=" + uri + "&lang=" + lang,
+        url: "https://api.finto.fi/rest/v1/label?uri=" + uri + "&lang=" + lang,
         method: 'GET'
     });
 }
