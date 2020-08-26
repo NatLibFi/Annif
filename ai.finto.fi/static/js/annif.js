@@ -87,7 +87,6 @@ function getSuggestions() {
                 });
                 $.when.apply($, promises).done(function(result) {
                     $.each(promises, function(idx, promise) {
-                        // TODO: Make sure label is taken from the right URI (promises and results are in the same order)
                         data.results[idx].label = promise.responseJSON.prefLabel;
                     });
                     showResults(data);
