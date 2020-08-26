@@ -38,7 +38,6 @@ function makeLabelLanguageOptions() {
 
 function getLabelPromise(uri, lang) {
     return $.ajax({
-        // TODO: Define base url for api.finto somewhere else?
         url: "https://api.finto.fi/rest/v1/label?uri=" + uri + "&lang=" + lang,
         method: 'GET'
     });
@@ -89,11 +88,15 @@ function getSuggestions() {
                 $.when.apply($, promises).done(function(result) {
                     $.each(promises, function(idx, promise) {
                         // TODO: Make sure label is taken from the right URI (promises and results are in the same order)
-                        // TODO: What to do if api.finto does not respond?
                         data.results[idx].label = promise.responseJSON.prefLabel;
                     });
                     showResults(data);
-                });
+                }).fail(function (jqXHR) {
+                    alert('URI query on api.finto.fi failed:\n' + jqXHR.responseText);
+                    $('#results').hide();
+                    $('#no-results').show();
+                }
+                );
             }
         }
     });
