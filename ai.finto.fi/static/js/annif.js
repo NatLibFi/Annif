@@ -87,9 +87,15 @@ function getSuggestions() {
                         getLabelPromise(value.uri, $('#label-language').val())
                     );
                 });
+
                 $.when.apply($, promises).done(function(result) {
                     $.each(promises, function(idx, promise) {
-                        data.results[idx].label = promise.responseJSON.prefLabel;
+                        var newLabel = promise.responseJSON.prefLabel;
+                        if (newLabel === undefined) {
+                            var projectLanguage = projects[$('#project').val()].language;
+                            newLabel = data.results[idx].label + ' (' + projectLanguage + ')';
+                        }
+                        data.results[idx].label = newLabel;
                     });
                     showResults(data);
                 }).fail(function (jqXHR) {
