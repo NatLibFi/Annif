@@ -6,6 +6,7 @@ if (window.location.protocol.startsWith('http')) {
     // local development case - use Finto AI dev API
     var base_url = 'https://ai.dev.finto.fi/v1/';
 }
+var projects = {};
 
 function clearResults() {
     $('#results').empty();
@@ -22,6 +23,7 @@ function fetchProjects() {
                 $('#project').append(
                     $('<option>').attr('value',value.project_id).append(value.name)
                 );
+                projects[value.project_id] = value;
             });
         }
     });
