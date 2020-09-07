@@ -6,6 +6,7 @@ if (window.location.protocol.startsWith('http')) {
     // local development case - use Finto AI dev API
     var base_url = 'https://ai.dev.finto.fi/v1/';
 }
+var projects = {};
 
 function clearResults() {
     $('#results').empty();
@@ -22,8 +23,38 @@ function fetchProjects() {
                 $('#project').append(
                     $('<option>').attr('value',value.project_id).append(value.name)
                 );
+                projects[value.project_id] = value;
             });
         }
+    });
+}
+
+function makeLabelLanguageOptions() {
+    $('#label-language').append(
+        $('<option>').attr('value','project-language').attr('data-i18n','label-language-option-project'),
+        $('<option>').attr('value','fi').attr('data-i18n','label-language-option-fi'),
+        $('<option>').attr('value','sv').attr('data-i18n','label-language-option-sv'),
+        $('<option>').attr('value','en').attr('data-i18n','label-language-option-en'),
+    );
+}
+
+function getLabelPromise(uri, lang) {
+    return $.ajax({
+        url: "https://api.finto.fi/rest/v1/label?uri=" + uri + "&lang=" + lang,
+        method: 'GET'
+    });
+}
+
+function showResults(data) {
+    $.each(data.results, function(idx, value) {
+        $('#no-results').hide();
+        $('#results').append(
+            $('<li class="list-group-item p-0">').append(
+                $('<meter class="mr-2">').attr('value',value.score).attr('max',1.0).attr('title',value.score.toFixed(4)),
+                $('<a target="_blank">').attr('href',value.uri).append(value.label)
+            )
+        );
+        $('#results').show();
     });
 }
 
@@ -45,16 +76,35 @@ function getSuggestions() {
                 $('#results').hide();
                 $('#no-results').show();
             }
-            $.each(data.results, function(idx, value) {
-                $('#no-results').hide();
-                $('#results').append(
-                    $('<li class="list-group-item p-0">').append(
-                        $('<meter class="mr-2">').attr('value',value.score).attr('max',1.0).attr('title',value.score.toFixed(4)),
-                        $('<a target="_blank">').attr('href',value.uri).append(value.label)
-                    )
+
+            if ($('#label-language').val() == 'project-language') {
+                showResults(data);
+            }
+            else {
+                var promises = []
+                $.each(data.results, function(idx, value) {
+                    promises.push(
+                        getLabelPromise(value.uri, $('#label-language').val())
+                    );
+                });
+
+                $.when.apply($, promises).done(function(result) {
+                    $.each(promises, function(idx, promise) {
+                        var newLabel = promise.responseJSON.prefLabel;
+                        if (newLabel === undefined) {
+                            var projectLanguage = projects[$('#project').val()].language;
+                            newLabel = data.results[idx].label + ' (' + projectLanguage + ')';
+                        }
+                        data.results[idx].label = newLabel;
+                    });
+                    showResults(data);
+                }).fail(function (jqXHR) {
+                    alert('URI query on api.finto.fi failed:\n' + jqXHR.responseText);
+                    $('#results').hide();
+                    $('#no-results').show();
+                }
                 );
-                $('#results').show();
-            });
+            }
         }
     });
 }
@@ -77,6 +127,7 @@ $(document).ready(function() {
         disableButton();
     }
     fetchProjects();
+    makeLabelLanguageOptions();
     $('#get-suggestions').click(function() {
         clearResults();
         getSuggestions();
