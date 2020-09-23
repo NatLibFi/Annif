@@ -94,7 +94,7 @@
       border-radius: 0px;
       padding: 2px 7px;
     }
-    label, #suggestions {
+    label, #suggestions, legend {
       border-top: 1px solid #343260;
       padding-top: 0.5rem;
       text-transform: uppercase;
@@ -117,9 +117,12 @@
       color: black;
       pointer-events: none;
     }
+    fieldset.btn-group {
+      width: 100%;
+      display: block;
+    }
     #limit-buttons label {
       border-radius: 50%;
-      margin-right: 0.4rem;
       width: 2rem;
       height: 2rem;
       display: inline-flex;
@@ -129,6 +132,9 @@
       color: #343260;
       border-width: 0px;
       font-weight: 500;
+    }
+    #limit-buttons input {
+      display: inline;
     }
     #limit-buttons .active {
       background-color: #343260;
@@ -258,8 +264,8 @@
           </div>
         </div>
         <div class="form-group">
-          <label data-i18n="limit">Max # of suggestions</label>
-          <div id="limit-buttons" class="btn-group btn-group-toggle" data-toggle="buttons">
+          <fieldset id="limit-buttons" class="btn-group btn-group-toggle" data-toggle="buttons">
+            <legend data-i18n="limit">Max # of suggestions</legend>
             <label class="btn btn-secondary">
               <input type="radio" name="limit" value="10" checked>
               10
@@ -272,7 +278,7 @@
               <input type="radio" name="limit" value="20">
               20
             </label>
-          </div>
+          </fieldset>
         </div>
         <img id="animation" src="static/img/annif-static.gif" alt="">
         <button type="button" class="btn btn-primary" id="get-suggestions">Get suggestions</button>
