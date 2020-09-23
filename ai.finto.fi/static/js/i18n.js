@@ -20,6 +20,7 @@ var setLocale = function(locale) {
     }
 
     $('body').i18n();
+    $('html').attr('lang', $.i18n().locale);
     
     /* switch link targets */
     $('#nav-feedback').attr("href", $.i18n('url-feedback'));
@@ -132,7 +133,3 @@ jQuery(function() {
         });
     });
 });
-
-
-
-/* TODO: Make the missing links and make them work  */
