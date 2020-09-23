@@ -109,8 +109,16 @@
         color: black;
         pointer-events: none;
       }
+      fieldset.btn-group {
+        width: 100%;
+        display: block;
+      }
+      legend {
+        font-size: 1rem;
+      }
       #limit-buttons label {
         border-radius: 0px;
+        border: none;
       }
       #limit-buttons .active {
         background-color: #009cca;
@@ -230,21 +238,19 @@
           </div>
         </div>
         <div class="form-group">
-          <label data-i18n="limit">Ehdotusten enimmäismäärä</label>
-          <div id="limit-buttons" class="btn-group btn-group-toggle" data-toggle="buttons">
+          <fieldset id="limit-buttons" class="btn-group btn-group-toggle" data-toggle="buttons">
+            <legend data-i18n="limit">Ehdotusten enimmäismäärä</legend>
             <label class="btn btn-secondary">
               <input type="radio" name="limit" value="10" checked>
               10
-            </label>
-            <label class="btn btn-secondary">
+            </label><label class="btn btn-secondary">
               <input type="radio" name="limit" value="15">
               15
-            </label>
-            <label class="btn btn-secondary">
+            </label><label class="btn btn-secondary">
               <input type="radio" name="limit" value="20">
               20
             </label>
-          </div>
+          </fieldset>
         </div>
         <div class="form-group">
           <label for="label-language" data-i18n="label-language">Termien kieli</label>
