@@ -397,9 +397,7 @@ def run_optimize(project_id, paths, backend_param):
         params, filter_batch = filter_batches.pop(0)
         metrics = ['Precision (doc avg)',
                    'Recall (doc avg)',
-                   'F1 score (doc avg)',
-                   'NDCG@5',
-                   'NDCG@10']
+                   'F1 score (doc avg)']
         results = filter_batch[1].results(metrics=metrics)
         for metric, score in results.items():
             if score >= best_scores[metric]:
