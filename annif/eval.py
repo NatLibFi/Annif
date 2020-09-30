@@ -3,6 +3,7 @@
 import statistics
 import warnings
 import numpy as np
+from scipy.sparse import csr_matrix
 from sklearn.metrics import precision_score, recall_score, f1_score
 from sklearn.metrics import label_ranking_average_precision_score
 from annif.exception import NotSupportedException
@@ -97,36 +98,39 @@ class EvaluationBatch:
 
     def _evaluate_samples(self, y_true, y_pred, metrics='all'):
         y_pred_binary = y_pred > 0.0
+        y_true_sparse = csr_matrix(y_true)
 
         # define the available metrics as lazy lambda functions
         # so we can execute only the ones actually requested
         all_metrics = {
             'Precision (doc avg)': lambda: precision_score(
-                y_true, y_pred_binary, average='samples'),
+                y_true_sparse, y_pred_binary, average='samples'),
             'Recall (doc avg)': lambda: recall_score(
-                y_true, y_pred_binary, average='samples'),
+                y_true_sparse, y_pred_binary, average='samples'),
             'F1 score (doc avg)': lambda: f1_score(
-                y_true, y_pred_binary, average='samples'),
+                y_true_sparse, y_pred_binary, average='samples'),
             'Precision (subj avg)': lambda: precision_score(
-                y_true, y_pred_binary, average='macro'),
+                y_true_sparse, y_pred_binary, average='macro'),
             'Recall (subj avg)': lambda: recall_score(
-                y_true, y_pred_binary, average='macro'),
+                y_true_sparse, y_pred_binary, average='macro'),
             'F1 score (subj avg)': lambda: f1_score(
-                y_true, y_pred_binary, average='macro'),
+                y_true_sparse, y_pred_binary, average='macro'),
             'Precision (weighted subj avg)': lambda: precision_score(
-                y_true, y_pred_binary, average='weighted'),
+                y_true_sparse, y_pred_binary, average='weighted'),
             'Recall (weighted subj avg)': lambda: recall_score(
-                y_true, y_pred_binary, average='weighted'),
+                y_true_sparse, y_pred_binary, average='weighted'),
             'F1 score (weighted subj avg)': lambda: f1_score(
-                y_true, y_pred_binary, average='weighted'),
+                y_true_sparse, y_pred_binary, average='weighted'),
             'Precision (microavg)': lambda: precision_score(
-                y_true, y_pred_binary, average='micro'),
+                y_true_sparse, y_pred_binary, average='micro'),
             'Recall (microavg)': lambda: recall_score(
-                y_true, y_pred_binary, average='micro'),
+                y_true_sparse, y_pred_binary, average='micro'),
             'F1 score (microavg)': lambda: f1_score(
-                y_true, y_pred_binary, average='micro'),
+                y_true_sparse, y_pred_binary, average='micro'),
             'F1@5': lambda: f1_score(
-                y_true, filter_pred_top_k(y_pred, 5) > 0.0, average='samples'),
+                y_true_sparse,
+                filter_pred_top_k(y_pred, 5) > 0.0,
+                average='samples'),
             'NDCG': lambda: ndcg_score(y_true, y_pred),
             'NDCG@5': lambda: ndcg_score(y_true, y_pred, limit=5),
             'NDCG@10': lambda: ndcg_score(y_true, y_pred, limit=10),
