@@ -27,6 +27,7 @@ var setLocale = function(locale) {
     $('#nav-about').attr("href", $.i18n('url-read-more'));
     $('#read-more').attr("href", $.i18n('url-read-more'));
     $('#api-more-info').attr("href", $.i18n('url-api-more-info'));
+    $('#accessibility-statement').attr("href", $.i18n('url-accessibility-statement'));
 
     $('#switch-locale a').show();
     $('a[data-locale=' + $.i18n().locale + ']').hide();
@@ -59,10 +60,13 @@ jQuery(function() {
             "get-suggestions": "Get subject suggestions",
             "suggestions": "Suggestions",
             "no-results": "No results",
-            "footer-text": "The data submitted via the above form or the API will not be saved anywhere. Usage of the service is being monitored for development purposes. Powered by ",
+            "footer-text": "The data submitted via the above form or the API will not be saved anywhere. Usage of the service is being monitored for development purposes. See the ",
+            "accessibility-statement": "accessibility statement",
+            "powered-by": "Powered by ",
             "url-feedback": "http://finto.fi/en/feedback",
             "url-read-more": "https://www.kiwi.fi/x/DYDbCQ",
-            "url-api-more-info": "https://www.kiwi.fi/x/h4A_Cg"
+            "url-api-more-info": "https://www.kiwi.fi/x/h4A_Cg",
+            "url-accessibility-statement": "https://www.kiwi.fi/x/LQBTCw",
         },
         'sv': {
             "nav-about": "Information",
@@ -86,10 +90,13 @@ jQuery(function() {
             "get-suggestions": "Ge förslag till ämnesord",
             "suggestions": "Förslag",
             "no-results": "Inga resultat",
-            "footer-text": "Uppgifterna som skickas via formuläret eller API-tjänsten sparas inte. Användningen av tjänsten följs upp och statistikförs för utvecklingsändamål. Drivs av ",
+            "footer-text": "Uppgifterna som skickas via formuläret eller API-tjänsten sparas inte. Användningen av tjänsten följs upp och statistikförs för utvecklingsändamål. Se ",
+            "accessibility-statement": "tillgänglighetsutlåtande",
+            "powered-by": "Drivs av ",
             "url-feedback": "http://finto.fi/sv/feedback",
             "url-read-more": "https://www.kiwi.fi/x/FoDbCQ",
-            "url-api-more-info": "https://www.kiwi.fi/x/iIA_Cg"
+            "url-api-more-info": "https://www.kiwi.fi/x/iIA_Cg",
+            "url-accessibility-statement": "https://www.kiwi.fi/x/KABTCw",
         },
 
         'fi': {
@@ -114,10 +121,13 @@ jQuery(function() {
             "get-suggestions": "Anna aihe-ehdotukset",
             "suggestions": "Ehdotetut aiheet",
             "no-results": "Ei tuloksia",
-            "footer-text": "Lomakkeen ja rajapintapalveluiden kautta lähettyjä tietoja ei talleteta.  Palvelun käyttöä seurataan ja tilastoidaan palvelun kehittämiseksi. Voimanlähteenä ",
+            "footer-text": "Lomakkeen ja rajapintapalveluiden kautta lähettyjä tietoja ei talleteta. Palvelun käyttöä seurataan ja tilastoidaan palvelun kehittämiseksi. Tutustu ",
+            "accessibility-statement": "saavutettavuusselosteeseen",
+            "powered-by": "Voimanlähteenä ",
             "url-feedback": "http://finto.fi/fi/feedback",
             "url-read-more": "https://www.kiwi.fi/x/-oHbCQ",
-            "url-api-more-info": "https://www.kiwi.fi/x/VYA_Cg"
+            "url-api-more-info": "https://www.kiwi.fi/x/VYA_Cg",
+            "url-accessibility-statement": "https://www.kiwi.fi/x/LQBTCw",
         }
 
     }).done(function() {
