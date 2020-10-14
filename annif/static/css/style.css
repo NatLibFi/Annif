@@ -92,6 +92,13 @@ meter { width: 24px; }
 meter:-moz-meter-optimum::-moz-meter-bar {
   background: #6280dc;
 }
+meter::-webkit-meter-bar {
+  border: none;
+  border-radius: 0;
+  height: 18px;
+  background-color: #ccc;
+  box-shadow: 0 12px 3px -5px #e6e6e6 inset;
+}
 meter::-webkit-meter-optimum-value {
   background: #6280dc;
 }
