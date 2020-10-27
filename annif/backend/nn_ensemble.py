@@ -184,14 +184,16 @@ class NNEnsembleBackend(
 
     def _fit_model(self, corpus, epochs):
         env = self._open_lmdb(corpus == 'cached')
-        with env.begin(write=True, buffers=True) as txn:
-            seq = LMDBSequence(txn, batch_size=32)
-            if corpus != 'cached':
+        if corpus != 'cached':
+            with env.begin(write=True, buffers=True) as txn:
+                seq = LMDBSequence(txn, batch_size=32)
                 self._corpus_to_vectors(corpus, seq)
-            else:
-                self.info("Reusing cached training data from previous run.")
+        else:
+            self.info("Reusing cached training data from previous run.")
 
-            # fit the model
+        # fit the model using a read-only view of the LMDB
+        with env.begin(buffers=True) as txn:
+            seq = LMDBSequence(txn, batch_size=32)
             self._model.fit(seq, verbose=True, epochs=epochs)
 
         annif.util.atomic_save(
