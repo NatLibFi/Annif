@@ -31,7 +31,7 @@ RUN apt-get update \
 	&& pip install --no-cache-dir \
 		vowpalwabbit==8.7.* \
         ## LMDB
-        && pip install --no-cache-dir lmdb==0.98
+        && pip install --no-cache-dir lmdb==1.0.0
 
 
 
