@@ -98,8 +98,7 @@ class NNEnsembleBackend(
     _model = None
 
     def default_params(self):
-        params = {}
-        params.update(super().default_params())
+        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
         return params
 

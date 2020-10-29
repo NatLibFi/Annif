@@ -147,6 +147,22 @@ def test_nn_ensemble_initialize(app_project):
     nn_ensemble.initialize()
 
 
+def test_nn_ensemble_default_params(document_corpus, app_project):
+    nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
+    nn_ensemble = nn_ensemble_type(
+        backend_id='nn_ensemble',
+        config_params={'sources': 'dummy-en'},
+        project=app_project)
+
+    expected_default_params = {
+        'optimizer': 'adam',
+        'limit': 100,
+    }
+    actual_params = nn_ensemble.params
+    for param, val in expected_default_params.items():
+        assert param in actual_params and actual_params[param] == val
+
+
 def test_nn_ensemble_suggest(app_project):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
