@@ -94,7 +94,8 @@ def test_pav_suggest(app_project):
     pav_type = annif.backend.get_backend("pav")
     pav = pav_type(
         backend_id='pav',
-        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi'},
+        config_params={'limit': 50, 'min-docs': 2, 'sources': 'dummy-fi',
+                       'input_limit': 0},
         project=app_project)
 
     results = pav.suggest("""Arkeologiaa sanotaan joskus myös
