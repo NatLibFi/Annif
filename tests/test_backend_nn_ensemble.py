@@ -167,7 +167,7 @@ def test_nn_ensemble_suggest(app_project):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
-        config_params={'sources': 'dummy-en', 'input_limit': 0},
+        config_params={'sources': 'dummy-en'},
         project=app_project)
 
     results = nn_ensemble.suggest("""Arkeologiaa sanotaan joskus myös
