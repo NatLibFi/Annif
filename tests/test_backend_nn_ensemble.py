@@ -147,7 +147,7 @@ def test_nn_ensemble_initialize(app_project):
     nn_ensemble.initialize()
 
 
-def test_nn_ensemble_default_params(document_corpus, app_project):
+def test_nn_ensemble_default_params(app_project):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id='nn_ensemble',
