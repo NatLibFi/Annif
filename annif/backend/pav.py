@@ -12,6 +12,7 @@ import annif.corpus
 import annif.suggestion
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
+from . import backend
 from . import ensemble
 
 
@@ -25,6 +26,11 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
     _models = None
 
     DEFAULT_PARAMETERS = {'min-docs': 10}
+
+    def default_params(self):
+        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
+        params.update(self.DEFAULT_PARAMETERS)
+        return params
 
     def initialize(self):
         super().initialize()
