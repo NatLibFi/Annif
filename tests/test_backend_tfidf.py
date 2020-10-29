@@ -57,6 +57,17 @@ def test_tfidf_suggest(project):
     assert 'arkeologia' in [result.label for result in hits]
 
 
+def test_tfidf_suggest_input_limited(project):
+    tfidf_type = annif.backend.get_backend("tfidf")
+    tfidf = tfidf_type(
+        backend_id='tfidf',
+        config_params={'limit': 10, 'input_limit': 1},
+        project=project)
+
+    results = tfidf.suggest("""Arkeologia.""")
+    assert len(results) == 0
+
+
 def test_suggest_params(project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
