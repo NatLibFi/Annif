@@ -18,6 +18,7 @@ def test_pav_default_params(document_corpus, app_project):
 
     expected_default_params = {
         'min-docs': 10,
+        'limit': 100,
     }
     actual_params = pav.params
     for param, val in expected_default_params.items():
