@@ -29,7 +29,7 @@ RUN apt-get update \
 	&& ln -sf /usr/lib/x86_64-linux-gnu/libboost_python-py35.so \
 		/usr/lib/x86_64-linux-gnu/libboost_python3.so \
 	&& pip install --no-cache-dir \
-		vowpalwabbit==8.7.* \
+		vowpalwabbit==8.8.1 \
         ## LMDB
         && pip install --no-cache-dir lmdb==1.0.0
 
@@ -52,8 +52,8 @@ RUN apt-get update \
 		libboost-system1.67.0 \
 	&& pip install --no-cache-dir \
 		voikko \
-		vowpalwabbit==8.7.* \
-		tensorflow-cpu==2.3.0 \
+		vowpalwabbit==8.8.1 \
+		tensorflow-cpu==2.3.1 \
 		omikuji==0.3.* \
 	# For Docker healthcheck:
 	&& apt-get install -y --no-install-recommends curl \
