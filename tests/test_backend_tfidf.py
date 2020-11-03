@@ -3,9 +3,6 @@
 import annif
 import annif.backend
 import annif.corpus
-from sklearn.feature_extraction.text import TfidfVectorizer
-import pytest
-import unittest.mock
 
 
 def test_tfidf_default_params(project):

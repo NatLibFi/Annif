@@ -3,7 +3,6 @@
 import pytest
 import annif.backend
 import annif.corpus
-from annif.exception import ConfigurationException
 from annif.exception import NotInitializedException
 from annif.exception import NotSupportedException
 
