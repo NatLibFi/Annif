@@ -48,7 +48,7 @@ setup(
             'pytest-cov',
             'pytest-watch',
             'pytest-flask',
-            'pytest-pep8',
+            'pytest-flake8',
             'swagger-tester',
             'bumpversion',
             'responses',
