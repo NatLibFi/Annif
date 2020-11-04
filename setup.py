@@ -33,7 +33,7 @@ setup(
         'scipy==1.5.3',
         'rdflib',
         'gunicorn',
-        'numpy==1.19.4',
+        'numpy==1.18.*',
         'optuna==2.2.0'
     ],
     tests_require=['py', 'pytest', 'requests'],
