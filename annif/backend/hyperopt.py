@@ -6,7 +6,6 @@ import warnings
 import optuna
 import optuna.exceptions
 from .backend import AnnifBackend
-from annif import logger
 
 
 HPRecommendation = collections.namedtuple('HPRecommendation', 'lines score')
