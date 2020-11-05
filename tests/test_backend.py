@@ -48,5 +48,6 @@ def test_fill_params_with_defaults(project):
     dummy_type = annif.backend.get_backend('dummy')
     dummy = dummy_type(backend_id='dummy', config_params={},
                        project=project)
-    expected_default_params = {'limit': 100}  # From AnnifBackend class
+    expected_default_params = {'limit': 100,
+                               'input_limit': 0}
     assert expected_default_params == dummy.params

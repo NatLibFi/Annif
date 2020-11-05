@@ -14,7 +14,8 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     name = None
     needs_subject_index = False
 
-    DEFAULT_PARAMETERS = {'limit': 100}
+    DEFAULT_PARAMETERS = {'limit': 100,
+                          'input_limit': 0}
 
     def __init__(self, backend_id, config_params, project):
         """Initialize backend with specific parameters. The
@@ -80,6 +81,8 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         represented as a list of SubjectSuggestion objects."""
         beparams = self._get_backend_params(params)
         self.initialize()
+        if int(beparams['input_limit']) != 0:
+            text = text[:int(beparams['input_limit'])]
         return self._suggest(text, params=beparams)
 
     def debug(self, message):
