@@ -172,7 +172,7 @@ class AnnifProject(DatadirMixin):
         list of SubjectSuggestion objects ordered by decreasing score."""
         if not self.is_trained:
             if self.is_trained is None:
-                logger.warn('Could not get train state information.')
+                logger.warning('Could not get train state information.')
             else:
                 raise NotInitializedException('Project is not trained.')
         logger.debug('Suggesting subjects for text "%s..." (len=%d)',
