@@ -17,7 +17,6 @@ class DocumentDirectory(DocumentCorpus):
     def __init__(self, path, require_subjects=False):
         self.path = path
         self.require_subjects = require_subjects
-        self.text_limit = None
 
     def __iter__(self):
         """Iterate through the directory, yielding tuples of (docfile,
@@ -41,7 +40,7 @@ class DocumentDirectory(DocumentCorpus):
         for docfilename, keyfilename in self:
             with open(docfilename, errors='replace',
                       encoding='utf-8-sig') as docfile:
-                text = docfile.read()[:self.text_limit]
+                text = docfile.read()
             with open(keyfilename, encoding='utf-8-sig') as keyfile:
                 subjects = SubjectSet.from_string(keyfile.read())
             yield self._create_document(text=text,
@@ -54,7 +53,6 @@ class DocumentFile(DocumentCorpus):
 
     def __init__(self, path):
         self.path = path
-        self.text_limit = None
 
     @property
     def documents(self):
@@ -69,7 +67,6 @@ class DocumentFile(DocumentCorpus):
     def _parse_tsv_line(self, line):
         if '\t' in line:
             text, uris = line.split('\t', maxsplit=1)
-            text = text[:self.text_limit]
             subjects = [annif.util.cleanup_uri(uri)
                         for uri in uris.split()]
             yield self._create_document(text=text,
