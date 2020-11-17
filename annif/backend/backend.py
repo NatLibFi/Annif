@@ -63,6 +63,8 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def train(self, corpus, params=None):
         """Train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)
+        if int(beparams['input_limit']) != 0:
+            corpus.text_limit = int(beparams['input_limit'])
         return self._train(corpus, params=beparams)
 
     def initialize(self):
@@ -110,4 +112,6 @@ class AnnifLearningBackend(AnnifBackend):
     def learn(self, corpus, params=None):
         """Further train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)
+        if int(beparams['input_limit']) != 0:
+            corpus.text_limit = int(beparams['input_limit'])
         return self._learn(corpus, params=beparams)
