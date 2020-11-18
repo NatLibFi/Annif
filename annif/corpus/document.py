@@ -87,3 +87,19 @@ class DocumentList(DocumentCorpus):
     @property
     def documents(self):
         yield from self._documents
+
+
+class TruncatingDocumentCorpus(DocumentCorpus):
+    """A document corpus that wraps another document corpus but truncates the
+    documents to a given length"""
+
+    def __init__(self, corpus, limit):
+        self._documents = corpus.documents
+        self._limit = limit
+
+    @property
+    def documents(self):
+        for doc in self._documents:
+            yield self._create_document(text=doc.text[:self._limit],
+                                        uris=doc.uris,
+                                        labels=doc.labels)
