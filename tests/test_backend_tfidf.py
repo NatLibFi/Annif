@@ -40,7 +40,7 @@ def test_tfidf_train_input_limited(datadir, document_corpus, project):
         backend_id='tfidf',
         config_params={'limit': 10, 'input_limit': 1},
         project=project)
-
+    # Training on documents truncated to only one character fails
     with pytest.raises(ValueError) as excinfo:
         tfidf.train(document_corpus)
     assert 'empty vocabulary; perhaps the documents only contain stop words' \
