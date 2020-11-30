@@ -91,7 +91,8 @@ class DocumentList(DocumentCorpus):
 
 class TruncatingDocumentCorpus(DocumentCorpus):
     """A document corpus that wraps another document corpus but truncates the
-    documents to a given length"""
+    documents retaining a given number of characters. When the limit value is
+    negative it sets the number of characters that are dropped."""
 
     def __init__(self, corpus, limit):
         self._documents = corpus.documents
