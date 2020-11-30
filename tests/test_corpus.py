@@ -270,5 +270,7 @@ def test_combinedcorpus(tmpdir):
 
 def test_truncatedcorpus(document_corpus):
     truncated_corpus = TruncatingDocumentCorpus(document_corpus, 3)
-    for doc in truncated_corpus.documents:
-        assert len(doc.text) == 3
+    for truncated_doc, doc in zip(truncated_corpus.documents,
+                                  document_corpus.documents):
+        assert len(truncated_doc.text) == 3
+        assert truncated_doc.text == doc.text[:3]
