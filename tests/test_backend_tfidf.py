@@ -35,7 +35,7 @@ def test_tfidf_train(datadir, document_corpus, project):
     assert datadir.join('tfidf-index').size() > 0
 
 
-def test_tfidf_train_input_limited(datadir, document_corpus, project):
+def test_tfidf_train_input_limited(document_corpus, project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
@@ -48,7 +48,7 @@ def test_tfidf_train_input_limited(datadir, document_corpus, project):
         in str(excinfo)
 
 
-def test_tfidf_train_negative_input_limit(datadir, document_corpus, project):
+def test_tfidf_train_negative_input_limit(document_corpus, project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(
         backend_id='tfidf',
