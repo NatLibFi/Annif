@@ -1,8 +1,10 @@
 """Unit tests for the TF-IDF backend in Annif"""
 
+import pytest
 import annif
 import annif.backend
 import annif.corpus
+from annif.exception import ConfigurationException
 
 
 def test_tfidf_default_params(project):
@@ -31,6 +33,29 @@ def test_tfidf_train(datadir, document_corpus, project):
     assert len(tfidf._index) > 0
     assert datadir.join('tfidf-index').exists()
     assert datadir.join('tfidf-index').size() > 0
+
+
+def test_tfidf_train_input_limited(document_corpus, project):
+    tfidf_type = annif.backend.get_backend("tfidf")
+    tfidf = tfidf_type(
+        backend_id='tfidf',
+        config_params={'limit': 10, 'input_limit': 1},
+        project=project)
+    # Training on documents truncated to only one character fails
+    with pytest.raises(ValueError) as excinfo:
+        tfidf.train(document_corpus)
+    assert 'empty vocabulary; perhaps the documents only contain stop words' \
+        in str(excinfo)
+
+
+def test_tfidf_train_negative_input_limit(document_corpus, project):
+    tfidf_type = annif.backend.get_backend("tfidf")
+    tfidf = tfidf_type(
+        backend_id='tfidf',
+        config_params={'limit': 10, 'input_limit': -1},
+        project=project)
+    with pytest.raises(ConfigurationException):
+        tfidf.train(document_corpus)
 
 
 def test_tfidf_suggest(project):
