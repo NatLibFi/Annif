@@ -103,9 +103,9 @@ def test_clear_project(testdatadir):
 def test_clear_project_nonexistent_data(testdatadir, caplog):
     logger = annif.logger
     logger.propagate = True
-    runner.invoke(
-        annif.cli.cli,
-        ['clear', 'dummy-fi']).exit_code != 0
+    result = runner.invoke(annif.cli.cli, ['clear', 'dummy-fi'])
+    assert not result.exception
+    assert result.exit_code == 0
     assert len(caplog.records) == 1
     expected_msg = 'No model data to remove for project dummy-fi.'
     assert expected_msg == caplog.records[0].message
