@@ -9,6 +9,6 @@ from .skos import SubjectFileSKOS
 from .types import Document
 from .combine import CombinedCorpus
 
-__all__ = [DocumentDirectory, DocumentFile, DocumentList, Subject,
-           SubjectFileTSV, SubjectIndex, SubjectSet, SubjectFileSKOS,
-           Document, CombinedCorpus, TruncatingDocumentCorpus]
+__all__ = ["DocumentDirectory", "DocumentFile", "DocumentList", "Subject",
+           "SubjectFileTSV", "SubjectIndex", "SubjectSet", "SubjectFileSKOS",
+           "Document", "CombinedCorpus", "TruncatingDocumentCorpus"]
