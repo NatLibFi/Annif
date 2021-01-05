@@ -44,6 +44,7 @@ setup(
         'vw': ['vowpalwabbit==8.8.1'],
         'nn': ['tensorflow-cpu==2.3.1', 'lmdb==1.0.0'],
         'omikuji': ['omikuji==0.3.*'],
+        'yake': ['yake @ git+https://github.com/LIAAD/yake@v0.4.3'],
         'dev': [
             'codecov',
             'pytest-cov',

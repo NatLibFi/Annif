@@ -133,4 +133,4 @@ Zenodo DOI:
 
 The code in this repository is licensed under Apache License 2.0, except for the
 dependencies included under `annif/static/css` and `annif/static/js`,
-which have their own licenses. See the file headers for details.
+which have their own licenses. See the file headers for details. Using the optional Yake backend may change the licence of Annif to GPLv3, because [YAKE](https://github.com/LIAAD/yake) is licensed under GPLv3.
