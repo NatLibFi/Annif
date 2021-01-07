@@ -2,7 +2,7 @@ import os
 from annif.backend import get_backend
 from rdflib import Graph
 import annif.corpus
-from annif.backend.stwfsapy import StwfsapyBackend
+from annif.backend.stwfsa import StwfsaBackend
 from annif.exception import NotSupportedException
 
 import pytest
@@ -35,10 +35,10 @@ _backend_conf = {
 }
 
 
-def test_stwfsapy_default_params(project):
-    stwfsapy_type = get_backend(StwfsapyBackend.name)
-    stwfsapy = stwfsapy_type(
-        backend_id=StwfsapyBackend.name,
+def test_stwfsa_default_params(project):
+    stwfsa_type = get_backend(StwfsaBackend.name)
+    stwfsa = stwfsa_type(
+        backend_id=StwfsaBackend.name,
         config_params={},
         project=project
     )
@@ -54,64 +54,64 @@ def test_stwfsapy_default_params(project):
         'expand_abbreviation_with_punctuation': True,
         'simple_english_plural_rules': False
     }
-    actual_params = stwfsapy.params
+    actual_params = stwfsa.params
     assert expected_default_params == actual_params
 
 
-def test_stwfsapy_train(document_corpus, graph_project, datadir):
-    stwfsapy_type = get_backend(StwfsapyBackend.name)
-    stwfsapy = stwfsapy_type(
-        backend_id=StwfsapyBackend.name,
+def test_stwfsa_train(document_corpus, graph_project, datadir):
+    stwfsa_type = get_backend(StwfsaBackend.name)
+    stwfsa = stwfsa_type(
+        backend_id=StwfsaBackend.name,
         config_params=_backend_conf,
         project=graph_project)
-    stwfsapy.train(document_corpus)
-    assert stwfsapy._model is not None
-    model_file = datadir.join(stwfsapy.MODEL_FILE)
+    stwfsa.train(document_corpus)
+    assert stwfsa._model is not None
+    model_file = datadir.join(stwfsa.MODEL_FILE)
     assert model_file.exists()
     assert model_file.size() > 0
 
 
 def test_empty_corpus(project):
     corpus = annif.corpus.DocumentList([])
-    stwfsapy_type = get_backend(StwfsapyBackend.name)
-    stwfsapy = stwfsapy_type(
-        backend_id=StwfsapyBackend.name,
+    stwfsa_type = get_backend(StwfsaBackend.name)
+    stwfsa = stwfsa_type(
+        backend_id=StwfsaBackend.name,
         config_params=dict(),
         project=project)
     with pytest.raises(NotSupportedException):
-        stwfsapy.train(corpus)
+        stwfsa.train(corpus)
 
 
 def test_cached_corpus(project):
     corpus = 'cached'
-    stwfsapy_type = get_backend(StwfsapyBackend.name)
-    stwfsapy = stwfsapy_type(
-        backend_id=StwfsapyBackend.name,
+    stwfsa_type = get_backend(StwfsaBackend.name)
+    stwfsa = stwfsa_type(
+        backend_id=StwfsaBackend.name,
         config_params=dict(),
         project=project)
     with pytest.raises(NotSupportedException):
-        stwfsapy.train(corpus)
+        stwfsa.train(corpus)
 
 
-def test_stwfsapy_suggest_unknown(project):
-    stwfsapy_type = get_backend(StwfsapyBackend.name)
-    stwfsapy = stwfsapy_type(
-        backend_id=StwfsapyBackend.name,
+def test_stwfsa_suggest_unknown(project):
+    stwfsa_type = get_backend(StwfsaBackend.name)
+    stwfsa = stwfsa_type(
+        backend_id=StwfsaBackend.name,
         config_params=dict(),
         project=project)
-    results = stwfsapy.suggest('1234')
+    results = stwfsa.suggest('1234')
     assert len(results) == 0
 
 
-def test_stwfsapy_suggest(project, datadir):
-    stwfsapy_type = get_backend(StwfsapyBackend.name)
-    stwfsapy = stwfsapy_type(
-        backend_id=StwfsapyBackend.name,
+def test_stwfsa_suggest(project, datadir):
+    stwfsa_type = get_backend(StwfsaBackend.name)
+    stwfsa = stwfsa_type(
+        backend_id=StwfsaBackend.name,
         config_params=dict(),
         project=project)
     # Just some randomly selected words, taken from YSO archaeology group.
     # And "random" words between them
-    results = stwfsapy.suggest("""random
+    results = stwfsa.suggest("""random
     muinais-DNA random random
     labyrintit random random random
     Eurooppalainen yleissopimus arkeologisen perinnön suojelusta random

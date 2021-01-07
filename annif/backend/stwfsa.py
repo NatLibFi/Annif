@@ -21,12 +21,12 @@ _KEY_EXPAND_ABBREVIATION_WITH_PUNCTUATION = (
 _KEY_SIMPLE_ENGLISH_PLURAL_RULES = 'simple_english_plural_rules'
 
 
-class StwfsapyBackend(backend.AnnifBackend):
+class StwfsaBackend(backend.AnnifBackend):
 
-    name = "stwfsapy"
+    name = "stwfsa"
     needs_subject_index = True
 
-    STWFSAPY_PARAMETERS = {
+    STWFSA_PARAMETERS = {
         _KEY_CONCEPT_TYPE_URI: str,
         _KEY_SUBTHESAURUS_TYPE_URI: str,
         _KEY_THESAURUS_RELATION_TYPE_URI: str,
@@ -53,14 +53,14 @@ class StwfsapyBackend(backend.AnnifBackend):
         _KEY_SIMPLE_ENGLISH_PLURAL_RULES: False,
     }
 
-    MODEL_FILE = 'stwfsapy_predictor.zip'
+    MODEL_FILE = 'stwfsa_predictor.zip'
 
     _model = None
 
     def initialize(self):
         if self._model is None:
             path = os.path.join(self.datadir, self.MODEL_FILE)
-            self.debug(f'Loading STWFSAPY model from {path}.')
+            self.debug(f'Loading STWFSA model from {path}.')
             if os.path.exists(path):
                 self._model = StwfsapyPredictor.load(path)
                 self.debug('Loaded model.')
@@ -72,10 +72,10 @@ class StwfsapyBackend(backend.AnnifBackend):
     def _train(self, corpus, params):
         if corpus == 'cached':
             raise NotSupportedException(
-                'Training stwfsapy project from cached data not supported.')
+                'Training stwfsa project from cached data not supported.')
         if corpus.is_empty():
             raise NotSupportedException(
-                'Cannot train stwfsapy project with no documents.')
+                'Cannot train stwfsa project with no documents.')
         self.debug("Transforming training data.")
         X = []
         y = []
@@ -84,10 +84,10 @@ class StwfsapyBackend(backend.AnnifBackend):
             y.append(doc.uris)
         graph = self.project.vocab.as_graph()
         new_params = {
-                key: self.STWFSAPY_PARAMETERS[key](val)
+                key: self.STWFSA_PARAMETERS[key](val)
                 for key, val
                 in params.items()
-                if key in self.STWFSAPY_PARAMETERS
+                if key in self.STWFSA_PARAMETERS
             }
         p = StwfsapyPredictor(
             graph=graph,

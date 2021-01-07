@@ -34,8 +34,8 @@ setup(
         'rdflib',
         'gunicorn',
         'numpy==1.18.*',
-        'optuna==2.2.0'
-        'stwfsapy==0.1.3',
+        'optuna==2.2.0',
+        'stwfsapy==0.1.4'
     ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
