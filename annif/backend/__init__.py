@@ -7,6 +7,7 @@ from . import tfidf
 from . import pav
 from . import maui
 from . import stwfsa
+from . import mllm
 import annif
 
 
@@ -31,6 +32,7 @@ register_backend(tfidf.TFIDFBackend)
 register_backend(pav.PAVBackend)
 register_backend(maui.MauiBackend)
 register_backend(stwfsa.StwfsaBackend)
+register_backend(mllm.MLLMBackend)
 
 # Optional backends
 try:
