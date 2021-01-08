@@ -79,7 +79,9 @@ class MauiBackend(backend.AnnifBackend):
                    .format(self.tagger(params), resp.status_code))
 
         # create a new tagger
-        data = {'id': self.tagger(params), 'lang': params['language']}
+        data = {'id': self.tagger(params),
+                'lang': params['language'],
+                'max_topics_per_document': int(params['limit'])}
         json = {}
         try:
             resp = requests.post(self.endpoint(params), data=data)
