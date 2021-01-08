@@ -15,7 +15,8 @@ from annif.exception import OperationFailedException
 def maui_params():
     return {'endpoint': 'http://api.example.org/mauiservice/',
             'tagger': 'dummy',
-            'language': 'en'}
+            'language': 'en',
+            'limit': 100}
 
 
 @pytest.fixture
