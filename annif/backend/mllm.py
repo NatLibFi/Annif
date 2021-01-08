@@ -1,12 +1,19 @@
 """Maui-like Lexical Matching backend"""
 
 import collections
+from statistics import mean
 from rdflib import URIRef
 from rdflib.namespace import SKOS
 from sklearn.feature_extraction.text import CountVectorizer
 from . import backend
 
 Term = collections.namedtuple('Term', 'subject_id label is_pref')
+Match = collections.namedtuple(
+    'Match', 'subject_id is_pref n_tokens position ambiguity')
+Candidate = collections.namedtuple(
+    'Candidate',
+    'doc_length subject_id freq is_pref n_tokens ambiguity ' +
+    'first_occ last_occ spread')
 
 
 class TokenSet:
@@ -19,11 +26,17 @@ class TokenSet:
         self.subject_id = subject_id
         self.is_pref = is_pref
 
+    def __len__(self):
+        return len(self._tokens)
+
+    def __iter__(self):
+        return iter(self._tokens)
+
     def contains(self, other):
         """Returns True iff the tokens in the other TokenSet are all
         included within this TokenSet."""
 
-        return other._tokens.issubset(self.tokens)
+        return other._tokens.issubset(self._tokens)
 
     def sample(self):
         """Return an arbitrary token from this TokenSet, or None if empty"""
@@ -54,7 +67,7 @@ class TokenSetIndex:
         subj_tsets = {}
         subj_ambiguity = collections.Counter()
 
-        for token in tset.tokens:
+        for token in tset:
             for ts in self._index[token]:
                 if not tset.contains(ts):
                     continue
@@ -78,8 +91,49 @@ class MLLMBackend(backend.AnnifBackend):
     name = "mllm"
     needs_subject_index = True
 
+    _vectorizer = None
+    _index = None
+
     def initialize(self):
+        # TODO: load vectorizer
+        # TODO: load index
         pass
+
+    def _conflate_matches(self, matches, doc_length):
+        subj_matches = collections.defaultdict(list)
+        for match in matches:
+            subj_matches[match.subject_id].append(match)
+        return [
+            Candidate(
+                doc_length=doc_length,
+                subject_id=subject_id,
+                freq=len(matches) / doc_length,
+                is_pref=mean((float(m.is_pref) for m in matches)),
+                n_tokens=mean((m.n_tokens for m in matches)),
+                ambiguity=mean((m.ambiguity for m in matches)),
+                first_occ=matches[0].position / doc_length,
+                last_occ=matches[-1].position / doc_length,
+                spread=(matches[-1].position - matches[0].position) / doc_length
+            )
+            for subject_id, matches in subj_matches.items()]
+
+    def _generate_candidates(self, text):
+        sentences = self.project.analyzer.tokenize_sentences(text)
+        sent_tokens = self._vectorizer.transform(sentences)
+        matches = []
+
+        features = self._vectorizer.get_feature_names()
+
+        for sent_idx, token_matrix in enumerate(sent_tokens):
+            tset = TokenSet(token_matrix.nonzero()[1])
+            for ts, ambiguity in self._index.search(tset):
+                matches.append(Match(subject_id=ts.subject_id,
+                                     is_pref=ts.is_pref,
+                                     n_tokens=len(ts),
+                                     position=sent_idx,
+                                     ambiguity=ambiguity))
+
+        return self._conflate_matches(matches, len(sentences))
 
     def _train(self, corpus, params):
         graph = self.project.vocab.as_graph()
@@ -97,19 +151,28 @@ class MLLMBackend(backend.AnnifBackend):
                                   label=str(label),
                                   is_pref=False))
 
-        vectorizer = CountVectorizer(
+        self._vectorizer = CountVectorizer(
             binary=True,
             tokenizer=self.project.analyzer.tokenize_words
         )
-        label_corpus = vectorizer.fit_transform((t.label for t in terms))
+        label_corpus = self._vectorizer.fit_transform((t.label for t in terms))
+        # TODO: save vectorizer
         self.info(label_corpus.shape)
 
-        index = TokenSetIndex()
+        self._index = TokenSetIndex()
         for term, label_matrix in zip(terms, label_corpus):
             tokens = label_matrix.nonzero()[1]
             tset = TokenSet(tokens, term.subject_id, term.is_pref)
-            index.add(tset)
-        self.info(index._index)
+            self._index.add(tset)
+        # TODO: save index
+
+        # TODO: check for "cached" corpus
+        for idx, doc in enumerate(corpus.documents):
+            self.info(doc.text)
+            for candidate in self._generate_candidates(doc.text):
+                self.info(candidate)
+            if idx > 5:
+                break
 
     def _suggest(self, text, params):
         pass
