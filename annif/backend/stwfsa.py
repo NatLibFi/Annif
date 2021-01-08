@@ -19,6 +19,7 @@ _KEY_EXPAND_AMPERSAND_WITH_SPACES = 'expand_ampersand_with_spaces'
 _KEY_EXPAND_ABBREVIATION_WITH_PUNCTUATION = (
     'expand_abbreviation_with_punctuation')
 _KEY_SIMPLE_ENGLISH_PLURAL_RULES = 'simple_english_plural_rules'
+_KEY_INPUT_LIMIT = 'input_limit'
 
 
 class StwfsaBackend(backend.AnnifBackend):
@@ -38,6 +39,7 @@ class StwfsaBackend(backend.AnnifBackend):
         _KEY_EXPAND_AMPERSAND_WITH_SPACES: boolean,
         _KEY_EXPAND_ABBREVIATION_WITH_PUNCTUATION: boolean,
         _KEY_SIMPLE_ENGLISH_PLURAL_RULES: boolean,
+        _KEY_INPUT_LIMIT: int,
     }
 
     DEFAULT_PARAMETERS = {
@@ -51,6 +53,7 @@ class StwfsaBackend(backend.AnnifBackend):
         _KEY_EXPAND_AMPERSAND_WITH_SPACES: True,
         _KEY_EXPAND_ABBREVIATION_WITH_PUNCTUATION: True,
         _KEY_SIMPLE_ENGLISH_PLURAL_RULES: False,
+        _KEY_INPUT_LIMIT: 0,
     }
 
     MODEL_FILE = 'stwfsa_predictor.zip'
@@ -89,6 +92,7 @@ class StwfsaBackend(backend.AnnifBackend):
                 in params.items()
                 if key in self.STWFSA_PARAMETERS
             }
+        new_params.pop(_KEY_INPUT_LIMIT)
         p = StwfsapyPredictor(
             graph=graph,
             langs=frozenset([params['language']]),

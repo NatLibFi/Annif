@@ -52,7 +52,8 @@ def test_stwfsa_default_params(project):
         'extract_any_case_from_braces': False,
         'expand_ampersand_with_spaces': True,
         'expand_abbreviation_with_punctuation': True,
-        'simple_english_plural_rules': False
+        'simple_english_plural_rules': False,
+        'input_limit': 0,
     }
     actual_params = stwfsa.params
     assert expected_default_params == actual_params
