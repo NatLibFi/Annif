@@ -9,7 +9,7 @@ from . import backend
 
 Term = collections.namedtuple('Term', 'subject_id label is_pref')
 Match = collections.namedtuple(
-    'Match', 'subject_id is_pref n_tokens position ambiguity')
+    'Match', 'subject_id is_pref n_tokens pos ambiguity')
 Candidate = collections.namedtuple(
     'Candidate',
     'doc_length subject_id freq is_pref n_tokens ambiguity ' +
@@ -111,9 +111,9 @@ class MLLMBackend(backend.AnnifBackend):
                 is_pref=mean((float(m.is_pref) for m in matches)),
                 n_tokens=mean((m.n_tokens for m in matches)),
                 ambiguity=mean((m.ambiguity for m in matches)),
-                first_occ=matches[0].position / doc_length,
-                last_occ=matches[-1].position / doc_length,
-                spread=(matches[-1].position - matches[0].position) / doc_length
+                first_occ=matches[0].pos / doc_length,
+                last_occ=matches[-1].pos / doc_length,
+                spread=(matches[-1].pos - matches[0].pos) / doc_length
             )
             for subject_id, matches in subj_matches.items()]
 
@@ -122,15 +122,13 @@ class MLLMBackend(backend.AnnifBackend):
         sent_tokens = self._vectorizer.transform(sentences)
         matches = []
 
-        features = self._vectorizer.get_feature_names()
-
         for sent_idx, token_matrix in enumerate(sent_tokens):
             tset = TokenSet(token_matrix.nonzero()[1])
             for ts, ambiguity in self._index.search(tset):
                 matches.append(Match(subject_id=ts.subject_id,
                                      is_pref=ts.is_pref,
                                      n_tokens=len(ts),
-                                     position=sent_idx,
+                                     pos=sent_idx,
                                      ambiguity=ambiguity))
 
         return self._conflate_matches(matches, len(sentences))
