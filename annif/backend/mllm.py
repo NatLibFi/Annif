@@ -1,10 +1,17 @@
 """Maui-like Lexical Matching backend"""
 
 import collections
+import math
+from enum import IntEnum
 from statistics import mean
+import numpy as np
 from rdflib import URIRef
 from rdflib.namespace import SKOS
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import FunctionTransformer
+from sklearn.ensemble import BaggingClassifier
+from sklearn.tree import DecisionTreeClassifier
 from . import backend
 
 Term = collections.namedtuple('Term', 'subject_id label is_pref')
@@ -14,6 +21,12 @@ Candidate = collections.namedtuple(
     'Candidate',
     'doc_length subject_id freq is_pref n_tokens ambiguity ' +
     'first_occ last_occ spread')
+
+Feature = IntEnum(
+    'Feature',
+    'freq doc_freq subj_freq tfidf is_pref n_tokens ambiguity ' +
+    'first_occ last_occ spread doc_length',
+    start=0)
 
 
 class TokenSet:
@@ -133,13 +146,33 @@ class MLLMBackend(backend.AnnifBackend):
 
         return self._conflate_matches(matches, len(sentences))
 
+    def _candidates_to_features(self, candidates):
+        """Convert a list of Candidates to a NumPy feature matrix"""
+        matrix = np.zeros((len(candidates), len(Feature)), dtype=np.float32)
+        for idx, c in enumerate(candidates):
+            subj = c.subject_id
+            matrix[idx, Feature.freq] = c.freq
+            matrix[idx, Feature.doc_freq] = self._doc_freq[subj]
+            matrix[idx, Feature.subj_freq] = self._subj_freq.get(subj, 1) - 1
+            matrix[idx, Feature.tfidf] = c.freq * self._idf[subj]
+            matrix[idx, Feature.is_pref] = c.is_pref
+            matrix[idx, Feature.n_tokens] = c.n_tokens
+            matrix[idx, Feature.ambiguity] = c.ambiguity
+            matrix[idx, Feature.first_occ] = c.first_occ
+            matrix[idx, Feature.last_occ] = c.last_occ
+            matrix[idx, Feature.spread] = c.spread
+            matrix[idx, Feature.doc_length] = c.doc_length
+        return matrix
+
     def _train(self, corpus, params):
         graph = self.project.vocab.as_graph()
         self.info('starting train')
         terms = []
-        for subj_id, (uri, pref, _) in enumerate(self.project.vocab.subjects):
+        subject_ids = []
+        for subj_id, (uri, pref, _) in enumerate(self.project.subjects):
             if pref is None:
                 continue  # deprecated subject
+            subject_ids.append(subj_id)
             terms.append(Term(subject_id=subj_id, label=pref, is_pref=True))
             alts = graph.preferredLabel(URIRef(uri),
                                         lang=params['language'],
@@ -164,13 +197,49 @@ class MLLMBackend(backend.AnnifBackend):
             self._index.add(tset)
         # TODO: save index
 
+        # frequency of subjects (by id) in the generated candidates
+        self._doc_freq = collections.Counter()
+        # frequency of manually assigned subjects ("domain keyphraseness")
+        self._subj_freq = collections.Counter()
         # TODO: check for "cached" corpus
+        doc_count = 0
+        train_X = []
+        train_y = []
         for idx, doc in enumerate(corpus.documents):
+            doc_subject_ids = [self.project.subjects.by_uri(uri)
+                               for uri in doc.uris]
+            self._subj_freq.update(doc_subject_ids)
             self.info(doc.text)
-            for candidate in self._generate_candidates(doc.text):
-                self.info(candidate)
+            candidates = self._generate_candidates(doc.text)
+            self._doc_freq.update([c.subject_id for c in candidates])
+            train_X += candidates
+            train_y += [(c.subject_id in doc_subject_ids) for c in candidates]
             if idx > 5:
                 break
+            doc_count += 1
+        self.info(self._doc_freq)
+        self.info(self._subj_freq)
+
+        # precalculate idf values for candidate subjects
+        self._idf = collections.defaultdict(float)
+        for subj_id in subject_ids:
+            self._idf[uri] = math.log((doc_count + 1) /
+                                      (self._doc_freq[subj_id] + 1)) + 1
+
+        # define a sklearn pipeline with transformer and classifier
+        # TODO: make hyperparameters configurable
+        self._model = Pipeline(
+            steps=[
+                ('transformer', FunctionTransformer(
+                    self._candidates_to_features)),
+                ('classifier', BaggingClassifier(
+                    DecisionTreeClassifier(min_samples_leaf=18,
+                                           max_leaf_nodes=800),
+                    max_samples=0.9))])
+        # fit the model on the training corpus
+        self._model.fit(train_X, train_y)
+        self.info(self._model)
+        # TODO: save model
 
     def _suggest(self, text, params):
         pass
