@@ -39,7 +39,7 @@ class TokenSet:
     be matched with another set of tokens. A TokenSet can optionally
     be associated with a subject from the vocabulary."""
 
-    def __init__(self, tokens, subject_id=None, is_pref=None):
+    def __init__(self, tokens, subject_id=None, is_pref=False):
         self._tokens = set(tokens)
         self.subject_id = subject_id
         self.is_pref = is_pref
