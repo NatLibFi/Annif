@@ -4,6 +4,8 @@ import collections
 import math
 from enum import IntEnum
 from statistics import mean
+import os.path
+import joblib
 import numpy as np
 from rdflib import URIRef
 from rdflib.namespace import SKOS
@@ -12,6 +14,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.ensemble import BaggingClassifier
 from sklearn.tree import DecisionTreeClassifier
+import annif.util
+from annif.exception import NotInitializedException
+from annif.suggestion import VectorSuggestionResult
 from . import backend
 
 Term = collections.namedtuple('Term', 'subject_id label is_pref')
@@ -99,18 +104,8 @@ class TokenSetIndex:
                 for uri, ts in subj_tsets.items()]
 
 
-class MLLMBackend(backend.AnnifBackend):
-    """Maui-like Lexical Matching backend for Annif"""
-    name = "mllm"
-    needs_subject_index = True
-
-    _vectorizer = None
-    _index = None
-
-    def initialize(self):
-        # TODO: load vectorizer
-        # TODO: load index
-        pass
+class MLLMModel:
+    """Maui-like Lexical Matching model"""
 
     def _conflate_matches(self, matches, doc_length):
         subj_matches = collections.defaultdict(list)
@@ -130,8 +125,8 @@ class MLLMBackend(backend.AnnifBackend):
             )
             for subject_id, matches in subj_matches.items()]
 
-    def _generate_candidates(self, text):
-        sentences = self.project.analyzer.tokenize_sentences(text)
+    def _generate_candidates(self, text, analyzer):
+        sentences = analyzer.tokenize_sentences(text)
         sent_tokens = self._vectorizer.transform(sentences)
         matches = []
 
@@ -164,12 +159,11 @@ class MLLMBackend(backend.AnnifBackend):
             matrix[idx, Feature.doc_length] = c.doc_length
         return matrix
 
-    def _train(self, corpus, params):
-        graph = self.project.vocab.as_graph()
-        self.info('starting train')
+    def train(self, corpus, vocab, analyzer, params):
+        graph = vocab.as_graph()
         terms = []
         subject_ids = []
-        for subj_id, (uri, pref, _) in enumerate(self.project.subjects):
+        for subj_id, (uri, pref, _) in enumerate(vocab.subjects):
             if pref is None:
                 continue  # deprecated subject
             subject_ids.append(subj_id)
@@ -184,41 +178,32 @@ class MLLMBackend(backend.AnnifBackend):
 
         self._vectorizer = CountVectorizer(
             binary=True,
-            tokenizer=self.project.analyzer.tokenize_words
+            tokenizer=analyzer.tokenize_words
         )
         label_corpus = self._vectorizer.fit_transform((t.label for t in terms))
-        # TODO: save vectorizer
-        self.info(label_corpus.shape)
 
         self._index = TokenSetIndex()
         for term, label_matrix in zip(terms, label_corpus):
             tokens = label_matrix.nonzero()[1]
             tset = TokenSet(tokens, term.subject_id, term.is_pref)
             self._index.add(tset)
-        # TODO: save index
 
         # frequency of subjects (by id) in the generated candidates
         self._doc_freq = collections.Counter()
         # frequency of manually assigned subjects ("domain keyphraseness")
         self._subj_freq = collections.Counter()
-        # TODO: check for "cached" corpus
         doc_count = 0
         train_X = []
         train_y = []
         for idx, doc in enumerate(corpus.documents):
-            doc_subject_ids = [self.project.subjects.by_uri(uri)
+            doc_subject_ids = [vocab.subjects.by_uri(uri)
                                for uri in doc.uris]
             self._subj_freq.update(doc_subject_ids)
-            self.info(doc.text)
-            candidates = self._generate_candidates(doc.text)
+            candidates = self._generate_candidates(doc.text, analyzer)
             self._doc_freq.update([c.subject_id for c in candidates])
             train_X += candidates
             train_y += [(c.subject_id in doc_subject_ids) for c in candidates]
-            if idx > 5:
-                break
             doc_count += 1
-        self.info(self._doc_freq)
-        self.info(self._subj_freq)
 
         # precalculate idf values for candidate subjects
         self._idf = collections.defaultdict(float)
@@ -238,8 +223,54 @@ class MLLMBackend(backend.AnnifBackend):
                     max_samples=0.9))])
         # fit the model on the training corpus
         self._model.fit(train_X, train_y)
-        self.info(self._model)
-        # TODO: save model
+
+    def predict(self, text, analyzer):
+        candidates = self._generate_candidates(text, analyzer)
+        scores = self._model.predict_proba(candidates)
+        subj_scores = [(score[1], c.subject_id)
+                       for score, c in zip(scores, candidates)]
+        return sorted(subj_scores, reverse=True)
+
+
+class MLLMBackend(backend.AnnifBackend):
+    """Maui-like Lexical Matching backend for Annif"""
+    name = "mllm"
+    needs_subject_index = True
+
+    _model = None
+
+    MODEL_FILE = 'model'
+
+    def initialize(self):
+        if self._model is None:
+            path = os.path.join(self.datadir, self.MODEL_FILE)
+            self.debug('loading model from {}'.format(path))
+            if os.path.exists(path):
+                self._model = joblib.load(path)
+            else:
+                raise NotInitializedException(
+                    'model {} not found'.format(path),
+                    backend_id=self.backend_id)
+
+    def _train(self, corpus, params):
+        # TODO: check for "cached" corpus
+        self.info('starting train')
+        self._model = MLLMModel()
+        self._model.train(
+            corpus,
+            self.project.vocab,
+            self.project.analyzer,
+            params)
+        self.info('saving model')
+        annif.util.atomic_save(
+            self._model,
+            self.datadir,
+            self.MODEL_FILE,
+            method=joblib.dump)
 
     def _suggest(self, text, params):
-        pass
+        vector = np.zeros(len(self.project.subjects), dtype=np.float32)
+        for score, subject_id in self._model.predict(text, self.project.analyzer):
+            vector[subject_id] = score
+        result = VectorSuggestionResult(vector)
+        return result.filter(self.project.subjects, limit=int(params['limit']))
