@@ -270,7 +270,9 @@ class MLLMBackend(backend.AnnifBackend):
 
     def _suggest(self, text, params):
         vector = np.zeros(len(self.project.subjects), dtype=np.float32)
-        for score, subject_id in self._model.predict(text, self.project.analyzer):
+        for score, subject_id in self._model.predict(text,
+                                                     self.project.analyzer):
             vector[subject_id] = score
         result = VectorSuggestionResult(vector)
-        return result.filter(self.project.subjects, limit=int(params['limit']))
+        return result.filter(self.project.subjects,
+                             limit=int(params['limit']))
