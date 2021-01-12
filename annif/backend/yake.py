@@ -4,7 +4,7 @@
 import yake
 import os.path
 from collections import defaultdict
-from rdflib.namespace import SKOS, RDF, OWL, URIRef
+from rdflib.namespace import SKOS, RDF, OWL
 import rdflib
 from . import backend
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
