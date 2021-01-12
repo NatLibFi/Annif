@@ -3,11 +3,9 @@
 
 import yake
 import os.path
-import re
 from collections import defaultdict
 from rdflib.namespace import SKOS, RDF, OWL, URIRef
 import rdflib
-from nltk.corpus import stopwords
 from . import backend
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 
@@ -42,7 +40,6 @@ class YakeBackend(backend.AnnifBackend):
 
     def initialize(self):
         self._initialize_index()
-        # self.graph
         self._kw_extractor = yake.KeywordExtractor(
             lan=self.project.language,
             n=self.params['max_ngram_size'],
@@ -56,9 +53,9 @@ class YakeBackend(backend.AnnifBackend):
         if self._index is None:
             path = os.path.join(self.datadir, self.INDEX_FILE)
             if os.path.exists(path):
-                self.info('Loading index from {}'.format(path))
                 self._index = self._load_index(path)
-                self.info(f'Loaded index with {len(self._index)} labels')
+                self.info(
+                    f'Loaded index from {path} with {len(self._index)} labels')
             else:
                 self.info('Creating index')
                 self._create_index()
@@ -68,6 +65,8 @@ class YakeBackend(backend.AnnifBackend):
     @property
     def graph(self):
         if self._graph is None:
+            # TODO use as_graph() that is now available
+            # self._graph = vocab.as_graph()
             self._graph = rdflib.Graph()
             path = os.path.join(self.project.vocab.datadir, 'subjects.ttl')
             self.info('Loading graph from {}'.format(path))
@@ -80,17 +79,14 @@ class YakeBackend(backend.AnnifBackend):
         index = defaultdict(list)
         for predicate in [SKOS.prefLabel]:  #, SKOS.altLabel, SKOS.hiddenLabel]:
             for concept in self.graph.subjects(RDF.type, SKOS.Concept):
-                if (concept, OWL.deprecated, rdflib.Literal(True)) in self.graph:
+                if (concept, OWL.deprecated, rdflib.Literal(True)) \
+                        in self.graph:
                     continue
                 for label in self.graph.objects(concept, predicate):
                     if not label.language == self.project.language:
                         continue
                     uri = str(concept)
                     label = str(label)
-                    # This really is useful: Disambiguate by dropping ambigious labels
-                    # if label[-1] == ')':
-                        # continue
-                    # label = re.sub(r' \(.*\)', '', label)  # Remove specifier
                     lemmatized_label = self._lemmatize_phrase(label)
                     lemmatized_label = self._sort_phrase(lemmatized_label)
                     index[lemmatized_label].append(uri)
@@ -117,22 +113,11 @@ class YakeBackend(backend.AnnifBackend):
         return ' '.join(sorted(words))
 
     def _lemmatize_phrase(self, phrase):
-        # if self.project.language == 'fi':
-            # lan_stopwords = set(stopwords.words('finnish'))
-        # elif self.project.language == 'en':
-            # stopwords = set(stopwords.words('english'))
         normalized = []
-        # phrase = re.sub(r'\W+', '', phrase)
         for word in phrase.split():
-            # if word in lan_stopwords:
-                # continue
             normalized.append(
                 self.project.analyzer.normalize_word(word).lower())
         return ' '.join(normalized)
-
-    def _sort_phrase(self, phrase):
-        words = phrase.split()
-        return ' '.join(sorted(words))
 
     def _keyphrases2suggestions(self, keyphrases):
         suggestions = []
@@ -140,7 +125,6 @@ class YakeBackend(backend.AnnifBackend):
         for kp, score in keyphrases:
             uris = self._keyphrase2uris(kp)
             for uri in uris:
-                # Its faster to get label from Annif subject index than from graph (but is even this needed?)
                 label = self.project.subjects.uris_to_labels([uri])[0]
                 suggestions.append(
                     (uri, label, self._transform_score(score)))
@@ -159,15 +143,6 @@ class YakeBackend(backend.AnnifBackend):
         uris = []
         uris.extend(self._index.get(keyphrase, []))
 
-        # Maybe TODO: Search only in hidden labels if not found in pref or alt labels:
-        # if not uris:
-            # uris.extend(hidden_label_index.get(mutated_kp, []))
-
-        # Maybe TODO: if not found, search for part of keyword:
-        # if not uris and ' ' in keyphrase:
-            # words = keyphrase.split()
-            # uris.extend(self._index.get(' '.join(words[:-1]), []))
-            # uris.extend(self._index.get(' '.join(words[1:]), []))
         return uris
 
     def _transform_score(self, score):
@@ -188,45 +163,7 @@ class YakeBackend(backend.AnnifBackend):
 
     def _conflate_scores(self, score1, score2):
         # https://stats.stackexchange.com/questions/194878/combining-two-probability-scores/194884
-        # return min(1, score1 + score2)
-        # return min(1.0, (score1**2 + score2**2)**0.5)
-        # score1 = 0.5 * score1 + 0.5
-        # score2 = 0.5 * score2 + 0.5
         return score1 * score2 / (score1 * score2 + (1-score1) * (1-score2))
-
-    # def _get_node_degrees(self, suggestions):
-    #     connections = []
-    #     for uri, label, score in suggestions:
-    #         suggestion_neighbours = []
-    #         u = URIRef(uri)
-    #         suggestion_neighbours.extend(
-    #             [o for o in self.graph.objects(u, SKOS.broader)])
-    #         suggestion_neighbours.extend(
-    #             [o for o in self.graph.objects(u, SKOS.narrower)])
-    #         #suggestion_neighbours.extend([o for o in graph.objects(u, SKOS.related)])
-    #         connections.append((u, suggestion_neighbours))
-
-    #     node_degrees = []
-    #     for uri, label, score in suggestions:
-    #         u = URIRef(uri)
-    #         cnt = 0
-    #         for neighbour, suggestion_neighbours in connections:
-    #             if u == neighbour:
-    #                 # print('SELF')
-    #                 continue
-    #             if u in suggestion_neighbours:
-    #                 # print('HIT')
-    #                 cnt += 1
-    #         node_degrees.append(cnt)  # / len(suggestion_neighbours))
-    #     return node_degrees
-
-    # def _modify_scores(self, suggestions, node_degrees, scale):
-    #     modified_suggestions = []
-    #     for suggestion, node_degree in zip(suggestions, node_degrees):
-    #         modified_suggestions.append(
-    #             (suggestion[0], suggestion[1],
-    #              float(suggestion[2]) + scale * node_degree))
-    #     return modified_suggestions
 
     def _suggest(self, text, params):
         self.debug(
@@ -235,9 +172,6 @@ class YakeBackend(backend.AnnifBackend):
 
         keywords = self._kw_extractor.extract_keywords(text)
         suggestions = self._keyphrases2suggestions(keywords)
-
-        # node_degrees = self._get_node_degrees(suggestions)
-        # suggestions = self._modify_scores(suggestions, node_degrees, scale=0.01)
 
         subject_suggestions = [SubjectSuggestion(
                 uri=uri,
