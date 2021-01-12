@@ -93,9 +93,23 @@ def pretrained_vectors():
 
 
 @pytest.fixture(scope='module')
-def project(subject_index, datadir, registry):
+def vocab(datadir):
+    vocab = annif.vocab.AnnifVocabulary('my-vocab', datadir)
+    subjfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'yso-archaeology.ttl')
+    subjects = annif.corpus.SubjectFileSKOS(subjfile, 'fi')
+    vocab.load_vocabulary(subjects, 'fi')
+    return vocab
+
+
+@pytest.fixture(scope='module')
+def project(subject_index, datadir, registry, vocab):
     proj = unittest.mock.Mock()
     proj.analyzer = annif.analyzer.get_analyzer('snowball(finnish)')
+    proj.vocab = vocab
     proj.subjects = subject_index
     proj.datadir = str(datadir)
     proj.registry = registry

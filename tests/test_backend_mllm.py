@@ -66,3 +66,16 @@ def test_mllm_default_params(project):
     actual_params = mllm.params
     for param, val in expected_default_params.items():
         assert param in actual_params and actual_params[param] == val
+
+
+def test_mllm_train(datadir, document_corpus, project):
+    mllm_type = annif.backend.get_backend("mllm")
+    mllm = mllm_type(
+        backend_id='mllm',
+        config_params={'limit': 10, 'language': 'fi'},
+        project=project)
+
+    mllm.train(document_corpus)
+    assert mllm._model is not None
+    assert datadir.join('model').exists()
+    assert datadir.join('model').size() > 0
