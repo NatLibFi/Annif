@@ -74,8 +74,8 @@ class YakeBackend(backend.AnnifBackend):
         return self._graph
 
     def _create_index(self):
-        # TODO Should index creation be done on loadvoc command?
-        # TODO American to British labels?
+        # TODO Should index creation & saving be done on loadvoc command?
+        # Or saving at all? It takes about 1 min to create the index
         index = defaultdict(set)
         for predicate in [SKOS.prefLabel, SKOS.altLabel, SKOS.hiddenLabel]:
             for concept in self.graph.subjects(RDF.type, SKOS.Concept):
@@ -104,8 +104,7 @@ class YakeBackend(backend.AnnifBackend):
         with open(path, 'r', encoding='utf-8') as indexfile:
             for line in indexfile:
                 label, uris = line.strip().split('\t')
-                uris = uris.split()
-                index[label] = uris
+                index[label] = uris.split()
         return index
 
     def _sort_phrase(self, phrase):
@@ -140,10 +139,7 @@ class YakeBackend(backend.AnnifBackend):
     def _keyphrase2uris(self, keyphrase):
         keyphrase = self._lemmatize_phrase(keyphrase)
         keyphrase = self._sort_phrase(keyphrase)
-        uris = []
-        uris.extend(self._index.get(keyphrase, []))
-
-        return uris
+        return self._index.get(keyphrase, [])
 
     def _transform_score(self, score):
         # TODO if score<0:
