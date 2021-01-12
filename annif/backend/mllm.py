@@ -70,6 +70,9 @@ class TokenSetIndex:
     def __init__(self):
         self._index = collections.defaultdict(set)
 
+    def __len__(self):
+        return len(self._index)
+
     def add(self, tset):
         """Add a TokenSet into this index"""
         token = tset.sample()
