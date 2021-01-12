@@ -146,7 +146,8 @@ class YakeBackend(backend.AnnifBackend):
         return uris
 
     def _transform_score(self, score):
-        return 1.0 / (3*score + 1)
+        # TODO if score<0:
+        return 1.0 / (score + 1)
 
     def _combine_suggestions(self, suggestions):
         combined_suggestions = {}
