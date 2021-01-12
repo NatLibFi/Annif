@@ -76,8 +76,8 @@ class YakeBackend(backend.AnnifBackend):
     def _create_index(self):
         # TODO Should index creation be done on loadvoc command?
         # TODO American to British labels?
-        index = defaultdict(list)
         for predicate in [SKOS.prefLabel]:  #, SKOS.altLabel, SKOS.hiddenLabel]:
+        index = defaultdict(set)
             for concept in self.graph.subjects(RDF.type, SKOS.Concept):
                 if (concept, OWL.deprecated, rdflib.Literal(True)) \
                         in self.graph:
@@ -89,7 +89,7 @@ class YakeBackend(backend.AnnifBackend):
                     label = str(label)
                     lemmatized_label = self._lemmatize_phrase(label)
                     lemmatized_label = self._sort_phrase(lemmatized_label)
-                    index[lemmatized_label].append(uri)
+                    index[lemmatized_label].add(uri)
         index.pop('', None)  # Remove possible empty string entry
         self._index = dict(index)
 
