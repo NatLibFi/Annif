@@ -21,7 +21,7 @@ class YakeBackend(backend.AnnifBackend):
     INDEX_FILE = 'yake-index'
 
     DEFAULT_PARAMETERS = {
-        'max_ngram_size': 3,
+        'max_ngram_size': 4,
         'deduplication_threshold': 0.9,
         'deduplication_algo': 'levs',
         'window_size': 1,
