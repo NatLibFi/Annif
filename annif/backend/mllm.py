@@ -222,9 +222,9 @@ class MLLMModel:
                     self._candidates_to_features)),
                 ('classifier', BaggingClassifier(
                     DecisionTreeClassifier(
-                        min_samples_leaf=params['min_samples_leaf'],
-                        max_leaf_nodes=params['max_leaf_nodes']
-                    ), max_samples=params['max_samples']))])
+                        min_samples_leaf=int(params['min_samples_leaf']),
+                        max_leaf_nodes=int(params['max_leaf_nodes'])
+                    ), max_samples=int(params['max_samples'])))])
         # fit the model on the training corpus
         self._model.fit(train_X, train_y)
 
