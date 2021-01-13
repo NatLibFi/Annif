@@ -221,9 +221,10 @@ class MLLMModel:
                 ('transformer', FunctionTransformer(
                     self._candidates_to_features)),
                 ('classifier', BaggingClassifier(
-                    DecisionTreeClassifier(min_samples_leaf=18,
-                                           max_leaf_nodes=800),
-                    max_samples=0.9))])
+                    DecisionTreeClassifier(
+                        min_samples_leaf=params['min_samples_leaf'],
+                        max_leaf_nodes=params['max_leaf_nodes']
+                    ), max_samples=params['max_samples']))])
         # fit the model on the training corpus
         self._model.fit(train_X, train_y)
 
@@ -240,9 +241,21 @@ class MLLMBackend(backend.AnnifBackend):
     name = "mllm"
     needs_subject_index = True
 
+    # defaults for unitialized instances
     _model = None
 
     MODEL_FILE = 'model'
+
+    DEFAULT_PARAMETERS = {
+        'min_samples_leaf': 20,
+        'max_leaf_nodes': 1000,
+        'max_samples': 0.9
+    }
+
+    def default_params(self):
+        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
+        params.update(self.DEFAULT_PARAMETERS)
+        return params
 
     def initialize(self):
         if self._model is None:

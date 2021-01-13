@@ -61,7 +61,10 @@ def test_mllm_default_params(project):
         project=project)
 
     expected_default_params = {
-        'limit': 100  # From AnnifBackend class
+        'limit': 100,  # from AnnifBackend class
+        'min_samples_leaf': 20,
+        'max_leaf_nodes': 1000,
+        'max_samples': 0.9
     }
     actual_params = mllm.params
     for param, val in expected_default_params.items():
