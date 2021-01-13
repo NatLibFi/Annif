@@ -85,10 +85,10 @@ def test_mllm_suggest(project):
     mllm_type = annif.backend.get_backend('mllm')
     mllm = mllm_type(
         backend_id='mllm',
-        config_params={'limit': 8},
+        config_params={'limit': 8, 'language': 'fi'},
         project=project)
 
-    results = mllm.suggest("""Arkeologiaa sanotaan joskus myös
+    results = mllm.suggest("""Arkeologia on tieteenala, jota sanotaan joskus
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
