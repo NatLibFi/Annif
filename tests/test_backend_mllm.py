@@ -79,3 +79,25 @@ def test_mllm_train(datadir, document_corpus, project):
     assert mllm._model is not None
     assert datadir.join('model').exists()
     assert datadir.join('model').size() > 0
+
+
+def test_mllm_suggest(project):
+    mllm_type = annif.backend.get_backend('mllm')
+    mllm = mllm_type(
+        backend_id='mllm',
+        config_params={'limit': 8},
+        project=project)
+
+    results = mllm.suggest("""Arkeologiaa sanotaan joskus myös
+        muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
+        tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
+        Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
+        joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
+        pohjaan.""")
+
+    assert len(results) > 0
+    assert len(results) <= 8
+    hits = results.as_list(project.subjects)
+    assert 'http://www.yso.fi/onto/yso/p1265' in [
+        result.uri for result in hits]
+    assert 'arkeologia' in [result.label for result in hits]
