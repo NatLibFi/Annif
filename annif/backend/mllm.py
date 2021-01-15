@@ -230,6 +230,8 @@ class MLLMModel:
 
     def predict(self, text, analyzer):
         candidates = self._generate_candidates(text, analyzer)
+        if not candidates:
+            return []
         scores = self._model.predict_proba(candidates)
         subj_scores = [(score[1], c.subject_id)
                        for score, c in zip(scores, candidates)]

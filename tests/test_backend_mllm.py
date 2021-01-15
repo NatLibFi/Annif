@@ -104,3 +104,15 @@ def test_mllm_suggest(project):
     assert 'http://www.yso.fi/onto/yso/p1265' in [
         result.uri for result in hits]
     assert 'arkeologia' in [result.label for result in hits]
+
+
+def test_mllm_suggest_no_matches(project):
+    mllm_type = annif.backend.get_backend('mllm')
+    mllm = mllm_type(
+        backend_id='mllm',
+        config_params={'limit': 8, 'language': 'fi'},
+        project=project)
+
+    results = mllm.suggest("Nothing matches this.")
+
+    assert len(results) == 0
