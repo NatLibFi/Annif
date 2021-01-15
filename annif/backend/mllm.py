@@ -162,7 +162,7 @@ class MLLMModel:
             matrix[idx, Feature.doc_length] = c.doc_length
         return matrix
 
-    def train(self, corpus, vocab, analyzer, params):
+    def prepare(self, corpus, vocab, analyzer, params):
         graph = vocab.as_graph()
         terms = []
         subject_ids = []
@@ -213,9 +213,10 @@ class MLLMModel:
         for subj_id in subject_ids:
             self._idf[uri] = math.log((doc_count + 1) /
                                       (self._doc_freq[subj_id] + 1)) + 1
+        return (train_X, train_y)
 
+    def train(self, train_X, train_y, params):
         # define a sklearn pipeline with transformer and classifier
-        # TODO: make hyperparameters configurable
         self._model = Pipeline(
             steps=[
                 ('transformer', FunctionTransformer(
@@ -246,7 +247,8 @@ class MLLMBackend(backend.AnnifBackend):
     # defaults for unitialized instances
     _model = None
 
-    MODEL_FILE = 'model'
+    MODEL_FILE = 'mllm-model.gz'
+    TRAIN_FILE = 'mllm-train.gz'
 
     DEFAULT_PARAMETERS = {
         'min_samples_leaf': 20,
@@ -259,26 +261,47 @@ class MLLMBackend(backend.AnnifBackend):
         params.update(self.DEFAULT_PARAMETERS)
         return params
 
+    def _load_model(self):
+        path = os.path.join(self.datadir, self.MODEL_FILE)
+        self.debug('loading model from {}'.format(path))
+        if os.path.exists(path):
+            return joblib.load(path)
+        else:
+            raise NotInitializedException(
+                'model {} not found'.format(path),
+                backend_id=self.backend_id)
+
     def initialize(self):
         if self._model is None:
-            path = os.path.join(self.datadir, self.MODEL_FILE)
-            self.debug('loading model from {}'.format(path))
-            if os.path.exists(path):
-                self._model = joblib.load(path)
-            else:
-                raise NotInitializedException(
-                    'model {} not found'.format(path),
-                    backend_id=self.backend_id)
+            self._model = self._load_model()
 
     def _train(self, corpus, params):
-        # TODO: check for "cached" corpus
         self.info('starting train')
-        self._model = MLLMModel()
-        self._model.train(
-            corpus,
-            self.project.vocab,
-            self.project.analyzer,
-            params)
+        if corpus != 'cached':
+            self.info("preparing training data")
+            self._model = MLLMModel()
+            train_data = self._model.prepare(corpus,
+                                             self.project.vocab,
+                                             self.project.analyzer,
+                                             params)
+            annif.util.atomic_save(train_data,
+                                   self.datadir,
+                                   self.TRAIN_FILE,
+                                   method=joblib.dump)
+        else:
+            self.info("reusing cached training data from previous run")
+            self._model = self._load_model()
+            path = os.path.join(self.datadir, self.TRAIN_FILE)
+            if os.path.exists(path):
+                train_data = joblib.load(path)
+            else:
+                raise NotInitializedException(
+                    'train data file {} not found'.format(path),
+                    backend_id=self.backend_id)
+
+        self.info("training model")
+        self._model.train(train_data[0], train_data[1], params)
+
         self.info('saving model')
         annif.util.atomic_save(
             self._model,

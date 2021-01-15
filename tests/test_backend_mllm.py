@@ -80,8 +80,30 @@ def test_mllm_train(datadir, document_corpus, project):
 
     mllm.train(document_corpus)
     assert mllm._model is not None
-    assert datadir.join('model').exists()
-    assert datadir.join('model').size() > 0
+    assert datadir.join('mllm-train.gz').exists()
+    assert datadir.join('mllm-train.gz').size() > 0
+    assert datadir.join('mllm-model.gz').exists()
+    assert datadir.join('mllm-model.gz').size() > 0
+
+
+def test_mllm_train_cached(datadir, project):
+    modelfile = datadir.join('mllm-model.gz')
+    assert modelfile.exists()
+
+    old_size = modelfile.size()
+    old_mtime = modelfile.mtime()
+
+    mllm_type = annif.backend.get_backend("mllm")
+    mllm = mllm_type(
+        backend_id='mllm',
+        config_params={'limit': 10, 'language': 'fi'},
+        project=project)
+
+    mllm.train("cached")
+    assert mllm._model is not None
+    assert modelfile.exists()
+    assert modelfile.size() > 0
+    assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
 
 
 def test_mllm_suggest(project):
