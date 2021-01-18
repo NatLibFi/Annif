@@ -18,6 +18,7 @@ import annif.util
 from annif.exception import NotInitializedException
 from annif.suggestion import VectorSuggestionResult
 from . import backend
+from . import hyperopt
 
 Term = collections.namedtuple('Term', 'subject_id label is_pref')
 Match = collections.namedtuple(
@@ -128,7 +129,7 @@ class MLLMModel:
             )
             for subject_id, matches in subj_matches.items()]
 
-    def _generate_candidates(self, text, analyzer):
+    def generate_candidates(self, text, analyzer):
         sentences = analyzer.tokenize_sentences(text)
         sent_tokens = self._vectorizer.transform(sentences)
         matches = []
@@ -162,7 +163,7 @@ class MLLMModel:
             matrix[idx, Feature.doc_length] = c.doc_length
         return matrix
 
-    def prepare(self, corpus, vocab, analyzer, params):
+    def prepare_train(self, corpus, vocab, analyzer, params):
         graph = vocab.as_graph()
         terms = []
         subject_ids = []
@@ -202,7 +203,7 @@ class MLLMModel:
             doc_subject_ids = [vocab.subjects.by_uri(uri)
                                for uri in doc.uris]
             self._subj_freq.update(doc_subject_ids)
-            candidates = self._generate_candidates(doc.text, analyzer)
+            candidates = self.generate_candidates(doc.text, analyzer)
             self._doc_freq.update([c.subject_id for c in candidates])
             train_X += candidates
             train_y += [(c.subject_id in doc_subject_ids) for c in candidates]
@@ -215,9 +216,9 @@ class MLLMModel:
                                       (self._doc_freq[subj_id] + 1)) + 1
         return (train_X, train_y)
 
-    def train(self, train_X, train_y, params):
+    def _create_classifier(self, params):
         # define a sklearn pipeline with transformer and classifier
-        self._model = Pipeline(
+        return Pipeline(
             steps=[
                 ('transformer', FunctionTransformer(
                     self._candidates_to_features)),
@@ -226,20 +227,71 @@ class MLLMModel:
                         min_samples_leaf=int(params['min_samples_leaf']),
                         max_leaf_nodes=int(params['max_leaf_nodes'])
                     ), max_samples=float(params['max_samples'])))])
-        # fit the model on the training corpus
-        self._model.fit(train_X, train_y)
 
-    def predict(self, text, analyzer):
-        candidates = self._generate_candidates(text, analyzer)
-        if not candidates:
-            return []
-        scores = self._model.predict_proba(candidates)
+    def train(self, train_X, train_y, params):
+        # fit the model on the training corpus
+        self._classifier = self._create_classifier(params)
+        self._classifier.fit(train_X, train_y)
+
+    def _prediction_to_list(self, scores, candidates):
         subj_scores = [(score[1], c.subject_id)
                        for score, c in zip(scores, candidates)]
         return sorted(subj_scores, reverse=True)
 
+    def predict(self, candidates):
+        if not candidates:
+            return []
+        scores = self._classifier.predict_proba(candidates)
+        return self._prediction_to_list(scores, candidates)
 
-class MLLMBackend(backend.AnnifBackend):
+
+class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
+    """Hyperparameter optimizer for the MLLM backend"""
+
+    def _prepare(self, n_jobs=1):
+        self._backend.initialize()
+        self._train_X, self._train_y = self._backend._load_train_data()
+        self._candidates = []
+        self._gold_subjects = []
+
+        # TODO parallelize generation of candidates
+        for doc in self._corpus.documents:
+            candidates = self._backend._generate_candidates(doc.text)
+            self._candidates.append(candidates)
+            self._gold_subjects.append(
+                annif.corpus.SubjectSet((doc.uris, doc.labels)))
+
+    def _objective(self, trial):
+        params = {
+            'min_samples_leaf': trial.suggest_int('min_samples_leaf', 5, 30),
+            'max_leaf_nodes': trial.suggest_int('max_leaf_nodes', 100, 2000),
+            'max_samples': trial.suggest_float('max_samples', 0.5, 1.0),
+            'limit': 100
+        }
+        model = self._backend._model._create_classifier(params)
+        model.fit(self._train_X, self._train_y)
+
+        batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
+        for goldsubj, candidates in zip(self._gold_subjects, self._candidates):
+            scores = model.predict_proba(candidates)
+            ranking = self._backend._model._prediction_to_list(
+                scores, candidates)
+            results = self._backend._prediction_to_result(ranking, params)
+            batch.evaluate(results, goldsubj)
+        results = batch.results(metrics=[self._metric])
+        return results[self._metric]
+
+    def _postprocess(self, study):
+        bp = study.best_params
+        lines = [
+            f"min_samples_leaf={bp['min_samples_leaf']}",
+            f"max_leaf_nodes={bp['max_leaf_nodes']}",
+            f"max_samples={bp['max_samples']:.4f}"
+        ]
+        return hyperopt.HPRecommendation(lines=lines, score=study.best_value)
+
+
+class MLLMBackend(hyperopt.AnnifHyperoptBackend):
     """Maui-like Lexical Matching backend for Annif"""
     name = "mllm"
     needs_subject_index = True
@@ -256,6 +308,9 @@ class MLLMBackend(backend.AnnifBackend):
         'max_samples': 0.9
     }
 
+    def get_hp_optimizer(self, corpus, metric):
+        return MLLMOptimizer(self, corpus, metric)
+
     def default_params(self):
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
@@ -271,6 +326,15 @@ class MLLMBackend(backend.AnnifBackend):
                 'model {} not found'.format(path),
                 backend_id=self.backend_id)
 
+    def _load_train_data(self):
+        path = os.path.join(self.datadir, self.TRAIN_FILE)
+        if os.path.exists(path):
+            return joblib.load(path)
+        else:
+            raise NotInitializedException(
+                'train data file {} not found'.format(path),
+                backend_id=self.backend_id)
+
     def initialize(self):
         if self._model is None:
             self._model = self._load_model()
@@ -280,10 +344,10 @@ class MLLMBackend(backend.AnnifBackend):
         if corpus != 'cached':
             self.info("preparing training data")
             self._model = MLLMModel()
-            train_data = self._model.prepare(corpus,
-                                             self.project.vocab,
-                                             self.project.analyzer,
-                                             params)
+            train_data = self._model.prepare_train(corpus,
+                                                   self.project.vocab,
+                                                   self.project.analyzer,
+                                                   params)
             annif.util.atomic_save(train_data,
                                    self.datadir,
                                    self.TRAIN_FILE,
@@ -291,13 +355,7 @@ class MLLMBackend(backend.AnnifBackend):
         else:
             self.info("reusing cached training data from previous run")
             self._model = self._load_model()
-            path = os.path.join(self.datadir, self.TRAIN_FILE)
-            if os.path.exists(path):
-                train_data = joblib.load(path)
-            else:
-                raise NotInitializedException(
-                    'train data file {} not found'.format(path),
-                    backend_id=self.backend_id)
+            train_data = self._load_train_data()
 
         self.info("training model")
         self._model.train(train_data[0], train_data[1], params)
@@ -309,11 +367,18 @@ class MLLMBackend(backend.AnnifBackend):
             self.MODEL_FILE,
             method=joblib.dump)
 
-    def _suggest(self, text, params):
+    def _generate_candidates(self, text):
+        return self._model.generate_candidates(text, self.project.analyzer)
+
+    def _prediction_to_result(self, prediction, params):
         vector = np.zeros(len(self.project.subjects), dtype=np.float32)
-        for score, subject_id in self._model.predict(text,
-                                                     self.project.analyzer):
+        for score, subject_id in prediction:
             vector[subject_id] = score
         result = VectorSuggestionResult(vector)
         return result.filter(self.project.subjects,
                              limit=int(params['limit']))
+
+    def _suggest(self, text, params):
+        candidates = self._generate_candidates(text)
+        prediction = self._model.predict(candidates)
+        return self._prediction_to_result(prediction, params)
