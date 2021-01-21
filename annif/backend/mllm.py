@@ -273,9 +273,12 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
 
         batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
         for goldsubj, candidates in zip(self._gold_subjects, self._candidates):
-            scores = model.predict_proba(candidates)
-            ranking = self._backend._model._prediction_to_list(
-                scores, candidates)
+            if candidates:
+                scores = model.predict_proba(candidates)
+                ranking = self._backend._model._prediction_to_list(
+                    scores, candidates)
+            else:
+                ranking = []
             results = self._backend._prediction_to_result(ranking, params)
             batch.evaluate(results, goldsubj)
         results = batch.results(metrics=[self._metric])

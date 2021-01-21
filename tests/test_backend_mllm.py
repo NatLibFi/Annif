@@ -138,3 +138,14 @@ def test_mllm_suggest_no_matches(project):
     results = mllm.suggest("Nothing matches this.")
 
     assert len(results) == 0
+
+
+def test_mllm_hyperopt(project, document_corpus):
+    mllm_type = annif.backend.get_backend('mllm')
+    mllm = mllm_type(
+        backend_id='mllm',
+        config_params={'limit': 10, 'language': 'fi'},
+        project=project)
+
+    optimizer = mllm.get_hp_optimizer(document_corpus, metric='NDCG')
+    optimizer.optimize(n_trials=3, n_jobs=1, results_file=None)
