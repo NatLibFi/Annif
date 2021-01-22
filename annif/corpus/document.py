@@ -94,12 +94,12 @@ class TruncatingDocumentCorpus(DocumentCorpus):
     documents to a given length"""
 
     def __init__(self, corpus, limit):
-        self._documents = corpus.documents
+        self._orig_corpus = corpus
         self._limit = limit
 
     @property
     def documents(self):
-        for doc in self._documents:
+        for doc in self._orig_corpus.documents:
             yield self._create_document(text=doc.text[:self._limit],
                                         uris=doc.uris,
                                         labels=doc.labels)
