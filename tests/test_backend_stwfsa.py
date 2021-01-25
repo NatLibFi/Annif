@@ -3,7 +3,7 @@ from annif.backend import get_backend
 from rdflib import Graph
 import annif.corpus
 from annif.backend.stwfsa import StwfsaBackend
-from annif.exception import NotSupportedException
+from annif.exception import NotInitializedException, NotSupportedException
 
 import pytest
 from unittest.mock import Mock
@@ -44,8 +44,10 @@ def test_stwfsa_default_params(project):
     )
     expected_default_params = {
         'concept_type_uri': 'http://www.w3.org/2004/02/skos/core#Concept',
-        'sub_thesaurus_type_uri': 'http://www.w3.org/2004/02/skos/core#Collection',
-        'thesaurus_relation_type_uri': 'http://www.w3.org/2004/02/skos/core#member',
+        'sub_thesaurus_type_uri':
+            'http://www.w3.org/2004/02/skos/core#Collection',
+        'thesaurus_relation_type_uri':
+            'http://www.w3.org/2004/02/skos/core#member',
         'thesaurus_relation_is_specialisation': True,
         'remove_deprecated': True,
         'handle_title_case': True,
@@ -58,6 +60,17 @@ def test_stwfsa_default_params(project):
     }
     actual_params = stwfsa.params
     assert expected_default_params == actual_params
+
+
+def test_stwfsa_not_initialized(project):
+    stwfsa_type = get_backend(StwfsaBackend.name)
+    stwfsa = stwfsa_type(
+        backend_id='stwfsa',
+        config_params={},
+        project=project)
+    with pytest.raises(NotInitializedException):
+        stwfsa.suggest("example text")
+
 
 
 def test_stwfsa_train(document_corpus, graph_project, datadir):
@@ -103,6 +116,7 @@ def test_stwfsa_suggest_unknown(project):
         project=project)
     results = stwfsa.suggest('1234')
     assert len(results) == 0
+
 
 
 def test_stwfsa_suggest(project, datadir):
