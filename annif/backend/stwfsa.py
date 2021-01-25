@@ -3,7 +3,7 @@ from stwfsapy.predictor import StwfsapyPredictor
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import ListSuggestionResult, SubjectSuggestion
 from . import backend
-from annif.util import boolean
+from annif.util import atomic_save, boolean
 
 
 _KEY_CONCEPT_TYPE_URI = 'concept_type_uri'
@@ -44,8 +44,10 @@ class StwfsaBackend(backend.AnnifBackend):
 
     DEFAULT_PARAMETERS = {
         _KEY_CONCEPT_TYPE_URI: 'http://www.w3.org/2004/02/skos/core#Concept',
-        _KEY_SUBTHESAURUS_TYPE_URI: 'http://www.w3.org/2004/02/skos/core#Collection',
-        _KEY_THESAURUS_RELATION_TYPE_URI: 'http://www.w3.org/2004/02/skos/core#member',
+        _KEY_SUBTHESAURUS_TYPE_URI:
+            'http://www.w3.org/2004/02/skos/core#Collection',
+        _KEY_THESAURUS_RELATION_TYPE_URI:
+            'http://www.w3.org/2004/02/skos/core#member',
         _KEY_THESAURUS_RELATION_IS_SPECIALISATION: True,
         _KEY_REMOVE_DEPRECATED: True,
         _KEY_HANDLE_TITLE_CASE: True,
@@ -100,7 +102,11 @@ class StwfsaBackend(backend.AnnifBackend):
             **new_params)
         p.fit(X, y)
         self._model = p
-        p.store(os.path.join(self.datadir, self.MODEL_FILE))
+        atomic_save(
+            p,
+            self.datadir,
+            self.MODEL_FILE,
+            lambda model, store_path: model.store(store_path))
 
     def _suggest(self, text, params):
         self.debug(
