@@ -31,7 +31,7 @@ setup(
         'gensim==3.8.*',
         'scikit-learn==0.23.2',
         'scipy==1.5.3',
-        'rdflib',
+        'rdflib>=4.2,<6.0',
         'gunicorn',
         'numpy==1.18.*',
         'optuna==2.2.0',
