@@ -75,7 +75,7 @@ class StwfsaBackend(backend.AnnifBackend):
                     f'Model not found at {path}',
                     backend_id=self.backend_id)
 
-    def _train(self, corpus, params):
+    def _load_data(self, corpus):
         if corpus == 'cached':
             raise NotSupportedException(
                 'Training stwfsa project from cached data not supported.')
@@ -88,7 +88,10 @@ class StwfsaBackend(backend.AnnifBackend):
         for doc in corpus.documents:
             X.append(doc.text)
             y.append(doc.uris)
-        graph = self.project.vocab.as_graph()
+        return X, y
+
+    def _train(self, corpus, params):
+        X, y = self._load_data(corpus)
         new_params = {
                 key: self.STWFSA_PARAMETERS[key](val)
                 for key, val
@@ -97,7 +100,7 @@ class StwfsaBackend(backend.AnnifBackend):
             }
         new_params.pop(_KEY_INPUT_LIMIT)
         p = StwfsapyPredictor(
-            graph=graph,
+            graph=self.project.vocab.as_graph(),
             langs=frozenset([params['language']]),
             **new_params)
         p.fit(X, y)
