@@ -274,3 +274,6 @@ def test_truncatedcorpus(document_corpus):
                                   document_corpus.documents):
         assert len(truncated_doc.text) == 3
         assert truncated_doc.text == doc.text[:3]
+    # Ensure docs from TruncatingCorpus are still available after iterating
+    assert len(list(truncated_corpus.documents)) \
+        == len(list(document_corpus.documents))
