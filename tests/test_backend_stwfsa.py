@@ -43,9 +43,10 @@ def test_stwfsa_default_params(project):
         project=project
     )
     expected_default_params = {
-        'sub_thesaurus_type_uri': '',
-        'thesaurus_relation_type_uri': '',
-        'thesaurus_relation_is_specialisation': False,
+        'concept_type_uri': 'http://www.w3.org/2004/02/skos/core#Concept',
+        'sub_thesaurus_type_uri': 'http://www.w3.org/2004/02/skos/core#Collection',
+        'thesaurus_relation_type_uri': 'http://www.w3.org/2004/02/skos/core#member',
+        'thesaurus_relation_is_specialisation': True,
         'remove_deprecated': True,
         'handle_title_case': True,
         'extract_upper_case_from_braces': True,

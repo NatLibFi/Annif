@@ -43,9 +43,10 @@ class StwfsaBackend(backend.AnnifBackend):
     }
 
     DEFAULT_PARAMETERS = {
-        _KEY_SUBTHESAURUS_TYPE_URI: '',
-        _KEY_THESAURUS_RELATION_TYPE_URI: '',
-        _KEY_THESAURUS_RELATION_IS_SPECIALISATION: False,
+        _KEY_CONCEPT_TYPE_URI: 'http://www.w3.org/2004/02/skos/core#Concept',
+        _KEY_SUBTHESAURUS_TYPE_URI: 'http://www.w3.org/2004/02/skos/core#Collection',
+        _KEY_THESAURUS_RELATION_TYPE_URI: 'http://www.w3.org/2004/02/skos/core#member',
+        _KEY_THESAURUS_RELATION_IS_SPECIALISATION: True,
         _KEY_REMOVE_DEPRECATED: True,
         _KEY_HANDLE_TITLE_CASE: True,
         _KEY_EXTRACT_UPPER_CASE_FROM_BRACES: True,
