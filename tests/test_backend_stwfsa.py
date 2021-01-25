@@ -72,7 +72,6 @@ def test_stwfsa_not_initialized(project):
         stwfsa.suggest("example text")
 
 
-
 def test_stwfsa_train(document_corpus, graph_project, datadir):
     stwfsa_type = get_backend(StwfsaBackend.name)
     stwfsa = stwfsa_type(
@@ -116,7 +115,6 @@ def test_stwfsa_suggest_unknown(project):
         project=project)
     results = stwfsa.suggest('1234')
     assert len(results) == 0
-
 
 
 def test_stwfsa_suggest(project, datadir):
