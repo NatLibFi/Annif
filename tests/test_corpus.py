@@ -268,12 +268,12 @@ def test_combinedcorpus(tmpdir):
     assert len(list(combined.documents)) == 6
 
 
-def test_truncatedcorpus(document_corpus):
-    truncated_corpus = TruncatingDocumentCorpus(document_corpus, 3)
-    for truncated_doc, doc in zip(truncated_corpus.documents,
+def test_truncatingcorpus(document_corpus):
+    truncating_corpus = TruncatingDocumentCorpus(document_corpus, 3)
+    for truncated_doc, doc in zip(truncating_corpus.documents,
                                   document_corpus.documents):
         assert len(truncated_doc.text) == 3
         assert truncated_doc.text == doc.text[:3]
     # Ensure docs from TruncatingCorpus are still available after iterating
-    assert len(list(truncated_corpus.documents)) \
+    assert len(list(truncating_corpus.documents)) \
         == len(list(document_corpus.documents))
