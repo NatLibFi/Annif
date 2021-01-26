@@ -197,7 +197,7 @@ class MLLMModel:
         # frequency of manually assigned subjects ("domain keyphraseness")
         self._subj_freq = collections.Counter()
         doc_count = 0
-        train_X = []
+        train_x = []
         train_y = []
         for idx, doc in enumerate(corpus.documents):
             doc_subject_ids = [vocab.subjects.by_uri(uri)
@@ -205,7 +205,7 @@ class MLLMModel:
             self._subj_freq.update(doc_subject_ids)
             candidates = self.generate_candidates(doc.text, analyzer)
             self._doc_freq.update([c.subject_id for c in candidates])
-            train_X += candidates
+            train_x += candidates
             train_y += [(c.subject_id in doc_subject_ids) for c in candidates]
             doc_count += 1
 
@@ -214,7 +214,7 @@ class MLLMModel:
         for subj_id in subject_ids:
             self._idf[uri] = math.log((doc_count + 1) /
                                       (self._doc_freq[subj_id] + 1)) + 1
-        return (train_X, train_y)
+        return (train_x, train_y)
 
     def _create_classifier(self, params):
         # define a sklearn pipeline with transformer and classifier
@@ -228,10 +228,10 @@ class MLLMModel:
                         max_leaf_nodes=int(params['max_leaf_nodes'])
                     ), max_samples=float(params['max_samples'])))])
 
-    def train(self, train_X, train_y, params):
+    def train(self, train_x, train_y, params):
         # fit the model on the training corpus
         self._classifier = self._create_classifier(params)
-        self._classifier.fit(train_X, train_y)
+        self._classifier.fit(train_x, train_y)
 
     def _prediction_to_list(self, scores, candidates):
         subj_scores = [(score[1], c.subject_id)
@@ -250,7 +250,7 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
 
     def _prepare(self, n_jobs=1):
         self._backend.initialize()
-        self._train_X, self._train_y = self._backend._load_train_data()
+        self._train_x, self._train_y = self._backend._load_train_data()
         self._candidates = []
         self._gold_subjects = []
 
@@ -269,7 +269,7 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
             'limit': 100
         }
         model = self._backend._model._create_classifier(params)
-        model.fit(self._train_X, self._train_y)
+        model.fit(self._train_x, self._train_y)
 
         batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
         for goldsubj, candidates in zip(self._gold_subjects, self._candidates):
