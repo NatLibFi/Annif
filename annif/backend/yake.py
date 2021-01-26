@@ -185,8 +185,8 @@ class YakeBackend(backend.AnnifBackend):
 
         subject_suggestions = [SubjectSuggestion(
                 uri=uri,
-                label=label,
-                notation=None,  # TODO Should notation be fetched to here?
+                label=None,
+                notation=None,
                 score=score)
                 for uri, label, score in suggestions[:limit] if score > 0.0]
         return ListSuggestionResult.create_from_index(subject_suggestions,
