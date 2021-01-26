@@ -3,6 +3,7 @@
 import os
 import annif.corpus
 import annif.vocab
+import rdflib.namespace
 
 
 def load_dummy_vocab(tmpdir):
@@ -81,3 +82,26 @@ def test_update_subject_index_with_added_subjects(tmpdir):
     assert vocab.subjects.by_uri('http://example.org/new-dummy') == 2
     assert vocab.subjects[2] == ('http://example.org/new-dummy', 'new dummy',
                                  '42.42')
+
+
+def test_as_graph(tmpdir):
+    vocab = load_dummy_vocab(tmpdir)
+    graph = vocab.as_graph()
+    labels = [
+        (str(tpl[0]), str(tpl[1]))
+        for tpl
+        in graph[
+            :rdflib.namespace.SKOS.prefLabel:]
+    ]
+    assert len(labels) == 2
+    assert ('http://example.org/dummy',	'dummy') in labels
+    assert ('http://example.org/none',	'none') in labels
+    concepts = [
+        str(tpl)
+        for tpl
+        in graph[
+            :rdflib.namespace.RDF.type:rdflib.namespace.SKOS.Concept]
+    ]
+    assert len(concepts) == 2
+    assert 'http://example.org/dummy' in concepts
+    assert 'http://example.org/none' in concepts

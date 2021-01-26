@@ -6,6 +6,7 @@ from . import http
 from . import tfidf
 from . import pav
 from . import maui
+from . import stwfsa
 import annif
 
 
@@ -29,6 +30,7 @@ register_backend(http.HTTPBackend)
 register_backend(tfidf.TFIDFBackend)
 register_backend(pav.PAVBackend)
 register_backend(maui.MauiBackend)
+register_backend(stwfsa.StwfsaBackend)
 
 # Optional backends
 try:
