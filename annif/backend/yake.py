@@ -65,12 +65,8 @@ class YakeBackend(backend.AnnifBackend):
     @property
     def graph(self):
         if self._graph is None:
-            # TODO use as_graph() that is now available
-            # self._graph = vocab.as_graph()
-            self._graph = rdflib.Graph()
-            path = os.path.join(self.project.vocab.datadir, 'subjects.ttl')
-            self.info('Loading graph from {}'.format(path))
-            self._graph.load(path, format=rdflib.util.guess_format(path))
+            self.info('Loading graph')
+            self._graph = self.project.vocab.as_graph()
         return self._graph
 
     def _create_index(self):
