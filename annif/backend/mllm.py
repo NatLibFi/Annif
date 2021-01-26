@@ -172,10 +172,16 @@ class MLLMModel:
                 continue  # deprecated subject
             subject_ids.append(subj_id)
             terms.append(Term(subject_id=subj_id, label=pref, is_pref=True))
-            alts = graph.preferredLabel(URIRef(uri),
-                                        lang=params['language'],
-                                        labelProperties=[SKOS.altLabel])
-            for label, _ in alts:
+
+            if annif.util.boolean(params['use_hidden_labels']):
+                props = [SKOS.altLabel, SKOS.hiddenLabel]
+            else:
+                props = [SKOS.altLabel]
+
+            non_pref = graph.preferredLabel(URIRef(uri),
+                                            lang=params['language'],
+                                            labelProperties=props)
+            for label, _ in non_pref:
                 terms.append(Term(subject_id=subj_id,
                                   label=str(label),
                                   is_pref=False))
@@ -266,6 +272,8 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
             'min_samples_leaf': trial.suggest_int('min_samples_leaf', 5, 30),
             'max_leaf_nodes': trial.suggest_int('max_leaf_nodes', 100, 2000),
             'max_samples': trial.suggest_float('max_samples', 0.5, 1.0),
+            'use_hidden_labels':
+                trial.suggest_categorical('use_hidden_labels', [True, False]),
             'limit': 100
         }
         model = self._backend._model._create_classifier(params)
@@ -289,7 +297,8 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
         lines = [
             f"min_samples_leaf={bp['min_samples_leaf']}",
             f"max_leaf_nodes={bp['max_leaf_nodes']}",
-            f"max_samples={bp['max_samples']:.4f}"
+            f"max_samples={bp['max_samples']:.4f}",
+            f"use_hidden_labels={bp['use_hidden_labels']}"
         ]
         return hyperopt.HPRecommendation(lines=lines, score=study.best_value)
 
@@ -308,7 +317,8 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
     DEFAULT_PARAMETERS = {
         'min_samples_leaf': 20,
         'max_leaf_nodes': 1000,
-        'max_samples': 0.9
+        'max_samples': 0.9,
+        'use_hidden_labels': False
     }
 
     def get_hp_optimizer(self, corpus, metric):
