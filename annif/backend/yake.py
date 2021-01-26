@@ -8,6 +8,7 @@ from rdflib.namespace import SKOS, RDF, OWL
 import rdflib
 from . import backend
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
+from annif.exception import ConfigurationException
 
 
 class YakeBackend(backend.AnnifBackend):
@@ -27,6 +28,7 @@ class YakeBackend(backend.AnnifBackend):
         'window_size': 1,
         'num_keywords': 100,
         'features': None,
+        'default_label_types': ['pref', 'alt']
     }
 
     def default_params(self):
@@ -37,6 +39,21 @@ class YakeBackend(backend.AnnifBackend):
     @property
     def is_trained(self):
         return True
+
+    @property
+    def label_types(self):
+        mapping = {'pref': SKOS.prefLabel,
+                   'alt': SKOS.altLabel,
+                   'hidden': SKOS.hiddenLabel}
+        if 'label_types' in self.params:
+            lt_entries = self.params['label_types'].split(',')
+            try:
+                return [mapping[lt.strip()] for lt in lt_entries]
+            except KeyError as err:
+                raise ConfigurationException(
+                    f'invalid label type {err}', backend_id=self.backend_id)
+        else:
+            return [mapping[lt] for lt in self.params['default_label_types']]
 
     def initialize(self):
         self._initialize_index()
@@ -73,12 +90,12 @@ class YakeBackend(backend.AnnifBackend):
         # TODO Should index creation & saving be done on loadvoc command?
         # Or saving at all? It takes about 1 min to create the index
         index = defaultdict(set)
-        for predicate in [SKOS.prefLabel, SKOS.altLabel, SKOS.hiddenLabel]:
+        for label_type in self.label_types:
             for concept in self.graph.subjects(RDF.type, SKOS.Concept):
                 if (concept, OWL.deprecated, rdflib.Literal(True)) \
                         in self.graph:
                     continue
-                for label in self.graph.objects(concept, predicate):
+                for label in self.graph.objects(concept, label_type):
                     if not label.language == self.project.language:
                         continue
                     uri = str(concept)
