@@ -9,9 +9,8 @@ import joblib
 import numpy as np
 from rdflib import URIRef
 from rdflib.namespace import SKOS
+from scipy.sparse import lil_matrix
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import FunctionTransformer
 from sklearn.ensemble import BaggingClassifier
 from sklearn.tree import DecisionTreeClassifier
 import annif.util
@@ -31,7 +30,8 @@ Candidate = collections.namedtuple(
 Feature = IntEnum(
     'Feature',
     'freq doc_freq subj_freq tfidf is_pref n_tokens ambiguity ' +
-    'first_occ last_occ spread doc_length',
+    'first_occ last_occ spread doc_length ' +
+    'related',
     start=0)
 
 
@@ -148,6 +148,10 @@ class MLLMModel:
     def _candidates_to_features(self, candidates):
         """Convert a list of Candidates to a NumPy feature matrix"""
         matrix = np.zeros((len(candidates), len(Feature)), dtype=np.float32)
+        c_ids = [c.subject_id for c in candidates]
+        c_vec = np.zeros(self._related_matrix.shape[0], dtype=np.bool)
+        c_vec[c_ids] = True
+        rels = self._related_matrix.multiply(c_vec).sum(axis=1)
         for idx, c in enumerate(candidates):
             subj = c.subject_id
             matrix[idx, Feature.freq] = c.freq
@@ -161,12 +165,15 @@ class MLLMModel:
             matrix[idx, Feature.last_occ] = c.last_occ
             matrix[idx, Feature.spread] = c.spread
             matrix[idx, Feature.doc_length] = c.doc_length
+            matrix[idx, Feature.related] = rels[subj, 0] / len(c_ids)
         return matrix
 
     def prepare_train(self, corpus, vocab, analyzer, params):
         graph = vocab.as_graph()
         terms = []
         subject_ids = []
+        n_subj = len(vocab.subjects)
+        self._related_matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
         for subj_id, (uri, pref, _) in enumerate(vocab.subjects):
             if pref is None:
                 continue  # deprecated subject
@@ -185,6 +192,11 @@ class MLLMModel:
                 terms.append(Term(subject_id=subj_id,
                                   label=str(label),
                                   is_pref=False))
+
+            for related in graph.objects(URIRef(uri), SKOS.related):
+                broad_id = vocab.subjects.by_uri(str(related), warnings=False)
+                if broad_id is not None:
+                    self._related_matrix[subj_id, broad_id] = True
 
         self._vectorizer = CountVectorizer(
             binary=True,
@@ -211,7 +223,7 @@ class MLLMModel:
             self._subj_freq.update(doc_subject_ids)
             candidates = self.generate_candidates(doc.text, analyzer)
             self._doc_freq.update([c.subject_id for c in candidates])
-            train_x += candidates
+            train_x.append(candidates)
             train_y += [(c.subject_id in doc_subject_ids) for c in candidates]
             doc_count += 1
 
@@ -220,19 +232,15 @@ class MLLMModel:
         for subj_id in subject_ids:
             self._idf[uri] = math.log((doc_count + 1) /
                                       (self._doc_freq[subj_id] + 1)) + 1
-        return (train_x, train_y)
+        return (np.vstack([self._candidates_to_features(candidates)
+                           for candidates in train_x]), np.array(train_y))
 
     def _create_classifier(self, params):
-        # define a sklearn pipeline with transformer and classifier
-        return Pipeline(
-            steps=[
-                ('transformer', FunctionTransformer(
-                    self._candidates_to_features)),
-                ('classifier', BaggingClassifier(
-                    DecisionTreeClassifier(
-                        min_samples_leaf=int(params['min_samples_leaf']),
-                        max_leaf_nodes=int(params['max_leaf_nodes'])
-                    ), max_samples=float(params['max_samples'])))])
+        return BaggingClassifier(
+            DecisionTreeClassifier(
+                min_samples_leaf=int(params['min_samples_leaf']),
+                max_leaf_nodes=int(params['max_leaf_nodes'])
+            ), max_samples=float(params['max_samples']))
 
     def train(self, train_x, train_y, params):
         # fit the model on the training corpus
@@ -247,7 +255,8 @@ class MLLMModel:
     def predict(self, candidates):
         if not candidates:
             return []
-        scores = self._classifier.predict_proba(candidates)
+        features = self._candidates_to_features(candidates)
+        scores = self._classifier.predict_proba(features)
         return self._prediction_to_list(scores, candidates)
 
 
@@ -282,7 +291,9 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
         batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
         for goldsubj, candidates in zip(self._gold_subjects, self._candidates):
             if candidates:
-                scores = model.predict_proba(candidates)
+                features = \
+                    self._backend._model._candidates_to_features(candidates)
+                scores = model.predict_proba(features)
                 ranking = self._backend._model._prediction_to_list(
                     scores, candidates)
             else:
