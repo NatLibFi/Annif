@@ -141,11 +141,11 @@ class YakeBackend(backend.AnnifBackend):
                     (uri, self._transform_score(score)))
             if not uris:
                 not_matched.append((kp, self._transform_score(score)))
-        # Remove duplicate uris, combining the scores
+        # Remove duplicate uris, conflating the scores
         suggestions = self._combine_suggestions(suggestions)
         self.debug('Keyphrases not matched:\n' + '\t'.join(
-            [x[0] + ' ' + str(x[1]) for x
-             in sorted(not_matched, reverse=True, key=lambda x: x[1])]))
+            [kp[0] + ' ' + str(kp[1]) for kp
+             in sorted(not_matched, reverse=True, key=lambda kp: kp[1])]))
         return suggestions
 
     def _keyphrase2uris(self, keyphrase):
@@ -171,7 +171,6 @@ class YakeBackend(backend.AnnifBackend):
         return list(combined_suggestions.items())
 
     def _conflate_scores(self, score1, score2):
-        # https://stats.stackexchange.com/questions/194878/combining-two-probability-scores/194884
         return score1 * score2 / (score1 * score2 + (1-score1) * (1-score2))
 
     def _suggest(self, text, params):
@@ -179,8 +178,8 @@ class YakeBackend(backend.AnnifBackend):
             f'Suggesting subjects for text "{text[:20]}..." (len={len(text)})')
         limit = int(params['limit'])
 
-        keywords = self._kw_extractor.extract_keywords(text)
-        suggestions = self._keyphrases2suggestions(keywords)
+        keyphrases = self._kw_extractor.extract_keywords(text)
+        suggestions = self._keyphrases2suggestions(keyphrases)
 
         subject_suggestions = [SubjectSuggestion(
                 uri=uri,
