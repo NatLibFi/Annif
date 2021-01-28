@@ -137,9 +137,8 @@ class YakeBackend(backend.AnnifBackend):
         for kp, score in keyphrases:
             uris = self._keyphrase2uris(kp)
             for uri in uris:
-                label = self.project.subjects.uris_to_labels([uri])[0]
                 suggestions.append(
-                    (uri, label, self._transform_score(score)))
+                    (uri, self._transform_score(score)))
             if not uris:
                 not_matched.append((kp, self._transform_score(score)))
         # Remove duplicate uris, combining the scores
@@ -162,16 +161,14 @@ class YakeBackend(backend.AnnifBackend):
 
     def _combine_suggestions(self, suggestions):
         combined_suggestions = {}
-        for uri, label, score in suggestions:
+        for uri, score in suggestions:
             if uri not in combined_suggestions:
-                combined_suggestions[uri] = (label, score)
+                combined_suggestions[uri] = score
             else:
-                old_score = combined_suggestions[uri][1]
-                conflated_score = self._conflate_scores(score, old_score)
-                combined_suggestions[uri] = (label, conflated_score)
-        combined_suggestions = [(uri, *label_score) for uri, label_score
-                                in combined_suggestions.items()]
-        return combined_suggestions
+                old_score = combined_suggestions[uri]
+                combined_suggestions[uri] = self._conflate_scores(
+                    score, old_score)
+        return list(combined_suggestions.items())
 
     def _conflate_scores(self, score1, score2):
         # https://stats.stackexchange.com/questions/194878/combining-two-probability-scores/194884
@@ -190,6 +187,6 @@ class YakeBackend(backend.AnnifBackend):
                 label=None,
                 notation=None,
                 score=score)
-                for uri, label, score in suggestions[:limit] if score > 0.0]
+                for uri, score in suggestions[:limit] if score > 0.0]
         return ListSuggestionResult.create_from_index(subject_suggestions,
                                                       self.project.subjects)
