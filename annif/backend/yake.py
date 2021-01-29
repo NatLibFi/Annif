@@ -58,7 +58,7 @@ class YakeBackend(backend.AnnifBackend):
     def initialize(self):
         self._initialize_index()
         self._kw_extractor = yake.KeywordExtractor(
-            lan=self.project.language,
+            lan=self.params['language'],
             n=self.params['max_ngram_size'],
             dedupLim=self.params['deduplication_threshold'],
             dedupFunc=self.params['deduplication_algo'],
@@ -96,7 +96,7 @@ class YakeBackend(backend.AnnifBackend):
                         in self.graph:
                     continue
                 for label in self.graph.objects(concept, label_type):
-                    if not label.language == self.project.language:
+                    if not label.language == self.params['language']:
                         continue
                     uri = str(concept)
                     label = str(label)
