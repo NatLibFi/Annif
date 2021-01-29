@@ -5,6 +5,8 @@ import pytest
 import os
 from rdflib import Graph
 
+pytest.importorskip("annif.backend.yake")
+
 
 @pytest.fixture(scope='module')
 def graph_project(project):
