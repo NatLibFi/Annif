@@ -3,9 +3,11 @@
 
 import yake
 import os.path
+import re
 from collections import defaultdict
 from rdflib.namespace import SKOS, RDF, OWL
 import rdflib
+import annif.util
 from . import backend
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 from annif.exception import ConfigurationException
@@ -28,7 +30,8 @@ class YakeBackend(backend.AnnifBackend):
         'window_size': 1,
         'num_keywords': 100,
         'features': None,
-        'default_label_types': ['pref', 'alt']
+        'default_label_types': ['pref', 'alt'],
+        'remove_specifiers': False
     }
 
     def default_params(self):
@@ -100,6 +103,8 @@ class YakeBackend(backend.AnnifBackend):
                         continue
                     uri = str(concept)
                     label = str(label)
+                    if annif.util.boolean(self.params['remove_specifiers']):
+                        label = re.sub(r' \(.*\)', '', label)
                     lemmatized_label = self._lemmatize_phrase(label)
                     lemmatized_label = self._sort_phrase(lemmatized_label)
                     index[lemmatized_label].add(uri)
