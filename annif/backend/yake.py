@@ -58,6 +58,13 @@ class YakeBackend(backend.AnnifBackend):
         else:
             return [mapping[lt] for lt in self.params['default_label_types']]
 
+    @property
+    def graph(self):
+        if self._graph is None:
+            self.info('Loading graph')
+            self._graph = self.project.vocab.as_graph()
+        return self._graph
+
     def initialize(self):
         self._initialize_index()
         self._kw_extractor = yake.KeywordExtractor(
@@ -82,35 +89,6 @@ class YakeBackend(backend.AnnifBackend):
                 self._save_index(path)
                 self.info(f'Created index with {len(self._index)} labels')
 
-    @property
-    def graph(self):
-        if self._graph is None:
-            self.info('Loading graph')
-            self._graph = self.project.vocab.as_graph()
-        return self._graph
-
-    def _create_index(self):
-        # TODO Should index creation & saving be done on loadvoc command?
-        # Or saving at all? It takes about 1 min to create the index
-        index = defaultdict(set)
-        for label_type in self.label_types:
-            for concept in self.graph.subjects(RDF.type, SKOS.Concept):
-                if (concept, OWL.deprecated, rdflib.Literal(True)) \
-                        in self.graph:
-                    continue
-                for label in self.graph.objects(concept, label_type):
-                    if not label.language == self.params['language']:
-                        continue
-                    uri = str(concept)
-                    label = str(label)
-                    if annif.util.boolean(self.params['remove_specifiers']):
-                        label = re.sub(r' \(.*\)', '', label)
-                    lemmatized_label = self._lemmatize_phrase(label)
-                    lemmatized_label = self._sort_phrase(lemmatized_label)
-                    index[lemmatized_label].add(uri)
-        index.pop('', None)  # Remove possible empty string entry
-        self._index = dict(index)
-
     def _save_index(self, path):
         with open(path, 'w', encoding='utf-8') as indexfile:
             for label, uris in self._index.items():
@@ -125,9 +103,27 @@ class YakeBackend(backend.AnnifBackend):
                 index[label] = uris.split()
         return index
 
-    def _sort_phrase(self, phrase):
-        words = phrase.split()
-        return ' '.join(sorted(words))
+    def _create_index(self):
+        index = defaultdict(set)
+        for concept in self.graph.subjects(RDF.type, SKOS.Concept):
+            if (concept, OWL.deprecated, rdflib.Literal(True)) in self.graph:
+                continue
+            uri = str(concept)
+            for label_type in self.label_types:
+                for label in self.graph.objects(concept, label_type):
+                    if not label.language == self.params['language']:
+                        continue
+                    label = self._normalize_label(label)
+                    index[label].add(uri)
+        index.pop('', None)  # Remove possible empty string entry
+        self._index = dict(index)
+
+    def _normalize_label(self, label):
+        label = str(label)
+        if annif.util.boolean(self.params['remove_specifiers']):
+            label = re.sub(r' \(.*\)', '', label)
+        lemmatized_label = self._lemmatize_phrase(label)
+        return self._sort_phrase(lemmatized_label)
 
     def _lemmatize_phrase(self, phrase):
         normalized = []
@@ -135,6 +131,27 @@ class YakeBackend(backend.AnnifBackend):
             normalized.append(
                 self.project.analyzer.normalize_word(word).lower())
         return ' '.join(normalized)
+
+    def _sort_phrase(self, phrase):
+        words = phrase.split()
+        return ' '.join(sorted(words))
+
+    def _suggest(self, text, params):
+        self.debug(
+            f'Suggesting subjects for text "{text[:20]}..." (len={len(text)})')
+        limit = int(params['limit'])
+
+        keyphrases = self._kw_extractor.extract_keywords(text)
+        suggestions = self._keyphrases2suggestions(keyphrases)
+
+        subject_suggestions = [SubjectSuggestion(
+                uri=uri,
+                label=None,
+                notation=None,
+                score=score)
+                for uri, score in suggestions[:limit] if score > 0.0]
+        return ListSuggestionResult.create_from_index(subject_suggestions,
+                                                      self.project.subjects)
 
     def _keyphrases2suggestions(self, keyphrases):
         suggestions = []
@@ -177,20 +194,3 @@ class YakeBackend(backend.AnnifBackend):
 
     def _conflate_scores(self, score1, score2):
         return score1 * score2 / (score1 * score2 + (1-score1) * (1-score2))
-
-    def _suggest(self, text, params):
-        self.debug(
-            f'Suggesting subjects for text "{text[:20]}..." (len={len(text)})')
-        limit = int(params['limit'])
-
-        keyphrases = self._kw_extractor.extract_keywords(text)
-        suggestions = self._keyphrases2suggestions(keyphrases)
-
-        subject_suggestions = [SubjectSuggestion(
-                uri=uri,
-                label=None,
-                notation=None,
-                score=score)
-                for uri, score in suggestions[:limit] if score > 0.0]
-        return ListSuggestionResult.create_from_index(subject_suggestions,
-                                                      self.project.subjects)
