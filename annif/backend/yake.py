@@ -31,7 +31,7 @@ class YakeBackend(backend.AnnifBackend):
         'num_keywords': 100,
         'features': None,
         'default_label_types': ['pref', 'alt'],
-        'remove_specifiers': False
+        'remove_parentheses': False
     }
 
     def default_params(self):
@@ -120,7 +120,7 @@ class YakeBackend(backend.AnnifBackend):
 
     def _normalize_label(self, label):
         label = str(label)
-        if annif.util.boolean(self.params['remove_specifiers']):
+        if annif.util.boolean(self.params['remove_parentheses']):
             label = re.sub(r' \(.*\)', '', label)
         lemmatized_label = self._lemmatize_phrase(label)
         return self._sort_phrase(lemmatized_label)
