@@ -190,7 +190,7 @@ def run_loadvoc(project_id, subjectfile):
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @click.option('--cached/--no-cached', '-c/-C', default=False,
               help='Reuse preprocessed training data from previous run')
-@click.option('--docs-limit', '-dl', default=None,
+@click.option('--docs-limit', '-d', default=None,
               type=click.IntRange(0, None),
               help='Maximum number of documents to use')
 @backend_param_option
@@ -214,7 +214,7 @@ def run_train(project_id, paths, cached, docs_limit, backend_param):
 @cli.command('learn')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
-@click.option('--docs-limit', '-dl', default=None,
+@click.option('--docs-limit', '-d', default=None,
               type=click.IntRange(0, None),
               help='Maximum number of documents to use')
 @backend_param_option
@@ -301,7 +301,7 @@ def run_index(project_id, directory, suffix, force,
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @click.option('--limit', '-l', default=10, help='Maximum number of subjects')
 @click.option('--threshold', '-t', default=0.0, help='Minimum score threshold')
-@click.option('--docs-limit', '-dl', default=None,
+@click.option('--docs-limit', '-d', default=None,
               type=click.IntRange(0, None),
               help='Maximum number of documents to use')
 @click.option(
@@ -372,7 +372,7 @@ def run_eval(
 @cli.command('optimize')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
-@click.option('--docs-limit', '-dl', default=None,
+@click.option('--docs-limit', '-d', default=None,
               type=click.IntRange(0, None),
               help='Maximum number of documents to use')
 @backend_param_option
@@ -442,7 +442,7 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
 @cli.command('hyperopt')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
-@click.option('--docs-limit', '-dl', default=None,
+@click.option('--docs-limit', '-d', default=None,
               type=click.IntRange(0, None),
               help='Maximum number of documents to use')
 @click.option('--trials', '-T', default=10, help='Number of trials')
