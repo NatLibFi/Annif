@@ -38,10 +38,11 @@ def get_project(project_id):
         sys.exit(1)
 
 
-def open_documents(paths):
+def open_documents(paths, docs_limit):
     """Helper function to open a document corpus from a list of pathnames,
     each of which is either a TSV file or a directory of TXT files. The
-    corpus will be returned as an instance of DocumentCorpus."""
+    corpus will be returned as an instance of DocumentCorpus or
+    LimitingDocumentCorpus."""
 
     def open_doc_path(path):
         """open a single path and return it as a DocumentCorpus"""
@@ -57,6 +58,8 @@ def open_documents(paths):
     else:
         corpora = [open_doc_path(path) for path in paths]
         docs = annif.corpus.CombinedCorpus(corpora)
+    if docs_limit is not None:
+        docs = annif.corpus.LimitingDocumentCorpus(docs, docs_limit)
     return docs
 
 
@@ -187,9 +190,12 @@ def run_loadvoc(project_id, subjectfile):
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @click.option('--cached/--no-cached', '-c/-C', default=False,
               help='Reuse preprocessed training data from previous run')
+@click.option('--docs-limit', '-d', default=None,
+              type=click.IntRange(0, None),
+              help='Maximum number of documents to use')
 @backend_param_option
 @common_options
-def run_train(project_id, paths, cached, backend_param):
+def run_train(project_id, paths, cached, docs_limit, backend_param):
     """
     Train a project on a collection of documents.
     """
@@ -201,22 +207,25 @@ def run_train(project_id, paths, cached, backend_param):
                 "Corpus paths cannot be given when using --cached option.")
         documents = 'cached'
     else:
-        documents = open_documents(paths)
+        documents = open_documents(paths, docs_limit)
     proj.train(documents, backend_params)
 
 
 @cli.command('learn')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
+@click.option('--docs-limit', '-d', default=None,
+              type=click.IntRange(0, None),
+              help='Maximum number of documents to use')
 @backend_param_option
 @common_options
-def run_learn(project_id, paths, backend_param):
+def run_learn(project_id, paths, docs_limit, backend_param):
     """
     Further train an existing project on a collection of documents.
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
-    documents = open_documents(paths)
+    documents = open_documents(paths, docs_limit)
     proj.learn(documents, backend_params)
 
 
@@ -292,6 +301,9 @@ def run_index(project_id, directory, suffix, force,
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
 @click.option('--limit', '-l', default=10, help='Maximum number of subjects')
 @click.option('--threshold', '-t', default=0.0, help='Minimum score threshold')
+@click.option('--docs-limit', '-d', default=None,
+              type=click.IntRange(0, None),
+              help='Maximum number of documents to use')
 @click.option(
     '--results-file',
     '-r',
@@ -313,6 +325,7 @@ def run_eval(
         paths,
         limit,
         threshold,
+        docs_limit,
         results_file,
         jobs,
         backend_param):
@@ -337,7 +350,7 @@ def run_eval(
         except Exception as e:
             raise NotSupportedException(
                 "cannot open results-file for writing: " + str(e))
-    docs = open_documents(paths)
+    docs = open_documents(paths, docs_limit)
 
     jobs, pool_class = annif.parallel.get_pool(jobs)
 
@@ -359,9 +372,12 @@ def run_eval(
 @cli.command('optimize')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
+@click.option('--docs-limit', '-d', default=None,
+              type=click.IntRange(0, None),
+              help='Maximum number of documents to use')
 @backend_param_option
 @common_options
-def run_optimize(project_id, paths, backend_param):
+def run_optimize(project_id, paths, docs_limit, backend_param):
     """
     Analyze documents, testing multiple limits and thresholds.
 
@@ -376,7 +392,7 @@ def run_optimize(project_id, paths, backend_param):
     filter_batches = generate_filter_batches(project.subjects)
 
     ndocs = 0
-    docs = open_documents(paths)
+    docs = open_documents(paths, docs_limit)
     for doc in docs.documents:
         hits = project.suggest(doc.text, backend_params)
         gold_subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
@@ -426,6 +442,9 @@ def run_optimize(project_id, paths, backend_param):
 @cli.command('hyperopt')
 @click.argument('project_id')
 @click.argument('paths', type=click.Path(exists=True), nargs=-1)
+@click.option('--docs-limit', '-d', default=None,
+              type=click.IntRange(0, None),
+              help='Maximum number of documents to use')
 @click.option('--trials', '-T', default=10, help='Number of trials')
 @click.option('--jobs',
               '-j',
@@ -444,12 +463,13 @@ def run_optimize(project_id, paths, backend_param):
     help="""Specify file path to write trial results as CSV.
     File directory must exist, existing file will be overwritten.""")
 @common_options
-def run_hyperopt(project_id, paths, trials, jobs, metric, results_file):
+def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric,
+                 results_file):
     """
     Optimize the hyperparameters of a project using a validation corpus.
     """
     proj = get_project(project_id)
-    documents = open_documents(paths)
+    documents = open_documents(paths, docs_limit)
     click.echo(f"Looking for optimal hyperparameters using {trials} trials")
     rec = proj.hyperopt(documents, trials, jobs, metric, results_file)
     click.echo(f"Got best {metric} score {rec.score:.4f} with:")

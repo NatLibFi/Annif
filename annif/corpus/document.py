@@ -5,6 +5,7 @@ import os.path
 import re
 import gzip
 import annif.util
+from itertools import islice
 from .types import DocumentCorpus
 from .subject import SubjectSet
 
@@ -101,5 +102,21 @@ class TruncatingDocumentCorpus(DocumentCorpus):
     def documents(self):
         for doc in self._orig_corpus.documents:
             yield self._create_document(text=doc.text[:self._limit],
+                                        uris=doc.uris,
+                                        labels=doc.labels)
+
+
+class LimitingDocumentCorpus(DocumentCorpus):
+    """A document corpus that wraps another document corpus but limits the
+    number of documents to a given limit"""
+
+    def __init__(self, corpus, docs_limit):
+        self._orig_corpus = corpus
+        self.docs_limit = docs_limit
+
+    @property
+    def documents(self):
+        for doc in islice(self._orig_corpus.documents, self.docs_limit):
+            yield self._create_document(text=doc.text,
                                         uris=doc.uris,
                                         labels=doc.labels)

@@ -288,6 +288,21 @@ def test_train_no_path(caplog):
     assert 'Reading empty file' == caplog.records[0].message
 
 
+def test_train_docslimit_zero():
+    docfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'documents.tsv')
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'train', 'tfidf-fi', docfile, '--docs-limit', '0'])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "Not supported: Cannot train tfidf project with no documents"  \
+        in failed_result.output
+
+
 def test_learn(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__),

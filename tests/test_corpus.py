@@ -277,3 +277,20 @@ def test_truncatingcorpus(document_corpus):
     # Ensure docs from TruncatingCorpus are still available after iterating
     assert len(list(truncating_corpus.documents)) \
         == len(list(document_corpus.documents))
+
+
+def test_limitingcorpus(tmpdir):
+    docfile = tmpdir.join('documents_invalid.tsv')
+    docfile.write("""Läntinen\t<http://www.yso.fi/onto/yso/p2557>
+
+        Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
+        A line with no tabs
+        Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
+
+    document_corpus = annif.corpus.DocumentFile(str(docfile))
+    limiting_corpus = annif.corpus.LimitingDocumentCorpus(document_corpus, 2)
+
+    assert len(list(limiting_corpus.documents)) == 2
+    for limited_doc, doc in zip(limiting_corpus.documents,
+                                document_corpus.documents):
+        assert limited_doc.text == doc.text
