@@ -67,14 +67,6 @@ class YakeBackend(backend.AnnifBackend):
 
     def initialize(self):
         self._initialize_index()
-        self._kw_extractor = yake.KeywordExtractor(
-            lan=self.params['language'],
-            n=self.params['max_ngram_size'],
-            dedupLim=self.params['deduplication_threshold'],
-            dedupFunc=self.params['deduplication_algo'],
-            windowsSize=self.params['window_size'],
-            top=self.params['num_keywords'],
-            features=self.params['features'])
 
     def _initialize_index(self):
         if self._index is None:
@@ -147,6 +139,14 @@ class YakeBackend(backend.AnnifBackend):
             f'Suggesting subjects for text "{text[:20]}..." (len={len(text)})')
         limit = int(params['limit'])
 
+        self._kw_extractor = yake.KeywordExtractor(
+            lan=params['language'],
+            n=int(params['max_ngram_size']),
+            dedupLim=float(params['deduplication_threshold']),
+            dedupFunc=params['deduplication_algo'],
+            windowsSize=int(params['window_size']),
+            top=int(params['num_keywords']),
+            features=self.params['features'])
         keyphrases = self._kw_extractor.extract_keywords(text)
         suggestions = self._keyphrases2suggestions(keyphrases)
 
