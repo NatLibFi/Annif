@@ -85,7 +85,7 @@ class YakeBackend(backend.AnnifBackend):
                     f'Loaded index from {path} with {len(self._index)} labels')
             else:
                 self.info('Creating index')
-                self._create_index()
+                self._index = self._create_index()
                 self._save_index(path)
                 self.info(f'Created index with {len(self._index)} labels')
 
@@ -114,7 +114,8 @@ class YakeBackend(backend.AnnifBackend):
                 label = self._normalize_label(label)
                 index[label].add(uri)
         index.pop('', None)  # Remove possible empty string entry
-        self._index = dict(index)
+        return dict(index)
+
     def _get_concept_labels(self, concept, label_types):
         labels = []
         for label_type in label_types:
