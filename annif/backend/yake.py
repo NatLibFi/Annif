@@ -139,6 +139,10 @@ class YakeBackend(backend.AnnifBackend):
             f'Suggesting subjects for text "{text[:20]}..." (len={len(text)})')
         limit = int(params['limit'])
 
+        alphanum = re.compile('[^a-zA-Z0-9]')
+        if len(re.sub(alphanum, '', text)) == 0:
+            return ListSuggestionResult([])
+
         self._kw_extractor = yake.KeywordExtractor(
             lan=params['language'],
             n=int(params['max_ngram_size']),
