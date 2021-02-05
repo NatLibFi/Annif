@@ -109,14 +109,19 @@ class YakeBackend(backend.AnnifBackend):
             if (concept, OWL.deprecated, rdflib.Literal(True)) in self.graph:
                 continue
             uri = str(concept)
-            for label_type in self.label_types:
-                for label in self.graph.objects(concept, label_type):
-                    if not label.language == self.params['language']:
-                        continue
-                    label = self._normalize_label(label)
-                    index[label].add(uri)
+            labels = self._get_concept_labels(concept, self.label_types)
+            for label in labels:
+                label = self._normalize_label(label)
+                index[label].add(uri)
         index.pop('', None)  # Remove possible empty string entry
         self._index = dict(index)
+    def _get_concept_labels(self, concept, label_types):
+        labels = []
+        for label_type in label_types:
+            for label in self.graph.objects(concept, label_type):
+                if label.language == self.params['language']:
+                    labels.append(label)
+        return labels
 
     def _normalize_label(self, label):
         label = str(label)
