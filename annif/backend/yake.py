@@ -194,9 +194,13 @@ class YakeBackend(backend.AnnifBackend):
                 combined_suggestions[uri] = score
             else:
                 old_score = combined_suggestions[uri]
-                combined_suggestions[uri] = self._conflate_scores(
+                combined_suggestions[uri] = self._combine_scores(
                     score, old_score)
         return list(combined_suggestions.items())
 
-    def _conflate_scores(self, score1, score2):
-        return score1 * score2 / (score1 * score2 + (1-score1) * (1-score2))
+    def _combine_scores(self, score1, score2):
+        # The result is never smaller than the greater input
+        score1 = score1/2 + 0.5
+        score2 = score2/2 + 0.5
+        confl = score1 * score2 / (score1 * score2 + (1-score1) * (1-score2))
+        return (confl-0.5) * 2
