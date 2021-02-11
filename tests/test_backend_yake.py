@@ -2,25 +2,10 @@
 
 import annif
 import pytest
-import os
-from rdflib import Graph
 import annif.backend
 
 
 pytest.importorskip("annif.backend.yake")
-
-
-@pytest.fixture(scope='module')
-def graph_project(project):
-    _rdf_file_path = os.path.join(
-        os.path.dirname(__file__),
-        'corpora',
-        'archaeology',
-        'yso-archaeology.rdf')
-    g = Graph()
-    g.load(_rdf_file_path)
-    project.vocab.as_graph.return_value = g
-    return project
 
 
 def test_yake_suggest(project, graph_project):

@@ -5,6 +5,7 @@ import shutil
 import pytest
 import py.path
 import unittest.mock
+from rdflib import Graph
 import annif
 import annif.analyzer
 import annif.corpus
@@ -114,6 +115,19 @@ def project(subject_index, datadir, registry, vocabulary):
     proj.datadir = str(datadir)
     proj.registry = registry
     return proj
+
+
+@pytest.fixture(scope='module')
+def graph_project(project):
+    _rdf_file_path = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'yso-archaeology.rdf')
+    g = Graph()
+    g.load(_rdf_file_path)
+    project.vocab.as_graph.return_value = g
+    return project
 
 
 @pytest.fixture(scope='module')

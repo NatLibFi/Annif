@@ -1,27 +1,8 @@
-import os
 from annif.backend import get_backend
-from rdflib import Graph
 import annif.corpus
 from annif.backend.stwfsa import StwfsaBackend
 from annif.exception import NotInitializedException, NotSupportedException
-
 import pytest
-from unittest.mock import Mock
-
-
-@pytest.fixture
-def graph_project(project):
-    _rdf_file_path = os.path.join(
-        os.path.dirname(__file__),
-        'corpora',
-        'archaeology',
-        'yso-archaeology.rdf')
-    g = Graph()
-    g.load(_rdf_file_path)
-    mock_vocab = Mock()
-    mock_vocab.as_graph.return_value = g
-    project.vocab = mock_vocab
-    return project
 
 
 _backend_conf = {
