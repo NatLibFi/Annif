@@ -45,7 +45,7 @@ def test_create_index_preflabels(graph_project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
-        config_params={'limit': 8, 'language': 'fi', 'label_types': 'pref'},
+        config_params={'language': 'fi', 'label_types': 'prefLabel'},
         project=graph_project)
     index = yake._create_index()
     # Some of the 130 prefLabels get merged in lemmatization:
@@ -60,7 +60,7 @@ def test_create_index_altlabels(graph_project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
-        config_params={'limit': 8, 'language': 'fi', 'label_types': 'alt'},
+        config_params={'language': 'fi', 'label_types': 'altLabel'},
         project=graph_project)
     index = yake._create_index()
     assert len(index) == 34
@@ -84,7 +84,7 @@ def test_create_index_label_languages(graph_project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
-        config_params={'limit': 8, 'language': 'sv', 'label_types': 'pref'},
+        config_params={'limit': 8, 'language': 'sv', 'label_types': 'prefLabel'},
         project=graph_project)
     index = yake._create_index()
     assert len(index) == 130

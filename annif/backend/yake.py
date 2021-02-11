@@ -30,7 +30,7 @@ class YakeBackend(backend.AnnifBackend):
         'window_size': 1,
         'num_keywords': 100,
         'features': None,
-        'default_label_types': ['pref', 'alt'],
+        'default_label_types': ['prefLabel', 'altLabel'],
         'remove_parentheses': False
     }
 
@@ -45,18 +45,16 @@ class YakeBackend(backend.AnnifBackend):
 
     @property
     def label_types(self):
-        mapping = {'pref': SKOS.prefLabel,
-                   'alt': SKOS.altLabel,
-                   'hidden': SKOS.hiddenLabel}
         if 'label_types' in self.params:
-            lt_entries = self.params['label_types'].split(',')
-            try:
-                return [mapping[lt.strip()] for lt in lt_entries]
-            except KeyError as err:
-                raise ConfigurationException(
-                    f'invalid label type {err}', backend_id=self.backend_id)
-        else:
-            return [mapping[lt] for lt in self.params['default_label_types']]
+            lt_entries = [lt.strip() for lt
+                          in self.params['label_types'].split(',')]
+            valid_types = ('prefLabel', 'altLabel', 'hiddenLabel')
+            for lt in lt_entries:
+                if lt not in valid_types:
+                    raise ConfigurationException(
+                        f'invalid label type {lt}', backend_id=self.backend_id)
+            return [getattr(SKOS, lt) for lt in lt_entries]
+        return [getattr(SKOS, lt) for lt in self.params['default_label_types']]
 
     @property
     def graph(self):
