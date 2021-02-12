@@ -1,11 +1,21 @@
 """Unit tests for the Yake backend in Annif"""
 
 import annif
-import pytest
 import annif.backend
-
+import pytest
+from annif.exception import ConfigurationException
 
 pytest.importorskip("annif.backend.yake")
+
+
+def test_invalid_label_type(graph_project):
+    yake_type = annif.backend.get_backend('yake')
+    yake = yake_type(
+        backend_id='yake',
+        config_params={'label_types': 'invalid_type', 'language': 'fi'},
+        project=graph_project)
+    with pytest.raises(ConfigurationException):
+        yake.suggest("example text")
 
 
 def test_yake_suggest(project, graph_project):
