@@ -90,19 +90,6 @@ def test_create_index_pref_and_altlabels(graph_project):
     assert 'luolamaalauks' in index
 
 
-def test_create_index_label_languages(graph_project):
-    yake_type = annif.backend.get_backend('yake')
-    yake = yake_type(
-        backend_id='yake',
-        config_params={'limit': 8, 'language': 'sv', 'label_types': 'prefLabel'},
-        project=graph_project)
-    index = yake._create_index()
-    assert len(index) == 130
-    assert 'kalliotaid' not in index
-    assert 'bergkonst' in index
-    assert 'rock art' not in index
-
-
 def test_combine_suggestions_different_uris(project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
