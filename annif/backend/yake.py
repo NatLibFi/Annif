@@ -48,14 +48,16 @@ class YakeBackend(backend.AnnifBackend):
         if type(self.params['label_types']) == str:  # Label types set by user
             label_types = [lt.strip() for lt
                            in self.params['label_types'].split(',')]
-            valid_types = ('prefLabel', 'altLabel', 'hiddenLabel')
-            for lt in label_types:
-                if lt not in valid_types:
-                    raise ConfigurationException(
-                        f'invalid label type {lt}', backend_id=self.backend_id)
+            self._validate_label_types(label_types)
         else:
             label_types = self.params['label_types']  # The defaults
         return [getattr(SKOS, lt) for lt in label_types]
+
+    def _validate_label_types(self, label_types):
+        for lt in label_types:
+            if lt not in ('prefLabel', 'altLabel', 'hiddenLabel'):
+                raise ConfigurationException(
+                    f'invalid label type {lt}', backend_id=self.backend_id)
 
     @property
     def graph(self):
