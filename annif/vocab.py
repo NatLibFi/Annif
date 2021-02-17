@@ -21,6 +21,7 @@ class AnnifVocabulary(DatadirMixin):
     def __init__(self, vocab_id, datadir):
         DatadirMixin.__init__(self, datadir, 'vocabs', vocab_id)
         self.vocab_id = vocab_id
+        self._skos_vocab = None
 
     def _create_subject_index(self, subject_corpus):
         self._subjects = annif.corpus.SubjectIndex(subject_corpus)
@@ -54,6 +55,25 @@ class AnnifVocabulary(DatadirMixin):
                 raise NotInitializedException(
                     "subject file {} not found".format(path))
         return self._subjects
+
+    @property
+    def skos_vocab(self):
+        if self._skos_vocab is None:
+            path = os.path.join(self.datadir, 'subjects.ttl')
+            if os.path.exists(path):
+                logger.debug(f'loading graph from {path}')
+                self._skos_vocab = annif.corpus.SubjectFileSKOS(path, None)
+            else:
+                raise NotInitializedException(f'graph file {path} not found')
+        return self._skos_vocab
+
+    @property
+    def skos_concepts(self):
+        return self.skos_vocab.skos_concepts
+
+    def get_skos_concept_labels(self, concept, label_types, language):
+        return self.skos_vocab.get_skos_concept_labels(concept, label_types,
+                                                       language)
 
     def load_vocabulary(self, subject_corpus, language):
         """load subjects from a subject corpus and save them into a
