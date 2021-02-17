@@ -1,7 +1,6 @@
 """Vocabulary management functionality for Annif"""
 
 import os.path
-import rdflib.graph
 import annif
 import annif.corpus
 import annif.util
@@ -93,9 +92,4 @@ class AnnifVocabulary(DatadirMixin):
 
     def as_graph(self):
         """return the vocabulary as an rdflib graph"""
-        g = rdflib.graph.Graph()
-        g.load(
-            os.path.join(self.datadir, 'subjects.ttl'),
-            format='ttl'
-        )
-        return g
+        return self.skos_vocab.graph
