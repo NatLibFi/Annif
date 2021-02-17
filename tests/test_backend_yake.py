@@ -6,26 +6,27 @@ import pytest
 from annif.exception import ConfigurationException
 from rdflib import Graph, URIRef, Literal
 from rdflib.namespace import SKOS, RDF
+from copy import copy
 
 pytest.importorskip("annif.backend.yake")
 
 
-def test_invalid_label_type(graph_project):
+def test_invalid_label_type(skos_project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
         config_params={'label_types': 'invalid_type', 'language': 'fi'},
-        project=graph_project)
+        project=skos_project)
     with pytest.raises(ConfigurationException):
         yake.suggest("example text")
 
 
-def test_yake_suggest(project, graph_project):
+def test_yake_suggest(project, skos_project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
         config_params={'limit': 8, 'language': 'fi'},
-        project=graph_project)
+        project=skos_project)
 
     results = yake.suggest("""Arkeologia on tieteenala, jota sanotaan joskus
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
@@ -42,23 +43,23 @@ def test_yake_suggest(project, graph_project):
     assert 'arkeologia' in [result.label for result in hits]
 
 
-def test_yake_suggest_non_alphanum_text(project, graph_project):
+def test_yake_suggest_non_alphanum_text(project, skos_project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
         config_params={'limit': 8, 'language': 'fi'},
-        project=graph_project)
+        project=skos_project)
 
     results = yake.suggest(".,!")
     assert len(results) == 0
 
 
-def test_create_index_preflabels(graph_project):
+def test_create_index_preflabels(skos_project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
         config_params={'language': 'fi', 'label_types': 'prefLabel'},
-        project=graph_project)
+        project=skos_project)
     index = yake._create_index()
     # Some of the 130 prefLabels get merged in lemmatization:
     # assyriologit, assyriologia (assyriolog); arkealogit, arkeologia
@@ -68,44 +69,49 @@ def test_create_index_preflabels(graph_project):
     assert 'luolamaalauks' not in index
 
 
-def test_create_index_altlabels(graph_project):
-    yake_type = annif.backend.get_backend('yake')
-    yake = yake_type(
-        backend_id='yake',
-        config_params={'language': 'fi', 'label_types': 'altLabel'},
-        project=graph_project)
-    index = yake._create_index()
-    assert len(index) == 34
-    assert 'kalliotaid' not in index
-    assert 'luolamaalauks' in index
-
-
-def test_create_index_pref_and_altlabels(graph_project):
+def test_create_index_pref_and_altlabels(skos_project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
         config_params={'limit': 8, 'language': 'fi'},
-        project=graph_project)
+        project=skos_project)
     index = yake._create_index()
     assert len(index) == 161
     assert 'kalliotaid' in index
     assert 'luolamaalauks' in index
 
 
-def test_remove_parentheses(graph_project):
+def test_create_index_altlabels(skos_project):
+    yake_type = annif.backend.get_backend('yake')
+    yake = yake_type(
+        backend_id='yake',
+        config_params={'language': 'fi', 'label_types': 'altLabel'},
+        project=skos_project)
+    index = yake._create_index()
+    assert len(index) == 34
+    assert 'kalliotaid' not in index
+    assert 'luolamaalauks' in index
+
+
+def test_remove_parentheses(project, skos_vocabulary):
     graph = Graph()
     graph.add((
         URIRef('http://www.yso.fi/onto/yso/p4354'), RDF.type, SKOS.Concept))
     graph.add((
         URIRef('http://www.yso.fi/onto/yso/p4354'), SKOS.prefLabel,
         Literal('lapset (ikäryhmät)', lang='fi')))
-    graph_project.vocab.as_graph.return_value = graph
+
+    skos_vocabulary = copy(skos_vocabulary)  # Do not modify original fixture
+    skos_vocabulary.graph = graph
+    project.vocab.skos_concepts = skos_vocabulary.skos_concepts
+    project.vocab.get_skos_concept_labels = \
+        skos_vocabulary.get_skos_concept_labels
 
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
         config_params={'language': 'fi', 'remove_parentheses': True},
-        project=graph_project)
+        project=project)
     index = yake._create_index()
     assert len(index) == 1
     assert 'laps' in index

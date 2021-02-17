@@ -5,8 +5,7 @@ import yake
 import os.path
 import re
 from collections import defaultdict
-from rdflib.namespace import SKOS, RDF, OWL
-import rdflib
+from rdflib.namespace import SKOS
 import annif.util
 from . import backend
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
@@ -59,13 +58,6 @@ class YakeBackend(backend.AnnifBackend):
                 raise ConfigurationException(
                     f'invalid label type {lt}', backend_id=self.backend_id)
 
-    @property
-    def graph(self):
-        if self._graph is None:
-            self.info('Loading graph')
-            self._graph = self.project.vocab.as_graph()
-        return self._graph
-
     def initialize(self):
         self._initialize_index()
 
@@ -98,24 +90,15 @@ class YakeBackend(backend.AnnifBackend):
 
     def _create_index(self):
         index = defaultdict(set)
-        for concept in self.graph.subjects(RDF.type, SKOS.Concept):
-            if (concept, OWL.deprecated, rdflib.Literal(True)) in self.graph:
-                continue
+        for concept in self.project.vocab.skos_concepts:
             uri = str(concept)
-            labels = self._get_concept_labels(concept, self.label_types)
+            labels = self.project.vocab.get_skos_concept_labels(
+                concept, self.label_types, self.params['language'])
             for label in labels:
                 label = self._normalize_label(label)
                 index[label].add(uri)
         index.pop('', None)  # Remove possible empty string entry
         return dict(index)
-
-    def _get_concept_labels(self, concept, label_types):
-        labels = []
-        for label_type in label_types:
-            for label in self.graph.objects(concept, label_type):
-                if label.language == self.params['language']:
-                    labels.append(label)
-        return labels
 
     def _normalize_label(self, label):
         label = str(label)
