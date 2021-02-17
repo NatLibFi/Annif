@@ -35,9 +35,7 @@ class SubjectFileSKOS(SubjectCorpus):
 
     @property
     def subjects(self):
-        for concept in self.graph.subjects(RDF.type, SKOS.Concept):
-            if (concept, OWL.deprecated, rdflib.Literal(True)) in self.graph:
-                continue
+        for concept in self.skos_concepts:
             labels = self.graph.preferredLabel(concept, lang=self.language)
             notation = self.graph.value(concept, SKOS.notation, None, any=True)
             if not labels:
