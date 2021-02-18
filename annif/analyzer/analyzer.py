@@ -12,7 +12,7 @@ class Analyzer(metaclass=abc.ABCMeta):
     be overridden when necessary."""
 
     name = None
-    TOKEN_MIN_LENGTH = 3
+    TOKEN_MIN_LENGTH = 2
 
     def tokenize_sentences(self, text):
         """Tokenize a piece of text (e.g. a document) into sentences."""

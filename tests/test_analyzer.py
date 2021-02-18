@@ -48,19 +48,19 @@ def test_english_tokenize_words():
     text = """To take a trivial example, which of us ever undertakes
     laborious physical exercise, except to obtain some advantage from it?"""
     words = analyzer.tokenize_words(text)
-    assert len(words) == 14
+    assert len(words) == 19
 
 
 def test_english_filter_words():
     analyzer = annif.analyzer.get_analyzer("snowball(english)")
-    text = """Since 2000, 3D printing can be used to print
+    text = """Since 2000, a 3D printer can be used to print
     3 kinds of objects."""
     words = analyzer.tokenize_words(text)
-    assert len(words) == 7
+    assert len(words) == 11
     assert '2000' not in words
-    assert 'be' not in words
     assert 'sinc' in words
     assert 'object' in words
+    assert 'a' not in words
 
 
 def test_swedish_analyzer_normalize_word():
