@@ -115,7 +115,8 @@ class NNEnsembleBackend(
         self._model = load_model(model_filename)
 
     def _merge_hits_from_sources(self, hits_from_sources, params):
-        score_vector = np.array([hits.as_vector(subjects) * weight
+        score_vector = np.array([np.sqrt(hits.as_vector(subjects))
+                                 * weight * len(hits_from_sources)
                                  for hits, weight, subjects
                                  in hits_from_sources],
                                 dtype=np.float32)
@@ -167,8 +168,8 @@ class NNEnsembleBackend(
             doc_scores = []
             for source_project, weight in sources:
                 hits = source_project.suggest(doc.text)
-                doc_scores.append(
-                    hits.as_vector(source_project.subjects) * weight)
+                vector = hits.as_vector(source_project.subjects)
+                doc_scores.append(np.sqrt(vector) * weight * len(sources))
             score_vector = np.array(doc_scores,
                                     dtype=np.float32).transpose()
             subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))

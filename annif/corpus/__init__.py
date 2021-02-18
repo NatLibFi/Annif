@@ -2,7 +2,7 @@
 
 
 from .document import DocumentDirectory, DocumentFile, DocumentList, \
-    TruncatingDocumentCorpus
+    TruncatingDocumentCorpus, LimitingDocumentCorpus
 from .subject import Subject, SubjectFileTSV
 from .subject import SubjectIndex, SubjectSet
 from .skos import SubjectFileSKOS
@@ -11,4 +11,5 @@ from .combine import CombinedCorpus
 
 __all__ = ["DocumentDirectory", "DocumentFile", "DocumentList", "Subject",
            "SubjectFileTSV", "SubjectIndex", "SubjectSet", "SubjectFileSKOS",
-           "Document", "CombinedCorpus", "TruncatingDocumentCorpus"]
+           "Document", "CombinedCorpus", "TruncatingDocumentCorpus",
+           "LimitingDocumentCorpus"]

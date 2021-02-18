@@ -53,6 +53,7 @@ def parse_sources(sourcedef):
     tuples (src_id, weight)"""
 
     sources = []
+    totalweight = 0.0
     for srcdef in sourcedef.strip().split(','):
         srcval = srcdef.strip().split(':')
         src_id = srcval[0]
@@ -61,7 +62,8 @@ def parse_sources(sourcedef):
         else:
             weight = 1.0
         sources.append((src_id, weight))
-    return sources
+        totalweight += weight
+    return [(srcid, weight / totalweight) for srcid, weight in sources]
 
 
 def boolean(val):
