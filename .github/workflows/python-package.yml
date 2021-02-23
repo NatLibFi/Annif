@@ -18,6 +18,11 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
     steps:
     - uses: actions/checkout@v2
+    - name: Install system packages
+      run: |
+        sudo apt-get install \
+          libvoikko1 \
+          voikko-fi
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -27,6 +32,11 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install .[dev]
         python -m nltk.downloader punkt
+        # Selectively install the optional dependencies for some Python versions
+        # For Python 3.6
+        # - voikko dependencies
+        if [[ ${{ matrix.python-version }} == '3.6' ]]; then python -m pip install .[voikko]; fi 
+
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
