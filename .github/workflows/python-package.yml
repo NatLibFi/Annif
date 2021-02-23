@@ -33,6 +33,9 @@ jobs:
         python -m pip install .[dev]
         python -m nltk.downloader punkt
         # Selectively install the optional dependencies for some Python versions
+        # Install the optional neural network dependencies (TensorFlow and LMDB)
+        # - except for one Python version (3.7) so that we can test also without them
+        if [[ ${{ matrix.python-version }} != '3.7' ]]; then pip install .[nn]; fi
         # For Python 3.6
         # - voikko dependencies
         if [[ ${{ matrix.python-version }} == '3.6' ]]; then python -m pip install .[voikko]; fi 
