@@ -44,6 +44,8 @@ jobs:
         # For Python 3.6
         # - voikko dependencies
         if [[ ${{ matrix.python-version }} == '3.6' ]]; then python -m pip install .[voikko]; fi 
+        # Install the optional VowpalWabbit dependency for Python 3.6
+        if [[ ${{ matrix.python-version }} == '3.6' ]]; then pip install .[vw]; fi
 
     - name: Lint with flake8
       run: |
