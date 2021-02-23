@@ -38,7 +38,9 @@ jobs:
         if [[ ${{ matrix.python-version }} != '3.7' ]]; then pip install .[nn]; fi
         # Install the optional Omikuji dependency
         # - except for one Python version (3.7) so that we can test also without them
-        if [[ ${{ matrix.python-version }} != '3.7' ]]; then pip install .[omikuji]; fi        
+        if [[ ${{ matrix.python-version }} != '3.7' ]]; then pip install .[omikuji]; fi
+        # Install the optional fastText dependencies for Python 3.7 only
+        if [[ ${{ matrix.python-version }} == '3.7' ]]; then pip install .[fasttext]; fi
         # For Python 3.6
         # - voikko dependencies
         if [[ ${{ matrix.python-version }} == '3.6' ]]; then python -m pip install .[voikko]; fi 
