@@ -19,6 +19,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Install system packages
+      run: |
+        sudo apt-get install \
+          libvoikko1 \
+          voikko-fi
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -28,6 +33,21 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install .[dev]
         python -m nltk.downloader punkt
+        # Selectively install the optional dependencies for some Python versions
+        # Install the optional neural network dependencies (TensorFlow and LMDB)
+        # - except for one Python version (3.7) so that we can test also without them
+        if [[ ${{ matrix.python-version }} != '3.7' ]]; then pip install .[nn]; fi
+        # Install the optional Omikuji dependency
+        # - except for one Python version (3.7) so that we can test also without them
+        if [[ ${{ matrix.python-version }} != '3.7' ]]; then pip install .[omikuji]; fi
+        # Install the optional fastText dependencies for Python 3.7 only
+        if [[ ${{ matrix.python-version }} == '3.7' ]]; then pip install .[fasttext]; fi
+        # For Python 3.6
+        # - voikko dependencies
+        if [[ ${{ matrix.python-version }} == '3.6' ]]; then python -m pip install .[voikko]; fi 
+        # Install the optional VowpalWabbit dependency for Python 3.6
+        if [[ ${{ matrix.python-version }} == '3.6' ]]; then pip install .[vw]; fi
+
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
