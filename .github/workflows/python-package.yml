@@ -3,12 +3,7 @@
 
 name: Python package
 
-on:
-  push:
-    branches: [ actions-test ]
-  pull_request:
-    branches: [ actions-test ]
-  tags:
+on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
