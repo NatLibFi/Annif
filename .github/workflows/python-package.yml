@@ -8,7 +8,7 @@ on:
     branches: [ actions-test ]
   pull_request:
     branches: [ actions-test ]
-
+  tags:
 jobs:
   test:
     runs-on: ubuntu-latest
