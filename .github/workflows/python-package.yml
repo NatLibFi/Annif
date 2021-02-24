@@ -1,11 +1,12 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions,
+# if event is a push of tagged commit, will also build and publish to PyPI.
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
 name: Python package
 
 on: [push, pull_request]
 jobs:
-  test:
+  test-job:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -51,8 +52,8 @@ jobs:
       run: |
         pytest
 
-  build-and-publish:
-    needs: test
+  build-and-publish-job:
+    needs: test-job
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
@@ -60,13 +61,12 @@ jobs:
     - name: Set up Python 3.8
       uses: actions/setup-python@v2
       with:
-        # Semantic version range syntax or exact version of a Python version
         python-version: '3.8'
     - name: Build distribution
       run: |
         python -m pip install wheel
         python setup.py sdist bdist_wheel
-    - name: Publish distribution to Test PyPI
+    - name: Publish distribution
       uses: pypa/gh-action-pypi-publish@release/v1.4
       with:
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
