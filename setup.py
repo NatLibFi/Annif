@@ -7,7 +7,7 @@ def read(fname):
 
 
 setup(
-    name='annif',
+    name='annif-test-pypi',
     version='0.52.0-dev',
     url='https://github.com/NatLibFi/Annif',
     author='Osma Suominen',
