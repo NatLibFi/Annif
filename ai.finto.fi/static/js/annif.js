@@ -53,15 +53,15 @@ function showResults(data) {
                 $('<meter class="mr-2">').attr('value',value.score).attr('max',1.0).attr('title',value.score.toFixed(4)),
                 $('<a target="_blank">').attr('href',value.uri).append(value.label),
                 $('<span style="float:right"> \
-                    <button type="button" class="btn p-0" data-i18n="[title]button-copy-label" \
+                    <button type="button" class="btn copy-btn" data-i18n="[title]button-copy-label" \
                         onclick="copyLabelToClipboard(this);"> \
-                        <img src="static/img/clipboard-label.svg" class="img" alt="Copy label to clipboard"></button> \
-                    <button type="button" class="btn p-0" id="button-copy-uri" data-i18n="[title]button-copy-uri" \
+                        <img src="static/img/clipboard-label.svg" class="img copy-btn-img" alt="Copy label to clipboard"></button> \
+                    <button type="button" class="btn copy-btn" id="button-copy-uri" data-i18n="[title]button-copy-uri" \
                         onclick="copyUriToClipboard(this);"> \
-                        <img src="static/img/clipboard-http.svg" class="img" alt="Copy URI to clipboard"></button> \
-                    <button type="button" class="btn p-0" id="button-copy-label-and-uri" data-i18n="[title]button-copy-label-and-uri" \
+                        <img src="static/img/clipboard-http.svg" class="img copy-btn-img" alt="Copy URI to clipboard"></button> \
+                    <button type="button" class="btn copy-btn" id="button-copy-label-and-uri" data-i18n="[title]button-copy-label-and-uri" \
                         onclick="copyUriAndLabelToClipboard(this);"> \
-                        <img src="static/img/clipboard-http-label.svg" class="img" alt="Copy labe, URI, and language code to clipboard"></button> \
+                        <img src="static/img/clipboard-http-label.svg" class="img copy-btn-img" alt="Copy labe, URI, and language code to clipboard"></button> \
                 </span>')
             )
         );
