@@ -101,7 +101,7 @@ def test_lazy_suggestion_result(subject_index):
     assert lsr._object is not None
 
 
-def test_list_suggestions_vector(document_corpus, subject_index):
+def test_list_suggestion_result_vector(subject_index):
     suggestions = ListSuggestionResult(
         [
             SubjectSuggestion(
@@ -166,7 +166,7 @@ def test_list_suggestions_vector_enforce_score_range(subject_index):
             assert score in (1.0, 0.5, 0.0)
 
 
-def test_list_suggestions_vector_destination(document_corpus, subject_index):
+def test_list_suggestion_result_vector_destination(subject_index):
     suggestions = ListSuggestionResult(
         [
             SubjectSuggestion(
@@ -184,7 +184,7 @@ def test_list_suggestions_vector_destination(document_corpus, subject_index):
     assert vector is destination
 
 
-def test_list_suggestions_vector_notfound(document_corpus, subject_index):
+def test_list_suggestion_result_vector_notfound(subject_index):
     suggestions = ListSuggestionResult(
         [
             SubjectSuggestion(
@@ -195,7 +195,7 @@ def test_list_suggestions_vector_notfound(document_corpus, subject_index):
     assert suggestions.as_vector(subject_index).sum() == 0
 
 
-def test_vector_suggestions_as_vector(subject_index):
+def test_vector_suggestion_result_as_vector(subject_index):
     orig_vector = np.ones(len(subject_index), dtype=np.float32)
     suggestions = VectorSuggestionResult(orig_vector)
     vector = suggestions.as_vector(subject_index)
@@ -210,7 +210,7 @@ def test_vector_suggestions_enforce_score_range(subject_index):
     assert (vector == expected).all()
 
 
-def test_vector_suggestions_as_vector_destination(subject_index):
+def test_vector_suggestion_result_as_vector_destination(subject_index):
     orig_vector = np.ones(len(subject_index), dtype=np.float32)
     suggestions = VectorSuggestionResult(orig_vector)
     destination = np.zeros(len(subject_index), dtype=np.float32)
