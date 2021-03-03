@@ -161,9 +161,7 @@ class ListSuggestionResult(SuggestionResult):
 
     @staticmethod
     def _enforce_score_range(hit):
-        if hit.score < 0.0:
-            return hit._replace(score=0.0)
-        elif hit.score > 1.0:
+        if hit.score > 1.0:
             return hit._replace(score=1.0)
         return hit
 
