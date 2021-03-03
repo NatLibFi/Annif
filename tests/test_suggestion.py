@@ -127,6 +127,45 @@ def test_list_suggestions_vector(document_corpus, subject_index):
             assert score == 0.0
 
 
+def test_list_suggestions_vector_enforce_score_range(subject_index):
+    suggestions = ListSuggestionResult(
+        [
+            SubjectSuggestion(
+                uri='http://www.yso.fi/onto/yso/p7141',
+                label='sinetit',
+                notation=None,
+                score=1.5),
+            SubjectSuggestion(
+                uri='http://www.yso.fi/onto/yso/p6479',
+                label='viikingit',
+                notation=None,
+                score=1.0),
+            SubjectSuggestion(
+                uri='http://www.yso.fi/onto/yso/p14173',
+                label='kaivaukset',
+                notation=None,
+                score=0.5),
+            SubjectSuggestion(
+                uri='http://www.yso.fi/onto/yso/p14588',
+                label='riimukivet',
+                notation=None,
+                score=0.0),
+            SubjectSuggestion(
+                uri='http://www.yso.fi/onto/yso/p12738',
+                label='viikinkiaika',
+                notation=None,
+                score=-0.5)])
+    vector = suggestions.as_vector(subject_index)
+    assert vector.sum() == 2.5
+    for subject_id, score in enumerate(vector):
+        if subject_index[subject_id][1] == 'sinetit':
+            assert score == 1.0
+        elif subject_index[subject_id][1] == 'viikinkiaika':
+            assert score == 0.0
+        else:
+            assert score in (1.0, 0.5, 0.0)
+
+
 def test_list_suggestions_vector_destination(document_corpus, subject_index):
     suggestions = ListSuggestionResult(
         [
@@ -161,6 +200,14 @@ def test_vector_suggestions_as_vector(subject_index):
     suggestions = VectorSuggestionResult(orig_vector)
     vector = suggestions.as_vector(subject_index)
     assert (vector == orig_vector).all()
+
+
+def test_vector_suggestions_enforce_score_range(subject_index):
+    orig_vector = np.array([-0.1, 0.0, 0.5, 1.0, 1.5], dtype=np.float32)
+    suggestions = VectorSuggestionResult(orig_vector)
+    vector = suggestions.as_vector(subject_index)
+    expected = np.array([0.0, 0.0, 0.5, 1.0, 1.0], dtype=np.float32)
+    assert (vector == expected).all()
 
 
 def test_vector_suggestions_as_vector_destination(subject_index):
