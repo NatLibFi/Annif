@@ -24,7 +24,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -39,43 +39,37 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1215"
-     inkscape:window-height="696"
+     inkscape:window-width="1855"
+     inkscape:window-height="1056"
      id="namedview8"
      showgrid="false"
-     inkscape:zoom="14.75"
-     inkscape:cx="-5.7288136"
-     inkscape:cy="9.7740121"
+     inkscape:zoom="29.5"
+     inkscape:cx="18.395272"
+     inkscape:cy="6.7015456"
      inkscape:window-x="65"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg6">
-    <inkscape:grid
-       type="xygrid"
-       id="grid5483" />
-  </sodipodi:namedview>
-  <path
-     style="fill:#ffffff;fill-opacity:0;stroke:#006288;stroke-width:0.99095219;stroke-opacity:1"
-     d="m 11.972114,1.9974556 h 2.611777 V 15.503709 H 1.4839012 V 1.9974556 h 2.609311"
-     id="rect156"
-     inkscape:connector-curvature="0"
-     sodipodi:nodetypes="cccccc" />
-  <path
-     inkscape:connector-curvature="0"
-     d="m 9.5385228,1.0008116 a 0.5,0.5 0 0 1 0.4999972,0.5 v 1 a 0.5,0.5 0 0 1 -0.4999972,0.5 H 6.5385252 a 0.5,0.5 0 0 1 -0.5,-0.5 v -1 a 0.5,0.5 0 0 1 0.5,-0.5 z M 6.5385252,8.1151017e-4 a 1.5,1.5 0 0 0 -1.5,1.50000008983 v 1 a 1.5,1.5 0 0 0 1.5,1.5 h 2.9999976 a 1.5,1.5 0 0 0 1.4999972,-1.5 v -1 A 1.5,1.5 0 0 0 9.5385228,8.1151017e-4 Z"
-     id="path4-8"
-     style="fill:#006288;fill-opacity:1" />
+     inkscape:current-layer="svg6" />
+  <rect
+     style="fill:#cccccc;fill-opacity:1;stroke:#006288;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="rect5485"
+     width="14"
+     height="14.566406"
+     x="1"
+     y="1.4987421" />
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;letter-spacing:0px;word-spacing:0px;fill:#006288;fill-opacity:1;stroke:none"
-     x="3.5218959"
-     y="12.678777"
-     id="text16-8"
-     inkscape:transform-center-x="1.6271186"
-     inkscape:transform-center-y="-0.81355932"><tspan
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#006288;fill-opacity:1;stroke:none"
+     x="7.9988127"
+     y="13.290784"
+     id="text16"><tspan
        sodipodi:role="line"
-       id="tspan14-6"
-       x="3.5218959"
-       y="12.678777"
-       style="font-weight:normal;font-size:10.66666698px;fill:#006288;fill-opacity:1">M</tspan></text>
+       id="tspan14"
+       x="7.9988127"
+       y="13.290784"
+       style="font-weight:normal;font-size:12px;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1">M</tspan></text>
+  <path
+     style="fill:#8db3f1;fill-opacity:1;stroke:#bfeaf4;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 5.4140625 0.001953125 L 5.4140625 2.9863281 L 10.585938 2.9863281 L 10.585938 0.001953125 L 5.4140625 0.001953125 z "
+     id="rect5487" />
 </svg>
