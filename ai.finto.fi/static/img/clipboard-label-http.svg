@@ -14,7 +14,7 @@
    viewBox="0 0 16 16"
    version="1.1"
    id="svg6"
-   sodipodi:docname="clipboard-uri-http.svg"
+   sodipodi:docname="clipboard-http-label.svg"
    inkscape:version="0.92.3 (2405546, 2018-03-11)">
   <metadata
      id="metadata12">
@@ -24,7 +24,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -44,38 +44,43 @@
      id="namedview8"
      showgrid="false"
      inkscape:zoom="14.75"
-     inkscape:cx="7.220339"
+     inkscape:cx="-5.1864407"
      inkscape:cy="4.3502833"
      inkscape:window-x="65"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg6" />
   <path
-     d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"
-     id="path2" />
+     style="fill:#ffffff;fill-opacity:0;stroke:#006288;stroke-width:0.99095219;stroke-opacity:1"
+     d="m 11.972114,1.9974556 h 2.611777 V 15.503709 H 1.4839012 V 1.9974556 h 2.609311"
+     id="rect156"
+     inkscape:connector-curvature="0"
+     sodipodi:nodetypes="cccccc" />
   <path
-     d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"
-     id="path4" />
+     inkscape:connector-curvature="0"
+     d="m 9.5385228,1.0008116 a 0.5,0.5 0 0 1 0.4999972,0.5 v 1 a 0.5,0.5 0 0 1 -0.4999972,0.5 H 6.5385252 a 0.5,0.5 0 0 1 -0.5,-0.5 v -1 a 0.5,0.5 0 0 1 0.5,-0.5 z M 6.5385252,8.1151017e-4 a 1.5,1.5 0 0 0 -1.5,1.50000008983 v 1 a 1.5,1.5 0 0 0 1.5,1.5 h 2.9999976 a 1.5,1.5 0 0 0 1.4999972,-1.5 v -1 A 1.5,1.5 0 0 0 9.5385228,8.1151017e-4 Z"
+     id="path4-8"
+     style="fill:#006288;fill-opacity:1" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;letter-spacing:0px;word-spacing:0px;fill:#006288;fill-opacity:1;stroke:none"
+     x="1.2927641"
+     y="14.204202"
+     id="text16-8"><tspan
+       sodipodi:role="line"
+       id="tspan14-6"
+       x="1.2927641"
+       y="14.204202"
+       style="font-weight:normal;font-size:8px;fill:#006288;fill-opacity:1">http</tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
      x="2.4067819"
-     y="8.9830503"
+     y="8.7118635"
      id="text16"><tspan
        sodipodi:role="line"
        x="2.4067819"
-       y="8.9830503"
-       style="font-weight:normal;line-height:0"
-       id="tspan76">uri+</tspan></text>
-  <text
-     xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-     x="2.356935"
-     y="13.940623"
-     id="text16-7"><tspan
-       sodipodi:role="line"
-       id="tspan14"
-       x="2.356935"
-       y="13.940623"
-       style="font-weight:normal">http</tspan></text>
+       y="8.7118635"
+       style="font-weight:normal;line-height:0;fill:#006288;fill-opacity:1"
+       id="tspan76">Ab+</tspan></text>
 </svg>
