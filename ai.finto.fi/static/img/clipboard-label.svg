@@ -24,7 +24,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -39,34 +39,35 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1855"
-     inkscape:window-height="1056"
+     inkscape:window-width="1215"
+     inkscape:window-height="696"
      id="namedview8"
      showgrid="false"
      inkscape:zoom="45.254834"
-     inkscape:cx="8.3744656"
-     inkscape:cy="6.7298643"
+     inkscape:cx="8.3766425"
+     inkscape:cy="6.7304303"
      inkscape:window-x="65"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg6" />
   <path
-     style="fill:#ffffff;fill-opacity:0;stroke:#006288;stroke-width:0.99095219;stroke-opacity:1"
-     d="m 11.933594,1.9966438 2.611777,0 V 15.502899 H 1.4453765 V 1.9966438 l 2.609311,0"
-     id="rect156"/>
+     style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#006288;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.99095219;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+     d="M 0.94921875,1.5019531 V 15.998047 H 15.041016 V 1.5019531 h -3.107422 v 0.9902344 h 2.117187 V 15.007812 H 1.9414062 V 2.4921875 H 4.0546875 V 1.5019531 Z"
+     id="rect156"
+     inkscape:connector-curvature="0" />
   <path
      d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"
      id="path4"
      style="fill:#006288;fill-opacity:1" />
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;letter-spacing:0px;word-spacing:0px;fill:#006288;fill-opacity:1;stroke:none;"
-     x="3.1186447"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;letter-spacing:0px;word-spacing:0px;fill:#006288;fill-opacity:1;stroke:none"
+     x="2.3483779"
      y="11.661017"
      id="text16"><tspan
        sodipodi:role="line"
        id="tspan14"
-       x="3.1186447"
+       x="2.3483779"
        y="11.661017"
-       style="font-weight:normal;font-size:8px;fill:#006288;fill-opacity:1;">Ab</tspan></text>
+       style="font-weight:normal;font-size:9.33333302px;fill:#006288;fill-opacity:1">Ab</tspan></text>
 </svg>

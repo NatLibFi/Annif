@@ -14,7 +14,7 @@
    viewBox="0 0 16 16"
    version="1.1"
    id="svg6"
-   sodipodi:docname="clipboard-http-label.svg"
+   sodipodi:docname="clipboard-label-http.svg"
    inkscape:version="0.92.3 (2405546, 2018-03-11)">
   <metadata
      id="metadata12">
@@ -39,17 +39,21 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1855"
-     inkscape:window-height="1056"
+     inkscape:window-width="1215"
+     inkscape:window-height="696"
      id="namedview8"
      showgrid="false"
      inkscape:zoom="14.75"
-     inkscape:cx="-5.1864407"
-     inkscape:cy="4.3502833"
+     inkscape:cx="-5.7288136"
+     inkscape:cy="9.7740121"
      inkscape:window-x="65"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg6" />
+     inkscape:current-layer="svg6">
+    <inkscape:grid
+       type="xygrid"
+       id="grid5483" />
+  </sodipodi:namedview>
   <path
      style="fill:#ffffff;fill-opacity:0;stroke:#006288;stroke-width:0.99095219;stroke-opacity:1"
      d="m 11.972114,1.9974556 h 2.611777 V 15.503709 H 1.4839012 V 1.9974556 h 2.609311"
@@ -64,23 +68,14 @@
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;letter-spacing:0px;word-spacing:0px;fill:#006288;fill-opacity:1;stroke:none"
-     x="1.2927641"
-     y="14.204202"
-     id="text16-8"><tspan
+     x="3.5218959"
+     y="12.678777"
+     id="text16-8"
+     inkscape:transform-center-x="1.6271186"
+     inkscape:transform-center-y="-0.81355932"><tspan
        sodipodi:role="line"
        id="tspan14-6"
-       x="1.2927641"
-       y="14.204202"
-       style="font-weight:normal;font-size:8px;fill:#006288;fill-opacity:1">http</tspan></text>
-  <text
-     xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-     x="2.4067819"
-     y="8.7118635"
-     id="text16"><tspan
-       sodipodi:role="line"
-       x="2.4067819"
-       y="8.7118635"
-       style="font-weight:normal;line-height:0;fill:#006288;fill-opacity:1"
-       id="tspan76">Ab+</tspan></text>
+       x="3.5218959"
+       y="12.678777"
+       style="font-weight:normal;font-size:10.66666698px;fill:#006288;fill-opacity:1">M</tspan></text>
 </svg>
