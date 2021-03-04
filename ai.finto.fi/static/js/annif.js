@@ -52,17 +52,14 @@ function showResults(data) {
             $('<li class="list-group-item p-0">').append(
                 $('<meter class="mr-2">').attr('value',value.score).attr('max',1.0).attr('title',value.score.toFixed(4)),
                 $('<a target="_blank">').attr('href',value.uri).append(value.label),
-                $('<span style="float:right"> \
-                    <button type="button" class="btn copy-btn" data-i18n="[title]button-copy-label" \
-                        onclick="copyLabelToClipboard(this);"> \
-                        <img src="static/img/clipboard-label.svg" class="img copy-btn-img" alt="Copy label to clipboard"></button> \
-                    <button type="button" class="btn copy-btn" id="button-copy-uri" data-i18n="[title]button-copy-uri" \
-                        onclick="copyUriToClipboard(this);"> \
-                        <img src="static/img/clipboard-http.svg" class="img copy-btn-img" alt="Copy URI to clipboard"></button> \
-                    <button type="button" class="btn copy-btn" id="button-copy-label-and-uri" data-i18n="[title]button-copy-label-and-uri" \
-                        onclick="copyUriAndLabelToClipboard(this);"> \
-                        <img src="static/img/clipboard-http-label.svg" class="img copy-btn-img" alt="Copy labe, URI, and language code to clipboard"></button> \
-                </span>')
+                $('<div class="btn-group" role="group" id="copy-buttons"> \
+                    <button type="button" class="btn copy-button" id="copy-button-label" data-i18n="[title]copy-button-label" \
+                        onclick="copyLabelToClipboard(this);"></button><!-- \
+                    --><button type="button" class="btn copy-button" id="copy-button-uri" data-i18n="[title]copy-button-uri" \
+                        onclick="copyUriToClipboard(this);"></button><!-- \
+                    --><button type="button" class="btn copy-button" id="copy-button-label-and-uri" data-i18n="[title]copy-button-label-and-uri" \
+                        onclick="copyUriAndLabelToClipboard(this);"></button> \
+                </div>')
             )
         );
         $('#results').i18n();
