@@ -7,15 +7,15 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="16"
-   height="16"
-   fill="currentColor"
+   width="17"
+   height="14.921141"
    class="bi bi-clipboard"
-   viewBox="0 0 16 16"
+   viewBox="0 0 17 14.921141"
    version="1.1"
    id="svg6"
    sodipodi:docname="clipboard-http.svg"
-   inkscape:version="0.92.3 (2405546, 2018-03-11)">
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   style="fill:currentColor">
   <metadata
      id="metadata12">
     <rdf:RDF>
@@ -24,7 +24,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -42,34 +42,51 @@
      inkscape:window-width="1855"
      inkscape:window-height="1056"
      id="namedview8"
-     showgrid="false"
-     inkscape:zoom="29.5"
-     inkscape:cx="12.734255"
-     inkscape:cy="6.7015456"
+     showgrid="true"
+     inkscape:zoom="45.254834"
+     inkscape:cx="11.421914"
+     inkscape:cy="6.4265492"
      inkscape:window-x="65"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg6" />
-  <rect
+     inkscape:current-layer="svg6"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="1"
+     fit-margin-bottom="0"
+     showguides="false">
+    <inkscape:grid
+       type="xygrid"
+       id="grid6226"
+       originx="1.0000005"
+       originy="2.3168949e-06" />
+  </sodipodi:namedview>
+  <path
      style="fill:#cccccc;fill-opacity:1;stroke:#006288;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 2.9953681,1.3903712 H 15.999999 V 14.921139 h -13.0046309 0.00463 l 3,-4 -3,-4.0000002 z"
      id="rect5485"
-     width="14"
-     height="14.566406"
-     x="1"
-     y="1.4987421" />
+     inkscape:connector-curvature="0"
+     sodipodi:nodetypes="cccccccc" />
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;letter-spacing:0px;word-spacing:0px;fill:#006288;fill-opacity:1;stroke:none"
-     x="1.2690001"
-     y="11.663666"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.81144762px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#006288;fill-opacity:1;stroke:none;stroke-width:0.72171718"
+     x="9.5721531"
+     y="8.9592676"
      id="text16"><tspan
        sodipodi:role="line"
        id="tspan14"
-       x="1.2690001"
-       y="11.663666"
-       style="font-weight:normal;font-size:8px;fill:#000000;fill-opacity:1">http</tspan></text>
+       x="9.5721531"
+       y="8.9592676"
+       style="font-weight:normal;font-size:7.33333349px;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke-width:0.72171718">URI</tspan></text>
   <path
      style="fill:#8db3f1;fill-opacity:1;stroke:#bfeaf4;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     d="M 5.4140625 0.001953125 L 5.4140625 2.9863281 L 10.585938 2.9863281 L 10.585938 0.001953125 L 5.4140625 0.001953125 z "
-     id="rect5487" />
+     d="M 7.0956008,5e-7 V 2.7721932 H 11.899767 V 5e-7 Z"
+     id="rect5487"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:#808080;fill-opacity:1;stroke:#bfeaf4;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="m 2,6.9211388 3,4.0000002 -3,4 v -2 L 5e-7,12.921138 V 8.9211377 L 2,8.9211388"
+     id="rect6223"
+     inkscape:connector-curvature="0"
+     sodipodi:nodetypes="ccccccc" />
 </svg>
