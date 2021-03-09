@@ -153,16 +153,22 @@
         padding: 0px;
      }
       .copy-button {
-        height: 20px;
-        width: 20px;
+        height: 26px;
+        width: 26px;
+        background-size: contain !important;
         padding: 0px;
+        border: hidden;
         border-radius: 0px;
-        border-width: 2px;
         background-repeat: no-repeat !important;
         background-position: center !important;
+        margin: 0px 2px;
       }
       .copy-button:focus {
+        border: 1px dotted black;
         box-shadow: none;
+      }
+      .copy-button:hover {
+        border: 2px solid lightgrey;
       }
       #copy-button-label {
         background: url("static/img/clipboard-label.svg");
