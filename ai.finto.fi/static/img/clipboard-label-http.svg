@@ -62,7 +62,7 @@
        originy="1.5295533e-06" />
   </sodipodi:namedview>
   <path
-     style="fill:#cccccc;fill-opacity:1;stroke:#006288;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     style="fill:#dcdcdc;fill-opacity:1;stroke:#006288;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
      d="M 2.995368,1.3903716 H 15.999999 V 14.921139 h -13.004631 0.0046 l 3,-4 -3,-4.0000004 z"
      id="rect5485"
      inkscape:connector-curvature="0"
@@ -73,8 +73,8 @@
      id="rect5487"
      inkscape:connector-curvature="0" />
   <image
-     y="0.55447042"
-     x="3.406249"
+     y="-0.15077107"
+     x="2.5158739"
      id="image6344"
      xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABdwAAAZACAYAAABjeYDBAAAABHNCSVQICAgIfAhkiAAAIABJREFU
 eJzs3fuz5Hdd5/HnMMlMwoxJhiJmIlEmELZINFGTUMCuuSDwAwkgYS0uXgK6JqgruCIgIq6CmBgN
@@ -625,8 +625,8 @@ AAAAAAAAAAAAAAAAAAAAAAAAAABfAe7gMD2lsQeTAAAAAElFTkSuQmCC
 "
      style="image-rendering:optimizeSpeed"
      preserveAspectRatio="none"
-     height="12.366668"
-     width="11.593751" />
+     height="14.879758"
+     width="13.949773" />
   <path
      style="fill:#808080;fill-opacity:1;stroke:#bfeaf4;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
      d="m 2,6.9211378 3,4.0000002 -3,4 v -2 L 5e-7,12.921137 V 8.9211367 L 2,8.9211378"
