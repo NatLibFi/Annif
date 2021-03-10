@@ -148,6 +148,9 @@ class NNEnsembleBackend(
         self._model.compile(optimizer=self.params['optimizer'],
                             loss='binary_crossentropy',
                             metrics=['top_k_categorical_accuracy'])
+        if 'lr' in self.params:
+            self._model.optimizer.learning_rate.assign(
+                float(self.params['lr']))
 
         summary = []
         self._model.summary(print_fn=summary.append)

@@ -36,6 +36,17 @@ def test_nn_ensemble_is_not_trained(app_project):
     assert not nn_ensemble.is_trained
 
 
+def test_nn_ensemble_can_set_lr(registry):
+    project = registry.get_project('dummy-en')
+    nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
+    nn_ensemble = nn_ensemble_type(
+        backend_id='nn_ensemble',
+        config_params={'epochs': 1, 'lr': 0.002},
+        project=project)
+    nn_ensemble._create_model(['dummy-en'])
+    assert nn_ensemble._model.optimizer.learning_rate.value() == 0.002
+
+
 def test_nn_ensemble_train_and_learn(registry, tmpdir):
     project = registry.get_project('dummy-en')
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
@@ -51,6 +62,9 @@ def test_nn_ensemble_train_and_learn(registry, tmpdir):
     document_corpus = annif.corpus.DocumentFile(str(tmpfile))
 
     nn_ensemble.train(document_corpus)
+
+    # check adam default learning_rate:
+    assert nn_ensemble._model.optimizer.learning_rate.value() == 0.001
 
     datadir = py.path.local(project.datadir)
     assert datadir.join('nn-model.h5').exists()
