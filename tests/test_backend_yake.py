@@ -43,14 +43,14 @@ def test_yake_suggest(project, skos_project):
     assert 'arkeologia' in [result.label for result in hits]
 
 
-def test_yake_suggest_non_alphanum_text(project, skos_project):
+def test_yake_suggest_no_input(project, skos_project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
         config_params={'limit': 8, 'language': 'fi'},
         project=skos_project)
 
-    results = yake.suggest(".,!")
+    results = yake.suggest("ja tai .,!")
     assert len(results) == 0
 
 
