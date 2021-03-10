@@ -92,7 +92,9 @@ class VectorSuggestionResult(SuggestionResult):
     """SuggestionResult implementation based primarily on NumPy vectors."""
 
     def __init__(self, vector):
-        self._vector = vector.astype(np.float32)
+        vector_f32 = vector.astype(np.float32)
+        # limit scores to the range 0.0 .. 1.0
+        self._vector = np.minimum(np.maximum(vector_f32, 0.0), 1.0)
         self._subject_order = None
         self._lsr = None
 
@@ -152,8 +154,16 @@ class ListSuggestionResult(SuggestionResult):
     """SuggestionResult implementation based primarily on lists of hits."""
 
     def __init__(self, hits):
-        self._list = [hit for hit in hits if hit.score > 0.0]
+        self._list = [self._enforce_score_range(hit)
+                      for hit in hits
+                      if hit.score > 0.0]
         self._vector = None
+
+    @staticmethod
+    def _enforce_score_range(hit):
+        if hit.score > 1.0:
+            return hit._replace(score=1.0)
+        return hit
 
     @classmethod
     def create_from_index(cls, hits, subject_index):
