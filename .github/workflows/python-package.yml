@@ -6,7 +6,7 @@ name: CI/CD
 
 on: [push, pull_request]
 jobs:
-  test-job:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -53,8 +53,8 @@ jobs:
       run: |
         pytest --cov=./
 
-  build-and-publish-job:
-    needs: test-job
+  publish:
+    needs: test
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
