@@ -92,7 +92,7 @@ function copyUriAndLabelToClipboard(buttonItem) {
     else {
         var language = languageCodes[$('#label-language').val()];
     }
-    navigator.clipboard.writeText(label + '$$0'+ uri + '$$2' + 'yso/' + language);
+    navigator.clipboard.writeText(label + '$$2' + 'yso/' + language + '$$0'+ uri);
 }
 
 function getSuggestions() {
