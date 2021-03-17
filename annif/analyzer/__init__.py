@@ -19,13 +19,21 @@ def get_analyzer(analyzerspec):
             "Invalid analyzer specification {}".format(analyzerspec))
 
     analyzer = match.group(1)
+    param_string = match.group(3)
+    kwargs = {}
+    pos_args = []
+    if param_string:
+        param_strings = param_string.split(',')
+        for p_string in param_strings:
+            parts = p_string.split('=')
+            if len(parts) == 1:
+                pos_args.append(p_string)
+            elif len(parts) == 2:
+                kwargs[parts[0]] = parts[1]
+    if not pos_args:
+        pos_args = [None]
     try:
-        param = match.group(3)
-    except IndexError:
-        param = None
-
-    try:
-        return _analyzers[analyzer](param)
+        return _analyzers[analyzer](*pos_args, **kwargs)
     except KeyError:
         raise ValueError("No such analyzer {}".format(analyzer))
 

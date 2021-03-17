@@ -8,9 +8,10 @@ from . import analyzer
 class VoikkoAnalyzer(analyzer.Analyzer):
     name = "voikko"
 
-    def __init__(self, param):
+    def __init__(self, param, **kwargs):
         self.param = param
         self.voikko = None
+        super().__init__(**kwargs)
 
     def __getstate__(self):
         """Return the state of the object for pickling purposes. The Voikko

@@ -5,6 +5,8 @@ import functools
 import unicodedata
 import nltk.tokenize
 
+_KEY_TOKEN_MIN_LENGTH = 'token_min_length'
+
 
 class Analyzer(metaclass=abc.ABCMeta):
     """Base class for language-specific analyzers. The non-implemented
@@ -12,7 +14,9 @@ class Analyzer(metaclass=abc.ABCMeta):
     be overridden when necessary."""
 
     name = None
-    TOKEN_MIN_LENGTH = 2
+
+    def __init__(self, **kwargs):
+        self.token_min_length = int(kwargs.get(_KEY_TOKEN_MIN_LENGTH, 3))
 
     def tokenize_sentences(self, text):
         """Tokenize a piece of text (e.g. a document) into sentences."""
@@ -21,7 +25,7 @@ class Analyzer(metaclass=abc.ABCMeta):
     @functools.lru_cache(maxsize=50000)
     def is_valid_token(self, word):
         """Return True if the word is an acceptable token."""
-        if len(word) < self.TOKEN_MIN_LENGTH:
+        if len(word) < self.token_min_length:
             return False
         for char in word:
             category = unicodedata.category(char)

@@ -8,9 +8,10 @@ from . import analyzer
 class SnowballAnalyzer(analyzer.Analyzer):
     name = "snowball"
 
-    def __init__(self, param):
+    def __init__(self, param, **kwargs):
         self.param = param
         self.stemmer = nltk.stem.snowball.SnowballStemmer(param)
+        super().__init__(**kwargs)
 
     @functools.lru_cache(maxsize=500000)
     def normalize_word(self, word):

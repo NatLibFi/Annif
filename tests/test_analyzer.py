@@ -48,11 +48,12 @@ def test_english_tokenize_words():
     text = """To take a trivial example, which of us ever undertakes
     laborious physical exercise, except to obtain some advantage from it?"""
     words = analyzer.tokenize_words(text)
-    assert len(words) == 19
+    assert len(words) == 14
 
 
-def test_english_filter_words():
-    analyzer = annif.analyzer.get_analyzer("snowball(english)")
+def test_english_filter_words_min_token():
+    analyzer = annif.analyzer.get_analyzer(
+        "snowball(english,token_min_length=2)")
     text = """Since 2000, a 3D printer can be used to print
     3 kinds of objects."""
     words = analyzer.tokenize_words(text)
@@ -78,3 +79,10 @@ def test_snowball_finnish_analyzer_normalize_word():
 def test_simple_analyzer():
     analyzer = annif.analyzer.get_analyzer("simple")
     assert analyzer.normalize_word("Big") == "big"
+
+
+def test_simple_analyzer_token_size():
+    analyzer = annif.analyzer.get_analyzer("simple(token_min_length=2)")
+    text = 'I do stuff'
+    tokens = analyzer.tokenize_words(text)
+    assert len(tokens) == 2
