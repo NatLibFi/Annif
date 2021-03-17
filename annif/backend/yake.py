@@ -166,9 +166,7 @@ class YakeBackend(backend.AnnifBackend):
         return self._index.get(keyphrase, [])
 
     def _transform_score(self, score):
-        if score < 0:
-            self.debug(f'Replacing negative YAKE score {score} with zero')
-            return 1.0
+        score = max(score, 0)
         return 1.0 / (score + 1)
 
     def _combine_suggestions(self, suggestions):
