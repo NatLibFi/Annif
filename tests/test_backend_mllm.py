@@ -2,7 +2,7 @@
 
 import annif
 import annif.backend
-from annif.backend.mllm import TokenSet, TokenSetIndex
+from annif.backend.mllm import TokenSet, TokenSetIndex, MLLMModel
 
 
 def test_mllm_tokenset():
@@ -51,6 +51,16 @@ def test_mllm_tokensetindex():
 
     assert tset34 not in [r[0] for r in result]
     assert tset5 not in [r[0] for r in result]
+
+
+def test_mllmmodel_prepare_terms(vocabulary, project):
+    model = MLLMModel()
+    graph = vocabulary.as_graph()
+    params = {'language': 'fi', 'use_hidden_labels': True}
+    terms, subject_ids = model._prepare_terms(
+        graph, vocabulary, params)
+    assert len(terms) == 164  # 130 prefLabels + 34 altLabels
+    assert len(subject_ids) == 130  # 130 subjects
 
 
 def test_mllm_default_params(project):
