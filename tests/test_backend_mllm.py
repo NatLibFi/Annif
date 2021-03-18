@@ -53,7 +53,7 @@ def test_mllm_tokensetindex():
     assert tset5 not in [r[0] for r in result]
 
 
-def test_mllmmodel_prepare_terms(vocabulary, project):
+def test_mllmmodel_prepare_terms(vocabulary):
     model = MLLMModel()
     graph = vocabulary.as_graph()
     params = {'language': 'fi', 'use_hidden_labels': True}
@@ -61,6 +61,15 @@ def test_mllmmodel_prepare_terms(vocabulary, project):
         graph, vocabulary, params)
     assert len(terms) == 164  # 130 prefLabels + 34 altLabels
     assert len(subject_ids) == 130  # 130 subjects
+
+
+def test_mllmmodel_prepare_relations(vocabulary):
+    model = MLLMModel()
+    graph = vocabulary.as_graph()
+    model._prepare_relations(graph, vocabulary)
+    matrix = model._related_matrix
+    assert matrix.shape == (130, 130)  # 130x130 subjects
+    assert matrix.sum() == 112  # 112 skos:related triples
 
 
 def test_mllm_default_params(project):
