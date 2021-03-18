@@ -181,17 +181,17 @@ class MLLMModel:
             terms.append(Term(subject_id=subj_id, label=pref, is_pref=True))
 
             if annif.util.boolean(params['use_hidden_labels']):
-                props = [SKOS.altLabel, SKOS.hiddenLabel]
+                label_props = [SKOS.altLabel, SKOS.hiddenLabel]
             else:
-                props = [SKOS.altLabel]
+                label_props = [SKOS.altLabel]
 
-            non_pref = graph.preferredLabel(URIRef(uri),
-                                            lang=params['language'],
-                                            labelProperties=props)
-            for label, _ in non_pref:
-                terms.append(Term(subject_id=subj_id,
-                                  label=str(label),
-                                  is_pref=False))
+            for prop in label_props:
+                for label in graph.objects(URIRef(uri), prop):
+                    if label.language != params['language']:
+                        continue
+                    terms.append(Term(subject_id=subj_id,
+                                      label=str(label),
+                                      is_pref=False))
 
             for related in graph.objects(URIRef(uri), SKOS.related):
                 broad_id = vocab.subjects.by_uri(str(related), warnings=False)
