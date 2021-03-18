@@ -203,7 +203,7 @@ class MLLMModel:
                 if broad_id is not None:
                     self._related_matrix[subj_id, broad_id] = True
 
-    def prepare_train(self, corpus, vocab, analyzer, params):
+    def _prepare_train_index(self, vocab, analyzer, params):
         graph = vocab.as_graph()
         terms, subject_ids = self._prepare_terms(graph, vocab, params)
         self._prepare_relations(graph, vocab)
@@ -219,6 +219,11 @@ class MLLMModel:
             tokens = label_matrix.nonzero()[1]
             tset = TokenSet(tokens, term.subject_id, term.is_pref)
             self._index.add(tset)
+
+        return subject_ids
+
+    def prepare_train(self, corpus, vocab, analyzer, params):
+        subject_ids = self._prepare_train_index(vocab, analyzer, params)
 
         # frequency of subjects (by id) in the generated candidates
         self._doc_freq = collections.Counter()
