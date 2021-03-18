@@ -168,12 +168,9 @@ class MLLMModel:
             matrix[idx, Feature.related] = rels[subj, 0] / len(c_ids)
         return matrix
 
-    def prepare_train(self, corpus, vocab, analyzer, params):
-        graph = vocab.as_graph()
+    def _prepare_terms(self, graph, vocab, params):
         terms = []
         subject_ids = []
-        n_subj = len(vocab.subjects)
-        self._related_matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
         for subj_id, (uri, pref, _) in enumerate(vocab.subjects):
             if pref is None:
                 continue  # deprecated subject
@@ -192,11 +189,24 @@ class MLLMModel:
                     terms.append(Term(subject_id=subj_id,
                                       label=str(label),
                                       is_pref=False))
+        return (terms, subject_ids)
 
+    def _prepare_relations(self, graph, vocab):
+        n_subj = len(vocab.subjects)
+        self._related_matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
+
+        for subj_id, (uri, pref, _) in enumerate(vocab.subjects):
+            if pref is None:
+                continue  # deprecated subject
             for related in graph.objects(URIRef(uri), SKOS.related):
                 broad_id = vocab.subjects.by_uri(str(related), warnings=False)
                 if broad_id is not None:
                     self._related_matrix[subj_id, broad_id] = True
+
+    def prepare_train(self, corpus, vocab, analyzer, params):
+        graph = vocab.as_graph()
+        terms, subject_ids = self._prepare_terms(graph, vocab, params)
+        self._prepare_relations(graph, vocab)
 
         self._vectorizer = CountVectorizer(
             binary=True,
@@ -230,8 +240,8 @@ class MLLMModel:
         # precalculate idf values for candidate subjects
         self._idf = collections.defaultdict(float)
         for subj_id in subject_ids:
-            self._idf[uri] = math.log((doc_count + 1) /
-                                      (self._doc_freq[subj_id] + 1)) + 1
+            self._idf[subj_id] = math.log((doc_count + 1) /
+                                          (self._doc_freq[subj_id] + 1)) + 1
         return (np.vstack([self._candidates_to_features(candidates)
                            for candidates in train_x]), np.array(train_y))
 
