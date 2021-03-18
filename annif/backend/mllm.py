@@ -31,7 +31,7 @@ Feature = IntEnum(
     'Feature',
     'freq doc_freq subj_freq tfidf is_pref n_tokens ambiguity ' +
     'first_occ last_occ spread doc_length ' +
-    'related',
+    'broader narrower related',
     start=0)
 
 
@@ -151,7 +151,9 @@ class MLLMModel:
         c_ids = [c.subject_id for c in candidates]
         c_vec = np.zeros(self._related_matrix.shape[0], dtype=np.bool)
         c_vec[c_ids] = True
-        rels = self._related_matrix.multiply(c_vec).sum(axis=1)
+        broader = self._broader_matrix.multiply(c_vec).sum(axis=1)
+        narrower = self._narrower_matrix.multiply(c_vec).sum(axis=1)
+        related = self._related_matrix.multiply(c_vec).sum(axis=1)
         for idx, c in enumerate(candidates):
             subj = c.subject_id
             matrix[idx, Feature.freq] = c.freq
@@ -165,7 +167,9 @@ class MLLMModel:
             matrix[idx, Feature.last_occ] = c.last_occ
             matrix[idx, Feature.spread] = c.spread
             matrix[idx, Feature.doc_length] = c.doc_length
-            matrix[idx, Feature.related] = rels[subj, 0] / len(c_ids)
+            matrix[idx, Feature.broader] = broader[subj, 0] / len(c_ids)
+            matrix[idx, Feature.narrower] = narrower[subj, 0] / len(c_ids)
+            matrix[idx, Feature.related] = related[subj, 0] / len(c_ids)
         return matrix
 
     def _prepare_terms(self, graph, vocab, params):
@@ -193,15 +197,26 @@ class MLLMModel:
 
     def _prepare_relations(self, graph, vocab):
         n_subj = len(vocab.subjects)
+        self._broader_matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
+        self._narrower_matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
         self._related_matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
+
+        prop_matrix = [
+            (SKOS.broader, self._broader_matrix),
+            (SKOS.narrower, self._narrower_matrix),
+            (SKOS.related, self._related_matrix)
+        ]
 
         for subj_id, (uri, pref, _) in enumerate(vocab.subjects):
             if pref is None:
                 continue  # deprecated subject
-            for related in graph.objects(URIRef(uri), SKOS.related):
-                broad_id = vocab.subjects.by_uri(str(related), warnings=False)
-                if broad_id is not None:
-                    self._related_matrix[subj_id, broad_id] = True
+
+            for prop, matrix in prop_matrix:
+                for other in graph.objects(URIRef(uri), prop):
+                    other_id = vocab.subjects.by_uri(str(other),
+                                                     warnings=False)
+                    if other_id is not None:
+                        matrix[subj_id, other_id] = True
 
     def _prepare_train_index(self, vocab, analyzer, params):
         graph = vocab.as_graph()
