@@ -95,7 +95,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
         path = os.path.join(self.datadir, self.MODEL_FILE)
         self.debug('loading model from {}'.format(path))
         if os.path.exists(path):
-            return joblib.load(path)
+            return MLLMModel.load(path)
         else:
             raise NotInitializedException(
                 'model {} not found'.format(path),
@@ -139,8 +139,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
         annif.util.atomic_save(
             self._model,
             self.datadir,
-            self.MODEL_FILE,
-            method=joblib.dump)
+            self.MODEL_FILE)
 
     def _generate_candidates(self, text):
         return self._model.generate_candidates(text, self.project.analyzer)

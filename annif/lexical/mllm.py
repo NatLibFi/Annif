@@ -2,6 +2,7 @@
 
 import collections
 import math
+import joblib
 from statistics import mean
 from enum import IntEnum
 import numpy as np
@@ -213,3 +214,10 @@ class MLLMModel:
         features = self._candidates_to_features(candidates)
         scores = self._classifier.predict_proba(features)
         return self._prediction_to_list(scores, candidates)
+
+    def save(self, filename):
+        return joblib.dump(self, filename)
+
+    @staticmethod
+    def load(filename):
+        return joblib.load(filename)
