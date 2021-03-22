@@ -17,7 +17,7 @@ import annif.parallel
 import annif.project
 import annif.registry
 from annif.project import Access
-from annif.suggestion import SuggestionFilter
+from annif.suggestion import SuggestionFilter, ListSuggestionResult
 from annif.exception import ConfigurationException, NotSupportedException
 
 logger = annif.logger
@@ -85,9 +85,12 @@ def validate_backend_params(backend, beparam, project):
             .format(backend, beparam, project.config['backend']))
 
 
+BATCH_MAX_LIMIT = 15
+
+
 def generate_filter_batches(subjects):
     filter_batches = collections.OrderedDict()
-    for limit in range(1, 16):
+    for limit in range(1, BATCH_MAX_LIMIT + 1):
         for threshold in [i * 0.05 for i in range(20)]:
             hit_filter = SuggestionFilter(subjects, limit, threshold)
             batch = annif.eval.EvaluationBatch(subjects)
@@ -394,7 +397,11 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     ndocs = 0
     docs = open_documents(paths, docs_limit)
     for doc in docs.documents:
-        hits = project.suggest(doc.text, backend_params)
+        raw_hits = project.suggest(doc.text, backend_params)
+        hits = raw_hits.filter(project.subjects, limit=BATCH_MAX_LIMIT)
+        assert isinstance(hits, ListSuggestionResult), \
+            "Optimize should only be done with ListSuggestionResult " + \
+            "as it would be very slow with VectorSuggestionResult."
         gold_subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
         for hit_filter, batch in filter_batches.values():
             batch.evaluate(hit_filter(hits), gold_subjects)
