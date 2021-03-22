@@ -48,14 +48,8 @@ class TokenSetIndex:
         if token is not None:
             self._index[token].add(tset)
 
-    def search(self, tset):
-        """Return the TokenSets that are contained in the given TokenSet.
-        The matches are returned as a list of (TokenSet, ambiguity) pairs
-        where ambiguity is an integer indicating the number of other TokenSets
-        that also match the same tokens."""
-
+    def _find_subj_tsets(self, tset):
         subj_tsets = {}
-        subj_ambiguity = collections.Counter()
 
         for token in tset:
             for ts in self._index[token]:
@@ -65,12 +59,28 @@ class TokenSetIndex:
                    not subj_tsets[ts.subject_id].is_pref:
                     subj_tsets[ts.subject_id] = ts
 
+        return subj_tsets
+
+    def _find_subj_ambiguity(self, subj_tsets):
+        subj_ambiguity = collections.Counter()
+
         for ts in subj_tsets.values():
             for other in subj_tsets.values():
                 if ts == other:
                     continue
                 if other.contains(ts):
                     subj_ambiguity.update([ts.subject_id])
+
+        return subj_ambiguity
+
+    def search(self, tset):
+        """Return the TokenSets that are contained in the given TokenSet.
+        The matches are returned as a list of (TokenSet, ambiguity) pairs
+        where ambiguity is an integer indicating the number of other TokenSets
+        that also match the same tokens."""
+
+        subj_tsets = self._find_subj_tsets(tset)
+        subj_ambiguity = self._find_subj_ambiguity(subj_tsets)
 
         return [(ts, subj_ambiguity[ts.subject_id])
                 for uri, ts in subj_tsets.items()]
