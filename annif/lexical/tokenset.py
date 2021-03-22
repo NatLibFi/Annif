@@ -49,6 +49,9 @@ class TokenSetIndex:
             self._index[token].add(tset)
 
     def _find_subj_tsets(self, tset):
+        """return a dict (subject_id : TokenSet) of matches contained in the
+        given TokenSet"""
+
         subj_tsets = {}
 
         for token in tset:
@@ -61,11 +64,15 @@ class TokenSetIndex:
 
         return subj_tsets
 
-    def _find_subj_ambiguity(self, subj_tsets):
+    def _find_subj_ambiguity(self, tsets):
+        """calculate the ambiguity values (the number of other TokenSets
+        that also match the same tokens) for the given TokenSets and return
+        them as a dict-like object (subject_id : ambiguity_value)"""
+
         subj_ambiguity = collections.Counter()
 
-        for ts in subj_tsets.values():
-            for other in subj_tsets.values():
+        for ts in tsets:
+            for other in tsets:
                 if ts == other:
                     continue
                 if other.contains(ts):
@@ -80,7 +87,7 @@ class TokenSetIndex:
         that also match the same tokens."""
 
         subj_tsets = self._find_subj_tsets(tset)
-        subj_ambiguity = self._find_subj_ambiguity(subj_tsets)
+        subj_ambiguity = self._find_subj_ambiguity(subj_tsets.values())
 
-        return [(ts, subj_ambiguity[ts.subject_id])
-                for uri, ts in subj_tsets.items()]
+        return [(ts, subj_ambiguity[subject_id])
+                for subject_id, ts in subj_tsets.items()]
