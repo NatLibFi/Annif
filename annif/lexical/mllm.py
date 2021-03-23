@@ -8,7 +8,7 @@ from enum import IntEnum
 import numpy as np
 from rdflib import URIRef
 from rdflib.namespace import SKOS
-from scipy.sparse import lil_matrix
+from scipy.sparse import lil_matrix, csc_matrix
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.ensemble import BaggingClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -138,7 +138,7 @@ class MLLMModel:
                 if other_id is not None:
                     matrix[subj_id, other_id] = True
 
-        return matrix
+        return csc_matrix(matrix)
 
     def _make_collection_matrix(self, graph, vocab):
         # make an index with all collection members
