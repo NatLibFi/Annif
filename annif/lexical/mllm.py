@@ -80,7 +80,8 @@ class MLLMModel:
         broader = self._broader_matrix.multiply(c_vec).sum(axis=1)
         narrower = self._narrower_matrix.multiply(c_vec).sum(axis=1)
         related = self._related_matrix.multiply(c_vec).sum(axis=1)
-        collection = self._collection_matrix.multiply(c_vec).sum(axis=1)
+        collection = self._collection_matrix.multiply(c_vec).T.dot(
+            self._collection_matrix).sum(axis=0)
         for idx, c in enumerate(candidates):
             subj = c.subject_id
             matrix[idx, Feature.freq] = c.freq
@@ -97,7 +98,7 @@ class MLLMModel:
             matrix[idx, Feature.broader] = broader[subj, 0] / len(c_ids)
             matrix[idx, Feature.narrower] = narrower[subj, 0] / len(c_ids)
             matrix[idx, Feature.related] = related[subj, 0] / len(c_ids)
-            matrix[idx, Feature.collection] = collection[subj, 0] / len(c_ids)
+            matrix[idx, Feature.collection] = collection[0, subj] / len(c_ids)
         return matrix
 
     def _prepare_terms(self, graph, vocab, params):
@@ -131,16 +132,12 @@ class MLLMModel:
             if member_id is not None:
                 c_members[str(coll)].append(member_id)
 
-        n_subj = len(vocab.subjects)
-        c_matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
+        c_matrix = lil_matrix((len(c_members), len(vocab.subjects)),
+                              dtype=np.bool)
 
-        # populate the matrix by looking up members of the same collections
-        for subj_id, (uri, pref, _) in enumerate(vocab.subjects):
-            if pref is None:
-                continue  # deprecated subject
-            for coll in graph.subjects(SKOS.member, URIRef(uri)):
-                other_ids = c_members[str(coll)]
-                c_matrix[subj_id, other_ids] = True
+        # populate the matrix for collection -> subject_id
+        for c_id, members in enumerate(c_members.values()):
+            c_matrix[c_id, members] = True
 
         return c_matrix
 
