@@ -185,6 +185,14 @@ class MLLMModel:
 
         return subject_ids
 
+    def _calculate_idf(self, subject_ids, doc_count):
+        idf = collections.defaultdict(float)
+        for subj_id in subject_ids:
+            idf[subj_id] = math.log((doc_count + 1) /
+                                    (self._doc_freq[subj_id] + 1)) + 1
+
+        return idf
+
     def prepare_train(self, corpus, vocab, analyzer, params):
         subject_ids = self._prepare_train_index(vocab, analyzer, params)
 
@@ -205,11 +213,9 @@ class MLLMModel:
             train_y += [(c.subject_id in doc_subject_ids) for c in candidates]
             doc_count += 1
 
-        # precalculate idf values for candidate subjects
-        self._idf = collections.defaultdict(float)
-        for subj_id in subject_ids:
-            self._idf[subj_id] = math.log((doc_count + 1) /
-                                          (self._doc_freq[subj_id] + 1)) + 1
+        # precalculate idf values for all candidate subjects
+        self._idf = self._calculate_idf(subject_ids, doc_count)
+
         return (np.vstack([self._candidates_to_features(candidates)
                            for candidates in train_x]), np.array(train_y))
 
