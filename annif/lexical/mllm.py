@@ -155,7 +155,7 @@ class MLLMModel:
         for c_id, members in enumerate(c_members.values()):
             c_matrix[c_id, members] = True
 
-        return c_matrix
+        return csc_matrix(c_matrix)
 
     def _prepare_relations(self, graph, vocab):
         self._broader_matrix = self._make_relation_matrix(
