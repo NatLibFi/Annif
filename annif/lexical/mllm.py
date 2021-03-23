@@ -124,6 +124,22 @@ class MLLMModel:
                                       is_pref=False))
         return (terms, subject_ids)
 
+    def _make_relation_matrix(self, graph, vocab, property):
+        n_subj = len(vocab.subjects)
+        matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
+
+        for subj_id, (uri, pref, _) in enumerate(vocab.subjects):
+            if pref is None:
+                continue  # deprecated subject
+
+            for other in graph.objects(URIRef(uri), property):
+                other_id = vocab.subjects.by_uri(str(other),
+                                                 warnings=False)
+                if other_id is not None:
+                    matrix[subj_id, other_id] = True
+
+        return matrix
+
     def _make_collection_matrix(self, graph, vocab):
         # make an index with all collection members
         c_members = collections.defaultdict(list)
@@ -142,28 +158,13 @@ class MLLMModel:
         return c_matrix
 
     def _prepare_relations(self, graph, vocab):
-        n_subj = len(vocab.subjects)
-        self._broader_matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
-        self._narrower_matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
-        self._related_matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
+        self._broader_matrix = self._make_relation_matrix(
+            graph, vocab, SKOS.broader)
+        self._narrower_matrix = self._make_relation_matrix(
+            graph, vocab, SKOS.narrower)
+        self._related_matrix = self._make_relation_matrix(
+            graph, vocab, SKOS.related)
         self._collection_matrix = self._make_collection_matrix(graph, vocab)
-
-        prop_matrix = [
-            (SKOS.broader, self._broader_matrix),
-            (SKOS.narrower, self._narrower_matrix),
-            (SKOS.related, self._related_matrix)
-        ]
-
-        for subj_id, (uri, pref, _) in enumerate(vocab.subjects):
-            if pref is None:
-                continue  # deprecated subject
-
-            for prop, matrix in prop_matrix:
-                for other in graph.objects(URIRef(uri), prop):
-                    other_id = vocab.subjects.by_uri(str(other),
-                                                     warnings=False)
-                    if other_id is not None:
-                        matrix[subj_id, other_id] = True
 
     def _prepare_train_index(self, vocab, analyzer, params):
         graph = vocab.as_graph()
