@@ -10,7 +10,7 @@ def test_mllmmodel_prepare_terms(vocabulary):
     params = {'language': 'fi', 'use_hidden_labels': True}
     terms, subject_ids = model._prepare_terms(
         graph, vocabulary, params)
-    assert len(terms) == 164  # 130 prefLabels + 34 altLabels
+    assert len(terms) == 163  # 130 prefLabels + 33 altLabels
     assert len(subject_ids) == 130  # 130 subjects
 
 

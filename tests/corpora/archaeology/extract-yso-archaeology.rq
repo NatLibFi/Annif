@@ -4,6 +4,8 @@ CONSTRUCT {
   ?c skos:prefLabel ?prefLabel .
   ?c skos:altLabel ?altLabel .
   ?c ?rel ?c2 .
+  ?coll a skos:Collection .
+  ?coll skos:member ?c .
 }
 WHERE {
   ?c a skos:Concept .
@@ -14,5 +16,9 @@ WHERE {
     VALUES ?rel { skos:broader skos:narrower skos:related } 
     ?c ?rel ?c2 .
     <http://www.yso.fi/onto/yso/p26593> skos:member ?c2 .   
+  }
+  OPTIONAL { ?coll skos:member ?c . 
+    # don't include the Archaeology collection as it contains all concepts
+    FILTER (?coll != <http://www.yso.fi/onto/yso/p26593>)
   }
 } 
