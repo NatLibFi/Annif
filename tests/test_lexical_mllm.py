@@ -36,3 +36,26 @@ def test_mllmmodel_prepare_relations(vocabulary):
 
     # related is symmetric, check by transposing!
     assert np.array_equal(r_matrix.T, r_matrix)
+
+    c_matrix = model._collection_matrix.todense()
+    assert c_matrix.shape == (130, 130)  # 130x130 subjects
+
+    # check some example cases by looking up their subject IDs
+
+    shipfinds = vocabulary.subjects.by_uri('http://www.yso.fi/onto/yso/p8869')
+    # "ship finds" is not in any collection
+    assert c_matrix[shipfinds].sum() == 0
+
+    seals = vocabulary.subjects.by_uri('http://www.yso.fi/onto/yso/p7141')
+    sphinxes = vocabulary.subjects.by_uri('http://www.yso.fi/onto/yso/p8307')
+
+    # "seals" is in 2 collections, with 43 other concepts total
+    assert c_matrix[seals].sum() == 43
+    # "seals" is in the same collection with itself
+    assert c_matrix[seals, seals]
+    # "seals" is in the same collection with "sphinxes"
+    assert c_matrix[seals, sphinxes]
+
+    dating = vocabulary.subjects.by_uri('http://www.yso.fi/onto/yso/p7804')
+    # "dating (age estimation)" is in 3 collections, w/ 8 other concepts total
+    assert c_matrix[dating].sum() == 8

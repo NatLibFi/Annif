@@ -30,7 +30,7 @@ Feature = IntEnum(
     'Feature',
     'freq doc_freq subj_freq tfidf is_pref n_tokens ambiguity ' +
     'first_occ last_occ spread doc_length ' +
-    'broader narrower related',
+    'broader narrower related collection',
     start=0)
 
 
@@ -80,6 +80,7 @@ class MLLMModel:
         broader = self._broader_matrix.multiply(c_vec).sum(axis=1)
         narrower = self._narrower_matrix.multiply(c_vec).sum(axis=1)
         related = self._related_matrix.multiply(c_vec).sum(axis=1)
+        collection = self._collection_matrix.multiply(c_vec).sum(axis=1)
         for idx, c in enumerate(candidates):
             subj = c.subject_id
             matrix[idx, Feature.freq] = c.freq
@@ -96,6 +97,7 @@ class MLLMModel:
             matrix[idx, Feature.broader] = broader[subj, 0] / len(c_ids)
             matrix[idx, Feature.narrower] = narrower[subj, 0] / len(c_ids)
             matrix[idx, Feature.related] = related[subj, 0] / len(c_ids)
+            matrix[idx, Feature.collection] = collection[subj, 0] / len(c_ids)
         return matrix
 
     def _prepare_terms(self, graph, vocab, params):
@@ -121,11 +123,33 @@ class MLLMModel:
                                       is_pref=False))
         return (terms, subject_ids)
 
+    def _make_collection_matrix(self, graph, vocab):
+        # make an index with all collection members
+        c_members = collections.defaultdict(list)
+        for coll, member in graph.subject_objects(SKOS.member):
+            member_id = vocab.subjects.by_uri(str(member), warnings=False)
+            if member_id is not None:
+                c_members[str(coll)].append(member_id)
+
+        n_subj = len(vocab.subjects)
+        c_matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
+
+        # populate the matrix by looking up members of the same collections
+        for subj_id, (uri, pref, _) in enumerate(vocab.subjects):
+            if pref is None:
+                continue  # deprecated subject
+            for coll in graph.subjects(SKOS.member, URIRef(uri)):
+                other_ids = c_members[str(coll)]
+                c_matrix[subj_id, other_ids] = True
+
+        return c_matrix
+
     def _prepare_relations(self, graph, vocab):
         n_subj = len(vocab.subjects)
         self._broader_matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
         self._narrower_matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
         self._related_matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
+        self._collection_matrix = self._make_collection_matrix(graph, vocab)
 
         prop_matrix = [
             (SKOS.broader, self._broader_matrix),
