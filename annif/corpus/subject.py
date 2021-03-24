@@ -109,6 +109,16 @@ class SubjectIndex:
         return [subject_id for subject_id, label in enumerate(self._labels)
                 if label is None]
 
+    @property
+    def active(self):
+        """return a list of (subject_id, uri, label, notation) tuples of all
+        subjects that are not deprecated"""
+
+        return [(subj_id, uri, label, notation)
+                for subj_id, (uri, label, notation)
+                in enumerate(zip(self._uris, self._labels, self._notations))
+                if label is not None]
+
     def save(self, path):
         """Save this subject index into a file."""
 

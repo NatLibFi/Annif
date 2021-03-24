@@ -104,9 +104,7 @@ class MLLMModel:
     def _prepare_terms(self, graph, vocab, params):
         terms = []
         subject_ids = []
-        for subj_id, (uri, pref, _) in enumerate(vocab.subjects):
-            if pref is None:
-                continue  # deprecated subject
+        for subj_id, uri, pref, _ in vocab.subjects.active:
             subject_ids.append(subj_id)
             terms.append(Term(subject_id=subj_id, label=pref, is_pref=True))
 
@@ -128,10 +126,7 @@ class MLLMModel:
         n_subj = len(vocab.subjects)
         matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
 
-        for subj_id, (uri, pref, _) in enumerate(vocab.subjects):
-            if pref is None:
-                continue  # deprecated subject
-
+        for subj_id, uri, pref, _ in vocab.subjects.active:
             for other in graph.objects(URIRef(uri), property):
                 other_id = vocab.subjects.by_uri(str(other),
                                                  warnings=False)
