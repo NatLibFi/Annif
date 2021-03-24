@@ -1,7 +1,9 @@
 """Unit tests for the MLLM backend in Annif"""
 
+import pytest
 import annif
 import annif.backend
+from annif.exception import NotInitializedException
 
 
 def test_mllm_default_params(project):
@@ -100,3 +102,31 @@ def test_mllm_hyperopt(project, document_corpus):
 
     optimizer = mllm.get_hp_optimizer(document_corpus, metric='NDCG')
     optimizer.optimize(n_trials=3, n_jobs=1, results_file=None)
+
+
+def test_mllm_train_cached_no_data(datadir, project):
+    modelfile = datadir.join('mllm-model.gz')
+    assert modelfile.exists()
+    trainfile = datadir.join('mllm-train.gz')
+    trainfile.remove()
+
+    mllm_type = annif.backend.get_backend("mllm")
+    mllm = mllm_type(
+        backend_id='mllm',
+        config_params={'limit': 10, 'language': 'fi'},
+        project=project)
+
+    with pytest.raises(NotInitializedException):
+        mllm.train("cached")
+
+
+def test_mllm_suggest_no_model(datadir, project):
+    mllm_type = annif.backend.get_backend('mllm')
+    mllm = mllm_type(
+        backend_id='mllm',
+        config_params={'limit': 8, 'language': 'fi'},
+        project=project)
+
+    datadir.join('mllm-model.gz').remove()
+    with pytest.raises(NotInitializedException):
+        mllm.suggest("example text")
