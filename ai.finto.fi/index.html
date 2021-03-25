@@ -146,7 +146,15 @@
       #sidebar {
         min-height: 500px;
       }
-      #results li, #no-results li { border-radius: 0; }
+      #suggestions {
+        display: flex;
+        justify-content: space-between;
+        padding-right: 2px;
+      }
+      #results li, #no-results li {border-radius: 0; }
+      #uri-link {
+        display: inline-block;
+      }
       #copy-buttons {
         float: right;
         margin: 4px;
@@ -304,7 +312,10 @@
         </div>
         <button id="get-suggestions" data-i18n="get-suggestions" type="button" class="btn btn-primary btn-block">Anna aihe-ehdotukset</button>
         <div id="suggestions-wrapper">
-          <h2 id="suggestions" data-i18n="suggestions">Ehdotetut aiheet</h2>
+          <div id="suggestions">
+            <h2 id="suggestions-heading" data-i18n="suggestions-heading">Ehdotetut aiheet</h2>
+            <h2 id="copy-heading" data-i18n="copy-heading">Kopioi</h2>
+          </div>
           <div class="d-flex justify-content-center">
             <div id="results-spinner" class="spinner-border m-2" role="status">
               <span class="sr-only">Loading...</span>
