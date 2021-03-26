@@ -20,6 +20,7 @@ _KEY_EXPAND_ABBREVIATION_WITH_PUNCTUATION = (
     'expand_abbreviation_with_punctuation')
 _KEY_SIMPLE_ENGLISH_PLURAL_RULES = 'simple_english_plural_rules'
 _KEY_INPUT_LIMIT = 'input_limit'
+_KEY_USE_TXT_VEC = 'use_txt_vec'
 
 
 class StwfsaBackend(backend.AnnifBackend):
@@ -40,6 +41,7 @@ class StwfsaBackend(backend.AnnifBackend):
         _KEY_EXPAND_ABBREVIATION_WITH_PUNCTUATION: boolean,
         _KEY_SIMPLE_ENGLISH_PLURAL_RULES: boolean,
         _KEY_INPUT_LIMIT: int,
+        _KEY_USE_TXT_VEC: bool,
     }
 
     DEFAULT_PARAMETERS = {
@@ -57,6 +59,7 @@ class StwfsaBackend(backend.AnnifBackend):
         _KEY_EXPAND_ABBREVIATION_WITH_PUNCTUATION: True,
         _KEY_SIMPLE_ENGLISH_PLURAL_RULES: False,
         _KEY_INPUT_LIMIT: 0,
+        _KEY_USE_TXT_VEC: False
     }
 
     MODEL_FILE = 'stwfsa_predictor.zip'
