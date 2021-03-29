@@ -150,7 +150,7 @@ def test_omikuji_suggest_no_input(project):
         config_params={'limit': 8},
         project=project)
 
-    results = omikuji.suggest("ja")
+    results = omikuji.suggest("j")
     assert len(results) == 0
 
 
