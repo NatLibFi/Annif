@@ -37,9 +37,8 @@ Feature = IntEnum(
 def get_subject_labels(graph, uri, properties, language):
     for prop in properties:
         for label in graph.objects(URIRef(uri), prop):
-            if label.language != language:
-                continue
-            yield str(label)
+            if label.language == language:
+                yield str(label)
 
 
 class MLLMModel:
