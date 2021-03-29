@@ -126,12 +126,11 @@ class MLLMModel:
         n_subj = len(vocab.subjects)
         matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
 
-        for subj_id, uri, pref, _ in vocab.subjects.active:
-            for other in graph.objects(URIRef(uri), property):
-                other_id = vocab.subjects.by_uri(str(other),
-                                                 warnings=False)
-                if other_id is not None:
-                    matrix[subj_id, other_id] = True
+        for subj, obj in graph.subject_objects(property):
+            subj_id = vocab.subjects.by_uri(str(subj), warnings=False)
+            obj_id = vocab.subjects.by_uri(str(obj), warnings=False)
+            if subj_id is not None and obj_id is not None:
+                matrix[subj_id, obj_id] = True
 
         return csc_matrix(matrix)
 
