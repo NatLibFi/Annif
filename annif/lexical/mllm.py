@@ -34,6 +34,14 @@ Feature = IntEnum(
     start=0)
 
 
+def get_subject_labels(graph, uri, properties, language):
+    for prop in properties:
+        for label in graph.objects(URIRef(uri), prop):
+            if label.language != language:
+                continue
+            yield str(label)
+
+
 class MLLMModel:
     """Maui-like Lexical Matching model"""
 
@@ -101,14 +109,6 @@ class MLLMModel:
             matrix[idx, Feature.collection] = collection[0, subj] / len(c_ids)
         return matrix
 
-    @staticmethod
-    def _get_subject_labels(graph, uri, properties, language):
-        for prop in properties:
-            for label in graph.objects(URIRef(uri), prop):
-                if label.language != language:
-                    continue
-                yield str(label)
-
     def _prepare_terms(self, graph, vocab, params):
         if annif.util.boolean(params['use_hidden_labels']):
             label_props = [SKOS.altLabel, SKOS.hiddenLabel]
@@ -121,8 +121,8 @@ class MLLMModel:
             subject_ids.append(subj_id)
             terms.append(Term(subject_id=subj_id, label=pref, is_pref=True))
 
-            for label in self._get_subject_labels(graph, uri, label_props,
-                                                  params['language']):
+            for label in get_subject_labels(graph, uri, label_props,
+                                            params['language']):
                 terms.append(Term(subject_id=subj_id,
                                   label=label,
                                   is_pref=False))
