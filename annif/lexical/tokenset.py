@@ -71,12 +71,11 @@ class TokenSetIndex:
 
         subj_ambiguity = collections.Counter()
 
-        for ts in tsets:
-            for other in tsets:
-                if ts == other:
-                    continue
-                if other.contains(ts):
-                    subj_ambiguity.update([ts.subject_id])
+        subj_ambiguity.update([ts.subject_id
+                               for ts in tsets
+                               for other in tsets
+                               if ts != other
+                               and other.contains(ts)])
 
         return subj_ambiguity
 
