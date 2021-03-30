@@ -8,10 +8,10 @@ from scipy.sparse import lil_matrix, csc_matrix
 
 
 def get_subject_labels(graph, uri, properties, language):
-    for prop in properties:
-        for label in graph.objects(URIRef(uri), prop):
-            if label.language == language:
-                yield str(label)
+    return [str(label)
+            for prop in properties
+            for label in graph.objects(URIRef(uri), prop)
+            if label.language == language]
 
 
 def make_relation_matrix(graph, vocab, property):
