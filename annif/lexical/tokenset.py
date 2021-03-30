@@ -56,10 +56,9 @@ class TokenSetIndex:
 
         for token in tset:
             for ts in self._index[token]:
-                if not tset.contains(ts):
-                    continue
-                if ts.subject_id not in subj_tsets or \
-                   not subj_tsets[ts.subject_id].is_pref:
+                if tset.contains(ts) \
+                   and (ts.subject_id not in subj_tsets
+                        or not subj_tsets[ts.subject_id].is_pref):
                     subj_tsets[ts.subject_id] = ts
 
         return subj_tsets
