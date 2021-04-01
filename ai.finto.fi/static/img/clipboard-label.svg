@@ -24,7 +24,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -45,7 +45,7 @@
      showgrid="true"
      inkscape:zoom="45.254834"
      inkscape:cx="5.3943513"
-     inkscape:cy="4.9339083"
+     inkscape:cy="6.7016753"
      inkscape:window-x="65"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
@@ -68,15 +68,15 @@
      sodipodi:nodetypes="cccccccc" />
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.81144762px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#006288;fill-opacity:1;stroke:none;stroke-width:0.72171718"
-     x="9.572154"
-     y="7.4592676"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.19955015px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#006288;fill-opacity:1;stroke:none;stroke-width:0.62993252"
+     x="9.554985"
+     y="7.1858406"
      id="text16"><tspan
        sodipodi:role="line"
        id="tspan14"
-       x="9.572154"
-       y="7.4592676"
-       style="font-weight:normal;font-size:6.66666651px;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke-width:0.72171718">term</tspan></text>
+       x="9.554985"
+       y="7.1858406"
+       style="font-weight:normal;font-size:5.81883097px;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke-width:0.62993252">term</tspan></text>
   <path
      style="fill:#8db3f1;fill-opacity:1;stroke:#bfeaf4;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
      d="m 7.095601,5e-7 v 2.772193 h 4.804166 V 5e-7 Z"
