@@ -35,7 +35,7 @@ setup(
         'gunicorn',
         'numpy==1.18.*',
         'optuna==2.2.0',
-        'stwfsapy==0.1.5'
+        'stwfsapy==0.2.*'
     ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
