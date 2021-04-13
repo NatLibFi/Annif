@@ -56,7 +56,7 @@ def test_omikuji_create_train_file(tmpdir, project, datadir):
     examples, features, labels = map(int, traindata[0].split())
     assert examples == 1
     assert features == 2
-    assert labels == 125
+    assert labels == 130
 
 
 def test_omikuji_train(datadir, document_corpus, project):

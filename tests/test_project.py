@@ -123,9 +123,9 @@ def test_get_project_invalid_config_file():
             annif.registry.get_project('duplicatedvocab')
 
 
-def test_project_load_vocabulary_tfidf(registry, vocabulary, testdatadir):
+def test_project_load_vocabulary_tfidf(registry, subject_file, testdatadir):
     project = registry.get_project('tfidf-fi')
-    project.vocab.load_vocabulary(vocabulary, 'fi')
+    project.vocab.load_vocabulary(subject_file, 'fi')
     assert testdatadir.join('vocabs/yso-fi/subjects').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
 
@@ -189,10 +189,10 @@ def test_project_learn_not_supported(registry, tmpdir):
         project.learn(docdir)
 
 
-def test_project_load_vocabulary_fasttext(registry, vocabulary, testdatadir):
+def test_project_load_vocabulary_fasttext(registry, subject_file, testdatadir):
     pytest.importorskip("annif.backend.fasttext")
     project = registry.get_project('fasttext-fi')
-    project.vocab.load_vocabulary(vocabulary, 'fi')
+    project.vocab.load_vocabulary(subject_file, 'fi')
     assert testdatadir.join('vocabs/yso-fi/subjects').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
 
