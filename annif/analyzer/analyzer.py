@@ -14,9 +14,11 @@ class Analyzer(metaclass=abc.ABCMeta):
     be overridden when necessary."""
 
     name = None
+    token_min_length = 3  # default value, can be overridden in instances
 
     def __init__(self, **kwargs):
-        self.token_min_length = int(kwargs.get(_KEY_TOKEN_MIN_LENGTH, 3))
+        if _KEY_TOKEN_MIN_LENGTH in kwargs:
+            self.token_min_length = int(kwargs[_KEY_TOKEN_MIN_LENGTH])
 
     def tokenize_sentences(self, text):
         """Tokenize a piece of text (e.g. a document) into sentences."""
