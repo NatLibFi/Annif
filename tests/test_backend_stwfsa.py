@@ -54,12 +54,12 @@ def test_stwfsa_not_initialized(project):
         stwfsa.suggest("example text")
 
 
-def test_stwfsa_train(document_corpus, graph_project, datadir):
+def test_stwfsa_train(document_corpus, project, datadir):
     stwfsa_type = get_backend(StwfsaBackend.name)
     stwfsa = stwfsa_type(
         backend_id=StwfsaBackend.name,
         config_params=_backend_conf,
-        project=graph_project)
+        project=project)
     stwfsa.train(document_corpus)
     assert stwfsa._model is not None
     model_file = datadir.join(stwfsa.MODEL_FILE)
