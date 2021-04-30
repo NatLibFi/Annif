@@ -101,7 +101,7 @@ class MauiBackend(backend.AnnifBackend):
         json = {}
         try:
             resp = requests.put(self.tagger_url(params) + '/vocab',
-                                data=self.project.vocab.as_skos())
+                                data=self.project.vocab.as_skos_file())
             try:
                 json = resp.json()
             except ValueError:

@@ -78,7 +78,7 @@ class AnnifVocabulary(DatadirMixin):
         subject_corpus.save_skos(os.path.join(self.datadir, 'subjects.ttl'),
                                  language)
 
-    def as_skos(self):
+    def as_skos_file(self):
         """return the vocabulary as a file object, in SKOS/Turtle syntax"""
         return open(os.path.join(self.datadir, 'subjects.ttl'), 'rb')
 
