@@ -66,14 +66,6 @@ class AnnifVocabulary(DatadirMixin):
                 raise NotInitializedException(f'graph file {path} not found')
         return self._skos_vocab
 
-    @property
-    def skos_concepts(self):
-        return self.skos_vocab.skos_concepts
-
-    def get_skos_concept_labels(self, concept, label_types, language):
-        return self.skos_vocab.get_skos_concept_labels(concept, label_types,
-                                                       language)
-
     def load_vocabulary(self, subject_corpus, language):
         """load subjects from a subject corpus and save them into a
         SKOS/Turtle file for later use"""
