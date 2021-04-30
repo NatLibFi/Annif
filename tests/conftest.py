@@ -130,14 +130,6 @@ def graph_project(project):
     return project
 
 
-@pytest.fixture(scope='function')
-def skos_project(project, skos_vocabulary):
-    project.vocab.skos_concepts = skos_vocabulary.skos_concepts
-    project.vocab.get_skos_concept_labels = \
-        skos_vocabulary.get_skos_concept_labels
-    return project
-
-
 @pytest.fixture(scope='module')
 def app_project(app):
     with app.app_context():

@@ -11,22 +11,22 @@ from copy import copy
 pytest.importorskip("annif.backend.yake")
 
 
-def test_invalid_label_type(skos_project):
+def test_invalid_label_type(project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
         config_params={'label_types': 'invalid_type', 'language': 'fi'},
-        project=skos_project)
+        project=project)
     with pytest.raises(ConfigurationException):
         yake.suggest("example text")
 
 
-def test_yake_suggest(project, skos_project):
+def test_yake_suggest(project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
         config_params={'limit': 8, 'language': 'fi'},
-        project=skos_project)
+        project=project)
 
     results = yake.suggest("""Arkeologia on tieteenala, jota sanotaan joskus
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
@@ -43,23 +43,23 @@ def test_yake_suggest(project, skos_project):
     assert 'arkeologia' in [result.label for result in hits]
 
 
-def test_yake_suggest_no_input(project, skos_project):
+def test_yake_suggest_no_input(project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
         config_params={'limit': 8, 'language': 'fi'},
-        project=skos_project)
+        project=project)
 
     results = yake.suggest("ja tai .,!")
     assert len(results) == 0
 
 
-def test_create_index_preflabels(skos_project):
+def test_create_index_preflabels(project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
         config_params={'language': 'fi', 'label_types': 'prefLabel'},
-        project=skos_project)
+        project=project)
     index = yake._create_index()
     # Some of the 130 prefLabels get merged in lemmatization:
     # assyriologit, assyriologia (assyriolog); arkealogit, arkeologia
@@ -69,24 +69,24 @@ def test_create_index_preflabels(skos_project):
     assert 'luolamaalauks' not in index
 
 
-def test_create_index_pref_and_altlabels(skos_project):
+def test_create_index_pref_and_altlabels(project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
         config_params={'limit': 8, 'language': 'fi'},
-        project=skos_project)
+        project=project)
     index = yake._create_index()
     assert len(index) == 161
     assert 'kalliotaid' in index
     assert 'luolamaalauks' in index
 
 
-def test_create_index_altlabels(skos_project):
+def test_create_index_altlabels(project):
     yake_type = annif.backend.get_backend('yake')
     yake = yake_type(
         backend_id='yake',
         config_params={'language': 'fi', 'label_types': 'altLabel'},
-        project=skos_project)
+        project=project)
     index = yake._create_index()
     assert len(index) == 34
     assert 'kalliotaid' not in index
