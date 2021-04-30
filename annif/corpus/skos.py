@@ -54,12 +54,10 @@ class SubjectFileSKOS(SubjectCorpus):
             yield concept
 
     def get_skos_concept_labels(self, concept, label_types, language):
-        labels = []
-        for label_type in label_types:
-            for label in self.graph.objects(concept, label_type):
-                if label.language == language:
-                    labels.append(label)
-        return labels
+        return [str(label)
+                for label_type in label_types
+                for label in self.graph.objects(concept, label_type)
+                if label.language == language]
 
     @staticmethod
     def is_rdf_file(path):
