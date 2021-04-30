@@ -1,5 +1,7 @@
 """Annif backend using Yake keyword extraction"""
-# TODO Mention GPLv3 license also here?
+# Enabling this optional backend may result in GPLv3 terms to cover the
+# application, because YAKE (https://github.com/LIAAD/yake) is licensed under
+# GPLv3.
 
 import yake
 import os.path
