@@ -76,7 +76,7 @@ def test_create_index_pref_and_altlabels(project):
         config_params={'limit': 8, 'language': 'fi'},
         project=project)
     index = yake._create_index()
-    assert len(index) == 161
+    assert len(index) == 160
     assert 'kalliotaid' in index
     assert 'luolamaalauks' in index
 
@@ -88,7 +88,7 @@ def test_create_index_altlabels(project):
         config_params={'language': 'fi', 'label_types': 'altLabel'},
         project=project)
     index = yake._create_index()
-    assert len(index) == 34
+    assert len(index) == 33
     assert 'kalliotaid' not in index
     assert 'luolamaalauks' in index
 
