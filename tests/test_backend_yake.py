@@ -4,9 +4,6 @@ import annif
 import annif.backend
 import pytest
 from annif.exception import ConfigurationException
-from rdflib import Graph, URIRef, Literal
-from rdflib.namespace import SKOS, RDF
-from copy import copy
 
 pytest.importorskip("annif.backend.yake")
 
@@ -91,33 +88,6 @@ def test_create_index_altlabels(project):
     assert len(index) == 33
     assert 'kalliotaid' not in index
     assert 'luolamaalauks' in index
-
-
-def test_remove_parentheses(project, skos_vocabulary):
-    graph = Graph()
-    graph.add((
-        URIRef('http://www.yso.fi/onto/yso/p4354'), RDF.type, SKOS.Concept))
-    graph.add((
-        URIRef('http://www.yso.fi/onto/yso/p4354'), SKOS.prefLabel,
-        Literal('lapset (ikäryhmät)', lang='fi')))
-
-    skos_vocabulary = copy(skos_vocabulary)  # Do not modify original fixture
-    skos_vocabulary.graph = graph
-    project.vocab.skos_concepts = skos_vocabulary.skos_concepts
-    project.vocab.get_skos_concept_labels = \
-        skos_vocabulary.get_skos_concept_labels
-
-    yake_type = annif.backend.get_backend('yake')
-    yake = yake_type(
-        backend_id='yake',
-        config_params={'language': 'fi', 'remove_parentheses': True},
-        project=project)
-    index = yake._create_index()
-    assert len(index) == 1
-    assert 'laps' in index
-    assert '(' not in index
-    assert ')' not in index
-    assert 'ikä' not in index
 
 
 def test_combine_suggestions_different_uris(project):
