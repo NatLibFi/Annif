@@ -68,7 +68,7 @@ class YakeBackend(backend.AnnifBackend):
             path = os.path.join(self.datadir, self.INDEX_FILE)
             if os.path.exists(path):
                 self._index = self._load_index(path)
-                self.info(
+                self.debug(
                     f'Loaded index from {path} with {len(self._index)} labels')
             else:
                 self.info('Creating index')
