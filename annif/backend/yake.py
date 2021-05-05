@@ -92,10 +92,10 @@ class YakeBackend(backend.AnnifBackend):
 
     def _create_index(self):
         index = defaultdict(set)
-        concepts = self.project.vocab.skos_vocab.concepts
-        for concept in concepts:
+        skos_vocab = self.project.vocab.skos
+        for concept in skos_vocab.concepts:
             uri = str(concept)
-            labels = self.project.vocab.skos_vocab.get_concept_labels(
+            labels = skos_vocab.get_concept_labels(
                 concept, self.label_types, self.params['language'])
             for label in labels:
                 label = self._normalize_label(label)

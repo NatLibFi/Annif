@@ -56,7 +56,8 @@ class AnnifVocabulary(DatadirMixin):
         return self._subjects
 
     @property
-    def skos_vocab(self):
+    def skos(self):
+        """return the subject vocabulary from SKOS file"""
         if self._skos_vocab is None:
             path = os.path.join(self.datadir, 'subjects.ttl')
             if os.path.exists(path):
@@ -84,4 +85,4 @@ class AnnifVocabulary(DatadirMixin):
 
     def as_graph(self):
         """return the vocabulary as an rdflib graph"""
-        return self.skos_vocab.graph
+        return self.skos.graph
