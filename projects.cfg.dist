@@ -111,6 +111,14 @@ backend=omikuji
 analyzer=snowball(english)
 vocab=yso-en
 
+[yake-fi]
+name=YAKE Finnish
+language=fi
+backend=yake
+vocab=yso-fi
+analyzer=voikko(fi)
+input_limit=20000
+
 [ensemble-fi]
 name=Ensemble Finnish
 language=fi

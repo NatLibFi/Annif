@@ -1,27 +1,8 @@
-import os
 from annif.backend import get_backend
-from rdflib import Graph
 import annif.corpus
 from annif.backend.stwfsa import StwfsaBackend
 from annif.exception import NotInitializedException, NotSupportedException
-
 import pytest
-from unittest.mock import Mock
-
-
-@pytest.fixture
-def graph_project(project):
-    _rdf_file_path = os.path.join(
-        os.path.dirname(__file__),
-        'corpora',
-        'archaeology',
-        'yso-archaeology.rdf')
-    g = Graph()
-    g.load(_rdf_file_path)
-    mock_vocab = Mock()
-    mock_vocab.as_graph.return_value = g
-    project.vocab = mock_vocab
-    return project
 
 
 _backend_conf = {
@@ -73,12 +54,12 @@ def test_stwfsa_not_initialized(project):
         stwfsa.suggest("example text")
 
 
-def test_stwfsa_train(document_corpus, graph_project, datadir):
+def test_stwfsa_train(document_corpus, project, datadir):
     stwfsa_type = get_backend(StwfsaBackend.name)
     stwfsa = stwfsa_type(
         backend_id=StwfsaBackend.name,
         config_params=_backend_conf,
-        project=graph_project)
+        project=project)
     stwfsa.train(document_corpus)
     assert stwfsa._model is not None
     model_file = datadir.join(stwfsa.MODEL_FILE)

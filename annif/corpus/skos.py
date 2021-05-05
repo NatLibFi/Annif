@@ -35,9 +35,7 @@ class SubjectFileSKOS(SubjectCorpus):
 
     @property
     def subjects(self):
-        for concept in self.graph.subjects(RDF.type, SKOS.Concept):
-            if (concept, OWL.deprecated, rdflib.Literal(True)) in self.graph:
-                continue
+        for concept in self.concepts:
             labels = self.graph.preferredLabel(concept, lang=self.language)
             notation = self.graph.value(concept, SKOS.notation, None, any=True)
             if not labels:
@@ -47,6 +45,19 @@ class SubjectFileSKOS(SubjectCorpus):
                 notation = str(notation)
             yield Subject(uri=str(concept), label=label, notation=notation,
                           text=None)
+
+    @property
+    def concepts(self):
+        for concept in self.graph.subjects(RDF.type, SKOS.Concept):
+            if (concept, OWL.deprecated, rdflib.Literal(True)) in self.graph:
+                continue
+            yield concept
+
+    def get_concept_labels(self, concept, label_types, language):
+        return [str(label)
+                for label_type in label_types
+                for label in self.graph.objects(concept, label_type)
+                if label.language == language]
 
     @staticmethod
     def is_rdf_file(path):
