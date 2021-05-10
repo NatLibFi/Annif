@@ -62,7 +62,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                      'tokenizer': self.project.analyzer.tokenize_words}
         veccorpus = self.create_vectorizer(input, vecparams)
         svc = LinearSVC()
-        self._model = CalibratedClassifierCV(svc)
+        self._model = CalibratedClassifierCV(svc, n_jobs=-1)
         self._model.fit(veccorpus, classes)
         annif.util.atomic_save(self._model,
                                self.datadir,
