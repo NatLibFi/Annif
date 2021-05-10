@@ -29,7 +29,7 @@ setup(
         'joblib==0.17.0',
         'nltk',
         'gensim==3.8.*',
-        'scikit-learn==0.23.2',
+        'scikit-learn==0.24.*',
         'scipy==1.5.3',
         'rdflib>=4.2,<6.0',
         'gunicorn',
