@@ -23,6 +23,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
 
     DEFAULT_PARAMETERS = {
         'min_df': 1,
+        'ngram': 1,
         'cluster_balanced': True,
         'cluster_k': 2,
         'max_depth': 20,
@@ -105,7 +106,8 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                     'Cannot train omikuji project with no documents')
             input = (doc.text for doc in corpus.documents)
             vecparams = {'min_df': int(params['min_df']),
-                         'tokenizer': self.project.analyzer.tokenize_words}
+                         'tokenizer': self.project.analyzer.tokenize_words,
+                         'ngram_range': (1, int(params['ngram']))}
             veccorpus = self.create_vectorizer(input, vecparams)
             self._create_train_file(veccorpus, corpus)
         else:
