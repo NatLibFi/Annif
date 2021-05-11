@@ -17,9 +17,10 @@ class AnnifVocabulary(DatadirMixin):
     # defaults for uninitialized instances
     _subjects = None
 
-    def __init__(self, vocab_id, datadir):
+    def __init__(self, vocab_id, datadir, language):
         DatadirMixin.__init__(self, datadir, 'vocabs', vocab_id)
         self.vocab_id = vocab_id
+        self.language = language
         self._skos_vocab = None
 
     def _create_subject_index(self, subject_corpus):
@@ -62,7 +63,8 @@ class AnnifVocabulary(DatadirMixin):
             path = os.path.join(self.datadir, 'subjects.ttl')
             if os.path.exists(path):
                 logger.debug(f'loading graph from {path}')
-                self._skos_vocab = annif.corpus.SubjectFileSKOS(path, None)
+                self._skos_vocab = annif.corpus.SubjectFileSKOS(path,
+                                                                self.language)
             else:
                 raise NotInitializedException(f'graph file {path} not found')
         return self._skos_vocab

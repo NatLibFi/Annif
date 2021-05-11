@@ -68,7 +68,7 @@ def subject_file():
 
 @pytest.fixture(scope='module')
 def vocabulary(datadir):
-    vocab = annif.vocab.AnnifVocabulary('my-vocab', datadir)
+    vocab = annif.vocab.AnnifVocabulary('my-vocab', datadir, 'fi')
     subjfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
