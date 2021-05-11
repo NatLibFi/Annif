@@ -85,9 +85,9 @@ def test_svc_suggest(project):
     assert len(results) > 0
     assert len(results) <= 8
     hits = results.as_list(project.subjects)
-    assert 'http://www.yso.fi/onto/yso/p1265' in [
+    assert 'http://www.yso.fi/onto/yso/p10849' in [
         result.uri for result in hits]
-    assert 'arkeologia' in [result.label for result in hits]
+    assert 'arkeologit' in [result.label for result in hits]
 
 
 def test_svc_suggest_no_input(project):

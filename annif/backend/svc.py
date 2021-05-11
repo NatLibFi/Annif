@@ -3,8 +3,8 @@
 import os.path
 import joblib
 import numpy as np
+import scipy.special
 from sklearn.svm import LinearSVC
-from sklearn.calibration import CalibratedClassifierCV
 import annif.util
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 from annif.exception import NotInitializedException, NotSupportedException
@@ -61,8 +61,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         vecparams = {'min_df': int(params['min_df']),
                      'tokenizer': self.project.analyzer.tokenize_words}
         veccorpus = self.create_vectorizer(input, vecparams)
-        svc = LinearSVC()
-        self._model = CalibratedClassifierCV(svc, n_jobs=-1)
+        self._model = LinearSVC()
         self._model.fit(veccorpus, classes)
         annif.util.atomic_save(self._model,
                                self.datadir,
@@ -75,10 +74,12 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         vector = self.vectorizer.transform([text])
         if vector.nnz == 0:  # All zero vector, empty result
             return ListSuggestionResult([])
-        predictions = self._model.predict_proba(vector)[0]
+        confidences = self._model.decision_function(vector)[0]
+        # convert to 0..1 score range using logistic function
+        scores = scipy.special.expit(confidences)
         results = []
         limit = int(params['limit'])
-        for class_id in np.argsort(predictions)[::-1][:limit]:
+        for class_id in np.argsort(scores)[::-1][:limit]:
             class_uri = self._model.classes_[class_id]
             subject_id = self.project.subjects.by_uri(class_uri)
             if subject_id is not None:
@@ -87,5 +88,5 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                     uri=uri,
                     label=label,
                     notation=notation,
-                    score=predictions[class_id]))
+                    score=scores[class_id]))
         return ListSuggestionResult(results)
