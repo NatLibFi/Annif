@@ -24,6 +24,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
 
     DEFAULT_PARAMETERS = {
         'min_df': 1,
+        'ngram': 1
     }
 
     def default_params(self):
@@ -59,7 +60,8 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             input.append(doc.text)
             classes.append(doc.uris[0])
         vecparams = {'min_df': int(params['min_df']),
-                     'tokenizer': self.project.analyzer.tokenize_words}
+                     'tokenizer': self.project.analyzer.tokenize_words,
+                     'ngram_range': (1, int(params['ngram']))}
         veccorpus = self.create_vectorizer(input, vecparams)
         self._model = LinearSVC()
         self._model.fit(veccorpus, classes)

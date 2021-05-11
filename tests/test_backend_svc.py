@@ -46,6 +46,18 @@ def test_svc_train(datadir, document_corpus, project):
     assert datadir.join('svc-model.gz').exists()
 
 
+def test_svc_train_ngram(datadir, document_corpus, project):
+    svc_type = annif.backend.get_backend('svc')
+    svc = svc_type(
+        backend_id='svc',
+        config_params={'ngram': 2},
+        project=project)
+
+    svc.train(document_corpus)
+    assert svc._model is not None
+    assert datadir.join('svc-model.gz').exists()
+
+
 def test_svc_train_cached(datadir, project):
     svc_type = annif.backend.get_backend('svc')
     svc = svc_type(
