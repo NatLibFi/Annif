@@ -63,6 +63,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                      'tokenizer': self.project.analyzer.tokenize_words,
                      'ngram_range': (1, int(params['ngram']))}
         veccorpus = self.create_vectorizer(input, vecparams)
+        self.info('creating classifier')
         self._model = LinearSVC()
         self._model.fit(veccorpus, classes)
         annif.util.atomic_save(self._model,
