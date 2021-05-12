@@ -19,7 +19,7 @@ def atomic_save(obj, dirname, filename, method=None):
     tempfd, tempfilename = tempfile.mkstemp(
         prefix=prefix, suffix=suffix, dir=dirname)
     os.close(tempfd)
-    logger.debug('saving %s to temporary file %s', str(obj), tempfilename)
+    logger.debug('saving %s to temporary file %s', str(obj)[:90], tempfilename)
     if method is not None:
         method(obj, tempfilename)
     else:
