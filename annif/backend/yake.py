@@ -4,6 +4,7 @@
 # GPLv3.
 
 import yake
+import joblib
 import os.path
 import re
 from collections import defaultdict
@@ -67,7 +68,7 @@ class YakeBackend(backend.AnnifBackend):
         if self._index is None:
             path = os.path.join(self.datadir, self.INDEX_FILE)
             if os.path.exists(path):
-                self._index = self._load_index(path)
+                self._index = joblib.load(path)
                 self.debug(
                     f'Loaded index from {path} with {len(self._index)} labels')
             else:
@@ -77,18 +78,11 @@ class YakeBackend(backend.AnnifBackend):
                 self.info(f'Created index with {len(self._index)} labels')
 
     def _save_index(self, path):
-        with open(path, 'w', encoding='utf-8') as indexfile:
-            for label, uris in self._index.items():
-                line = label + '\t' + ' '.join(uris)
-                print(line, file=indexfile)
-
-    def _load_index(self, path):
-        index = dict()
-        with open(path, 'r', encoding='utf-8') as indexfile:
-            for line in indexfile:
-                label, uris = line.strip().split('\t')
-                index[label] = uris.split()
-        return index
+        annif.util.atomic_save(
+            self._index,
+            self.datadir,
+            self.INDEX_FILE,
+            method=joblib.dump)
 
     def _create_index(self):
         index = defaultdict(set)
