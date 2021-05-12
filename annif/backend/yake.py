@@ -107,10 +107,10 @@ class YakeBackend(backend.AnnifBackend):
         label = str(label)
         if annif.util.boolean(self.params['remove_parentheses']):
             label = re.sub(r' \(.*\)', '', label)
-        lemmatized_label = self._lemmatize_phrase(label)
-        return self._sort_phrase(lemmatized_label)
+        normalized_label = self._normalize_phrase(label)
+        return self._sort_phrase(normalized_label)
 
-    def _lemmatize_phrase(self, phrase):
+    def _normalize_phrase(self, phrase):
         normalized = []
         for word in phrase.split():
             normalized.append(
@@ -164,7 +164,7 @@ class YakeBackend(backend.AnnifBackend):
         return suggestions
 
     def _keyphrase2uris(self, keyphrase):
-        keyphrase = self._lemmatize_phrase(keyphrase)
+        keyphrase = self._normalize_phrase(keyphrase)
         keyphrase = self._sort_phrase(keyphrase)
         return self._index.get(keyphrase, [])
 
