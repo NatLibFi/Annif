@@ -60,3 +60,9 @@ try:
     register_backend(omikuji.OmikujiBackend)
 except ImportError:
     annif.logger.debug("Omikuji not available, not enabling omikuji backend")
+
+try:
+    from . import yake
+    register_backend(yake.YakeBackend)
+except ImportError:
+    annif.logger.debug("YAKE not available, not enabling yake backend")

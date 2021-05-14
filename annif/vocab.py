@@ -1,7 +1,6 @@
 """Vocabulary management functionality for Annif"""
 
 import os.path
-import rdflib.graph
 import annif
 import annif.corpus
 import annif.util
@@ -18,9 +17,11 @@ class AnnifVocabulary(DatadirMixin):
     # defaults for uninitialized instances
     _subjects = None
 
-    def __init__(self, vocab_id, datadir):
+    def __init__(self, vocab_id, datadir, language):
         DatadirMixin.__init__(self, datadir, 'vocabs', vocab_id)
         self.vocab_id = vocab_id
+        self.language = language
+        self._skos_vocab = None
 
     def _create_subject_index(self, subject_corpus):
         self._subjects = annif.corpus.SubjectIndex(subject_corpus)
@@ -55,6 +56,19 @@ class AnnifVocabulary(DatadirMixin):
                     "subject file {} not found".format(path))
         return self._subjects
 
+    @property
+    def skos(self):
+        """return the subject vocabulary from SKOS file"""
+        if self._skos_vocab is None:
+            path = os.path.join(self.datadir, 'subjects.ttl')
+            if os.path.exists(path):
+                logger.debug(f'loading graph from {path}')
+                self._skos_vocab = annif.corpus.SubjectFileSKOS(path,
+                                                                self.language)
+            else:
+                raise NotInitializedException(f'graph file {path} not found')
+        return self._skos_vocab
+
     def load_vocabulary(self, subject_corpus, language):
         """load subjects from a subject corpus and save them into a
         SKOS/Turtle file for later use"""
@@ -67,15 +81,10 @@ class AnnifVocabulary(DatadirMixin):
         subject_corpus.save_skos(os.path.join(self.datadir, 'subjects.ttl'),
                                  language)
 
-    def as_skos(self):
+    def as_skos_file(self):
         """return the vocabulary as a file object, in SKOS/Turtle syntax"""
         return open(os.path.join(self.datadir, 'subjects.ttl'), 'rb')
 
     def as_graph(self):
         """return the vocabulary as an rdflib graph"""
-        g = rdflib.graph.Graph()
-        g.load(
-            os.path.join(self.datadir, 'subjects.ttl'),
-            format='ttl'
-        )
-        return g
+        return self.skos.graph

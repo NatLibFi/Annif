@@ -143,7 +143,8 @@ class AnnifProject(DatadirMixin):
                 raise ConfigurationException("vocab setting is missing",
                                              project_id=self.project_id)
             self._vocab = annif.vocab.AnnifVocabulary(self.vocab_id,
-                                                      self._base_datadir)
+                                                      self._base_datadir,
+                                                      self.language)
         return self._vocab
 
     @property
