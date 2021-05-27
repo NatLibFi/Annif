@@ -3,7 +3,7 @@
 import annif
 import annif.backend
 import pytest
-from annif.exception import ConfigurationException
+from annif.exception import ConfigurationException, NotSupportedException
 
 pytest.importorskip("annif.backend.yake")
 
@@ -131,3 +131,14 @@ def test_combine_scores(project):
     assert yake._combine_scores(1.0, 0.0) == 1.0
     assert yake._combine_scores(0.4, 0.3) == 0.625
     assert yake._combine_scores(0.4, 0.5) == 0.75
+
+
+def test_yake_train(project, document_corpus):
+    yake_type = annif.backend.get_backend('yake')
+    yake = yake_type(
+        backend_id='yake',
+        config_params={'language': 'fi'},
+        project=project)
+
+    with pytest.raises(NotSupportedException):
+        yake.train(document_corpus)

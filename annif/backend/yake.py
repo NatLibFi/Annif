@@ -11,7 +11,7 @@ from rdflib.namespace import SKOS
 import annif.util
 from . import backend
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
-from annif.exception import ConfigurationException
+from annif.exception import ConfigurationException, NotSupportedException
 
 
 class YakeBackend(backend.AnnifBackend):
@@ -182,3 +182,7 @@ class YakeBackend(backend.AnnifBackend):
         score2 = score2/2 + 0.5
         confl = score1 * score2 / (score1 * score2 + (1-score1) * (1-score2))
         return (confl-0.5) * 2
+
+    def _train(self, corpus, params):
+        raise NotSupportedException(
+            'Training yake backend is not possible.')
