@@ -11,8 +11,7 @@ from rdflib.namespace import SKOS
 import annif.util
 from . import backend
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
-from annif.exception import ConfigurationException
-from annif.exception import NotSupportedException
+from annif.exception import ConfigurationException, NotSupportedException
 
 
 class YakeBackend(backend.AnnifBackend):
