@@ -23,7 +23,8 @@ from annif.exception import ConfigurationException, NotSupportedException
 logger = annif.logger
 click_log.basic_config(logger)
 
-cli = FlaskGroup(create_app=annif.create_app)
+cli = FlaskGroup(create_app=annif.create_app, add_version_option=False)
+cli = click.version_option(message='%(version)s')(cli)
 
 
 def get_project(project_id):
