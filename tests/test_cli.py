@@ -5,6 +5,7 @@ import random
 import re
 import os.path
 import pytest
+import pkg_resources
 from click.testing import CliRunner
 import annif.cli
 
@@ -762,3 +763,12 @@ def test_hyperopt_not_supported(tmpdir):
     assert failed_result.exit_code != 0
 
     assert 'Hyperparameter optimization not supported' in failed_result.output
+
+
+def test_version_option():
+    result = runner.invoke(
+        annif.cli.cli, ['--version'])
+    assert not result.exception
+    assert result.exit_code == 0
+    version = pkg_resources.require('annif')[0].version
+    assert result.output.strip() == version.strip()
