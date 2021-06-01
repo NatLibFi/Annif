@@ -74,15 +74,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         veccorpus = self.create_vectorizer(texts, vecparams)
         self._train_classifier(veccorpus, classes)
 
-    def _suggest(self, text, params):
-        self.debug('Suggesting subjects for text "{}..." (len={})'.format(
-            text[:20], len(text)))
-        vector = self.vectorizer.transform([text])
-        if vector.nnz == 0:  # All zero vector, empty result
-            return ListSuggestionResult([])
-        confidences = self._model.decision_function(vector)[0]
-        # convert to 0..1 score range using logistic function
-        scores = scipy.special.expit(confidences)
+    def _scores_to_suggestions(self, scores, params):
         results = []
         limit = int(params['limit'])
         for class_id in np.argsort(scores)[::-1][:limit]:
@@ -96,3 +88,14 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                     notation=notation,
                     score=scores[class_id]))
         return ListSuggestionResult(results)
+
+    def _suggest(self, text, params):
+        self.debug('Suggesting subjects for text "{}..." (len={})'.format(
+            text[:20], len(text)))
+        vector = self.vectorizer.transform([text])
+        if vector.nnz == 0:  # All zero vector, empty result
+            return ListSuggestionResult([])
+        confidences = self._model.decision_function(vector)[0]
+        # convert to 0..1 score range using logistic function
+        scores = scipy.special.expit(confidences)
+        return self._scores_to_suggestions(scores, params)
