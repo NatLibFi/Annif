@@ -54,15 +54,15 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         if corpus.is_empty():
             raise NotSupportedException(
                 'Cannot train SVC project with no documents')
-        input = []
+        texts = []
         classes = []
         for doc in corpus.documents:
-            input.append(doc.text)
+            texts.append(doc.text)
             classes.append(doc.uris[0])
         vecparams = {'min_df': int(params['min_df']),
                      'tokenizer': self.project.analyzer.tokenize_words,
                      'ngram_range': (1, int(params['ngram']))}
-        veccorpus = self.create_vectorizer(input, vecparams)
+        veccorpus = self.create_vectorizer(texts, vecparams)
         self.info('creating classifier')
         self._model = LinearSVC()
         self._model.fit(veccorpus, classes)
