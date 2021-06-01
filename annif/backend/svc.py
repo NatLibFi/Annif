@@ -47,6 +47,15 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self.initialize_vectorizer()
         self._initialize_model()
 
+    def _train_classifier(self, veccorpus, classes):
+        self.info('creating classifier')
+        self._model = LinearSVC()
+        self._model.fit(veccorpus, classes)
+        annif.util.atomic_save(self._model,
+                               self.datadir,
+                               self.MODEL_FILE,
+                               method=joblib.dump)
+
     def _train(self, corpus, params):
         if corpus == 'cached':
             raise NotSupportedException(
@@ -63,13 +72,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                      'tokenizer': self.project.analyzer.tokenize_words,
                      'ngram_range': (1, int(params['ngram']))}
         veccorpus = self.create_vectorizer(texts, vecparams)
-        self.info('creating classifier')
-        self._model = LinearSVC()
-        self._model.fit(veccorpus, classes)
-        annif.util.atomic_save(self._model,
-                               self.datadir,
-                               self.MODEL_FILE,
-                               method=joblib.dump)
+        self._train_classifier(veccorpus, classes)
 
     def _suggest(self, text, params):
         self.debug('Suggesting subjects for text "{}..." (len={})'.format(
