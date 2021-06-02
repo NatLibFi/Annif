@@ -5,7 +5,6 @@ import os.path
 from datetime import datetime, timezone
 from glob import glob
 from annif import logger
-from annif.corpus import TruncatingDocumentCorpus
 from annif.exception import ConfigurationException
 
 
@@ -57,14 +56,6 @@ class AnnifBackend(metaclass=abc.ABCMeta):
             backend_params.update(params)
         return backend_params
 
-    def _validate_input_limit(self, input_limit):
-        input_limit = int(input_limit)
-        if input_limit >= 0:
-            return input_limit
-        else:
-            raise ConfigurationException(
-                'input_limit can not be negative', backend_id=self.backend_id)
-
     def _train(self, corpus, params):
         """This method can be overridden by backends. It implements
         the train functionality, with pre-processed parameters."""
@@ -73,9 +64,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def train(self, corpus, params=None):
         """Train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)
-        input_limit = self._validate_input_limit(beparams['input_limit'])
-        if input_limit != 0:
-            corpus = TruncatingDocumentCorpus(corpus, input_limit)
+        corpus = self.project.transformer.transform_corpus(corpus)
         return self._train(corpus, params=beparams)
 
     def initialize(self):
@@ -94,9 +83,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         represented as a list of SubjectSuggestion objects."""
         beparams = self._get_backend_params(params)
         self.initialize()
-        input_limit = self._validate_input_limit(beparams['input_limit'])
-        if input_limit != 0:
-            text = text[:input_limit]
+        text = self.project.transformer.transform_text(text)
         return self._suggest(text, params=beparams)
 
     def debug(self, message):

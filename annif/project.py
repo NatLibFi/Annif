@@ -4,6 +4,7 @@ import enum
 import os.path
 from shutil import rmtree
 import annif
+import annif.transformer
 import annif.analyzer
 import annif.corpus
 import annif.suggestion
@@ -27,6 +28,7 @@ class AnnifProject(DatadirMixin):
     """Class representing the configuration of a single Annif project."""
 
     # defaults for uninitialized instances
+    _transformer = None
     _analyzer = None
     _backend = None
     _vocab = None
@@ -41,6 +43,7 @@ class AnnifProject(DatadirMixin):
         self.name = config.get('name', project_id)
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
+        self.transformer_spec = config.get('input_transform', None)
         self.vocab_id = config.get('vocab', None)
         self.config = config
         self._base_datadir = datadir
@@ -63,6 +66,15 @@ class AnnifProject(DatadirMixin):
         logger.debug("Project '%s': initialized analyzer: %s",
                      self.project_id,
                      str(analyzer))
+
+    def _initialize_transformer(self):
+        # TODO: Is this needed?
+        if not self.transformer_spec:
+            return  # not configured, so assume it's not needed
+        transformer = self.transformer
+        logger.debug("Project '%s': initialized input-transform: %s",
+                     self.project_id,
+                     str(transformer))
 
     def _initialize_subjects(self):
         try:
@@ -90,6 +102,7 @@ class AnnifProject(DatadirMixin):
         logger.debug("Initializing project '%s'", self.project_id)
 
         self._initialize_analyzer()
+        self._initialize_transformer()  # TODO: Is this needed?
         self._initialize_subjects()
         self._initialize_backend()
 
@@ -116,6 +129,16 @@ class AnnifProject(DatadirMixin):
                     "analyzer setting is missing (and needed by the backend)",
                     project_id=self.project_id)
         return self._analyzer
+
+    @property
+    def transformer(self):
+        if self._transformer is None:
+            if self.transformer_spec:
+                self._transformer = annif.transformer.get_transformer(
+                    self.transformer_spec)
+            else:
+                self._transformer = annif.transformer.Transformer()
+        return self._transformer
 
     @property
     def backend(self):
