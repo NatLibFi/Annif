@@ -5,7 +5,6 @@ import os.path
 from datetime import datetime, timezone
 from glob import glob
 from annif import logger
-from annif.exception import ConfigurationException
 
 
 class AnnifBackend(metaclass=abc.ABCMeta):
@@ -15,8 +14,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     name = None
     needs_subject_index = False
 
-    DEFAULT_PARAMETERS = {'limit': 100,
-                          'input_limit': 0}
+    DEFAULT_PARAMETERS = {'limit': 100}
 
     def __init__(self, backend_id, config_params, project):
         """Initialize backend with specific parameters. The
