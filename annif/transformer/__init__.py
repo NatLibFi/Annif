@@ -6,15 +6,9 @@ from . import langfilter
 from annif.exception import ConfigurationException
 
 
-def _extend_posargs(posargs):
-    if not posargs:
-        posargs = [None]
-    return posargs
-
-
-def _parse_analyzer_args(param_string):
+def _parse_transformer_args(param_string):
     if not param_string:
-        return [None], {}
+        return [], {}
     kwargs = {}
     posargs = []
     param_strings = param_string.split(',')
@@ -24,32 +18,36 @@ def _parse_analyzer_args(param_string):
             posargs.append(p_string)
         elif len(parts) == 2:
             kwargs[parts[0]] = parts[1]
-    return _extend_posargs(posargs), kwargs
+    return posargs, kwargs
 
 
 def parse_specs(transformers_spec):
     """parse a configuration definition such as 'A(x),B(y=1),C' into a tuples
     of ((A, [x], {}), (B, [None], {y: 1}))..."""  # TODO
-
-    out = []
+    parsed = []
     # Split by commas not inside parentheses
     parts = re.split(r',\s*(?![^()]*\))', transformers_spec)
     for part in parts:
         match = re.match(r'(\w+)(\((.*)\))?', part)
         transformer = match.group(1)
-        posargs, kwargs = _parse_analyzer_args(match.group(3))
-        out.append((transformer, posargs, kwargs))
-    return out
+        posargs, kwargs = _parse_transformer_args(match.group(3))
+        parsed.append((transformer, posargs, kwargs))
+    return parsed
 
 
-def get_transformer(transformers_spec):
-    transformers = parse_specs(transformers_spec)
-    for (trans, _, _) in transformers:
+def get_transformer(transformer_specs):
+    transformer_defs = parse_specs(transformer_specs)
+    transformers = []
+    for trans, posargs, kwargs in transformer_defs:
         if trans not in _transformers:
             raise ConfigurationException(f"No such transformer {trans}")
-    return transformer.Transformer(
-        [_transformers[trans](*posargs, **kwargs)
-         for trans, posargs, kwargs in transformers])
+        try:
+            transformers.append(_transformers[trans](*posargs, **kwargs))
+        except (ValueError, TypeError):
+            raise ConfigurationException(
+                f"Invalid arguments to input-transformer {trans}: "
+                f"{posargs}, {kwargs})")
+    return transformer.Transformer(transformers)
 
 
 _transformers = {'input_limit': inputlimiter.InputLimiter,
