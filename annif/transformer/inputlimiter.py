@@ -1,9 +1,10 @@
 # TODO Add docstring
 from annif.exception import ConfigurationException
 from annif.corpus import TruncatingDocumentCorpus
+from . import transformer
 
 
-class InputLimiter():
+class InputLimiter(transformer.AbstractTransformer):
 
     def __init__(self, input_limit, *posargs):  # TODO Error on unkonwn params
         input_limit = self._validate_input_limit(input_limit)

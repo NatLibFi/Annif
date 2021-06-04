@@ -1,9 +1,21 @@
 """Common functionality for input transforming."""
 
-# import abc
+import abc
 # import annif
 # from annif.exception import ConfigurationException
-#
+
+
+class AbstractTransformer(metaclass=abc.ABCMeta):
+    """"""""  # TODO
+
+    def transform_text(self, text):
+        """"""  # TODO
+        return text  # default is to do nothing, subclasses may override
+
+    def transform_corpus(self, corpus):
+        """"""  # TODO
+        return corpus  # default is to do nothing, subclasses may override
+
 
 class Transformer():
     """"""  # TODO

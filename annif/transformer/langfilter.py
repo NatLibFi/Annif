@@ -1,8 +1,10 @@
 # TODO Add dcostring
 import annif
+from . import transformer
 
 
-class LangFilter():
+
+class LangFilter(transformer.AbstractTransformer):
 
     def __init__(self, *posargs):  # TODO Error on unknown params
         pass
