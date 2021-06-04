@@ -111,7 +111,5 @@ class AnnifLearningBackend(AnnifBackend):
     def learn(self, corpus, params=None):
         """Further train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)
-        input_limit = self._validate_input_limit(beparams['input_limit'])
-        if input_limit != 0:
-            corpus = TruncatingDocumentCorpus(corpus, input_limit)
+        corpus = self.project.transformer.transform_corpus(corpus)
         return self._learn(corpus, params=beparams)
