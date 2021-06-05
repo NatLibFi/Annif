@@ -6,8 +6,10 @@ from . import transformer
 
 class LangFilter(transformer.AbstractTransformer):
 
-    def __init__(self, *posargs):  # TODO Error on unknown params
-        pass
+    name = 'filter_lang'
+
+    def __init__(self, project):  # TODO Error on unknown params
+        self.project = project
 
     def transform_text(self, text):
         # print('lang filter in action')
@@ -18,4 +20,3 @@ class LangFilter(transformer.AbstractTransformer):
         # print('lang filter in action')
         # TODO Implement functionality
         return corpus
-

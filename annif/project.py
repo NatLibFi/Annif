@@ -135,7 +135,7 @@ class AnnifProject(DatadirMixin):
         if self._transformer is None:
             if self.transformer_spec:
                 self._transformer = annif.transformer.get_transformer(
-                    self.transformer_spec)
+                    self.transformer_spec, project=self)
             else:
                 self._transformer = None
         return self._transformer

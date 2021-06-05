@@ -35,20 +35,17 @@ def parse_specs(transformers_spec):
     return parsed
 
 
-def get_transformer(transformer_specs):
+def get_transformer(transformer_specs, project):
     transformer_defs = parse_specs(transformer_specs)
-    transformers = []
+    transformer_classes = []
+    args = []
     for trans, posargs, kwargs in transformer_defs:
         if trans not in _transformers:
             raise ConfigurationException(f"No such transformer {trans}")
-        try:
-            transformers.append(_transformers[trans](*posargs, **kwargs))
-        except (ValueError, TypeError):
-            raise ConfigurationException(
-                f"Invalid arguments to input-transformer {trans}: "
-                f"{posargs}, {kwargs})")
-    return transformer.Transformer(transformers)
+        transformer_classes.append(_transformers[trans])
+        args.append((posargs, kwargs))
+    return transformer.Transformer(transformer_classes, args, project)
 
 
-_transformers = {'input_limit': inputlimiter.InputLimiter,
+_transformers = {'limit_input': inputlimiter.InputLimiter,
                  'filter_lang': langfilter.LangFilter}
