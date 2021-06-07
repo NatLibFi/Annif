@@ -1,16 +1,16 @@
 """Common functionality for input transforming."""
 
 import abc
-# import annif
+from annif.corpus import TransformingDocumentCorpus
 from annif.exception import ConfigurationException
 
 
 class AbstractTransformer(metaclass=abc.ABCMeta):
     """"""""  # TODO
 
-    name = None
+    name = 'pass-through'
 
-    def __init__(self, project, *posargs, **kwargs):
+    def __init__(self, project):
         self.project = project
 
     def transform_text(self, text):
@@ -19,7 +19,7 @@ class AbstractTransformer(metaclass=abc.ABCMeta):
 
     def transform_corpus(self, corpus):
         """"""  # TODO
-        return corpus  # default is to do nothing, subclasses may override
+        return TransformingDocumentCorpus(corpus, self.transform_text)
 
 
 class Transformer():

@@ -1,6 +1,5 @@
 # TODO Add docstring
 from annif.exception import ConfigurationException
-from annif.corpus import TruncatingDocumentCorpus
 from . import transformer
 
 
@@ -15,9 +14,6 @@ class InputLimiter(transformer.AbstractTransformer):
 
     def transform_text(self, text):
         return text[:self.input_limit]
-
-    def transform_corpus(self, corpus):
-        return TruncatingDocumentCorpus(corpus, self.input_limit)
 
     def _validate_value(self, input_limit):
         if input_limit < 0:
