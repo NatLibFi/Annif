@@ -47,5 +47,7 @@ def get_transformer(transformer_specs, project):
     return transformer.Transformer(transformer_classes, args, project)
 
 
-_transformers = {'limit_input': inputlimiter.InputLimiter,
-                 'filter_lang': langfilter.LangFilter}
+_transformers = {
+    'pass': transformer.IdentityTransformer,
+    'limit_input': inputlimiter.InputLimiter,
+    'filter_lang': langfilter.LangFilter}

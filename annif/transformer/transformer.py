@@ -1,21 +1,20 @@
 """Common functionality for input transforming."""
 
-import abc
 from annif.corpus import TransformingDocumentCorpus
 from annif.exception import ConfigurationException
 
 
-class AbstractTransformer(metaclass=abc.ABCMeta):
+class IdentityTransformer():
     """"""""  # TODO
 
-    name = 'pass-through'
+    name = 'pass_through'
 
     def __init__(self, project):
         self.project = project
 
     def transform_text(self, text):
         """"""  # TODO
-        return text  # default is to do nothing, subclasses may override
+        return text
 
     def transform_corpus(self, corpus):
         """"""  # TODO

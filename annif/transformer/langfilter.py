@@ -1,10 +1,8 @@
 # TODO Add dcostring
-import annif
 from . import transformer
 
 
-
-class LangFilter(transformer.AbstractTransformer):
+class LangFilter(transformer.IdentityTransformer):
 
     name = 'filter_lang'
 
