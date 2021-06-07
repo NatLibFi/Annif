@@ -62,8 +62,6 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def train(self, corpus, params=None):
         """Train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)
-        if self.project.transformer is not None:
-            corpus = self.project.transformer.transform_corpus(corpus)
         return self._train(corpus, params=beparams)
 
     def initialize(self):
@@ -82,8 +80,6 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         represented as a list of SubjectSuggestion objects."""
         beparams = self._get_backend_params(params)
         self.initialize()
-        if self.project.transformer is not None:
-            text = self.project.transformer.transform_text(text)
         return self._suggest(text, params=beparams)
 
     def debug(self, message):
@@ -111,6 +107,4 @@ class AnnifLearningBackend(AnnifBackend):
     def learn(self, corpus, params=None):
         """Further train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)
-        if self.project.transformer is not None:
-            corpus = self.project.transformer.transform_corpus(corpus)
         return self._learn(corpus, params=beparams)
