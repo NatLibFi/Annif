@@ -269,12 +269,12 @@ def test_combinedcorpus(tmpdir):
 
 
 def test_transformingcorpus(document_corpus):
-    def double(x): x + x
+    def double(x): return x + x
 
     transformed_corpus = TransformingDocumentCorpus(document_corpus, double)
     for transf_doc, doc in zip(transformed_corpus.documents,
                                document_corpus.documents):
-        assert transf_doc.text == double(doc.text)
+        assert transf_doc.text == doc.text + doc.text
         assert transf_doc.uris == doc.uris
         assert transf_doc.labels == doc.labels
     # Ensure docs are still available after iterating
