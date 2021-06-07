@@ -2,7 +2,6 @@
 import re
 from . import transformer
 from . import inputlimiter
-from . import langfilter
 from annif.exception import ConfigurationException
 
 
@@ -49,5 +48,4 @@ def get_transformer(transformer_specs, project):
 
 _transformers = {
     'pass': transformer.IdentityTransformer,
-    'limit_input': inputlimiter.InputLimiter,
-    'filter_lang': langfilter.LangFilter}
+    'limit_input': inputlimiter.InputLimiter}
