@@ -28,6 +28,8 @@ def parse_specs(transformers_spec):
     parts = re.split(r',\s*(?![^()]*\))', transformers_spec)
     for part in parts:
         match = re.match(r'(\w+)(\((.*)\))?', part)
+        if match is None:
+            continue
         transformer = match.group(1)
         posargs, kwargs = _parse_transformer_args(match.group(3))
         parsed.append((transformer, posargs, kwargs))
