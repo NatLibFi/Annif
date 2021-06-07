@@ -4,6 +4,7 @@ import pytest
 import annif
 import annif.backend
 from annif.exception import NotInitializedException
+from annif.exception import NotSupportedException
 
 
 def test_mllm_default_params(project):
@@ -57,6 +58,18 @@ def test_mllm_train_cached(datadir, project):
     assert modelfile.exists()
     assert modelfile.size() > 0
     assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
+
+
+def test_mllm_train_nodocuments(project, empty_corpus):
+    mllm_type = annif.backend.get_backend("mllm")
+    mllm = mllm_type(
+        backend_id='mllm',
+        config_params={'limit': 10, 'language': 'fi'},
+        project=project)
+
+    with pytest.raises(NotSupportedException) as excinfo:
+        mllm.train(empty_corpus)
+    assert 'training backend mllm with no documents' in str(excinfo.value)
 
 
 def test_mllm_suggest(project):

@@ -5,6 +5,7 @@ import joblib
 import numpy as np
 import annif.util
 from annif.exception import NotInitializedException
+from annif.exception import NotSupportedException
 from annif.lexical.mllm import MLLMModel
 from annif.suggestion import VectorSuggestionResult
 from . import backend
@@ -114,6 +115,10 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
     def _train(self, corpus, params):
         self.info('starting train')
         if corpus != 'cached':
+            if corpus.is_empty():
+                raise NotSupportedException(
+                    'training backend {} with no documents' .format(
+                        self.backend_id))
             self.info("preparing training data")
             self._model = MLLMModel()
             train_data = self._model.prepare_train(corpus,
