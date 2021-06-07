@@ -24,4 +24,3 @@ def test_chained_transformers_text():
     transf = annif.transformer.get_transformer(
         "limit_input(5),   pass,limit_input(3),", project=None)
     assert transf.transform_text("abcdefghij") == "abc"
-
