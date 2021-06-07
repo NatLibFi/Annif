@@ -24,17 +24,22 @@ class IdentityTransformer():
 class Transformer():
     """"""  # TODO
 
-    def __init__(self, transformers, args, project):
-        self.transformers = []
+    def __init__(self, transformer_classes, args, project):
         self.project = project
-        for trans, (posargs, kwargs) in zip(transformers, args):
+        self.transformers = self._init_transformers(transformer_classes, args)
+
+    def _init_transformers(self, transformer_classes, args):
+        transformers = []
+        for trans, (posargs, kwargs) in zip(transformer_classes, args):
             try:
-                self.transformers.append(
+                transformers.append(
                     trans(self.project, *posargs, **kwargs))
             except (ValueError, TypeError):
                 raise ConfigurationException(
                     f"Invalid arguments to {trans.name} transformer: "
-                    f"{posargs}, {kwargs})", project_id=project.project_id)
+                    f"{posargs}, {kwargs})",
+                    project_id=self.project.project_id)
+        return transformers
 
     def transform_text(self, text):
         for trans in self.transformers:
