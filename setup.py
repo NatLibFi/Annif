@@ -29,6 +29,7 @@ setup(
         'joblib==1.0.1',
         'nltk',
         'gensim==4.0.*',
+        'python-Levenshtein',
         'scikit-learn==0.24.2',
         'scipy==1.5.4',
         'rdflib>=4.2,<6.0',
