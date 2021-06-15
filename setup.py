@@ -41,7 +41,7 @@ setup(
     extras_require={
         'fasttext': ['fasttext==0.9.2'],
         'voikko': ['voikko'],
-        'vw': ['vowpalwabbit==8.10.1'],
+        'vw': ['vowpalwabbit==8.10.2'],
         'nn': ['tensorflow-cpu==2.5.0', 'lmdb==1.2.1'],
         'omikuji': ['omikuji==0.3.*'],
         'yake': ['yake==0.4.5'],
