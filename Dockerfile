@@ -2,7 +2,7 @@ FROM python:3.8-slim-buster AS builder
 
 LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
 
-# Install fastText, which needs to be build, and therefore also some system packages:
+# Install fastText, which needs to be built, and therefore also some system packages:
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		build-essential \
