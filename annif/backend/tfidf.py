@@ -9,6 +9,7 @@ from annif.exception import NotInitializedException, NotSupportedException
 from . import backend
 from . import mixins
 
+# Filter UserWarnings due to not-installed python-Levenshtein package
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
