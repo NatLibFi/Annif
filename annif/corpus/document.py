@@ -94,15 +94,15 @@ class TransformingDocumentCorpus(DocumentCorpus):
     """A document corpus that wraps another document corpus but transforms the
     documents using a given transform function"""
 
-    def __init__(self, corpus, transform_text):
+    def __init__(self, corpus, transform_fn):
         self._orig_corpus = corpus
-        self._transform_text = transform_text
+        self._transform_fn = transform_fn
 
     @property
     def documents(self):
         for doc in self._orig_corpus.documents:
             yield self._create_document(
-                text=self._transform_text(doc.text),
+                text=self._transform_fn(doc.text),
                 uris=doc.uris,
                 labels=doc.labels)
 
