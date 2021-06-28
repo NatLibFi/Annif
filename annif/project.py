@@ -67,15 +67,6 @@ class AnnifProject(DatadirMixin):
                      self.project_id,
                      str(analyzer))
 
-    def _initialize_transformer(self):
-        # TODO: Is this needed?
-        if not self.transformer_spec:
-            return  # not configured, so assume it's not needed
-        transformer = self.transformer
-        logger.debug("Project '%s': initialized input-transform: %s",
-                     self.project_id,
-                     str(transformer))
-
     def _initialize_subjects(self):
         try:
             subjects = self.subjects
@@ -102,7 +93,6 @@ class AnnifProject(DatadirMixin):
         logger.debug("Initializing project '%s'", self.project_id)
 
         self._initialize_analyzer()
-        self._initialize_transformer()  # TODO: Is this needed?
         self._initialize_subjects()
         self._initialize_backend()
 
