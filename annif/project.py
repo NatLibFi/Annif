@@ -127,7 +127,7 @@ class AnnifProject(DatadirMixin):
                 self._transformer = annif.transformer.get_transformer(
                     self.transformer_spec, project=self)
             else:
-                self._transformer = None
+                self._transformer = annif.transformer.IdentityTransformer(self)
         return self._transformer
 
     @property
@@ -191,8 +191,7 @@ class AnnifProject(DatadirMixin):
                 raise NotInitializedException('Project is not trained.')
         logger.debug('Suggesting subjects for text "%s..." (len=%d)',
                      text[:20], len(text))
-        if self.transformer is not None:
-            text = self.transformer.transform_text(text)
+        text = self.transformer.transform_text(text)
         hits = self._suggest_with_backend(text, backend_params)
         logger.debug('%d hits from backend', len(hits))
         return hits
@@ -203,8 +202,7 @@ class AnnifProject(DatadirMixin):
             corpus.set_subject_index(self.subjects)
         if backend_params is None:
             backend_params = {}
-        if self.transformer is not None:
-            corpus = self.transformer.transform_corpus(corpus)
+        corpus = self.transformer.transform_corpus(corpus)
         beparams = backend_params.get(self.backend.backend_id, {})
         self.backend.train(corpus, beparams)
 
@@ -214,8 +212,7 @@ class AnnifProject(DatadirMixin):
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-        if self.transformer is not None:
-            corpus = self.transformer.transform_corpus(corpus)
+        corpus = self.transformer.transform_corpus(corpus)
         if isinstance(
                 self.backend,
                 annif.backend.backend.AnnifLearningBackend):

@@ -2,7 +2,10 @@
 import re
 from . import transformer
 from . import inputlimiter
+from .transformer import IdentityTransformer
 from annif.exception import ConfigurationException
+
+__all__ = ["IdentityTransformer"]
 
 
 def _parse_transformer_args(param_string):
