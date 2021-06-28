@@ -43,7 +43,7 @@ class AnnifProject(DatadirMixin):
         self.name = config.get('name', project_id)
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
-        self.transformer_spec = config.get('input_transform', None)
+        self.transform_spec = config.get('input_transform', None)
         self.vocab_id = config.get('vocab', None)
         self.config = config
         self._base_datadir = datadir
@@ -123,11 +123,11 @@ class AnnifProject(DatadirMixin):
     @property
     def transformer(self):
         if self._transformer is None:
-            if self.transformer_spec:
-                self._transformer = annif.transformer.get_transformer(
-                    self.transformer_spec, project=self)
+            if self.transform_spec:
+                self._transformer = annif.transformer.get_transform(
+                    self.transform_spec, project=self)
             else:
-                self._transformer = annif.transformer.IdentityTransformer(self)
+                self._transformer = annif.transformer.IdentityTransform(self)
         return self._transformer
 
     @property

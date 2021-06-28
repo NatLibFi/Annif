@@ -3,7 +3,7 @@ from annif.exception import ConfigurationException
 from . import transformer
 
 
-class InputLimiter(transformer.IdentityTransformer):
+class InputLimiter(transformer.IdentityTransform):
 
     name = 'limit'
 

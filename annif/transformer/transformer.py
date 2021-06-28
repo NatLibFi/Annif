@@ -4,7 +4,7 @@ from annif.corpus import TransformingDocumentCorpus
 from annif.exception import ConfigurationException
 
 
-class IdentityTransformer():
+class IdentityTransform():
     """"""""  # TODO
 
     name = 'pass'
@@ -21,32 +21,32 @@ class IdentityTransformer():
         return TransformingDocumentCorpus(corpus, self.transform_text)
 
 
-class Transformer():
+class TransformChain():
     """"""  # TODO
 
-    def __init__(self, transformer_classes, args, project):
+    def __init__(self, transform_classes, args, project):
         self.project = project
-        self.transformers = self._init_transformers(transformer_classes, args)
+        self.transforms = self._init_transforms(transform_classes, args)
 
-    def _init_transformers(self, transformer_classes, args):
-        transformers = []
-        for trans, (posargs, kwargs) in zip(transformer_classes, args):
+    def _init_transforms(self, transform_classes, args):
+        transforms = []
+        for trans, (posargs, kwargs) in zip(transform_classes, args):
             try:
-                transformers.append(
+                transforms.append(
                     trans(self.project, *posargs, **kwargs))
             except (ValueError, TypeError):
                 raise ConfigurationException(
-                    f"Invalid arguments to {trans.name} transformer: "
+                    f"Invalid arguments to {trans.name} transform: "
                     f"{posargs}, {kwargs})",
                     project_id=self.project.project_id)
-        return transformers
+        return transforms
 
     def transform_text(self, text):
-        for trans in self.transformers:
+        for trans in self.transforms:
             text = trans.transform_text(text)
         return text
 
     def transform_corpus(self, corpus):
-        for trans in self.transformers:
+        for trans in self.transforms:
             corpus = trans.transform_corpus(corpus)
         return corpus

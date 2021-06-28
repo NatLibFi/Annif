@@ -5,22 +5,22 @@ import annif.transformer
 from annif.exception import ConfigurationException
 
 
-def test_get_transformer_nonexistent():
+def test_get_transform_nonexistent():
     with pytest.raises(ConfigurationException):
-        annif.transformer.get_transformer("nonexistent", project=None)
+        annif.transformer.get_transform("nonexistent", project=None)
 
 
-def test_get_transformer_badspec(project):
+def test_get_transform_badspec(project):
     with pytest.raises(ConfigurationException):
-        annif.transformer.get_transformer("pass(invalid_argument)", project)
+        annif.transformer.get_transform("pass(invalid_argument)", project)
 
 
 def test_input_limiter():
-    transf = annif.transformer.get_transformer("limit(3)", project=None)
+    transf = annif.transformer.get_transform("limit(3)", project=None)
     assert transf.transform_text("running") == "run"
 
 
-def test_chained_transformers_text():
-    transf = annif.transformer.get_transformer(
+def test_chained_transforms_text():
+    transf = annif.transformer.get_transform(
         "limit(5),   pass,limit(3),", project=None)
     assert transf.transform_text("abcdefghij") == "abc"
