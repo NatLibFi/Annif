@@ -200,9 +200,9 @@ class AnnifProject(DatadirMixin):
         """train the project using documents from a metadata source"""
         if corpus != 'cached':
             corpus.set_subject_index(self.subjects)
+            corpus = self.transformer.transform_corpus(corpus)
         if backend_params is None:
             backend_params = {}
-        corpus = self.transformer.transform_corpus(corpus)
         beparams = backend_params.get(self.backend.backend_id, {})
         self.backend.train(corpus, beparams)
 
