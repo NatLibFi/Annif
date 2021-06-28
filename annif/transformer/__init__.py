@@ -52,5 +52,5 @@ def get_transformer(transformer_specs, project):
 
 
 _transformers = {
-    'pass': transformer.IdentityTransformer,
-    'limit_input': inputlimiter.InputLimiter}
+    transformer.IdentityTransformer.name: transformer.IdentityTransformer,
+    inputlimiter.InputLimiter.name: inputlimiter.InputLimiter}

@@ -16,11 +16,11 @@ def test_get_transformer_badspec(project):
 
 
 def test_input_limiter():
-    transf = annif.transformer.get_transformer("limit_input(3)", project=None)
+    transf = annif.transformer.get_transformer("limit(3)", project=None)
     assert transf.transform_text("running") == "run"
 
 
 def test_chained_transformers_text():
     transf = annif.transformer.get_transformer(
-        "limit_input(5),   pass,limit_input(3),", project=None)
+        "limit(5),   pass,limit(3),", project=None)
     assert transf.transform_text("abcdefghij") == "abc"

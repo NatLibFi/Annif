@@ -7,7 +7,7 @@ from annif.exception import ConfigurationException
 class IdentityTransformer():
     """"""""  # TODO
 
-    name = 'pass_through'
+    name = 'pass'
 
     def __init__(self, project):
         self.project = project

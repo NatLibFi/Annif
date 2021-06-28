@@ -5,7 +5,7 @@ from . import transformer
 
 class InputLimiter(transformer.IdentityTransformer):
 
-    name = 'limit_input'
+    name = 'limit'
 
     def __init__(self, project, input_limit):
         self.project = project
