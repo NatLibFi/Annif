@@ -3,24 +3,10 @@ import re
 from . import transformer
 from . import inputlimiter
 from .transformer import IdentityTransform
+from annif.util import parse_args
 from annif.exception import ConfigurationException
 
 __all__ = ["IdentityTransform"]
-
-
-def _parse_transform_args(param_string):
-    if not param_string:
-        return [], {}
-    kwargs = {}
-    posargs = []
-    param_strings = param_string.split(',')
-    for p_string in param_strings:
-        parts = p_string.split('=')
-        if len(parts) == 1:
-            posargs.append(p_string)
-        elif len(parts) == 2:
-            kwargs[parts[0]] = parts[1]
-    return posargs, kwargs
 
 
 def parse_specs(transform_specs):
@@ -34,7 +20,7 @@ def parse_specs(transform_specs):
         if match is None:
             continue
         transform = match.group(1)
-        posargs, kwargs = _parse_transform_args(match.group(3))
+        posargs, kwargs = parse_args(match.group(3))
         parsed.append((transform, posargs, kwargs))
     return parsed
 
