@@ -53,7 +53,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         classes = []
         for doc in corpus.documents:
             texts.append(doc.text)
-            classes.append(doc.uris[0])
+            classes.append(list(doc.uris)[0])
         return texts, classes
 
     def _train_classifier(self, veccorpus, classes):
