@@ -26,7 +26,23 @@ def test_input_limiter():
     assert transf.transform_text("running") == "run"
 
 
+def test_input_limiter_with_negative_value(project):
+    with pytest.raises(ConfigurationException):
+        annif.transformer.get_transform("limit(-2)", project)
+
+
 def test_chained_transforms_text():
     transf = annif.transformer.get_transform(
         "limit(5),pass,limit(3),", project=None)
     assert transf.transform_text("abcdefghij") == "abc"
+
+
+def test_chained_transforms_corpus(document_corpus):
+    transf = annif.transformer.get_transform(
+        "limit(5),pass,limit(3),", project=None)
+    transformed_corpus = transf.transform_corpus(document_corpus)
+    for transf_doc, doc in zip(transformed_corpus.documents,
+                               document_corpus.documents):
+        assert transf_doc.text == doc.text[:3]
+        assert transf_doc.uris == doc.uris
+        assert transf_doc.labels == doc.labels
