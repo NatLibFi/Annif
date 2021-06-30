@@ -69,6 +69,17 @@ def test_svc_train_cached(datadir, project):
         svc.train("cached")
 
 
+def test_svc_train_multiple_subjects(datadir, document_corpus, project):
+    svc_type = annif.backend.get_backend('svc')
+    svc = svc_type(
+        backend_id='svc',
+        config_params={},
+        project=project)
+
+    with pytest.raises(NotSupportedException):
+        svc.train(document_corpus)
+
+
 def test_svc_train_nodocuments(datadir, project, empty_corpus):
     svc_type = annif.backend.get_backend('svc')
     svc = svc_type(
