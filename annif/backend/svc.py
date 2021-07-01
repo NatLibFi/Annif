@@ -53,7 +53,11 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         classes = []
         for doc in corpus.documents:
             texts.append(doc.text)
-            classes.append(doc.uris[0])
+            if len(doc.uris) > 1:
+                raise NotSupportedException(
+                    'SVC backend does not support training on documents ' +
+                    'with multiple subjects.')
+            classes.append(list(doc.uris)[0])
         return texts, classes
 
     def _train_classifier(self, veccorpus, classes):

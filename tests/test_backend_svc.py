@@ -34,26 +34,26 @@ def test_svc_suggest_no_vectorizer(project):
         svc.suggest("example text")
 
 
-def test_svc_train(datadir, document_corpus, project):
+def test_svc_train(datadir, document_corpus_single_subject, project):
     svc_type = annif.backend.get_backend('svc')
     svc = svc_type(
         backend_id='svc',
         config_params={},
         project=project)
 
-    svc.train(document_corpus)
+    svc.train(document_corpus_single_subject)
     assert svc._model is not None
     assert datadir.join('svc-model.gz').exists()
 
 
-def test_svc_train_ngram(datadir, document_corpus, project):
+def test_svc_train_ngram(datadir, document_corpus_single_subject, project):
     svc_type = annif.backend.get_backend('svc')
     svc = svc_type(
         backend_id='svc',
         config_params={'ngram': 2},
         project=project)
 
-    svc.train(document_corpus)
+    svc.train(document_corpus_single_subject)
     assert svc._model is not None
     assert datadir.join('svc-model.gz').exists()
 
@@ -67,6 +67,17 @@ def test_svc_train_cached(datadir, project):
 
     with pytest.raises(NotSupportedException):
         svc.train("cached")
+
+
+def test_svc_train_multiple_subjects(datadir, document_corpus, project):
+    svc_type = annif.backend.get_backend('svc')
+    svc = svc_type(
+        backend_id='svc',
+        config_params={},
+        project=project)
+
+    with pytest.raises(NotSupportedException):
+        svc.train(document_corpus)
 
 
 def test_svc_train_nodocuments(datadir, project, empty_corpus):
