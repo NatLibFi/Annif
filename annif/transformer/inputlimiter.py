@@ -8,7 +8,7 @@ class InputLimiter(transformer.IdentityTransform):
     name = 'limit'
 
     def __init__(self, project, input_limit):
-        self.project = project
+        super().__init__(project)
         self.input_limit = int(input_limit)
         self._validate_value(self.input_limit)
 
