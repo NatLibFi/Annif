@@ -3,7 +3,7 @@ version: "3.6"
 services:
 
   annif_app:
-    image: quay.io/natlibfi/annif:0.47.1
+    image: quay.io/natlibfi/annif:0.52.0
     command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000", "--timeout", "600"]
     volumes:
       - data:/annif-projects:ro
@@ -51,20 +51,6 @@ services:
         - traefik.http.routers.${STACK_NAME}-https.entrypoints=https
         - traefik.http.routers.${STACK_NAME}-https.tls=true
 
-  mauiserver:
-    image: quay.io/natlibfi/mauiserver:1.3.2-tomcat-8.5.59-jdk11-openjdk-slim
-    volumes:
-      - data:/annif-projects
-      - /etc/localtime:/etc/localtime:ro
-    environment:
-      - MAUI_SERVER_DATA_DIR=/annif-projects/mauidata
-      - JAVA_OPTS="-Duser.timezone=Europe/Helsinki"
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.labels.environment == $NODE_LABELS_ENVIRONMENT
-
   modeldata_sync:
     image: quay.io/natlibfi/annif-rsync
     volumes:
@@ -81,7 +67,7 @@ services:
         mode: 0600
         uid: '998'
         gid: '998'
-    command: rsync -avzLu --exclude '*omikuji-train.txt' annif@$ANNIF_KK:/srv/annif-data/$INSTANCE_DATA_DIR/* /annif-projects
+    command: rsync -avzLu --exclude '*-train.*' annif@$ANNIF_KK:/srv/annif-data/$INSTANCE_DATA_DIR/* /annif-projects
     networks:
       - traefik-net
     deploy:
