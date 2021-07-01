@@ -3,7 +3,7 @@ version: "3.6"
 services:
 
   annif_app:
-    image: quay.io/natlibfi/annif:0.47.1
+    image: quay.io/natlibfi/annif:0.52.0
     command: ["gunicorn", "annif:create_app()", "--bind", "0.0.0.0:8000", "--timeout", "600"]
     volumes:
       - data:/annif-projects:ro
@@ -81,7 +81,7 @@ services:
         mode: 0600
         uid: '998'
         gid: '998'
-    command: rsync -avzLu --exclude '*omikuji-train.txt' annif@$ANNIF_KK:/srv/annif-data/$SERVICE_DOMAIN/* /annif-projects
+    command: rsync -avzLu --exclude '*-train.*' annif@$ANNIF_KK:/srv/annif-data/$SERVICE_DOMAIN/* /annif-projects
     networks:
       - traefik-net
     deploy:
