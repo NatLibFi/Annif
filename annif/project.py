@@ -127,7 +127,8 @@ class AnnifProject(DatadirMixin):
                 self._transformer = annif.transformer.get_transform(
                     self.transform_spec, project=self)
             else:
-                self._transformer = annif.transformer.IdentityTransform(self)
+                self._transformer = annif.transformer.get_transform(
+                    'pass', project=self)
         return self._transformer
 
     @property

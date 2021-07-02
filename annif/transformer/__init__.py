@@ -3,11 +3,8 @@
 import re
 from . import transformer
 from . import inputlimiter
-from .transformer import IdentityTransform
 from annif.util import parse_args
 from annif.exception import ConfigurationException
-
-__all__ = ["IdentityTransform"]
 
 
 def parse_specs(transform_specs):

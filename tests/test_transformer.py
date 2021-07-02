@@ -37,7 +37,7 @@ def test_chained_transforms_text():
     assert transf.transform_text("abcdefghij") == "abc"
 
     # Check with a more arbitrary transform function
-    reverser = annif.transformer.IdentityTransform(None)
+    reverser = annif.transformer.transformer.IdentityTransform(None)
     reverser.transform_fn = lambda x: x[::-1]
     transf.transforms.append(reverser)
     assert transf.transform_text("abcdefghij") == "cba"
@@ -54,7 +54,7 @@ def test_chained_transforms_corpus(document_corpus):
         assert transf_doc.labels == doc.labels
 
     # Check with a more arbitrary transform function
-    reverser = annif.transformer.IdentityTransform(None)
+    reverser = annif.transformer.transformer.IdentityTransform(None)
     reverser.transform_fn = lambda x: x[::-1]
     transf.transforms.append(reverser)
     for transf_doc, doc in zip(transformed_corpus.documents,
