@@ -1,11 +1,13 @@
-"""Common functionality for input transforming."""
+"""Common functionality for transforming text of input documents."""
 
 from annif.corpus import TransformingDocumentCorpus
 from annif.exception import ConfigurationException
 
 
 class IdentityTransform():
-    """"""""  # TODO
+    """Transform that does not modify text but simply passes it through. This
+    class also acts as a base class for other transformations, which need to
+    implement and override the transform function."""
 
     name = 'pass'
 
@@ -17,7 +19,8 @@ class IdentityTransform():
 
 
 class TransformChain():
-    """"""  # TODO
+    """Class instantiating and holding the transformation objects performing
+    the actual text transformation."""
 
     def __init__(self, transform_classes, args, project):
         self.project = project

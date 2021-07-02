@@ -1,4 +1,5 @@
-# TODO Add docstring
+"""Functionality for obtaining text transformation from string specification"""
+
 import re
 from . import transformer
 from . import inputlimiter
@@ -10,8 +11,10 @@ __all__ = ["IdentityTransform"]
 
 
 def parse_specs(transform_specs):
-    """parse a configuration definition such as 'A(x),B(y=1),C' into a tuples
-    of ((A, [x], {}), (B, [None], {y: 1}))..."""  # TODO
+    """Parse a transformation specification into a list of tuples, e.g.
+    'transf_1(x),transf_2(y=42),transf_3' is parsed to
+    [(transf_1, [x], {}), (transf_2, [], {y: 42}), (transf_3, [], {})]."""
+
     parsed = []
     # Split by commas not inside parentheses
     parts = re.split(r',\s*(?![^()]*\))', transform_specs)

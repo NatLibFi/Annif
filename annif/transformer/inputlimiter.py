@@ -1,4 +1,6 @@
-# TODO Add docstring
+"""A simple transformation that truncates the text of input documents to a
+given character length."""
+
 from annif.exception import ConfigurationException
 from . import transformer
 
