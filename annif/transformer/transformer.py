@@ -12,13 +12,8 @@ class IdentityTransform():
     def __init__(self, project):
         self.project = project
 
-    def transform_text(self, text):
-        """"""  # TODO
+    def transform_fn(self, text):
         return text
-
-    def transform_corpus(self, corpus):
-        """"""  # TODO
-        return TransformingDocumentCorpus(corpus, self.transform_text)
 
 
 class TransformChain():
@@ -43,10 +38,8 @@ class TransformChain():
 
     def transform_text(self, text):
         for trans in self.transforms:
-            text = trans.transform_text(text)
+            text = trans.transform_fn(text)
         return text
 
     def transform_corpus(self, corpus):
-        for trans in self.transforms:
-            corpus = trans.transform_corpus(corpus)
-        return corpus
+        return TransformingDocumentCorpus(corpus, self.transform_text)

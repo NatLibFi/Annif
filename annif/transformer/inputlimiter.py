@@ -12,7 +12,7 @@ class InputLimiter(transformer.IdentityTransform):
         self.input_limit = int(input_limit)
         self._validate_value(self.input_limit)
 
-    def transform_text(self, text):
+    def transform_fn(self, text):
         return text[:self.input_limit]
 
     def _validate_value(self, input_limit):
