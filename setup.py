@@ -37,6 +37,7 @@ setup(
         'optuna==2.8.0',
         'stwfsapy==0.2.*',
         'python-dateutil',
+        'pycld3',
     ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
