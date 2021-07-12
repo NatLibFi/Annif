@@ -38,7 +38,8 @@ class LMDBSequence(Sequence):
         self._txn = txn
         cursor = txn.cursor()
         if cursor.last():
-            self._counter = key_to_idx(cursor.key())
+            # Counter holds the number of samples in the database
+            self._counter = key_to_idx(cursor.key()) + 1
         else:  # empty database
             self._counter = 0
         self._batch_size = batch_size
@@ -193,7 +194,6 @@ class NNEnsembleBackend(
                 self._corpus_to_vectors(corpus, seq)
         else:
             self.info("Reusing cached training data from previous run.")
-
         # fit the model using a read-only view of the LMDB
         with env.begin(buffers=True) as txn:
             seq = LMDBSequence(txn, batch_size=32)
