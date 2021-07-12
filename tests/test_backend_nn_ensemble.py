@@ -78,7 +78,10 @@ def test_nn_ensemble_train_and_learn(registry, tmpdir):
 
     time.sleep(0.1)  # make sure the timestamp has a chance to increase
 
-    nn_ensemble.learn(document_corpus)
+    # Learning is typically performed on one document at a time
+    document_corpus_single_doc = annif.corpus.LimitingDocumentCorpus(
+        document_corpus, 1)
+    nn_ensemble.learn(document_corpus_single_doc)
 
     assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
 
