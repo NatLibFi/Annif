@@ -6,7 +6,7 @@ import py.path
 from datetime import datetime, timedelta, timezone
 import annif.backend
 import annif.corpus
-from annif.exception import NotInitializedException
+from annif.exception import NotInitializedException, NotSupportedException
 
 pytest.importorskip("annif.backend.nn_ensemble")
 
@@ -178,6 +178,16 @@ def test_nn_ensemble_default_params(app_project):
     actual_params = nn_ensemble.params
     for param, val in expected_default_params.items():
         assert param in actual_params and actual_params[param] == val
+
+
+def test_nn_ensemble_train_nodocuments(project, empty_corpus):
+    nn_ensemble_type = annif.backend.get_backend('nn_ensemble')
+    nn_ensemble = nn_ensemble_type(
+        backend_id='nn_ensemble',
+        config_params={'sources': 'dummy-en'},
+        project=project)
+    with pytest.raises(NotSupportedException):
+        nn_ensemble.train(empty_corpus)
 
 
 def test_nn_ensemble_suggest(app_project):

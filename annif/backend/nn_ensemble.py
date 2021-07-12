@@ -15,7 +15,7 @@ from tensorflow.keras.utils import Sequence
 import tensorflow.keras.backend as K
 import annif.corpus
 import annif.util
-from annif.exception import NotInitializedException
+from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import VectorSuggestionResult
 from . import backend
 from . import ensemble
@@ -189,6 +189,9 @@ class NNEnsembleBackend(
     def _fit_model(self, corpus, epochs):
         env = self._open_lmdb(corpus == 'cached')
         if corpus != 'cached':
+            if corpus.is_empty():
+                raise NotSupportedException(
+                    'Cannot train nn_ensemble project with no documents')
             with env.begin(write=True, buffers=True) as txn:
                 seq = LMDBSequence(txn, batch_size=32)
                 self._corpus_to_vectors(corpus, seq)
