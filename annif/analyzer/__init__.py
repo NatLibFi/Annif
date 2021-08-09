@@ -13,12 +13,6 @@ def register_analyzer(analyzer):
     _analyzers[analyzer.name] = analyzer
 
 
-def _extend_posargs(posargs):
-    if not posargs:
-        posargs = [None]
-    return posargs
-
-
 def get_analyzer(analyzerspec):
     match = re.match(r'(\w+)(\((.*)\))?', analyzerspec)
     if match is None:
@@ -27,7 +21,7 @@ def get_analyzer(analyzerspec):
 
     analyzer = match.group(1)
     posargs, kwargs = parse_args(match.group(3))
-    posargs = _extend_posargs(posargs)
+    posargs = posargs if posargs else [None]
     try:
         return _analyzers[analyzer](*posargs, **kwargs)
     except KeyError:
