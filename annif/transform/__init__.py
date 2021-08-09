@@ -1,7 +1,7 @@
 """Functionality for obtaining text transformation from string specification"""
 
 import re
-from . import transformer
+from . import transform
 from . import inputlimiter
 from annif.util import parse_args
 from annif.exception import ConfigurationException
@@ -34,9 +34,9 @@ def get_transform(transform_specs, project):
             raise ConfigurationException(f"No such transform {trans}")
         transform_classes.append(_transforms[trans])
         args.append((posargs, kwargs))
-    return transformer.TransformChain(transform_classes, args, project)
+    return transform.TransformChain(transform_classes, args, project)
 
 
 _transforms = {
-    transformer.IdentityTransform.name: transformer.IdentityTransform,
+    transform.IdentityTransform.name: transform.IdentityTransform,
     inputlimiter.InputLimiter.name: inputlimiter.InputLimiter}

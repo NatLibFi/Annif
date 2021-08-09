@@ -4,7 +4,7 @@ import enum
 import os.path
 from shutil import rmtree
 import annif
-import annif.transformer
+import annif.transform
 import annif.analyzer
 import annif.corpus
 import annif.suggestion
@@ -28,7 +28,7 @@ class AnnifProject(DatadirMixin):
     """Class representing the configuration of a single Annif project."""
 
     # defaults for uninitialized instances
-    _transformer = None
+    _transform = None
     _analyzer = None
     _backend = None
     _vocab = None
@@ -121,11 +121,11 @@ class AnnifProject(DatadirMixin):
         return self._analyzer
 
     @property
-    def transformer(self):
-        if self._transformer is None:
-            self._transformer = annif.transformer.get_transform(
+    def transform(self):
+        if self._transform is None:
+            self._transform = annif.transform.get_transform(
                 self.transform_spec, project=self)
-        return self._transformer
+        return self._transform
 
     @property
     def backend(self):
@@ -188,7 +188,7 @@ class AnnifProject(DatadirMixin):
                 raise NotInitializedException('Project is not trained.')
         logger.debug('Suggesting subjects for text "%s..." (len=%d)',
                      text[:20], len(text))
-        text = self.transformer.transform_text(text)
+        text = self.transform.transform_text(text)
         hits = self._suggest_with_backend(text, backend_params)
         logger.debug('%d hits from backend', len(hits))
         return hits
@@ -197,7 +197,7 @@ class AnnifProject(DatadirMixin):
         """train the project using documents from a metadata source"""
         if corpus != 'cached':
             corpus.set_subject_index(self.subjects)
-            corpus = self.transformer.transform_corpus(corpus)
+            corpus = self.transform.transform_corpus(corpus)
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
@@ -209,7 +209,7 @@ class AnnifProject(DatadirMixin):
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-        corpus = self.transformer.transform_corpus(corpus)
+        corpus = self.transform.transform_corpus(corpus)
         if isinstance(
                 self.backend,
                 annif.backend.backend.AnnifLearningBackend):

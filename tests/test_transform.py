@@ -1,9 +1,9 @@
-"""Unit tests for the input-transformers in Annif"""
+"""Unit tests for the input-transforms in Annif"""
 
 import pytest
-import annif.transformer
+import annif.transform
 from annif.exception import ConfigurationException
-from annif.transformer import parse_specs
+from annif.transform import parse_specs
 
 
 def test_parse_specs():
@@ -13,38 +13,38 @@ def test_parse_specs():
 
 def test_get_transform_nonexistent():
     with pytest.raises(ConfigurationException):
-        annif.transformer.get_transform("nonexistent", project=None)
+        annif.transform.get_transform("nonexistent", project=None)
 
 
 def test_get_transform_badspec(project):
     with pytest.raises(ConfigurationException):
-        annif.transformer.get_transform("pass(invalid_argument)", project)
+        annif.transform.get_transform("pass(invalid_argument)", project)
 
 
 def test_input_limiter():
-    transf = annif.transformer.get_transform("limit(3)", project=None)
+    transf = annif.transform.get_transform("limit(3)", project=None)
     assert transf.transform_text("running") == "run"
 
 
 def test_input_limiter_with_negative_value(project):
     with pytest.raises(ConfigurationException):
-        annif.transformer.get_transform("limit(-2)", project)
+        annif.transform.get_transform("limit(-2)", project)
 
 
 def test_chained_transforms_text():
-    transf = annif.transformer.get_transform(
+    transf = annif.transform.get_transform(
         "limit(5),pass,limit(3),", project=None)
     assert transf.transform_text("abcdefghij") == "abc"
 
     # Check with a more arbitrary transform function
-    reverser = annif.transformer.transformer.IdentityTransform(None)
+    reverser = annif.transform.transform.IdentityTransform(None)
     reverser.transform_fn = lambda x: x[::-1]
     transf.transforms.append(reverser)
     assert transf.transform_text("abcdefghij") == "cba"
 
 
 def test_chained_transforms_corpus(document_corpus):
-    transf = annif.transformer.get_transform(
+    transf = annif.transform.get_transform(
         "limit(5),pass,limit(3),", project=None)
     transformed_corpus = transf.transform_corpus(document_corpus)
     for transf_doc, doc in zip(transformed_corpus.documents,
@@ -54,7 +54,7 @@ def test_chained_transforms_corpus(document_corpus):
         assert transf_doc.labels == doc.labels
 
     # Check with a more arbitrary transform function
-    reverser = annif.transformer.transformer.IdentityTransform(None)
+    reverser = annif.transform.transform.IdentityTransform(None)
     reverser.transform_fn = lambda x: x[::-1]
     transf.transforms.append(reverser)
     for transf_doc, doc in zip(transformed_corpus.documents,

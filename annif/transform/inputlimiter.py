@@ -2,10 +2,10 @@
 given character length."""
 
 from annif.exception import ConfigurationException
-from . import transformer
+from . import transform
 
 
-class InputLimiter(transformer.IdentityTransform):
+class InputLimiter(transform.IdentityTransform):
 
     name = 'limit'
 
@@ -20,5 +20,5 @@ class InputLimiter(transformer.IdentityTransform):
     def _validate_value(self, input_limit):
         if input_limit < 0:
             raise ConfigurationException(
-                'input_limit in limit_input transformer cannot be negative',
+                'input_limit in limit_input transform cannot be negative',
                 project_id=self.project.project_id)

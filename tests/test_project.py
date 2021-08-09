@@ -241,7 +241,7 @@ def test_project_train_state_not_available(registry, caplog):
 
 def test_project_transform_text_pass_through(registry):
     project = registry.get_project('dummy-transform')
-    assert project.transformer.transform_text(
+    assert project.transform.transform_text(
         'this is some text') == 'this is some text'
 
 
