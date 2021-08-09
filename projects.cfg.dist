@@ -117,7 +117,7 @@ language=fi
 backend=yake
 vocab=yso-fi
 analyzer=voikko(fi)
-input_limit=20000
+transform=limit(20000)
 
 [ensemble-fi]
 name=Ensemble Finnish
