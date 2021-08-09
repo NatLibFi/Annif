@@ -5,7 +5,7 @@ from annif.exception import ConfigurationException
 from . import transform
 
 
-class InputLimiter(transform.IdentityTransform):
+class InputLimiter(transform.BaseTransform):
 
     name = 'limit'
 

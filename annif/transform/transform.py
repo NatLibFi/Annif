@@ -1,18 +1,29 @@
 """Common functionality for transforming text of input documents."""
 
+import abc
 from annif.corpus import TransformingDocumentCorpus
 from annif.exception import ConfigurationException
 
 
-class IdentityTransform():
-    """Transform that does not modify text but simply passes it through. This
-    class also acts as a base class for other transformations, which need to
-    implement and override the transform function."""
+class BaseTransform(metaclass=abc.ABCMeta):
+    """Base class for text transformations, which need to implement the
+    transform function."""
 
-    name = 'pass'
+    name = None
 
     def __init__(self, project):
         self.project = project
+
+    @abc.abstractmethod
+    def transform_fn(self, text):
+        """Perform the text transformation."""
+        pass  # pragma: no cover
+
+
+class IdentityTransform(BaseTransform):
+    """Transform that does not modify text but simply passes it through."""
+
+    name = 'pass'
 
     def transform_fn(self, text):
         return text
