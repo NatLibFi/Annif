@@ -43,7 +43,7 @@ class AnnifProject(DatadirMixin):
         self.name = config.get('name', project_id)
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
-        self.transform_spec = config.get('input_transform', 'pass')
+        self.transform_spec = config.get('transform', 'pass')
         self.vocab_id = config.get('vocab', None)
         self.config = config
         self._base_datadir = datadir
