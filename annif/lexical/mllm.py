@@ -37,7 +37,8 @@ Feature = IntEnum(
 class MLLMModel:
     """Maui-like Lexical Matching model"""
 
-    def _conflate_matches(self, matches, doc_length):
+    @staticmethod
+    def _conflate_matches(matches, doc_length):
         subj_matches = collections.defaultdict(list)
         for match in matches:
             subj_matches[match.subject_id].append(match)
