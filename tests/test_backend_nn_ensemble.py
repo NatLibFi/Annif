@@ -6,7 +6,7 @@ import py.path
 from datetime import datetime, timedelta, timezone
 import annif.backend
 import annif.corpus
-from annif.exception import NotInitializedException
+from annif.exception import NotInitializedException, NotSupportedException
 
 pytest.importorskip("annif.backend.nn_ensemble")
 
@@ -78,7 +78,10 @@ def test_nn_ensemble_train_and_learn(registry, tmpdir):
 
     time.sleep(0.1)  # make sure the timestamp has a chance to increase
 
-    nn_ensemble.learn(document_corpus)
+    # Learning is typically performed on one document at a time
+    document_corpus_single_doc = annif.corpus.LimitingDocumentCorpus(
+        document_corpus, 1)
+    nn_ensemble.learn(document_corpus_single_doc)
 
     assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
 
@@ -175,6 +178,16 @@ def test_nn_ensemble_default_params(app_project):
     actual_params = nn_ensemble.params
     for param, val in expected_default_params.items():
         assert param in actual_params and actual_params[param] == val
+
+
+def test_nn_ensemble_train_nodocuments(project, empty_corpus):
+    nn_ensemble_type = annif.backend.get_backend('nn_ensemble')
+    nn_ensemble = nn_ensemble_type(
+        backend_id='nn_ensemble',
+        config_params={'sources': 'dummy-en'},
+        project=project)
+    with pytest.raises(NotSupportedException):
+        nn_ensemble.train(empty_corpus)
 
 
 def test_nn_ensemble_suggest(app_project):
