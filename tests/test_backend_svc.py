@@ -34,28 +34,28 @@ def test_svc_suggest_no_vectorizer(project):
         svc.suggest("example text")
 
 
-def test_svc_train(datadir, document_corpus_single_subject, project, caplog):
+def test_svc_train(datadir, document_corpus, project, caplog):
     svc_type = annif.backend.get_backend('svc')
     svc = svc_type(
         backend_id='svc',
         config_params={},
         project=project)
 
-    svc.train(document_corpus_single_subject)
+    svc.train(document_corpus)
     assert svc._model is not None
     assert datadir.join('svc-model.gz').exists()
     assert 'training on a document with multiple subjects is not ' + \
            'supported by SVC; selecting one random subject.' in caplog.text
 
 
-def test_svc_train_ngram(datadir, document_corpus_single_subject, project):
+def test_svc_train_ngram(datadir, document_corpus, project):
     svc_type = annif.backend.get_backend('svc')
     svc = svc_type(
         backend_id='svc',
         config_params={'ngram': 2},
         project=project)
 
-    svc.train(document_corpus_single_subject)
+    svc.train(document_corpus)
     assert svc._model is not None
     assert datadir.join('svc-model.gz').exists()
 
