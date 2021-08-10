@@ -34,43 +34,48 @@ Feature = IntEnum(
     start=0)
 
 
+def conflate_matches(matches, doc_length):
+    subj_matches = collections.defaultdict(list)
+    for match in matches:
+        subj_matches[match.subject_id].append(match)
+    return [
+        Candidate(
+            doc_length=doc_length,
+            subject_id=subject_id,
+            freq=len(matches) / doc_length,
+            is_pref=mean((float(m.is_pref) for m in matches)),
+            n_tokens=mean((m.n_tokens for m in matches)),
+            ambiguity=mean((m.ambiguity for m in matches)),
+            first_occ=matches[0].pos / doc_length,
+            last_occ=matches[-1].pos / doc_length,
+            spread=(matches[-1].pos - matches[0].pos) / doc_length
+        )
+        for subject_id, matches in subj_matches.items()]
+
+
+def generate_candidates(text, analyzer, vectorizer, index):
+    sentences = analyzer.tokenize_sentences(text)
+    sent_tokens = vectorizer.transform(sentences)
+    matches = []
+
+    for sent_idx, token_matrix in enumerate(sent_tokens):
+        tset = TokenSet(token_matrix.nonzero()[1])
+        for ts, ambiguity in index.search(tset):
+            matches.append(Match(subject_id=ts.subject_id,
+                                 is_pref=ts.is_pref,
+                                 n_tokens=len(ts),
+                                 pos=sent_idx,
+                                 ambiguity=ambiguity))
+
+    return conflate_matches(matches, len(sentences))
+
+
 class MLLMModel:
     """Maui-like Lexical Matching model"""
 
-    @staticmethod
-    def _conflate_matches(matches, doc_length):
-        subj_matches = collections.defaultdict(list)
-        for match in matches:
-            subj_matches[match.subject_id].append(match)
-        return [
-            Candidate(
-                doc_length=doc_length,
-                subject_id=subject_id,
-                freq=len(matches) / doc_length,
-                is_pref=mean((float(m.is_pref) for m in matches)),
-                n_tokens=mean((m.n_tokens for m in matches)),
-                ambiguity=mean((m.ambiguity for m in matches)),
-                first_occ=matches[0].pos / doc_length,
-                last_occ=matches[-1].pos / doc_length,
-                spread=(matches[-1].pos - matches[0].pos) / doc_length
-            )
-            for subject_id, matches in subj_matches.items()]
-
     def generate_candidates(self, text, analyzer):
-        sentences = analyzer.tokenize_sentences(text)
-        sent_tokens = self._vectorizer.transform(sentences)
-        matches = []
-
-        for sent_idx, token_matrix in enumerate(sent_tokens):
-            tset = TokenSet(token_matrix.nonzero()[1])
-            for ts, ambiguity in self._index.search(tset):
-                matches.append(Match(subject_id=ts.subject_id,
-                                     is_pref=ts.is_pref,
-                                     n_tokens=len(ts),
-                                     pos=sent_idx,
-                                     ambiguity=ambiguity))
-
-        return self._conflate_matches(matches, len(sentences))
+        return generate_candidates(text, analyzer,
+                                   self._vectorizer, self._index)
 
     def _candidates_to_features(self, candidates):
         """Convert a list of Candidates to a NumPy feature matrix"""
@@ -172,7 +177,8 @@ class MLLMModel:
             doc_subject_ids = [vocab.subjects.by_uri(uri)
                                for uri in doc.uris]
             self._subj_freq.update(doc_subject_ids)
-            candidates = self.generate_candidates(doc.text, analyzer)
+            candidates = generate_candidates(doc.text, analyzer,
+                                             self._vectorizer, self._index)
             self._doc_freq.update([c.subject_id for c in candidates])
             train_x.append(candidates)
             train_y += [(c.subject_id in doc_subject_ids) for c in candidates]
