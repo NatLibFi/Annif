@@ -56,7 +56,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                 self.warning(
                     'training on a document with multiple subjects is not ' +
                     'supported by SVC; selecting one random subject.')
-            classes.append(list(doc.uris)[0])
+            classes.append(next(iter(doc.uris)))
         return texts, classes
 
     def _train_classifier(self, veccorpus, classes):
