@@ -47,17 +47,16 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self.initialize_vectorizer()
         self._initialize_model()
 
-    @staticmethod
-    def _corpus_to_texts_and_classes(corpus):
+    def _corpus_to_texts_and_classes(self, corpus):
         texts = []
         classes = []
         for doc in corpus.documents:
             texts.append(doc.text)
             if len(doc.uris) > 1:
-                raise NotSupportedException(
-                    'SVC backend does not support training on documents ' +
-                    'with multiple subjects.')
-            classes.append(list(doc.uris)[0])
+                self.warning(
+                    'training on a document with multiple subjects is not ' +
+                    'supported by SVC; selecting one random subject.')
+            classes.append(next(iter(doc.uris)))
         return texts, classes
 
     def _train_classifier(self, veccorpus, classes):

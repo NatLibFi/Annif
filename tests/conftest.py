@@ -97,17 +97,6 @@ def document_corpus(subject_index):
 
 
 @pytest.fixture(scope='module')
-def document_corpus_single_subject(document_corpus):
-    docs_single_subj = []
-    for doc in document_corpus.documents:
-        uri = list(doc.uris)[0] if len(doc.uris) > 0 else None
-        label = list(doc.labels)[0] if len(doc.labels) > 0 else None
-        docs_single_subj.append(
-            annif.corpus.Document(doc.text, {uri}, {label}))
-    return annif.corpus.DocumentList(docs_single_subj)
-
-
-@pytest.fixture(scope='module')
 def pretrained_vectors():
     return py.path.local(os.path.join(
         os.path.dirname(__file__),
