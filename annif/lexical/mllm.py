@@ -11,6 +11,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.ensemble import BaggingClassifier
 from sklearn.tree import DecisionTreeClassifier
 import annif.util
+import annif.parallel
 from annif.lexical.tokenset import TokenSet, TokenSetIndex
 from annif.lexical.util import get_subject_labels
 from annif.lexical.util import make_relation_matrix, make_collection_matrix
@@ -68,6 +69,21 @@ def generate_candidates(text, analyzer, vectorizer, index):
                                  ambiguity=ambiguity))
 
     return conflate_matches(matches, len(sentences))
+
+
+def initializer(analyzer, vectorizer, index):
+    global _analyzer, _vectorizer, _index
+    _analyzer = analyzer
+    _vectorizer = vectorizer
+    _index = index
+
+
+def gen_candidates(args):
+    doc_subject_ids, text = args
+    global _analyzer, _vectorizer, _index
+    candidates = generate_candidates(
+        text, _analyzer, _vectorizer, _index)
+    return doc_subject_ids, candidates
 
 
 class MLLMModel:
@@ -173,16 +189,25 @@ class MLLMModel:
         doc_count = 0
         train_x = []
         train_y = []
-        for idx, doc in enumerate(corpus.documents):
-            doc_subject_ids = [vocab.subjects.by_uri(uri)
-                               for uri in doc.uris]
-            self._subj_freq.update(doc_subject_ids)
-            candidates = generate_candidates(doc.text, analyzer,
-                                             self._vectorizer, self._index)
-            self._doc_freq.update([c.subject_id for c in candidates])
-            train_x.append(candidates)
-            train_y += [(c.subject_id in doc_subject_ids) for c in candidates]
-            doc_count += 1
+
+        jobs, pool_class = annif.parallel.get_pool(4)
+
+        with pool_class(jobs,
+                        initializer=initializer,
+                        initargs=(analyzer,
+                                  self._vectorizer,
+                                  self._index)) as pool:
+            args = (([vocab.subjects.by_uri(uri) for uri in doc.uris],
+                     doc.text)
+                    for doc in corpus.documents)
+            for doc_subject_ids, candidates \
+                    in pool.imap_unordered(gen_candidates, args, 20):
+
+                self._doc_freq.update([c.subject_id for c in candidates])
+                train_x.append(candidates)
+                train_y += [(c.subject_id in doc_subject_ids)
+                            for c in candidates]
+                doc_count += 1
 
         # precalculate idf values for all candidate subjects
         self._idf = self._calculate_idf(subject_ids, doc_count)
