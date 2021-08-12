@@ -1,6 +1,5 @@
 """MLLM (Maui-like Lexical Matchin) model for Annif"""
 
-import time
 import collections
 import math
 import joblib
@@ -40,7 +39,7 @@ def conflate_matches(matches, doc_length):
     subj_matches = collections.defaultdict(list)
     for match in matches:
         subj_matches[match.subject_id].append(match)
-    ret = [
+    return [
         Candidate(
             doc_length=doc_length,
             subject_id=subject_id,
@@ -53,7 +52,6 @@ def conflate_matches(matches, doc_length):
             spread=(matches[-1].pos - matches[0].pos) / doc_length
         )
         for subject_id, matches in subj_matches.items()]
-    return ret
 
 
 def generate_candidates(text, analyzer, vectorizer, index):
@@ -70,13 +68,13 @@ def generate_candidates(text, analyzer, vectorizer, index):
                                  pos=sent_idx,
                                  ambiguity=ambiguity))
 
-    ret = conflate_matches(matches, len(sentences))
-    return ret
+    return conflate_matches(matches, len(sentences))
 
 
 def candidates_to_features(candidates,
-        related_matrix, broader_matrix, narrower_matrix, collection_matrix,
-        doc_freq, subj_freq, idf):
+                           related_matrix, broader_matrix,
+                           narrower_matrix, collection_matrix,
+                           doc_freq, subj_freq, idf):
     """Convert a list of Candidates to a NumPy feature matrix"""
 
     matrix = np.zeros((len(candidates), len(Feature)), dtype=np.float32)
@@ -115,6 +113,7 @@ class BaseWorker:
     def init(cls, args):
         cls.args = args
 
+
 class MLLMCandidateGenerator(BaseWorker):
 
     @classmethod
@@ -150,8 +149,6 @@ class MLLMModel:
                                       self._idf)
 
     def _prepare_terms(self, graph, vocab, params):
-        print("_prepare_terms starting")
-        starttime = time.time()
         if annif.util.boolean(params['use_hidden_labels']):
             label_props = [SKOS.altLabel, SKOS.hiddenLabel]
         else:
@@ -169,12 +166,9 @@ class MLLMModel:
                                   label=label,
                                   is_pref=False))
 
-        print("_prepare_terms took {:.1f} s".format(time.time()-starttime))
         return (terms, subject_ids)
 
     def _prepare_relations(self, graph, vocab):
-        print("_prepare_relations starting")
-        starttime = time.time()
         self._broader_matrix = make_relation_matrix(
             graph, vocab, SKOS.broader)
         self._narrower_matrix = make_relation_matrix(
@@ -182,18 +176,12 @@ class MLLMModel:
         self._related_matrix = make_relation_matrix(
             graph, vocab, SKOS.related)
         self._collection_matrix = make_collection_matrix(graph, vocab)
-        print("_prepare_relations took {:.1f} s".format(time.time()-starttime))
 
     def _prepare_train_index(self, vocab, analyzer, params):
-        print("_prepare_train_index starting")
-        starttime = time.time()
         graph = vocab.as_graph()
-        print("graph parsing took {:.1f} s".format(time.time()-starttime))
         terms, subject_ids = self._prepare_terms(graph, vocab, params)
         self._prepare_relations(graph, vocab)
 
-        print("index creation starting")
-        starttime2 = time.time()
         self._vectorizer = CountVectorizer(
             binary=True,
             tokenizer=analyzer.tokenize_words
@@ -205,25 +193,18 @@ class MLLMModel:
             tokens = label_matrix.nonzero()[1]
             tset = TokenSet(tokens, term.subject_id, term.is_pref)
             self._index.add(tset)
-        print("index creation took {:.1f} s".format(time.time()-starttime2))
 
-        print("_prepare_train_index took {:.1f} s".format(time.time()-starttime))
         return subject_ids
 
     def _calculate_idf(self, subject_ids, doc_count):
-        print("_calculate_idf starting")
-        starttime = time.time()
         idf = collections.defaultdict(float)
         for subj_id in subject_ids:
             idf[subj_id] = math.log((doc_count + 1) /
                                     (self._doc_freq[subj_id] + 1)) + 1
 
-        print("_calculate_idf took {:.1f} s".format(time.time()-starttime))
         return idf
 
     def prepare_train(self, corpus, vocab, analyzer, params):
-        print("_prepare_train starting")
-        starttime = time.time()
         subject_ids = self._prepare_train_index(vocab, analyzer, params)
 
         # frequency of subjects (by id) in the generated candidates
@@ -233,8 +214,6 @@ class MLLMModel:
         doc_count = 0
         train_x = []
         train_y = []
-        print("candidate generation starting")
-        starttime2 = time.time()
 
         jobs, pool_class = annif.parallel.get_pool(4)
 
@@ -258,13 +237,9 @@ class MLLMModel:
                 train_y += [(c.subject_id in doc_subject_ids)
                             for c in candidates]
                 doc_count += 1
-        print("candidate generation took {:.1f} s".format(time.time()-starttime2))
 
         # precalculate idf values for all candidate subjects
         self._idf = self._calculate_idf(subject_ids, doc_count)
-
-        print("candidate to feature conversion starting")
-        starttime3 = time.time()
 
         fc_args = {
             'related_matrix': self._related_matrix,
@@ -281,10 +256,7 @@ class MLLMModel:
                         initargs=(fc_args,)) as pool:
             features = pool.map(
                 MLLMFeatureConverter.candidates_to_features, train_x, 20)
-        ret = (np.vstack(features), np.array(train_y))
-        print("candidate to feature conversion took {:.1f} s".format(time.time()-starttime3))
-        print("prepare_train took {:.1f} s".format(time.time()-starttime))
-        return ret
+        return (np.vstack(features), np.array(train_y))
 
     def _create_classifier(self, params):
         return BaggingClassifier(
@@ -294,12 +266,9 @@ class MLLMModel:
             ), max_samples=float(params['max_samples']))
 
     def train(self, train_x, train_y, params):
-        print("train starting")
-        starttime = time.time()
         # fit the model on the training corpus
         self._classifier = self._create_classifier(params)
         self._classifier.fit(train_x, train_y)
-        print("train took {:.1f} s".format(time.time()-starttime))
 
     def _prediction_to_list(self, scores, candidates):
         subj_scores = [(score[1], c.subject_id)
