@@ -74,6 +74,40 @@ def generate_candidates(text, analyzer, vectorizer, index):
     return ret
 
 
+def candidates_to_features(candidates,
+        related_matrix, broader_matrix, narrower_matrix, collection_matrix,
+        doc_freq, subj_freq, idf):
+    """Convert a list of Candidates to a NumPy feature matrix"""
+
+    matrix = np.zeros((len(candidates), len(Feature)), dtype=np.float32)
+    c_ids = [c.subject_id for c in candidates]
+    c_vec = np.zeros(related_matrix.shape[0], dtype=np.bool)
+    c_vec[c_ids] = True
+    broader = broader_matrix.multiply(c_vec).sum(axis=1)
+    narrower = narrower_matrix.multiply(c_vec).sum(axis=1)
+    related = related_matrix.multiply(c_vec).sum(axis=1)
+    collection = collection_matrix.multiply(c_vec).T.dot(
+        collection_matrix).sum(axis=0)
+    for idx, c in enumerate(candidates):
+        subj = c.subject_id
+        matrix[idx, Feature.freq] = c.freq
+        matrix[idx, Feature.doc_freq] = doc_freq[subj]
+        matrix[idx, Feature.subj_freq] = subj_freq.get(subj, 1) - 1
+        matrix[idx, Feature.tfidf] = c.freq * idf[subj]
+        matrix[idx, Feature.is_pref] = c.is_pref
+        matrix[idx, Feature.n_tokens] = c.n_tokens
+        matrix[idx, Feature.ambiguity] = c.ambiguity
+        matrix[idx, Feature.first_occ] = c.first_occ
+        matrix[idx, Feature.last_occ] = c.last_occ
+        matrix[idx, Feature.spread] = c.spread
+        matrix[idx, Feature.doc_length] = c.doc_length
+        matrix[idx, Feature.broader] = broader[subj, 0] / len(c_ids)
+        matrix[idx, Feature.narrower] = narrower[subj, 0] / len(c_ids)
+        matrix[idx, Feature.related] = related[subj, 0] / len(c_ids)
+        matrix[idx, Feature.collection] = collection[0, subj] / len(c_ids)
+    return matrix
+
+
 class BaseWorker:
     args = None
 
@@ -91,6 +125,13 @@ class MLLMCandidateGenerator(BaseWorker):
         return doc_subject_ids, candidates
 
 
+class MLLMFeatureConverter(BaseWorker):
+
+    @classmethod
+    def candidates_to_features(cls, candidates):
+        return candidates_to_features(candidates, **cls.args)
+
+
 class MLLMModel:
     """Maui-like Lexical Matching model"""
 
@@ -99,34 +140,14 @@ class MLLMModel:
                                    self._vectorizer, self._index)
 
     def _candidates_to_features(self, candidates):
-        """Convert a list of Candidates to a NumPy feature matrix"""
-        matrix = np.zeros((len(candidates), len(Feature)), dtype=np.float32)
-        c_ids = [c.subject_id for c in candidates]
-        c_vec = np.zeros(self._related_matrix.shape[0], dtype=np.bool)
-        c_vec[c_ids] = True
-        broader = self._broader_matrix.multiply(c_vec).sum(axis=1)
-        narrower = self._narrower_matrix.multiply(c_vec).sum(axis=1)
-        related = self._related_matrix.multiply(c_vec).sum(axis=1)
-        collection = self._collection_matrix.multiply(c_vec).T.dot(
-            self._collection_matrix).sum(axis=0)
-        for idx, c in enumerate(candidates):
-            subj = c.subject_id
-            matrix[idx, Feature.freq] = c.freq
-            matrix[idx, Feature.doc_freq] = self._doc_freq[subj]
-            matrix[idx, Feature.subj_freq] = self._subj_freq.get(subj, 1) - 1
-            matrix[idx, Feature.tfidf] = c.freq * self._idf[subj]
-            matrix[idx, Feature.is_pref] = c.is_pref
-            matrix[idx, Feature.n_tokens] = c.n_tokens
-            matrix[idx, Feature.ambiguity] = c.ambiguity
-            matrix[idx, Feature.first_occ] = c.first_occ
-            matrix[idx, Feature.last_occ] = c.last_occ
-            matrix[idx, Feature.spread] = c.spread
-            matrix[idx, Feature.doc_length] = c.doc_length
-            matrix[idx, Feature.broader] = broader[subj, 0] / len(c_ids)
-            matrix[idx, Feature.narrower] = narrower[subj, 0] / len(c_ids)
-            matrix[idx, Feature.related] = related[subj, 0] / len(c_ids)
-            matrix[idx, Feature.collection] = collection[0, subj] / len(c_ids)
-        return matrix
+        return candidates_to_features(candidates,
+                                      self._related_matrix,
+                                      self._broader_matrix,
+                                      self._narrower_matrix,
+                                      self._collection_matrix,
+                                      self._doc_freq,
+                                      self._subj_freq,
+                                      self._idf)
 
     def _prepare_terms(self, graph, vocab, params):
         print("_prepare_terms starting")
@@ -217,7 +238,7 @@ class MLLMModel:
 
         jobs, pool_class = annif.parallel.get_pool(4)
 
-        worker_args = {
+        cg_args = {
             'analyzer': analyzer,
             'vectorizer': self._vectorizer,
             'index': self._index
@@ -225,7 +246,7 @@ class MLLMModel:
 
         with pool_class(jobs,
                         initializer=MLLMCandidateGenerator.init,
-                        initargs=(worker_args,)) as pool:
+                        initargs=(cg_args,)) as pool:
             params = (([vocab.subjects.by_uri(uri) for uri in doc.uris],
                        doc.text)
                       for doc in corpus.documents)
@@ -244,8 +265,23 @@ class MLLMModel:
 
         print("candidate to feature conversion starting")
         starttime3 = time.time()
-        ret = (np.vstack([self._candidates_to_features(candidates)
-                           for candidates in train_x]), np.array(train_y))
+
+        fc_args = {
+            'related_matrix': self._related_matrix,
+            'broader_matrix': self._broader_matrix,
+            'narrower_matrix': self._narrower_matrix,
+            'collection_matrix': self._collection_matrix,
+            'doc_freq': self._doc_freq,
+            'subj_freq': self._subj_freq,
+            'idf': self._idf
+        }
+
+        with pool_class(jobs,
+                        initializer=MLLMFeatureConverter.init,
+                        initargs=(fc_args,)) as pool:
+            features = pool.map(
+                MLLMFeatureConverter.candidates_to_features, train_x, 20)
+        ret = (np.vstack(features), np.array(train_y))
         print("candidate to feature conversion took {:.1f} s".format(time.time()-starttime3))
         print("prepare_train took {:.1f} s".format(time.time()-starttime))
         return ret
