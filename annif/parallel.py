@@ -5,6 +5,22 @@ import multiprocessing
 import multiprocessing.dummy
 
 
+class BaseWorker:
+    """Base class for workers that implement tasks executed via
+    multiprocessing. The init method can be used to store data objects that
+    are necessary for the operation. They will be stored in a class
+    attribute that is accessible to the static worker method. The storage
+    solution is inspired by this blog post:
+    https://thelaziestprogrammer.com/python/multiprocessing-pool-a-global-solution # noqa
+    """
+
+    args = None
+
+    @classmethod
+    def init(cls, args):
+        cls.args = args
+
+
 class ProjectSuggestMap:
     """A utility class that can be used to wrap one or more projects and
     provide a mapping method that converts Document objects to suggestions.

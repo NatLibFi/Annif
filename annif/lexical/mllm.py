@@ -106,15 +106,7 @@ def candidates_to_features(candidates,
     return matrix
 
 
-class BaseWorker:
-    args = None
-
-    @classmethod
-    def init(cls, args):
-        cls.args = args
-
-
-class MLLMCandidateGenerator(BaseWorker):
+class MLLMCandidateGenerator(annif.parallel.BaseWorker):
 
     @classmethod
     def generate_candidates(cls, doc_subject_ids, text):
@@ -124,7 +116,7 @@ class MLLMCandidateGenerator(BaseWorker):
         return doc_subject_ids, candidates
 
 
-class MLLMFeatureConverter(BaseWorker):
+class MLLMFeatureConverter(annif.parallel.BaseWorker):
 
     @classmethod
     def candidates_to_features(cls, candidates):
