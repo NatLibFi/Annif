@@ -86,18 +86,13 @@ def test_svc_suggest(project):
     svc_type = annif.backend.get_backend('svc')
     svc = svc_type(
         backend_id='svc',
-        config_params={'limit': 8},
+        config_params={'limit': 20},
         project=project)
 
-    results = svc.suggest("""Arkeologiaa sanotaan joskus myös
-        muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
-        tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
-        Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
-        joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
-        pohjaan.""")
+    results = svc.suggest("""Arkeologiaa sanotaan joskus myös...""")
 
     assert len(results) > 0
-    assert len(results) <= 8
+    assert len(results) <= 20
     hits = results.as_list(project.subjects)
     assert 'http://www.yso.fi/onto/yso/p10849' in [
         result.uri for result in hits]
