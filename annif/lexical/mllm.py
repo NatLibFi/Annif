@@ -74,22 +74,20 @@ def generate_candidates(text, analyzer, vectorizer, index):
     return ret
 
 
-class MLLMCandidateGenerator:
-    _analyzer = None
-    _vectorizer = None
-    _index = None
+class BaseWorker:
+    args = None
 
     @classmethod
-    def initialize(cls, analyzer, vectorizer, index):
-        cls._analyzer = analyzer
-        cls._vectorizer = vectorizer
-        cls._index = index
+    def init(cls, args):
+        cls.args = args
+
+class MLLMCandidateGenerator(BaseWorker):
 
     @classmethod
-    def generate_candidates(cls, args):
-        doc_subject_ids, text = args
+    def generate_candidates(cls, doc_subject_ids, text):
+        args = cls.args
         candidates = generate_candidates(
-            text, cls._analyzer, cls._vectorizer, cls._index)
+            text, args['analyzer'], args['vectorizer'], args['index'])
         return doc_subject_ids, candidates
 
 
@@ -219,16 +217,20 @@ class MLLMModel:
 
         jobs, pool_class = annif.parallel.get_pool(4)
 
+        worker_args = {
+            'analyzer': analyzer,
+            'vectorizer': self._vectorizer,
+            'index': self._index
+        }
+
         with pool_class(jobs,
-                        initializer=MLLMCandidateGenerator.initialize,
-                        initargs=(analyzer,
-                                  self._vectorizer,
-                                  self._index)) as pool:
-            args = (([vocab.subjects.by_uri(uri) for uri in doc.uris],
-                     doc.text)
-                    for doc in corpus.documents)
-            for doc_subject_ids, candidates in pool.imap_unordered(
-                    MLLMCandidateGenerator.generate_candidates, args, 20):
+                        initializer=MLLMCandidateGenerator.init,
+                        initargs=(worker_args,)) as pool:
+            params = (([vocab.subjects.by_uri(uri) for uri in doc.uris],
+                       doc.text)
+                      for doc in corpus.documents)
+            for doc_subject_ids, candidates in pool.starmap(
+                    MLLMCandidateGenerator.generate_candidates, params, 20):
 
                 self._doc_freq.update([c.subject_id for c in candidates])
                 train_x.append(candidates)
