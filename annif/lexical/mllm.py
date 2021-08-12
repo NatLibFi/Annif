@@ -71,19 +71,23 @@ def generate_candidates(text, analyzer, vectorizer, index):
     return conflate_matches(matches, len(sentences))
 
 
-def initializer(analyzer, vectorizer, index):
-    global _analyzer, _vectorizer, _index
-    _analyzer = analyzer
-    _vectorizer = vectorizer
-    _index = index
+class MLLMCandidateGenerator:
+    _analyzer = None
+    _vectorizer = None
+    _index = None
 
+    @classmethod
+    def initialize(cls, analyzer, vectorizer, index):
+        cls._analyzer = analyzer
+        cls._vectorizer = vectorizer
+        cls._index = index
 
-def gen_candidates(args):
-    doc_subject_ids, text = args
-    global _analyzer, _vectorizer, _index
-    candidates = generate_candidates(
-        text, _analyzer, _vectorizer, _index)
-    return doc_subject_ids, candidates
+    @classmethod
+    def generate_candidates(cls, args):
+        doc_subject_ids, text = args
+        candidates = generate_candidates(
+            text, cls._analyzer, cls._vectorizer, cls._index)
+        return doc_subject_ids, candidates
 
 
 class MLLMModel:
@@ -193,15 +197,15 @@ class MLLMModel:
         jobs, pool_class = annif.parallel.get_pool(4)
 
         with pool_class(jobs,
-                        initializer=initializer,
+                        initializer=MLLMCandidateGenerator.initialize,
                         initargs=(analyzer,
                                   self._vectorizer,
                                   self._index)) as pool:
             args = (([vocab.subjects.by_uri(uri) for uri in doc.uris],
                      doc.text)
                     for doc in corpus.documents)
-            for doc_subject_ids, candidates \
-                    in pool.imap_unordered(gen_candidates, args, 20):
+            for doc_subject_ids, candidates in pool.imap_unordered(
+                    MLLMCandidateGenerator.generate_candidates, args, 20):
 
                 self._doc_freq.update([c.subject_id for c in candidates])
                 train_x.append(candidates)
