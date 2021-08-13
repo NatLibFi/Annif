@@ -112,13 +112,15 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                                self.TRAIN_FILE,
                                method=self._write_train_file)
 
-    def _create_model(self, params):
+    def _create_model(self, params, jobs):
         self.info('creating fastText model')
         trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
         modelpath = os.path.join(self.datadir, self.MODEL_FILE)
         params = {param: self.FASTTEXT_PARAMS[param](val)
                   for param, val in params.items()
                   if param in self.FASTTEXT_PARAMS}
+        if jobs != 0:  # jobs set by user to non-default value
+            params['thread'] = jobs
         self.debug('Model parameters: {}'.format(params))
         self._model = fasttext.train_supervised(trainpath, **params)
         self._model.save_model(modelpath)
@@ -132,7 +134,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             self._create_train_file(corpus)
         else:
             self.info("Reusing cached training data from previous run.")
-        self._create_model(params)
+        self._create_model(params, jobs)
 
     def _predict_chunks(self, chunktexts, limit):
         return self._model.predict(list(
