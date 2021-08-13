@@ -47,7 +47,7 @@ def test_fasttext_train(document_corpus, project, datadir):
     assert datadir.join('fasttext-model').size() > 0
 
 
-def test_fasttext_train_cached(project, datadir):
+def test_fasttext_train_cached_jobs(project, datadir):
     assert datadir.join('fasttext-train.txt').exists()
     datadir.join('fasttext-model').remove()
     fasttext_type = annif.backend.get_backend("fasttext")
@@ -61,7 +61,7 @@ def test_fasttext_train_cached(project, datadir):
             'loss': 'hs'},
         project=project)
 
-    fasttext.train("cached")
+    fasttext.train("cached", jobs=2)
     assert fasttext._model is not None
     assert datadir.join('fasttext-model').exists()
     assert datadir.join('fasttext-model').size() > 0

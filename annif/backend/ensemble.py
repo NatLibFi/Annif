@@ -142,6 +142,6 @@ class EnsembleBackend(BaseEnsembleBackend, hyperopt.AnnifHyperoptBackend):
     def get_hp_optimizer(self, corpus, metric):
         return EnsembleOptimizer(self, corpus, metric)
 
-    def _train(self, corpus, params):
+    def _train(self, corpus, params, jobs=0):
         raise NotSupportedException(
             'Training ensemble backend is not possible.')

@@ -197,9 +197,13 @@ def run_loadvoc(project_id, subjectfile):
 @click.option('--docs-limit', '-d', default=None,
               type=click.IntRange(0, None),
               help='Maximum number of documents to use')
+@click.option('--jobs',
+              '-j',
+              default=0,
+              help='Number of parallel jobs (0 means choose automatically)')
 @backend_param_option
 @common_options
-def run_train(project_id, paths, cached, docs_limit, backend_param):
+def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
     """
     Train a project on a collection of documents.
     """
@@ -212,7 +216,7 @@ def run_train(project_id, paths, cached, docs_limit, backend_param):
         documents = 'cached'
     else:
         documents = open_documents(paths, docs_limit)
-    proj.train(documents, backend_params)
+    proj.train(documents, backend_params, jobs)
 
 
 @cli.command('learn')

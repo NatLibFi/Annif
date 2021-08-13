@@ -112,7 +112,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
         if self._model is None:
             self._model = self._load_model()
 
-    def _train(self, corpus, params):
+    def _train(self, corpus, params, jobs=0):
         self.info('starting train')
         if corpus != 'cached':
             if corpus.is_empty():

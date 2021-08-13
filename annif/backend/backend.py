@@ -54,15 +54,15 @@ class AnnifBackend(metaclass=abc.ABCMeta):
             backend_params.update(params)
         return backend_params
 
-    def _train(self, corpus, params):
+    def _train(self, corpus, params, jobs=0):
         """This method can be overridden by backends. It implements
         the train functionality, with pre-processed parameters."""
         pass  # default is to do nothing, subclasses may override
 
-    def train(self, corpus, params=None):
+    def train(self, corpus, params=None, jobs=0):
         """Train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)
-        return self._train(corpus, params=beparams)
+        return self._train(corpus, params=beparams, jobs=jobs)
 
     def initialize(self):
         """This method can be overridden by backends. It should cause the

@@ -124,7 +124,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
             model_filename,
             method=joblib.dump)
 
-    def _train(self, corpus, params):
+    def _train(self, corpus, params, jobs=0):
         if corpus == 'cached':
             raise NotSupportedException(
                 'Training pav project from cached data not supported.')
