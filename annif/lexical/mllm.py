@@ -110,9 +110,7 @@ class MLLMCandidateGenerator(annif.parallel.BaseWorker):
 
     @classmethod
     def generate_candidates(cls, doc_subject_ids, text):
-        args = cls.args
-        candidates = generate_candidates(
-            text, args['analyzer'], args['vectorizer'], args['index'])
+        candidates = generate_candidates(text, **cls.args)
         return doc_subject_ids, candidates
 
 
