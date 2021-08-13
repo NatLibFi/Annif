@@ -227,7 +227,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
                                self.TRAIN_FILE,
                                method=self._write_train_file)
 
-    def _train(self, corpus, params):
+    def _train(self, corpus, params, jobs=0):
         if corpus != 'cached':
             self._create_train_file(corpus)
         else:

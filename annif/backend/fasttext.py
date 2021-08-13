@@ -123,7 +123,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         self._model = fasttext.train_supervised(trainpath, **params)
         self._model.save_model(modelpath)
 
-    def _train(self, corpus, params):
+    def _train(self, corpus, params, jobs=0):
         if corpus != 'cached':
             if corpus.is_empty():
                 raise NotSupportedException(

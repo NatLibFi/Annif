@@ -68,7 +68,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                                self.MODEL_FILE,
                                method=joblib.dump)
 
-    def _train(self, corpus, params):
+    def _train(self, corpus, params, jobs=0):
         if corpus == 'cached':
             raise NotSupportedException(
                 'SVC backend does not support reuse of cached training data.')

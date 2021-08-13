@@ -183,6 +183,6 @@ class YakeBackend(backend.AnnifBackend):
         confl = score1 * score2 / (score1 * score2 + (1-score1) * (1-score2))
         return (confl-0.5) * 2
 
-    def _train(self, corpus, params):
+    def _train(self, corpus, params, jobs=0):
         raise NotSupportedException(
             'Training yake backend is not possible.')

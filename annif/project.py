@@ -193,7 +193,7 @@ class AnnifProject(DatadirMixin):
         logger.debug('%d hits from backend', len(hits))
         return hits
 
-    def train(self, corpus, backend_params=None):
+    def train(self, corpus, backend_params=None, jobs=0):
         """train the project using documents from a metadata source"""
         if corpus != 'cached':
             corpus.set_subject_index(self.subjects)
@@ -201,7 +201,7 @@ class AnnifProject(DatadirMixin):
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-        self.backend.train(corpus, beparams)
+        self.backend.train(corpus, beparams, jobs)
 
     def learn(self, corpus, backend_params=None):
         """further train the project using documents from a metadata source"""

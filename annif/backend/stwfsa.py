@@ -90,7 +90,7 @@ class StwfsaBackend(backend.AnnifBackend):
             y.append(doc.uris)
         return X, y
 
-    def _train(self, corpus, params):
+    def _train(self, corpus, params, jobs=0):
         X, y = self._load_data(corpus)
         new_params = {
                 key: self.STWFSA_PARAMETERS[key](val)

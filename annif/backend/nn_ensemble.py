@@ -164,7 +164,7 @@ class NNEnsembleBackend(
         self._model.summary(print_fn=summary.append)
         self.debug("Created model: \n" + "\n".join(summary))
 
-    def _train(self, corpus, params):
+    def _train(self, corpus, params, jobs=0):
         sources = annif.util.parse_sources(self.params['sources'])
         self._create_model(sources)
         self._fit_model(corpus, epochs=int(params['epochs']))

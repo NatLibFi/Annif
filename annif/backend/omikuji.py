@@ -99,7 +99,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             shutil.rmtree(model_path)
         self._model.save(os.path.join(self.datadir, self.MODEL_FILE))
 
-    def _train(self, corpus, params):
+    def _train(self, corpus, params, jobs=0):
         if corpus != 'cached':
             if corpus.is_empty():
                 raise NotSupportedException(
