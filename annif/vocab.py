@@ -60,11 +60,18 @@ class AnnifVocabulary(DatadirMixin):
     def skos(self):
         """return the subject vocabulary from SKOS file"""
         if self._skos_vocab is None:
+            dumppath = os.path.join(self.datadir, 'subjects.joblib')
+            if os.path.exists(dumppath):
+                logger.debug(f'loading graph dump from {dumppath}')
+                self._skos_vocab = annif.corpus.SubjectFileSKOS(dumppath,
+                                                                self.language)
+        if self._skos_vocab is None:
             path = os.path.join(self.datadir, 'subjects.ttl')
             if os.path.exists(path):
                 logger.debug(f'loading graph from {path}')
                 self._skos_vocab = annif.corpus.SubjectFileSKOS(path,
                                                                 self.language)
+                self._skos_vocab.save_skos(path, self.language)
             else:
                 raise NotInitializedException(f'graph file {path} not found')
         return self._skos_vocab
