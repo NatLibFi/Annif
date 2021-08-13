@@ -82,7 +82,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             trainfile.seek(0)
             print('{:08d}'.format(n_samples), end='', file=trainfile)
 
-    def _create_model(self, params):
+    def _create_model(self, params, jobs):
         train_path = os.path.join(self.datadir, self.TRAIN_FILE)
         model_path = os.path.join(self.datadir, self.MODEL_FILE)
         hyper_param = omikuji.Model.default_hyper_param()
@@ -94,7 +94,8 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         hyper_param.collapse_every_n_layers = int(
             params['collapse_every_n_layers'])
 
-        self._model = omikuji.Model.train_on_data(train_path, hyper_param)
+        self._model = omikuji.Model.train_on_data(
+            train_path, hyper_param, jobs or None)
         if os.path.exists(model_path):
             shutil.rmtree(model_path)
         self._model.save(os.path.join(self.datadir, self.MODEL_FILE))
@@ -112,7 +113,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             self._create_train_file(veccorpus, corpus)
         else:
             self.info("Reusing cached training data from previous run.")
-        self._create_model(params)
+        self._create_model(params, jobs)
 
     def _suggest(self, text, params):
         self.debug('Suggesting subjects for text "{}..." (len={})'.format(
