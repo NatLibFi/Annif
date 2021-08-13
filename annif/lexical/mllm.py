@@ -186,22 +186,11 @@ class MLLMModel:
 
         return subject_ids
 
-    def _calculate_idf(self, subject_ids, doc_count):
-        idf = collections.defaultdict(float)
-        for subj_id in subject_ids:
-            idf[subj_id] = math.log((doc_count + 1) /
-                                    (self._doc_freq[subj_id] + 1)) + 1
-
-        return idf
-
-    def prepare_train(self, corpus, vocab, analyzer, params, n_jobs):
-        subject_ids = self._prepare_train_index(vocab, analyzer, params)
-
+    def _prepare_train_data(self, corpus, vocab, analyzer, n_jobs):
         # frequency of subjects (by id) in the generated candidates
         self._doc_freq = collections.Counter()
         # frequency of manually assigned subjects ("domain keyphraseness")
         self._subj_freq = collections.Counter()
-        doc_count = 0
         train_x = []
         train_y = []
 
@@ -226,11 +215,18 @@ class MLLMModel:
                 train_x.append(candidates)
                 train_y += [(c.subject_id in doc_subject_ids)
                             for c in candidates]
-                doc_count += 1
 
-        # precalculate idf values for all candidate subjects
-        self._idf = self._calculate_idf(subject_ids, doc_count)
+        return (train_x, train_y)
 
+    def _calculate_idf(self, subject_ids, doc_count):
+        idf = collections.defaultdict(float)
+        for subj_id in subject_ids:
+            idf[subj_id] = math.log((doc_count + 1) /
+                                    (self._doc_freq[subj_id] + 1)) + 1
+
+        return idf
+
+    def _prepare_features(self, train_x, n_jobs):
         fc_args = {
             'related_matrix': self._related_matrix,
             'broader_matrix': self._broader_matrix,
@@ -241,11 +237,30 @@ class MLLMModel:
             'idf': self._idf
         }
 
+        jobs, pool_class = annif.parallel.get_pool(n_jobs)
+
         with pool_class(jobs,
                         initializer=MLLMFeatureConverter.init,
                         initargs=(fc_args,)) as pool:
             features = pool.map(
                 MLLMFeatureConverter.candidates_to_features, train_x, 10)
+
+        return features
+
+    def prepare_train(self, corpus, vocab, analyzer, params, n_jobs):
+        # create an index from the vocabulary terms
+        subject_ids = self._prepare_train_index(vocab, analyzer, params)
+
+        # convert the corpus into train data
+        train_x, train_y = self._prepare_train_data(
+            corpus, vocab, analyzer, n_jobs)
+
+        # precalculate idf values for all candidate subjects
+        self._idf = self._calculate_idf(subject_ids, len(train_x))
+
+        # convert the train data into feature values
+        features = self._prepare_features(train_x, n_jobs)
+
         return (np.vstack(features), np.array(train_y))
 
     def _create_classifier(self, params):
