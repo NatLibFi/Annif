@@ -222,7 +222,7 @@ class MLLMModel:
                        doc.text)
                       for doc in corpus.documents)
             for doc_subject_ids, candidates in pool.starmap(
-                    MLLMCandidateGenerator.generate_candidates, params, 20):
+                    MLLMCandidateGenerator.generate_candidates, params, 10):
 
                 self._doc_freq.update([c.subject_id for c in candidates])
                 train_x.append(candidates)
@@ -247,7 +247,7 @@ class MLLMModel:
                         initializer=MLLMFeatureConverter.init,
                         initargs=(fc_args,)) as pool:
             features = pool.map(
-                MLLMFeatureConverter.candidates_to_features, train_x, 20)
+                MLLMFeatureConverter.candidates_to_features, train_x, 10)
         return (np.vstack(features), np.array(train_y))
 
     def _create_classifier(self, params):
