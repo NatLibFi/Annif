@@ -68,8 +68,8 @@ class DocumentFile(DocumentCorpus):
     def _parse_tsv_line(self, line):
         if '\t' in line:
             text, uris = line.split('\t', maxsplit=1)
-            subjects = [annif.util.cleanup_uri(uri)
-                        for uri in uris.split()]
+            subjects = {annif.util.cleanup_uri(uri)
+                        for uri in uris.split()}
             yield self._create_document(text=text,
                                         uris=subjects,
                                         labels=[])
