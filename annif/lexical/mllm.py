@@ -196,7 +196,7 @@ class MLLMModel:
 
         return idf
 
-    def prepare_train(self, corpus, vocab, analyzer, params):
+    def prepare_train(self, corpus, vocab, analyzer, params, n_jobs):
         subject_ids = self._prepare_train_index(vocab, analyzer, params)
 
         # frequency of subjects (by id) in the generated candidates
@@ -207,7 +207,7 @@ class MLLMModel:
         train_x = []
         train_y = []
 
-        jobs, pool_class = annif.parallel.get_pool(4)
+        jobs, pool_class = annif.parallel.get_pool(n_jobs)
 
         cg_args = {
             'analyzer': analyzer,

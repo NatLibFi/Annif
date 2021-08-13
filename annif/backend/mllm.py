@@ -124,7 +124,8 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
             train_data = self._model.prepare_train(corpus,
                                                    self.project.vocab,
                                                    self.project.analyzer,
-                                                   params)
+                                                   params,
+                                                   jobs)
             annif.util.atomic_save(train_data,
                                    self.datadir,
                                    self.TRAIN_FILE,
