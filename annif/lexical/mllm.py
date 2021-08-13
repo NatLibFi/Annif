@@ -211,6 +211,7 @@ class MLLMModel:
             for doc_subject_ids, candidates in pool.starmap(
                     MLLMCandidateGenerator.generate_candidates, params, 10):
 
+                self._subj_freq.update(doc_subject_ids)
                 self._doc_freq.update([c.subject_id for c in candidates])
                 train_x.append(candidates)
                 train_y += [(c.subject_id in doc_subject_ids)
