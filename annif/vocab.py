@@ -65,13 +65,17 @@ class AnnifVocabulary(DatadirMixin):
                 logger.debug(f'loading graph dump from {dumppath}')
                 self._skos_vocab = annif.corpus.SubjectFileSKOS(dumppath,
                                                                 self.language)
-        if self._skos_vocab is None:
+                return self._skos_vocab
+
+            # graph dump file not found - parse ttl file instead
             path = os.path.join(self.datadir, 'subjects.ttl')
             if os.path.exists(path):
                 logger.debug(f'loading graph from {path}')
                 self._skos_vocab = annif.corpus.SubjectFileSKOS(path,
                                                                 self.language)
+                # store the dump file so we can use it next time
                 self._skos_vocab.save_skos(path, self.language)
+                return self._skos_vocab
             else:
                 raise NotInitializedException(f'graph file {path} not found')
         return self._skos_vocab
