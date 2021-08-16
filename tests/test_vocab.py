@@ -1,8 +1,10 @@
 """Unit tests for vocabulary functionality in Annif"""
 
+import pytest
 import os
 import annif.corpus
 import annif.vocab
+from annif.exception import NotInitializedException
 import rdflib.namespace
 
 
@@ -101,6 +103,17 @@ def test_skos_cache(tmpdir):
     assert isinstance(vocab.skos, annif.corpus.SubjectFileSKOS)
     # cached dump file has been recreated in .skos property access
     assert tmpdir.join('vocabs/vocab-id/subjects.joblib.gz').exists()
+
+
+def test_skos_not_found(tmpdir):
+    vocab = load_dummy_vocab(tmpdir)
+    assert tmpdir.join('vocabs/vocab-id/subjects.ttl').exists()
+    assert tmpdir.join('vocabs/vocab-id/subjects.joblib.gz').exists()
+    tmpdir.join('vocabs/vocab-id/subjects.ttl').remove()
+    tmpdir.join('vocabs/vocab-id/subjects.joblib.gz').remove()
+
+    with pytest.raises(NotInitializedException):
+        vocab.skos
 
 
 def test_as_graph(tmpdir):
