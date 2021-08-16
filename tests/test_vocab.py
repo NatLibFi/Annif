@@ -84,6 +84,25 @@ def test_update_subject_index_with_added_subjects(tmpdir):
                                  '42.42')
 
 
+def test_skos(tmpdir):
+    vocab = load_dummy_vocab(tmpdir)
+    assert tmpdir.join('vocabs/vocab-id/subjects.ttl').exists()
+    assert tmpdir.join('vocabs/vocab-id/subjects.joblib.gz').exists()
+    assert isinstance(vocab.skos, annif.corpus.SubjectFileSKOS)
+
+
+def test_skos_cache(tmpdir):
+    vocab = load_dummy_vocab(tmpdir)
+    assert tmpdir.join('vocabs/vocab-id/subjects.ttl').exists()
+    assert tmpdir.join('vocabs/vocab-id/subjects.joblib.gz').exists()
+    tmpdir.join('vocabs/vocab-id/subjects.joblib.gz').remove()
+    assert not tmpdir.join('vocabs/vocab-id/subjects.joblib.gz').exists()
+
+    assert isinstance(vocab.skos, annif.corpus.SubjectFileSKOS)
+    # cached dump file has been recreated in .skos property access
+    assert tmpdir.join('vocabs/vocab-id/subjects.joblib.gz').exists()
+
+
 def test_as_graph(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
     graph = vocab.as_graph()
