@@ -1,5 +1,6 @@
 """Support for subjects loaded from a SKOS/RDF file"""
 
+import os.path
 import shutil
 import joblib
 import rdflib
@@ -80,7 +81,8 @@ class SubjectFileSKOS(SubjectCorpus):
 
         if self.path.endswith('.ttl'):
             # input is already in Turtle syntax, no need to reserialize
-            if self.path != path:
+            if not os.path.exists(path) or \
+               not os.path.samefile(self.path, path):
                 shutil.copyfile(self.path, path)
         else:
             # need to serialize into Turtle
