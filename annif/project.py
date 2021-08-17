@@ -87,8 +87,9 @@ class AnnifProject(DatadirMixin):
             logger.warning(err.format_message())
 
     def initialize(self, parallel=False):
-        """initialize this project and its backend so that they are ready to
-        be used"""
+        """Initialize this project and its backend so that they are ready to
+        be used. If parallel is True, expect that the project will be used
+        for parallel processing."""
 
         if self.initialized:
             return

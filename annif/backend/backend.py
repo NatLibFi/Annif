@@ -66,7 +66,9 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     def initialize(self, parallel=False):
         """This method can be overridden by backends. It should cause the
-        backend to pre-load all data it needs during operation."""
+        backend to pre-load all data it needs during operation.
+        If parallel is True, the backend should expect to be used for
+        parallel operation."""
         pass
 
     @abc.abstractmethod
