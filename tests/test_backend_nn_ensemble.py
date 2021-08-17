@@ -16,6 +16,18 @@ def test_lmdb_idx_to_key_to_idx():
     assert annif.backend.nn_ensemble.key_to_idx(b'00000042') == 42
 
 
+def test_nn_ensemble_initialize_parallel(project):
+    nn_ensemble_type = annif.backend.get_backend('nn_ensemble')
+    nn_ensemble = nn_ensemble_type(
+        backend_id='nn_ensemble',
+        config_params={'sources': 'dummy-en'},
+        project=project)
+
+    nn_ensemble.initialize(parallel=True)
+    # model is still not loaded since we're preparing for parallel execution
+    assert nn_ensemble._model is None
+
+
 def test_nn_ensemble_suggest_no_model(project):
     nn_ensemble_type = annif.backend.get_backend('nn_ensemble')
     nn_ensemble = nn_ensemble_type(

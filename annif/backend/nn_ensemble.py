@@ -109,10 +109,14 @@ class NNEnsembleBackend(
         params.update(self.DEFAULT_PARAMETERS)
         return params
 
-    def initialize(self):
-        super().initialize()
+    def initialize(self, parallel=False):
+        super().initialize(parallel)
         if self._model is not None:
             return  # already initialized
+        if parallel:
+            # Don't load TF model just before parallel execution,
+            # since it won't work after forking worker processes
+            return
         model_filename = os.path.join(self.datadir, self.MODEL_FILE)
         if not os.path.exists(model_filename):
             raise NotInitializedException(

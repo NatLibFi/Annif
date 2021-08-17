@@ -64,7 +64,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         fasttext.FastText.eprint = orig_eprint
         return model
 
-    def initialize(self):
+    def initialize(self, parallel=False):
         if self._model is None:
             path = os.path.join(self.datadir, self.MODEL_FILE)
             self.debug('loading fastText model from {}'.format(path))

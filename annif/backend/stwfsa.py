@@ -63,7 +63,7 @@ class StwfsaBackend(backend.AnnifBackend):
 
     _model = None
 
-    def initialize(self):
+    def initialize(self, parallel=False):
         if self._model is None:
             path = os.path.join(self.datadir, self.MODEL_FILE)
             self.debug(f'Loading STWFSA model from {path}.')
