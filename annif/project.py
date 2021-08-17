@@ -90,6 +90,9 @@ class AnnifProject(DatadirMixin):
         """initialize this project and its backend so that they are ready to
         be used"""
 
+        if self.initialized:
+            return
+
         logger.debug("Initializing project '%s'", self.project_id)
 
         self._initialize_analyzer()
