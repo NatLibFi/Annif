@@ -76,17 +76,17 @@ class AnnifProject(DatadirMixin):
         except AnnifException as err:
             logger.warning(err.format_message())
 
-    def _initialize_backend(self):
+    def _initialize_backend(self, parallel):
         logger.debug("Project '%s': initializing backend", self.project_id)
         try:
             if not self.backend:
                 logger.debug("Cannot initialize backend: does not exist")
                 return
-            self.backend.initialize()
+            self.backend.initialize(parallel)
         except AnnifException as err:
             logger.warning(err.format_message())
 
-    def initialize(self):
+    def initialize(self, parallel=False):
         """initialize this project and its backend so that they are ready to
         be used"""
 
@@ -97,7 +97,7 @@ class AnnifProject(DatadirMixin):
 
         self._initialize_analyzer()
         self._initialize_subjects()
-        self._initialize_backend()
+        self._initialize_backend(parallel)
 
         self.initialized = True
 

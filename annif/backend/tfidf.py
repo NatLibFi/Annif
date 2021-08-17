@@ -95,7 +95,7 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                     'similarity index {} not found'.format(path),
                     backend_id=self.backend_id)
 
-    def initialize(self):
+    def initialize(self, parallel=False):
         self.initialize_vectorizer()
         self._initialize_index()
 

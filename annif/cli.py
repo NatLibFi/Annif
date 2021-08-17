@@ -362,7 +362,7 @@ def run_eval(
 
     jobs, pool_class = annif.parallel.get_pool(jobs)
 
-    project.initialize()
+    project.initialize(parallel=True)
     psmap = annif.parallel.ProjectSuggestMap(
         project.registry, [project_id], backend_params, limit, threshold)
 

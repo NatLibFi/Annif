@@ -64,7 +64,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         beparams = self._get_backend_params(params)
         return self._train(corpus, params=beparams, jobs=jobs)
 
-    def initialize(self):
+    def initialize(self, parallel=False):
         """This method can be overridden by backends. It should cause the
         backend to pre-load all data it needs during operation."""
         pass
