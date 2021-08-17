@@ -1,6 +1,8 @@
 """Support for subjects loaded from a SKOS/RDF file"""
 
+import os.path
 import shutil
+import joblib
 import rdflib
 import rdflib.util
 from rdflib.namespace import SKOS, RDF, OWL
@@ -22,6 +24,8 @@ def serialize_subjects_to_skos(subjects, language, path):
                    SKOS.notation,
                    rdflib.Literal(subject.notation)))
     graph.serialize(destination=path, format='turtle')
+    # also dump the graph in joblib format which is faster to load
+    joblib.dump(graph, path.replace('.ttl', '.joblib.gz'))
 
 
 class SubjectFileSKOS(SubjectCorpus):
@@ -30,8 +34,12 @@ class SubjectFileSKOS(SubjectCorpus):
     def __init__(self, path, language):
         self.path = path
         self.language = language
-        self.graph = rdflib.Graph()
-        self.graph.load(self.path, format=rdflib.util.guess_format(self.path))
+        if path.endswith('.joblib.gz'):
+            self.graph = joblib.load(path)
+        else:
+            self.graph = rdflib.Graph()
+            self.graph.load(self.path,
+                            format=rdflib.util.guess_format(self.path))
 
     @property
     def subjects(self):
@@ -73,7 +81,11 @@ class SubjectFileSKOS(SubjectCorpus):
 
         if self.path.endswith('.ttl'):
             # input is already in Turtle syntax, no need to reserialize
-            shutil.copyfile(self.path, path)
+            if not os.path.exists(path) or \
+               not os.path.samefile(self.path, path):
+                shutil.copyfile(self.path, path)
         else:
             # need to serialize into Turtle
             self.graph.serialize(destination=path, format='turtle')
+        # also dump the graph in joblib format which is faster to load
+        joblib.dump(self.graph, path.replace('.ttl', '.joblib.gz'))
