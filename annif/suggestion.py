@@ -103,7 +103,7 @@ class VectorSuggestionResult(SuggestionResult):
         for subject_id in self.subject_order:
             score = self._vector[subject_id]
             if score <= 0.0:
-                continue  # we can skip the remaining ones
+                break  # we can skip the remaining ones
             subject = subject_index[subject_id]
             hits.append(
                 SubjectSuggestion(
