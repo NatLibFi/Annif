@@ -10,6 +10,7 @@ class TokenSet:
 
     def __init__(self, tokens, subject_id=None, is_pref=False):
         self._tokens = set(tokens)
+        self.key = tokens[0] if len(tokens) else None
         self.subject_id = subject_id
         self.is_pref = is_pref
 
@@ -25,13 +26,6 @@ class TokenSet:
 
         return other._tokens.issubset(self._tokens)
 
-    def sample(self):
-        """Return an arbitrary token from this TokenSet, or None if empty"""
-        try:
-            return next(iter(self._tokens))
-        except StopIteration:
-            return None
-
 
 class TokenSetIndex:
     """A searchable index of TokenSets (representing vocabulary terms)"""
@@ -44,9 +38,8 @@ class TokenSetIndex:
 
     def add(self, tset):
         """Add a TokenSet into this index"""
-        token = tset.sample()
-        if token is not None:
-            self._index[token].add(tset)
+        if tset.key is not None:
+            self._index[tset.key].add(tset)
 
     def _find_subj_tsets(self, tset):
         """return a dict (subject_id : TokenSet) of matches contained in the
