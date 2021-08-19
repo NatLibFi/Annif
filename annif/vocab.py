@@ -63,7 +63,7 @@ class AnnifVocabulary(DatadirMixin):
             return self._skos_vocab
 
         # attempt to load graph from dump file
-        dumppath = os.path.join(self.datadir, 'subjects.joblib.gz')
+        dumppath = os.path.join(self.datadir, 'subjects.dump.gz')
         if os.path.exists(dumppath):
             logger.debug(f'loading graph dump from {dumppath}')
             self._skos_vocab = annif.corpus.SubjectFileSKOS(dumppath,
