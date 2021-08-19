@@ -6,6 +6,7 @@ import joblib
 import rdflib
 import rdflib.util
 from rdflib.namespace import SKOS, RDF, OWL
+import annif.util
 from .types import Subject, SubjectCorpus
 
 
@@ -25,7 +26,9 @@ def serialize_subjects_to_skos(subjects, language, path):
                    rdflib.Literal(subject.notation)))
     graph.serialize(destination=path, format='turtle')
     # also dump the graph in joblib format which is faster to load
-    joblib.dump(graph, path.replace('.ttl', '.dump.gz'))
+    annif.util.atomic_save(graph,
+                           *os.path.split(path.replace('.ttl', '.dump.gz')),
+                           method=joblib.dump)
 
 
 class SubjectFileSKOS(SubjectCorpus):
@@ -88,4 +91,7 @@ class SubjectFileSKOS(SubjectCorpus):
             # need to serialize into Turtle
             self.graph.serialize(destination=path, format='turtle')
         # also dump the graph in joblib format which is faster to load
-        joblib.dump(self.graph, path.replace('.ttl', '.dump.gz'))
+        annif.util.atomic_save(self.graph,
+                               *os.path.split(
+                                   path.replace('.ttl', '.dump.gz')),
+                               method=joblib.dump)
