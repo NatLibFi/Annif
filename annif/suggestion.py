@@ -2,6 +2,7 @@
 
 import abc
 import collections
+import itertools
 import numpy as np
 
 
@@ -136,9 +137,10 @@ class VectorSuggestionResult(SuggestionResult):
         if limit is not None:
             limit_mask = np.zeros_like(self._vector, dtype=np.bool)
             deprecated_set = set(deprecated_ids)
-            top_k_subjects = [subj for subj in self.subject_order
-                              if subj not in deprecated_set][:limit]
-            limit_mask[top_k_subjects] = True
+            top_k_subjects = itertools.islice(
+                                (subj for subj in self.subject_order
+                                 if subj not in deprecated_set), limit)
+            limit_mask[list(top_k_subjects)] = True
             mask = mask & limit_mask
         else:
             deprecated_mask = np.ones_like(self._vector, dtype=np.bool)
