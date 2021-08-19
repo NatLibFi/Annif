@@ -141,9 +141,15 @@ class MLLMModel:
         )
         label_corpus = self._vectorizer.fit_transform((t.label for t in terms))
 
+        # frequency of each token used in labels - how rare each word is
+        token_freq = np.bincount(label_corpus.indices,
+                                 minlength=label_corpus.shape[1])
+
         self._index = TokenSetIndex()
         for term, label_matrix in zip(terms, label_corpus):
             tokens = label_matrix.nonzero()[1]
+            # sort tokens by frequency - use the rarest token as index key
+            tokens = sorted(tokens, key=token_freq.__getitem__)
             tset = TokenSet(tokens, term.subject_id, term.is_pref)
             self._index.add(tset)
 
