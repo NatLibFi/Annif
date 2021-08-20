@@ -129,6 +129,8 @@ def test_loadvoc_tsv(testdatadir):
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects.dump.gz').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects.dump.gz').size() > 0
 
 
 def test_loadvoc_tsv_with_bom(testdatadir):
@@ -148,6 +150,8 @@ def test_loadvoc_tsv_with_bom(testdatadir):
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects.dump.gz').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects.dump.gz').size() > 0
 
 
 def test_loadvoc_rdf(testdatadir):
@@ -167,6 +171,8 @@ def test_loadvoc_rdf(testdatadir):
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects.dump.gz').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects.dump.gz').size() > 0
 
 
 def test_loadvoc_ttl(testdatadir):
@@ -186,6 +192,8 @@ def test_loadvoc_ttl(testdatadir):
     assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects.dump.gz').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects.dump.gz').size() > 0
 
 
 def test_loadvoc_nonexistent_path():

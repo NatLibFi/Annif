@@ -108,7 +108,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
                 'train data file {} not found'.format(path),
                 backend_id=self.backend_id)
 
-    def initialize(self):
+    def initialize(self, parallel=False):
         if self._model is None:
             self._model = self._load_model()
 

@@ -59,15 +59,28 @@ class AnnifVocabulary(DatadirMixin):
     @property
     def skos(self):
         """return the subject vocabulary from SKOS file"""
-        if self._skos_vocab is None:
-            path = os.path.join(self.datadir, 'subjects.ttl')
-            if os.path.exists(path):
-                logger.debug(f'loading graph from {path}')
-                self._skos_vocab = annif.corpus.SubjectFileSKOS(path,
-                                                                self.language)
-            else:
-                raise NotInitializedException(f'graph file {path} not found')
-        return self._skos_vocab
+        if self._skos_vocab is not None:
+            return self._skos_vocab
+
+        # attempt to load graph from dump file
+        dumppath = os.path.join(self.datadir, 'subjects.dump.gz')
+        if os.path.exists(dumppath):
+            logger.debug(f'loading graph dump from {dumppath}')
+            self._skos_vocab = annif.corpus.SubjectFileSKOS(dumppath,
+                                                            self.language)
+            return self._skos_vocab
+
+        # graph dump file not found - parse ttl file instead
+        path = os.path.join(self.datadir, 'subjects.ttl')
+        if os.path.exists(path):
+            logger.debug(f'loading graph from {path}')
+            self._skos_vocab = annif.corpus.SubjectFileSKOS(path,
+                                                            self.language)
+            # store the dump file so we can use it next time
+            self._skos_vocab.save_skos(path, self.language)
+            return self._skos_vocab
+
+        raise NotInitializedException(f'graph file {path} not found')
 
     def load_vocabulary(self, subject_corpus, language):
         """load subjects from a subject corpus and save them into a

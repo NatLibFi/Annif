@@ -1,8 +1,10 @@
 """Unit tests for vocabulary functionality in Annif"""
 
+import pytest
 import os
 import annif.corpus
 import annif.vocab
+from annif.exception import NotInitializedException
 import rdflib.namespace
 
 
@@ -82,6 +84,36 @@ def test_update_subject_index_with_added_subjects(tmpdir):
     assert vocab.subjects.by_uri('http://example.org/new-dummy') == 2
     assert vocab.subjects[2] == ('http://example.org/new-dummy', 'new dummy',
                                  '42.42')
+
+
+def test_skos(tmpdir):
+    vocab = load_dummy_vocab(tmpdir)
+    assert tmpdir.join('vocabs/vocab-id/subjects.ttl').exists()
+    assert tmpdir.join('vocabs/vocab-id/subjects.dump.gz').exists()
+    assert isinstance(vocab.skos, annif.corpus.SubjectFileSKOS)
+
+
+def test_skos_cache(tmpdir):
+    vocab = load_dummy_vocab(tmpdir)
+    assert tmpdir.join('vocabs/vocab-id/subjects.ttl').exists()
+    assert tmpdir.join('vocabs/vocab-id/subjects.dump.gz').exists()
+    tmpdir.join('vocabs/vocab-id/subjects.dump.gz').remove()
+    assert not tmpdir.join('vocabs/vocab-id/subjects.dump.gz').exists()
+
+    assert isinstance(vocab.skos, annif.corpus.SubjectFileSKOS)
+    # cached dump file has been recreated in .skos property access
+    assert tmpdir.join('vocabs/vocab-id/subjects.dump.gz').exists()
+
+
+def test_skos_not_found(tmpdir):
+    vocab = load_dummy_vocab(tmpdir)
+    assert tmpdir.join('vocabs/vocab-id/subjects.ttl').exists()
+    assert tmpdir.join('vocabs/vocab-id/subjects.dump.gz').exists()
+    tmpdir.join('vocabs/vocab-id/subjects.ttl').remove()
+    tmpdir.join('vocabs/vocab-id/subjects.dump.gz').remove()
+
+    with pytest.raises(NotInitializedException):
+        vocab.skos
 
 
 def test_as_graph(tmpdir):

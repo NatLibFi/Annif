@@ -31,7 +31,8 @@ def get_project(project_id):
     """
     Helper function to get a project by ID and bail out if it doesn't exist"""
     try:
-        return annif.registry.get_project(project_id, min_access=Access.hidden)
+        return annif.registry.get_project(project_id,
+                                          min_access=Access.private)
     except ValueError:
         click.echo(
             "No projects found with id \'{0}\'.".format(project_id),
@@ -362,7 +363,7 @@ def run_eval(
 
     jobs, pool_class = annif.parallel.get_pool(jobs)
 
-    project.initialize()
+    project.initialize(parallel=True)
     psmap = annif.parallel.ProjectSuggestMap(
         project.registry, [project_id], backend_params, limit, threshold)
 

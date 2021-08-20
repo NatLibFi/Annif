@@ -46,7 +46,7 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
 
     DEFAULT_PARAMETERS = {'algorithm': 'oaa'}
 
-    def initialize(self):
+    def initialize(self, parallel=False):
         if self._model is None:
             path = os.path.join(self.datadir, self.MODEL_FILE)
             if not os.path.exists(path):

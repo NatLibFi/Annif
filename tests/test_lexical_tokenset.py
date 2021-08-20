@@ -13,11 +13,11 @@ def test_mllm_tokenset():
     assert tset.contains(TokenSet(tokens))
     assert tset.contains(TokenSet([1]))
     assert not tset.contains(TokenSet([0]))
-    assert tset.sample() in tokens
+    assert tset.key in tokens
 
 
-def test_mllm_tokenset_empty_sample():
-    assert TokenSet([]).sample() is None
+def test_mllm_tokenset_empty_key():
+    assert TokenSet([]).key is None
 
 
 def test_mllm_tokensetindex():

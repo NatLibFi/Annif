@@ -19,12 +19,12 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         return [getattr(self.project.registry.get_project(project_id), attr)
                 for project_id, _ in sources]
 
-    def initialize(self):
+    def initialize(self, parallel=False):
         # initialize all the source projects
         params = self._get_backend_params(None)
         for project_id, _ in annif.util.parse_sources(params['sources']):
             project = self.project.registry.get_project(project_id)
-            project.initialize()
+            project.initialize(parallel)
 
     def _normalize_hits(self, hits, source_project):
         """Hook for processing hits from backends. Intended to be overridden

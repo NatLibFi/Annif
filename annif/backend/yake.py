@@ -60,7 +60,7 @@ class YakeBackend(backend.AnnifBackend):
                 raise ConfigurationException(
                     f'invalid label type {lt}', backend_id=self.backend_id)
 
-    def initialize(self):
+    def initialize(self, parallel=False):
         self._initialize_index()
 
     def _initialize_index(self):

@@ -32,8 +32,8 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         params.update(self.DEFAULT_PARAMETERS)
         return params
 
-    def initialize(self):
-        super().initialize()
+    def initialize(self, parallel=False):
+        super().initialize(parallel)
         if self._models is not None:
             return  # already initialized
         self._models = {}
