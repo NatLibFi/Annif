@@ -120,7 +120,8 @@ class MLLMFeatureConverter(annif.parallel.BaseWorker):
 
     @classmethod
     def candidates_to_features(cls, candidates):
-        return candidates_to_features(candidates, **cls.args)
+        return candidates_to_features(candidates,
+                                      **cls.args)  # pragma: no cover
 
 
 class MLLMModel:
