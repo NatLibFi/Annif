@@ -27,6 +27,11 @@ Candidate = collections.namedtuple(
     'doc_length subject_id freq is_pref n_tokens ambiguity ' +
     'first_occ last_occ spread')
 
+ModelData = collections.namedtuple(
+    'ModelData',
+    'broader narrower related collection ' +
+    'doc_freq subj_freq idf')
+
 Feature = IntEnum(
     'Feature',
     'freq doc_freq subj_freq tfidf is_pref n_tokens ambiguity ' +
@@ -71,27 +76,24 @@ def generate_candidates(text, analyzer, vectorizer, index):
     return conflate_matches(matches, len(sentences))
 
 
-def candidates_to_features(candidates,
-                           related_matrix, broader_matrix,
-                           narrower_matrix, collection_matrix,
-                           doc_freq, subj_freq, idf):
+def candidates_to_features(candidates, mdata):
     """Convert a list of Candidates to a NumPy feature matrix"""
 
     matrix = np.zeros((len(candidates), len(Feature)), dtype=np.float32)
     c_ids = [c.subject_id for c in candidates]
-    c_vec = np.zeros(related_matrix.shape[0], dtype=np.bool)
+    c_vec = np.zeros(mdata.related.shape[0], dtype=np.bool)
     c_vec[c_ids] = True
-    broader = broader_matrix.multiply(c_vec).sum(axis=1)
-    narrower = narrower_matrix.multiply(c_vec).sum(axis=1)
-    related = related_matrix.multiply(c_vec).sum(axis=1)
-    collection = collection_matrix.multiply(c_vec).T.dot(
-        collection_matrix).sum(axis=0)
+    broader = mdata.broader.multiply(c_vec).sum(axis=1)
+    narrower = mdata.narrower.multiply(c_vec).sum(axis=1)
+    related = mdata.related.multiply(c_vec).sum(axis=1)
+    collection = mdata.collection.multiply(c_vec).T.dot(
+        mdata.collection).sum(axis=0)
     for idx, c in enumerate(candidates):
         subj = c.subject_id
         matrix[idx, Feature.freq] = c.freq
-        matrix[idx, Feature.doc_freq] = doc_freq[subj]
-        matrix[idx, Feature.subj_freq] = subj_freq.get(subj, 1) - 1
-        matrix[idx, Feature.tfidf] = c.freq * idf[subj]
+        matrix[idx, Feature.doc_freq] = mdata.doc_freq[subj]
+        matrix[idx, Feature.subj_freq] = mdata.subj_freq.get(subj, 1) - 1
+        matrix[idx, Feature.tfidf] = c.freq * mdata.idf[subj]
         matrix[idx, Feature.is_pref] = c.is_pref
         matrix[idx, Feature.n_tokens] = c.n_tokens
         matrix[idx, Feature.ambiguity] = c.ambiguity
@@ -128,15 +130,18 @@ class MLLMModel:
         return generate_candidates(text, analyzer,
                                    self._vectorizer, self._index)
 
+    @property
+    def _model_data(self):
+        return ModelData(broader=self._broader_matrix,
+                         narrower=self._narrower_matrix,
+                         related=self._related_matrix,
+                         collection=self._collection_matrix,
+                         doc_freq=self._doc_freq,
+                         subj_freq=self._subj_freq,
+                         idf=self._idf)
+
     def _candidates_to_features(self, candidates):
-        return candidates_to_features(candidates,
-                                      self._related_matrix,
-                                      self._broader_matrix,
-                                      self._narrower_matrix,
-                                      self._collection_matrix,
-                                      self._doc_freq,
-                                      self._subj_freq,
-                                      self._idf)
+        return candidates_to_features(candidates, self._model_data)
 
     def _prepare_terms(self, graph, vocab, params):
         if annif.util.boolean(params['use_hidden_labels']):
@@ -234,16 +239,7 @@ class MLLMModel:
         return idf
 
     def _prepare_features(self, train_x, n_jobs):
-        fc_args = {
-            'related_matrix': self._related_matrix,
-            'broader_matrix': self._broader_matrix,
-            'narrower_matrix': self._narrower_matrix,
-            'collection_matrix': self._collection_matrix,
-            'doc_freq': self._doc_freq,
-            'subj_freq': self._subj_freq,
-            'idf': self._idf
-        }
-
+        fc_args = {'mdata': self._model_data}
         jobs, pool_class = annif.parallel.get_pool(n_jobs)
 
         with pool_class(jobs,
