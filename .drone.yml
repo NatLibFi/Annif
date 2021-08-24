@@ -59,8 +59,6 @@ steps:
       <<: *docker_settings
       auto_tag: true
     when:
-      branch:
-      - master
       event:
       - tag
 
