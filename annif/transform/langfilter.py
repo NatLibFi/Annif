@@ -11,9 +11,8 @@ class LangFilter(transform.BaseTransform):
 
     name = 'filter_lang'
 
-    def __init__(self, project, threshold=0.99):
+    def __init__(self, project):
         super().__init__(project)
-        self.threshold = float(threshold)
 
     def transform_fn(self, text):
         retained_sentences = []
@@ -23,9 +22,7 @@ class LangFilter(transform.BaseTransform):
         for sent in sentences:
             # TODO: Concat very short sentence to next one for better accuracy?
             detected_lang, probability = annif.util.detect_language(sent)
-            # TODO: Retain also those sentences which detection fails on?
-            if detected_lang == self.project.language \
-                    and probability >= self.threshold:
+            if detected_lang == self.project.language or detected_lang is None:
                 retained_sentences.append(sent)
         text_out = ' '.join(retained_sentences)
         logger.debug(f'Number of retained chars {len(text_out)} ' +
