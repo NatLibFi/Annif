@@ -1,7 +1,9 @@
 """Unit tests for the MLLM model in Annif"""
 
 import numpy as np
+import pytest
 from annif.lexical.mllm import MLLMModel
+from annif.exception import OperationFailedException
 
 
 def test_mllmmodel_prepare_terms(vocabulary):
@@ -53,3 +55,17 @@ def test_mllmmodel_prepare_relations(vocabulary):
     dating = vocabulary.subjects.by_uri('http://www.yso.fi/onto/yso/p7804')
     # "dating (age estimation)" is in 3 collections
     assert c_matrix[:, dating].sum() == 3
+
+
+def test_train_sanity_check():
+    model = MLLMModel()
+    params = {
+        'min_samples_leaf': 20,
+        'max_leaf_nodes': 1000,
+        'max_samples': 0.9
+    }
+    train_x = [(1, 2), (2, 3)]
+    train_y = [False, False]
+
+    with pytest.raises(OperationFailedException):
+        model.train(train_x, train_y, params)
