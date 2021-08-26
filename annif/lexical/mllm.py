@@ -12,6 +12,7 @@ from sklearn.ensemble import BaggingClassifier
 from sklearn.tree import DecisionTreeClassifier
 import annif.util
 import annif.parallel
+from annif.exception import OperationFailedException
 from annif.lexical.tokenset import TokenSet, TokenSetIndex
 from annif.lexical.util import get_subject_labels
 from annif.lexical.util import make_relation_matrix, make_collection_matrix
@@ -278,6 +279,13 @@ class MLLMModel:
         # fit the model on the training corpus
         self._classifier = self._create_classifier(params)
         self._classifier.fit(train_x, train_y)
+        # sanity check: verify that the classifier has seen both classes
+        if self._classifier.n_classes_ != 2:
+            raise OperationFailedException(
+                "Unable to create classifier: " +
+                "Not enough positive and negative examples " +
+                "in the training data. Please check that your training " +
+                "data matches your vocabulary.")
 
     def _prediction_to_list(self, scores, candidates):
         subj_scores = [(score[1], c.subject_id)
