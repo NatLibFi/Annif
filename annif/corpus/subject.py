@@ -67,7 +67,7 @@ class SubjectIndex:
         self._append(subject_id, uri, label, notation)
 
     def contains_uri(self, uri):
-        return uri in self._uris
+        return uri in self._uri_idx
 
     def by_uri(self, uri, warnings=True):
         """return the subject index of a subject by its URI, or None if not found.
