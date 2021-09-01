@@ -37,3 +37,9 @@ try:
     register_analyzer(voikko.VoikkoAnalyzer)
 except ImportError:
     annif.logger.debug("voikko not available, not enabling voikko analyzer")
+
+try:
+    from . import spacy
+    register_analyzer(spacy.SpacyAnalyzer)
+except ImportError:
+    annif.logger.debug("spaCy not available, not enabling spacy analyzer")

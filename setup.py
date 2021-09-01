@@ -46,6 +46,7 @@ setup(
         'omikuji': ['omikuji==0.4.*'],
         'yake': ['yake==0.4.5'],
         'pycld3': ['pycld3'],
+        'spacy': ['spacy==3.1.*'],
         'dev': [
             'codecov',
             'pytest-cov',
