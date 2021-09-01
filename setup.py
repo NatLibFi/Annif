@@ -35,7 +35,8 @@ setup(
         'gunicorn',
         'numpy==1.19.*',
         'optuna==2.8.0',
-        'stwfsapy==0.2.*'
+        'stwfsapy==0.2.*',
+        'python-dateutil',
     ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
