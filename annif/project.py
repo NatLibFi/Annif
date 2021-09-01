@@ -120,8 +120,7 @@ class AnnifProject(DatadirMixin):
                     self.analyzer_spec)
             else:
                 raise ConfigurationException(
-                    "analyzer setting is missing (and needed by the backend)",
-                    project_id=self.project_id)
+                    "analyzer setting is missing", project_id=self.project_id)
         return self._analyzer
 
     @property
