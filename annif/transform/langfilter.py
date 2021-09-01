@@ -22,8 +22,6 @@ class LangFilter(transform.BaseTransform):
 
         retained_sentences = []
         sentences = self.project.analyzer.tokenize_sentences(text)
-        logger.debug(f'Number of input chars {len(text)} ' +
-                     f'in {len(sentences)} sentences')
         for sent in sentences:
             if len(sent) < self.sentence_min_length:
                 retained_sentences.append(sent)
@@ -32,6 +30,4 @@ class LangFilter(transform.BaseTransform):
             if detected_lang == self.project.language or detected_lang is None:
                 retained_sentences.append(sent)
         text_out = ' '.join(retained_sentences)
-        logger.debug(f'Number of retained chars {len(text_out)} ' +
-                     f'in {len(retained_sentences)} sentences')
         return text_out
