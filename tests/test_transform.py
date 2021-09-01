@@ -66,6 +66,27 @@ def test_lang_filter(project):
     assert transf.transform_text(text) == text_filtered
 
 
+def test_lang_filter_text_min_length(project):
+    text = "This is just some non-Finnish text of 52 characters."
+    transf = annif.transform.get_transform("filter_lang", project)
+    assert transf.transform_text(text) == text
+    # Set a short text_min_length to apply language filtering:
+    transf = annif.transform.get_transform(
+        "filter_lang(text_min_length=50)", project)
+    assert transf.transform_text(text) == ""
+
+
+def test_lang_filter_sentence_min_length(project):
+    text = "This is a non-Finnish sentence of 42 chars. And this of 20 chars."
+    transf = annif.transform.get_transform(
+        "filter_lang(text_min_length=50)", project)
+    assert transf.transform_text(text) == text
+    # Set a short sentence_min_length to apply language filtering:
+    transf = annif.transform.get_transform(
+        "filter_lang(text_min_length=50,sentence_min_length=30)", project)
+    assert transf.transform_text(text) == "And this of 20 chars."
+
+
 def test_chained_transforms_text():
     transf = annif.transform.get_transform(
         "limit(5),pass,limit(3),", project=None)
