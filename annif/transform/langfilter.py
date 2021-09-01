@@ -11,8 +11,9 @@ class LangFilter(transform.BaseTransform):
 
     name = 'filter_lang'
 
-    def __init__(self, project):
+    def __init__(self, project, sentence_min_length=50):
         super().__init__(project)
+        self.sentence_min_length = int(sentence_min_length)
 
     def transform_fn(self, text):
         retained_sentences = []
@@ -20,7 +21,9 @@ class LangFilter(transform.BaseTransform):
         logger.debug(f'Number of input chars {len(text)} ' +
                      f'in {len(sentences)} sentences')
         for sent in sentences:
-            # TODO: Concat very short sentence to next one for better accuracy?
+            if len(sent) < self.sentence_min_length:
+                retained_sentences.append(sent)
+                continue
             detected_lang, probability = annif.util.detect_language(sent)
             if detected_lang == self.project.language or detected_lang is None:
                 retained_sentences.append(sent)
