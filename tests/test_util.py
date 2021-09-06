@@ -30,4 +30,4 @@ def test_detect_language():
     )
     outputs = ('en', 'fi', 'sv', None)
     for text, true_lang in zip(inputs, outputs):
-        assert true_lang == annif.util.detect_language(text)[0]
+        assert true_lang == annif.util.detect_language(text)

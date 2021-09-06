@@ -87,13 +87,13 @@ def parse_args(param_string):
 
 def detect_language(text):
     """Tries to detect the language of a text input. Outputs a BCP-47-style
-    language code (e.g. 'en') and a probability for the language in a tuple."""
+    language code (e.g. 'en')."""
 
     lan_info = cld3.get_language(text)
     if lan_info is not None and lan_info.is_reliable:
-        return (lan_info.language, lan_info.probability)
+        return lan_info.language
     else:
-        return (None, None)
+        return None
 
 
 def boolean(val):

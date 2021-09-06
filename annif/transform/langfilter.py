@@ -21,13 +21,11 @@ class LangFilter(transform.BaseTransform):
             return text
 
         retained_sentences = []
-        sentences = self.project.analyzer.tokenize_sentences(text)
-        for sent in sentences:
+        for sent in self.project.analyzer.tokenize_sentences(text):
             if len(sent) < self.sentence_min_length:
                 retained_sentences.append(sent)
                 continue
-            detected_lang, probability = annif.util.detect_language(sent)
+            detected_lang = annif.util.detect_language(sent)
             if detected_lang == self.project.language or detected_lang is None:
                 retained_sentences.append(sent)
-        text_out = ' '.join(retained_sentences)
-        return text_out
+        return ' '.join(retained_sentences)
