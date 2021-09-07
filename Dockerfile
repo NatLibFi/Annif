@@ -1,4 +1,4 @@
-FROM python:3.8-slim-buster AS builder
+FROM python:3.8-slim-bullseye AS builder
 
 LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
 
@@ -10,7 +10,7 @@ RUN apt-get update \
 		fasttext==0.9.2
 
 
-FROM python:3.8-slim-buster
+FROM python:3.8-slim-bullseye
 
 COPY --from=builder /usr/local/lib/python3.8 /usr/local/lib/python3.8
 
