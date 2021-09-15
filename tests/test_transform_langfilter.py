@@ -20,6 +20,7 @@ def test_lang_filter(project):
         bibliotek, som ansvarar för utökning, beskrivning, förvaring och
         tillhandahållande av vårt nationella publikationsarv och av sina unika
         samlingar.
+        Abc defghij klmnopqr stuwxyz.
         Turvaamme Suomessa julkaistun tai Suomea koskevan julkaistun
         kulttuuriperinnön saatavuuden sekä välittämme ja tuotamme
         tietosisältöjä tutkimukselle, opiskelulle, kansalaisille ja
@@ -31,6 +32,7 @@ def test_lang_filter(project):
         Kansalliskirjasto on kaikille avoin kulttuuriperintöorganisaatio, joka
         palvelee valtakunnallisesti kansalaisia, tiedeyhteisöjä ja muita
         yhteiskunnan toimijoita.
+        Abc defghij klmnopqr stuwxyz.
         Turvaamme Suomessa julkaistun tai Suomea koskevan julkaistun
         kulttuuriperinnön saatavuuden sekä välittämme ja tuotamme
         tietosisältöjä tutkimukselle, opiskelulle, kansalaisille ja
