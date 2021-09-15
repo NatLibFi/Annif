@@ -1,6 +1,7 @@
 """Functionality for obtaining text transformation from string specification"""
 
 import re
+import annif
 from . import transform
 from . import inputlimiter
 from annif.util import parse_args
@@ -40,3 +41,11 @@ def get_transform(transform_specs, project):
 _transforms = {
     transform.IdentityTransform.name: transform.IdentityTransform,
     inputlimiter.InputLimiter.name: inputlimiter.InputLimiter}
+
+# Optional transforms
+try:
+    from . import langfilter
+    _transforms.update({langfilter.LangFilter.name: langfilter.LangFilter})
+except ImportError:
+    annif.logger.debug(
+        "pycld3 not available, not enabling filter_language transform")
