@@ -228,6 +228,8 @@ class VWMultiBackend(mixins.ChunkingBackend, backend.AnnifLearningBackend):
                                method=self._write_train_file)
 
     def _train(self, corpus, params, jobs=0):
+        self.warning('Deprecation: This backend will no longer be available in'
+                     ' version 0.56')
         if corpus != 'cached':
             self._create_train_file(corpus)
         else:
