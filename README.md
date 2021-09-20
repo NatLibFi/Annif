@@ -1,4 +1,4 @@
-<img src="http://annif.org/new/static/img/annif-RGB.svg" width="150">
+<img src="https://annif.org/static/img/annif-RGB.svg" width="150">
 
 [![DOI](https://zenodo.org/badge/100936800.svg)](https://zenodo.org/badge/latestdoi/100936800)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
