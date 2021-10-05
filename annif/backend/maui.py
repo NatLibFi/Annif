@@ -155,6 +155,8 @@ class MauiBackend(backend.AnnifBackend):
             time.sleep(1)
 
     def _train(self, corpus, params, jobs=0):
+        self.warning('Deprecation: This backend will no longer be available in'
+                     ' version 0.56')
         if corpus == 'cached':
             raise NotSupportedException(
                 'Training maui project from cached data not supported.')
