@@ -22,9 +22,9 @@ setup(
     install_requires=[
         'connexion[swagger-ui]',
         'swagger_ui_bundle',
-        'flask',
+        'flask>=1.0.4,<2',
         'flask-cors',
-        'click==8.0.*',
+        'click==7.1.*',
         'click-log',
         'joblib==1.0.1',
         'nltk',
