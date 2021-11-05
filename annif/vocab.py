@@ -66,9 +66,14 @@ class AnnifVocabulary(DatadirMixin):
         dumppath = os.path.join(self.datadir, 'subjects.dump.gz')
         if os.path.exists(dumppath):
             logger.debug(f'loading graph dump from {dumppath}')
-            self._skos_vocab = annif.corpus.SubjectFileSKOS(dumppath,
-                                                            self.language)
-            return self._skos_vocab
+            try:
+                self._skos_vocab = annif.corpus.SubjectFileSKOS(dumppath,
+                                                                self.language)
+            except ModuleNotFoundError:
+                # Probably dump has been saved using a different rdflib version
+                logger.debug('could not load graph dump, using turtle file')
+            else:
+                return self._skos_vocab
 
         # graph dump file not found - parse ttl file instead
         path = os.path.join(self.datadir, 'subjects.ttl')

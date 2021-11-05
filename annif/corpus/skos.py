@@ -5,7 +5,7 @@ import shutil
 import joblib
 import rdflib
 import rdflib.util
-from rdflib.namespace import SKOS, RDF, OWL
+from rdflib.namespace import SKOS, RDF, OWL, RDFS
 import annif.util
 from .types import Subject, SubjectCorpus
 
@@ -41,17 +41,18 @@ class SubjectFileSKOS(SubjectCorpus):
             self.graph = joblib.load(path)
         else:
             self.graph = rdflib.Graph()
-            self.graph.load(self.path,
-                            format=rdflib.util.guess_format(self.path))
+            self.graph.parse(self.path,
+                             format=rdflib.util.guess_format(self.path))
 
     @property
     def subjects(self):
         for concept in self.concepts:
-            labels = self.graph.preferredLabel(concept, lang=self.language)
+            labels = self.get_concept_labels(
+                concept, [SKOS.prefLabel, RDFS.label], self.language)
             notation = self.graph.value(concept, SKOS.notation, None, any=True)
             if not labels:
                 continue
-            label = str(labels[0][1])
+            label = labels[0]
             if notation is not None:
                 notation = str(notation)
             yield Subject(uri=str(concept), label=label, notation=notation,
