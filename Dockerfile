@@ -28,7 +28,7 @@ RUN pip install --upgrade pip --no-cache-dir
 
 # Install all optional dependencies:
 COPY setup.py README.md LICENSE.txt projects.cfg.dist /Annif/
-RUN pip install .[dev,voikko,fasttext,nn,omikuji,vw,yake] --no-cache-dir
+RUN pip install .[dev,voikko,pycld3,fasttext,nn,omikuji,vw,yake] --no-cache-dir
 
 # Download nltk data (handle occasional timeout in with 3 tries):
 RUN for i in 1 2 3; do python -m nltk.downloader punkt -d /usr/share/nltk_data && break || sleep 1; done
