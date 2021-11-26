@@ -84,6 +84,14 @@ def parse_args(param_string):
     return posargs, kwargs
 
 
+def apply_param_parse_config(configs, params):
+    """Applies a parsing configuration to a parameter dict."""
+    return {
+        param: configs[param](val)
+        for param, val in params.items()
+        if param in configs and val is not None}
+
+
 def boolean(val):
     """Convert the given value to a boolean True/False value, if it isn't already.
     True values are '1', 'yes', 'true', and 'on' (case insensitive), everything

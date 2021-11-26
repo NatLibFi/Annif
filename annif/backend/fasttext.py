@@ -5,6 +5,7 @@ import os.path
 import annif.util
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 from annif.exception import NotInitializedException, NotSupportedException
+from annif.util import apply_param_parse_config
 import fasttext
 from . import backend
 from . import mixins
@@ -111,9 +112,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         self.info('creating fastText model')
         trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
         modelpath = os.path.join(self.datadir, self.MODEL_FILE)
-        params = {param: self.FASTTEXT_PARAMS[param](val)
-                  for param, val in params.items()
-                  if param in self.FASTTEXT_PARAMS}
+        params = apply_param_parse_config(self.FASTTEXT_PARAMS, params)
         if jobs != 0:  # jobs set by user to non-default value
             params['thread'] = jobs
         self.debug('Model parameters: {}'.format(params))
