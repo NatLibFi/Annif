@@ -2,7 +2,6 @@
 
 import omikuji
 import os.path
-import shutil
 import annif.util
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 from annif.exception import NotInitializedException, NotSupportedException, \
@@ -95,9 +94,10 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
 
         self._model = omikuji.Model.train_on_data(
             train_path, hyper_param, jobs or None)
-        if os.path.exists(model_path):
-            shutil.rmtree(model_path)
-        self._model.save(os.path.join(self.datadir, self.MODEL_FILE))
+        annif.util.atomic_save(
+            self._model,
+            model_path,
+            None)
 
     def _train(self, corpus, params, jobs=0):
         if corpus != 'cached':

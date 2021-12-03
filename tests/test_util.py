@@ -2,6 +2,7 @@
 
 import annif.util
 from unittest.mock import MagicMock
+import os.path as osp
 
 
 def test_boolean():
@@ -56,3 +57,50 @@ def test_apply_parse_param_config():
     }
     fun0.assert_called_once_with(0)
     fun1.assert_not_called()
+
+
+def _save(obj, pth):
+    with open(pth, 'w') as f:
+        print('test file content', file=f)
+
+
+def test_atomic_save_method(tmpdir):
+    fname = 'tst_file_method.txt'
+    annif.util.atomic_save(None, tmpdir.strpath, fname, method=_save)
+    f_pth = tmpdir.join(fname)
+    assert f_pth.exists()
+    with f_pth.open() as f:
+        assert f.readlines() == ['test file content\n']
+
+
+def test_atomic_save(tmpdir):
+    fname = 'tst_file_obj.txt'
+    to_save = MagicMock()
+    to_save.save.side_effect = lambda pth: _save(None, pth)
+    annif.util.atomic_save(to_save, tmpdir.strpath, fname)
+    f_pth = tmpdir.join(fname)
+    assert f_pth.exists()
+    with f_pth.open() as f:
+        assert f.readlines() == ['test file content\n']
+    to_save.save.assert_called_once()
+    call_args = to_save.save.calls[0].args
+    assert isinstance(call_args[0], MagicMock)
+    assert call_args[1] != f_pth.strpath
+
+
+def test_atomic_save_folder(tmpdir):
+    folder_name = 'test_save'
+    fname_0 = 'tst_file_0'
+    fname_1 = 'tst_file_1'
+
+    def save_folder(obj, pth):
+        _save(None, osp.join(pth, fname_0))
+        _save(None, osp.join(pth, fname_1))
+    folder_path = tmpdir.join(folder_name)
+    annif.util.atomic_save(None, folder_path.strpath, None, method=save_folder)
+    assert folder_path.exists()
+    for f_name in [fname_0, fname_1]:
+        f_pth = folder_path.join(f_name)
+        assert f_pth.exists()
+        with f_pth.open() as f:
+            assert f.readlines() == ['test file content\n']
