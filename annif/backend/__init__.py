@@ -67,6 +67,15 @@ def _tfidf():
     return tfidf.TFIDFBackend
 
 
+def _xtransformer():
+    try:
+        from . import xtransformer
+        xtransformer.XTransformerBackend
+    except ImportError:
+        raise ValueError(
+            "XTransformer not available, not enabling XTransformer backend")
+
+
 def _yake():
     try:
         from . import yake
@@ -88,6 +97,7 @@ _backend_fns = {
     'stwfsa': _stwfsa,
     'svc': _svc,
     'tfidf': _tfidf,
+    'xtransformer': _xtransformer,
     'yake': _yake
 }
 
