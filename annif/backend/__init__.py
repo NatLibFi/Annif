@@ -5,7 +5,6 @@ from . import ensemble
 from . import http
 from . import tfidf
 from . import pav
-from . import maui
 from . import stwfsa
 from . import mllm
 from . import svc
@@ -31,7 +30,6 @@ register_backend(ensemble.EnsembleBackend)
 register_backend(http.HTTPBackend)
 register_backend(tfidf.TFIDFBackend)
 register_backend(pav.PAVBackend)
-register_backend(maui.MauiBackend)
 register_backend(stwfsa.StwfsaBackend)
 register_backend(mllm.MLLMBackend)
 register_backend(svc.SVCBackend)

@@ -63,32 +63,6 @@ limit=100
 chunksize=24
 vocab=yso-en
 
-[maui-fi]
-name=Maui Finnish
-language=fi
-backend=maui
-endpoint=http://localhost:8080/mauiserver/
-#endpoint=http://mauiserver:8080/mauiserver/
-tagger=maui-fi
-vocab=yso-fi
-
-[maui-sv]
-name=Maui Swedish
-language=sv
-backend=maui
-endpoint=http://localhost:8080/mauiserver/
-#endpoint=http://mauiserver:8080/mauiserver/
-tagger=maui-sv
-vocab=yso-sv
-
-[maui-en]
-name=Maui English
-language=en
-backend=maui
-endpoint=http://localhost:8080/mauiserver/
-#endpoint=http://mauiserver:8080/mauiserver/
-tagger=maui-en
-vocab=yso-en
 
 [omikuji-parabel-fi]
 name=Omikuji Parabel Finnish
