@@ -4,7 +4,6 @@ import contextlib
 import random
 import re
 import os.path
-import pytest
 import pkg_resources
 from click.testing import CliRunner
 import annif.cli
@@ -258,22 +257,6 @@ def test_train_cached_with_corpus(testdatadir):
     assert result.exit_code == 2
     assert 'Corpus paths cannot be given when using --cached option.' \
            in result.output
-
-
-def test_train_param_override_algo_notsupported():
-    pytest.importorskip('annif.backend.vw_multi')
-    docfile = os.path.join(
-        os.path.dirname(__file__),
-        'corpora',
-        'archaeology',
-        'documents.tsv')
-    result = runner.invoke(
-        annif.cli.cli,
-        ['train', 'vw-multi-fi', docfile,
-         '--backend-param', 'vw_multi.algorithm=oaa'])
-    assert result.exception
-    assert result.exit_code == 1
-    assert 'Algorithm overriding not supported.' in result.output
 
 
 def test_train_nonexistent_path():

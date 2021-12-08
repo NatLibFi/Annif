@@ -42,13 +42,6 @@ except ImportError:
     annif.logger.debug("fastText not available, not enabling fasttext backend")
 
 try:
-    from . import vw_multi
-    register_backend(vw_multi.VWMultiBackend)
-except ImportError:
-    annif.logger.debug("vowpalwabbit not available, not enabling " +
-                       "vw_multi backend")
-
-try:
     from . import nn_ensemble
     register_backend(nn_ensemble.NNEnsembleBackend)
 except ImportError:
