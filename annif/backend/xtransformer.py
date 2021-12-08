@@ -232,7 +232,7 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         prediction = self._model.predict(
             [text],
             X_feat=vector.sorted_indices(),
-            batch_size=params['batch_size'],
+            batch_size=new_params['batch_size'],
             use_gpu=new_params['use_gpu'],
             only_top_k=new_params['limit'],
             post_processor=new_params['post_processor'])
