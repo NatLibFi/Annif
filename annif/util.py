@@ -4,9 +4,7 @@ import glob
 import os
 import os.path
 import tempfile
-import numpy as np
 from annif import logger
-from annif.suggestion import VectorSuggestionResult
 
 
 def atomic_save(obj, dirname, filename, method=None):
@@ -44,7 +42,9 @@ def merge_hits(weighted_hits, subject_index):
 
     weights = [whit.weight for whit in weighted_hits]
     scores = [whit.hits.as_vector(subject_index) for whit in weighted_hits]
+    import numpy as np
     result = np.average(scores, axis=0, weights=weights)
+    from annif.suggestion import VectorSuggestionResult
     return VectorSuggestionResult(result)
 
 
