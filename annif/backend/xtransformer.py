@@ -180,7 +180,7 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         model_path = osp.join(self.datadir, self.model_folder)
         new_params = apply_param_parse_config(
             self.PARAM_CONFIG,
-            self.DEFAULT_PARAMETERS)
+            self.params)
         new_params['only_topk'] = new_params.pop('limit')
         train_params = XTransformer.TrainParams.from_dict(
             new_params,
