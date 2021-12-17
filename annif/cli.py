@@ -12,12 +12,10 @@ from flask import current_app
 from flask.cli import FlaskGroup, ScriptInfo
 import annif
 import annif.corpus
-import annif.eval
 import annif.parallel
 import annif.project
 import annif.registry
 from annif.project import Access
-from annif.suggestion import SuggestionFilter, ListSuggestionResult
 from annif.exception import ConfigurationException, NotSupportedException
 
 logger = annif.logger
@@ -89,6 +87,8 @@ BATCH_MAX_LIMIT = 15
 
 
 def generate_filter_batches(subjects):
+    import annif.eval
+    from annif.suggestion import SuggestionFilter
     filter_batches = collections.OrderedDict()
     for limit in range(1, BATCH_MAX_LIMIT + 1):
         for threshold in [i * 0.05 for i in range(20)]:
@@ -246,6 +246,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
     """
     Suggest subjects for a single document from standard input.
     """
+    from annif.suggestion import SuggestionFilter
     project = get_project(project_id)
     text = sys.stdin.read()
     backend_params = parse_backend_params(backend_param, project)
@@ -279,6 +280,7 @@ def run_index(project_id, directory, suffix, force,
     Index a directory with documents, suggesting subjects for each document.
     Write the results in TSV files with the given suffix.
     """
+    from annif.suggestion import SuggestionFilter
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
@@ -347,6 +349,7 @@ def run_eval(
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
 
+    import annif.eval
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
 
     if results_file:
@@ -393,6 +396,7 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     values and report the precision, recall and F-measure of each combination
     of settings.
     """
+    from annif.suggestion import ListSuggestionResult
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
 
