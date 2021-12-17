@@ -54,7 +54,6 @@ setup(
             'pytest-flake8',
             'swagger-tester',
             'bumpversion',
-            'responses',
             'autopep8'
         ]
     },
