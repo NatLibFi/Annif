@@ -5,7 +5,6 @@ from . import ensemble
 from . import http
 from . import tfidf
 from . import pav
-from . import maui
 from . import stwfsa
 from . import mllm
 from . import svc
@@ -31,7 +30,6 @@ register_backend(ensemble.EnsembleBackend)
 register_backend(http.HTTPBackend)
 register_backend(tfidf.TFIDFBackend)
 register_backend(pav.PAVBackend)
-register_backend(maui.MauiBackend)
 register_backend(stwfsa.StwfsaBackend)
 register_backend(mllm.MLLMBackend)
 register_backend(svc.SVCBackend)
@@ -42,13 +40,6 @@ try:
     register_backend(fasttext.FastTextBackend)
 except ImportError:
     annif.logger.debug("fastText not available, not enabling fasttext backend")
-
-try:
-    from . import vw_multi
-    register_backend(vw_multi.VWMultiBackend)
-except ImportError:
-    annif.logger.debug("vowpalwabbit not available, not enabling " +
-                       "vw_multi backend")
 
 try:
     from . import nn_ensemble

@@ -11,18 +11,6 @@ services:
     tty: true
     command: bash
 
-  # Note: to connect to the mauiserver from other services, use "mauiserver" in place of "localhost"
-  mauiserver:
-    image: quay.io/natlibfi/mauiserver
-    volumes:
-      - ${ANNIF_PROJECTS}/mauidata:/mauidata
-    ports:
-      - "8080:8080"
-    environment:
-      - MY_UID=${MY_UID}
-      - MY_GID=${MY_GID}
-      - MAUI_SERVER_DATA_DIR=/mauidata
-
   gunicorn_server:
     image: quay.io/natlibfi/annif
     volumes:

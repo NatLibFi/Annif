@@ -78,8 +78,6 @@ def parse_backend_params(backend_param, project):
 
 
 def validate_backend_params(backend, beparam, project):
-    if 'algorithm' in beparam:
-        raise NotSupportedException('Algorithm overriding not supported.')
     if backend != project.config['backend']:
         raise ConfigurationException(
             'The backend {} in CLI option "-b {}" not matching the project'
