@@ -4,7 +4,6 @@ methods defined in the Swagger specification."""
 import connexion
 import annif.registry
 from annif.corpus import Document, DocumentList
-from annif.suggestion import SuggestionFilter
 from annif.exception import AnnifException
 from annif.project import Access
 
@@ -58,6 +57,7 @@ def suggest(project_id, text, limit, threshold):
     except ValueError:
         return project_not_found_error(project_id)
 
+    from annif.suggestion import SuggestionFilter
     try:
         hit_filter = SuggestionFilter(project.subjects, limit, threshold)
         result = project.suggest(text)
