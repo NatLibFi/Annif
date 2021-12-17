@@ -1,7 +1,6 @@
 """Classes for supporting subject corpora expressed as directories or files"""
 
 import annif.util
-import numpy as np
 from annif import logger
 from .types import Subject
 from .skos import serialize_subjects_to_skos
@@ -181,6 +180,7 @@ class SubjectSet:
            unknown URIs."""
 
         if destination is None:
+            import numpy as np
             destination = np.zeros(len(subject_index), dtype=bool)
 
         if self.has_uris():
