@@ -7,7 +7,6 @@ import annif
 import annif.transform
 import annif.analyzer
 import annif.corpus
-import annif.suggestion
 import annif.backend
 import annif.vocab
 from annif.datadir import DatadirMixin
