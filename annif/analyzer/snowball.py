@@ -1,7 +1,6 @@
 """Snowball analyzer for Annif, based on nltk Snowball stemmer."""
 
 import functools
-import nltk.stem.snowball
 from . import analyzer
 
 
@@ -10,6 +9,7 @@ class SnowballAnalyzer(analyzer.Analyzer):
 
     def __init__(self, param, **kwargs):
         self.param = param
+        import nltk.stem.snowball
         self.stemmer = nltk.stem.snowball.SnowballStemmer(param)
         super().__init__(**kwargs)
 
