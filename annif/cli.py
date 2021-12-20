@@ -12,7 +12,6 @@ from flask import current_app
 from flask.cli import FlaskGroup, ScriptInfo
 import annif
 import annif.corpus
-import annif.eval
 import annif.parallel
 import annif.project
 import annif.registry
@@ -89,6 +88,7 @@ BATCH_MAX_LIMIT = 15
 
 
 def generate_filter_batches(subjects):
+    import annif.eval
     filter_batches = collections.OrderedDict()
     for limit in range(1, BATCH_MAX_LIMIT + 1):
         for threshold in [i * 0.05 for i in range(20)]:
@@ -347,6 +347,7 @@ def run_eval(
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
 
+    import annif.eval
     eval_batch = annif.eval.EvaluationBatch(project.subjects)
 
     if results_file:
