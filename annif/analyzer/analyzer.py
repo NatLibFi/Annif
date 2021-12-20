@@ -3,7 +3,6 @@
 import abc
 import functools
 import unicodedata
-import nltk.tokenize
 
 _KEY_TOKEN_MIN_LENGTH = 'token_min_length'
 
@@ -22,6 +21,7 @@ class Analyzer(metaclass=abc.ABCMeta):
 
     def tokenize_sentences(self, text):
         """Tokenize a piece of text (e.g. a document) into sentences."""
+        import nltk.tokenize
         return nltk.tokenize.sent_tokenize(text)
 
     @functools.lru_cache(maxsize=50000)
@@ -37,6 +37,7 @@ class Analyzer(metaclass=abc.ABCMeta):
 
     def tokenize_words(self, text):
         """Tokenize a piece of text (e.g. a sentence) into words."""
+        import nltk.tokenize
         return [self.normalize_word(word)
                 for word in nltk.tokenize.word_tokenize(text)
                 if self.is_valid_token(word)]
