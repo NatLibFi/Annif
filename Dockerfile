@@ -2,12 +2,16 @@ FROM python:3.8-slim-bullseye AS builder
 
 LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
 
-# Install fastText, which needs to be built, and therefore also some system packages:
-RUN apt-get update \
-	&& apt-get install -y --no-install-recommends \
-		build-essential \
-	&& pip install --no-cache-dir \
-		fasttext==0.9.2
+SHELL ["/bin/bash", "-c"]
+ARG optional_dependencies=dev,voikko,pycld3,fasttext,nn,omikuji,yake
+# Bulding fastText needs some system packages
+RUN if [[ $optional_dependencies =~ "fasttext" ]]; then \
+		apt-get update && \
+		apt-get install -y --no-install-recommends \
+			build-essential && \
+		pip install --no-cache-dir \
+			fasttext==0.9.2; \
+	fi
 
 
 FROM python:3.8-slim-bullseye
