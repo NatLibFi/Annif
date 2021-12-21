@@ -26,9 +26,11 @@ RUN apt-get update \
 WORKDIR /Annif
 RUN pip install --upgrade pip --no-cache-dir
 
-# Install all optional dependencies:
 COPY setup.py README.md LICENSE.txt projects.cfg.dist /Annif/
-RUN pip install .[dev,voikko,pycld3,fasttext,nn,omikuji,yake] --no-cache-dir
+# Install dependencies for optional features.
+ARG optional_dependencies=dev,voikko,pycld3,fasttext,nn,omikuji,yake
+RUN echo "Installing dependencies for optional features: $optional_dependencies" \
+	&& pip install .[$optional_dependencies] --no-cache-dir
 
 # Download nltk data (handle occasional timeout in with 3 tries):
 RUN for i in 1 2 3; do python -m nltk.downloader punkt -d /usr/share/nltk_data && break || sleep 1; done
