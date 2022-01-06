@@ -28,7 +28,7 @@ setup(
         'click-log',
         'joblib==1.0.1',
         'nltk',
-        'gensim==4.0.*',
+        'gensim==4.1.*',
         'scikit-learn==0.24.2',
         'scipy==1.5.4',
         'rdflib>=4.2,<7.0',
