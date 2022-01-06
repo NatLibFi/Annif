@@ -70,7 +70,7 @@ def _tfidf():
 def _xtransformer():
     try:
         from . import xtransformer
-        xtransformer.XTransformerBackend
+        return xtransformer.XTransformerBackend
     except ImportError:
         raise ValueError(
             "XTransformer not available, not enabling XTransformer backend")
