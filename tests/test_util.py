@@ -97,7 +97,10 @@ def test_atomic_save_folder(tmpdir):
         _save(None, osp.join(pth, fname_0))
         _save(None, osp.join(pth, fname_1))
     folder_path = tmpdir.join(folder_name)
-    annif.util.atomic_save(None, folder_path.strpath, None, method=save_folder)
+    annif.util.atomic_save_folder(
+        None,
+        folder_path.strpath,
+        method=save_folder)
     assert folder_path.exists()
     for f_name in [fname_0, fname_1]:
         f_pth = folder_path.join(f_name)

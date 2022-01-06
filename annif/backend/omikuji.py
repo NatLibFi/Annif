@@ -94,10 +94,9 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
 
         self._model = omikuji.Model.train_on_data(
             train_path, hyper_param, jobs or None)
-        annif.util.atomic_save(
+        annif.util.atomic_save_folder(
             self._model,
-            model_path,
-            None)
+            model_path)
 
     def _train(self, corpus, params, jobs=0):
         if corpus != 'cached':

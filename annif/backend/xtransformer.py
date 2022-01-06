@@ -10,7 +10,8 @@ from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import ListSuggestionResult, SubjectSuggestion
 from . import mixins
 from . import backend
-from annif.util import boolean, apply_param_parse_config, atomic_save
+from annif.util import boolean, apply_param_parse_config, atomic_save_folder, \
+    atomic_save
 
 from pecos.xmc.xtransformer.model import XTransformer
 from pecos.xmc.xtransformer.module import MLProblemWithText
@@ -203,7 +204,7 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             steps_scale=None,
             label_feat=None,
             )
-        atomic_save(self._model, model_path, None)
+        atomic_save_folder(self._model, model_path)
 
     def _train(self, corpus, params, jobs=0):
         if corpus == 'cached':
