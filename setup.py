@@ -30,7 +30,7 @@ setup(
         'nltk',
         'gensim==4.1.*',
         'scikit-learn==0.24.2',
-        'scipy==1.5.4',
+        'scipy==1.7.*',
         'rdflib>=4.2,<7.0',
         'gunicorn',
         'numpy==1.19.*',
