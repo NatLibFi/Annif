@@ -42,7 +42,7 @@ setup(
     extras_require={
         'fasttext': ['fasttext==0.9.2'],
         'voikko': ['voikko'],
-        'nn': ['tensorflow-cpu==2.6.2', 'lmdb==1.3.0'],
+        'nn': ['tensorflow-cpu==2.7.0', 'lmdb==1.3.0'],
         'omikuji': ['omikuji==0.4.*'],
         'yake': ['yake==0.4.5'],
         'pycld3': ['pycld3'],
