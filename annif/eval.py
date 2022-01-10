@@ -15,7 +15,7 @@ def filter_pred_top_k(preds, limit):
 
     masks = []
     for pred in preds:
-        mask = np.zeros_like(pred, dtype=np.bool)
+        mask = np.zeros_like(pred, dtype=bool)
         top_k = np.argsort(pred)[::-1][:limit]
         mask[top_k] = True
         masks.append(mask)
