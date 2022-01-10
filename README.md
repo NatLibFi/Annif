@@ -22,7 +22,7 @@ already functional for many common tasks.
 
 # Basic install
 
-You will need Python 3.6+ to install Annif.
+You will need Python 3.7+ to install Annif.
 
 The recommended way is to install Annif from
 [PyPI](https://pypi.org/project/annif/) into a virtual environment.
