@@ -52,7 +52,6 @@ setup(
             'pytest-watch',
             'pytest-flask',
             'pytest-flake8',
-            'swagger-tester',
             'bumpversion',
             'autopep8'
         ]
