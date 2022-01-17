@@ -95,9 +95,9 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         scores = coo_matrix((data, (row, col)),
                             shape=(ndocs, len(source_project.subjects)),
                             dtype=np.float32)
-        true = coo_matrix((np.ones(len(trow), dtype=np.bool), (trow, tcol)),
+        true = coo_matrix((np.ones(len(trow), dtype=bool), (trow, tcol)),
                           shape=(ndocs, len(source_project.subjects)),
-                          dtype=np.bool)
+                          dtype=bool)
         return csc_matrix(scores), csc_matrix(true)
 
     def _create_pav_model(self, source_project_id, min_docs, corpus):

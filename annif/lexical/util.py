@@ -3,7 +3,6 @@
 import collections
 from rdflib import URIRef
 from rdflib.namespace import SKOS
-import numpy as np
 from scipy.sparse import lil_matrix, csc_matrix
 
 
@@ -16,7 +15,7 @@ def get_subject_labels(graph, uri, properties, language):
 
 def make_relation_matrix(graph, vocab, property):
     n_subj = len(vocab.subjects)
-    matrix = lil_matrix((n_subj, n_subj), dtype=np.bool)
+    matrix = lil_matrix((n_subj, n_subj), dtype=bool)
 
     for subj, obj in graph.subject_objects(property):
         subj_id = vocab.subjects.by_uri(str(subj), warnings=False)
@@ -36,7 +35,7 @@ def make_collection_matrix(graph, vocab):
             c_members[str(coll)].append(member_id)
 
     c_matrix = lil_matrix((len(c_members), len(vocab.subjects)),
-                          dtype=np.bool)
+                          dtype=bool)
 
     # populate the matrix for collection -> subject_id
     for c_id, members in enumerate(c_members.values()):

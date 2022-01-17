@@ -135,7 +135,7 @@ class VectorSuggestionResult(SuggestionResult):
         mask = (self._vector > threshold)
         deprecated_ids = subject_index.deprecated_ids()
         if limit is not None:
-            limit_mask = np.zeros_like(self._vector, dtype=np.bool)
+            limit_mask = np.zeros_like(self._vector, dtype=bool)
             deprecated_set = set(deprecated_ids)
             top_k_subjects = itertools.islice(
                                 (subj for subj in self.subject_order
@@ -143,7 +143,7 @@ class VectorSuggestionResult(SuggestionResult):
             limit_mask[list(top_k_subjects)] = True
             mask = mask & limit_mask
         else:
-            deprecated_mask = np.ones_like(self._vector, dtype=np.bool)
+            deprecated_mask = np.ones_like(self._vector, dtype=bool)
             deprecated_mask[deprecated_ids] = False
             mask = mask & deprecated_mask
         vsr = VectorSuggestionResult(self._vector * mask)

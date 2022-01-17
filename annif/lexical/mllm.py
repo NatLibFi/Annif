@@ -82,7 +82,7 @@ def candidates_to_features(candidates, mdata):
 
     matrix = np.zeros((len(candidates), len(Feature)), dtype=np.float32)
     c_ids = [c.subject_id for c in candidates]
-    c_vec = np.zeros(mdata.related.shape[0], dtype=np.bool)
+    c_vec = np.zeros(mdata.related.shape[0], dtype=bool)
     c_vec[c_ids] = True
     broader = mdata.broader.multiply(c_vec).sum(axis=1)
     narrower = mdata.narrower.multiply(c_vec).sum(axis=1)

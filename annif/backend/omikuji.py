@@ -5,7 +5,8 @@ import os.path
 import shutil
 import annif.util
 from annif.suggestion import SubjectSuggestion, ListSuggestionResult
-from annif.exception import NotInitializedException, NotSupportedException
+from annif.exception import NotInitializedException, NotSupportedException, \
+    OperationFailedException
 from . import backend
 from . import mixins
 
@@ -40,7 +41,12 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             path = os.path.join(self.datadir, self.MODEL_FILE)
             self.debug('loading model from {}'.format(path))
             if os.path.exists(path):
-                self._model = omikuji.Model.load(path)
+                try:
+                    self._model = omikuji.Model.load(path)
+                except RuntimeError:
+                    raise OperationFailedException(
+                        "Omikuji models trained on Annif versions older than "
+                        "0.56 cannot be loaded. Please retrain your project.")
             else:
                 raise NotInitializedException(
                     'model {} not found'.format(path),
