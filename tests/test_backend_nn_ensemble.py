@@ -9,6 +9,7 @@ import annif.corpus
 from annif.exception import NotInitializedException, NotSupportedException
 
 pytest.importorskip("annif.backend.nn_ensemble")
+lmdb = pytest.importorskip("lmdb")
 
 
 def test_lmdb_idx_to_key_to_idx():
@@ -57,6 +58,23 @@ def test_nn_ensemble_can_set_lr(registry):
         project=project)
     nn_ensemble._create_model(['dummy-en'])
     assert nn_ensemble._model.optimizer.learning_rate.value() == 0.002
+
+
+def test_set_lmdb_map_size(registry, tmpdir):
+    project = registry.get_project('dummy-en')
+    nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
+    nn_ensemble = nn_ensemble_type(
+        backend_id='nn_ensemble',
+        config_params={'sources': 'dummy-en', 'epochs': 1, 'lmdb_map_size': 1},
+        project=project)
+    tmpfile = tmpdir.join('document.tsv')
+    tmpfile.write("dummy\thttp://example.org/dummy\n" +
+                  "another\thttp://example.org/dummy\n" +
+                  "none\thttp://example.org/none\n" * 40)
+    document_corpus = annif.corpus.DocumentFile(str(tmpfile))
+
+    with pytest.raises(lmdb.MapFullError):
+        nn_ensemble.train(document_corpus)
 
 
 def test_nn_ensemble_train_and_learn(registry, tmpdir):
