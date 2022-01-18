@@ -4,12 +4,10 @@ checks:
     duplicate_code: true
 build:
   environment:
-    python: 3.6.3
+    python: 3.8.12
   dependencies:
     override:
-     - pip install pipenv
-     - pipenv run pip install pip==19.*
-     - pipenv install --dev --skip-lock
+     - pip install .[dev]
   tests:
     override:
      - py-scrutinizer-run
