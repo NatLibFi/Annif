@@ -40,9 +40,12 @@ RUN echo "Installing dependencies for optional features: $optional_dependencies"
 # Download nltk data (handle occasional timeout in with 3 tries):
 RUN for i in 1 2 3; do python -m nltk.downloader punkt -d /usr/share/nltk_data && break || sleep 1; done
 
-# Download spaCy English model, if the optional feature was selected (with timeout handling)
+# Download spaCy models, if the optional feature was selected
+ARG spacy_models=en_core_web_sm
 RUN if [[ $optional_dependencies =~ "spacy" ]]; then \
-		for i in 1 2 3; do python -m spacy download en_core_web_sm && break || sleep 1; done \
+		for model in $(echo $spacy_models | tr "," "\n"); do \
+			python -m spacy download $model; \
+		done; \
 	fi
 
 # Install Annif by copying source and make the installation editable:
