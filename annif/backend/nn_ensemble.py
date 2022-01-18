@@ -91,7 +91,6 @@ class NNEnsembleBackend(
 
     MODEL_FILE = "nn-model.h5"
     LMDB_FILE = 'nn-train.mdb'
-    LMDB_MAP_SIZE = 1024 * 1024 * 1024
 
     DEFAULT_PARAMETERS = {
         'nodes': 100,
@@ -99,6 +98,7 @@ class NNEnsembleBackend(
         'optimizer': 'adam',
         'epochs': 10,
         'learn-epochs': 1,
+        'lmdb_map_size': 1024 * 1024 * 1024
     }
 
     # defaults for uninitialized instances
@@ -171,7 +171,10 @@ class NNEnsembleBackend(
     def _train(self, corpus, params, jobs=0):
         sources = annif.util.parse_sources(self.params['sources'])
         self._create_model(sources)
-        self._fit_model(corpus, epochs=int(params['epochs']))
+        self._fit_model(
+            corpus,
+            epochs=int(params['epochs']),
+            lmdb_map_size=int(params['lmdb_map_size']))
 
     def _corpus_to_vectors(self, corpus, seq):
         # pass corpus through all source projects
@@ -191,14 +194,14 @@ class NNEnsembleBackend(
             true_vector = subjects.as_vector(self.project.subjects)
             seq.add_sample(score_vector, true_vector)
 
-    def _open_lmdb(self, cached):
+    def _open_lmdb(self, cached, lmdb_map_size):
         lmdb_path = os.path.join(self.datadir, self.LMDB_FILE)
         if not cached and os.path.exists(lmdb_path):
             shutil.rmtree(lmdb_path)
-        return lmdb.open(lmdb_path, map_size=self.LMDB_MAP_SIZE, writemap=True)
+        return lmdb.open(lmdb_path, map_size=lmdb_map_size, writemap=True)
 
-    def _fit_model(self, corpus, epochs):
-        env = self._open_lmdb(corpus == 'cached')
+    def _fit_model(self, corpus, epochs, lmdb_map_size):
+        env = self._open_lmdb(corpus == 'cached', lmdb_map_size)
         if corpus != 'cached':
             if corpus.is_empty():
                 raise NotSupportedException(
@@ -220,4 +223,7 @@ class NNEnsembleBackend(
 
     def _learn(self, corpus, params):
         self.initialize()
-        self._fit_model(corpus, int(params['learn-epochs']))
+        self._fit_model(
+            corpus,
+            int(params['learn-epochs']),
+            int(params['lmdb_map_size']))
