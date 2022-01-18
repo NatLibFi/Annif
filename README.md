@@ -95,23 +95,26 @@ Many resources are available:
 
 # Publications / How to cite
 
-An article about Annif has been published in the peer-reviewed Open Access
-journal LIBER Quarterly. The software itself is also archived on Zenodo and
+Two articles about Annif have been published in peer-reviewed Open Access
+journals. The software itself is also archived on Zenodo and
 has a citable DOI.
 
 ## Annif articles
 
-Suominen, O.; Inkinen, J.; Lehtinen, M., 2021. 
+Suominen, O.; Inkinen, J.; Lehtinen, M., 2022. 
 Annif and Finto AI: Developing and Implementing Automated Subject Indexing.
-Manuscript accepted on 23 June 2021 for publication in JLIS.it. URN:
-[https://urn.fi/URN:NBN:fi-fe2021080942632](https://urn.fi/URN:NBN:fi-fe2021080942632)
+JLIS.It, 13(1), pp. 265–282. URL:
+[https://www.jlis.it/index.php/jlis/article/view/437](https://www.jlis.it/index.php/jlis/article/view/437)
 
-    @article{suominen2021annif,
+    @article{suominen2022annif,
       title={Annif and Finto AI: Developing and Implementing Automated Subject Indexing},
       author={Suominen, Osma and Inkinen, Juho and Lehtinen, Mona},
       journal={JLIS.it},
-      note = {(in press)},
-      url = {https://urn.fi/URN:NBN:fi-fe2021080942632}
+      volume={13},
+      number={1},
+      pages={265--282},
+      year={2022},
+      url={https://www.jlis.it/index.php/jlis/article/view/437},
     }
 
 Suominen, O., 2019. Annif: DIY automated subject indexing using multiple
