@@ -35,12 +35,15 @@ class Analyzer(metaclass=abc.ABCMeta):
                 return True
         return False
 
-    def tokenize_words(self, text):
-        """Tokenize a piece of text (e.g. a sentence) into words."""
+    def tokenize_words(self, text, filter=True):
+        """Tokenize a piece of text (e.g. a sentence) into words. If
+        filter=True (default), only return valid tokens (e.g. not
+        punctuation, numbers or very short words)"""
+
         import nltk.tokenize
         return [self.normalize_word(word)
                 for word in nltk.tokenize.word_tokenize(text)
-                if self.is_valid_token(word)]
+                if (not filter or self.is_valid_token(word))]
 
     @abc.abstractmethod
     def normalize_word(self, word):

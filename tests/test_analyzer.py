@@ -51,6 +51,14 @@ def test_english_tokenize_words():
     assert len(words) == 14
 
 
+def test_english_tokenize_words_no_filter():
+    analyzer = annif.analyzer.get_analyzer("snowball(english)")
+    text = """To take a trivial example, which of us ever undertakes
+    laborious physical exercise, except to obtain some advantage from it?"""
+    words = analyzer.tokenize_words(text, filter=False)
+    assert len(words) == 23
+
+
 def test_english_filter_words_min_token():
     analyzer = annif.analyzer.get_analyzer(
         "snowball(english,token_min_length=2)")

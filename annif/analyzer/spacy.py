@@ -19,9 +19,11 @@ class SpacyAnalyzer(analyzer.Analyzer):
             self.lowercase = False
         super().__init__(**kwargs)
 
-    def tokenize_words(self, text):
-        lemmas = [lemma for lemma in (token.lemma_ for token in self.nlp(text))
-                  if self.is_valid_token(lemma)]
+    def tokenize_words(self, text, filter=True):
+        lemmas = [lemma
+                  for lemma in (token.lemma_
+                                for token in self.nlp(text.strip()))
+                  if (not filter or self.is_valid_token(lemma))]
         if self.lowercase:
             return [lemma.lower() for lemma in lemmas]
         else:

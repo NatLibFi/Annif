@@ -104,11 +104,8 @@ class YakeBackend(backend.AnnifBackend):
         return self._sort_phrase(normalized_label)
 
     def _normalize_phrase(self, phrase):
-        normalized = []
-        for word in phrase.split():
-            normalized.append(
-                self.project.analyzer.normalize_word(word).lower())
-        return ' '.join(normalized)
+        return ' '.join(self.project.analyzer.tokenize_words(phrase,
+                                                             filter=False))
 
     def _sort_phrase(self, phrase):
         words = phrase.split()
