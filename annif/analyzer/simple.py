@@ -10,5 +10,5 @@ class SimpleAnalyzer(analyzer.Analyzer):
         self.param = param
         super().__init__(**kwargs)
 
-    def normalize_word(self, word):
+    def _normalize_word(self, word):
         return word.lower()

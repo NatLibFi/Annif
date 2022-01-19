@@ -14,5 +14,5 @@ class SnowballAnalyzer(analyzer.Analyzer):
         super().__init__(**kwargs)
 
     @functools.lru_cache(maxsize=500000)
-    def normalize_word(self, word):
+    def _normalize_word(self, word):
         return self.stemmer.stem(word.lower())

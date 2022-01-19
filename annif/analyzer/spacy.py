@@ -28,11 +28,3 @@ class SpacyAnalyzer(analyzer.Analyzer):
             return [lemma.lower() for lemma in lemmas]
         else:
             return lemmas
-
-    def normalize_word(self, word):
-        doc = self.nlp(word)
-        lemma = doc[:].lemma_
-        if self.lowercase:
-            return lemma.lower()
-        else:
-            return lemma

@@ -16,8 +16,8 @@ def test_get_analyzer_badspec():
 
 def test_english_analyzer_normalize_word():
     analyzer = annif.analyzer.get_analyzer("snowball(english)")
-    assert analyzer.normalize_word("running") == "run"
-    assert analyzer.normalize_word("words") == "word"
+    assert analyzer._normalize_word("running") == "run"
+    assert analyzer._normalize_word("words") == "word"
 
 
 def test_english_tokenize_sentences():
@@ -74,19 +74,19 @@ def test_english_filter_words_min_token():
 
 def test_swedish_analyzer_normalize_word():
     analyzer = annif.analyzer.get_analyzer("snowball(swedish)")
-    assert analyzer.normalize_word("gamla") == "gaml"
-    assert analyzer.normalize_word("hundar") == "hund"
+    assert analyzer._normalize_word("gamla") == "gaml"
+    assert analyzer._normalize_word("hundar") == "hund"
 
 
 def test_snowball_finnish_analyzer_normalize_word():
     analyzer = annif.analyzer.get_analyzer("snowball(finnish)")
-    assert analyzer.normalize_word("vanhat") == "vanh"
-    assert analyzer.normalize_word("koirien") == "koir"
+    assert analyzer._normalize_word("vanhat") == "vanh"
+    assert analyzer._normalize_word("koirien") == "koir"
 
 
 def test_simple_analyzer():
     analyzer = annif.analyzer.get_analyzer("simple")
-    assert analyzer.normalize_word("Big") == "big"
+    assert analyzer._normalize_word("Big") == "big"
 
 
 def test_simple_analyzer_token_size():
