@@ -1,4 +1,4 @@
-"""Simple analyzer for Annif. Only folds words to lower case."""
+"""spaCy analyzer for Annif which uses spaCy for lemmatization"""
 
 import spacy
 from . import analyzer
