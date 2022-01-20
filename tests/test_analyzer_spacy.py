@@ -2,8 +2,15 @@
 
 import pytest
 import annif.analyzer
+from annif.exception import OperationFailedException
 
 spacy = pytest.importorskip("annif.analyzer.spacy")
+
+
+def test_spacy_model_not_found():
+    with pytest.raises(OperationFailedException) as excinfo:
+        annif.analyzer.get_analyzer("spacy(not_found)")
+    assert "Loading spaCy model 'not_found' failed" in str(excinfo.value)
 
 
 def test_spacy_english_tokenize_words():

@@ -2,6 +2,7 @@
 
 import spacy
 from . import analyzer
+from annif.exception import OperationFailedException
 import annif.util
 
 _KEY_LOWERCASE = 'lowercase'
@@ -12,7 +13,12 @@ class SpacyAnalyzer(analyzer.Analyzer):
 
     def __init__(self, param, **kwargs):
         self.param = param
-        self.nlp = spacy.load(param, exclude=['ner', 'parser'])
+        try:
+            self.nlp = spacy.load(param, exclude=['ner', 'parser'])
+        except IOError as err:
+            raise OperationFailedException(
+                f"Loading spaCy model '{param}' failed - " +
+                f"please download the model.\n{err}")
         if _KEY_LOWERCASE in kwargs:
             self.lowercase = annif.util.boolean(kwargs[_KEY_LOWERCASE])
         else:
