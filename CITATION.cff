@@ -1,0 +1,67 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Suominen
+    given-names: Osma
+    affiliation: "National Library of Finland"
+  - family-names: Inkinen 
+    given-names: Juho
+    affiliation: "National Library of Finland"
+  - family-names: Virolainen
+    given-names: Tuomo
+    affiliation: " "
+  - family-names: Fürneisen
+    given-names: Moritz
+    affiliation: "ZBW - Leibniz Information Centre for Economics"
+  - family-names: Kinoshita
+    given-names: Bruno P.
+    affiliation: " "
+  - family-names: Veldhoen
+    given-names: Sara
+    affiliation: "National Library of the Netherlands"
+  - family-names: Sjöberg
+    given-names: Mats
+    affiliation: "CSC – IT Center for Science Ltd."
+  - family-names: Zumstein
+    given-names: Philipp
+    affiliation: "University Library Mannheim"
+  - family-names: Neatherway
+    given-names: Robin
+    affiliation: " "
+  - family-names: Lehtinen
+    given-names: Mona
+    affiliation: "National Library of Finland"
+title: "Annif"
+abstract: "Annif is an automatic indexing software."
+version: 0.5.5
+license: 
+  - Apache-2.0
+  - GPL-3.0
+date-released: 2021-11-08
+doi: 10.5281/zenodo.2578948
+repository-code: "https://github.com/NatLibFi/Annif"
+contact:
+  - name: "Annif-team"
+  - website: "https://www.annif.org"
+  - email: finto-posti@helsinki.fi
+  - affiliation: "National Library of Finland"
+keywords:
+  - "automated subject indexing"
+  - "artificial intelligence"
+  - "machine learning"
+references:
+  - authors:
+      - family-names: Suominen
+        given-names: Osma
+      - family-names: Inkinen
+        given-names: Juho
+      - family-names: Lehtinen
+        given-names: Mona
+    doi: 10.4403/jlis.it-12740
+    type: article
+    scope: "Cite this paper if you want to reference the general concepts and usage of Annif."
+    title: "Annif and Finto AI: Developing and Implementing Automated Subject Indexing"
+    journal: "Italian Journal of Library, Archives, and Information Science"
+    volume: 13
+    issue: 1
+    year: 2022
