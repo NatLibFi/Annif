@@ -14,6 +14,6 @@ def test_voikko_getstate():
 
 def test_voikko_finnish_analyzer_normalize_word():
     analyzer = annif.analyzer.get_analyzer("voikko(fi)")
-    assert analyzer.normalize_word("xyzzy") == "xyzzy"
-    assert analyzer.normalize_word("vanhat") == "vanha"
-    assert analyzer.normalize_word("koirien") == "koira"
+    assert analyzer._normalize_word("xyzzy") == "xyzzy"
+    assert analyzer._normalize_word("vanhat") == "vanha"
+    assert analyzer._normalize_word("koirien") == "koira"

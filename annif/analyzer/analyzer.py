@@ -8,9 +8,9 @@ _KEY_TOKEN_MIN_LENGTH = 'token_min_length'
 
 
 class Analyzer(metaclass=abc.ABCMeta):
-    """Base class for language-specific analyzers. The non-implemented
-    methods should be overridden in subclasses. Tokenize functions may
-    be overridden when necessary."""
+    """Base class for language-specific analyzers. Either tokenize_words or
+    _normalize_word must be overridden in subclasses. Other methods may be
+    overridden when necessary."""
 
     name = None
     token_min_length = 3  # default value, can be overridden in instances
@@ -35,14 +35,16 @@ class Analyzer(metaclass=abc.ABCMeta):
                 return True
         return False
 
-    def tokenize_words(self, text):
-        """Tokenize a piece of text (e.g. a sentence) into words."""
-        import nltk.tokenize
-        return [self.normalize_word(word)
-                for word in nltk.tokenize.word_tokenize(text)
-                if self.is_valid_token(word)]
+    def tokenize_words(self, text, filter=True):
+        """Tokenize a piece of text (e.g. a sentence) into words. If
+        filter=True (default), only return valid tokens (e.g. not
+        punctuation, numbers or very short words)"""
 
-    @abc.abstractmethod
-    def normalize_word(self, word):
+        import nltk.tokenize
+        return [self._normalize_word(word)
+                for word in nltk.tokenize.word_tokenize(text)
+                if (not filter or self.is_valid_token(word))]
+
+    def _normalize_word(self, word):
         """Normalize (stem or lemmatize) a word form into a normal form."""
         pass  # pragma: no cover

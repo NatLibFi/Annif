@@ -21,7 +21,7 @@ class VoikkoAnalyzer(analyzer.Analyzer):
         return {'param': self.param, 'voikko': None}
 
     @functools.lru_cache(maxsize=500000)
-    def normalize_word(self, word):
+    def _normalize_word(self, word):
         if self.voikko is None:
             self.voikko = voikko.libvoikko.Voikko(self.param)
         result = self.voikko.analyze(word)

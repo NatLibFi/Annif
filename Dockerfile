@@ -3,7 +3,7 @@ FROM python:3.8-slim-bullseye AS builder
 LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
 
 SHELL ["/bin/bash", "-c"]
-ARG optional_dependencies=dev,voikko,pycld3,fasttext,nn,omikuji,yake
+ARG optional_dependencies=dev,voikko,pycld3,fasttext,nn,omikuji,yake,spacy
 # Bulding fastText needs some system packages
 RUN if [[ $optional_dependencies =~ "fasttext" ]]; then \
 		apt-get update && \
@@ -16,6 +16,7 @@ RUN if [[ $optional_dependencies =~ "fasttext" ]]; then \
 
 FROM python:3.8-slim-bullseye
 
+SHELL ["/bin/bash", "-c"]
 COPY --from=builder /usr/local/lib/python3.8 /usr/local/lib/python3.8
 
 # Install system dependencies needed at runtime:
@@ -32,12 +33,20 @@ RUN pip install --upgrade pip --no-cache-dir
 
 COPY setup.py README.md LICENSE.txt projects.cfg.dist /Annif/
 # Install dependencies for optional features.
-ARG optional_dependencies=dev,voikko,pycld3,fasttext,nn,omikuji,yake
+ARG optional_dependencies=dev,voikko,pycld3,fasttext,nn,omikuji,yake,spacy
 RUN echo "Installing dependencies for optional features: $optional_dependencies" \
 	&& pip install .[$optional_dependencies] --no-cache-dir
 
 # Download nltk data (handle occasional timeout in with 3 tries):
 RUN for i in 1 2 3; do python -m nltk.downloader punkt -d /usr/share/nltk_data && break || sleep 1; done
+
+# Download spaCy models, if the optional feature was selected
+ARG spacy_models=en_core_web_sm
+RUN if [[ $optional_dependencies =~ "spacy" ]]; then \
+		for model in $(echo $spacy_models | tr "," "\n"); do \
+			python -m spacy download $model; \
+		done; \
+	fi
 
 # Install Annif by copying source and make the installation editable:
 COPY annif /Annif/annif

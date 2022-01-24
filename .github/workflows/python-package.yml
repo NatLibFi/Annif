@@ -37,6 +37,12 @@ jobs:
         if [[ ${{ matrix.python-version }} != '3.8' ]]; then pip install .[omikuji,yake]; fi
         # Install the optional fastText dependencies for Python 3.8 only
         if [[ ${{ matrix.python-version }} == '3.8' ]]; then pip install .[fasttext]; fi
+        # Install the optional spaCy dependencies for Python 3.8 only
+        if [[ ${{ matrix.python-version }} == '3.8' ]]; then
+          pip install .[spacy]
+          # download the small English pretrained spaCy model needed by spacy analyzer
+          python -m spacy download en_core_web_sm
+        fi
         # For Python 3.7
         # - voikko and pycld3 dependencies
         if [[ ${{ matrix.python-version }} == '3.7' ]]; then python -m pip install .[voikko,pycld3]; fi
