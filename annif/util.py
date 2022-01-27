@@ -95,3 +95,8 @@ def boolean(val):
 def identity(x):
     """Identity function: return the given argument unchanged"""
     return x
+
+
+def metric_code(metric):
+    """Convert a human-readable metric name into an alphanumeric string"""
+    return metric.translate(metric.maketrans(' ', '_', '()'))

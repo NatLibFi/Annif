@@ -539,6 +539,8 @@ def test_eval_metricsfile(tmpdir):
     assert metrics['F1@5'] > 0.0
     assert 'NDCG' in metrics
     assert metrics['NDCG'] > 0.0
+    assert 'Precision_doc_avg' in metrics
+    assert metrics['Precision_doc_avg'] > 0.0
 
 
 def test_eval_resultsfile(tmpdir):

@@ -19,6 +19,7 @@ import annif.registry
 from annif.project import Access
 from annif.suggestion import SuggestionFilter, ListSuggestionResult
 from annif.exception import ConfigurationException, NotSupportedException
+from annif.util import metric_code
 
 logger = annif.logger
 click_log.basic_config(logger)
@@ -389,7 +390,9 @@ def run_eval(
     for metric, score in metrics.items():
         click.echo(template.format(metric + ":", score))
     if metrics_file:
-        json.dump(metrics, metrics_file, indent=2)
+        json.dump(
+            {metric_code(metric): val for metric, val in metrics.items()},
+            metrics_file, indent=2)
 
 
 @cli.command('optimize')
