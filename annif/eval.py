@@ -96,7 +96,7 @@ class EvaluationBatch:
     def evaluate(self, hits, gold_subjects):
         self._samples.append((hits, gold_subjects))
 
-    def _evaluate_samples(self, y_true, y_pred, metrics='all'):
+    def _evaluate_samples(self, y_true, y_pred, metrics=[]):
         y_pred_binary = y_pred > 0.0
         y_true_sparse = csr_matrix(y_true)
 
@@ -150,7 +150,7 @@ class EvaluationBatch:
                 y_true, y_pred_binary),
         }
 
-        if metrics == 'all':
+        if not metrics:
             metrics = all_metrics.keys()
 
         with warnings.catch_warnings():
@@ -202,9 +202,9 @@ class EvaluationBatch:
         self._result_per_subject_header(results_file)
         self._result_per_subject_body(zipped, results_file)
 
-    def results(self, metrics='all', results_file=None, warnings=False):
+    def results(self, metrics=[], results_file=None, warnings=False):
         """evaluate a set of selected subjects against a gold standard using
-        different metrics. The set of metrics can be either 'all' or 'simple'.
+        different metrics. If metrics is empty, use all available metrics.
         If results_file (file object) given, write results per subject to it"""
 
         if not self._samples:
