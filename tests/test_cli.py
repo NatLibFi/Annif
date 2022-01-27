@@ -5,6 +5,7 @@ import random
 import re
 import os.path
 import pkg_resources
+import json
 from click.testing import CliRunner
 import annif.cli
 
@@ -517,6 +518,27 @@ def test_eval_param(tmpdir):
     # at all
     recall = re.search(r'Recall .*doc.*:\s+(\d.\d+)', result.output)
     assert float(recall.group(1)) == 0.0
+
+
+def test_eval_metricsfile(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    tmpdir.join('doc3.txt').write('doc3')
+    metricsfile = tmpdir.join('metrics.json')
+    result = runner.invoke(
+        annif.cli.cli, [
+            'eval', '--metrics-file', str(metricsfile), 'dummy-en',
+            str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    metrics = json.load(metricsfile)
+    assert 'F1@5' in metrics
+    assert metrics['F1@5'] > 0.0
+    assert 'NDCG' in metrics
+    assert metrics['NDCG'] > 0.0
 
 
 def test_eval_resultsfile(tmpdir):
