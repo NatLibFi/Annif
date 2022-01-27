@@ -6,6 +6,7 @@ import collections
 import os.path
 import re
 import sys
+import json
 import click
 import click_log
 from flask import current_app
@@ -18,6 +19,7 @@ import annif.registry
 from annif.project import Access
 from annif.suggestion import SuggestionFilter, ListSuggestionResult
 from annif.exception import ConfigurationException, NotSupportedException
+from annif.util import metric_code
 
 logger = annif.logger
 click_log.basic_config(logger)
@@ -312,6 +314,16 @@ def run_index(project_id, directory, suffix, force,
               type=click.IntRange(0, None),
               help='Maximum number of documents to use')
 @click.option(
+    '--metrics-file',
+    '-M',
+    type=click.File(
+        'w',
+        encoding='utf-8',
+        errors='ignore',
+        lazy=True),
+    help="""Specify file in order to write evaluation metrics in JSON format.
+    File directory must exist, existing file will be overwritten.""")
+@click.option(
     '--results-file',
     '-r',
     type=click.File(
@@ -333,6 +345,7 @@ def run_eval(
         limit,
         threshold,
         docs_limit,
+        metrics_file,
         results_file,
         jobs,
         backend_param):
@@ -373,8 +386,13 @@ def run_eval(
                                 annif.corpus.SubjectSet((uris, labels)))
 
     template = "{0:<30}\t{1}"
-    for metric, score in eval_batch.results(results_file=results_file).items():
+    metrics = eval_batch.results(results_file=results_file)
+    for metric, score in metrics.items():
         click.echo(template.format(metric + ":", score))
+    if metrics_file:
+        json.dump(
+            {metric_code(metric): val for metric, val in metrics.items()},
+            metrics_file, indent=2)
 
 
 @cli.command('optimize')

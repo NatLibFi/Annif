@@ -25,19 +25,19 @@ def filter_pred_top_k(preds, limit):
 def true_positives(y_true, y_pred):
     """calculate the number of true positives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
-    return (y_true & y_pred).sum()
+    return int((y_true & y_pred).sum())
 
 
 def false_positives(y_true, y_pred):
     """calculate the number of false positives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
-    return (~y_true & y_pred).sum()
+    return int((~y_true & y_pred).sum())
 
 
 def false_negatives(y_true, y_pred):
     """calculate the number of false negatives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
-    return (y_true & ~y_pred).sum()
+    return int((y_true & ~y_pred).sum())
 
 
 def precision_at_k_score(y_true, y_pred, limit):
@@ -221,7 +221,7 @@ class EvaluationBatch:
             hits.as_vector(self._subject_index, destination=y_pred[idx])
 
         results = self._evaluate_samples(y_true, y_pred, metrics)
-        results['Documents evaluated'] = y_true.shape[0]
+        results['Documents evaluated'] = int(y_true.shape[0])
 
         if results_file:
             self.output_result_per_subject(y_true, y_pred, results_file)
