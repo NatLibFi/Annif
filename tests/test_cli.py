@@ -520,6 +520,27 @@ def test_eval_param(tmpdir):
     assert float(recall.group(1)) == 0.0
 
 
+def test_eval_metric(tmpdir):
+    tmpdir.join('doc1.txt').write('doc1')
+    tmpdir.join('doc1.key').write('dummy')
+    tmpdir.join('doc2.txt').write('doc2')
+    tmpdir.join('doc2.key').write('none')
+    tmpdir.join('doc3.txt').write('doc3')
+    result = runner.invoke(
+        annif.cli.cli, [
+            'eval', '--metric', 'F1@5', '-m', 'NDCG', 'dummy-en',
+            str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    f1 = re.search(r'F1@5\s*:\s+(\d.\d+)', result.output)
+    assert float(f1.group(1)) > 0.0
+    ndcg = re.search(r'NDCG\s*:\s+(\d.\d+)', result.output)
+    assert float(ndcg.group(1)) > 0.0
+    # check that we only have 2 metrics + "Documents evaluated"
+    assert len(result.output.strip().split('\n')) == 3
+
+
 def test_eval_metricsfile(tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('dummy')

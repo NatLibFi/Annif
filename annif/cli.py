@@ -313,6 +313,8 @@ def run_index(project_id, directory, suffix, force,
 @click.option('--docs-limit', '-d', default=None,
               type=click.IntRange(0, None),
               help='Maximum number of documents to use')
+@click.option('--metric', '-m', default=[], multiple=True,
+              help='Metric to calculate (default: all)')
 @click.option(
     '--metrics-file',
     '-M',
@@ -345,6 +347,7 @@ def run_eval(
         limit,
         threshold,
         docs_limit,
+        metric,
         metrics_file,
         results_file,
         jobs,
@@ -386,12 +389,12 @@ def run_eval(
                                 annif.corpus.SubjectSet((uris, labels)))
 
     template = "{0:<30}\t{1}"
-    metrics = eval_batch.results(results_file=results_file)
+    metrics = eval_batch.results(metrics=metric, results_file=results_file)
     for metric, score in metrics.items():
         click.echo(template.format(metric + ":", score))
     if metrics_file:
         json.dump(
-            {metric_code(metric): val for metric, val in metrics.items()},
+            {metric_code(mname): val for mname, val in metrics.items()},
             metrics_file, indent=2)
 
 
