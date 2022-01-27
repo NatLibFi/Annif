@@ -389,7 +389,6 @@ def run_eval(
     for metric, score in metrics.items():
         click.echo(template.format(metric + ":", score))
     if metrics_file:
-        print(metrics)
         json.dump(metrics, metrics_file, indent=2)
 
 
