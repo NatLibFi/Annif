@@ -12,6 +12,13 @@ from annif.project import Access, AnnifProject
 logger = annif.logger
 
 
+def strip_quotes(val):
+    """strip quotes from a configuration value to comply with TOML syntax"""
+    if val.startswith('"') and val.endswith('"'):
+        return val[1:-1]
+    return val
+
+
 class AnnifRegistry:
     """Class that keeps track of the Annif projects"""
 
@@ -54,8 +61,10 @@ class AnnifRegistry:
         # create AnnifProject objects from the configuration file
         projects = collections.OrderedDict()
         for project_id in config.sections():
+            project_cfg = {name: strip_quotes(val)
+                           for name, val in config[project_id].items()}
             projects[project_id] = AnnifProject(project_id,
-                                                config[project_id],
+                                                project_cfg,
                                                 datadir,
                                                 self)
         return projects
