@@ -4,6 +4,7 @@ import collections
 import configparser
 import os.path
 from flask import current_app
+import tomli
 import annif
 import annif.util
 from annif.exception import ConfigurationException
@@ -33,27 +34,50 @@ class AnnifRegistry:
                 project.initialize()
 
     def _create_projects(self, projects_file, datadir):
-        if not os.path.exists(projects_file):
-            logger.warning(
-                'Project configuration file "%s" is missing. ' +
-                'Please provide one. You can set the path to the project ' +
-                'configuration file using the ANNIF_PROJECTS environment ' +
-                'variable or the command-line option "--projects".',
-                projects_file)
-            return {}
+        if projects_file:
+            if not os.path.exists(projects_file):
+                logger.warning(
+                    f'Project configuration file "{projects_file}" is ' +
+                    'missing. Please provide one. ' +
+                    'You can set the path to the project configuration ' +
+                    'file using the ANNIF_PROJECTS environment ' +
+                    'variable or the command-line option "--projects".')
+                return {}
+        else:
+            if os.path.exists('projects.cfg'):
+                projects_file = 'projects.cfg'
+            elif os.path.exists('projects.toml'):
+                projects_file = 'projects.toml'
+            else:
+                logger.warning(
+                    'Could not find project configuration file ' +
+                    '"projects.cfg" or "projects.toml". ' +
+                    'You can set the path to the project configuration ' +
+                    'file using the ANNIF_PROJECTS environment ' +
+                    'variable or the command-line option "--projects".')
+                return {}
 
-        config = configparser.ConfigParser()
-        config.optionxform = annif.util.identity
-        with open(projects_file, encoding='utf-8-sig') as projf:
-            try:
-                config.read_file(projf)
-            except (configparser.DuplicateOptionError,
-                    configparser.DuplicateSectionError) as err:
-                raise ConfigurationException(err)
+        if projects_file.endswith('.toml'):  # TOML format
+            with open(projects_file, "rb") as projf:
+                try:
+                    config = tomli.load(projf)
+                except tomli.TOMLDecodeError as err:
+                    raise ConfigurationException(err)
+            project_ids = config.keys()
+        else:  # classic INI style format
+            config = configparser.ConfigParser()
+            config.optionxform = annif.util.identity
+            with open(projects_file, encoding='utf-8-sig') as projf:
+                try:
+                    config.read_file(projf)
+                except (configparser.DuplicateOptionError,
+                        configparser.DuplicateSectionError) as err:
+                    raise ConfigurationException(err)
+            project_ids = config.sections()
 
         # create AnnifProject objects from the configuration file
         projects = collections.OrderedDict()
-        for project_id in config.sections():
+        for project_id in project_ids:
             projects[project_id] = AnnifProject(project_id,
                                                 config[project_id],
                                                 datadir,

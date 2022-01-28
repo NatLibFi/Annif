@@ -263,3 +263,12 @@ def test_project_file_not_found():
     with app.app_context():
         with pytest.raises(ValueError):
             annif.registry.get_project('dummy-en')
+
+
+def test_project_file_toml():
+    app = annif.create_app(
+        config_name='annif.default_config.TestingTOMLConfig')
+    with app.app_context():
+        assert len(annif.registry.get_projects()) == 2
+        assert annif.registry.get_project('dummy-fi').project_id == 'dummy-fi'
+        assert annif.registry.get_project('dummy-en').project_id == 'dummy-en'

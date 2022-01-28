@@ -1,0 +1,18 @@
+# Project configuration for Annif unit tests
+
+[dummy-fi]
+name="Dummy Finnish"
+language="fi"
+backend="dummy"
+analyzer="snowball(finnish)"
+key="value"
+vocab="dummy"
+access="public"
+
+[dummy-en]
+name="Dummy English"
+language="en"
+backend="dummy"
+analyzer="snowball(english)"
+vocab="dummy"
+access="hidden"
