@@ -1,6 +1,5 @@
 """spaCy analyzer for Annif which uses spaCy for lemmatization"""
 
-import spacy
 from . import analyzer
 from annif.exception import OperationFailedException
 import annif.util
@@ -12,6 +11,7 @@ class SpacyAnalyzer(analyzer.Analyzer):
     name = "spacy"
 
     def __init__(self, param, **kwargs):
+        import spacy
         self.param = param
         try:
             self.nlp = spacy.load(param, exclude=['ner', 'parser'])
