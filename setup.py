@@ -49,6 +49,7 @@ setup(
         'spacy': ['spacy==3.2.*'],
         'dev': [
             'codecov',
+            'coverage<=6.2',
             'pytest-cov',
             'pytest-watch',
             'pytest-flask',
