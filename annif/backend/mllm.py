@@ -3,6 +3,7 @@
 import os.path
 import joblib
 import numpy as np
+import annif.eval
 import annif.util
 from annif.exception import NotInitializedException
 from annif.exception import NotSupportedException
