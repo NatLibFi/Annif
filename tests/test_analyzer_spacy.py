@@ -4,7 +4,7 @@ import pytest
 import annif.analyzer
 from annif.exception import OperationFailedException
 
-spacy = pytest.importorskip("annif.analyzer.spacy")
+spacy = pytest.importorskip("spacy")
 
 
 def test_spacy_model_not_found():
