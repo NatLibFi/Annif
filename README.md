@@ -97,7 +97,11 @@ Many resources are available:
 
 Two articles about Annif have been published in peer-reviewed Open Access
 journals. The software itself is also archived on Zenodo and
-has a citable DOI.
+has a [citable DOI](https://doi.org/10.5281/zenodo.5654173).
+
+## Citing the software itself
+
+See "Cite this repository" in the details of the repository.
 
 ## Annif articles
 
@@ -114,6 +118,7 @@ JLIS.It, 13(1), pp. 265–282. URL:
       number={1},
       pages={265--282},
       year={2022},
+      doi = {10.4403/jlis.it-12740},
       url={https://www.jlis.it/index.php/jlis/article/view/437},
     }
 
@@ -131,18 +136,6 @@ algorithms. LIBER Quarterly, 29(1), pp.1–25. DOI:
       year={2019},
       doi = {10.18352/lq.10285},
       url = {https://doi.org/10.18352/lq.10285}
-    }
-
-## Citing the software itself
-
-Zenodo DOI:
-[https://doi.org/10.5281/zenodo.2578948](https://doi.org/10.5281/zenodo.2578948)
-
-    @misc{https://doi.org/10.5281/zenodo.2578948,
-      doi = {10.5281/ZENODO.2578948},
-      url = {https://doi.org/10.5281/zenodo.2578948},
-      title = {NatLibFi/Annif},
-      year = {2019}
     }
 
 # License
