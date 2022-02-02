@@ -13,6 +13,41 @@ from annif.project import Access, AnnifProject
 logger = annif.logger
 
 
+class AnnifConfigCFG:
+    def __init__(self, filename):
+        self._config = configparser.ConfigParser()
+        self._config.optionxform = annif.util.identity
+        with open(filename, encoding='utf-8-sig') as projf:
+            try:
+                self._config.read_file(projf)
+            except (configparser.DuplicateOptionError,
+                    configparser.DuplicateSectionError) as err:
+                raise ConfigurationException(err)
+
+    @property
+    def project_ids(self):
+        return self._config.sections()
+
+    def __getitem__(self, key):
+        return self._config[key]
+
+
+class AnnifConfigTOML:
+    def __init__(self, filename):
+        with open(filename, "rb") as projf:
+            try:
+                self._config = tomli.load(projf)
+            except tomli.TOMLDecodeError as err:
+                raise ConfigurationException(err)
+
+    @property
+    def project_ids(self):
+        return self._config.keys()
+
+    def __getitem__(self, key):
+        return self._config[key]
+
+
 class AnnifRegistry:
     """Class that keeps track of the Annif projects"""
 
@@ -58,26 +93,13 @@ class AnnifRegistry:
                 return {}
 
         if projects_file.endswith('.toml'):  # TOML format
-            with open(projects_file, "rb") as projf:
-                try:
-                    config = tomli.load(projf)
-                except tomli.TOMLDecodeError as err:
-                    raise ConfigurationException(err)
-            project_ids = config.keys()
+            config = AnnifConfigTOML(projects_file)
         else:  # classic INI style format
-            config = configparser.ConfigParser()
-            config.optionxform = annif.util.identity
-            with open(projects_file, encoding='utf-8-sig') as projf:
-                try:
-                    config.read_file(projf)
-                except (configparser.DuplicateOptionError,
-                        configparser.DuplicateSectionError) as err:
-                    raise ConfigurationException(err)
-            project_ids = config.sections()
+            config = AnnifConfigCFG(projects_file)
 
         # create AnnifProject objects from the configuration file
         projects = collections.OrderedDict()
-        for project_id in project_ids:
+        for project_id in config.project_ids:
             projects[project_id] = AnnifProject(project_id,
                                                 config[project_id],
                                                 datadir,
