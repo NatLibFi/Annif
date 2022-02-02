@@ -1,6 +1,6 @@
 # Project configuration for Annif unit tests
 
-[dummy-fi]
+[dummy-fi-toml]
 name="Dummy Finnish"
 language="fi"
 backend="dummy"
@@ -9,7 +9,7 @@ key="value"
 vocab="dummy"
 access="public"
 
-[dummy-en]
+[dummy-en-toml]
 name="Dummy English"
 language="en"
 backend="dummy"
