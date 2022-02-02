@@ -55,7 +55,7 @@ class AnnifConfigTOML:
         return self._config[key]
 
 
-def parse_config(projects_file):
+def find_config(projects_file):
     if projects_file:
         if not os.path.exists(projects_file):
             logger.warning(
@@ -65,21 +65,31 @@ def parse_config(projects_file):
                 'file using the ANNIF_PROJECTS environment ' +
                 'variable or the command-line option "--projects".')
             return None
-    else:
-        if os.path.exists('projects.cfg'):
-            projects_file = 'projects.cfg'
-        elif os.path.exists('projects.toml'):
-            projects_file = 'projects.toml'
         else:
-            logger.warning(
-                'Could not find project configuration file ' +
-                '"projects.cfg" or "projects.toml". ' +
-                'You can set the path to the project configuration ' +
-                'file using the ANNIF_PROJECTS environment ' +
-                'variable or the command-line option "--projects".')
-            return None
+            return projects_file
 
-    if projects_file.endswith('.toml'):  # TOML format
-        return AnnifConfigTOML(projects_file)
+    if os.path.exists('projects.cfg'):
+        return 'projects.cfg'
+
+    if os.path.exists('projects.toml'):
+        return 'projects.toml'
+
+    logger.warning(
+        'Could not find project configuration file ' +
+        '"projects.cfg" or "projects.toml". ' +
+        'You can set the path to the project configuration ' +
+        'file using the ANNIF_PROJECTS environment ' +
+        'variable or the command-line option "--projects".')
+    return None
+
+
+def parse_config(projects_file):
+    filename = find_config(projects_file)
+
+    if not filename:  # not found
+        return None
+
+    if filename.endswith('.toml'):  # TOML format
+        return AnnifConfigTOML(filename)
     else:  # classic CFG/INI style format
-        return AnnifConfigCFG(projects_file)
+        return AnnifConfigCFG(filename)
