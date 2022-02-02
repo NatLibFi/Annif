@@ -1,9 +1,11 @@
 """Configuration file handling"""
 
 
+import os.path
 import configparser
 import tomli
 import annif
+import annif.util
 from annif.exception import ConfigurationException
 
 
@@ -51,3 +53,33 @@ class AnnifConfigTOML:
 
     def __getitem__(self, key):
         return self._config[key]
+
+
+def parse_config(projects_file):
+    if projects_file:
+        if not os.path.exists(projects_file):
+            logger.warning(
+                f'Project configuration file "{projects_file}" is ' +
+                'missing. Please provide one. ' +
+                'You can set the path to the project configuration ' +
+                'file using the ANNIF_PROJECTS environment ' +
+                'variable or the command-line option "--projects".')
+            return None
+    else:
+        if os.path.exists('projects.cfg'):
+            projects_file = 'projects.cfg'
+        elif os.path.exists('projects.toml'):
+            projects_file = 'projects.toml'
+        else:
+            logger.warning(
+                'Could not find project configuration file ' +
+                '"projects.cfg" or "projects.toml". ' +
+                'You can set the path to the project configuration ' +
+                'file using the ANNIF_PROJECTS environment ' +
+                'variable or the command-line option "--projects".')
+            return None
+
+    if projects_file.endswith('.toml'):  # TOML format
+        return AnnifConfigTOML(projects_file)
+    else:  # classic CFG/INI style format
+        return AnnifConfigCFG(projects_file)

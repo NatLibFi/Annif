@@ -1,11 +1,9 @@
 """Registry that keeps track of Annif projects"""
 
 import collections
-import os.path
 from flask import current_app
 import annif
-import annif.util
-from annif.config import AnnifConfigCFG, AnnifConfigTOML
+from annif.config import parse_config
 from annif.project import Access, AnnifProject
 
 logger = annif.logger
@@ -32,33 +30,12 @@ class AnnifRegistry:
                 project.initialize()
 
     def _create_projects(self, projects_file, datadir):
-        if projects_file:
-            if not os.path.exists(projects_file):
-                logger.warning(
-                    f'Project configuration file "{projects_file}" is ' +
-                    'missing. Please provide one. ' +
-                    'You can set the path to the project configuration ' +
-                    'file using the ANNIF_PROJECTS environment ' +
-                    'variable or the command-line option "--projects".')
-                return {}
-        else:
-            if os.path.exists('projects.cfg'):
-                projects_file = 'projects.cfg'
-            elif os.path.exists('projects.toml'):
-                projects_file = 'projects.toml'
-            else:
-                logger.warning(
-                    'Could not find project configuration file ' +
-                    '"projects.cfg" or "projects.toml". ' +
-                    'You can set the path to the project configuration ' +
-                    'file using the ANNIF_PROJECTS environment ' +
-                    'variable or the command-line option "--projects".')
-                return {}
+        # parse the configuration
+        config = parse_config(projects_file)
 
-        if projects_file.endswith('.toml'):  # TOML format
-            config = AnnifConfigTOML(projects_file)
-        else:  # classic INI style format
-            config = AnnifConfigCFG(projects_file)
+        # handle the case where the config file doesn't exist
+        if config is None:
+            return {}
 
         # create AnnifProject objects from the configuration file
         projects = collections.OrderedDict()
