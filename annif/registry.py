@@ -1,51 +1,14 @@
 """Registry that keeps track of Annif projects"""
 
 import collections
-import configparser
 import os.path
 from flask import current_app
-import tomli
 import annif
 import annif.util
-from annif.exception import ConfigurationException
+from annif.config import AnnifConfigCFG, AnnifConfigTOML
 from annif.project import Access, AnnifProject
 
 logger = annif.logger
-
-
-class AnnifConfigCFG:
-    def __init__(self, filename):
-        self._config = configparser.ConfigParser()
-        self._config.optionxform = annif.util.identity
-        with open(filename, encoding='utf-8-sig') as projf:
-            try:
-                self._config.read_file(projf)
-            except (configparser.DuplicateOptionError,
-                    configparser.DuplicateSectionError) as err:
-                raise ConfigurationException(err)
-
-    @property
-    def project_ids(self):
-        return self._config.sections()
-
-    def __getitem__(self, key):
-        return self._config[key]
-
-
-class AnnifConfigTOML:
-    def __init__(self, filename):
-        with open(filename, "rb") as projf:
-            try:
-                self._config = tomli.load(projf)
-            except tomli.TOMLDecodeError as err:
-                raise ConfigurationException(err)
-
-    @property
-    def project_ids(self):
-        return self._config.keys()
-
-    def __getitem__(self, key):
-        return self._config[key]
 
 
 class AnnifRegistry:
