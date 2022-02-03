@@ -11,7 +11,7 @@ import os
 class Config(object):
     DEBUG = False
     TESTING = False
-    PROJECTS_FILE = os.environ.get('ANNIF_PROJECTS', default='projects.cfg')
+    PROJECTS_FILE = os.environ.get('ANNIF_PROJECTS', default='')
     DATADIR = os.environ.get('ANNIF_DATADIR', default='data')
     INITIALIZE_PROJECTS = False
 
@@ -40,3 +40,7 @@ class TestingNoProjectsConfig(TestingConfig):
 
 class TestingInvalidProjectsConfig(TestingConfig):
     PROJECTS_FILE = 'tests/projects_invalid.cfg'
+
+
+class TestingTOMLConfig(TestingConfig):
+    PROJECTS_FILE = 'tests/projects.toml'

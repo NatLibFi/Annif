@@ -37,6 +37,7 @@ setup(
         'optuna==2.10.*',
         'stwfsapy==0.3.*',
         'python-dateutil',
+        'tomli==2.0.*'
     ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
