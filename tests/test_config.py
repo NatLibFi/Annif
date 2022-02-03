@@ -1,7 +1,9 @@
 """Unit tests for configuration handling in Annif"""
 
 import logging
+import pytest
 import annif.config
+from annif.exception import ConfigurationException
 
 
 def test_find_config_exists_cfg():
@@ -50,3 +52,11 @@ def test_parse_config_toml():
     assert isinstance(cfg, annif.config.AnnifConfigTOML)
     assert len(cfg.project_ids) == 2
     assert cfg['dummy-fi-toml'] is not None
+
+
+def test_parse_config_toml_failed(tmpdir):
+    conffile = tmpdir.join('projects.toml')
+    conffile.write("[section]\nkey=unquoted\n")
+    with pytest.raises(ConfigurationException) as excinfo:
+        annif.config.parse_config(str(conffile))
+    assert 'Invalid value' in str(excinfo.value)

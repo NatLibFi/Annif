@@ -45,7 +45,8 @@ class AnnifConfigTOML:
                     f"Reading configuration file {filename} in TOML format")
                 self._config = tomli.load(projf)
             except tomli.TOMLDecodeError as err:
-                raise ConfigurationException(err)
+                raise ConfigurationException(
+                    f"Parsing TOML file '{filename}' failed: {err}")
 
     @property
     def project_ids(self):
