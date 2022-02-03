@@ -56,19 +56,20 @@ class AnnifConfigTOML:
         return self._config[key]
 
 
-def find_config(projects_file):
-    if projects_file:
-        if os.path.exists(projects_file):
-            return projects_file
-        else:
-            logger.warning(
-                f'Project configuration file "{projects_file}" is ' +
-                'missing. Please provide one. ' +
-                'You can set the path to the project configuration ' +
-                'file using the ANNIF_PROJECTS environment ' +
-                'variable or the command-line option "--projects".')
-            return None
+def check_config(projects_file):
+    if os.path.exists(projects_file):
+        return projects_file
+    else:
+        logger.warning(
+            f'Project configuration file "{projects_file}" is ' +
+            'missing. Please provide one. ' +
+            'You can set the path to the project configuration ' +
+            'file using the ANNIF_PROJECTS environment ' +
+            'variable or the command-line option "--projects".')
+        return None
 
+
+def find_config():
     for filename in ('projects.cfg', 'projects.toml'):
         if os.path.exists(filename):
             return filename
@@ -83,7 +84,10 @@ def find_config(projects_file):
 
 
 def parse_config(projects_file):
-    filename = find_config(projects_file)
+    if projects_file:
+        filename = check_config(projects_file)
+    else:
+        filename = find_config()
 
     if not filename:  # not found
         return None

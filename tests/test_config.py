@@ -6,19 +6,19 @@ import annif.config
 from annif.exception import ConfigurationException
 
 
-def test_find_config_exists_cfg():
-    cfg = annif.config.find_config('tests/projects.cfg')
+def test_check_config_exists_cfg():
+    cfg = annif.config.check_config('tests/projects.cfg')
     assert cfg == 'tests/projects.cfg'
 
 
-def test_find_config_exists_toml():
-    cfg = annif.config.find_config('tests/projects.toml')
+def test_check_config_exists_toml():
+    cfg = annif.config.check_config('tests/projects.toml')
     assert cfg == 'tests/projects.toml'
 
 
-def test_find_config_not_exists(caplog):
+def test_check_config_not_exists(caplog):
     with caplog.at_level(logging.WARNING):
-        cfg = annif.config.find_config('tests/notfound.cfg')
+        cfg = annif.config.check_config('tests/notfound.cfg')
     assert cfg is None
     assert 'Project configuration file "tests/notfound.cfg" is missing' \
         in caplog.text
@@ -27,7 +27,7 @@ def test_find_config_not_exists(caplog):
 def test_find_config_exists_default(monkeypatch):
     # temporarily chdir to the tests directory
     monkeypatch.chdir('tests')
-    cfg = annif.config.find_config('')
+    cfg = annif.config.find_config()
     assert cfg == 'projects.cfg'
 
 
@@ -35,7 +35,7 @@ def test_find_config_not_exists_default(monkeypatch, caplog):
     # temporarily chdir to the tests/corpora directory
     monkeypatch.chdir('tests/corpora')
     with caplog.at_level(logging.WARNING):
-        cfg = annif.config.find_config('')
+        cfg = annif.config.find_config()
     assert cfg is None
     assert 'Could not find project configuration file' in caplog.text
 
