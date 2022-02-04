@@ -87,11 +87,13 @@ class AnnifVocabulary(DatadirMixin):
 
         raise NotInitializedException(f'graph file {path} not found')
 
-    def load_vocabulary(self, subject_corpus, language):
-        """load subjects from a subject corpus and save them into a
-        SKOS/Turtle file for later use"""
+    def load_vocabulary(self, subject_corpus, language, force=False):
+        """Load subjects from a subject corpus and save them into a
+        SKOS/Turtle file for later use. If force=True, replace the
+        existing vocabulary completely."""
 
-        if os.path.exists(os.path.join(self.datadir, 'subjects')):
+        if not force and os.path.exists(os.path.join(self.datadir,
+                                                     'subjects')):
             logger.info('updating existing vocabulary')
             self._update_subject_index(subject_corpus)
         else:
