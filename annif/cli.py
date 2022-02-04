@@ -176,7 +176,7 @@ def run_clear_project(project_id):
 @click.argument('project_id')
 @click.argument('subjectfile', type=click.Path(exists=True, dir_okay=False))
 @click.option('--force', '-f', default=False, is_flag=True,
-              help='Replace existing vocabulary completely ' + \
+              help='Replace existing vocabulary completely ' +
                    'instead of updating it')
 @common_options
 def run_loadvoc(project_id, force, subjectfile):
