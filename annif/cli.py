@@ -175,8 +175,11 @@ def run_clear_project(project_id):
 @cli.command('loadvoc')
 @click.argument('project_id')
 @click.argument('subjectfile', type=click.Path(exists=True, dir_okay=False))
+@click.option('--force', '-f', default=False, is_flag=True,
+              help='Replace existing vocabulary completely ' + \
+                   'instead of updating it')
 @common_options
-def run_loadvoc(project_id, subjectfile):
+def run_loadvoc(project_id, force, subjectfile):
     """
     Load a vocabulary for a project.
     """
@@ -187,7 +190,7 @@ def run_loadvoc(project_id, subjectfile):
     else:
         # probably a TSV file
         subjects = annif.corpus.SubjectFileTSV(subjectfile)
-    proj.vocab.load_vocabulary(subjects, proj.language)
+    proj.vocab.load_vocabulary(subjects, proj.language, force=force)
 
 
 @cli.command('train')

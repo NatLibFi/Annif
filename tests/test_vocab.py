@@ -86,6 +86,23 @@ def test_update_subject_index_with_added_subjects(tmpdir):
                                  '42.42')
 
 
+def test_update_subject_index_force(tmpdir):
+    vocab = load_dummy_vocab(tmpdir)
+    subjfile_new = tmpdir.join('subjects_new.tsv')
+    subjfile_new.write("<http://example.org/dummy>\tdummy\n" +
+                       "<http://example.org/new-dummy>\tnew dummy\t42.42\n" +
+                       "<http://example.org/new-none>\tnew none\n")
+    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new))
+
+    vocab.load_vocabulary(subjects_new, 'en', force=True)
+    assert len(vocab.subjects) == 3
+    assert vocab.subjects.by_uri('http://example.org/dummy') == 0
+    assert vocab.subjects[0] == ('http://example.org/dummy', 'dummy', None)
+    assert vocab.subjects.by_uri('http://example.org/new-dummy') == 1
+    assert vocab.subjects[1] == ('http://example.org/new-dummy', 'new dummy',
+                                 '42.42')
+
+
 def test_skos(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
     assert tmpdir.join('vocabs/vocab-id/subjects.ttl').exists()
