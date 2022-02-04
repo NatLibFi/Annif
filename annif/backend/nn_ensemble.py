@@ -180,23 +180,26 @@ class NNEnsembleBackend(
 
     def _corpus_to_vectors(self, corpus, seq, n_jobs):
         # pass corpus through all source projects
-        project_weights = dict(
+        sources = dict(
             annif.util.parse_sources(self.params['sources']))
 
         # initialize the source projects before forking, to save memory
-        for project_id in project_weights.keys():
+        self.info(
+            f"Initializing source projects: {', '.join(sources.keys())}")
+        for project_id in sources.keys():
             project = self.project.registry.get_project(project_id)
             project.initialize(parallel=True)
 
         psmap = annif.parallel.ProjectSuggestMap(
             self.project.registry,
-            list(project_weights.keys()),
+            list(sources.keys()),
             backend_params=None,
             limit=None,
             threshold=0.0)
 
         jobs, pool_class = annif.parallel.get_pool(n_jobs)
 
+        self.info("Processing training documents...")
         with pool_class(jobs) as pool:
             for hits, uris, labels in pool.imap_unordered(
                     psmap.suggest, corpus.documents):
@@ -204,8 +207,8 @@ class NNEnsembleBackend(
                 for project_id, p_hits in hits.items():
                     vector = p_hits.as_vector(self.project.subjects)
                     doc_scores.append(np.sqrt(vector)
-                                      * project_weights[project_id]
-                                      * len(project_weights))
+                                      * sources[project_id]
+                                      * len(sources))
                 score_vector = np.array(doc_scores,
                                         dtype=np.float32).transpose()
                 subjects = annif.corpus.SubjectSet((uris, labels))
@@ -230,6 +233,7 @@ class NNEnsembleBackend(
         else:
             self.info("Reusing cached training data from previous run.")
         # fit the model using a read-only view of the LMDB
+        self.info("Training neural network model...")
         with env.begin(buffers=True) as txn:
             seq = LMDBSequence(txn, batch_size=32)
             self._model.fit(seq, verbose=True, epochs=epochs)
