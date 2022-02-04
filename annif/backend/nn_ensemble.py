@@ -183,6 +183,11 @@ class NNEnsembleBackend(
         project_weights = dict(
             annif.util.parse_sources(self.params['sources']))
 
+        # initialize the source projects before forking, to save memory
+        for project_id in project_weights.keys():
+            project = self.project.registry.get_project(project_id)
+            project.initialize(parallel=True)
+
         psmap = annif.parallel.ProjectSuggestMap(
             self.project.registry,
             list(project_weights.keys()),
