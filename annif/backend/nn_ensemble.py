@@ -236,7 +236,7 @@ class NNEnsembleBackend(
         self.info("Training neural network model...")
         with env.begin(buffers=True) as txn:
             seq = LMDBSequence(txn, batch_size=32)
-            self._model.fit(seq, verbose=True, epochs=epochs)
+            self._model.fit(seq, verbose=1, epochs=epochs)
 
         annif.util.atomic_save(
             self._model,
