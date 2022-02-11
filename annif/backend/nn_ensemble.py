@@ -137,18 +137,17 @@ class NNEnsembleBackend(
             np.expand_dims(score_vector.transpose(), 0))
         return VectorSuggestionResult(results[0])
 
-    def _create_model(self, sources):
+    def _create_model(self, sources, params):
         self.info("creating NN ensemble model")
 
         inputs = Input(shape=(len(self.project.subjects), len(sources)))
 
         flat_input = Flatten()(inputs)
         drop_input = Dropout(
-            rate=float(
-                self.params['dropout_rate']))(flat_input)
-        hidden = Dense(int(self.params['nodes']),
+            rate=float(params['dropout_rate']))(flat_input)
+        hidden = Dense(int(params['nodes']),
                        activation="relu")(drop_input)
-        drop_hidden = Dropout(rate=float(self.params['dropout_rate']))(hidden)
+        drop_hidden = Dropout(rate=float(params['dropout_rate']))(hidden)
         delta = Dense(len(self.project.subjects),
                       kernel_initializer='zeros',
                       bias_initializer='zeros')(drop_hidden)
@@ -157,21 +156,22 @@ class NNEnsembleBackend(
 
         predictions = Add()([mean, delta])
 
-        self._model = Model(inputs=inputs, outputs=predictions)
-        self._model.compile(optimizer=self.params['optimizer'],
-                            loss='binary_crossentropy',
-                            metrics=['top_k_categorical_accuracy'])
-        if 'lr' in self.params:
-            self._model.optimizer.learning_rate.assign(
-                float(self.params['lr']))
+        model = Model(inputs=inputs, outputs=predictions)
+        model.compile(optimizer=params['optimizer'],
+                      loss='binary_crossentropy',
+                      metrics=['top_k_categorical_accuracy'])
+        if 'lr' in params:
+            model.optimizer.learning_rate.assign(
+                float(params['lr']))
 
         summary = []
-        self._model.summary(print_fn=summary.append)
+        model.summary(print_fn=summary.append)
         self.debug("Created model: \n" + "\n".join(summary))
+        return model
 
     def _train(self, corpus, params, jobs=0):
-        sources = annif.util.parse_sources(self.params['sources'])
-        self._create_model(sources)
+        sources = annif.util.parse_sources(params['sources'])
+        self._model = self._create_model(sources, params)
         self._fit_model(
             corpus,
             epochs=int(params['epochs']),

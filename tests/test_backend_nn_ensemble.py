@@ -56,8 +56,8 @@ def test_nn_ensemble_can_set_lr(registry):
         backend_id='nn_ensemble',
         config_params={'epochs': 1, 'lr': 0.002},
         project=project)
-    nn_ensemble._create_model(['dummy-en'])
-    assert nn_ensemble._model.optimizer.learning_rate.value() == 0.002
+    model = nn_ensemble._create_model(['dummy-en'], nn_ensemble.params)
+    assert model.optimizer.learning_rate.value() == 0.002
 
 
 def test_set_lmdb_map_size(registry, tmpdir):
