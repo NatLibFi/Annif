@@ -103,6 +103,18 @@ def document_corpus(subject_index):
 
 
 @pytest.fixture(scope='module')
+def fulltext_corpus(subject_index):
+    ftdir = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'fulltext')
+    ft_corpus = annif.corpus.DocumentDirectory(ftdir)
+    ft_corpus.set_subject_index(subject_index)
+    return ft_corpus
+
+
+@pytest.fixture(scope='module')
 def pretrained_vectors():
     return py.path.local(os.path.join(
         os.path.dirname(__file__),
