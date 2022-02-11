@@ -18,7 +18,7 @@ class BaseWorker:
 
     @classmethod
     def init(cls, args):
-        cls.args = args
+        cls.args = args  # pragma: no cover
 
 
 class ProjectSuggestMap:

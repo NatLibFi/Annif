@@ -25,14 +25,14 @@ def test_mllm_default_params(project):
         assert param in actual_params and actual_params[param] == val
 
 
-def test_mllm_train(datadir, document_corpus, project):
+def test_mllm_train(datadir, fulltext_corpus, project):
     mllm_type = annif.backend.get_backend("mllm")
     mllm = mllm_type(
         backend_id='mllm',
         config_params={'limit': 10, 'language': 'fi'},
         project=project)
 
-    mllm.train(document_corpus)
+    mllm.train(fulltext_corpus)
     assert mllm._model is not None
     assert datadir.join('mllm-train.gz').exists()
     assert datadir.join('mllm-train.gz').size() > 0
@@ -106,14 +106,14 @@ def test_mllm_suggest_no_matches(project):
     assert len(results) == 0
 
 
-def test_mllm_hyperopt(project, document_corpus):
+def test_mllm_hyperopt(project, fulltext_corpus):
     mllm_type = annif.backend.get_backend('mllm')
     mllm = mllm_type(
         backend_id='mllm',
         config_params={'limit': 10, 'language': 'fi'},
         project=project)
 
-    optimizer = mllm.get_hp_optimizer(document_corpus, metric='NDCG')
+    optimizer = mllm.get_hp_optimizer(fulltext_corpus, metric='NDCG')
     optimizer.optimize(n_trials=3, n_jobs=1, results_file=None)
 
 
