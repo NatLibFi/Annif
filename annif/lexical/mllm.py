@@ -113,8 +113,8 @@ class MLLMCandidateGenerator(annif.parallel.BaseWorker):
 
     @classmethod
     def generate_candidates(cls, doc_subject_ids, text):
-        candidates = generate_candidates(text, **cls.args)
-        return doc_subject_ids, candidates
+        candidates = generate_candidates(text, **cls.args)  # pragma: no cover
+        return doc_subject_ids, candidates  # pragma: no cover
 
 
 class MLLMFeatureConverter(annif.parallel.BaseWorker):
