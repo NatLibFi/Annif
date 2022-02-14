@@ -71,7 +71,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/docker-build-on-gh-actions'  # TODO Change to master
     steps:
     - name: Login to Quay.io
-      uses: docker/login-action@v1.12
+      uses: docker/login-action@v1
       with:
         username: ${{ secrets.JUHON_DOCKERHUB_USERNAME }}
         password: ${{ secrets.JUHON_DOCKERHUB_TOKEN }}
@@ -80,14 +80,14 @@ jobs:
         # password: ${{ secrets.QUAYIO_TOKEN }}
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@v3.6
+      uses: docker/metadata-action@v3
       with:
         # images: quay.io/natlibfi/annif # TODO Switch
         images: jinkinen/annif
         tags: |
           latest
     - name: Build and push to Quay.io
-      uses: docker/build-push-action@v2.9
+      uses: docker/build-push-action@v2
       with:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
@@ -110,19 +110,19 @@ jobs:
         python -m pip install wheel
         python setup.py sdist bdist_wheel
     - name: Publish distribution to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1.4
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
     - name: Login to Quay.io
-      uses: docker/login-action@v1.12
+      uses: docker/login-action@v1
       with:
         registry: quay.io
         username: ${{ secrets.QUAYIO_USERNAME }}  # TODO Add secrets
         password: ${{ secrets.QUAYIO_TOKEN }}
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@v3.6
+      uses: docker/metadata-action@v3
       with:
         # images: quay.io/natlibfi/annif
         images: jinkinen/annif
@@ -130,7 +130,7 @@ jobs:
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
     - name: Build and push to Quay.io
-      uses: docker/build-push-action@v2.9
+      uses: docker/build-push-action@v2
       with:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
