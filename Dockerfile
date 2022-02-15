@@ -24,8 +24,8 @@ RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		libvoikko1 \
 		voikko-fi \
-	# For Docker healthcheck:
-	&& apt-get install -y --no-install-recommends curl \
+	# curl for Docker healthcheck and rsync for model transfers:
+	&& apt-get install -y --no-install-recommends curl rsync \
 	&& rm -rf /var/lib/apt/lists/* /usr/include/*
 
 WORKDIR /Annif
