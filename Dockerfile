@@ -27,10 +27,10 @@ RUN apt-get update && \
 		apt-get install -y --no-install-recommends \
 			libvoikko1 \
 			voikko-fi; \
-	fi \
+	fi && \
 	# curl for Docker healthcheck and rsync for model transfers:
-	&& apt-get install -y --no-install-recommends curl rsync \
-	&& rm -rf /var/lib/apt/lists/* /usr/include/*
+	apt-get install -y --no-install-recommends curl rsync && \
+	rm -rf /var/lib/apt/lists/* /usr/include/*
 
 WORKDIR /Annif
 RUN pip install --upgrade pip setuptools --no-cache-dir
@@ -58,9 +58,9 @@ RUN pip install -e .
 WORKDIR /annif-projects
 
 # Switch user to non-root:
-RUN groupadd -g 998 annif_user \
-    && useradd -r -u 998 -g annif_user annif_user \
-    && chown -R annif_user:annif_user /annif-projects
+RUN groupadd -g 998 annif_user && \
+    useradd -r -u 998 -g annif_user annif_user && \
+    chown -R annif_user:annif_user /annif-projects
 USER annif_user
 
 CMD annif
