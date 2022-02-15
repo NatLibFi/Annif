@@ -39,8 +39,8 @@ COPY setup.py README.md LICENSE.txt projects.cfg.dist /Annif/
 RUN echo "Installing dependencies for optional features: $optional_dependencies" \
 	&& pip install .[$optional_dependencies] --no-cache-dir
 
-# Download nltk data (handle occasional timeout in with 3 tries):
-RUN for i in 1 2 3; do python -m nltk.downloader punkt -d /usr/share/nltk_data && break || sleep 1; done
+# Download nltk data
+RUN python -m nltk.downloader punkt -d /usr/share/nltk_data
 
 # Download spaCy models, if the optional feature was selected
 ARG spacy_models=en_core_web_sm
