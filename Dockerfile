@@ -9,6 +9,7 @@ RUN if [[ $optional_dependencies =~ "fasttext" ]]; then \
 		apt-get update && \
 		apt-get install -y --no-install-recommends \
 			build-essential && \
+		pip install --upgrade pip setuptools --no-cache-dir && \
 		pip install --no-cache-dir \
 			fasttext==0.9.2; \
 	fi
@@ -29,7 +30,7 @@ RUN apt-get update \
 	&& rm -rf /var/lib/apt/lists/* /usr/include/*
 
 WORKDIR /Annif
-RUN pip install --upgrade pip --no-cache-dir
+RUN pip install --upgrade pip setuptools --no-cache-dir
 
 COPY setup.py README.md LICENSE.txt projects.cfg.dist /Annif/
 # Install dependencies for optional features.
