@@ -20,11 +20,14 @@ FROM python:3.8-slim-bullseye
 SHELL ["/bin/bash", "-c"]
 COPY --from=builder /usr/local/lib/python3.8 /usr/local/lib/python3.8
 
+ARG optional_dependencies=dev,voikko,pycld3,fasttext,nn,omikuji,yake,spacy
 # Install system dependencies needed at runtime:
-RUN apt-get update \
-	&& apt-get install -y --no-install-recommends \
-		libvoikko1 \
-		voikko-fi \
+RUN apt-get update && \
+	if [[ $optional_dependencies =~ "voikko" ]]; then \
+		apt-get install -y --no-install-recommends \
+			libvoikko1 \
+			voikko-fi; \
+	fi \
 	# curl for Docker healthcheck and rsync for model transfers:
 	&& apt-get install -y --no-install-recommends curl rsync \
 	&& rm -rf /var/lib/apt/lists/* /usr/include/*
@@ -33,8 +36,6 @@ WORKDIR /Annif
 RUN pip install --upgrade pip setuptools --no-cache-dir
 
 COPY setup.py README.md LICENSE.txt projects.cfg.dist /Annif/
-# Install dependencies for optional features.
-ARG optional_dependencies=dev,voikko,pycld3,fasttext,nn,omikuji,yake,spacy
 RUN echo "Installing dependencies for optional features: $optional_dependencies" \
 	&& pip install .[$optional_dependencies] --no-cache-dir
 
