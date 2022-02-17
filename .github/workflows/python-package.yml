@@ -3,8 +3,12 @@
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
 name: CI/CD
-
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+  workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
