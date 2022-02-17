@@ -1,4 +1,4 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions,
+  # This workflow will install Python dependencies, run tests and lint with a variety of Python versions,
 # if event is a push of tagged commit, will also build and publish to PyPI.
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
@@ -28,6 +28,8 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+        cache: pip
+        cache-dependency-path: setup.py
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
@@ -74,6 +76,8 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: '3.8'
+        cache: pip
+        cache-dependency-path: setup.py
     - name: Build distribution
       run: |
         python -m pip install wheel
