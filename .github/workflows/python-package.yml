@@ -9,6 +9,9 @@ on:
     - master
   pull_request:
   workflow_dispatch:
+env:
+  PIP_UPGRADE: "true"  # always upgrade to latest version
+  PIP_UPGRADE_STRATEGY: "eager"  # upgrade all dependencies
 jobs:
   test-with-cache:
     runs-on: ubuntu-latest
@@ -32,7 +35,7 @@ jobs:
         cache-dependency-path: setup.py
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install pip setuptools wheel
         python -m pip install .[dev]
         python -m nltk.downloader punkt
         # Selectively install the optional dependencies for some Python versions
@@ -86,7 +89,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install pip setuptools wheel
         python -m pip install .[dev]
         python -m nltk.downloader punkt
         # Selectively install the optional dependencies for some Python versions
