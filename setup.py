@@ -56,7 +56,8 @@ setup(
             'pytest-flask',
             'pytest-flake8',
             'bumpversion',
-            'autopep8'
+            'autopep8',
+            'importlib_metadata'
         ]
     },
     entry_points={
