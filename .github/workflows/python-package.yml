@@ -1,4 +1,4 @@
-  # This workflow will install Python dependencies, run tests and lint with a variety of Python versions,
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions,
 # if event is a push of tagged commit, will also build and publish to PyPI.
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
@@ -13,7 +13,7 @@ env:
   PIP_UPGRADE: "true"  # always upgrade to latest version
   PIP_UPGRADE_STRATEGY: "eager"  # upgrade all dependencies
 jobs:
-  test-with-cache:
+  test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
@@ -35,7 +35,6 @@ jobs:
         cache-dependency-path: setup.py
     - name: Install dependencies
       run: |
-        python -m pip install --help
         python -m pip install pip setuptools wheel
         python -m pip install .[dev]
         python -m nltk.downloader punkt
@@ -70,78 +69,24 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
 
-  test-without-cache:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    strategy:
-      matrix:
-        python-version: [3.7, 3.8, 3.9]
-
+  publish:
+    needs: test
+    runs-on: ubuntu-20.04
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
     - uses: actions/checkout@v2
-    - name: Install system packages
-      run: |
-        sudo apt-get install \
-          libvoikko1 \
-          voikko-fi
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.8
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+        python-version: '3.8'
+        cache: pip
+        cache-dependency-path: setup.py
+    - name: Build distribution
       run: |
-        python -m pip install pip setuptools wheel
-        python -m pip install .[dev]
-        python -m nltk.downloader punkt
-        # Selectively install the optional dependencies for some Python versions
-        # Install the optional neural network dependencies (TensorFlow and LMDB)
-        # - except for one Python version (3.8) so that we can test also without them
-        if [[ ${{ matrix.python-version }} != '3.8' ]]; then pip install .[nn]; fi
-        # Install the optional Omikuji and YAKE dependencies
-        # - except for one Python version (3.8) so that we can test also without them
-        if [[ ${{ matrix.python-version }} != '3.8' ]]; then pip install .[omikuji,yake]; fi
-        # Install the optional fastText dependencies for Python 3.8 only
-        if [[ ${{ matrix.python-version }} == '3.8' ]]; then pip install .[fasttext]; fi
-        # Install the optional spaCy dependencies for Python 3.8 only
-        if [[ ${{ matrix.python-version }} == '3.8' ]]; then
-          pip install .[spacy]
-          # download the small English pretrained spaCy model needed by spacy analyzer
-          python -m spacy download en_core_web_sm
-        fi
-        # For Python 3.7
-        # - voikko and pycld3 dependencies
-        if [[ ${{ matrix.python-version }} == '3.7' ]]; then python -m pip install .[voikko,pycld3]; fi
-
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        pytest --cov=./
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
-
-  #publish:
-  #  needs: test
-  #  runs-on: ubuntu-20.04
-  #  if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-  #  steps:
-  #  - uses: actions/checkout@v2
-  #  - name: Set up Python 3.8
-  #    uses: actions/setup-python@v2
-  #    with:
-  #      python-version: '3.8'
-  #      cache: pip
-  #      cache-dependency-path: setup.py
-  #  - name: Build distribution
-  #    run: |
-  #      python -m pip install wheel
-  #      python setup.py sdist bdist_wheel
-  #  - name: Publish distribution
-  #    uses: pypa/gh-action-pypi-publish@release/v1.4
-  #    with:
-  #      user: __token__
-  #      password: ${{ secrets.PYPI_API_TOKEN }}
+        python -m pip install wheel
+        python setup.py sdist bdist_wheel
+    - name: Publish distribution
+      uses: pypa/gh-action-pypi-publish@release/v1.4
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
