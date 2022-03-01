@@ -11,7 +11,7 @@ logger = logging.getLogger('annif')
 import annif.backend  # noqa
 
 
-def create_app(script_info=None, config_name=None):
+def create_app(config_name=None):
     # 'cxapp' here is the Connexion application that has a normal Flask app
     # as a property (cxapp.app)
 
