@@ -9,7 +9,11 @@ def read(fname):
 setup(
     name='annif',
     version='0.57.0-dev',
-    url='https://github.com/NatLibFi/Annif',
+    url='https://annif.org',
+    project_urls={
+        'Source': 'https://github.com/NatLibFi/Annif',
+        'Documentation': 'https://github.com/NatLibFi/Annif/wiki',
+    },
     author='Osma Suominen',
     author_email='osma.suominen@helsinki.fi',
     description='Automated subject indexing and classification tool',
