@@ -48,7 +48,7 @@ setup(
         'fasttext': ['fasttext==0.9.2'],
         'voikko': ['voikko'],
         'nn': ['tensorflow-cpu==2.7.0', 'lmdb==1.3.0'],
-        'omikuji': ['omikuji==0.4.*'],
+        'omikuji': ['omikuji==0.5.*'],
         'yake': ['yake==0.4.5'],
         'pycld3': ['pycld3'],
         'spacy': ['spacy==3.2.*'],
