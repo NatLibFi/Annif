@@ -73,7 +73,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/docker-build-on-gh-actions'  # TODO Change to master
     steps:
     - name: Login to Quay.io
-      uses: docker/login-action@v1
+      uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7  # v1.14.1
       with:
         username: ${{ secrets.JUHON_DOCKERHUB_USERNAME }}
         password: ${{ secrets.JUHON_DOCKERHUB_TOKEN }}
@@ -82,14 +82,14 @@ jobs:
         # password: ${{ secrets.QUAYIO_TOKEN }}
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@v3
+      uses: docker/metadata-action@e5622373a38e60fb6d795a4421e56882f2d7a681  # v3.6.2
       with:
         # images: quay.io/natlibfi/annif # TODO Switch
         images: jinkinen/annif
         tags: |
           latest
     - name: Build and push to Quay.io
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@7f9d37fa544684fb73bfe4835ed7214c255ce02b  # v2.9.0
       with:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
@@ -118,14 +118,14 @@ jobs:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
     - name: Login to Quay.io
-      uses: docker/login-action@v1
+      uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7  # v1.14.1
       with:
         registry: quay.io
         username: ${{ secrets.QUAYIO_USERNAME }}  # TODO Add secrets
         password: ${{ secrets.QUAYIO_TOKEN }}
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@v3
+      uses: docker/metadata-action@e5622373a38e60fb6d795a4421e56882f2d7a681  # v3.6.2
       with:
         # images: quay.io/natlibfi/annif
         images: jinkinen/annif
@@ -133,7 +133,7 @@ jobs:
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
     - name: Build and push to Quay.io
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@7f9d37fa544684fb73bfe4835ed7214c255ce02b  # v2.9.0
       with:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
