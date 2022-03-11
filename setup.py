@@ -24,7 +24,7 @@ setup(
     zip_safe=False,
     python_requires='>=3.7',
     install_requires=[
-        'connexion[swagger-ui]',
+        'connexion[swagger-ui]==2.12.*',
         'swagger_ui_bundle',
         'flask>=1.0.4,<3',
         'flask-cors',
