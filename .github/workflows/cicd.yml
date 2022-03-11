@@ -52,7 +52,7 @@ jobs:
         fi
         # For Python 3.7
         # - voikko and pycld3 dependencies
-        if [[ ${{ matrix.python-version }} == '3.7' ]]; then python -m pip install .[voikko,pycld3]; fi
+        if [[ ${{ matrix.python-version }} == '3.7' ]]; then pip install .[voikko,pycld3]; fi
 
     - name: Lint with flake8
       run: |
