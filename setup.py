@@ -41,7 +41,8 @@ setup(
         'optuna==2.10.*',
         'stwfsapy==0.3.*',
         'python-dateutil',
-        'tomli==2.0.*'
+        'tomli==2.0.*',
+        'importlib_metadata'
     ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
@@ -61,7 +62,6 @@ setup(
             'pytest-flake8',
             'bumpversion',
             'autopep8',
-            'importlib_metadata'
         ]
     },
     entry_points={
