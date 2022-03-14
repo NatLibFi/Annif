@@ -48,7 +48,7 @@ jobs:
         if [[ ${{ matrix.python-version }} == '3.8' ]]; then
           pip install .[spacy]
           # download the small English pretrained spaCy model needed by spacy analyzer
-          python -m spacy download en_core_web_sm
+          python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
         # For Python 3.7
         # - voikko and pycld3 dependencies
