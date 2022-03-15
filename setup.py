@@ -8,7 +8,7 @@ def read(fname):
 
 setup(
     name='annif',
-    version='0.57.0-dev',
+    version='0.57.0',
     url='https://annif.org',
     project_urls={
         'Source': 'https://github.com/NatLibFi/Annif',
