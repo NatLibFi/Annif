@@ -8,8 +8,12 @@ def read(fname):
 
 setup(
     name='annif',
-    version='0.57.0-dev',
-    url='https://github.com/NatLibFi/Annif',
+    version='0.58.0-dev',
+    url='https://annif.org',
+    project_urls={
+        'Source': 'https://github.com/NatLibFi/Annif',
+        'Documentation': 'https://github.com/NatLibFi/Annif/wiki',
+    },
     author='Osma Suominen',
     author_email='osma.suominen@helsinki.fi',
     description='Automated subject indexing and classification tool',
@@ -20,7 +24,7 @@ setup(
     zip_safe=False,
     python_requires='>=3.7',
     install_requires=[
-        'connexion2[swagger-ui]',
+        'connexion[swagger-ui]==2.12.*',
         'swagger_ui_bundle',
         'flask>=1.0.4,<3',
         'flask-cors',
@@ -43,8 +47,8 @@ setup(
     extras_require={
         'fasttext': ['fasttext==0.9.2'],
         'voikko': ['voikko'],
-        'nn': ['tensorflow-cpu==2.7.0', 'lmdb==1.3.0'],
-        'omikuji': ['omikuji==0.4.*'],
+        'nn': ['tensorflow-cpu==2.7.1', 'lmdb==1.3.0'],
+        'omikuji': ['omikuji==0.5.*'],
         'yake': ['yake==0.4.5'],
         'pycld3': ['pycld3'],
         'spacy': ['spacy==3.2.*'],
@@ -56,7 +60,8 @@ setup(
             'pytest-flask',
             'pytest-flake8',
             'bumpversion',
-            'autopep8'
+            'autopep8',
+            'importlib_metadata'
         ]
     },
     entry_points={

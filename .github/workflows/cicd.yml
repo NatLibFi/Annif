@@ -1,10 +1,15 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions,
-# if event is a push of tagged commit, will also build and publish to PyPI.
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
 name: CI/CD
-
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - master
+    tags:
+    - '*'
+  pull_request:
+  workflow_dispatch:
+env:
+  PIP_UPGRADE: "true"  # always upgrade to latest version
+  PIP_UPGRADE_STRATEGY: "eager"  # upgrade all dependencies
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -12,6 +17,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.7, 3.8, 3.9]
+    name: test on Python ${{ matrix.python-version }}
 
     steps:
     - uses: actions/checkout@v2
@@ -24,9 +30,11 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+        cache: pip
+        cache-dependency-path: setup.py
+    - name: Install Python dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install pip setuptools wheel
         python -m pip install .[dev]
         python -m nltk.downloader punkt
         # Selectively install the optional dependencies for some Python versions
@@ -42,7 +50,7 @@ jobs:
         if [[ ${{ matrix.python-version }} == '3.8' ]]; then
           pip install .[spacy]
           # download the small English pretrained spaCy model needed by spacy analyzer
-          python -m spacy download en_core_web_sm
+          python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
         # For Python 3.7
         # - voikko and pycld3 dependencies
@@ -60,7 +68,34 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
 
-  publish:
+  publish-docker-latest:
+    name: publish latest Docker image
+    needs: test
+    runs-on: ubuntu-20.04
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    steps:
+    - name: Login to Quay.io
+      uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7  # v1.14.1
+      with:
+        registry: quay.io
+        username: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_USERNAME }}
+        password: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_PASSWORD }}
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@e5622373a38e60fb6d795a4421e56882f2d7a681  # v3.6.2
+      with:
+        images: quay.io/natlibfi/annif
+        tags: |
+          latest
+    - name: Build and push to Quay.io
+      uses: docker/build-push-action@7f9d37fa544684fb73bfe4835ed7214c255ce02b  # v2.9.0
+      with:
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  publish-release:
+    name: publish release
     needs: test
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -70,12 +105,34 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: '3.8'
+        cache: pip
+        cache-dependency-path: setup.py
     - name: Build distribution
       run: |
         python -m pip install wheel
         python setup.py sdist bdist_wheel
-    - name: Publish distribution
-      uses: pypa/gh-action-pypi-publish@release/v1.4
+    - name: Publish distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
+    - name: Login to Quay.io
+      uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7  # v1.14.1
+      with:
+        registry: quay.io
+        username: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_USERNAME }}
+        password: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_PASSWORD }}
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@e5622373a38e60fb6d795a4421e56882f2d7a681  # v3.6.2
+      with:
+        images: quay.io/natlibfi/annif
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+    - name: Build and push to Quay.io
+      uses: docker/build-push-action@7f9d37fa544684fb73bfe4835ed7214c255ce02b  # v2.9.0
+      with:
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
