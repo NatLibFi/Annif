@@ -21,17 +21,17 @@ class AnnifRegistry:
     # processes when using the multiprocessing module.
     _projects = {}
 
-    def __init__(self, projects_file, datadir, init_projects):
+    def __init__(self, projects_config_path, datadir, init_projects):
         self._rid = id(self)
         self._projects[self._rid] = \
-            self._create_projects(projects_file, datadir)
+            self._create_projects(projects_config_path, datadir)
         if init_projects:
             for project in self._projects[self._rid].values():
                 project.initialize()
 
-    def _create_projects(self, projects_file, datadir):
+    def _create_projects(self, projects_config_path, datadir):
         # parse the configuration
-        config = parse_config(projects_file)
+        config = parse_config(projects_config_path)
 
         # handle the case where the config file doesn't exist
         if config is None:
@@ -66,10 +66,11 @@ class AnnifRegistry:
 
 
 def initialize_projects(app):
-    projects_file = app.config['PROJECTS_FILE']
+    projects_config_path = app.config['PROJECTS_CONFIG_PATH']
     datadir = app.config['DATADIR']
     init_projects = app.config['INITIALIZE_PROJECTS']
-    app.annif_registry = AnnifRegistry(projects_file, datadir, init_projects)
+    app.annif_registry = AnnifRegistry(projects_config_path, datadir,
+                                       init_projects)
 
 
 def get_projects(min_access=Access.private):

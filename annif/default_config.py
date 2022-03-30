@@ -11,7 +11,7 @@ import os
 class Config(object):
     DEBUG = False
     TESTING = False
-    PROJECTS_FILE = os.environ.get('ANNIF_PROJECTS', default='')
+    PROJECTS_CONFIG_PATH = os.environ.get('ANNIF_PROJECTS', default='')
     DATADIR = os.environ.get('ANNIF_DATADIR', default='data')
     INITIALIZE_PROJECTS = False
 
@@ -26,7 +26,7 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
-    PROJECTS_FILE = 'tests/projects.cfg'
+    PROJECTS_CONFIG_PATH = 'tests/projects.cfg'
     DATADIR = 'tests/data'
 
 
@@ -35,12 +35,12 @@ class TestingInitializeConfig(TestingConfig):
 
 
 class TestingNoProjectsConfig(TestingConfig):
-    PROJECTS_FILE = 'tests/notfound.cfg'
+    PROJECTS_CONFIG_PATH = 'tests/notfound.cfg'
 
 
 class TestingInvalidProjectsConfig(TestingConfig):
-    PROJECTS_FILE = 'tests/projects_invalid.cfg'
+    PROJECTS_CONFIG_PATH = 'tests/projects_invalid.cfg'
 
 
 class TestingTOMLConfig(TestingConfig):
-    PROJECTS_FILE = 'tests/projects.toml'
+    PROJECTS_CONFIG_PATH = 'tests/projects.toml'

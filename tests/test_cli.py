@@ -14,7 +14,7 @@ runner = CliRunner(env={'ANNIF_CONFIG': 'annif.default_config.TestingConfig'})
 # Generate a random project name to use in tests
 TEMP_PROJECT = ''.join(
     random.choice('abcdefghiklmnopqrstuvwxyz') for _ in range(8))
-PROJECTS_FILE_OPTION = 'tests/projects_for_config_path_option.cfg'
+PROJECTS_CONFIG_PATH = 'tests/projects_for_config_path_option.cfg'
 
 
 def test_list_projects():
@@ -43,7 +43,7 @@ def test_list_projects_bad_arguments():
 
 def test_list_projects_config_path_option():
     result = runner.invoke(
-        annif.cli.cli, ["list-projects", "--projects", PROJECTS_FILE_OPTION])
+        annif.cli.cli, ["list-projects", "--projects", PROJECTS_CONFIG_PATH])
     assert not result.exception
     assert result.exit_code == 0
     assert 'dummy_for_projects_option' in result.output
@@ -57,7 +57,7 @@ def test_list_projects_config_path_option_nonexistent():
     assert failed_result.exception
     assert failed_result.exit_code != 0
     assert "Error: Invalid value for '-p' / '--projects': " \
-           "File 'nonexistent.cfg' does not exist." in failed_result.output
+           "Path 'nonexistent.cfg' does not exist." in failed_result.output
 
 
 def test_show_project():

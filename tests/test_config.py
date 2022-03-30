@@ -20,8 +20,8 @@ def test_check_config_not_exists(caplog):
     with caplog.at_level(logging.WARNING):
         cfg = annif.config.check_config('tests/notfound.cfg')
     assert cfg is None
-    assert 'Project configuration file "tests/notfound.cfg" is missing' \
-        in caplog.text
+    assert 'Project configuration file or directory "tests/notfound.cfg" ' + \
+        'is missing' in caplog.text
 
 
 def test_find_config_exists_default(monkeypatch):
@@ -37,7 +37,7 @@ def test_find_config_not_exists_default(monkeypatch, caplog):
     with caplog.at_level(logging.WARNING):
         cfg = annif.config.find_config()
     assert cfg is None
-    assert 'Could not find project configuration file' in caplog.text
+    assert 'Could not find project configuration ' in caplog.text
 
 
 def test_parse_config_cfg_nondefault():
