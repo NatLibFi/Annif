@@ -44,3 +44,7 @@ class TestingInvalidProjectsConfig(TestingConfig):
 
 class TestingTOMLConfig(TestingConfig):
     PROJECTS_CONFIG_PATH = 'tests/projects.toml'
+
+
+class TestingDirectoryConfig(TestingConfig):
+    PROJECTS_CONFIG_PATH = 'tests/projects.d'

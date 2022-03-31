@@ -16,6 +16,11 @@ def test_check_config_exists_toml():
     assert cfg == 'tests/projects.toml'
 
 
+def test_check_config_exists_directory():
+    cfg = annif.config.check_config('tests/projects.d')
+    assert cfg == 'tests/projects.d'
+
+
 def test_check_config_not_exists(caplog):
     with caplog.at_level(logging.WARNING):
         cfg = annif.config.check_config('tests/notfound.cfg')
@@ -69,3 +74,11 @@ def test_parse_config_toml_failed(tmpdir):
     with pytest.raises(ConfigurationException) as excinfo:
         annif.config.parse_config(str(conffile))
     assert 'Invalid value' in str(excinfo.value)
+
+
+def test_parse_config_directory():
+    cfg = annif.config.parse_config('tests/projects.d')
+    assert isinstance(cfg, annif.config.AnnifConfigDirectory)
+    assert len(cfg.project_ids) == 16 + 2  # projects.cfg + projects.toml
+    assert cfg['dummy-fi'] is not None
+    assert cfg['dummy-fi-toml'] is not None
