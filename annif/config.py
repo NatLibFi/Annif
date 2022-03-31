@@ -68,9 +68,16 @@ class AnnifConfigDirectory:
         self._config = dict()
         for file in files:
             source_config = parse_config(file)
-            # TODO Check for duplicate project_ids
             for proj_id in source_config.project_ids:
+                self._check_duplicate_project_ids(proj_id, file)
                 self._config[proj_id] = source_config[proj_id]
+
+    def _check_duplicate_project_ids(self, proj_id, file):
+        if proj_id in self._config:
+            # Error message resembles configparser's DuplicateSection message
+            raise ConfigurationException(
+                f'While reading from "{file}": project ID "{proj_id}" already '
+                'exists in another configuration file in the directory.')
 
     @property
     def project_ids(self):

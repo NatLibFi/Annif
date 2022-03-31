@@ -82,3 +82,13 @@ def test_parse_config_directory():
     assert len(cfg.project_ids) == 16 + 2  # projects.cfg + projects.toml
     assert cfg['dummy-fi'] is not None
     assert cfg['dummy-fi-toml'] is not None
+
+
+def test_parse_config_directory_duplicated_project(tmpdir):
+    conffile = tmpdir.join('projects-1.toml')
+    conffile.write("[duplicated]\nkey='value'\n")
+    conffile = tmpdir.join('projects-2.cfg')
+    conffile.write("[duplicated]\nkey=value\n")
+    with pytest.raises(ConfigurationException) as excinfo:
+        annif.config.parse_config(str(tmpdir))
+    assert 'project ID "duplicated" already exists' in str(excinfo.value)
