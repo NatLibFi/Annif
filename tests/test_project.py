@@ -274,3 +274,13 @@ def test_project_file_toml():
             == 'dummy-fi-toml'
         assert annif.registry.get_project('dummy-en-toml').project_id \
             == 'dummy-en-toml'
+
+
+def test_project_directory():
+    app = annif.create_app(
+        config_name='annif.default_config.TestingDirectoryConfig')
+    with app.app_context():
+        assert len(annif.registry.get_projects()) == 16 + 2
+        assert annif.registry.get_project('dummy-fi').project_id == 'dummy-fi'
+        assert annif.registry.get_project('dummy-fi-toml').project_id \
+            == 'dummy-fi-toml'

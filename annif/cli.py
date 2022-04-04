@@ -104,14 +104,15 @@ def set_project_config_file_path(ctx, param, value):
     """Override the default path or the path given in env by CLI option"""
     with ctx.ensure_object(ScriptInfo).load_app().app_context():
         if value:
-            current_app.config['PROJECTS_FILE'] = value
+            current_app.config['PROJECTS_CONFIG_PATH'] = value
 
 
 def common_options(f):
     """Decorator to add common options for all CLI commands"""
     f = click.option(
-        '-p', '--projects', help='Set path to project configuration file',
-        type=click.Path(dir_okay=False, exists=True),
+        '-p', '--projects',
+        help='Set path to project configuration file or directory',
+        type=click.Path(dir_okay=True, exists=True),
         callback=set_project_config_file_path, expose_value=False,
         is_eager=True)(f)
     return click_log.simple_verbosity_option(logger)(f)
