@@ -1,4 +1,4 @@
-sphinx==1.8.*
+sphinx==4.5.*
 sphinx-rtd-theme
 sphinxcontrib-apidoc==0.3.0
 docutils<0.18
