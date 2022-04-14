@@ -66,7 +66,7 @@ jobs:
       run: |
         pytest --cov=./
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71  # v3.0.0
 
   publish-docker-latest:
     name: publish latest Docker image
