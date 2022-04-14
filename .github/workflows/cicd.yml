@@ -112,7 +112,7 @@ jobs:
         python -m pip install wheel
         python setup.py sdist bdist_wheel
     - name: Publish distribution to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+      uses: pypa/gh-action-pypi-publish@717ba43cfbb0387f6ce311b169a825772f54d295  # v1.5.0
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
