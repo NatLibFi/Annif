@@ -3,6 +3,7 @@
 import re
 from . import simple
 from . import snowball
+from . import simplemma
 import annif
 from annif.util import parse_args
 
@@ -30,6 +31,7 @@ def get_analyzer(analyzerspec):
 
 register_analyzer(simple.SimpleAnalyzer)
 register_analyzer(snowball.SnowballAnalyzer)
+register_analyzer(simplemma.SimplemmaAnalyzer)
 
 # Optional analyzers
 try:
