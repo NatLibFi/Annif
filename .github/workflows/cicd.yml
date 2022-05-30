@@ -39,22 +39,22 @@ jobs:
         python -m nltk.downloader punkt
         # Selectively install the optional dependencies for some Python versions
         # Install the optional neural network dependencies (TensorFlow and LMDB)
-        # - except for one Python version (3.8) so that we can test also without them
-        if [[ ${{ matrix.python-version }} != '3.8' ]]; then pip install .[nn]; fi
+        # - except for one Python version (3.9) so that we can test also without them
+        if [[ ${{ matrix.python-version }} != '3.9' ]]; then pip install .[nn]; fi
         # Install the optional Omikuji and YAKE dependencies
-        # - except for one Python version (3.8) so that we can test also without them
-        if [[ ${{ matrix.python-version }} != '3.8' ]]; then pip install .[omikuji,yake]; fi
-        # Install the optional fastText dependencies for Python 3.8 only
-        if [[ ${{ matrix.python-version }} == '3.8' ]]; then pip install .[fasttext]; fi
-        # Install the optional spaCy dependencies for Python 3.8 only
-        if [[ ${{ matrix.python-version }} == '3.8' ]]; then
+        # - except for one Python version (3.9) so that we can test also without them
+        if [[ ${{ matrix.python-version }} != '3.9' ]]; then pip install .[omikuji,yake]; fi
+        # Install the optional fastText dependencies for Python 3.9 only
+        if [[ ${{ matrix.python-version }} == '3.9' ]]; then pip install .[fasttext]; fi
+        # Install the optional spaCy dependencies for Python 3.9 only
+        if [[ ${{ matrix.python-version }} == '3.9' ]]; then
           pip install .[spacy]
           # download the small English pretrained spaCy model needed by spacy analyzer
           python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
-        # For Python 3.7
+        # For Python 3.8
         # - voikko and pycld3 dependencies
-        if [[ ${{ matrix.python-version }} == '3.7' ]]; then python -m pip install .[voikko,pycld3]; fi
+        if [[ ${{ matrix.python-version }} == '3.8' ]]; then python -m pip install .[voikko,pycld3]; fi
 
     - name: Lint with flake8
       run: |
@@ -101,10 +101,10 @@ jobs:
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: '3.8'
+        python-version: '3.9'
         cache: pip
         cache-dependency-path: setup.py
     - name: Build distribution
