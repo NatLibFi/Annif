@@ -32,7 +32,7 @@ setup(
         'click-log',
         'joblib==1.1.0',
         'nltk',
-        'gensim==4.1.*',
+        'gensim==4.2.*',
         'scikit-learn==1.0.2',
         'scipy==1.7.*',
         'rdflib>=4.2,<7.0',
