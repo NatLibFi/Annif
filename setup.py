@@ -33,7 +33,7 @@ setup(
         'joblib==1.1.0',
         'nltk',
         'gensim==4.2.*',
-        'scikit-learn==1.0.2',
+        'scikit-learn==1.1.1',
         'scipy==1.8.*',
         'rdflib>=4.2,<7.0',
         'gunicorn',
