@@ -55,6 +55,8 @@ jobs:
         # For Python 3.8
         # - voikko and pycld3 dependencies
         if [[ ${{ matrix.python-version }} == '3.8' ]]; then python -m pip install .[voikko,pycld3]; fi
+        # Verify installed packages have compatible dependencies:
+        python -m pip check
 
     - name: Lint with flake8
       run: |
