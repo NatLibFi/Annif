@@ -52,7 +52,7 @@ setup(
         'omikuji': ['omikuji==0.5.*'],
         'yake': ['yake==0.4.5'],
         'pycld3': ['pycld3'],
-        'spacy': ['spacy==3.2.*'],
+        'spacy': ['spacy==3.3.*'],
         'dev': [
             'codecov',
             'coverage<=6.2',
