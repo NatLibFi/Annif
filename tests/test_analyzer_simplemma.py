@@ -6,12 +6,6 @@ import annif.analyzer
 simplemma = pytest.importorskip("annif.analyzer.simplemma")
 
 
-def test_simplemma_getstate():
-    analyzer = annif.analyzer.get_analyzer("simplemma(fi)")
-    state = analyzer.__getstate__()
-    assert state == {'lang': 'fi', 'langdata': None}
-
-
 def test_simplemma_finnish_analyzer_normalize_word():
     analyzer = annif.analyzer.get_analyzer("simplemma(fi)")
     assert analyzer._normalize_word("xyzzy") == "xyzzy"
