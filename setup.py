@@ -37,7 +37,7 @@ setup(
         'scipy==1.8.*',
         'rdflib>=4.2,<7.0',
         'gunicorn',
-        'numpy==1.22.*',
+        'numpy==1.23.*',
         'optuna==2.10.*',
         'stwfsapy==0.3.*',
         'python-dateutil',
