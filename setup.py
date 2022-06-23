@@ -42,7 +42,7 @@ setup(
         'stwfsapy==0.3.*',
         'python-dateutil',
         'tomli==2.0.*',
-        'simplemma==0.6.*'
+        'simplemma==0.7.*'
     ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={
