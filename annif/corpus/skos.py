@@ -49,10 +49,12 @@ class SubjectFileSKOS(SubjectCorpus):
         for concept in self.concepts:
             labels = self.get_concept_labels(
                 concept, [SKOS.prefLabel, RDFS.label], self.language)
+            if labels:
+                label = labels[0]
+            else:
+                # No labels - use qualified name instead (derived from URI)
+                label = self.graph.namespace_manager.qname(concept)
             notation = self.graph.value(concept, SKOS.notation, None, any=True)
-            if not labels:
-                continue
-            label = labels[0]
             if notation is not None:
                 notation = str(notation)
             yield Subject(uri=str(concept), label=label, notation=notation,
@@ -66,10 +68,19 @@ class SubjectFileSKOS(SubjectCorpus):
             yield concept
 
     def get_concept_labels(self, concept, label_types, language):
-        return [str(label)
-                for label_type in label_types
-                for label in self.graph.objects(concept, label_type)
-                if label.language == language]
+        # 1. Labels with the correct language tag
+        labels = [str(label)
+                  for label_type in label_types
+                  for label in self.graph.objects(concept, label_type)
+                  if label.language == language]
+        if labels:
+            return labels
+        # 2. Labels without a language tag
+        labels = [str(label)
+                  for label_type in label_types
+                  for label in self.graph.objects(concept, label_type)
+                  if label.language is None]
+        return labels
 
     @staticmethod
     def is_rdf_file(path):
