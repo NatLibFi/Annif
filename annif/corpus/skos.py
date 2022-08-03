@@ -36,9 +36,8 @@ class SubjectFileSKOS(SubjectCorpus):
 
     PREF_LABEL_PROPERTIES = (SKOS.prefLabel, RDFS.label)
 
-    def __init__(self, path, language):
+    def __init__(self, path):
         self.path = path
-        self.language = language
         if path.endswith('.dump.gz'):
             self.graph = joblib.load(path)
         else:
@@ -58,11 +57,10 @@ class SubjectFileSKOS(SubjectCorpus):
 
         return langs
 
-    @property
-    def subjects(self):
+    def subjects(self, language):
         for concept in self.concepts:
             labels = self.get_concept_labels(
-                concept, self.PREF_LABEL_PROPERTIES, self.language)
+                concept, self.PREF_LABEL_PROPERTIES, language)
             # Use first label if available, else use qualified name (from URI)
             label = (labels[0] if labels
                      else self.graph.namespace_manager.qname(concept))

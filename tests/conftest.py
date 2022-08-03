@@ -80,7 +80,7 @@ def vocabulary(datadir):
         'corpora',
         'archaeology',
         'yso-archaeology.ttl')
-    subjects = annif.corpus.SubjectFileSKOS(subjfile, 'fi')
+    subjects = annif.corpus.SubjectFileSKOS(subjfile)
     vocab.load_vocabulary(subjects, 'fi')
     return vocab
 

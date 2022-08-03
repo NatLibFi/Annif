@@ -23,13 +23,15 @@ class AnnifVocabulary(DatadirMixin):
         self.language = language
         self._skos_vocab = None
 
-    def _create_subject_index(self, subject_corpus):
-        self._subjects = annif.corpus.SubjectIndex(subject_corpus)
+    def _create_subject_index(self, subject_corpus, language):
+        self._subjects = annif.corpus.SubjectIndex()
+        self._subjects.load_subjects(subject_corpus, language)
         annif.util.atomic_save(self._subjects, self.datadir, 'subjects')
 
-    def _update_subject_index(self, subject_corpus):
+    def _update_subject_index(self, subject_corpus, language):
         old_subjects = self.subjects
-        new_subjects = annif.corpus.SubjectIndex(subject_corpus)
+        new_subjects = annif.corpus.SubjectIndex()
+        new_subjects.load_subjects(subject_corpus, language)
         updated_subjects = annif.corpus.SubjectIndex()
 
         for uri, label, notation in old_subjects:
@@ -67,8 +69,7 @@ class AnnifVocabulary(DatadirMixin):
         if os.path.exists(dumppath):
             logger.debug(f'loading graph dump from {dumppath}')
             try:
-                self._skos_vocab = annif.corpus.SubjectFileSKOS(dumppath,
-                                                                self.language)
+                self._skos_vocab = annif.corpus.SubjectFileSKOS(dumppath)
             except ModuleNotFoundError:
                 # Probably dump has been saved using a different rdflib version
                 logger.debug('could not load graph dump, using turtle file')
@@ -79,8 +80,7 @@ class AnnifVocabulary(DatadirMixin):
         path = os.path.join(self.datadir, 'subjects.ttl')
         if os.path.exists(path):
             logger.debug(f'loading graph from {path}')
-            self._skos_vocab = annif.corpus.SubjectFileSKOS(path,
-                                                            self.language)
+            self._skos_vocab = annif.corpus.SubjectFileSKOS(path)
             # store the dump file so we can use it next time
             self._skos_vocab.save_skos(path, self.language)
             return self._skos_vocab
@@ -88,16 +88,16 @@ class AnnifVocabulary(DatadirMixin):
         raise NotInitializedException(f'graph file {path} not found')
 
     def load_vocabulary(self, subject_corpus, language, force=False):
-        """Load subjects from a subject corpus and save them into a
-        SKOS/Turtle file for later use. If force=True, replace the
-        existing vocabulary completely."""
+        """Load subjects from a subject corpus and save them into one
+        or more subject index files as well as a SKOS/Turtle file for later
+        use. If force=True, replace the existing subject index completely."""
 
         if not force and os.path.exists(os.path.join(self.datadir,
                                                      'subjects')):
             logger.info('updating existing vocabulary')
-            self._update_subject_index(subject_corpus)
+            self._update_subject_index(subject_corpus, language)
         else:
-            self._create_subject_index(subject_corpus)
+            self._create_subject_index(subject_corpus, language)
         subject_corpus.save_skos(os.path.join(self.datadir, 'subjects.ttl'),
                                  language)
 
