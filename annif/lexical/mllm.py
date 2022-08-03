@@ -145,12 +145,19 @@ class MLLMModel:
     def _candidates_to_features(self, candidates):
         return candidates_to_features(candidates, self._model_data)
 
-    def _prepare_terms(self, graph, vocab, params):
+    @staticmethod
+    def _get_label_props(params):
         pref_label_props = [SKOS.prefLabel]
+
         if annif.util.boolean(params['use_hidden_labels']):
             nonpref_label_props = [SKOS.altLabel, SKOS.hiddenLabel]
         else:
             nonpref_label_props = [SKOS.altLabel]
+
+        return (pref_label_props, nonpref_label_props)
+
+    def _prepare_terms(self, graph, vocab, params):
+        pref_label_props, nonpref_label_props = self._get_label_props(params)
 
         terms = []
         subject_ids = []
