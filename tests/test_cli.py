@@ -114,7 +114,7 @@ def test_clear_project_nonexistent_data(testdatadir, caplog):
 
 def test_loadvoc_tsv(testdatadir):
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
+        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.fi.tsv')))
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
     subjectfile = os.path.join(
@@ -125,8 +125,8 @@ def test_loadvoc_tsv(testdatadir):
     result = runner.invoke(annif.cli.cli, ['loadvoc', 'tfidf-fi', subjectfile])
     assert not result.exception
     assert result.exit_code == 0
-    assert testdatadir.join('vocabs/yso-fi/subjects').exists()
-    assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects.fi.tsv').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects.fi.tsv').size() > 0
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').size() > 0
     assert testdatadir.join('vocabs/yso-fi/subjects.dump.gz').exists()
@@ -135,7 +135,7 @@ def test_loadvoc_tsv(testdatadir):
 
 def test_loadvoc_tsv_with_bom(testdatadir):
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
+        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.fi.tsv')))
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
     subjectfile = os.path.join(
@@ -146,8 +146,8 @@ def test_loadvoc_tsv_with_bom(testdatadir):
     result = runner.invoke(annif.cli.cli, ['loadvoc', 'tfidf-fi', subjectfile])
     assert not result.exception
     assert result.exit_code == 0
-    assert testdatadir.join('vocabs/yso-fi/subjects').exists()
-    assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects.fi.tsv').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects.fi.tsv').size() > 0
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').size() > 0
     assert testdatadir.join('vocabs/yso-fi/subjects.dump.gz').exists()
@@ -156,7 +156,7 @@ def test_loadvoc_tsv_with_bom(testdatadir):
 
 def test_loadvoc_rdf(testdatadir):
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
+        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.fi.tsv')))
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
     subjectfile = os.path.join(
@@ -167,8 +167,8 @@ def test_loadvoc_rdf(testdatadir):
     result = runner.invoke(annif.cli.cli, ['loadvoc', 'tfidf-fi', subjectfile])
     assert not result.exception
     assert result.exit_code == 0
-    assert testdatadir.join('vocabs/yso-fi/subjects').exists()
-    assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects.fi.tsv').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects.fi.tsv').size() > 0
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').size() > 0
     assert testdatadir.join('vocabs/yso-fi/subjects.dump.gz').exists()
@@ -177,7 +177,7 @@ def test_loadvoc_rdf(testdatadir):
 
 def test_loadvoc_ttl(testdatadir):
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects')))
+        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.fi.tsv')))
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
     subjectfile = os.path.join(
@@ -188,8 +188,8 @@ def test_loadvoc_ttl(testdatadir):
     result = runner.invoke(annif.cli.cli, ['loadvoc', 'tfidf-fi', subjectfile])
     assert not result.exception
     assert result.exit_code == 0
-    assert testdatadir.join('vocabs/yso-fi/subjects').exists()
-    assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
+    assert testdatadir.join('vocabs/yso-fi/subjects.fi.tsv').exists()
+    assert testdatadir.join('vocabs/yso-fi/subjects.fi.tsv').size() > 0
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').exists()
     assert testdatadir.join('vocabs/yso-fi/subjects.ttl').size() > 0
     assert testdatadir.join('vocabs/yso-fi/subjects.dump.gz').exists()

@@ -23,10 +23,15 @@ class AnnifVocabulary(DatadirMixin):
         self.language = language
         self._skos_vocab = None
 
+    @staticmethod
+    def _index_filename(language):
+        return f"subjects.{language}.tsv"
+
     def _create_subject_index(self, subject_corpus, language):
         self._subjects = annif.corpus.SubjectIndex()
         self._subjects.load_subjects(subject_corpus, language)
-        annif.util.atomic_save(self._subjects, self.datadir, 'subjects')
+        annif.util.atomic_save(self._subjects, self.datadir,
+                               self._index_filename(language))
 
     def _update_subject_index(self, subject_corpus, language):
         old_subjects = self.subjects
@@ -44,12 +49,14 @@ class AnnifVocabulary(DatadirMixin):
             if not old_subjects.contains_uri(uri):
                 updated_subjects.append(uri, label, notation)
         self._subjects = updated_subjects
-        annif.util.atomic_save(self._subjects, self.datadir, 'subjects')
+        annif.util.atomic_save(self._subjects, self.datadir,
+                               self._index_filename(language))
 
     @property
     def subjects(self):
         if self._subjects is None:
-            path = os.path.join(self.datadir, 'subjects')
+            path = os.path.join(self.datadir,
+                                self._index_filename(self.language))
             if os.path.exists(path):
                 logger.debug('loading subjects from %s', path)
                 self._subjects = annif.corpus.SubjectIndex.load(path)
@@ -92,8 +99,8 @@ class AnnifVocabulary(DatadirMixin):
         or more subject index files as well as a SKOS/Turtle file for later
         use. If force=True, replace the existing subject index completely."""
 
-        if not force and os.path.exists(os.path.join(self.datadir,
-                                                     'subjects')):
+        if not force and os.path.exists(
+                os.path.join(self.datadir, self._index_filename(language))):
             logger.info('updating existing vocabulary')
             self._update_subject_index(subject_corpus, language)
         else:

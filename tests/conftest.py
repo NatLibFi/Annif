@@ -23,7 +23,9 @@ def app():
     app = annif.create_app(config_name='annif.default_config.TestingConfig')
     with app.app_context():
         project = annif.registry.get_project('dummy-en')
+        # the vocab is needed for both English and Finnish language projects
         project.vocab.load_vocabulary(vocab, 'en')
+        project.vocab.load_vocabulary(vocab, 'fi')
     return app
 
 
