@@ -22,9 +22,9 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     install_requires=[
-        'connexion[swagger-ui]==2.12.*',
+        'connexion[swagger-ui]==2.14.*',
         'swagger_ui_bundle',
         'flask>=1.0.4,<3',
         'flask-cors',
@@ -32,12 +32,12 @@ setup(
         'click-log',
         'joblib==1.1.0',
         'nltk',
-        'gensim==4.1.*',
-        'scikit-learn==1.0.2',
-        'scipy==1.7.*',
+        'gensim==4.2.*',
+        'scikit-learn==1.1.1',
+        'scipy==1.8.*',
         'rdflib>=4.2,<7.0',
         'gunicorn',
-        'numpy==1.21.*',
+        'numpy==1.23.*',
         'optuna==2.10.*',
         'stwfsapy==0.3.*',
         'python-dateutil',
@@ -48,11 +48,11 @@ setup(
     extras_require={
         'fasttext': ['fasttext==0.9.2'],
         'voikko': ['voikko'],
-        'nn': ['tensorflow-cpu==2.7.1', 'lmdb==1.3.0'],
+        'nn': ['tensorflow-cpu==2.9.1', 'lmdb==1.3.0'],
         'omikuji': ['omikuji==0.5.*'],
         'yake': ['yake==0.4.5'],
         'pycld3': ['pycld3'],
-        'spacy': ['spacy==3.2.*'],
+        'spacy': ['spacy==3.3.*'],
         'dev': [
             'codecov',
             'coverage<=6.2',
@@ -62,8 +62,7 @@ setup(
             'pytest-flake8',
             'flake8<5',
             'bumpversion',
-            'autopep8',
-            'importlib_metadata'
+            'autopep8'
         ]
     },
     entry_points={

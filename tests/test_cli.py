@@ -4,7 +4,7 @@ import contextlib
 import random
 import re
 import os.path
-import importlib_metadata
+import importlib
 import json
 from click.testing import CliRunner
 import annif.cli
@@ -806,5 +806,5 @@ def test_version_option():
         annif.cli.cli, ['--version'])
     assert not result.exception
     assert result.exit_code == 0
-    version = importlib_metadata.version('annif')
+    version = importlib.metadata.version('annif')
     assert result.output.strip() == version.strip()
