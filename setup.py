@@ -60,6 +60,7 @@ setup(
             'pytest-watch',
             'pytest-flask',
             'pytest-flake8',
+            'flake8<5',
             'bumpversion',
             'autopep8'
         ]
