@@ -49,14 +49,14 @@ class SubjectFileSKOS(SubjectCorpus):
         for concept in self.concepts:
             labels = self.get_concept_labels(
                 concept, [SKOS.prefLabel, RDFS.label], self.language)
-            if labels:
-                label = labels[0]
-            else:
-                # No labels - use qualified name instead (derived from URI)
-                label = self.graph.namespace_manager.qname(concept)
+            # Use first label if available, else use qualified name (from URI)
+            label = (labels[0] if labels
+                     else self.graph.namespace_manager.qname(concept))
+
             notation = self.graph.value(concept, SKOS.notation, None, any=True)
             if notation is not None:
                 notation = str(notation)
+
             yield Subject(uri=str(concept), label=label, notation=notation,
                           text=None)
 
