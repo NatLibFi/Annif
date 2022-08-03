@@ -34,6 +34,8 @@ def serialize_subjects_to_skos(subjects, language, path):
 class SubjectFileSKOS(SubjectCorpus):
     """A subject corpus that uses SKOS files"""
 
+    PREF_LABEL_PROPERTIES = (SKOS.prefLabel, RDFS.label)
+
     def __init__(self, path, language):
         self.path = path
         self.language = language
@@ -45,10 +47,22 @@ class SubjectFileSKOS(SubjectCorpus):
                              format=rdflib.util.guess_format(self.path))
 
     @property
+    def languages(self):
+        langs = set()
+
+        for concept in self.concepts:
+            for label_type in self.PREF_LABEL_PROPERTIES:
+                for label in self.graph.objects(concept, label_type):
+                    if label.language is not None:
+                        langs.add(label.language)
+
+        return langs
+
+    @property
     def subjects(self):
         for concept in self.concepts:
             labels = self.get_concept_labels(
-                concept, [SKOS.prefLabel, RDFS.label], self.language)
+                concept, self.PREF_LABEL_PROPERTIES, self.language)
             # Use first label if available, else use qualified name (from URI)
             label = (labels[0] if labels
                      else self.graph.namespace_manager.qname(concept))

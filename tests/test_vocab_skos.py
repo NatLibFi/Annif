@@ -1,6 +1,8 @@
 """Unit tests for SKOS vocabulary functionality in Annif"""
 
 
+import os.path
+
 from annif.corpus.skos import SubjectFileSKOS
 
 
@@ -100,3 +102,17 @@ ex:conc3 a skos:Concept .
     assert 'Concept 1' in labels
     assert 'Concept 2' in labels
     assert 'ex:conc3' in labels
+
+
+def test_load_turtle_get_languages(testdatadir):
+    subjectfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'yso-archaeology.ttl')
+    corpus = SubjectFileSKOS(subjectfile, 'en')
+    langs = corpus.languages
+    assert len(langs) == 3
+    assert 'fi' in langs
+    assert 'sv' in langs
+    assert 'en' in langs

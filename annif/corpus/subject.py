@@ -21,6 +21,11 @@ class SubjectFileTSV:
         yield Subject(uri=clean_uri, label=label, notation=notation, text=None)
 
     @property
+    def languages(self):
+        # we don't have information about the language(s) of labels
+        return None
+
+    @property
     def subjects(self):
         with open(self.path, encoding='utf-8-sig') as subjfile:
             for line in subjfile:
