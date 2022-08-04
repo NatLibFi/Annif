@@ -95,15 +95,16 @@ class AnnifVocabulary(DatadirMixin):
 
         raise NotInitializedException(f'graph file {path} not found')
 
-    def load_vocabulary(self, subject_corpus, project_language, force=False):
+    def load_vocabulary(self, subject_corpus, default_language, force=False):
         """Load subjects from a subject corpus and save them into one
         or more subject index files as well as a SKOS/Turtle file for later
         use. If force=True, replace the existing subject index completely."""
 
         languages = subject_corpus.languages
-        if languages is None:
-            # subject corpus isn't language-aware, default to project language
-            languages = [project_language]
+        if not languages:
+            # subject corpus isn't language-aware or can't detect languages
+            # default to language from project config instead
+            languages = [default_language]
 
         for language in languages:
             if not force and os.path.exists(
@@ -114,11 +115,11 @@ class AnnifVocabulary(DatadirMixin):
             else:
                 subjects = self._create_subject_index(subject_corpus, language)
 
-            if language == project_language:
+            if language == default_language:
                 self._subjects = subjects
 
         subject_corpus.save_skos(os.path.join(self.datadir, 'subjects.ttl'),
-                                 project_language)
+                                 default_language)
 
     def as_skos_file(self):
         """return the vocabulary as a file object, in SKOS/Turtle syntax"""
