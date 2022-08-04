@@ -44,6 +44,9 @@ def test_get_project_dummydummy(registry):
     assert project.language == 'en'
     assert project.analyzer.name == 'snowball'
     assert project.analyzer.param == 'english'
+    # project uses the dummy vocab, with language overridden to Finnish
+    assert project.vocab.vocab_id == 'dummy'
+    assert project.vocab.language == 'fi'
     assert project.access == Access.private
     assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
 
