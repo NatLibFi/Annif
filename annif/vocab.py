@@ -28,10 +28,11 @@ class AnnifVocabulary(DatadirMixin):
         return f"subjects.{language}.tsv"
 
     def _create_subject_index(self, subject_corpus, language):
-        self._subjects = annif.corpus.SubjectIndex()
-        self._subjects.load_subjects(subject_corpus, language)
-        annif.util.atomic_save(self._subjects, self.datadir,
+        subjects = annif.corpus.SubjectIndex()
+        subjects.load_subjects(subject_corpus, language)
+        annif.util.atomic_save(subjects, self.datadir,
                                self._index_filename(language))
+        return subjects
 
     def _update_subject_index(self, subject_corpus, language):
         old_subjects = self.subjects
@@ -48,9 +49,9 @@ class AnnifVocabulary(DatadirMixin):
         for uri, label, notation in new_subjects:
             if not old_subjects.contains_uri(uri):
                 updated_subjects.append(uri, label, notation)
-        self._subjects = updated_subjects
-        annif.util.atomic_save(self._subjects, self.datadir,
+        annif.util.atomic_save(updated_subjects, self.datadir,
                                self._index_filename(language))
+        return updated_subjects
 
     @property
     def subjects(self):
@@ -94,19 +95,30 @@ class AnnifVocabulary(DatadirMixin):
 
         raise NotInitializedException(f'graph file {path} not found')
 
-    def load_vocabulary(self, subject_corpus, language, force=False):
+    def load_vocabulary(self, subject_corpus, project_language, force=False):
         """Load subjects from a subject corpus and save them into one
         or more subject index files as well as a SKOS/Turtle file for later
         use. If force=True, replace the existing subject index completely."""
 
-        if not force and os.path.exists(
-                os.path.join(self.datadir, self._index_filename(language))):
-            logger.info('updating existing vocabulary')
-            self._update_subject_index(subject_corpus, language)
-        else:
-            self._create_subject_index(subject_corpus, language)
+        languages = subject_corpus.languages
+        if languages is None:
+            # subject corpus isn't language-aware, default to project language
+            languages = [project_language]
+
+        for language in languages:
+            if not force and os.path.exists(
+                    os.path.join(self.datadir,
+                                 self._index_filename(language))):
+                logger.info('updating existing vocabulary')
+                subjects = self._update_subject_index(subject_corpus, language)
+            else:
+                subjects = self._create_subject_index(subject_corpus, language)
+
+            if language == project_language:
+                self._subjects = subjects
+
         subject_corpus.save_skos(os.path.join(self.datadir, 'subjects.ttl'),
-                                 language)
+                                 project_language)
 
     def as_skos_file(self):
         """return the vocabulary as a file object, in SKOS/Turtle syntax"""
