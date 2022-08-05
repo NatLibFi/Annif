@@ -52,10 +52,10 @@ class SubjectFileSKOS(SubjectCorpus):
         for concept in self.concepts:
             for label_type in self.PREF_LABEL_PROPERTIES:
                 for label in self.graph.objects(concept, label_type):
-                    if label.language is not None:
-                        langs.add(label.language)
+                    langs.add(label.language)
 
-        return langs
+        # return only real language tags, not None or ''
+        return list(filter(None, langs))
 
     def subjects(self, language):
         for concept in self.concepts:
