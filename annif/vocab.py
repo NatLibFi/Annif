@@ -113,11 +113,9 @@ class AnnifVocabulary(DatadirMixin):
         or more subject index files as well as a SKOS/Turtle file for later
         use. If force=True, replace the existing subject index completely."""
 
-        languages = subject_corpus.languages
-        if not languages:
-            # subject corpus isn't language-aware or can't detect languages
-            # default to language from project config instead
-            languages = [default_language]
+        # default to language from project config if subject corpus isn't
+        # language-aware or can't detect languages
+        languages = subject_corpus.languages or [default_language]
 
         for language in languages:
             if not force and os.path.exists(
