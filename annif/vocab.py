@@ -1,13 +1,26 @@
 """Vocabulary management functionality for Annif"""
 
 import os.path
+import re
 import annif
 import annif.corpus
 import annif.util
 from annif.datadir import DatadirMixin
 from annif.exception import NotInitializedException
+from annif.util import parse_args
 
 logger = annif.logger
+
+
+def get_vocab(vocab_spec, datadir, default_language):
+    match = re.match(r'(\w+)(\((.*)\))?', vocab_spec)
+    if match is None:
+        raise ValueError(f"Invalid vocabulary specification: {vocab_spec}")
+    vocab_id = match.group(1)
+    posargs, kwargs = parse_args(match.group(3))
+    language = posargs[0] if posargs else default_language
+
+    return AnnifVocabulary(vocab_id, datadir, language)
 
 
 class AnnifVocabulary(DatadirMixin):

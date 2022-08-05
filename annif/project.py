@@ -2,7 +2,6 @@
 
 import enum
 import os.path
-import re
 from shutil import rmtree
 import annif
 import annif.transform
@@ -14,7 +13,6 @@ import annif.vocab
 from annif.datadir import DatadirMixin
 from annif.exception import AnnifException, ConfigurationException, \
     NotSupportedException, NotInitializedException
-from annif.util import parse_args
 
 logger = annif.logger
 
@@ -157,17 +155,10 @@ class AnnifProject(DatadirMixin):
             if self.vocab_spec is None:
                 raise ConfigurationException("vocab setting is missing",
                                              project_id=self.project_id)
-            match = re.match(r'(\w+)(\((.*)\))?', self.vocab_spec)
-            if match is None:
-                raise ConfigurationException("vocab setting is invalid",
-                                             project_id=self.project_id)
-            vocab_id = match.group(1)
-            posargs, kwargs = parse_args(match.group(3))
-            language = posargs[0] if posargs else self.language
+            self._vocab = annif.vocab.get_vocab(self.vocab_spec,
+                                                self._base_datadir,
+                                                self.language)
 
-            self._vocab = annif.vocab.AnnifVocabulary(vocab_id,
-                                                      self._base_datadir,
-                                                      language)
         return self._vocab
 
     @property
