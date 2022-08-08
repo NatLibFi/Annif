@@ -44,7 +44,7 @@ class AnnifProject(DatadirMixin):
         self.language = config['language']
         self.analyzer_spec = config.get('analyzer', None)
         self.transform_spec = config.get('transform', 'pass')
-        self.vocab_id = config.get('vocab', None)
+        self.vocab_spec = config.get('vocab', None)
         self.config = config
         self._base_datadir = datadir
         self.registry = registry
@@ -152,12 +152,13 @@ class AnnifProject(DatadirMixin):
     @property
     def vocab(self):
         if self._vocab is None:
-            if self.vocab_id is None:
+            if self.vocab_spec is None:
                 raise ConfigurationException("vocab setting is missing",
                                              project_id=self.project_id)
-            self._vocab = annif.vocab.AnnifVocabulary(self.vocab_id,
-                                                      self._base_datadir,
-                                                      self.language)
+            self._vocab = annif.vocab.get_vocab(self.vocab_spec,
+                                                self._base_datadir,
+                                                self.language)
+
         return self._vocab
 
     @property

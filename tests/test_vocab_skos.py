@@ -1,6 +1,8 @@
 """Unit tests for SKOS vocabulary functionality in Annif"""
 
 
+import os.path
+
 from annif.corpus.skos import SubjectFileSKOS
 
 
@@ -44,8 +46,8 @@ yso:p9285
         "neolitisk tid"@sv .
     """)
 
-    corpus = SubjectFileSKOS(str(tmpfile), 'fi')
-    subjects = list(corpus.subjects)
+    corpus = SubjectFileSKOS(str(tmpfile))
+    subjects = list(corpus.subjects('fi'))
     assert len(subjects) == 1  # one of the concepts was deprecated
     assert subjects[0].uri == 'http://www.yso.fi/onto/yso/p8993'
     assert subjects[0].label == 'hylyt'
@@ -66,8 +68,8 @@ yso:p8993
     skos:related yso:p8869 .
     """)
 
-    corpus = SubjectFileSKOS(str(tmpfile), 'fi')
-    subjects = list(corpus.subjects)
+    corpus = SubjectFileSKOS(str(tmpfile))
+    subjects = list(corpus.subjects('fi'))
     assert subjects[0].uri == 'http://www.yso.fi/onto/yso/p8993'
     assert subjects[0].label == 'hylyt'
     assert subjects[0].notation == '42.42'
@@ -91,8 +93,8 @@ ex:conc2 a skos:Concept;
 ex:conc3 a skos:Concept .
     """)
 
-    corpus = SubjectFileSKOS(str(tmpfile), 'en')
-    subjects = list(corpus.subjects)
+    corpus = SubjectFileSKOS(str(tmpfile))
+    subjects = list(corpus.subjects('en'))
     assert len(subjects) == 3
 
     # check that the vocabulary contains the expected labels
@@ -100,3 +102,17 @@ ex:conc3 a skos:Concept .
     assert 'Concept 1' in labels
     assert 'Concept 2' in labels
     assert 'ex:conc3' in labels
+
+
+def test_load_turtle_get_languages(testdatadir):
+    subjectfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'yso-archaeology.ttl')
+    corpus = SubjectFileSKOS(subjectfile)
+    langs = corpus.languages
+    assert len(langs) == 3
+    assert 'fi' in langs
+    assert 'sv' in langs
+    assert 'en' in langs

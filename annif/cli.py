@@ -187,7 +187,7 @@ def run_loadvoc(project_id, force, subjectfile):
     proj = get_project(project_id)
     if annif.corpus.SubjectFileSKOS.is_rdf_file(subjectfile):
         # SKOS/RDF file supported by rdflib
-        subjects = annif.corpus.SubjectFileSKOS(subjectfile, proj.language)
+        subjects = annif.corpus.SubjectFileSKOS(subjectfile)
     else:
         # probably a TSV file
         subjects = annif.corpus.SubjectFileTSV(subjectfile)

@@ -21,7 +21,11 @@ class SubjectFileTSV:
         yield Subject(uri=clean_uri, label=label, notation=notation, text=None)
 
     @property
-    def subjects(self):
+    def languages(self):
+        # we don't have information about the language(s) of labels
+        return None
+
+    def subjects(self, language):
         with open(self.path, encoding='utf-8-sig') as subjfile:
             for line in subjfile:
                 yield from self._parse_line(line)
@@ -29,24 +33,27 @@ class SubjectFileTSV:
     def save_skos(self, path, language):
         """Save the contents of the subject vocabulary into a SKOS/Turtle
         file with the given path name."""
-        serialize_subjects_to_skos(self.subjects, language, path)
+        serialize_subjects_to_skos(self.subjects(language), language, path)
 
 
 class SubjectIndex:
     """An index that remembers the associations between integers subject IDs
     and their URIs and labels."""
 
-    def __init__(self, corpus=None):
-        """Initialize the subject index from a subject corpus."""
+    def __init__(self):
         self._uris = []
         self._labels = []
         self._notations = []
         self._uri_idx = {}
         self._label_idx = {}
-        if corpus is not None:
-            for subject_id, subject in enumerate(corpus.subjects):
-                self._append(subject_id, subject.uri, subject.label,
-                             subject.notation)
+
+    def load_subjects(self, corpus, language):
+        """Initialize the subject index from a subject corpus using labels
+        in the given language."""
+
+        for subject_id, subject in enumerate(corpus.subjects(language)):
+            self._append(subject_id, subject.uri, subject.label,
+                         subject.notation)
 
     def __len__(self):
         return len(self._uris)
@@ -136,7 +143,9 @@ class SubjectIndex:
         """Load a subject index from a TSV file and return it."""
 
         corpus = SubjectFileTSV(path)
-        return cls(corpus)
+        subject_index = cls()
+        subject_index.load_subjects(corpus, None)
+        return subject_index
 
 
 class SubjectSet:

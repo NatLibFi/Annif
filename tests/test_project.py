@@ -44,6 +44,9 @@ def test_get_project_dummydummy(registry):
     assert project.language == 'en'
     assert project.analyzer.name == 'snowball'
     assert project.analyzer.param == 'english'
+    # project uses the dummy vocab, with language overridden to Finnish
+    assert project.vocab.vocab_id == 'dummy'
+    assert project.vocab.language == 'fi'
     assert project.access == Access.private
     assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
 
@@ -126,8 +129,8 @@ def test_get_project_invalid_config_file():
 def test_project_load_vocabulary_tfidf(registry, subject_file, testdatadir):
     project = registry.get_project('tfidf-fi')
     project.vocab.load_vocabulary(subject_file, 'fi')
-    assert testdatadir.join('vocabs/yso-fi/subjects').exists()
-    assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
+    assert testdatadir.join('vocabs/yso/subjects.fi.tsv').exists()
+    assert testdatadir.join('vocabs/yso/subjects.fi.tsv').size() > 0
 
 
 def test_project_tfidf_is_not_trained(registry):
@@ -193,8 +196,8 @@ def test_project_load_vocabulary_fasttext(registry, subject_file, testdatadir):
     pytest.importorskip("annif.backend.fasttext")
     project = registry.get_project('fasttext-fi')
     project.vocab.load_vocabulary(subject_file, 'fi')
-    assert testdatadir.join('vocabs/yso-fi/subjects').exists()
-    assert testdatadir.join('vocabs/yso-fi/subjects').size() > 0
+    assert testdatadir.join('vocabs/yso/subjects.fi.tsv').exists()
+    assert testdatadir.join('vocabs/yso/subjects.fi.tsv').size() > 0
 
 
 def test_project_train_fasttext(registry, document_corpus, testdatadir):

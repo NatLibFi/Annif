@@ -19,6 +19,12 @@ def load_dummy_vocab(tmpdir):
     return vocab
 
 
+def test_get_vocab_invalid():
+    with pytest.raises(ValueError) as excinfo:
+        annif.vocab.get_vocab('', None, None)
+    assert 'Invalid vocabulary specification' in str(excinfo.value)
+
+
 def test_update_subject_index_with_no_changes(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
 
