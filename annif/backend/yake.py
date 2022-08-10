@@ -17,7 +17,6 @@ from annif.exception import ConfigurationException, NotSupportedException
 class YakeBackend(backend.AnnifBackend):
     """Yake based backend for Annif"""
     name = "yake"
-    needs_subject_index = False
 
     # defaults for uninitialized instances
     _index = None
@@ -128,13 +127,10 @@ class YakeBackend(backend.AnnifBackend):
         suggestions = self._keyphrases2suggestions(keyphrases)
 
         subject_suggestions = [SubjectSuggestion(
-                uri=uri,
-                label=None,
-                notation=None,
+                subject_id=self.project.subjects.by_uri(uri),
                 score=score)
                 for uri, score in suggestions[:limit] if score > 0.0]
-        return ListSuggestionResult.create_from_index(subject_suggestions,
-                                                      self.project.subjects)
+        return ListSuggestionResult(subject_suggestions)
 
     def _keyphrases2suggestions(self, keyphrases):
         suggestions = []

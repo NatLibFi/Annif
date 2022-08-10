@@ -165,18 +165,18 @@ def test_project_train_tfidf_nodocuments(registry, empty_corpus):
 
 def test_project_learn(registry, tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
-    tmpdir.join('doc1.tsv').write('<http://example.org/key1>\tkey1')
+    tmpdir.join('doc1.tsv').write('<http://example.org/none>\tnone')
     tmpdir.join('doc2.txt').write('doc2')
-    tmpdir.join('doc2.tsv').write('<http://example.org/key2>\tkey2')
+    tmpdir.join('doc2.tsv').write('<http://example.org/dummy>\tdummy')
     docdir = annif.corpus.DocumentDirectory(str(tmpdir))
 
     project = registry.get_project('dummy-fi')
     project.learn(docdir)
     result = project.suggest('this is some text')
     assert len(result) == 1
-    hits = result.as_list(project.subjects)
-    assert hits[0].uri == 'http://example.org/key1'
-    assert hits[0].label == 'key1'
+    hits = result.as_list()
+    assert hits[0].subject_id == project.subjects.by_uri(
+        'http://example.org/none')
     assert hits[0].score == 1.0
 
 
@@ -212,9 +212,9 @@ def test_project_suggest(registry):
     project = registry.get_project('dummy-en')
     result = project.suggest('this is some text')
     assert len(result) == 1
-    hits = result.as_list(project.subjects)
-    assert hits[0].uri == 'http://example.org/dummy'
-    assert hits[0].label == 'dummy'
+    hits = result.as_list()
+    assert hits[0].subject_id == project.subjects.by_uri(
+        'http://example.org/dummy')
     assert hits[0].score == 1.0
 
 
@@ -222,9 +222,9 @@ def test_project_suggest_combine(registry):
     project = registry.get_project('dummydummy')
     result = project.suggest('this is some text')
     assert len(result) == 1
-    hits = result.as_list(project.subjects)
-    assert hits[0].uri == 'http://example.org/dummy'
-    assert hits[0].label == 'dummy'
+    hits = result.as_list()
+    assert hits[0].subject_id == project.subjects.by_uri(
+        'http://example.org/dummy')
     assert hits[0].score == 1.0
 
 
@@ -235,9 +235,9 @@ def test_project_train_state_not_available(registry, caplog):
         result = project.suggest('this is some text')
     assert project.is_trained is None
     assert len(result) == 1
-    hits = result.as_list(project.subjects)
-    assert hits[0].uri == 'http://example.org/dummy'
-    assert hits[0].label == 'dummy'
+    hits = result.as_list()
+    assert hits[0].subject_id == project.subjects.by_uri(
+        'http://example.org/dummy')
     assert hits[0].score == 1.0
     assert 'Could not get train state information' in caplog.text
 

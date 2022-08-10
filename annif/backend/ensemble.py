@@ -50,7 +50,8 @@ class BaseEnsembleBackend(backend.AnnifBackend):
     def _merge_hits_from_sources(self, hits_from_sources, params):
         """Hook for merging hits from sources. Can be overridden by
         subclasses."""
-        return annif.util.merge_hits(hits_from_sources, self.project.subjects)
+        return annif.util.merge_hits(hits_from_sources,
+                                     len(self.project.subjects))
 
     def _suggest(self, text, params):
         sources = annif.util.parse_sources(params['sources'])
@@ -115,7 +116,7 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
             batch.evaluate(
                 annif.util.merge_hits(
                     weighted_hits,
-                    self._backend.project.subjects),
+                    len(self._backend.project.subjects)),
                 goldsubj)
         results = batch.results(metrics=[self._metric])
         return results[self._metric]

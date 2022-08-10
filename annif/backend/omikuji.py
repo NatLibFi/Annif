@@ -14,7 +14,6 @@ from . import mixins
 class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     """Omikuji based backend for Annif"""
     name = "omikuji"
-    needs_subject_index = True
 
     # defaults for uninitialized instances
     _model = None
@@ -132,10 +131,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         results = []
         limit = int(params['limit'])
         for subj_id, score in self._model.predict(feature_values, top_k=limit):
-            subject = self.project.subjects[subj_id]
             results.append(SubjectSuggestion(
-                uri=subject[0],
-                label=subject[1],
-                notation=subject[2],
+                subject_id=subj_id,
                 score=score))
         return ListSuggestionResult(results)

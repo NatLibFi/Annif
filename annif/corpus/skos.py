@@ -65,8 +65,7 @@ class SubjectFileSKOS(SubjectCorpus):
             if notation is not None:
                 notation = str(notation)
 
-            yield Subject(uri=str(concept), label=label, notation=notation,
-                          text=None)
+            yield Subject(uri=str(concept), label=label, notation=notation)
 
     @property
     def concepts(self):

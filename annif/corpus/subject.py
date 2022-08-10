@@ -18,7 +18,7 @@ class SubjectFileTSV:
         clean_uri = annif.util.cleanup_uri(vals[0])
         label = vals[1] if len(vals) >= 2 else None
         notation = vals[2] if len(vals) >= 3 else None
-        yield Subject(uri=clean_uri, label=label, notation=notation, text=None)
+        yield Subject(uri=clean_uri, label=label, notation=notation)
 
     @property
     def languages(self):
@@ -52,26 +52,26 @@ class SubjectIndex:
         in the given language."""
 
         for subject_id, subject in enumerate(corpus.subjects(language)):
-            self._append(subject_id, subject.uri, subject.label,
-                         subject.notation)
+            self._append(subject_id, subject)
 
     def __len__(self):
         return len(self._uris)
 
     def __getitem__(self, subject_id):
-        return (self._uris[subject_id], self._labels[subject_id],
-                self._notations[subject_id])
+        return Subject(uri=self._uris[subject_id],
+                       label=self._labels[subject_id],
+                       notation=self._notations[subject_id])
 
-    def _append(self, subject_id, uri, label, notation):
-        self._uris.append(uri)
-        self._labels.append(label)
-        self._notations.append(notation)
-        self._uri_idx[uri] = subject_id
-        self._label_idx[label] = subject_id
+    def _append(self, subject_id, subject):
+        self._uris.append(subject.uri)
+        self._labels.append(subject.label)
+        self._notations.append(subject.notation)
+        self._uri_idx[subject.uri] = subject_id
+        self._label_idx[subject.label] = subject_id
 
-    def append(self, uri, label, notation):
+    def append(self, subject):
         subject_id = len(self._uris)
-        self._append(subject_id, uri, label, notation)
+        self._append(subject_id, subject)
 
     def contains_uri(self, uri):
         return uri in self._uri_idx
@@ -98,7 +98,7 @@ class SubjectIndex:
         """return a list of labels corresponding to the given URIs; unknown
         URIs are ignored"""
 
-        return [self[subject_id][1]
+        return [self._labels[subject_id]
                 for subject_id in (self.by_uri(uri) for uri in uris)
                 if subject_id is not None]
 
@@ -106,7 +106,7 @@ class SubjectIndex:
         """return a list of URIs corresponding to the given labels; unknown
         labels are ignored"""
 
-        return [self[subject_id][0]
+        return [self._uris[subject_id]
                 for subject_id in (self.by_label(label) for label in labels)
                 if subject_id is not None]
 

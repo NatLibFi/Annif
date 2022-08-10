@@ -53,7 +53,6 @@ class SubjectBuffer:
 class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     """TF-IDF vector space similarity based backend for Annif"""
     name = "tfidf"
-    needs_subject_index = True
 
     # defaults for uninitialized instances
     _index = None

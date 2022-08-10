@@ -37,13 +37,13 @@ def cleanup_uri(uri):
     return uri
 
 
-def merge_hits(weighted_hits, subject_index):
+def merge_hits(weighted_hits, size):
     """Merge hits from multiple sources. Input is a sequence of WeightedSuggestion
-    objects. A SubjectIndex is needed to convert between subject IDs and URIs.
+    objects. The size parameter determines the length of the subject vector.
     Returns an SuggestionResult object."""
 
     weights = [whit.weight for whit in weighted_hits]
-    scores = [whit.hits.as_vector(subject_index) for whit in weighted_hits]
+    scores = [whit.hits.as_vector(size) for whit in weighted_hits]
     result = np.average(scores, axis=0, weights=weights)
     return VectorSuggestionResult(result)
 

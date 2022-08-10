@@ -12,7 +12,6 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     non-implemented methods should be overridden in subclasses."""
 
     name = None
-    needs_subject_index = False
 
     DEFAULT_PARAMETERS = {'limit': 100}
 

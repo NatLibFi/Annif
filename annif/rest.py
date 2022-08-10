@@ -48,6 +48,16 @@ def show_project(project_id):
     return project.dump()
 
 
+def _suggestion_to_dict(suggestion, subject_index):
+    subject = subject_index[suggestion.subject_id]
+    return {
+        'uri': subject.uri,
+        'label': subject.label,
+        'notation': subject.notation,
+        'score': suggestion.score
+    }
+
+
 def suggest(project_id, text, limit, threshold):
     """suggest subjects for the given text and return a dict with results
     formatted according to Swagger spec"""
@@ -63,8 +73,9 @@ def suggest(project_id, text, limit, threshold):
         result = project.suggest(text)
     except AnnifException as err:
         return server_error(err)
-    hits = hit_filter(result).as_list(project.subjects)
-    return {'results': [hit._asdict() for hit in hits]}
+    hits = hit_filter(result).as_list()
+    return {'results': [_suggestion_to_dict(hit, project.subjects)
+                        for hit in hits]}
 
 
 def _documents_to_corpus(documents):

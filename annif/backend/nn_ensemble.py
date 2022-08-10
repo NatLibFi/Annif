@@ -128,7 +128,7 @@ class NNEnsembleBackend(
                                  custom_objects={'MeanLayer': MeanLayer})
 
     def _merge_hits_from_sources(self, hits_from_sources, params):
-        score_vector = np.array([np.sqrt(hits.as_vector(subjects))
+        score_vector = np.array([np.sqrt(hits.as_vector(len(subjects)))
                                  * weight * len(hits_from_sources)
                                  for hits, weight, subjects
                                  in hits_from_sources],
@@ -205,7 +205,7 @@ class NNEnsembleBackend(
                     psmap.suggest, corpus.documents):
                 doc_scores = []
                 for project_id, p_hits in hits.items():
-                    vector = p_hits.as_vector(self.project.subjects)
+                    vector = p_hits.as_vector(len(self.project.subjects))
                     doc_scores.append(np.sqrt(vector)
                                       * sources[project_id]
                                       * len(sources))
