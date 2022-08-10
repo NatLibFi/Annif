@@ -91,7 +91,7 @@ def test_lazy_suggestion_result(subject_index):
     assert lsr._object is None
     assert len(lsr) == 10
     assert len(lsr.as_list()) == 10
-    assert lsr.as_vector(subject_index) is not None
+    assert lsr.as_vector(len(subject_index)) is not None
     assert lsr.as_list()[0] is not None
     filtered = lsr.filter(subject_index, limit=5, threshold=0.0)
     assert len(filtered) == 5
@@ -111,7 +111,7 @@ def test_list_suggestion_result_vector(subject_index):
                 subject_id=subject_index.by_uri(
                     'http://www.yso.fi/onto/yso/p6479'),
                 score=0.5)])
-    vector = suggestions.as_vector(subject_index)
+    vector = suggestions.as_vector(len(subject_index))
     assert isinstance(vector, np.ndarray)
     assert len(vector) == len(subject_index)
     assert vector.sum() == 1.5
@@ -152,7 +152,7 @@ def test_list_suggestions_vector_enforce_score_range(subject_index):
                 subject_id=subject_index.by_uri(
                     'http://www.yso.fi/onto/yso/p12738'),
                 score=-0.5)])
-    vector = suggestions.as_vector(subject_index)
+    vector = suggestions.as_vector(len(subject_index))
     assert vector.sum() == 2.5
     for subject_id, score in enumerate(vector):
         if subject_index[subject_id][1] == 'sinetit':
@@ -177,7 +177,8 @@ def test_list_suggestion_result_vector_destination(subject_index):
                     'http://www.yso.fi/onto/yso/p6479'),
                 score=0.5)])
     destination = np.zeros(len(subject_index), dtype=np.float32)
-    vector = suggestions.as_vector(subject_index, destination=destination)
+    vector = suggestions.as_vector(len(subject_index),
+                                   destination=destination)
     assert vector is destination
 
 
@@ -188,20 +189,20 @@ def test_list_suggestion_result_vector_notfound(subject_index):
                 subject_id=subject_index.by_uri(
                     'http://example.com/notfound'),
                 score=1.0)])
-    assert suggestions.as_vector(subject_index).sum() == 0
+    assert suggestions.as_vector(len(subject_index)).sum() == 0
 
 
 def test_vector_suggestion_result_as_vector(subject_index):
     orig_vector = np.ones(len(subject_index), dtype=np.float32)
     suggestions = VectorSuggestionResult(orig_vector)
-    vector = suggestions.as_vector(subject_index)
+    vector = suggestions.as_vector(len(subject_index))
     assert (vector == orig_vector).all()
 
 
 def test_vector_suggestions_enforce_score_range(subject_index):
     orig_vector = np.array([-0.1, 0.0, 0.5, 1.0, 1.5], dtype=np.float32)
     suggestions = VectorSuggestionResult(orig_vector)
-    vector = suggestions.as_vector(subject_index)
+    vector = suggestions.as_vector(len(subject_index))
     expected = np.array([0.0, 0.0, 0.5, 1.0, 1.0], dtype=np.float32)
     assert (vector == expected).all()
 
@@ -212,6 +213,7 @@ def test_vector_suggestion_result_as_vector_destination(subject_index):
     destination = np.zeros(len(subject_index), dtype=np.float32)
     assert not (destination == orig_vector).all()  # destination is all zeros
 
-    vector = suggestions.as_vector(subject_index, destination=destination)
+    vector = suggestions.as_vector(len(subject_index),
+                                   destination=destination)
     assert vector is destination
     assert (destination == orig_vector).all()      # destination now all ones

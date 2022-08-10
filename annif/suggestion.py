@@ -38,11 +38,10 @@ class SuggestionResult(metaclass=abc.ABCMeta):
         pass  # pragma: no cover
 
     @abc.abstractmethod
-    def as_vector(self, subject_index, destination=None):
-        """Return the hits as a one-dimensional score vector
-        where the indexes match the given subject index. If destination array
-        is given (not None) it will be used, otherwise a new array will
-        be created."""
+    def as_vector(self, size, destination=None):
+        """Return the hits as a one-dimensional score vector of given size.
+        If destination array is given (not None) it will be used, otherwise a
+        new array will be created."""
         pass  # pragma: no cover
 
     @abc.abstractmethod
@@ -76,9 +75,9 @@ class LazySuggestionResult(SuggestionResult):
         self._initialize()
         return self._object.as_list()
 
-    def as_vector(self, subject_index, destination=None):
+    def as_vector(self, size, destination=None):
         self._initialize()
-        return self._object.as_vector(subject_index, destination)
+        return self._object.as_vector(size, destination)
 
     def filter(self, subject_index, limit=None, threshold=0.0):
         self._initialize()
@@ -122,7 +121,7 @@ class VectorSuggestionResult(SuggestionResult):
             self._lsr = self._vector_to_list_suggestion()
         return self._lsr.as_list()
 
-    def as_vector(self, subject_index, destination=None):
+    def as_vector(self, size, destination=None):
         if destination is not None:
             np.copyto(destination, self._vector)
             return destination
@@ -165,9 +164,9 @@ class ListSuggestionResult(SuggestionResult):
             return hit._replace(score=1.0)
         return hit
 
-    def _list_to_vector(self, subject_index, destination):
+    def _list_to_vector(self, size, destination):
         if destination is None:
-            destination = np.zeros(len(subject_index), dtype=np.float32)
+            destination = np.zeros(size, dtype=np.float32)
 
         for hit in self._list:
             if hit.subject_id is not None:
@@ -177,9 +176,9 @@ class ListSuggestionResult(SuggestionResult):
     def as_list(self):
         return self._list
 
-    def as_vector(self, subject_index, destination=None):
+    def as_vector(self, size, destination=None):
         if self._vector is None:
-            self._vector = self._list_to_vector(subject_index, destination)
+            self._vector = self._list_to_vector(size, destination)
         return self._vector
 
     def filter(self, subject_index, limit=None, threshold=0.0):
