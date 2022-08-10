@@ -165,18 +165,6 @@ class ListSuggestionResult(SuggestionResult):
             return hit._replace(score=1.0)
         return hit
 
-    @classmethod
-    def create_from_index(cls, hits, subject_index):
-        subject_suggestions = []
-        for hit in hits:
-            subject_id = subject_index.by_uri(hit.uri)
-            if subject_id is None:
-                continue
-            subject_suggestions.append(
-                SubjectSuggestion(subject_id=subject_id,
-                                  score=hit.score))
-        return ListSuggestionResult(subject_suggestions)
-
     def _list_to_vector(self, subject_index, destination):
         if destination is None:
             destination = np.zeros(len(subject_index), dtype=np.float32)
