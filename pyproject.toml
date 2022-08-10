@@ -55,6 +55,9 @@ pycld3 = {version = "*", optional = true}
 spacy = {version = "3.3.*", optional = true}
 
 [tool.poetry.dev-dependencies]
+py = "*"
+pytest = "*"
+requests = "*"
 codecov = "*"
 coverage = "<=6.2"
 pytest-cov = "*"
