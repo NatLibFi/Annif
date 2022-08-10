@@ -46,7 +46,7 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
             return True
 
 
-Subject = collections.namedtuple('Subject', 'uri label notation text')
+Subject = collections.namedtuple('Subject', 'uri label notation')
 
 
 class SubjectCorpus(metaclass=abc.ABCMeta):

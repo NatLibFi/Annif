@@ -18,7 +18,7 @@ class SubjectFileTSV:
         clean_uri = annif.util.cleanup_uri(vals[0])
         label = vals[1] if len(vals) >= 2 else None
         notation = vals[2] if len(vals) >= 3 else None
-        yield Subject(uri=clean_uri, label=label, notation=notation, text=None)
+        yield Subject(uri=clean_uri, label=label, notation=notation)
 
     @property
     def languages(self):
