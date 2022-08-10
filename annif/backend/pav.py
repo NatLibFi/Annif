@@ -57,15 +57,13 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         reg_models = self._get_model(source_project.project_id)
         pav_result = []
         for hit in hits.as_list(source_project.subjects):
-            if hit.uri in reg_models:
-                score = reg_models[hit.uri].predict([hit.score])[0]
+            if hit.subject_id in reg_models:
+                score = reg_models[hit.subject_id].predict([hit.score])[0]
             else:  # default to raw score
                 score = hit.score
             pav_result.append(
                 annif.suggestion.SubjectSuggestion(
-                    uri=hit.uri,
-                    label=hit.label,
-                    notation=hit.notation,
+                    subject_id=hit.subject_id,
                     score=score))
         pav_result.sort(key=lambda hit: hit.score, reverse=True)
         return annif.suggestion.ListSuggestionResult(pav_result)
@@ -114,7 +112,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
             reg = IsotonicRegression(out_of_bounds='clip')
             cid_scores = scores[:, cid].toarray().flatten().astype(np.float64)
             reg.fit(cid_scores, true[:, cid].toarray().flatten())
-            pav_regressions[source_project.subjects[cid][0]] = reg
+            pav_regressions[cid] = reg
         self.info("created PAV model for {} concepts".format(
             len(pav_regressions)))
         model_filename = self.MODEL_FILE_PREFIX + source_project_id

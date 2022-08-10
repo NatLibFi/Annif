@@ -341,10 +341,11 @@ def test_suggest():
 def test_suggest_with_notations():
     result = runner.invoke(
         annif.cli.cli,
-        ['suggest', '--backend-param', 'dummy.notation=42.42', 'dummy-fi'],
+        ['suggest',
+         '--backend-param', 'dummy.uri=http://example.org/none', 'dummy-fi'],
         input='kissa')
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy\t42.42\t1.0\n"
+    assert result.output == "<http://example.org/none>\tnone\t42.42\t1.0\n"
     assert result.exit_code == 0
 
 

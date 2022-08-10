@@ -7,7 +7,7 @@ import numpy as np
 
 
 SubjectSuggestion = collections.namedtuple(
-    'SubjectSuggestion', 'uri label notation score')
+    'SubjectSuggestion', 'subject_id score')
 WeightedSuggestion = collections.namedtuple(
     'WeightedSuggestion', 'hits weight subjects')
 
@@ -105,12 +105,9 @@ class VectorSuggestionResult(SuggestionResult):
             score = self._vector[subject_id]
             if score <= 0.0:
                 break  # we can skip the remaining ones
-            subject = subject_index[subject_id]
             hits.append(
                 SubjectSuggestion(
-                    uri=subject[0],
-                    label=subject[1],
-                    notation=subject[2],
+                    subject_id=subject_id,
                     score=float(score)))
         return ListSuggestionResult(hits)
 
@@ -175,11 +172,8 @@ class ListSuggestionResult(SuggestionResult):
             subject_id = subject_index.by_uri(hit.uri)
             if subject_id is None:
                 continue
-            subject = subject_index[subject_id]
             subject_suggestions.append(
-                SubjectSuggestion(uri=hit.uri,
-                                  label=subject[1],
-                                  notation=subject[2],
+                SubjectSuggestion(subject_id=subject_id,
                                   score=hit.score))
         return ListSuggestionResult(subject_suggestions)
 
@@ -188,9 +182,8 @@ class ListSuggestionResult(SuggestionResult):
             destination = np.zeros(len(subject_index), dtype=np.float32)
 
         for hit in self._list:
-            subject_id = subject_index.by_uri(hit.uri)
-            if subject_id is not None:
-                destination[subject_id] = hit.score
+            if hit.subject_id is not None:
+                destination[hit.subject_id] = hit.score
         return destination
 
     def as_list(self, subject_index):
@@ -205,7 +198,7 @@ class ListSuggestionResult(SuggestionResult):
         hits = sorted(self._list, key=lambda hit: hit.score, reverse=True)
         filtered_hits = [hit for hit in hits
                          if hit.score >= threshold and hit.score > 0.0 and
-                         hit.label is not None]
+                         hit.subject_id is not None]
         if limit is not None:
             filtered_hits = filtered_hits[:limit]
         return ListSuggestionResult(filtered_hits)

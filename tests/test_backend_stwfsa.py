@@ -119,6 +119,5 @@ def test_stwfsa_suggest(project, datadir):
     termoluminesenssi random random random""")
     assert len(results) == 10
     hits = results.as_list(project.subjects)
-    assert 'http://www.yso.fi/onto/yso/p14174' in [
-        result.uri for result in hits]
-    assert 'labyrintit' in [result.label for result in hits]
+    labyrinths = project.subjects.by_uri('http://www.yso.fi/onto/yso/p14174')
+    assert labyrinths in [result.subject_id for result in hits]

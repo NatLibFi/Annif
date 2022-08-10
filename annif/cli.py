@@ -258,10 +258,11 @@ def run_suggest(project_id, limit, threshold, backend_param):
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
     hits = hit_filter(project.suggest(text, backend_params))
     for hit in hits.as_list(project.subjects):
+        subj = project.subjects[hit.subject_id]
         click.echo(
             "<{}>\t{}\t{}".format(
-                hit.uri,
-                '\t'.join(filter(None, (hit.label, hit.notation))),
+                subj.uri,
+                '\t'.join(filter(None, (subj.label, subj.notation))),
                 hit.score))
 
 
@@ -302,9 +303,10 @@ def run_index(project_id, directory, suffix, force,
         with open(subjectfilename, 'w', encoding='utf-8') as subjfile:
             results = project.suggest(text, backend_params)
             for hit in hit_filter(results).as_list(project.subjects):
+                subj = project.subjects[hit.subject_id]
                 line = "<{}>\t{}\t{}".format(
-                    hit.uri,
-                    '\t'.join(filter(None, (hit.label, hit.notation))),
+                    subj.uri,
+                    '\t'.join(filter(None, (subj.label, subj.notation))),
                     hit.score)
                 click.echo(line, file=subjfile)
 

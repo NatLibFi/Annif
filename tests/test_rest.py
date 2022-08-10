@@ -115,8 +115,8 @@ def test_rest_learn_empty(app):
 
 def test_rest_learn(app):
     documents = [{'text': 'the quick brown fox',
-                  'subjects': [{'uri': 'http://example.org/fox',
-                                'label': 'fox'}]}]
+                  'subjects': [{'uri': 'http://example.org/none',
+                                'label': 'none'}]}]
     with app.app_context():
         response = annif.rest.learn('dummy-en', documents)
         assert response == (None, 204)  # success, no output
@@ -127,8 +127,8 @@ def test_rest_learn(app):
             limit=10,
             threshold=0.0)
         assert 'results' in result
-        assert result['results'][0]['uri'] == 'http://example.org/fox'
-        assert result['results'][0]['label'] == 'fox'
+        assert result['results'][0]['uri'] == 'http://example.org/none'
+        assert result['results'][0]['label'] == 'none'
 
 
 def test_rest_learn_novocab(app):

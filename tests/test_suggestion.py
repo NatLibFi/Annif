@@ -9,10 +9,7 @@ import numpy as np
 def generate_suggestions(n, subject_index):
     suggestions = []
     for i in range(n):
-        uri = 'http://example.org/{}'.format(i)
-        suggestions.append(SubjectSuggestion(uri=uri,
-                                             label='hit {}'.format(i),
-                                             notation=None,
+        suggestions.append(SubjectSuggestion(subject_id=i,
                                              score=1.0 / (i + 1)))
     return ListSuggestionResult(suggestions)
 
@@ -34,7 +31,7 @@ def test_hitfilter_threshold(subject_index):
 
 def test_hitfilter_zero_score(subject_index):
     origsuggestions = ListSuggestionResult(
-        [SubjectSuggestion(uri='uri', label='label', notation=None,
+        [SubjectSuggestion(subject_id=0,
                            score=0.0)])
     suggestions = SuggestionFilter(subject_index)(origsuggestions)
     assert isinstance(suggestions, SuggestionResult)
@@ -46,20 +43,19 @@ def test_hitfilter_list_suggestion_results_with_deprecated_subjects(
     subject_index.append('http://example.org/deprecated', None, None)
     suggestions = ListSuggestionResult(
         [
+            # subject: seals (labels)
             SubjectSuggestion(
-                uri='http://www.yso.fi/onto/yso/p7141',
-                label='sinetit',
-                notation=None,
+                subject_id=subject_index.by_uri(
+                    'http://www.yso.fi/onto/yso/p7141'),
                 score=1.0),
+            # subject: Vikings
             SubjectSuggestion(
-                uri='http://www.yso.fi/onto/yso/p6479',
-                label='viikingit',
-                notation=None,
+                subject_id=subject_index.by_uri(
+                    'http://www.yso.fi/onto/yso/p6479'),
                 score=0.5),
+            # a deprecated subject
             SubjectSuggestion(
-                uri='http://example.org/deprecated',
-                label=None,
-                notation=None,
+                subject_id=None,
                 score=0.5)])
     filtered_suggestions = SuggestionFilter(subject_index)(suggestions)
     assert isinstance(filtered_suggestions, SuggestionResult)
@@ -80,11 +76,9 @@ def test_hitfilter_vector_suggestion_results_with_deprecated_subjects(
     assert len(suggestions) == len(filtered_suggestions) \
         + len(subject_index.deprecated_ids())
 
-    deprecated = SubjectSuggestion(
-        uri='http://example.org/deprecated',
-        label=None,
-        notation=None,
-        score=1.0)
+    deprecated_id = subject_index.by_uri('http://example.org/deprecated')
+    deprecated = SubjectSuggestion(subject_id=deprecated_id, score=1.0)
+
     assert deprecated in suggestions.as_list(subject_index)
     assert deprecated not in filtered_suggestions.as_list(subject_index)
 
@@ -104,15 +98,15 @@ def test_lazy_suggestion_result(subject_index):
 def test_list_suggestion_result_vector(subject_index):
     suggestions = ListSuggestionResult(
         [
+            # subject: seals (labels)
             SubjectSuggestion(
-                uri='http://www.yso.fi/onto/yso/p7141',
-                label='sinetit',
-                notation=None,
+                subject_id=subject_index.by_uri(
+                    'http://www.yso.fi/onto/yso/p7141'),
                 score=1.0),
+            # subject: Vikings
             SubjectSuggestion(
-                uri='http://www.yso.fi/onto/yso/p6479',
-                label='viikingit',
-                notation=None,
+                subject_id=subject_index.by_uri(
+                    'http://www.yso.fi/onto/yso/p6479'),
                 score=0.5)])
     vector = suggestions.as_vector(subject_index)
     assert isinstance(vector, np.ndarray)
@@ -130,30 +124,30 @@ def test_list_suggestion_result_vector(subject_index):
 def test_list_suggestions_vector_enforce_score_range(subject_index):
     suggestions = ListSuggestionResult(
         [
+            # subject: seals (labels)
             SubjectSuggestion(
-                uri='http://www.yso.fi/onto/yso/p7141',
-                label='sinetit',
-                notation=None,
+                subject_id=subject_index.by_uri(
+                    'http://www.yso.fi/onto/yso/p7141'),
                 score=1.5),
+            # subject: Vikings
             SubjectSuggestion(
-                uri='http://www.yso.fi/onto/yso/p6479',
-                label='viikingit',
-                notation=None,
+                subject_id=subject_index.by_uri(
+                    'http://www.yso.fi/onto/yso/p6479'),
                 score=1.0),
+            # subject: excavations
             SubjectSuggestion(
-                uri='http://www.yso.fi/onto/yso/p14173',
-                label='kaivaukset',
-                notation=None,
+                subject_id=subject_index.by_uri(
+                    'http://www.yso.fi/onto/yso/p14173'),
                 score=0.5),
+            # subject: runestones
             SubjectSuggestion(
-                uri='http://www.yso.fi/onto/yso/p14588',
-                label='riimukivet',
-                notation=None,
+                subject_id=subject_index.by_uri(
+                    'http://www.yso.fi/onto/yso/p14588'),
                 score=0.0),
+            # subject: Viking Age
             SubjectSuggestion(
-                uri='http://www.yso.fi/onto/yso/p12738',
-                label='viikinkiaika',
-                notation=None,
+                subject_id=subject_index.by_uri(
+                    'http://www.yso.fi/onto/yso/p12738'),
                 score=-0.5)])
     vector = suggestions.as_vector(subject_index)
     assert vector.sum() == 2.5
@@ -169,15 +163,15 @@ def test_list_suggestions_vector_enforce_score_range(subject_index):
 def test_list_suggestion_result_vector_destination(subject_index):
     suggestions = ListSuggestionResult(
         [
+            # subject: seals (labels)
             SubjectSuggestion(
-                uri='http://www.yso.fi/onto/yso/p7141',
-                label='sinetit',
-                notation=None,
+                subject_id=subject_index.by_uri(
+                    'http://www.yso.fi/onto/yso/p7141'),
                 score=1.0),
+            # subject: Vikings
             SubjectSuggestion(
-                uri='http://www.yso.fi/onto/yso/p6479',
-                label='viikingit',
-                notation=None,
+                subject_id=subject_index.by_uri(
+                    'http://www.yso.fi/onto/yso/p6479'),
                 score=0.5)])
     destination = np.zeros(len(subject_index), dtype=np.float32)
     vector = suggestions.as_vector(subject_index, destination=destination)
@@ -188,9 +182,8 @@ def test_list_suggestion_result_vector_notfound(subject_index):
     suggestions = ListSuggestionResult(
         [
             SubjectSuggestion(
-                uri='http://example.com/notfound',
-                label='not found',
-                notation=None,
+                subject_id=subject_index.by_uri(
+                    'http://example.com/notfound'),
                 score=1.0)])
     assert suggestions.as_vector(subject_index).sum() == 0
 

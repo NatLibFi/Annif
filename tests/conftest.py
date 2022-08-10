@@ -75,6 +75,13 @@ def subject_file():
 
 
 @pytest.fixture(scope='module')
+def dummy_subject_index(testdatadir):
+    """a fixture to access the subject index of the dummy vocabulary"""
+    vocab = annif.vocab.AnnifVocabulary('dummy', testdatadir, 'en')
+    return vocab.subjects
+
+
+@pytest.fixture(scope='module')
 def vocabulary(datadir):
     vocab = annif.vocab.AnnifVocabulary('my-vocab', datadir, 'fi')
     subjfile = os.path.join(

@@ -89,9 +89,8 @@ def test_mllm_suggest(project):
     assert len(results) > 0
     assert len(results) <= 8
     hits = results.as_list(project.subjects)
-    assert 'http://www.yso.fi/onto/yso/p1265' in [
-        result.uri for result in hits]
-    assert 'arkeologia' in [result.label for result in hits]
+    archaeology = project.subjects.by_uri('http://www.yso.fi/onto/yso/p1265')
+    assert archaeology in [result.subject_id for result in hits]
 
 
 def test_mllm_suggest_no_matches(project):

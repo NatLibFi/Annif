@@ -89,11 +89,8 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             class_uri = self._model.classes_[class_id]
             subject_id = self.project.subjects.by_uri(class_uri)
             if subject_id is not None:
-                uri, label, notation = self.project.subjects[subject_id]
                 results.append(SubjectSuggestion(
-                    uri=uri,
-                    label=label,
-                    notation=notation,
+                    subject_id=subject_id,
                     score=scores[class_id]))
         return ListSuggestionResult(results)
 

@@ -81,10 +81,9 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     def _id_to_label(subject_id):
         return "__label__{:d}".format(subject_id)
 
-    def _label_to_subject(self, label):
+    def _label_to_subject_id(self, label):
         labelnum = label.replace('__label__', '')
-        subject_id = int(labelnum)
-        return self.project.subjects[subject_id]
+        return int(labelnum)
 
     def _write_train_file(self, corpus, filename):
         with open(filename, 'w', encoding='utf-8') as trainfile:
@@ -155,10 +154,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
 
         results = []
         for score, label in best_labels[:limit]:
-            subject = self._label_to_subject(label)
             results.append(SubjectSuggestion(
-                uri=subject[0],
-                label=subject[1],
-                notation=subject[2],
+                subject_id=self._label_to_subject_id(label),
                 score=score / len(chunktexts)))
         return ListSuggestionResult(results)

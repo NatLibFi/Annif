@@ -39,7 +39,7 @@ def test_update_subject_index_with_no_changes(tmpdir):
     assert vocab.subjects.by_uri('http://example.org/dummy') == 0
     assert vocab.subjects[0] == ('http://example.org/dummy', 'dummy', None)
     assert vocab.subjects.by_uri('http://example.org/none') == 1
-    assert vocab.subjects[1] == ('http://example.org/none', 'none', None)
+    assert vocab.subjects[1] == ('http://example.org/none', 'none', '42.42')
 
 
 def test_update_subject_index_with_removed_subject(tmpdir):
