@@ -32,7 +32,7 @@ class SuggestionResult(metaclass=abc.ABCMeta):
     operation."""
 
     @abc.abstractmethod
-    def as_list(self, subject_index):
+    def as_list(self):
         """Return the hits as an ordered sequence of SubjectSuggestion objects,
         highest scores first."""
         pass  # pragma: no cover
@@ -72,9 +72,9 @@ class LazySuggestionResult(SuggestionResult):
         if self._object is None:
             self._object = self._construct()
 
-    def as_list(self, subject_index):
+    def as_list(self):
         self._initialize()
-        return self._object.as_list(subject_index)
+        return self._object.as_list()
 
     def as_vector(self, subject_index, destination=None):
         self._initialize()
@@ -99,7 +99,7 @@ class VectorSuggestionResult(SuggestionResult):
         self._subject_order = None
         self._lsr = None
 
-    def _vector_to_list_suggestion(self, subject_index):
+    def _vector_to_list_suggestion(self):
         hits = []
         for subject_id in self.subject_order:
             score = self._vector[subject_id]
@@ -117,10 +117,10 @@ class VectorSuggestionResult(SuggestionResult):
             self._subject_order = np.argsort(self._vector)[::-1]
         return self._subject_order
 
-    def as_list(self, subject_index):
+    def as_list(self):
         if self._lsr is None:
-            self._lsr = self._vector_to_list_suggestion(subject_index)
-        return self._lsr.as_list(subject_index)
+            self._lsr = self._vector_to_list_suggestion()
+        return self._lsr.as_list()
 
     def as_vector(self, subject_index, destination=None):
         if destination is not None:
@@ -144,7 +144,7 @@ class VectorSuggestionResult(SuggestionResult):
             deprecated_mask[deprecated_ids] = False
             mask = mask & deprecated_mask
         vsr = VectorSuggestionResult(self._vector * mask)
-        return ListSuggestionResult(vsr.as_list(subject_index))
+        return ListSuggestionResult(vsr.as_list())
 
     def __len__(self):
         return (self._vector > 0.0).sum()
@@ -174,7 +174,7 @@ class ListSuggestionResult(SuggestionResult):
                 destination[hit.subject_id] = hit.score
         return destination
 
-    def as_list(self, subject_index):
+    def as_list(self):
         return self._list
 
     def as_vector(self, subject_index, destination=None):

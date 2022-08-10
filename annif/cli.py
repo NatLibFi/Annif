@@ -257,7 +257,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
     backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
     hits = hit_filter(project.suggest(text, backend_params))
-    for hit in hits.as_list(project.subjects):
+    for hit in hits.as_list():
         subj = project.subjects[hit.subject_id]
         click.echo(
             "<{}>\t{}\t{}".format(
@@ -302,7 +302,7 @@ def run_index(project_id, directory, suffix, force,
             continue
         with open(subjectfilename, 'w', encoding='utf-8') as subjfile:
             results = project.suggest(text, backend_params)
-            for hit in hit_filter(results).as_list(project.subjects):
+            for hit in hit_filter(results).as_list():
                 subj = project.subjects[hit.subject_id]
                 line = "<{}>\t{}\t{}".format(
                     subj.uri,

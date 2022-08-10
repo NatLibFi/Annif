@@ -18,7 +18,7 @@ def test_get_backend_dummy(project, dummy_subject_index):
                        project=project)
     result = dummy.suggest(text='this is some text')
     assert len(result) == 1
-    hits = result.as_list(project.subjects)
+    hits = result.as_list()
     assert hits[0].subject_id == dummy_subject_index.by_uri(
         'http://example.org/dummy')
     assert hits[0].score == 1.0
@@ -40,7 +40,7 @@ def test_learn_dummy(project, tmpdir):
 
     result = dummy.suggest(text='this is some text')
     assert len(result) == 1
-    hits = result.as_list(project.subjects)
+    hits = result.as_list()
     assert hits[0].subject_id is not None
     assert hits[0].subject_id == project.subjects.by_uri(
         'http://www.yso.fi/onto/yso/p10849')

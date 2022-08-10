@@ -93,7 +93,7 @@ def test_svc_suggest(project):
 
     assert len(results) > 0
     assert len(results) <= 20
-    hits = results.as_list(project.subjects)
+    hits = results.as_list()
     archaeologists = project.subjects.by_uri(
         'http://www.yso.fi/onto/yso/p10849')
     assert archaeologists in [result.subject_id for result in hits]

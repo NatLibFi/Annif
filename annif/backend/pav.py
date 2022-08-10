@@ -56,7 +56,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
     def _normalize_hits(self, hits, source_project):
         reg_models = self._get_model(source_project.project_id)
         pav_result = []
-        for hit in hits.as_list(source_project.subjects):
+        for hit in hits.as_list():
             if hit.subject_id in reg_models:
                 score = reg_models[hit.subject_id].predict([hit.score])[0]
             else:  # default to raw score

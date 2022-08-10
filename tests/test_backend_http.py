@@ -27,7 +27,7 @@ def test_http_suggest(app_project):
             project=app_project)
         result = http.suggest('this is some text')
         assert len(result) == 1
-        hits = result.as_list(app_project.subjects)
+        hits = result.as_list()
         assert hits[0].subject_id is not None
         assert hits[0].subject_id == app_project.subjects.by_uri(
             'http://example.org/dummy')
@@ -56,7 +56,7 @@ def test_http_suggest_with_results(app_project):
 
         result = http.suggest('this is some text')
         assert len(result) == 1
-        hits = result.as_list(app_project.subjects)
+        hits = result.as_list()
         assert hits[0].subject_id is not None
         assert hits[0].subject_id == http.project.subjects.by_uri(
             'http://example.org/dummy-with-notation')

@@ -73,7 +73,7 @@ def suggest(project_id, text, limit, threshold):
         result = project.suggest(text)
     except AnnifException as err:
         return server_error(err)
-    hits = hit_filter(result).as_list(project.subjects)
+    hits = hit_filter(result).as_list()
     return {'results': [_suggestion_to_dict(hit, project.subjects)
                         for hit in hits]}
 
