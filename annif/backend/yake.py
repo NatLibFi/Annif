@@ -17,7 +17,6 @@ from annif.exception import ConfigurationException, NotSupportedException
 class YakeBackend(backend.AnnifBackend):
     """Yake based backend for Annif"""
     name = "yake"
-    needs_subject_index = False
 
     # defaults for uninitialized instances
     _index = None

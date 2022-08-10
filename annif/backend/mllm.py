@@ -67,7 +67,6 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
 class MLLMBackend(hyperopt.AnnifHyperoptBackend):
     """Maui-like Lexical Matching backend for Annif"""
     name = "mllm"
-    needs_subject_index = True
 
     # defaults for unitialized instances
     _model = None

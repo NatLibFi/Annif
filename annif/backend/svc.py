@@ -15,7 +15,6 @@ from . import mixins
 class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     """Support vector classifier backend for Annif"""
     name = "svc"
-    needs_subject_index = True
 
     # defaults for uninitialized instances
     _model = None

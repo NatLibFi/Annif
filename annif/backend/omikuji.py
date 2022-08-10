@@ -14,7 +14,6 @@ from . import mixins
 class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     """Omikuji based backend for Annif"""
     name = "omikuji"
-    needs_subject_index = True
 
     # defaults for uninitialized instances
     _model = None

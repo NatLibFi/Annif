@@ -14,7 +14,6 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     """fastText backend for Annif"""
 
     name = "fasttext"
-    needs_subject_index = True
 
     FASTTEXT_PARAMS = {
         'lr': float,
