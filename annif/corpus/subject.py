@@ -59,8 +59,9 @@ class SubjectIndex:
         return len(self._uris)
 
     def __getitem__(self, subject_id):
-        return (self._uris[subject_id], self._labels[subject_id],
-                self._notations[subject_id])
+        return Subject(uri=self._uris[subject_id],
+                       label=self._labels[subject_id],
+                       notation=self._notations[subject_id])
 
     def _append(self, subject_id, uri, label, notation):
         self._uris.append(uri)
