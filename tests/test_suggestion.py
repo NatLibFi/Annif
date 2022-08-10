@@ -3,6 +3,7 @@
 from annif.suggestion import SubjectSuggestion, SuggestionResult, \
     LazySuggestionResult, ListSuggestionResult, VectorSuggestionResult, \
     SuggestionFilter
+from annif.corpus import Subject
 import numpy as np
 
 
@@ -40,7 +41,9 @@ def test_hitfilter_zero_score(subject_index):
 
 def test_hitfilter_list_suggestion_results_with_deprecated_subjects(
         subject_index):
-    subject_index.append('http://example.org/deprecated', None, None)
+    subject_index.append(Subject(uri='http://example.org/deprecated',
+                                 label=None,
+                                 notation=None))
     suggestions = ListSuggestionResult(
         [
             # subject: seals (labels)
@@ -66,7 +69,9 @@ def test_hitfilter_list_suggestion_results_with_deprecated_subjects(
 
 def test_hitfilter_vector_suggestion_results_with_deprecated_subjects(
         subject_index):
-    subject_index.append('http://example.org/deprecated', None, None)
+    subject_index.append(Subject(uri='http://example.org/deprecated',
+                                 label=None,
+                                 notation=None))
     vector = np.ones(len(subject_index))
     suggestions = VectorSuggestionResult(vector)
     filtered_suggestions = SuggestionFilter(subject_index)(suggestions)

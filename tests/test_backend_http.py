@@ -6,6 +6,7 @@ import requests.exceptions
 import unittest.mock
 import annif.backend.http
 from annif.exception import OperationFailedException
+from annif.corpus import Subject
 
 
 def test_http_suggest(app_project):
@@ -51,8 +52,10 @@ def test_http_suggest_with_results(app_project):
                 'endpoint': 'http://api.example.org/dummy/analyze',
             },
             project=app_project)
-        http.project.subjects.append(
-            'http://example.org/dummy-with-notation', 'dummy', '42.42')
+        http.project.subjects.append(Subject(
+            uri='http://example.org/dummy-with-notation',
+            label='dummy',
+            notation='42.42'))
 
         result = http.suggest('this is some text')
         assert len(result) == 1

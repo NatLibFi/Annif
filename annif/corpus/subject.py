@@ -52,8 +52,7 @@ class SubjectIndex:
         in the given language."""
 
         for subject_id, subject in enumerate(corpus.subjects(language)):
-            self._append(subject_id, subject.uri, subject.label,
-                         subject.notation)
+            self._append(subject_id, subject)
 
     def __len__(self):
         return len(self._uris)
@@ -63,16 +62,16 @@ class SubjectIndex:
                        label=self._labels[subject_id],
                        notation=self._notations[subject_id])
 
-    def _append(self, subject_id, uri, label, notation):
-        self._uris.append(uri)
-        self._labels.append(label)
-        self._notations.append(notation)
-        self._uri_idx[uri] = subject_id
-        self._label_idx[label] = subject_id
+    def _append(self, subject_id, subject):
+        self._uris.append(subject.uri)
+        self._labels.append(subject.label)
+        self._notations.append(subject.notation)
+        self._uri_idx[subject.uri] = subject_id
+        self._label_idx[subject.label] = subject_id
 
-    def append(self, uri, label, notation):
+    def append(self, subject):
         subject_id = len(self._uris)
-        self._append(subject_id, uri, label, notation)
+        self._append(subject_id, subject)
 
     def contains_uri(self, uri):
         return uri in self._uri_idx
