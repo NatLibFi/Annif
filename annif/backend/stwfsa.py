@@ -117,10 +117,7 @@ class StwfsaBackend(backend.AnnifBackend):
         suggestions = []
         for uri, score in result:
             subject_id = self.project.subjects.by_uri(uri)
-            if not subject_id:
-                continue
-            suggestion = SubjectSuggestion(
-                subject_id=subject_id,
-                score=score)
-            suggestions.append(suggestion)
+            if subject_id is not None:
+                suggestions.append(SubjectSuggestion(subject_id=subject_id,
+                                                     score=score))
         return ListSuggestionResult(suggestions)
