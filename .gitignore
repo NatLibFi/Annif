@@ -9,6 +9,6 @@ __pycache__
 *.pyc
 data
 docs/_build/
-Pipfile.lock
+poetry.lock
 projects.cfg
 venv/
