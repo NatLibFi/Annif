@@ -99,7 +99,7 @@ class SubjectIndex:
         """return a list of labels corresponding to the given URIs; unknown
         URIs are ignored"""
 
-        return [self[subject_id][1]
+        return [self._labels[subject_id]
                 for subject_id in (self.by_uri(uri) for uri in uris)
                 if subject_id is not None]
 
@@ -107,7 +107,7 @@ class SubjectIndex:
         """return a list of URIs corresponding to the given labels; unknown
         labels are ignored"""
 
-        return [self[subject_id][0]
+        return [self._uris[subject_id]
                 for subject_id in (self.by_label(label) for label in labels)
                 if subject_id is not None]
 
