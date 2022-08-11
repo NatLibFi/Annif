@@ -26,7 +26,7 @@ jobs:
     - name: Install Poetry
       uses: snok/install-poetry@2bf112a0f6979928eb6b011f39700db589c5961e  # v1.3.1
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5  # v4.2.0
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'poetry'
@@ -102,7 +102,7 @@ jobs:
     - name: Install Poetry
       uses: snok/install-poetry@2bf112a0f6979928eb6b011f39700db589c5961e  # v1.3.1
     - name: Set up Python 3.9
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5  # v4.2.0
       with:
         python-version: '3.9'
         cache: 'poetry'
