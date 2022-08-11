@@ -161,16 +161,18 @@ class MLLMModel:
 
         terms = []
         subject_ids = []
-        for subj_id, uri, _, _ in vocab.subjects.active:
+        for subj_id, subject in vocab.subjects.active:
             subject_ids.append(subj_id)
 
-            for label in get_subject_labels(graph, uri, pref_label_props,
+            for label in get_subject_labels(graph, subject.uri,
+                                            pref_label_props,
                                             params['language']):
                 terms.append(Term(subject_id=subj_id,
                                   label=label,
                                   is_pref=True))
 
-            for label in get_subject_labels(graph, uri, nonpref_label_props,
+            for label in get_subject_labels(graph, subject.uri,
+                                            nonpref_label_props,
                                             params['language']):
                 terms.append(Term(subject_id=subj_id,
                                   label=label,

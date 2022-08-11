@@ -87,9 +87,9 @@ class YakeBackend(backend.AnnifBackend):
         skos_vocab = self.project.vocab.skos
         for concept in skos_vocab.concepts:
             uri = str(concept)
-            labels = skos_vocab.get_concept_labels(
-                concept, self.label_types, self.params['language'])
-            for label in labels:
+            labels_by_lang = skos_vocab.get_concept_labels(concept,
+                                                           self.label_types)
+            for label in labels_by_lang[self.params['language']]:
                 label = self._normalize_label(label)
                 index[label].add(uri)
         index.pop('', None)  # Remove possible empty string entry

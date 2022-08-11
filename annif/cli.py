@@ -41,7 +41,7 @@ def get_project(project_id):
         sys.exit(1)
 
 
-def open_documents(paths, subject_index, docs_limit):
+def open_documents(paths, subject_index, language, docs_limit):
     """Helper function to open a document corpus from a list of pathnames,
     each of which is either a TSV file or a directory of TXT files. The
     corpus will be returned as an instance of DocumentCorpus or
@@ -51,6 +51,7 @@ def open_documents(paths, subject_index, docs_limit):
         """open a single path and return it as a DocumentCorpus"""
         if os.path.isdir(path):
             return annif.corpus.DocumentDirectory(path, subject_index,
+                                                  language,
                                                   require_subjects=True)
         return annif.corpus.DocumentFile(path, subject_index)
 
@@ -191,8 +192,8 @@ def run_loadvoc(project_id, force, subjectfile):
         subjects = annif.corpus.SubjectFileSKOS(subjectfile)
     else:
         # probably a TSV file
-        subjects = annif.corpus.SubjectFileTSV(subjectfile)
-    proj.vocab.load_vocabulary(subjects, proj.language, force=force)
+        subjects = annif.corpus.SubjectFileTSV(subjectfile, proj.language)
+    proj.vocab.load_vocabulary(subjects, force=force)
 
 
 @cli.command('train')
@@ -221,7 +222,8 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
                 "Corpus paths cannot be given when using --cached option.")
         documents = 'cached'
     else:
-        documents = open_documents(paths, proj.subjects, docs_limit)
+        documents = open_documents(paths, proj.subjects,
+                                   proj.language, docs_limit)
     proj.train(documents, backend_params, jobs)
 
 
@@ -239,7 +241,8 @@ def run_learn(project_id, paths, docs_limit, backend_param):
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
-    documents = open_documents(paths, proj.subjects, docs_limit)
+    documents = open_documents(paths, proj.subjects,
+                               proj.language, docs_limit)
     proj.learn(documents, backend_params)
 
 
@@ -263,7 +266,9 @@ def run_suggest(project_id, limit, threshold, backend_param):
         click.echo(
             "<{}>\t{}\t{}".format(
                 subj.uri,
-                '\t'.join(filter(None, (subj.label, subj.notation))),
+                '\t'.join(filter(None,
+                                 (subj.labels[project.language],
+                                  subj.notation))),
                 hit.score))
 
 
@@ -292,7 +297,8 @@ def run_index(project_id, directory, suffix, force,
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
     for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
-            directory, project.subjects, require_subjects=False):
+            directory, project.subjects, project.language,
+            require_subjects=False):
         with open(docfilename, encoding='utf-8-sig') as docfile:
             text = docfile.read()
         subjectfilename = re.sub(r'\.txt$', suffix, docfilename)
@@ -307,7 +313,8 @@ def run_index(project_id, directory, suffix, force,
                 subj = project.subjects[hit.subject_id]
                 line = "<{}>\t{}\t{}".format(
                     subj.uri,
-                    '\t'.join(filter(None, (subj.label, subj.notation))),
+                    '\t'.join(filter(None, (subj.labels[project.language],
+                                            subj.notation))),
                     hit.score)
                 click.echo(line, file=subjfile)
 
@@ -381,7 +388,8 @@ def run_eval(
         except Exception as e:
             raise NotSupportedException(
                 "cannot open results-file for writing: " + str(e))
-    docs = open_documents(paths, project.subjects, docs_limit)
+    docs = open_documents(paths, project.subjects,
+                          project.language, docs_limit)
 
     jobs, pool_class = annif.parallel.get_pool(jobs)
 
@@ -396,7 +404,9 @@ def run_eval(
                                 subject_set)
 
     template = "{0:<30}\t{1}"
-    metrics = eval_batch.results(metrics=metric, results_file=results_file)
+    metrics = eval_batch.results(metrics=metric,
+                                 results_file=results_file,
+                                 language=project.language)
     for metric, score in metrics.items():
         click.echo(template.format(metric + ":", score))
     if metrics_file:
@@ -428,7 +438,8 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     filter_batches = generate_filter_batches(project.subjects)
 
     ndocs = 0
-    docs = open_documents(paths, project.subjects, docs_limit)
+    docs = open_documents(paths, project.subjects,
+                          project.language, docs_limit)
     for doc in docs.documents:
         raw_hits = project.suggest(doc.text, backend_params)
         hits = raw_hits.filter(project.subjects, limit=BATCH_MAX_LIMIT)
@@ -508,7 +519,8 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric,
     Optimize the hyperparameters of a project using a validation corpus.
     """
     proj = get_project(project_id)
-    documents = open_documents(paths, proj.subjects, docs_limit)
+    documents = open_documents(paths, proj.subjects,
+                               proj.language, docs_limit)
     click.echo(f"Looking for optimal hyperparameters using {trials} trials")
     rec = proj.hyperopt(documents, trials, jobs, metric, results_file)
     click.echo(f"Got best {metric} score {rec.score:.4f} with:")

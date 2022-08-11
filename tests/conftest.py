@@ -18,14 +18,13 @@ def app():
     subjfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
-        'dummy-subjects.tsv')
-    vocab = annif.corpus.SubjectFileTSV(subjfile)
+        'dummy-subjects.csv')
     app = annif.create_app(config_name='annif.default_config.TestingConfig')
     with app.app_context():
         project = annif.registry.get_project('dummy-en')
         # the vocab is needed for both English and Finnish language projects
-        project.vocab.load_vocabulary(vocab, 'en')
-        project.vocab.load_vocabulary(vocab, 'fi')
+        vocab = annif.corpus.SubjectFileCSV(subjfile)
+        project.vocab.load_vocabulary(vocab)
     return app
 
 
@@ -71,7 +70,7 @@ def subject_file():
         'corpora',
         'archaeology',
         'subjects.tsv')
-    return annif.corpus.SubjectFileTSV(docfile)
+    return annif.corpus.SubjectFileTSV(docfile, 'fi')
 
 
 @pytest.fixture(scope='module')
@@ -90,7 +89,7 @@ def vocabulary(datadir):
         'archaeology',
         'yso-archaeology.ttl')
     subjects = annif.corpus.SubjectFileSKOS(subjfile)
-    vocab.load_vocabulary(subjects, 'fi')
+    vocab.load_vocabulary(subjects)
     return vocab
 
 
@@ -117,7 +116,7 @@ def fulltext_corpus(subject_index):
         'corpora',
         'archaeology',
         'fulltext')
-    ft_corpus = annif.corpus.DocumentDirectory(ftdir, subject_index)
+    ft_corpus = annif.corpus.DocumentDirectory(ftdir, subject_index, 'fi')
     return ft_corpus
 
 

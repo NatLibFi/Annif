@@ -48,11 +48,11 @@ def show_project(project_id):
     return project.dump()
 
 
-def _suggestion_to_dict(suggestion, subject_index):
+def _suggestion_to_dict(suggestion, subject_index, language):
     subject = subject_index[suggestion.subject_id]
     return {
         'uri': subject.uri,
-        'label': subject.label,
+        'label': subject.labels[language],
         'notation': subject.notation,
         'score': suggestion.score
     }
@@ -74,7 +74,8 @@ def suggest(project_id, text, limit, threshold):
     except AnnifException as err:
         return server_error(err)
     hits = hit_filter(result).as_list()
-    return {'results': [_suggestion_to_dict(hit, project.subjects)
+    return {'results': [_suggestion_to_dict(hit, project.subjects,
+                                            project.language)
                         for hit in hits]}
 
 

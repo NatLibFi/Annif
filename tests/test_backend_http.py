@@ -54,7 +54,7 @@ def test_http_suggest_with_results(app_project):
             project=app_project)
         http.project.subjects.append(Subject(
             uri='http://example.org/dummy-with-notation',
-            label='dummy',
+            labels={'en': 'dummy', 'fi': 'dummy'},
             notation='42.42'))
 
         result = http.suggest('this is some text')

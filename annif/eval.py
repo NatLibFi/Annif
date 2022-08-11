@@ -174,9 +174,10 @@ class EvaluationBatch:
         for row in zipped_results:
             print('\t'.join((str(e) for e in row)), file=results_file)
 
-    def output_result_per_subject(self, y_true, y_pred, results_file):
+    def output_result_per_subject(self, y_true, y_pred,
+                                  results_file, language):
         """Write results per subject (non-aggregated)
-        to outputfile results_file"""
+        to outputfile results_file, using labels in the given language"""
 
         y_pred = y_pred.T > 0.0
         y_true = y_true.T > 0.0
@@ -187,8 +188,10 @@ class EvaluationBatch:
 
         r = len(y_true)
 
-        zipped = zip(self._subject_index._uris,               # URI
-                     self._subject_index._labels,             # Label
+        zipped = zip([subj.uri
+                      for subj in self._subject_index],       # URI
+                     [subj.labels[language]
+                      for subj in self._subject_index],	      # Label
                      np.sum((true_pos + false_neg), axis=1),  # Support
                      np.sum(true_pos, axis=1),                # True_positives
                      np.sum(false_pos, axis=1),               # False_positives
@@ -202,10 +205,11 @@ class EvaluationBatch:
         self._result_per_subject_header(results_file)
         self._result_per_subject_body(zipped, results_file)
 
-    def results(self, metrics=[], results_file=None):
+    def results(self, metrics=[], results_file=None, language=None):
         """evaluate a set of selected subjects against a gold standard using
         different metrics. If metrics is empty, use all available metrics.
-        If results_file (file object) given, write results per subject to it"""
+        If results_file (file object) given, write results per subject to it
+        with labels expressed in the given language."""
 
         if not self._samples:
             raise NotSupportedException("cannot evaluate empty corpus")
@@ -222,5 +226,6 @@ class EvaluationBatch:
         results['Documents evaluated'] = int(y_true.shape[0])
 
         if results_file:
-            self.output_result_per_subject(y_true, y_pred, results_file)
+            self.output_result_per_subject(y_true, y_pred,
+                                           results_file, language)
         return results

@@ -47,10 +47,11 @@ yso:p9285
     """)
 
     corpus = SubjectFileSKOS(str(tmpfile))
-    subjects = list(corpus.subjects('fi'))
+    subjects = list(corpus.subjects)
     assert len(subjects) == 1  # one of the concepts was deprecated
     assert subjects[0].uri == 'http://www.yso.fi/onto/yso/p8993'
-    assert subjects[0].label == 'hylyt'
+    print(subjects[0].labels)
+    assert subjects[0].labels['fi'] == 'hylyt'
     assert subjects[0].notation is None
 
 
@@ -69,9 +70,9 @@ yso:p8993
     """)
 
     corpus = SubjectFileSKOS(str(tmpfile))
-    subjects = list(corpus.subjects('fi'))
+    subjects = list(corpus.subjects)
     assert subjects[0].uri == 'http://www.yso.fi/onto/yso/p8993'
-    assert subjects[0].label == 'hylyt'
+    assert subjects[0].labels['fi'] == 'hylyt'
     assert subjects[0].notation == '42.42'
 
 
@@ -94,14 +95,14 @@ ex:conc3 a skos:Concept .
     """)
 
     corpus = SubjectFileSKOS(str(tmpfile))
-    subjects = list(corpus.subjects('en'))
+    subjects = list(corpus.subjects)
     assert len(subjects) == 3
 
     # check that the vocabulary contains the expected labels
-    labels = {subj.label for subj in subjects}
-    assert 'Concept 1' in labels
-    assert 'Concept 2' in labels
-    assert 'ex:conc3' in labels
+    en_labels = {subj.labels['en'] for subj in subjects}
+    assert 'Concept 1' in en_labels
+    assert 'Concept 2' in en_labels
+    assert 'ex:conc3' in en_labels
 
 
 def test_load_turtle_get_languages(testdatadir):
