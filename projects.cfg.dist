@@ -6,7 +6,7 @@ language=fi
 backend=tfidf
 analyzer=voikko(fi)
 limit=100
-vocab=yso-fi
+vocab=yso
 
 [tfidf-sv]
 name=TF-IDF Swedish
@@ -14,7 +14,7 @@ language=sv
 backend=tfidf
 analyzer=snowball(swedish)
 limit=100
-vocab=yso-sv
+vocab=yso
 
 [tfidf-en]
 name=TF-IDF English
@@ -22,7 +22,7 @@ language=en
 backend=tfidf
 analyzer=snowball(english)
 limit=100
-vocab=yso-en
+vocab=yso
 
 [fasttext-fi]
 name=fastText Finnish
@@ -35,7 +35,7 @@ epoch=30
 loss=hs
 limit=100
 chunksize=24
-vocab=yso-fi
+vocab=yso
 
 [fasttext-sv]
 name=fastText Swedish
@@ -48,7 +48,7 @@ epoch=30
 loss=hs
 limit=100
 chunksize=24
-vocab=yso-sv
+vocab=yso
 
 [fasttext-en]
 name=fastText English
@@ -61,7 +61,7 @@ epoch=30
 loss=hs
 limit=100
 chunksize=24
-vocab=yso-en
+vocab=yso
 
 
 [omikuji-parabel-fi]
@@ -69,44 +69,47 @@ name=Omikuji Parabel Finnish
 language=fi
 backend=omikuji
 analyzer=voikko(fi)
-vocab=yso-fi
+vocab=yso
 
 [omikuji-parabel-sv]
 name=Omikuji Parabel Swedish
 language=sv
 backend=omikuji
 analyzer=snowball(swedish)
-vocab=yso-sv
+vocab=yso
 
 [omikuji-parabel-en]
 name=Omikuji Parabel English
 language=en
 backend=omikuji
 analyzer=snowball(english)
-vocab=yso-en
+vocab=yso
 
 [yake-fi]
 name=YAKE Finnish
 language=fi
 backend=yake
-vocab=yso-fi
+vocab=yso
 analyzer=voikko(fi)
 transform=limit(20000)
 
 [ensemble-fi]
 name=Ensemble Finnish
 language=fi
+vocab=yso
 backend=ensemble
 sources=tfidf-fi,fasttext-fi,maui-fi
 
 [ensemble-sv]
 name=Ensemble Swedish
 language=sv
+vocab=yso
 backend=ensemble
 sources=tfidf-sv,fasttext-sv,maui-sv
 
 [ensemble-en]
 name=Ensemble English
 language=en
+vocab=yso
 backend=ensemble
 sources=tfidf-en,fasttext-en,maui-en
