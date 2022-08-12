@@ -212,7 +212,7 @@ class MLLMModel:
 
         return subject_ids
 
-    def _prepare_train_data(self, corpus, vocab, analyzer, n_jobs):
+    def _prepare_train_data(self, corpus, analyzer, n_jobs):
         # frequency of subjects (by id) in the generated candidates
         self._doc_freq = collections.Counter()
         # frequency of manually assigned subjects ("domain keyphraseness")
@@ -271,7 +271,7 @@ class MLLMModel:
 
         # convert the corpus into train data
         train_x, train_y = self._prepare_train_data(
-            corpus, vocab, analyzer, n_jobs)
+            corpus, analyzer, n_jobs)
 
         # precalculate idf values for all candidate subjects
         self._idf = self._calculate_idf(subject_ids, len(train_x))
