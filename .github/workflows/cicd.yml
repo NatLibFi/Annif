@@ -33,26 +33,26 @@ jobs:
         cache-dependency-path: 'pyproject.toml'
     - name: Install Python dependencies
       run: |
-        poetry install --no-interaction --no-root
+        poetry install --no-root
         poetry run python -m nltk.downloader punkt
         # Selectively install the optional dependencies for some Python versions
         # Install the optional neural network dependencies (TensorFlow and LMDB)
         # - except for one Python version (3.9) so that we can test also without them
-        if [[ ${{ matrix.python-version }} != '3.9' ]]; then poetry install -E nn; fi
+        if [[ ${{ matrix.python-version }} != '3.9' ]]; then poetry install --no-root -E nn; fi
         # Install the optional Omikuji and YAKE dependencies
         # - except for one Python version (3.9) so that we can test also without them
-        if [[ ${{ matrix.python-version }} != '3.9' ]]; then poetry install -E "omikuji yake"; fi
+        if [[ ${{ matrix.python-version }} != '3.9' ]]; then poetry install --no-root -E "omikuji yake"; fi
         # Install the optional fastText dependencies for Python 3.9 only
-        if [[ ${{ matrix.python-version }} == '3.9' ]]; then poetry install -E fasttext; fi
+        if [[ ${{ matrix.python-version }} == '3.9' ]]; then poetry install --no-root -E fasttext; fi
         # Install the optional spaCy dependencies for Python 3.9 only
         if [[ ${{ matrix.python-version }} == '3.9' ]]; then
-          poetry install -E spacy
+          poetry install --no-root -E spacy
           # download the small English pretrained spaCy model needed by spacy analyzer
           poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
         # For Python 3.8
         # - voikko and pycld3 dependencies
-        if [[ ${{ matrix.python-version }} == '3.8' ]]; then poetry install -E "voikko pycld3"; fi
+        if [[ ${{ matrix.python-version }} == '3.8' ]]; then poetry install --no-root -E "voikko pycld3"; fi
 
     - name: Lint with flake8
       run: |
