@@ -57,6 +57,8 @@ def test_subjectset_nonequal():
     sset = annif.corpus.SubjectSet([1, 3, 5])
     sset2 = annif.corpus.SubjectSet([3, 5])
     assert sset != sset2
+    assert sset != [1, 3, 5]
+    assert sset != set([1, 3, 5])
 
 
 def test_subjectset_as_vector(subject_index):
