@@ -68,10 +68,7 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
 
             for doc in corpus.documents:
                 tokens = self.project.analyzer.tokenize_words(doc.text)
-                for uri in doc.uris:
-                    subject_id = self.project.subjects.by_uri(uri)
-                    if subject_id is None:
-                        continue
+                for subject_id in doc.subject_set:
                     subject_buffer[subject_id].write(" ".join(tokens))
 
             for sid in range(len(self.project.subjects)):

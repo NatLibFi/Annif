@@ -88,10 +88,9 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         jobs, pool_class = annif.parallel.get_pool(n_jobs)
 
         with pool_class(jobs) as pool:
-            for hits, uris, labels in pool.imap_unordered(
+            for hits, subject_set in pool.imap_unordered(
                     psmap.suggest, self._corpus.documents):
-                self._gold_subjects.append(
-                    annif.corpus.SubjectSet((uris, labels)))
+                self._gold_subjects.append(subject_set)
                 self._source_hits.append(hits)
 
     def _normalize(self, hps):

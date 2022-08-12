@@ -202,7 +202,7 @@ class EvaluationBatch:
         self._result_per_subject_header(results_file)
         self._result_per_subject_body(zipped, results_file)
 
-    def results(self, metrics=[], results_file=None, warnings=False):
+    def results(self, metrics=[], results_file=None):
         """evaluate a set of selected subjects against a gold standard using
         different metrics. If metrics is empty, use all available metrics.
         If results_file (file object) given, write results per subject to it"""
@@ -215,9 +215,7 @@ class EvaluationBatch:
         y_pred = np.zeros(shape, dtype=np.float32)
 
         for idx, (hits, gold_subjects) in enumerate(self._samples):
-            gold_subjects.as_vector(self._subject_index,
-                                    destination=y_true[idx],
-                                    warnings=warnings)
+            gold_subjects.as_vector(destination=y_true[idx])
             hits.as_vector(len(self._subject_index), destination=y_pred[idx])
 
         results = self._evaluate_samples(y_true, y_pred, metrics)

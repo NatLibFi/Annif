@@ -94,22 +94,6 @@ class SubjectIndex:
             logger.warning('Unknown subject label "%s"', label)
             return None
 
-    def uris_to_labels(self, uris):
-        """return a list of labels corresponding to the given URIs; unknown
-        URIs are ignored"""
-
-        return [self._labels[subject_id]
-                for subject_id in (self.by_uri(uri) for uri in uris)
-                if subject_id is not None]
-
-    def labels_to_uris(self, labels):
-        """return a list of URIs corresponding to the given labels; unknown
-        labels are ignored"""
-
-        return [self._uris[subject_id]
-                for subject_id in (self.by_label(label) for label in labels)
-                if subject_id is not None]
-
     def deprecated_ids(self):
         """return indices of deprecated subjects"""
 
@@ -151,56 +135,67 @@ class SubjectIndex:
 class SubjectSet:
     """Represents a set of subjects for a document."""
 
-    def __init__(self, subj_data=None):
-        """Create a SubjectSet and optionally initialize it from a tuple
-        (URIs, labels)"""
+    def __init__(self, subject_ids=None):
+        """Create a SubjectSet and optionally initialize it from an iterable
+        of subject IDs"""
 
-        uris, labels = subj_data or ([], [])
-        self.subject_uris = set(uris)
-        self.subject_labels = set(labels)
+        if subject_ids:
+            # use set comprehension to eliminate possible duplicates
+            self._subject_ids = list({subject_id
+                                      for subject_id in subject_ids
+                                      if subject_id is not None})
+        else:
+            self._subject_ids = []
+
+    def __len__(self):
+        return len(self._subject_ids)
+
+    def __getitem__(self, idx):
+        return self._subject_ids[idx]
+
+    def __bool__(self):
+        return bool(self._subject_ids)
+
+    def __eq__(self, other):
+        if isinstance(other, SubjectSet):
+            return self._subject_ids == other._subject_ids
+
+        return False
 
     @classmethod
-    def from_string(cls, subj_data):
-        sset = cls()
+    def from_string(cls, subj_data, subject_index):
+        subject_ids = set()
         for line in subj_data.splitlines():
-            sset._parse_line(line)
-        return sset
+            uri, label = cls._parse_line(line)
+            if uri is not None:
+                subject_ids.add(subject_index.by_uri(uri))
+            else:
+                subject_ids.add(subject_index.by_label(label))
+        return cls(subject_ids)
 
-    def _parse_line(self, line):
+    @staticmethod
+    def _parse_line(line):
+        uri = label = None
         vals = line.split("\t")
         for val in vals:
             val = val.strip()
             if val == '':
                 continue
             if val.startswith('<') and val.endswith('>'):  # URI
-                self.subject_uris.add(val[1:-1])
+                uri = val[1:-1]
                 continue
-            self.subject_labels.add(val)
-            return
+            label = val
+            break
+        return uri, label
 
-    def has_uris(self):
-        """returns True if the URIs for all subjects are known"""
-        return len(self.subject_uris) >= len(self.subject_labels)
-
-    def as_vector(self, subject_index, destination=None, warnings=True):
+    def as_vector(self, size=None, destination=None):
         """Return the hits as a one-dimensional NumPy array in sklearn
-           multilabel indicator format, using a subject index as the source
-           of subjects. Use destination array if given (not None), otherwise
-           create and return a new one. If warnings=True, log warnings for
-           unknown URIs."""
+           multilabel indicator format. Use destination array if given (not
+           None), otherwise create and return a new one of the given size."""
 
         if destination is None:
-            destination = np.zeros(len(subject_index), dtype=bool)
+            destination = np.zeros(size, dtype=bool)
 
-        if self.has_uris():
-            for uri in self.subject_uris:
-                subject_id = subject_index.by_uri(
-                    uri, warnings=warnings)
-                if subject_id is not None:
-                    destination[subject_id] = True
-        else:
-            for label in self.subject_labels:
-                subject_id = subject_index.by_label(label)
-                if subject_id is not None:
-                    destination[subject_id] = True
+        destination[list(self._subject_ids)] = True
+
         return destination

@@ -41,25 +41,26 @@ def get_project(project_id):
         sys.exit(1)
 
 
-def open_documents(paths, docs_limit):
+def open_documents(paths, subject_index, docs_limit):
     """Helper function to open a document corpus from a list of pathnames,
     each of which is either a TSV file or a directory of TXT files. The
     corpus will be returned as an instance of DocumentCorpus or
     LimitingDocumentCorpus."""
 
-    def open_doc_path(path):
+    def open_doc_path(path, subject_index):
         """open a single path and return it as a DocumentCorpus"""
         if os.path.isdir(path):
-            return annif.corpus.DocumentDirectory(path, require_subjects=True)
-        return annif.corpus.DocumentFile(path)
+            return annif.corpus.DocumentDirectory(path, subject_index,
+                                                  require_subjects=True)
+        return annif.corpus.DocumentFile(path, subject_index)
 
     if len(paths) == 0:
         logger.warning('Reading empty file')
-        docs = open_doc_path(os.path.devnull)
+        docs = open_doc_path(os.path.devnull, subject_index)
     elif len(paths) == 1:
-        docs = open_doc_path(paths[0])
+        docs = open_doc_path(paths[0], subject_index)
     else:
-        corpora = [open_doc_path(path) for path in paths]
+        corpora = [open_doc_path(path, subject_index) for path in paths]
         docs = annif.corpus.CombinedCorpus(corpora)
     if docs_limit is not None:
         docs = annif.corpus.LimitingDocumentCorpus(docs, docs_limit)
@@ -220,7 +221,7 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
                 "Corpus paths cannot be given when using --cached option.")
         documents = 'cached'
     else:
-        documents = open_documents(paths, docs_limit)
+        documents = open_documents(paths, proj.subjects, docs_limit)
     proj.train(documents, backend_params, jobs)
 
 
@@ -238,7 +239,7 @@ def run_learn(project_id, paths, docs_limit, backend_param):
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
-    documents = open_documents(paths, docs_limit)
+    documents = open_documents(paths, proj.subjects, docs_limit)
     proj.learn(documents, backend_params)
 
 
@@ -291,7 +292,7 @@ def run_index(project_id, directory, suffix, force,
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
     for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
-            directory, require_subjects=False):
+            directory, project.subjects, require_subjects=False):
         with open(docfilename, encoding='utf-8-sig') as docfile:
             text = docfile.read()
         subjectfilename = re.sub(r'\.txt$', suffix, docfilename)
@@ -380,7 +381,7 @@ def run_eval(
         except Exception as e:
             raise NotSupportedException(
                 "cannot open results-file for writing: " + str(e))
-    docs = open_documents(paths, docs_limit)
+    docs = open_documents(paths, project.subjects, docs_limit)
 
     jobs, pool_class = annif.parallel.get_pool(jobs)
 
@@ -389,10 +390,10 @@ def run_eval(
         project.registry, [project_id], backend_params, limit, threshold)
 
     with pool_class(jobs) as pool:
-        for hits, uris, labels in pool.imap_unordered(
+        for hits, subject_set in pool.imap_unordered(
                 psmap.suggest, docs.documents):
             eval_batch.evaluate(hits[project_id],
-                                annif.corpus.SubjectSet((uris, labels)))
+                                subject_set)
 
     template = "{0:<30}\t{1}"
     metrics = eval_batch.results(metrics=metric, results_file=results_file)
@@ -427,16 +428,15 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     filter_batches = generate_filter_batches(project.subjects)
 
     ndocs = 0
-    docs = open_documents(paths, docs_limit)
+    docs = open_documents(paths, project.subjects, docs_limit)
     for doc in docs.documents:
         raw_hits = project.suggest(doc.text, backend_params)
         hits = raw_hits.filter(project.subjects, limit=BATCH_MAX_LIMIT)
         assert isinstance(hits, ListSuggestionResult), \
             "Optimize should only be done with ListSuggestionResult " + \
             "as it would be very slow with VectorSuggestionResult."
-        gold_subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
         for hit_filter, batch in filter_batches.values():
-            batch.evaluate(hit_filter(hits), gold_subjects)
+            batch.evaluate(hit_filter(hits), doc.subject_set)
         ndocs += 1
 
     click.echo("\t".join(('Limit', 'Thresh.', 'Prec.', 'Rec.', 'F1')))
@@ -508,7 +508,7 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric,
     Optimize the hyperparameters of a project using a validation corpus.
     """
     proj = get_project(project_id)
-    documents = open_documents(paths, docs_limit)
+    documents = open_documents(paths, proj.subjects, docs_limit)
     click.echo(f"Looking for optimal hyperparameters using {trials} trials")
     rec = proj.hyperopt(documents, trials, jobs, metric, results_file)
     click.echo(f"Got best {metric} score {rec.score:.4f} with:")

@@ -106,8 +106,7 @@ def document_corpus(subject_index):
         'corpora',
         'archaeology',
         'documents.tsv')
-    doc_corpus = annif.corpus.DocumentFile(docfile)
-    doc_corpus.set_subject_index(subject_index)
+    doc_corpus = annif.corpus.DocumentFile(docfile, subject_index)
     return doc_corpus
 
 
@@ -118,8 +117,7 @@ def fulltext_corpus(subject_index):
         'corpora',
         'archaeology',
         'fulltext')
-    ft_corpus = annif.corpus.DocumentDirectory(ftdir)
-    ft_corpus.set_subject_index(subject_index)
+    ft_corpus = annif.corpus.DocumentDirectory(ftdir, subject_index)
     return ft_corpus
 
 
@@ -153,6 +151,6 @@ def app_project(app):
 
 
 @pytest.fixture(scope='function')
-def empty_corpus(tmpdir):
+def empty_corpus(tmpdir, subject_index):
     empty_file = tmpdir.ensure('empty.tsv')
-    return annif.corpus.DocumentFile(str(empty_file))
+    return annif.corpus.DocumentFile(str(empty_file), subject_index)

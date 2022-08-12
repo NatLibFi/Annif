@@ -2,71 +2,91 @@
 
 import gzip
 import numpy as np
+import pytest
 import annif.corpus
 from annif.corpus import TransformingDocumentCorpus
 
 
-def test_subjectset_uris():
-    data = """<http://example.org/dummy>\tdummy
-    <http://example.org/another>\tanother
+def test_subjectset_uris(subject_index):
+    data = """<http://www.yso.fi/onto/yso/p2558>\trautakausi
+    <http://www.yso.fi/onto/yso/p12738>\tviikinkiaika
     """
 
-    sset = annif.corpus.SubjectSet.from_string(data)
-    assert sset.has_uris()
-    assert len(sset.subject_uris) == 2
-    assert "http://example.org/dummy" in sset.subject_uris
-    assert "http://example.org/another" in sset.subject_uris
+    sset = annif.corpus.SubjectSet.from_string(data, subject_index)
+    assert len(sset) == 2
+    assert subject_index.by_uri("http://www.yso.fi/onto/yso/p2558") in sset
+    assert subject_index.by_uri("http://www.yso.fi/onto/yso/p12738") in sset
 
 
-def test_subjectset_labels():
-    data = """dummy
-    another
+def test_subjectset_labels(subject_index):
+    data = """rautakausi
+    viikinkiaika
     """
 
-    sset = annif.corpus.SubjectSet.from_string(data)
-    assert not sset.has_uris()
-    assert len(sset.subject_labels) == 2
-    assert "dummy" in sset.subject_labels
-    assert "another" in sset.subject_labels
+    sset = annif.corpus.SubjectSet.from_string(data, subject_index)
+    assert len(sset) == 2
+    assert subject_index.by_label("rautakausi") in sset
+    assert subject_index.by_label("viikinkiaika") in sset
 
 
-def test_subjectset_from_tuple():
+def test_subjectset_from_list(subject_index):
     uris = ['http://www.yso.fi/onto/yso/p10849',
             'http://www.yso.fi/onto/yso/p19740']
-    labels = ['arkeologit', 'obeliskit']
-    sset = annif.corpus.SubjectSet((uris, labels))
-    assert sset.has_uris()
-    assert len(sset.subject_uris) == 2
-    assert 'http://www.yso.fi/onto/yso/p10849' in sset.subject_uris
-    assert 'http://www.yso.fi/onto/yso/p19740' in sset.subject_uris
+    subject_ids = [subject_index.by_uri(uri) for uri in uris]
+    sset = annif.corpus.SubjectSet(subject_ids)
+    assert len(sset) == 2
+    assert subject_index.by_uri("http://www.yso.fi/onto/yso/p10849") in sset
+    assert subject_index.by_uri("http://www.yso.fi/onto/yso/p19740") in sset
+
+
+def test_subjectset_empty():
+    sset = annif.corpus.SubjectSet()
+    assert len(sset) == 0
+    assert not sset
+    with pytest.raises(IndexError):
+        sset[0]
+
+
+def test_subjectset_equal():
+    sset = annif.corpus.SubjectSet([1, 3, 5])
+    sset2 = annif.corpus.SubjectSet([3, 5, 1])
+    assert sset == sset2
+
+
+def test_subjectset_nonequal():
+    sset = annif.corpus.SubjectSet([1, 3, 5])
+    sset2 = annif.corpus.SubjectSet([3, 5])
+    assert sset != sset2
+    assert sset != [1, 3, 5]
+    assert sset != set([1, 3, 5])
 
 
 def test_subjectset_as_vector(subject_index):
     uris = ['http://www.yso.fi/onto/yso/p10849', 'http://example.org/unknown']
-    labels = ['arkeologit', 'unknown-subject']
-    sset = annif.corpus.SubjectSet((uris, labels))
-    vector = sset.as_vector(subject_index)
+    subject_ids = [subject_index.by_uri(uri) for uri in uris]
+    sset = annif.corpus.SubjectSet(subject_ids)
+    vector = sset.as_vector(len(subject_index))
     assert vector.sum() == 1  # only one known subject
 
 
 def test_subjectset_as_vector_destination(subject_index):
     uris = ['http://www.yso.fi/onto/yso/p10849', 'http://example.org/unknown']
-    labels = ['arkeologit', 'unknown-subject']
-    sset = annif.corpus.SubjectSet((uris, labels))
+    subject_ids = [subject_index.by_uri(uri) for uri in uris]
+    sset = annif.corpus.SubjectSet(subject_ids)
     destination = np.zeros(len(subject_index), dtype=np.float32)
-    vector = sset.as_vector(subject_index, destination=destination)
+    vector = sset.as_vector(destination=destination)
     assert vector.sum() == 1  # only one known subject
     assert vector is destination
 
 
-def test_docdir_key(tmpdir):
+def test_docdir_key(tmpdir, subject_index):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('key1')
     tmpdir.join('doc2.txt').write('doc2')
     tmpdir.join('doc2.key').write('key2')
     tmpdir.join('doc3.txt').write('doc3')
 
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir))
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index)
     files = sorted(list(docdir))
     assert len(files) == 3
     assert files[0][0] == str(tmpdir.join('doc1.txt'))
@@ -77,14 +97,14 @@ def test_docdir_key(tmpdir):
     assert files[2][1] is None
 
 
-def test_docdir_tsv(tmpdir):
+def test_docdir_tsv(tmpdir, subject_index):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.tsv').write('<http://example.org/key1>\tkey1')
     tmpdir.join('doc2.txt').write('doc2')
     tmpdir.join('doc2.tsv').write('<http://example.org/key2>\tkey2')
     tmpdir.join('doc3.txt').write('doc3')
 
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir))
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index)
     files = sorted(list(docdir))
     assert len(files) == 3
     assert files[0][0] == str(tmpdir.join('doc1.txt'))
@@ -95,32 +115,35 @@ def test_docdir_tsv(tmpdir):
     assert files[2][1] is None
 
 
-def test_docdir_tsv_bom(tmpdir):
+def test_docdir_tsv_bom(tmpdir, subject_index):
     tmpdir.join('doc1.txt').write('doc1'.encode('utf-8-sig'))
     tmpdir.join('doc1.tsv').write(
-        '<http://example.org/key1>\tkey1'.encode('utf-8-sig'))
+        '<http://www.yso.fi/onto/yso/p4622>\tesihistoria'.encode('utf-8-sig'))
     tmpdir.join('doc2.txt').write('doc2'.encode('utf-8-sig'))
     tmpdir.join('doc2.tsv').write(
-        '<http://example.org/key2>\tkey2'.encode('utf-8-sig'))
+        '<http://www.yso.fi/onto/yso/p2558>\trautakausi'.encode('utf-8-sig'))
 
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir))
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index)
     docs = list(docdir.documents)
     assert docs[0].text == 'doc1'
-    assert list(docs[0].uris)[0] == 'http://example.org/key1'
-    assert list(docs[0].labels)[0] == 'key1'
+    assert subject_index.by_uri(
+        'http://www.yso.fi/onto/yso/p4622') in docs[0].subject_set
+    assert len(docs[0].subject_set) == 1
     assert docs[1].text == 'doc2'
-    assert list(docs[1].uris)[0] == 'http://example.org/key2'
-    assert list(docs[1].labels)[0] == 'key2'
+    assert subject_index.by_uri(
+        'http://www.yso.fi/onto/yso/p2558') in docs[1].subject_set
+    assert len(docs[1].subject_set) == 1
 
 
-def test_docdir_key_require_subjects(tmpdir):
+def test_docdir_key_require_subjects(tmpdir, subject_index):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.key').write('<http://example.org/key1>\tkey1')
     tmpdir.join('doc2.txt').write('doc2')
     tmpdir.join('doc2.key').write('<http://example.org/key2>\tkey2')
     tmpdir.join('doc3.txt').write('doc3')
 
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=True)
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index,
+                                            require_subjects=True)
     files = sorted(list(docdir))
     assert len(files) == 2
     assert files[0][0] == str(tmpdir.join('doc1.txt'))
@@ -129,14 +152,15 @@ def test_docdir_key_require_subjects(tmpdir):
     assert files[1][1] == str(tmpdir.join('doc2.key'))
 
 
-def test_docdir_tsv_require_subjects(tmpdir):
+def test_docdir_tsv_require_subjects(tmpdir, subject_index):
     tmpdir.join('doc1.txt').write('doc1')
     tmpdir.join('doc1.tsv').write('key1')
     tmpdir.join('doc2.txt').write('doc2')
     tmpdir.join('doc2.tsv').write('key2')
     tmpdir.join('doc3.txt').write('doc3')
 
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=True)
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index,
+                                            require_subjects=True)
     files = sorted(list(docdir))
     assert len(files) == 2
     assert files[0][0] == str(tmpdir.join('doc1.txt'))
@@ -145,20 +169,27 @@ def test_docdir_tsv_require_subjects(tmpdir):
     assert files[1][1] == str(tmpdir.join('doc2.tsv'))
 
 
-def test_docdir_tsv_as_doccorpus(tmpdir):
+def test_docdir_tsv_as_doccorpus(tmpdir, subject_index):
     tmpdir.join('doc1.txt').write('doc1')
-    tmpdir.join('doc1.tsv').write('<http://example.org/subj1>\tsubj1')
+    tmpdir.join('doc1.tsv').write(
+        '<http://www.yso.fi/onto/yso/p4622>\tesihistoria')
     tmpdir.join('doc2.txt').write('doc2')
-    tmpdir.join('doc2.tsv').write('<http://example.org/subj2>\tsubj2')
+    tmpdir.join('doc2.tsv').write(
+        '<http://www.yso.fi/onto/yso/p2558>\trautakausi')
     tmpdir.join('doc3.txt').write('doc3')
 
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=True)
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index,
+                                            require_subjects=True)
     docs = list(docdir.documents)
     assert len(docs) == 2
     assert docs[0].text == 'doc1'
-    assert docs[0].uris == {'http://example.org/subj1'}
+    assert len(docs[0].subject_set) == 1
+    assert subject_index.by_uri(
+        'http://www.yso.fi/onto/yso/p4622') in docs[0].subject_set
     assert docs[1].text == 'doc2'
-    assert docs[1].uris == {'http://example.org/subj2'}
+    assert subject_index.by_uri(
+        'http://www.yso.fi/onto/yso/p2558') in docs[1].subject_set
+    assert len(docs[1].subject_set) == 1
 
 
 def test_docdir_key_as_doccorpus(tmpdir, subject_index):
@@ -168,14 +199,18 @@ def test_docdir_key_as_doccorpus(tmpdir, subject_index):
     tmpdir.join('doc2.key').write('kalliotaide')
     tmpdir.join('doc3.txt').write('doc3')
 
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=True)
-    docdir.set_subject_index(subject_index)
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index,
+                                            require_subjects=True)
     docs = list(docdir.documents)
     assert len(docs) == 2
     assert docs[0].text == 'doc1'
-    assert docs[0].uris == {'http://www.yso.fi/onto/yso/p10849'}
+    assert len(docs[0].subject_set) == 1
+    assert subject_index.by_uri(
+        'http://www.yso.fi/onto/yso/p10849') in docs[0].subject_set
     assert docs[1].text == 'doc2'
-    assert docs[1].uris == {'http://www.yso.fi/onto/yso/p13027'}
+    assert len(docs[1].subject_set) == 1
+    assert subject_index.by_uri(
+        'http://www.yso.fi/onto/yso/p13027') in docs[1].subject_set
 
 
 def test_subject_by_uri(subject_index):
@@ -198,29 +233,29 @@ def test_subject_by_label_missing(subject_index):
     assert subj_id is None
 
 
-def test_docfile_plain(tmpdir):
+def test_docfile_plain(tmpdir, subject_index):
     docfile = tmpdir.join('documents.tsv')
     docfile.write("""Läntinen\t<http://www.yso.fi/onto/yso/p2557>
         Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
         Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
 
-    docs = annif.corpus.DocumentFile(str(docfile))
+    docs = annif.corpus.DocumentFile(str(docfile), subject_index)
     assert len(list(docs.documents)) == 3
 
 
-def test_docfile_bom(tmpdir):
+def test_docfile_bom(tmpdir, subject_index):
     docfile = tmpdir.join('documents_bom.tsv')
     data = """Läntinen\t<http://www.yso.fi/onto/yso/p2557>
         Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
         Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>"""
     docfile.write(data.encode('utf-8-sig'))
 
-    docs = annif.corpus.DocumentFile(str(docfile))
+    docs = annif.corpus.DocumentFile(str(docfile), subject_index)
     firstdoc = next(docs.documents)
     assert firstdoc.text.startswith("Läntinen")
 
 
-def test_docfile_plain_invalid_lines(tmpdir, caplog):
+def test_docfile_plain_invalid_lines(tmpdir, caplog, subject_index):
     logger = annif.logger
     logger.propagate = True
     docfile = tmpdir.join('documents_invalid.tsv')
@@ -229,7 +264,7 @@ def test_docfile_plain_invalid_lines(tmpdir, caplog):
         Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
         A line with no tabs
         Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
-    docs = annif.corpus.DocumentFile(str(docfile))
+    docs = annif.corpus.DocumentFile(str(docfile), subject_index)
     assert len(list(docs.documents)) == 3
     assert len(caplog.records) == 2
     expected_msg = 'Skipping invalid line (missing tab):'
@@ -237,31 +272,31 @@ def test_docfile_plain_invalid_lines(tmpdir, caplog):
         assert expected_msg in record.message
 
 
-def test_docfile_gzipped(tmpdir):
+def test_docfile_gzipped(tmpdir, subject_index):
     docfile = tmpdir.join('documents.tsv.gz')
     with gzip.open(str(docfile), 'wt') as gzf:
         gzf.write("""Pohjoinen\t<http://www.yso.fi/onto/yso/p2557>
             Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
             Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
 
-    docs = annif.corpus.DocumentFile(str(docfile))
+    docs = annif.corpus.DocumentFile(str(docfile), subject_index)
     assert len(list(docs.documents)) == 3
 
 
-def test_docfile_is_empty(tmpdir):
+def test_docfile_is_empty(tmpdir, subject_index):
     empty_file = tmpdir.ensure('empty.tsv')
-    docs = annif.corpus.DocumentFile(str(empty_file))
+    docs = annif.corpus.DocumentFile(str(empty_file), subject_index)
     assert docs.is_empty()
 
 
-def test_combinedcorpus(tmpdir):
+def test_combinedcorpus(tmpdir, subject_index):
     docfile = tmpdir.join('documents.tsv')
     docfile.write("""Läntinen\t<http://www.yso.fi/onto/yso/p2557>
         Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
         Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
 
-    corpus1 = annif.corpus.DocumentFile(str(docfile))
-    corpus2 = annif.corpus.DocumentFile(str(docfile))
+    corpus1 = annif.corpus.DocumentFile(str(docfile), subject_index)
+    corpus2 = annif.corpus.DocumentFile(str(docfile), subject_index)
 
     combined = annif.corpus.CombinedCorpus([corpus1, corpus2])
 
@@ -275,14 +310,13 @@ def test_transformingcorpus(document_corpus):
     for transf_doc, doc in zip(transformed_corpus.documents,
                                document_corpus.documents):
         assert transf_doc.text == doc.text + doc.text
-        assert transf_doc.uris == doc.uris
-        assert transf_doc.labels == doc.labels
+        assert transf_doc.subject_set == doc.subject_set
     # Ensure docs are still available after iterating
     assert len(list(transformed_corpus.documents)) \
         == len(list(document_corpus.documents))
 
 
-def test_limitingcorpus(tmpdir):
+def test_limitingcorpus(tmpdir, subject_index):
     docfile = tmpdir.join('documents_invalid.tsv')
     docfile.write("""Läntinen\t<http://www.yso.fi/onto/yso/p2557>
 
@@ -290,7 +324,7 @@ def test_limitingcorpus(tmpdir):
         A line with no tabs
         Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>""")
 
-    document_corpus = annif.corpus.DocumentFile(str(docfile))
+    document_corpus = annif.corpus.DocumentFile(str(docfile), subject_index)
     limiting_corpus = annif.corpus.LimitingDocumentCorpus(document_corpus, 2)
 
     assert len(list(limiting_corpus.documents)) == 2

@@ -168,9 +168,9 @@ def test_project_learn(registry, tmpdir):
     tmpdir.join('doc1.tsv').write('<http://example.org/none>\tnone')
     tmpdir.join('doc2.txt').write('doc2')
     tmpdir.join('doc2.tsv').write('<http://example.org/dummy>\tdummy')
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir))
 
     project = registry.get_project('dummy-fi')
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), project.subjects)
     project.learn(docdir)
     result = project.suggest('this is some text')
     assert len(result) == 1
@@ -185,9 +185,9 @@ def test_project_learn_not_supported(registry, tmpdir):
     tmpdir.join('doc1.tsv').write('<http://example.org/key1>\tkey1')
     tmpdir.join('doc2.txt').write('doc2')
     tmpdir.join('doc2.tsv').write('<http://example.org/key2>\tkey2')
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir))
 
     project = registry.get_project('tfidf-fi')
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), project.subjects)
     with pytest.raises(NotSupportedException):
         project.learn(docdir)
 

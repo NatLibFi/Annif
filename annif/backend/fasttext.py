@@ -90,10 +90,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                 text = self._normalize_text(doc.text)
                 if text == '':
                     continue
-                subject_ids = [self.project.subjects.by_uri(uri)
-                               for uri in doc.uris]
-                labels = [self._id_to_label(sid) for sid in subject_ids
-                          if sid is not None]
+                labels = [self._id_to_label(sid) for sid in doc.subject_set]
                 if labels:
                     print(' '.join(labels), text, file=trainfile)
                 else:

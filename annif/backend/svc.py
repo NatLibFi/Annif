@@ -50,12 +50,14 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         texts = []
         classes = []
         for doc in corpus.documents:
-            texts.append(doc.text)
-            if len(doc.uris) > 1:
+            if len(doc.subject_set) > 1:
                 self.warning(
                     'training on a document with multiple subjects is not ' +
                     'supported by SVC; selecting one random subject.')
-            classes.append(next(iter(doc.uris)))
+            elif not doc.subject_set:
+                continue  # skip documents with no subjects
+            texts.append(doc.text)
+            classes.append(doc.subject_set[0])
         return texts, classes
 
     def _train_classifier(self, veccorpus, classes):
@@ -85,8 +87,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         results = []
         limit = int(params['limit'])
         for class_id in np.argsort(scores)[::-1][:limit]:
-            class_uri = self._model.classes_[class_id]
-            subject_id = self.project.subjects.by_uri(class_uri)
+            subject_id = self._model.classes_[class_id]
             if subject_id is not None:
                 results.append(SubjectSuggestion(
                     subject_id=subject_id,

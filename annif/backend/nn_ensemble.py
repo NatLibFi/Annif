@@ -201,7 +201,7 @@ class NNEnsembleBackend(
 
         self.info("Processing training documents...")
         with pool_class(jobs) as pool:
-            for hits, uris, labels in pool.imap_unordered(
+            for hits, subject_set in pool.imap_unordered(
                     psmap.suggest, corpus.documents):
                 doc_scores = []
                 for project_id, p_hits in hits.items():
@@ -211,8 +211,8 @@ class NNEnsembleBackend(
                                       * len(sources))
                 score_vector = np.array(doc_scores,
                                         dtype=np.float32).transpose()
-                subjects = annif.corpus.SubjectSet((uris, labels))
-                true_vector = subjects.as_vector(self.project.subjects)
+                true_vector = subject_set.as_vector(
+                    len(self.project.subjects))
                 seq.add_sample(score_vector, true_vector)
 
     def _open_lmdb(self, cached, lmdb_map_size):
