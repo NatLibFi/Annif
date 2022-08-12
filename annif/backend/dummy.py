@@ -36,7 +36,6 @@ class DummyBackend(backend.AnnifLearningBackend):
         # of the first subject of the first document in the learning set
         # and using that in subsequent analysis results
         for doc in corpus.documents:
-            if doc.uris:
-                first_uri = list(doc.uris)[0]
-                self.subject_id = self.project.subjects.by_uri(first_uri)
+            if doc.subject_set:
+                self.subject_id = doc.subject_set[0]
             break

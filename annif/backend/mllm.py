@@ -26,8 +26,7 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
         for doc in self._corpus.documents:
             candidates = self._backend._generate_candidates(doc.text)
             self._candidates.append(candidates)
-            self._gold_subjects.append(
-                annif.corpus.SubjectSet((doc.uris, doc.labels)))
+            self._gold_subjects.append(doc.subject_set)
 
     def _objective(self, trial):
         params = {

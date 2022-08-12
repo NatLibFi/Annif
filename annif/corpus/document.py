@@ -6,7 +6,7 @@ import re
 import gzip
 import annif.util
 from itertools import islice
-from .types import DocumentCorpus
+from .types import DocumentCorpus, Document
 from .subject import SubjectSet
 
 logger = annif.logger
@@ -15,8 +15,9 @@ logger = annif.logger
 class DocumentDirectory(DocumentCorpus):
     """A directory of files as a full text document corpus"""
 
-    def __init__(self, path, require_subjects=False):
+    def __init__(self, path, subject_index, require_subjects=False):
         self.path = path
+        self.subject_index = subject_index
         self.require_subjects = require_subjects
 
     def __iter__(self):
@@ -43,17 +44,17 @@ class DocumentDirectory(DocumentCorpus):
                       encoding='utf-8-sig') as docfile:
                 text = docfile.read()
             with open(keyfilename, encoding='utf-8-sig') as keyfile:
-                subjects = SubjectSet.from_string(keyfile.read())
-            yield self._create_document(text=text,
-                                        uris=subjects.subject_uris,
-                                        labels=subjects.subject_labels)
+                subjects = SubjectSet.from_string(keyfile.read(),
+                                                  self.subject_index)
+            yield Document(text=text, subject_set=subjects)
 
 
 class DocumentFile(DocumentCorpus):
     """A TSV file as a corpus of documents with subjects"""
 
-    def __init__(self, path):
+    def __init__(self, path, subject_index):
         self.path = path
+        self.subject_index = subject_index
 
     @property
     def documents(self):
@@ -68,11 +69,11 @@ class DocumentFile(DocumentCorpus):
     def _parse_tsv_line(self, line):
         if '\t' in line:
             text, uris = line.split('\t', maxsplit=1)
-            subjects = {annif.util.cleanup_uri(uri)
-                        for uri in uris.split()}
-            yield self._create_document(text=text,
-                                        uris=subjects,
-                                        labels=[])
+            subject_ids = {self.subject_index.by_uri(
+                               annif.util.cleanup_uri(uri))
+                           for uri in uris.split()}
+            yield Document(text=text,
+                           subject_set=SubjectSet(subject_ids))
         else:
             logger.warning('Skipping invalid line (missing tab): "%s"',
                            line.rstrip())
@@ -101,10 +102,8 @@ class TransformingDocumentCorpus(DocumentCorpus):
     @property
     def documents(self):
         for doc in self._orig_corpus.documents:
-            yield self._create_document(
-                text=self._transform_fn(doc.text),
-                uris=doc.uris,
-                labels=doc.labels)
+            yield Document(text=self._transform_fn(doc.text),
+                           subject_set=doc.subject_set)
 
 
 class LimitingDocumentCorpus(DocumentCorpus):
@@ -118,6 +117,4 @@ class LimitingDocumentCorpus(DocumentCorpus):
     @property
     def documents(self):
         for doc in islice(self._orig_corpus.documents, self.docs_limit):
-            yield self._create_document(text=doc.text,
-                                        uris=doc.uris,
-                                        labels=doc.labels)
+            yield doc

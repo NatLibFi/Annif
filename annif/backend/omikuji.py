@@ -74,7 +74,8 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                   file=trainfile)
             n_samples = 0
             for doc, vector in zip(corpus.documents, veccorpus):
-                subject_ids = self._uris_to_subj_ids(doc.uris)
+                subject_ids = [str(subject_id)
+                               for subject_id in doc.subject_set]
                 feature_values = ['{}:{}'.format(col, vector[row, col])
                                   for row, col in zip(*vector.nonzero())]
                 if not subject_ids or not feature_values:

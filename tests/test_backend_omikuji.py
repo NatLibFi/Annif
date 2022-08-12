@@ -41,7 +41,7 @@ def test_omikuji_create_train_file(tmpdir, project, datadir):
     tmpfile.write("nonexistent\thttp://example.com/nonexistent\n" +
                   "arkeologia\thttp://www.yso.fi/onto/yso/p1265\n" +
                   "...\thttp://example.com/none")
-    corpus = annif.corpus.DocumentFile(str(tmpfile))
+    corpus = annif.corpus.DocumentFile(str(tmpfile), project.subjects)
     omikuji_type = annif.backend.get_backend('omikuji')
     omikuji = omikuji_type(
         backend_id='omikuji',

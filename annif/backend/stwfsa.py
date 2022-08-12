@@ -86,7 +86,8 @@ class StwfsaBackend(backend.AnnifBackend):
         y = []
         for doc in corpus.documents:
             X.append(doc.text)
-            y.append(doc.uris)
+            y.append([self.project.subjects[subject_id].uri
+                      for subject_id in doc.subject_set])
         return X, y
 
     def _train(self, corpus, params, jobs=0):

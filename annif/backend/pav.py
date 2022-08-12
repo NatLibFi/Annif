@@ -83,9 +83,8 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
                 data.append(vector[cid])
                 row.append(docid)
                 col.append(cid)
-            subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
             for cid in np.flatnonzero(
-                    subjects.as_vector(source_project.subjects)):
+                    doc.subject_set.as_vector(len(source_project.subjects))):
 
                 trow.append(docid)
                 tcol.append(cid)

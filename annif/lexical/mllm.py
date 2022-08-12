@@ -112,9 +112,9 @@ def candidates_to_features(candidates, mdata):
 class MLLMCandidateGenerator(annif.parallel.BaseWorker):
 
     @classmethod
-    def generate_candidates(cls, doc_subject_ids, text):
+    def generate_candidates(cls, doc_subject_set, text):
         candidates = generate_candidates(text, **cls.args)  # pragma: no cover
-        return doc_subject_ids, candidates  # pragma: no cover
+        return doc_subject_set, candidates  # pragma: no cover
 
 
 class MLLMFeatureConverter(annif.parallel.BaseWorker):
@@ -231,7 +231,7 @@ class MLLMModel:
         with pool_class(jobs,
                         initializer=MLLMCandidateGenerator.init,
                         initargs=(cg_args,)) as pool:
-            params = (([vocab.subjects.by_uri(uri) for uri in doc.uris],
+            params = ((doc.subject_set,
                        doc.text)
                       for doc in corpus.documents)
             for doc_subject_ids, candidates in pool.starmap(

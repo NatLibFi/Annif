@@ -3,7 +3,7 @@ methods defined in the Swagger specification."""
 
 import connexion
 import annif.registry
-from annif.corpus import Document, DocumentList
+from annif.corpus import Document, DocumentList, SubjectSet
 from annif.suggestion import SuggestionFilter
 from annif.exception import AnnifException
 from annif.project import Access
@@ -78,10 +78,11 @@ def suggest(project_id, text, limit, threshold):
                         for hit in hits]}
 
 
-def _documents_to_corpus(documents):
+def _documents_to_corpus(documents, subject_index):
     corpus = [Document(text=d['text'],
-                       uris=[subj['uri'] for subj in d['subjects']],
-                       labels=[subj['label'] for subj in d['subjects']])
+                       subject_set=SubjectSet(
+                           [subject_index.by_uri(subj['uri'])
+                            for subj in d['subjects']]))
               for d in documents
               if 'text' in d and 'subjects' in d]
     return DocumentList(corpus)
@@ -96,9 +97,8 @@ def learn(project_id, documents):
     except ValueError:
         return project_not_found_error(project_id)
 
-    corpus = _documents_to_corpus(documents)
-
     try:
+        corpus = _documents_to_corpus(documents, project.subjects)
         project.learn(corpus)
     except AnnifException as err:
         return server_error(err)
