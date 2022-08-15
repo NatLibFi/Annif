@@ -128,9 +128,9 @@ def test_get_project_invalid_config_file():
 
 def test_project_load_vocabulary_tfidf(registry, subject_file, testdatadir):
     project = registry.get_project('tfidf-fi')
-    project.vocab.load_vocabulary(subject_file, 'fi')
-    assert testdatadir.join('vocabs/yso/subjects.fi.tsv').exists()
-    assert testdatadir.join('vocabs/yso/subjects.fi.tsv').size() > 0
+    project.vocab.load_vocabulary(subject_file)
+    assert testdatadir.join('vocabs/yso/subjects.csv').exists()
+    assert testdatadir.join('vocabs/yso/subjects.csv').size() > 0
 
 
 def test_project_tfidf_is_not_trained(registry):
@@ -170,7 +170,8 @@ def test_project_learn(registry, tmpdir):
     tmpdir.join('doc2.tsv').write('<http://example.org/dummy>\tdummy')
 
     project = registry.get_project('dummy-fi')
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), project.subjects)
+    docdir = annif.corpus.DocumentDirectory(
+        str(tmpdir), project.subjects, 'en')
     project.learn(docdir)
     result = project.suggest('this is some text')
     assert len(result) == 1
@@ -187,7 +188,8 @@ def test_project_learn_not_supported(registry, tmpdir):
     tmpdir.join('doc2.tsv').write('<http://example.org/key2>\tkey2')
 
     project = registry.get_project('tfidf-fi')
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), project.subjects)
+    docdir = annif.corpus.DocumentDirectory(
+        str(tmpdir), project.subjects, 'en')
     with pytest.raises(NotSupportedException):
         project.learn(docdir)
 
@@ -195,9 +197,9 @@ def test_project_learn_not_supported(registry, tmpdir):
 def test_project_load_vocabulary_fasttext(registry, subject_file, testdatadir):
     pytest.importorskip("annif.backend.fasttext")
     project = registry.get_project('fasttext-fi')
-    project.vocab.load_vocabulary(subject_file, 'fi')
-    assert testdatadir.join('vocabs/yso/subjects.fi.tsv').exists()
-    assert testdatadir.join('vocabs/yso/subjects.fi.tsv').size() > 0
+    project.vocab.load_vocabulary(subject_file)
+    assert testdatadir.join('vocabs/yso/subjects.csv').exists()
+    assert testdatadir.join('vocabs/yso/subjects.csv').size() > 0
 
 
 def test_project_train_fasttext(registry, document_corpus, testdatadir):

@@ -98,7 +98,7 @@ def test_evaluation_batch(subject_index):
 
     gold_set = annif.corpus.SubjectSet.from_string(
         '<http://www.yso.fi/onto/yso/p10849>\tarkeologit',
-        subject_index)
+        subject_index, 'fi')
     hits1 = annif.suggestion.ListSuggestionResult([
         # subject: archaeologists (yso:p10849)
         annif.suggestion.SubjectSuggestion(

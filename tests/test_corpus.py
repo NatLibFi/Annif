@@ -12,7 +12,7 @@ def test_subjectset_uris(subject_index):
     <http://www.yso.fi/onto/yso/p12738>\tviikinkiaika
     """
 
-    sset = annif.corpus.SubjectSet.from_string(data, subject_index)
+    sset = annif.corpus.SubjectSet.from_string(data, subject_index, 'fi')
     assert len(sset) == 2
     assert subject_index.by_uri("http://www.yso.fi/onto/yso/p2558") in sset
     assert subject_index.by_uri("http://www.yso.fi/onto/yso/p12738") in sset
@@ -23,10 +23,10 @@ def test_subjectset_labels(subject_index):
     viikinkiaika
     """
 
-    sset = annif.corpus.SubjectSet.from_string(data, subject_index)
+    sset = annif.corpus.SubjectSet.from_string(data, subject_index, 'fi')
     assert len(sset) == 2
-    assert subject_index.by_label("rautakausi") in sset
-    assert subject_index.by_label("viikinkiaika") in sset
+    assert subject_index.by_label("rautakausi", 'fi') in sset
+    assert subject_index.by_label("viikinkiaika", 'fi') in sset
 
 
 def test_subjectset_from_list(subject_index):
@@ -86,7 +86,7 @@ def test_docdir_key(tmpdir, subject_index):
     tmpdir.join('doc2.key').write('key2')
     tmpdir.join('doc3.txt').write('doc3')
 
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index)
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index, 'en')
     files = sorted(list(docdir))
     assert len(files) == 3
     assert files[0][0] == str(tmpdir.join('doc1.txt'))
@@ -104,7 +104,7 @@ def test_docdir_tsv(tmpdir, subject_index):
     tmpdir.join('doc2.tsv').write('<http://example.org/key2>\tkey2')
     tmpdir.join('doc3.txt').write('doc3')
 
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index)
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index, 'en')
     files = sorted(list(docdir))
     assert len(files) == 3
     assert files[0][0] == str(tmpdir.join('doc1.txt'))
@@ -123,7 +123,7 @@ def test_docdir_tsv_bom(tmpdir, subject_index):
     tmpdir.join('doc2.tsv').write(
         '<http://www.yso.fi/onto/yso/p2558>\trautakausi'.encode('utf-8-sig'))
 
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index)
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index, 'fi')
     docs = list(docdir.documents)
     assert docs[0].text == 'doc1'
     assert subject_index.by_uri(
@@ -143,7 +143,7 @@ def test_docdir_key_require_subjects(tmpdir, subject_index):
     tmpdir.join('doc3.txt').write('doc3')
 
     docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index,
-                                            require_subjects=True)
+                                            'en', require_subjects=True)
     files = sorted(list(docdir))
     assert len(files) == 2
     assert files[0][0] == str(tmpdir.join('doc1.txt'))
@@ -160,7 +160,7 @@ def test_docdir_tsv_require_subjects(tmpdir, subject_index):
     tmpdir.join('doc3.txt').write('doc3')
 
     docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index,
-                                            require_subjects=True)
+                                            'en', require_subjects=True)
     files = sorted(list(docdir))
     assert len(files) == 2
     assert files[0][0] == str(tmpdir.join('doc1.txt'))
@@ -179,7 +179,7 @@ def test_docdir_tsv_as_doccorpus(tmpdir, subject_index):
     tmpdir.join('doc3.txt').write('doc3')
 
     docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index,
-                                            require_subjects=True)
+                                            'fi', require_subjects=True)
     docs = list(docdir.documents)
     assert len(docs) == 2
     assert docs[0].text == 'doc1'
@@ -200,7 +200,7 @@ def test_docdir_key_as_doccorpus(tmpdir, subject_index):
     tmpdir.join('doc3.txt').write('doc3')
 
     docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index,
-                                            require_subjects=True)
+                                            'fi', require_subjects=True)
     docs = list(docdir.documents)
     assert len(docs) == 2
     assert docs[0].text == 'doc1'
@@ -215,7 +215,7 @@ def test_docdir_key_as_doccorpus(tmpdir, subject_index):
 
 def test_subject_by_uri(subject_index):
     subj_id = subject_index.by_uri('http://www.yso.fi/onto/yso/p7141')
-    assert subject_index[subj_id][1] == 'sinetit'
+    assert subject_index[subj_id].labels['fi'] == 'sinetit'
 
 
 def test_subject_by_uri_missing(subject_index):
@@ -224,12 +224,12 @@ def test_subject_by_uri_missing(subject_index):
 
 
 def test_subject_by_label(subject_index):
-    subj_id = subject_index.by_label('sinetit')
-    assert subject_index[subj_id][0] == 'http://www.yso.fi/onto/yso/p7141'
+    subj_id = subject_index.by_label('sinetit', 'fi')
+    assert subject_index[subj_id].uri == 'http://www.yso.fi/onto/yso/p7141'
 
 
 def test_subject_by_label_missing(subject_index):
-    subj_id = subject_index.by_label('nonexistent')
+    subj_id = subject_index.by_label('nonexistent', 'fi')
     assert subj_id is None
 
 

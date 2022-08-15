@@ -15,9 +15,10 @@ logger = annif.logger
 class DocumentDirectory(DocumentCorpus):
     """A directory of files as a full text document corpus"""
 
-    def __init__(self, path, subject_index, require_subjects=False):
+    def __init__(self, path, subject_index, language, require_subjects=False):
         self.path = path
         self.subject_index = subject_index
+        self.language = language
         self.require_subjects = require_subjects
 
     def __iter__(self):
@@ -45,7 +46,8 @@ class DocumentDirectory(DocumentCorpus):
                 text = docfile.read()
             with open(keyfilename, encoding='utf-8-sig') as keyfile:
                 subjects = SubjectSet.from_string(keyfile.read(),
-                                                  self.subject_index)
+                                                  self.subject_index,
+                                                  self.language)
             yield Document(text=text, subject_set=subjects)
 
 

@@ -42,7 +42,7 @@ def test_hitfilter_zero_score(subject_index):
 def test_hitfilter_list_suggestion_results_with_deprecated_subjects(
         subject_index):
     subject_index.append(Subject(uri='http://example.org/deprecated',
-                                 label=None,
+                                 labels=None,
                                  notation=None))
     suggestions = ListSuggestionResult(
         [
@@ -70,7 +70,7 @@ def test_hitfilter_list_suggestion_results_with_deprecated_subjects(
 def test_hitfilter_vector_suggestion_results_with_deprecated_subjects(
         subject_index):
     subject_index.append(Subject(uri='http://example.org/deprecated',
-                                 label=None,
+                                 labels=None,
                                  notation=None))
     vector = np.ones(len(subject_index))
     suggestions = VectorSuggestionResult(vector)
@@ -116,9 +116,11 @@ def test_list_suggestion_result_vector(subject_index):
     assert len(vector) == len(subject_index)
     assert vector.sum() == 1.5
     for subject_id, score in enumerate(vector):
-        if subject_index[subject_id][1] == 'sinetit':
+        if subject_index[subject_id].labels is None:  # deprecated
+            assert score == 0.0
+        elif subject_index[subject_id].labels['fi'] == 'sinetit':
             assert score == 1.0
-        elif subject_index[subject_id][1] == 'viikingit':
+        elif subject_index[subject_id].labels['fi'] == 'viikingit':
             assert score == 0.5
         else:
             assert score == 0.0
@@ -154,13 +156,19 @@ def test_list_suggestions_vector_enforce_score_range(subject_index):
                 score=-0.5)])
     vector = suggestions.as_vector(len(subject_index))
     assert vector.sum() == 2.5
+    found = 0
     for subject_id, score in enumerate(vector):
-        if subject_index[subject_id][1] == 'sinetit':
+        if subject_index[subject_id].labels is None:
+            continue  # skip deprecated subjects
+        if subject_index[subject_id].labels['fi'] == 'sinetit':
             assert score == 1.0
-        elif subject_index[subject_id][1] == 'viikinkiaika':
+            found += 1
+        elif subject_index[subject_id].labels['fi'] == 'viikinkiaika':
             assert score == 0.0
+            found += 1
         else:
             assert score in (1.0, 0.5, 0.0)
+    assert found == 2
 
 
 def test_list_suggestion_result_vector_destination(subject_index):

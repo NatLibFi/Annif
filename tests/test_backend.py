@@ -34,7 +34,8 @@ def test_learn_dummy(project, tmpdir):
         '<http://www.yso.fi/onto/yso/p10849>\tarchaeologists')
     tmpdir.join('doc2.txt').write('doc2')
     tmpdir.join('doc2.tsv').write('<http://example.org/dummy>\tdummy')
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), project.subjects)
+    docdir = annif.corpus.DocumentDirectory(
+        str(tmpdir), project.subjects, 'en')
 
     dummy.learn(docdir)
 

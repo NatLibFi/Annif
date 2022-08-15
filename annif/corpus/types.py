@@ -25,7 +25,7 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
             return True
 
 
-Subject = collections.namedtuple('Subject', 'uri label notation')
+Subject = collections.namedtuple('Subject', 'uri labels notation')
 
 
 class SubjectCorpus(metaclass=abc.ABCMeta):
@@ -35,4 +35,17 @@ class SubjectCorpus(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def subjects(self):
         """Iterate through the subject corpus, yielding Subject objects."""
+        pass  # pragma: no cover
+
+    @property
+    @abc.abstractmethod
+    def languages(self):
+        """Provide a list of language codes supported by this subject
+        corpus."""
+        pass  # pragma: no cover
+
+    @abc.abstractmethod
+    def save_skos(self, path):
+        """Save the contents of the subject corpus into a SKOS/Turtle
+        file with the given path name."""
         pass  # pragma: no cover
