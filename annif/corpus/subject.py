@@ -160,9 +160,8 @@ class SubjectIndex:
     def save(self, path):
         """Save this subject index into a file with the given path name."""
 
-        fieldnames = ['uri', 'notation']
-        for lang in self._languages:
-            fieldnames.append(f'label_{lang}')
+        fieldnames = ['uri', 'notation'] + \
+            [f'label_{lang}' for lang in self._languages]
 
         with open(path, 'w', encoding='utf-8', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
