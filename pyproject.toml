@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "annif"
+name = "annif-test-pypi"
 version = "0.59.0-dev"
 description = "Automated subject indexing and classification tool"
 authors = ["Osma Suominen <osma.suominen@helsinki.fi>"]
