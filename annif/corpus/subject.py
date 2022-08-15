@@ -3,6 +3,7 @@
 import csv
 import numpy as np
 import annif.util
+import os.path
 from annif import logger
 from .types import Subject, SubjectCorpus
 from .skos import serialize_subjects_to_skos
@@ -57,6 +58,12 @@ class SubjectFileCSV(SubjectCorpus):
             for fname, value in row.items()
             if fname.startswith('label_')
         }
+
+        # if there are no labels in any language, set labels to None
+        # indicating a deprecated subject
+        if set(labels.values()) == {None}:
+            labels = None
+
         yield Subject(uri=annif.util.cleanup_uri(row['uri']),
                       labels=labels,
                       notation=row.get('notation', None) or None)
@@ -84,6 +91,12 @@ class SubjectFileCSV(SubjectCorpus):
         file with the given path name."""
         serialize_subjects_to_skos(self.subjects, path)
 
+    @staticmethod
+    def is_csv_file(path):
+        """return True if the path looks like a CSV file"""
+
+        return os.path.splitext(path)[1].lower() == '.csv'
+
 
 class SubjectIndex:
     """An index that remembers the associations between integers subject IDs
@@ -109,7 +122,7 @@ class SubjectIndex:
         return self._subjects[subject_id]
 
     def append(self, subject):
-        if self._languages is None:
+        if self._languages is None and subject.labels is not None:
             self._languages = list(subject.labels.keys())
 
         subject_id = len(self._subjects)
