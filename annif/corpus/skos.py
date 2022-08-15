@@ -60,15 +60,18 @@ class SubjectFileSKOS(SubjectCorpus):
                                if label.language is not None}
         return self._languages
 
+    def _concept_labels(self, concept):
+        by_lang = self.get_concept_labels(concept,
+                                          self.PREF_LABEL_PROPERTIES)
+        return {lang: by_lang[lang][0] if by_lang[lang]  # correct lang
+                else by_lang[None][0] if by_lang[None]  # no language
+                else self.graph.namespace_manager.qname(concept)
+                for lang in self.languages}
+
     @property
     def subjects(self):
         for concept in self.concepts:
-            by_lang = self.get_concept_labels(concept,
-                                              self.PREF_LABEL_PROPERTIES)
-            labels = {lang: by_lang[lang][0] if by_lang[lang]  # correct lang
-                      else by_lang[None][0] if by_lang[None]  # no language
-                      else self.graph.namespace_manager.qname(concept)
-                      for lang in self.languages}
+            labels = self._concept_labels(concept)
 
             notation = self.graph.value(concept, SKOS.notation, None, any=True)
             if notation is not None:
