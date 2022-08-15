@@ -2,7 +2,12 @@
 name = "annif"
 version = "0.59.0-dev"
 description = "Automated subject indexing and classification tool"
-authors = ["Osma Suominen <osma.suominen@helsinki.fi>"]
+authors = ["National Library of Finland <finto-posti@helsinki.fi>"]
+maintainers = [
+    "Osma Suominen <osma.suominen@helsinki.fi>",
+    "Juho Inkinen <juho.inkinen@helsinki.fi>",
+    "Mona Lehtinen <mona.lehtinen@helsinki.fi>",
+]
 license = "Apache-2.0"
 readme = "README.md"
 homepage = "https://annif.org"
