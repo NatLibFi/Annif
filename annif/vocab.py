@@ -126,10 +126,6 @@ class AnnifVocabulary(DatadirMixin):
         subject_corpus.save_skos(
             os.path.join(self.datadir, self.INDEX_FILENAME_TTL))
 
-    def as_skos_file(self):
-        """return the vocabulary as a file object, in SKOS/Turtle syntax"""
-        return open(os.path.join(self.datadir, self.INDEX_FILENAME_TTL), 'rb')
-
     def as_graph(self):
         """return the vocabulary as an rdflib graph"""
         return self.skos.graph
