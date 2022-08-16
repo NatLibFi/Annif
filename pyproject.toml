@@ -69,7 +69,7 @@ pytest-cov = "*"
 pytest-watch = "*"
 pytest-flask = "*"
 pytest-flake8 = "*"
-flake8 = "<5"
+flake8 = "4.*"
 bumpversion = "*"
 autopep8 = "*"
 
