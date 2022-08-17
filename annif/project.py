@@ -9,7 +9,6 @@ import annif.analyzer
 import annif.corpus
 import annif.suggestion
 import annif.backend
-import annif.vocab
 from annif.datadir import DatadirMixin
 from annif.exception import AnnifException, ConfigurationException, \
     NotSupportedException, NotInitializedException
@@ -155,9 +154,8 @@ class AnnifProject(DatadirMixin):
             if self.vocab_spec is None:
                 raise ConfigurationException("vocab setting is missing",
                                              project_id=self.project_id)
-            self._vocab = annif.vocab.get_vocab(self.vocab_spec,
-                                                self._base_datadir,
-                                                self.language)
+            self._vocab = self.registry.get_vocab(self.vocab_spec,
+                                                  self.language)
 
         return self._vocab
 
