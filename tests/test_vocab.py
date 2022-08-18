@@ -19,9 +19,9 @@ def load_dummy_vocab(tmpdir):
     return vocab
 
 
-def test_get_vocab_invalid():
+def test_get_vocab_invalid(registry):
     with pytest.raises(ValueError) as excinfo:
-        annif.vocab.get_vocab('', None, None)
+        registry.get_vocab('', None)
     assert 'Invalid vocabulary specification' in str(excinfo.value)
 
 
