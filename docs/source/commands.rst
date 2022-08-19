@@ -1,9 +1,11 @@
+.. _my-reference-label:
 ###############################
 Supported CLI commands in Annif
 ###############################
 
 These are the command line commands of Annif, with REST API equivalents when applicable.
 
+Most of these methods take a ``PROJECT_ID`` parameter. Projects are identified by alphanumeric strings ``(A-Za-z0-9_-)``.
 
 .. contents::
    :local:
@@ -36,7 +38,7 @@ REST equivalent::
 
 REST equivalent:::
 
-   GET /projects/<projectid>
+   GET /projects/<PROJECT_ID>
 
 
 .. click:: annif.cli:run_clear_project
@@ -63,7 +65,7 @@ This will continue training an already trained project using all the documents f
 
 REST equivalent::
 
-   POST /projects/<projectid>/learn
+   POST /projects/<PROJECT_ID>/learn
 
 .. click:: annif.cli:run_suggest
    :prog: annif suggest
@@ -72,7 +74,7 @@ This will read a text document from standard input and suggest subjects for it.
 
 REST equivalent::
 
-  POST /projects/<projectid>/suggest
+  POST /projects/<PROJECT_ID>/suggest
 
 .. click:: annif.cli:run_eval
    :prog: annif eval
@@ -97,5 +99,4 @@ REST equivalent: N/A
 
 .. click:: flask.cli:run_command
    :prog: annif run
-
 
