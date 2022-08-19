@@ -4,7 +4,10 @@ Supported CLI commands in Annif
 
 These are the command line commands of Annif, with REST API equivalents when applicable.
 
-Most of these methods take a projectid parameter. Projects are identified by alphanumeric strings ``(A-Za-z0-9_-)``.
+
+.. contents::
+   :local:
+   :backlinks: none
 
 **********************
 Project administration
