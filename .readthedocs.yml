@@ -26,6 +26,10 @@ python:
         - voikko
         - nn
         - omikuji
+        - fasttext
+        - yake
+        - pycld3
+        - spacy
     - requirements: docs/requirements.txt
     - method: setuptools
       path: .
