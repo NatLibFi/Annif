@@ -1,7 +1,6 @@
-.. _my-reference-label:
-###############################
-Supported CLI commands in Annif
-###############################
+############
+CLI commands
+############
 
 These are the command line commands of Annif, with REST API equivalents when applicable.
 
