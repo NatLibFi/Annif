@@ -125,7 +125,7 @@ def backend_param_option(f):
     return click.option(
         '--backend-param', '-b', multiple=True,
         help='Override backend parameter of the config file. ' +
-        'Syntax: "-b <backend>.<parameter>=<value>".')(f)
+        'Syntax: `-b <backend>.<parameter>=<value>`.')(f)
 
 
 @cli.command('list-projects')
@@ -134,6 +134,14 @@ def backend_param_option(f):
 def run_list_projects():
     """
     List available projects.
+    \f
+    REST equivalent::
+
+        GET /projects/
+
+    Show a list of currently defined projects. Projects are defined in a
+    configuration file, normally called ``projects.cfg``. See Project
+    configuration for details
     """
 
     template = "{0: <25}{1: <45}{2: <10}{3: <7}"
@@ -153,6 +161,10 @@ def run_list_projects():
 def run_show_project(project_id):
     """
     Show information about a project.
+    \f
+    REST equivalent::
+
+        GET /projects/<PROJECT_ID>
     """
 
     proj = get_project(project_id)
@@ -170,6 +182,8 @@ def run_show_project(project_id):
 def run_clear_project(project_id):
     """
     Initialize the project to its original, untrained state.
+    \f
+    REST equivalent: N/A
     """
     proj = get_project(project_id)
     proj.remove_model_data()
@@ -185,6 +199,21 @@ def run_clear_project(project_id):
 def run_loadvoc(project_id, force, subjectfile):
     """
     Load a vocabulary for a project.
+    \f
+    This will load the vocabulary to be used in subject indexing. Note that
+    although ``PROJECT_ID`` is a parameter of the command, the vocabulary is
+    shared by all the projects with the same vocab identifier in the project
+    configuration, and the vocabulary only needs to be loaded for one of those
+    projects.
+
+    If a vocabulary has already been loaded, reinvoking loadvoc with a new
+    subject file will update the Annif’s internal vocabulary: label names are
+    updated and any subject not appearing in the new subject file is removed.
+    Note that new subjects will not be suggested before the project is
+    retrained with the updated vocabulary. The update behavior can be
+    overridden with the ``--force`` option.
+
+    REST equivalent: N/A
     """
     proj = get_project(project_id)
     if annif.corpus.SubjectFileSKOS.is_rdf_file(subjectfile):
@@ -216,6 +245,11 @@ def run_loadvoc(project_id, force, subjectfile):
 def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
     """
     Train a project on a collection of documents.
+    \f
+    This will train the project using all the documents from the given
+    directory or TSV file in a single batch operation.
+
+    REST equivalent: N/A
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
@@ -241,6 +275,14 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
 def run_learn(project_id, paths, docs_limit, backend_param):
     """
     Further train an existing project on a collection of documents.
+    \f
+    This will continue training an already trained project using all the
+    documents from the given directory or TSV file in a single batch operation.
+    Not supported by all backends.
+
+    REST equivalent::
+
+         /projects/<PROJECT_ID>/learn
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
@@ -258,6 +300,13 @@ def run_learn(project_id, paths, docs_limit, backend_param):
 def run_suggest(project_id, limit, threshold, backend_param):
     """
     Suggest subjects for a single document from standard input.
+    \f
+    This will read a text document from standard input and suggest subjects for
+    it.
+
+    REST equivalent::
+
+        POST /projects/<PROJECT_ID>/suggest
     """
     project = get_project(project_id)
     text = sys.stdin.read()
@@ -294,6 +343,8 @@ def run_index(project_id, directory, suffix, force,
     """
     Index a directory with documents, suggesting subjects for each document.
     Write the results in TSV files with the given suffix.
+    \f
+    REST equivalent: N/A
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
@@ -371,10 +422,17 @@ def run_eval(
         backend_param):
     """
     Analyze documents and evaluate the result.
+    \f
+    Compare the results of automated indexing against a gold standard. The path
+    may be either a TSV file with short documents or a directory with documents
+    in separate files. You need to supply the documents in one of the supported
+    Document corpus formats, i.e. either as a directory or as a TSV file. It is
+    possible to give multiple corpora (even mixing corpus formats), in which
+    case they will all be processed in the same run.
 
-    Compare the results of automated indexing against a gold standard. The
-    path may be either a TSV file with short documents or a directory with
-    documents in separate files.
+    The output is a list of statistical measures.
+
+    REST equivalent: N/A
     """
 
     project = get_project(project_id)
@@ -430,10 +488,21 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     """
     Analyze documents, testing multiple limits and thresholds.
 
-    Evaluate the analysis results for a directory with documents against a
-    gold standard given in subject files. Test different limit/threshold
-    values and report the precision, recall and F-measure of each combination
-    of settings.
+    Evaluate the analysis results for a directory with documents against a gold
+    standard given in subject files. Test different limit/threshold values and
+    report the precision, recall and F-measure of each combination of settings.
+    \f
+    As with eval, you need to supply the documents in one of the supported
+    Document corpus formats. This command will read each document, assign
+    subjects to it using different limit and threshold values, and compare the
+    results with the gold standard subjects.
+
+    The output is a list of parameter combinations and their scores. From the
+    output, you can determine the optimum limit and threshold parameters
+    depending on which measure you want to target.
+
+    REST equivalent: N/A
+
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
@@ -520,6 +589,8 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric,
                  results_file):
     """
     Optimize the hyperparameters of a project using a validation corpus.
+    \f
+    REST equivalent: N/A
     """
     proj = get_project(project_id)
     documents = open_documents(paths, proj.subjects,
