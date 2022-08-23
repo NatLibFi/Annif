@@ -76,6 +76,11 @@ REST equivalent: N/A
 
 REST equivalent: N/A
 
+.. click:: annif.cli:run_hyperopt
+   :prog: annif hyperopt
+
+REST equivalent: N/A
+
 .. click:: flask.cli:run_command
    :prog: annif run
 
