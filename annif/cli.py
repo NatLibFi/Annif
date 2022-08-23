@@ -135,10 +135,6 @@ def run_list_projects():
     """
     List available projects.
     \f
-    REST equivalent::
-
-        GET /projects/
-
     Show a list of currently defined projects. Projects are defined in a
     configuration file, normally called ``projects.cfg``. See Project
     configuration for details
@@ -161,10 +157,6 @@ def run_list_projects():
 def run_show_project(project_id):
     """
     Show information about a project.
-    \f
-    REST equivalent::
-
-        GET /projects/<PROJECT_ID>
     """
 
     proj = get_project(project_id)
@@ -182,8 +174,6 @@ def run_show_project(project_id):
 def run_clear_project(project_id):
     """
     Initialize the project to its original, untrained state.
-    \f
-    REST equivalent: N/A
     """
     proj = get_project(project_id)
     proj.remove_model_data()
@@ -212,8 +202,6 @@ def run_loadvoc(project_id, force, subjectfile):
     Note that new subjects will not be suggested before the project is
     retrained with the updated vocabulary. The update behavior can be
     overridden with the ``--force`` option.
-
-    REST equivalent: N/A
     """
     proj = get_project(project_id)
     if annif.corpus.SubjectFileSKOS.is_rdf_file(subjectfile):
@@ -248,8 +236,6 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
     \f
     This will train the project using all the documents from the given
     directory or TSV file in a single batch operation.
-
-    REST equivalent: N/A
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
@@ -279,10 +265,6 @@ def run_learn(project_id, paths, docs_limit, backend_param):
     This will continue training an already trained project using all the
     documents from the given directory or TSV file in a single batch operation.
     Not supported by all backends.
-
-    REST equivalent::
-
-         /projects/<PROJECT_ID>/learn
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
@@ -303,10 +285,6 @@ def run_suggest(project_id, limit, threshold, backend_param):
     \f
     This will read a text document from standard input and suggest subjects for
     it.
-
-    REST equivalent::
-
-        POST /projects/<PROJECT_ID>/suggest
     """
     project = get_project(project_id)
     text = sys.stdin.read()
@@ -343,8 +321,6 @@ def run_index(project_id, directory, suffix, force,
     """
     Index a directory with documents, suggesting subjects for each document.
     Write the results in TSV files with the given suffix.
-    \f
-    REST equivalent: N/A
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
@@ -431,8 +407,6 @@ def run_eval(
     case they will all be processed in the same run.
 
     The output is a list of statistical measures.
-
-    REST equivalent: N/A
     """
 
     project = get_project(project_id)
@@ -500,9 +474,6 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     The output is a list of parameter combinations and their scores. From the
     output, you can determine the optimum limit and threshold parameters
     depending on which measure you want to target.
-
-    REST equivalent: N/A
-
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
@@ -589,8 +560,6 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric,
                  results_file):
     """
     Optimize the hyperparameters of a project using a validation corpus.
-    \f
-    REST equivalent: N/A
     """
     proj = get_project(project_id)
     documents = open_documents(paths, proj.subjects,
