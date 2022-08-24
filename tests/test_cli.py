@@ -26,7 +26,7 @@ def test_list_projects():
     # hidden project should be visible
     assert 'dummy-en' in result.output
     # private project should be visible
-    assert 'dummydummy' in result.output
+    assert 'dummy-private' in result.output
     # project with no access setting should be visible
     assert 'ensemble' in result.output
 
@@ -355,7 +355,19 @@ def test_suggest():
         ['suggest', 'dummy-fi'],
         input='kissa')
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy\t1.0\n"
+    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+    assert result.exit_code == 0
+
+
+def test_suggest_with_different_vocab_language():
+    # project language is English - input should be in English
+    # vocab language is Finnish - subject labels should be in Finnish
+    result = runner.invoke(
+        annif.cli.cli,
+        ['suggest', 'dummy-vocablang'],
+        input='the cat sat on the mat')
+    assert not result.exception
+    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
     assert result.exit_code == 0
 
 
@@ -366,7 +378,7 @@ def test_suggest_with_notations():
          '--backend-param', 'dummy.uri=http://example.org/none', 'dummy-fi'],
         input='kissa')
     assert not result.exception
-    assert result.output == "<http://example.org/none>\tnone\t42.42\t1.0\n"
+    assert result.output == "<http://example.org/none>\tnone-fi\t42.42\t1.0\n"
     assert result.exit_code == 0
 
 
@@ -387,7 +399,7 @@ def test_suggest_param():
         ['suggest', '--backend-param', 'dummy.score=0.8', 'dummy-fi'],
         input='kissa')
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy\t0.8\n"
+    assert result.output == "<http://example.org/dummy>\tdummy-fi\t0.8\n"
     assert result.exit_code == 0
 
 
@@ -438,7 +450,7 @@ def test_index(tmpdir):
     assert tmpdir.join('doc1.annif').exists()
     assert "Not overwriting" not in result.output
     assert tmpdir.join('doc1.annif').read_text(
-        'utf-8') == "<http://example.org/dummy>\tdummy\t1.0\n"
+        'utf-8') == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
 
 
 def test_index_nonexistent_path():
@@ -777,7 +789,7 @@ def test_hyperopt_ensemble(tmpdir):
     assert result.exit_code == 0
 
     assert re.search(
-        r'sources=dummy-en:0.\d+,dummydummy:0.\d+',
+        r'sources=dummy-en:0.\d+,dummy-private:0.\d+',
         result.output) is not None
 
 
@@ -800,7 +812,7 @@ def test_hyperopt_ensemble_resultsfile(tmpdir):
         assert header.strip('\n') == '\t'.join(['trial',
                                                 'value',
                                                 'dummy-en',
-                                                'dummydummy'])
+                                                'dummy-private'])
         for idx, line in enumerate(f):
             assert line.strip() != ''
             parts = line.split('\t')

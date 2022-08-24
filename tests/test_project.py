@@ -38,16 +38,26 @@ def test_get_project_fi(registry):
     assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
 
 
-def test_get_project_dummydummy(registry):
-    project = registry.get_project('dummydummy')
-    assert project.project_id == 'dummydummy'
+def test_get_project_dummy_private(registry):
+    project = registry.get_project('dummy-private')
+    assert project.project_id == 'dummy-private'
+    assert project.language == 'en'
+    assert project.analyzer.name == 'snowball'
+    assert project.analyzer.param == 'english'
+    assert project.access == Access.private
+    assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
+
+
+def test_get_project_dummy_vocablang(registry):
+    project = registry.get_project('dummy-vocablang')
+    assert project.project_id == 'dummy-vocablang'
     assert project.language == 'en'
     assert project.analyzer.name == 'snowball'
     assert project.analyzer.param == 'english'
     # project uses the dummy vocab, with language overridden to Finnish
     assert project.vocab.vocab_id == 'dummy'
     assert project.vocab.language == 'fi'
-    assert project.access == Access.private
+    assert project.access == Access.public
     assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
 
 
@@ -220,18 +230,8 @@ def test_project_suggest(registry):
     assert hits[0].score == 1.0
 
 
-def test_project_suggest_combine(registry):
-    project = registry.get_project('dummydummy')
-    result = project.suggest('this is some text')
-    assert len(result) == 1
-    hits = result.as_list()
-    assert hits[0].subject_id == project.subjects.by_uri(
-        'http://example.org/dummy')
-    assert hits[0].score == 1.0
-
-
 def test_project_train_state_not_available(registry, caplog):
-    project = registry.get_project('dummydummy')
+    project = registry.get_project('dummy-vocablang')
     project.backend.is_trained = None
     with caplog.at_level(logging.WARNING):
         result = project.suggest('this is some text')
@@ -285,7 +285,7 @@ def test_project_directory():
     app = annif.create_app(
         config_name='annif.default_config.TestingDirectoryConfig')
     with app.app_context():
-        assert len(annif.registry.get_projects()) == 16 + 2
+        assert len(annif.registry.get_projects()) == 17 + 2
         assert annif.registry.get_project('dummy-fi').project_id == 'dummy-fi'
         assert annif.registry.get_project('dummy-fi-toml').project_id \
             == 'dummy-fi-toml'
