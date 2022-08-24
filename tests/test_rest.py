@@ -12,7 +12,7 @@ def test_rest_list_projects(app):
         # hidden project should not be returned
         assert 'dummy-en' not in project_ids
         # private project should not be returned
-        assert 'dummy-vocablang' not in project_ids
+        assert 'dummy-private' not in project_ids
         # project with no access level setting should be returned
         assert 'ensemble' in project_ids
 
@@ -34,7 +34,7 @@ def test_rest_show_project_hidden(app):
 def test_rest_show_project_private(app):
     # private projects should not be accessible via REST
     with app.app_context():
-        result = annif.rest.show_project('dummy-vocablang')
+        result = annif.rest.show_project('dummy-private')
         assert result.status_code == 404
 
 
@@ -70,7 +70,7 @@ def test_rest_suggest_private(app):
     # private projects should not be accessible via REST
     with app.app_context():
         result = annif.rest.suggest(
-            'dummy-vocablang',
+            'dummy-private',
             text='example text',
             limit=10,
             threshold=0.0)

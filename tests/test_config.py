@@ -48,7 +48,7 @@ def test_find_config_not_exists_default(monkeypatch, caplog):
 def test_parse_config_cfg_nondefault():
     cfg = annif.config.parse_config('tests/projects.cfg')
     assert isinstance(cfg, annif.config.AnnifConfigCFG)
-    assert len(cfg.project_ids) == 16
+    assert len(cfg.project_ids) == 17
     assert cfg['dummy-fi'] is not None
 
 
@@ -57,7 +57,7 @@ def test_parse_config_cfg_default(monkeypatch):
     monkeypatch.chdir('tests')
     cfg = annif.config.parse_config('')
     assert isinstance(cfg, annif.config.AnnifConfigCFG)
-    assert len(cfg.project_ids) == 16
+    assert len(cfg.project_ids) == 17
     assert cfg['dummy-fi'] is not None
 
 
@@ -79,7 +79,7 @@ def test_parse_config_toml_failed(tmpdir):
 def test_parse_config_directory():
     cfg = annif.config.parse_config('tests/projects.d')
     assert isinstance(cfg, annif.config.AnnifConfigDirectory)
-    assert len(cfg.project_ids) == 16 + 2  # projects.cfg + projects.toml
+    assert len(cfg.project_ids) == 17 + 2  # projects.cfg + projects.toml
     assert cfg['dummy-fi'] is not None
     assert cfg['dummy-fi-toml'] is not None
 

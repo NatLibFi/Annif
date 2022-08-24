@@ -26,7 +26,7 @@ def test_list_projects():
     # hidden project should be visible
     assert 'dummy-en' in result.output
     # private project should be visible
-    assert 'dummy-vocablang' in result.output
+    assert 'dummy-private' in result.output
     # project with no access setting should be visible
     assert 'ensemble' in result.output
 
@@ -777,7 +777,7 @@ def test_hyperopt_ensemble(tmpdir):
     assert result.exit_code == 0
 
     assert re.search(
-        r'sources=dummy-en:0.\d+,dummy-vocablang:0.\d+',
+        r'sources=dummy-en:0.\d+,dummy-private:0.\d+',
         result.output) is not None
 
 
@@ -800,7 +800,7 @@ def test_hyperopt_ensemble_resultsfile(tmpdir):
         assert header.strip('\n') == '\t'.join(['trial',
                                                 'value',
                                                 'dummy-en',
-                                                'dummy-vocablang'])
+                                                'dummy-private'])
         for idx, line in enumerate(f):
             assert line.strip() != ''
             parts = line.split('\t')
