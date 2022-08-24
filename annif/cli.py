@@ -136,8 +136,10 @@ def run_list_projects():
     List available projects.
     \f
     Show a list of currently defined projects. Projects are defined in a
-    configuration file, normally called ``projects.cfg``. See Project
-    configuration for details
+    configuration file, normally called ``projects.cfg``. See `Project
+    configuration
+    <https://github.com/NatLibFi/Annif/wiki/Project-configuration>`_
+    for details.
     """
 
     template = "{0: <25}{1: <45}{2: <10}{3: <7}"
@@ -234,8 +236,12 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
     """
     Train a project on a collection of documents.
     \f
-    This will train the project using all the documents from the given
-    directory or TSV file in a single batch operation.
+    This will train the project using the documents from all TSV files
+    (possibly gzipped) or directories given by ``PATHS`` in a single batch
+    operation, or if ``--cached`` is set, reuse preprocessed training data from
+    the previous run. See `Reusing preprocessed training data
+    <https://github.com/NatLibFi/Annif/wiki/
+    Reusing-preprocessed-training-data>`_.
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
@@ -262,9 +268,9 @@ def run_learn(project_id, paths, docs_limit, backend_param):
     """
     Further train an existing project on a collection of documents.
     \f
-    This will continue training an already trained project using all the
-    documents from the given directory or TSV file in a single batch operation.
-    Not supported by all backends.
+    This will continue training an already trained project using the documents
+    from all TSV files (possibly gzipped) or directories given by ``PATHS`` in
+    a single batch operation. Not supported by all backends.
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
@@ -320,7 +326,7 @@ def run_index(project_id, directory, suffix, force,
               limit, threshold, backend_param):
     """
     Index a directory with documents, suggesting subjects for each document.
-    Write the results in TSV files with the given suffix.
+    Write the results in TSV files with the given suffix (default ``.annif``).
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
@@ -397,16 +403,17 @@ def run_eval(
         jobs,
         backend_param):
     """
-    Analyze documents and evaluate the result.
+    Suggest subjects for documents and evaluate the results by comparing
+    against a gold standard.
     \f
-    Compare the results of automated indexing against a gold standard. The path
-    may be either a TSV file with short documents or a directory with documents
-    in separate files. You need to supply the documents in one of the supported
-    Document corpus formats, i.e. either as a directory or as a TSV file. It is
-    possible to give multiple corpora (even mixing corpus formats), in which
-    case they will all be processed in the same run.
+    With this command the documents from the TSV files (possibly gzipped) or
+    directories given by ``PATHS`` will be assigned subject suggestions and
+    then statistical measures are calculated that quantify how well the
+    suggested subjects match the gold-standard subjects in the documents.
 
-    The output is a list of statistical measures.
+    Normally the output is the list of the metrics calculated across documents.
+    If ``--results-file <FILENAME>`` option is given, the metrics are
+    calculated separately for each subject, and written to the given file.
     """
 
     project = get_project(project_id)
@@ -460,20 +467,14 @@ def run_eval(
 @common_options
 def run_optimize(project_id, paths, docs_limit, backend_param):
     """
-    Analyze documents, testing multiple limits and thresholds.
-
-    Evaluate the analysis results for a directory with documents against a gold
-    standard given in subject files. Test different limit/threshold values and
-    report the precision, recall and F-measure of each combination of settings.
+    Suggest subjects for documents, testing multiple limits and thresholds.
     \f
-    As with eval, you need to supply the documents in one of the supported
-    Document corpus formats. This command will read each document, assign
-    subjects to it using different limit and threshold values, and compare the
-    results with the gold standard subjects.
-
-    The output is a list of parameter combinations and their scores. From the
-    output, you can determine the optimum limit and threshold parameters
-    depending on which measure you want to target.
+    This command will use different limit (maximum number of subjects) and
+    score threshold values when assigning subjects to each document given by
+    ``PATHS`` and compare the results against the gold standard subjects in the
+    documents. The output is a list of parameter combinations and their scores.
+    From the output, you can determine the optimum limit and threshold
+    parameters depending on which measure you want to target.
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
@@ -559,7 +560,8 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
 def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric,
                  results_file):
     """
-    Optimize the hyperparameters of a project using a validation corpus.
+    Optimize the hyperparameters of a project using a validation corpus. Not
+    supported by all backends.
     """
     proj = get_project(project_id)
     documents = open_documents(paths, proj.subjects,
