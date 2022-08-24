@@ -38,9 +38,9 @@ def test_get_project_fi(registry):
     assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
 
 
-def test_get_project_dummydummy(registry):
-    project = registry.get_project('dummydummy')
-    assert project.project_id == 'dummydummy'
+def test_get_project_dummy_vocablang(registry):
+    project = registry.get_project('dummy-vocablang')
+    assert project.project_id == 'dummy-vocablang'
     assert project.language == 'en'
     assert project.analyzer.name == 'snowball'
     assert project.analyzer.param == 'english'
@@ -220,18 +220,8 @@ def test_project_suggest(registry):
     assert hits[0].score == 1.0
 
 
-def test_project_suggest_combine(registry):
-    project = registry.get_project('dummydummy')
-    result = project.suggest('this is some text')
-    assert len(result) == 1
-    hits = result.as_list()
-    assert hits[0].subject_id == project.subjects.by_uri(
-        'http://example.org/dummy')
-    assert hits[0].score == 1.0
-
-
 def test_project_train_state_not_available(registry, caplog):
-    project = registry.get_project('dummydummy')
+    project = registry.get_project('dummy-vocablang')
     project.backend.is_trained = None
     with caplog.at_level(logging.WARNING):
         result = project.suggest('this is some text')
