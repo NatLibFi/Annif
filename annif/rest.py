@@ -75,7 +75,7 @@ def suggest(project_id, text, limit, threshold):
         return server_error(err)
     hits = hit_filter(result).as_list()
     return {'results': [_suggestion_to_dict(hit, project.subjects,
-                                            project.language)
+                                            project.vocab.language)
                         for hit in hits]}
 
 

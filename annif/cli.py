@@ -226,7 +226,7 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
         documents = 'cached'
     else:
         documents = open_documents(paths, proj.subjects,
-                                   proj.language, docs_limit)
+                                   proj.vocab.language, docs_limit)
     proj.train(documents, backend_params, jobs)
 
 
@@ -245,7 +245,7 @@ def run_learn(project_id, paths, docs_limit, backend_param):
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
     documents = open_documents(paths, proj.subjects,
-                               proj.language, docs_limit)
+                               proj.vocab.language, docs_limit)
     proj.learn(documents, backend_params)
 
 
@@ -270,7 +270,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
             "<{}>\t{}\t{}".format(
                 subj.uri,
                 '\t'.join(filter(None,
-                                 (subj.labels[project.language],
+                                 (subj.labels[project.vocab.language],
                                   subj.notation))),
                 hit.score))
 
@@ -392,7 +392,7 @@ def run_eval(
             raise NotSupportedException(
                 "cannot open results-file for writing: " + str(e))
     docs = open_documents(paths, project.subjects,
-                          project.language, docs_limit)
+                          project.vocab.language, docs_limit)
 
     jobs, pool_class = annif.parallel.get_pool(jobs)
 
@@ -409,7 +409,7 @@ def run_eval(
     template = "{0:<30}\t{1}"
     metrics = eval_batch.results(metrics=metric,
                                  results_file=results_file,
-                                 language=project.language)
+                                 language=project.vocab.language)
     for metric, score in metrics.items():
         click.echo(template.format(metric + ":", score))
     if metrics_file:
@@ -442,7 +442,7 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
 
     ndocs = 0
     docs = open_documents(paths, project.subjects,
-                          project.language, docs_limit)
+                          project.vocab.language, docs_limit)
     for doc in docs.documents:
         raw_hits = project.suggest(doc.text, backend_params)
         hits = raw_hits.filter(project.subjects, limit=BATCH_MAX_LIMIT)
@@ -523,7 +523,7 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric,
     """
     proj = get_project(project_id)
     documents = open_documents(paths, proj.subjects,
-                               proj.language, docs_limit)
+                               proj.vocab.language, docs_limit)
     click.echo(f"Looking for optimal hyperparameters using {trials} trials")
     rec = proj.hyperopt(documents, trials, jobs, metric, results_file)
     click.echo(f"Got best {metric} score {rec.score:.4f} with:")

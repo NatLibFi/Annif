@@ -97,6 +97,18 @@ def test_rest_suggest_novocab(app):
         assert result.status_code == 503
 
 
+def test_rest_suggest_with_different_vocab_language(app):
+    # project language is English - input should be in English
+    # vocab language is Finnish - subject labels should be in Finnish
+    with app.app_context():
+        result = annif.rest.suggest(
+            'dummy-vocablang',
+            text='example text',
+            limit=10,
+            threshold=0.0)
+        assert result['results'][0]['label'] == 'dummy-fi'
+
+
 def test_rest_suggest_with_notations(app):
     with app.app_context():
         result = annif.rest.suggest(
