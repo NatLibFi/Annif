@@ -31,6 +31,7 @@ class AnnifProject(DatadirMixin):
     _analyzer = None
     _backend = None
     _vocab = None
+    _vocab_lang = None
     initialized = False
 
     # default values for configuration settings
@@ -148,16 +149,24 @@ class AnnifProject(DatadirMixin):
                     backend_id)
         return self._backend
 
+    def _initialize_vocab(self):
+        if self.vocab_spec is None:
+            raise ConfigurationException("vocab setting is missing",
+                                         project_id=self.project_id)
+        self._vocab, self._vocab_lang = self.registry.get_vocab(
+            self.vocab_spec, self.language)
+
     @property
     def vocab(self):
         if self._vocab is None:
-            if self.vocab_spec is None:
-                raise ConfigurationException("vocab setting is missing",
-                                             project_id=self.project_id)
-            self._vocab = self.registry.get_vocab(self.vocab_spec,
-                                                  self.language)
-
+            self._initialize_vocab()
         return self._vocab
+
+    @property
+    def vocab_lang(self):
+        if self._vocab_lang is None:
+            self._initialize_vocab()
+        return self._vocab_lang
 
     @property
     def subjects(self):

@@ -71,8 +71,10 @@ class AnnifRegistry:
             raise ValueError("No such project {}".format(project_id))
 
     def get_vocab(self, vocab_spec, default_language):
-        """Return an AnnifVocabulary corresponding to the vocab_spec. If no
-        language information is specified, use the given default language."""
+        """Return an (AnnifVocabulary, language) pair corresponding to the
+        vocab_spec. If no language information is specified, use the given
+        default language."""
+
         match = re.match(r'(\w+)(\((.*)\))?', vocab_spec)
         if match is None:
             raise ValueError(
@@ -84,8 +86,8 @@ class AnnifRegistry:
 
         if vocab_key not in self._vocabs[self._rid]:
             self._vocabs[self._rid][vocab_key] = AnnifVocabulary(
-                vocab_id, self._datadir, language)
-        return self._vocabs[self._rid][vocab_key]
+                vocab_id, self._datadir)
+        return self._vocabs[self._rid][vocab_key], language
 
 
 def initialize_projects(app):

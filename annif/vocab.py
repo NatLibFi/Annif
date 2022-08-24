@@ -22,10 +22,9 @@ class AnnifVocabulary(DatadirMixin):
     INDEX_FILENAME_TTL = "subjects.ttl"
     INDEX_FILENAME_CSV = "subjects.csv"
 
-    def __init__(self, vocab_id, datadir, language):
+    def __init__(self, vocab_id, datadir):
         DatadirMixin.__init__(self, datadir, 'vocabs', vocab_id)
         self.vocab_id = vocab_id
-        self.language = language
         self._skos_vocab = None
 
     def _create_subject_index(self, subject_corpus):
