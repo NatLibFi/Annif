@@ -112,16 +112,6 @@ def test_clear_project_nonexistent_data(testdatadir, caplog):
     assert expected_msg == caplog.records[0].message
 
 
-def test_list_vocabs():
-    result = runner.invoke(annif.cli.cli, ["list-vocabs"])
-    assert not result.exception
-    assert result.exit_code == 0
-    assert re.search(r'^dummy\s+en,fi\s+2\s+True',
-                     result.output, re.MULTILINE)
-    assert re.search(r'^yso\s+en,fi,sv\s+130\s+True',
-                     result.output, re.MULTILINE)
-
-
 def test_loadvoc_csv(testdatadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('vocabs/yso/subjects.csv')))
@@ -235,6 +225,138 @@ def test_loadvoc_nonexistent_path():
     assert failed_result.exit_code != 0
     assert "Invalid value for 'SUBJECTFILE': " \
            "File 'nonexistent_path' does not exist." in failed_result.output
+
+
+def test_load_vocab_csv(testdatadir):
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.csv')))
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.ttl')))
+    subjectfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'subjects.csv')
+    result = runner.invoke(annif.cli.cli,
+                           ['load-vocab', 'yso', subjectfile])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert testdatadir.join('vocabs/yso/subjects.csv').exists()
+    assert testdatadir.join('vocabs/yso/subjects.csv').size() > 0
+    assert testdatadir.join('vocabs/yso/subjects.ttl').exists()
+    assert testdatadir.join('vocabs/yso/subjects.ttl').size() > 0
+    assert testdatadir.join('vocabs/yso/subjects.dump.gz').exists()
+    assert testdatadir.join('vocabs/yso/subjects.dump.gz').size() > 0
+
+
+def test_load_vocab_tsv(testdatadir):
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.csv')))
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.ttl')))
+    subjectfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'subjects.tsv')
+    result = runner.invoke(annif.cli.cli,
+                           ['load-vocab', '--language', 'fi',
+                            'yso', subjectfile])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert testdatadir.join('vocabs/yso/subjects.csv').exists()
+    assert testdatadir.join('vocabs/yso/subjects.csv').size() > 0
+    assert testdatadir.join('vocabs/yso/subjects.ttl').exists()
+    assert testdatadir.join('vocabs/yso/subjects.ttl').size() > 0
+    assert testdatadir.join('vocabs/yso/subjects.dump.gz').exists()
+    assert testdatadir.join('vocabs/yso/subjects.dump.gz').size() > 0
+
+
+def test_load_vocab_tsv_with_bom(testdatadir):
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.csv')))
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.ttl')))
+    subjectfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'subjects-bom.tsv')
+    result = runner.invoke(annif.cli.cli,
+                           ['load-vocab', '--language', 'fi',
+                            'yso', subjectfile])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert testdatadir.join('vocabs/yso/subjects.csv').exists()
+    assert testdatadir.join('vocabs/yso/subjects.csv').size() > 0
+    assert testdatadir.join('vocabs/yso/subjects.ttl').exists()
+    assert testdatadir.join('vocabs/yso/subjects.ttl').size() > 0
+    assert testdatadir.join('vocabs/yso/subjects.dump.gz').exists()
+    assert testdatadir.join('vocabs/yso/subjects.dump.gz').size() > 0
+
+
+def test_load_vocab_rdf(testdatadir):
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.csv')))
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.ttl')))
+    subjectfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'yso-archaeology.rdf')
+    result = runner.invoke(annif.cli.cli,
+                           ['load-vocab', 'yso', subjectfile])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert testdatadir.join('vocabs/yso/subjects.csv').exists()
+    assert testdatadir.join('vocabs/yso/subjects.csv').size() > 0
+    assert testdatadir.join('vocabs/yso/subjects.ttl').exists()
+    assert testdatadir.join('vocabs/yso/subjects.ttl').size() > 0
+    assert testdatadir.join('vocabs/yso/subjects.dump.gz').exists()
+    assert testdatadir.join('vocabs/yso/subjects.dump.gz').size() > 0
+
+
+def test_load_vocab_ttl(testdatadir):
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.csv')))
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.ttl')))
+    subjectfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'yso-archaeology.ttl')
+    result = runner.invoke(annif.cli.cli,
+                           ['load-vocab', 'yso', subjectfile])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert testdatadir.join('vocabs/yso/subjects.csv').exists()
+    assert testdatadir.join('vocabs/yso/subjects.csv').size() > 0
+    assert testdatadir.join('vocabs/yso/subjects.ttl').exists()
+    assert testdatadir.join('vocabs/yso/subjects.ttl').size() > 0
+    assert testdatadir.join('vocabs/yso/subjects.dump.gz').exists()
+    assert testdatadir.join('vocabs/yso/subjects.dump.gz').size() > 0
+
+
+def test_load_vocab_nonexistent_path():
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'load-vocab', 'dummy', 'nonexistent_path'])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "Invalid value for 'SUBJECTFILE': " \
+           "File 'nonexistent_path' does not exist." in failed_result.output
+
+
+def test_list_vocabs():
+    result = runner.invoke(annif.cli.cli, ["list-vocabs"])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert re.search(r'^dummy\s+en,fi\s+2\s+True',
+                     result.output, re.MULTILINE)
+    assert re.search(r'^yso\s+en,fi,sv\s+130\s+True',
+                     result.output, re.MULTILINE)
 
 
 def test_train(testdatadir):
