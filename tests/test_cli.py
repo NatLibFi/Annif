@@ -112,6 +112,16 @@ def test_clear_project_nonexistent_data(testdatadir, caplog):
     assert expected_msg == caplog.records[0].message
 
 
+def test_list_vocabs():
+    result = runner.invoke(annif.cli.cli, ["list-vocabs"])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert re.search(r'^dummy\s+en,fi\s+2\s+True',
+                     result.output, re.MULTILINE)
+    assert re.search(r'^yso\s+en,fi,sv\s+130\s+True',
+                     result.output, re.MULTILINE)
+
+
 def test_loadvoc_csv(testdatadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('vocabs/yso/subjects.csv')))
