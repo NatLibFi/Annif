@@ -114,9 +114,9 @@ def test_clear_project_nonexistent_data(testdatadir, caplog):
 
 def test_loadvoc_csv(testdatadir):
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.csv')))
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.csv')))
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.ttl')))
     subjectfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
@@ -135,9 +135,9 @@ def test_loadvoc_csv(testdatadir):
 
 def test_loadvoc_tsv(testdatadir):
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.csv')))
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.csv')))
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.ttl')))
     subjectfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
@@ -156,9 +156,9 @@ def test_loadvoc_tsv(testdatadir):
 
 def test_loadvoc_tsv_with_bom(testdatadir):
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.csv')))
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.csv')))
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.ttl')))
     subjectfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
@@ -177,9 +177,9 @@ def test_loadvoc_tsv_with_bom(testdatadir):
 
 def test_loadvoc_rdf(testdatadir):
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.csv')))
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.csv')))
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.ttl')))
     subjectfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
@@ -198,9 +198,9 @@ def test_loadvoc_rdf(testdatadir):
 
 def test_loadvoc_ttl(testdatadir):
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.csv')))
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.csv')))
     with contextlib.suppress(FileNotFoundError):
-        os.remove(str(testdatadir.join('projects/tfidf-fi/subjects.ttl')))
+        os.remove(str(testdatadir.join('vocabs/yso/subjects.ttl')))
     subjectfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
