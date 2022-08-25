@@ -50,7 +50,6 @@ yso:p9285
     subjects = list(corpus.subjects)
     assert len(subjects) == 1  # one of the concepts was deprecated
     assert subjects[0].uri == 'http://www.yso.fi/onto/yso/p8993'
-    print(subjects[0].labels)
     assert subjects[0].labels['fi'] == 'hylyt'
     assert subjects[0].notation is None
 
