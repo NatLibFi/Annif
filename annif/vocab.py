@@ -97,6 +97,13 @@ class AnnifVocabulary(DatadirMixin):
 
         raise NotInitializedException(f'graph file {path} not found')
 
+    def __len__(self):
+        return len(self.subjects)
+
+    @property
+    def languages(self):
+        return self.subjects.languages
+
     def load_vocabulary(self, subject_corpus, force=False):
         """Load subjects from a subject corpus and save them into one
         or more subject index files as well as a SKOS/Turtle file for later

@@ -19,6 +19,7 @@ import annif.registry
 from annif.project import Access
 from annif.suggestion import SuggestionFilter, ListSuggestionResult
 from annif.exception import ConfigurationException, NotSupportedException
+from annif.exception import NotInitializedException
 from annif.util import metric_code
 
 logger = annif.logger
@@ -37,6 +38,20 @@ def get_project(project_id):
     except ValueError:
         click.echo(
             "No projects found with id \'{0}\'.".format(project_id),
+            err=True)
+        sys.exit(1)
+
+
+def get_vocab(vocab_id):
+    """
+    Helper function to get a vocabulary by ID and bail out if it doesn't
+    exist"""
+    try:
+        return annif.registry.get_vocab(vocab_id,
+                                        min_access=Access.private)
+    except ValueError:
+        click.echo(
+            f"No vocabularies found with the id '{vocab_id}'.",
             err=True)
         sys.exit(1)
 
@@ -160,6 +175,8 @@ def run_show_project(project_id):
     click.echo(f'Project ID:        {proj.project_id}')
     click.echo(f'Project Name:      {proj.name}')
     click.echo(f'Language:          {proj.language}')
+    click.echo(f'Vocabulary:        {proj.vocab.vocab_id}')
+    click.echo(f'Vocab language:    {proj.vocab_lang}')
     click.echo(f'Access:            {proj.access.name}')
     click.echo(f'Trained:           {proj.is_trained}')
     click.echo(f'Modification time: {proj.modification_time}')
@@ -176,7 +193,34 @@ def run_clear_project(project_id):
     proj.remove_model_data()
 
 
-@cli.command('loadvoc')
+@cli.command('list-vocabs')
+@common_options
+@click_log.simple_verbosity_option(logger, default='ERROR')
+def run_list_vocabs():
+    """
+    List available vocabularies.
+    """
+
+    template = "{0: <20}{1: <20}{2: >10}  {3: <6}"
+    header = template.format(
+        "Vocabulary ID", "Languages", "Size", "Loaded")
+    click.echo(header)
+    click.echo("-" * len(header))
+    for vocab in annif.registry.get_vocabs(
+            min_access=Access.private).values():
+        try:
+            languages = ','.join(sorted(vocab.languages))
+            size = len(vocab)
+            loaded = True
+        except NotInitializedException:
+            languages = '-'
+            size = '-'
+            loaded = False
+        click.echo(template.format(
+            vocab.vocab_id, languages, size, str(loaded)))
+
+
+@cli.command('loadvoc', deprecated=True)
 @click.argument('project_id')
 @click.argument('subjectfile', type=click.Path(exists=True, dir_okay=False))
 @click.option('--force', '-f', default=False, is_flag=True,
@@ -198,6 +242,35 @@ def run_loadvoc(project_id, force, subjectfile):
         # probably a TSV file
         subjects = annif.corpus.SubjectFileTSV(subjectfile, proj.vocab_lang)
     proj.vocab.load_vocabulary(subjects, force=force)
+
+
+@cli.command('load-vocab')
+@click.argument('vocab_id')
+@click.argument('subjectfile', type=click.Path(exists=True, dir_okay=False))
+@click.option('--language', '-L', help='Language of subject file')
+@click.option('--force', '-f', default=False, is_flag=True,
+              help='Replace existing vocabulary completely ' +
+                   'instead of updating it')
+@common_options
+def run_load_vocab(vocab_id, language, force, subjectfile):
+    """
+    Load a vocabulary from a subject file.
+    """
+    vocab = get_vocab(vocab_id)
+    if annif.corpus.SubjectFileSKOS.is_rdf_file(subjectfile):
+        # SKOS/RDF file supported by rdflib
+        subjects = annif.corpus.SubjectFileSKOS(subjectfile)
+    elif annif.corpus.SubjectFileCSV.is_csv_file(subjectfile):
+        # CSV file
+        subjects = annif.corpus.SubjectFileCSV(subjectfile)
+    else:
+        # probably a TSV file - we need to know its language
+        if not language:
+            click.echo("Please use --language option to set the language of " +
+                       "a TSV vocabulary.", err=True)
+            sys.exit(1)
+        subjects = annif.corpus.SubjectFileTSV(subjectfile, language)
+    vocab.load_vocabulary(subjects, force=force)
 
 
 @cli.command('train')

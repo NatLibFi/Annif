@@ -5,6 +5,7 @@ import re
 from flask import current_app
 import annif
 from annif.config import parse_config
+from annif.exception import ConfigurationException
 from annif.project import Access, AnnifProject
 from annif.vocab import AnnifVocabulary
 from annif.util import parse_args
@@ -115,4 +116,29 @@ def get_project(project_id, min_access=Access.private):
     try:
         return projects[project_id]
     except KeyError:
-        raise ValueError("No such project {}".format(project_id))
+        raise ValueError(f"No such project '{project_id}'")
+
+
+def get_vocabs(min_access=Access.private):
+    """Return the available vocabularies as a dict of vocab_id ->
+    AnnifVocabulary. The min_access parameter may be used to set the minimum
+    access level required for the returned vocabularies."""
+
+    vocabs = {}
+    for proj in get_projects(min_access).values():
+        try:
+            vocabs[proj.vocab.vocab_id] = proj.vocab
+        except ConfigurationException:
+            pass
+
+    return vocabs
+
+
+def get_vocab(vocab_id, min_access=Access.private):
+    """return a single AnnifVocabulary by vocabulary id"""
+
+    vocabs = get_vocabs(min_access)
+    try:
+        return vocabs[vocab_id]
+    except KeyError:
+        raise ValueError(f"No such vocabulary '{vocab_id}'")
