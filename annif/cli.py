@@ -125,7 +125,7 @@ def backend_param_option(f):
     return click.option(
         '--backend-param', '-b', multiple=True,
         help='Override backend parameter of the config file. ' +
-        'Syntax: "-b <backend>.<parameter>=<value>".')(f)
+        'Syntax: `-b <backend>.<parameter>=<value>`.')(f)
 
 
 @cli.command('list-projects')
@@ -134,6 +134,12 @@ def backend_param_option(f):
 def run_list_projects():
     """
     List available projects.
+    \f
+    Show a list of currently defined projects. Projects are defined in a
+    configuration file, normally called ``projects.cfg``. See `Project
+    configuration
+    <https://github.com/NatLibFi/Annif/wiki/Project-configuration>`_
+    for details.
     """
 
     template = "{0: <25}{1: <45}{2: <10}{3: <7}"
@@ -185,6 +191,19 @@ def run_clear_project(project_id):
 def run_loadvoc(project_id, force, subjectfile):
     """
     Load a vocabulary for a project.
+    \f
+    This will load the vocabulary to be used in subject indexing. Note that
+    although ``PROJECT_ID`` is a parameter of the command, the vocabulary is
+    shared by all the projects with the same vocab identifier in the project
+    configuration, and the vocabulary only needs to be loaded for one of those
+    projects.
+
+    If a vocabulary has already been loaded, reinvoking loadvoc with a new
+    subject file will update the Annif’s internal vocabulary: label names are
+    updated and any subject not appearing in the new subject file is removed.
+    Note that new subjects will not be suggested before the project is
+    retrained with the updated vocabulary. The update behavior can be
+    overridden with the ``--force`` option.
     """
     proj = get_project(project_id)
     if annif.corpus.SubjectFileSKOS.is_rdf_file(subjectfile):
@@ -216,6 +235,13 @@ def run_loadvoc(project_id, force, subjectfile):
 def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
     """
     Train a project on a collection of documents.
+    \f
+    This will train the project using the documents from ``PATHS`` (directories
+    or possibly gzipped TSV files) in a single batch operation. If ``--cached``
+    is set, preprocessed training data from the previous run is reused instead
+    of documents input; see `Reusing preprocessed training data
+    <https://github.com/NatLibFi/Annif/wiki/
+    Reusing-preprocessed-training-data>`_.
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
@@ -241,6 +267,10 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
 def run_learn(project_id, paths, docs_limit, backend_param):
     """
     Further train an existing project on a collection of documents.
+    \f
+    Similar to the ``train`` command. This will continue training an already
+    trained project using the documents given by ``PATHS`` in a single batch
+    operation. Not supported by all backends.
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
@@ -258,6 +288,9 @@ def run_learn(project_id, paths, docs_limit, backend_param):
 def run_suggest(project_id, limit, threshold, backend_param):
     """
     Suggest subjects for a single document from standard input.
+    \f
+    This will read a text document from standard input and suggest subjects for
+    it.
     """
     project = get_project(project_id)
     text = sys.stdin.read()
@@ -293,7 +326,8 @@ def run_index(project_id, directory, suffix, force,
               limit, threshold, backend_param):
     """
     Index a directory with documents, suggesting subjects for each document.
-    Write the results in TSV files with the given suffix.
+    Write the results in TSV files with the given suffix (``.annif`` by
+    default).
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
@@ -370,11 +404,17 @@ def run_eval(
         jobs,
         backend_param):
     """
-    Analyze documents and evaluate the result.
+    Suggest subjects for documents and evaluate the results by comparing
+    against a gold standard.
+    \f
+    With this command the documents from ``PATHS`` (directories or possibly
+    gzipped TSV files) will be assigned subject suggestions and then
+    statistical measures are calculated that quantify how well the suggested
+    subjects match the gold-standard subjects in the documents.
 
-    Compare the results of automated indexing against a gold standard. The
-    path may be either a TSV file with short documents or a directory with
-    documents in separate files.
+    Normally the output is the list of the metrics calculated across documents.
+    If ``--results-file <FILENAME>`` option is given, the metrics are
+    calculated separately for each subject, and written to the given file.
     """
 
     project = get_project(project_id)
@@ -428,12 +468,14 @@ def run_eval(
 @common_options
 def run_optimize(project_id, paths, docs_limit, backend_param):
     """
-    Analyze documents, testing multiple limits and thresholds.
-
-    Evaluate the analysis results for a directory with documents against a
-    gold standard given in subject files. Test different limit/threshold
-    values and report the precision, recall and F-measure of each combination
-    of settings.
+    Suggest subjects for documents, testing multiple limits and thresholds.
+    \f
+    This command will use different limit (maximum number of subjects) and
+    score threshold values when assigning subjects to each document given by
+    ``PATHS`` and compare the results against the gold standard subjects in the
+    documents. The output is a list of parameter combinations and their scores.
+    From the output, you can determine the optimum limit and threshold
+    parameters depending on which measure you want to target.
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
@@ -519,7 +561,9 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
 def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric,
                  results_file):
     """
-    Optimize the hyperparameters of a project using a validation corpus.
+    Optimize the hyperparameters of a project using validation documents from
+    ``PATHS``. Not supported by all backends. Output is a list of trial results
+    and a report of the best performing parameters.
     """
     proj = get_project(project_id)
     documents = open_documents(paths, proj.subjects,
