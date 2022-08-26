@@ -236,10 +236,10 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
     """
     Train a project on a collection of documents.
     \f
-    This will train the project using the documents from all TSV files
-    (possibly gzipped) or directories given by ``PATHS`` in a single batch
-    operation, or if ``--cached`` is set, reuse preprocessed training data from
-    the previous run. See `Reusing preprocessed training data
+    This will train the project using the documents from ``PATHS`` (directories
+    or possibly gzipped TSV files) in a single batch operation. If ``--cached``
+    is set, preprocessed training data from the previous run is reused instead
+    of documents input; see `Reusing preprocessed training data
     <https://github.com/NatLibFi/Annif/wiki/
     Reusing-preprocessed-training-data>`_.
     """
@@ -268,9 +268,9 @@ def run_learn(project_id, paths, docs_limit, backend_param):
     """
     Further train an existing project on a collection of documents.
     \f
-    This will continue training an already trained project using the documents
-    from all TSV files (possibly gzipped) or directories given by ``PATHS`` in
-    a single batch operation. Not supported by all backends.
+    Similar to the ``train`` command. This will continue training an already
+    trained project using the documents given by ``PATHS`` in a single batch
+    operation. Not supported by all backends.
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
@@ -326,7 +326,8 @@ def run_index(project_id, directory, suffix, force,
               limit, threshold, backend_param):
     """
     Index a directory with documents, suggesting subjects for each document.
-    Write the results in TSV files with the given suffix (default ``.annif``).
+    Write the results in TSV files with the given suffix (``.annif`` by
+    default).
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
@@ -406,10 +407,10 @@ def run_eval(
     Suggest subjects for documents and evaluate the results by comparing
     against a gold standard.
     \f
-    With this command the documents from the TSV files (possibly gzipped) or
-    directories given by ``PATHS`` will be assigned subject suggestions and
-    then statistical measures are calculated that quantify how well the
-    suggested subjects match the gold-standard subjects in the documents.
+    With this command the documents from ``PATHS`` (directories or possibly
+    gzipped TSV files) will be assigned subject suggestions and then
+    statistical measures are calculated that quantify how well the suggested
+    subjects match the gold-standard subjects in the documents.
 
     Normally the output is the list of the metrics calculated across documents.
     If ``--results-file <FILENAME>`` option is given, the metrics are
@@ -560,8 +561,9 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
 def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric,
                  results_file):
     """
-    Optimize the hyperparameters of a project using a validation corpus. Not
-    supported by all backends.
+    Optimize the hyperparameters of a project using validation documents from
+    ``PATHS``. Not supported by all backends. Output is a list of trial results
+    and a report of the best performing parameters.
     """
     proj = get_project(project_id)
     documents = open_documents(paths, proj.subjects,

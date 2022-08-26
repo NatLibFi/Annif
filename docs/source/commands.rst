@@ -2,9 +2,15 @@
 CLI commands
 ############
 
-These are the command line interface commands of Annif, with REST API equivalents when applicable.
+These are the command-line interface commands of Annif, with REST API
+equivalents when applicable.
 
-Most of these methods take a ``PROJECT_ID`` parameter. Projects are identified by alphanumeric strings ``(A-Za-z0-9_-)``.
+To reference a project most of the commands take a ``PROJECT_ID`` parameter,
+which is an alphanumeric string ``(A-Za-z0-9_-)``. Common options of the
+commands are ``--projects`` for setting a (non-default) path to a `project
+configuration file
+<https://github.com/NatLibFi/Annif/wiki/Project-configuration>`_ and
+``--verbosity`` for selecting logging level.
 
 .. contents::
    :local:
