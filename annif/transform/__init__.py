@@ -48,4 +48,4 @@ try:
     _transforms.update({langfilter.LangFilter.name: langfilter.LangFilter})
 except ImportError:
     annif.logger.debug(
-        "pycld3 not available, not enabling filter_language transform")
+        "Lingua not available, not enabling filter_language transform")

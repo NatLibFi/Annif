@@ -32,7 +32,6 @@ def test_lang_filter(project):
         Kansalliskirjasto on kaikille avoin kulttuuriperintöorganisaatio, joka
         palvelee valtakunnallisesti kansalaisia, tiedeyhteisöjä ja muita
         yhteiskunnan toimijoita.
-        Abc defghij klmnopqr stuwxyz abc defghij klmnopqr stuwxyz.
         Turvaamme Suomessa julkaistun tai Suomea koskevan julkaistun
         kulttuuriperinnön saatavuuden sekä välittämme ja tuotamme
         tietosisältöjä tutkimukselle, opiskelulle, kansalaisille ja

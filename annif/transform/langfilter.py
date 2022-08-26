@@ -2,7 +2,7 @@
 different from the language of the project."""
 
 import annif
-import cld3
+import lingua
 from . import transform
 
 logger = annif.logger
@@ -16,14 +16,20 @@ class LangFilter(transform.BaseTransform):
         super().__init__(project)
         self.text_min_length = int(text_min_length)
         self.sentence_min_length = int(sentence_min_length)
+        self.detector = (
+            lingua.LanguageDetectorBuilder
+            .from_all_languages()
+            .with_low_accuracy_mode()
+            .build()
+        )
 
     def _detect_language(self, text):
         """Tries to detect the language of a text input. Outputs a BCP-47-style
         language code (e.g. 'en')."""
 
-        lan_info = cld3.get_language(text)
-        if lan_info is not None and lan_info.is_reliable:
-            return lan_info.language
+        lan_info = self.detector.detect_language_of(text)
+        if lan_info is not None:
+            return lan_info.iso_code_639_1.name.lower()
         else:
             return None
 
