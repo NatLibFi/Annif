@@ -49,7 +49,7 @@ jobs:
         # Selectively install the optional dependencies for some Python versions
         # For Python 3.8:
         if [[ ${{ matrix.python-version }} == '3.8' ]]; then
-          poetry install -E "nn omikuji yake voikko pycld3";
+          poetry install -E "nn omikuji yake voikko lingua";
         fi
         # For Python 3.9:
         if [[ ${{ matrix.python-version }} == '3.9' ]]; then
@@ -62,7 +62,6 @@ jobs:
           poetry install -E "nn omikuji yake";
         fi
         poetry run python -m nltk.downloader punkt
-
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
