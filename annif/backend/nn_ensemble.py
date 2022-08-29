@@ -20,6 +20,7 @@ from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import VectorSuggestionResult
 from . import backend
 from . import ensemble
+from . import hyperopt
 
 
 def idx_to_key(idx):
@@ -76,6 +77,82 @@ class LMDBSequence(Sequence):
         return int(np.ceil(self._counter / self._batch_size))
 
 
+class NNEnsembleOptimizer(hyperopt.HyperparameterOptimizer):
+    """Hyperparameter optimizer for the NN ensemble backend"""
+
+    def _prepare(self, n_jobs=1):
+        sources = dict(
+            annif.util.parse_sources(self._backend.params['sources']))
+
+        # initialize the source projects before forking, to save memory
+        for project_id in sources.keys():
+            project = self._backend.project.registry.get_project(project_id)
+            project.initialize(parallel=True)
+
+        psmap = annif.parallel.ProjectSuggestMap(
+            self._backend.project.registry,
+            list(sources.keys()),
+            backend_params=None,
+            limit=None,
+            threshold=0.0)
+
+        jobs, pool_class = annif.parallel.get_pool(n_jobs)
+
+        self._score_vectors = []
+        self._gold_subjects = []
+
+        with pool_class(jobs) as pool:
+            for hits, uris, labels in pool.imap_unordered(
+                    psmap.suggest, self._corpus.documents):
+                doc_scores = []
+                for project_id, p_hits in hits.items():
+                    vector = p_hits.as_vector(self._backend.project.subjects)
+                    doc_scores.append(np.sqrt(vector)
+                                      * sources[project_id]
+                                      * len(sources))
+                score_vector = np.array(doc_scores,
+                                        dtype=np.float32).transpose()
+                subjects = annif.corpus.SubjectSet((uris, labels))
+                self._score_vectors.append(score_vector)
+                self._gold_subjects.append(subjects)
+
+    def _objective(self, trial):
+        sources = annif.util.parse_sources(self._backend.params['sources'])
+        params = {
+            'nodes': trial.suggest_int('nodes', 50, 200),
+            'dropout_rate': trial.suggest_float('dropout_rate', 0.0, 0.5),
+            'epochs': trial.suggest_int('epochs', 5, 20),
+            'optimizer': 'adam'
+        }
+        model = self._backend._create_model(sources, params)
+
+        env = self._backend._open_lmdb(True,
+                                       self._backend.params['lmdb_map_size'])
+        with env.begin(buffers=True) as txn:
+            seq = LMDBSequence(txn, batch_size=32)
+            model.fit(seq, verbose=0, epochs=params['epochs'])
+
+        batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
+        for goldsubj, score_vector in zip(self._gold_subjects,
+                                          self._score_vectors):
+
+            results = model.predict(
+                np.expand_dims(score_vector, 0))
+            output = VectorSuggestionResult(results[0])
+            batch.evaluate(output, goldsubj)
+        eval_results = batch.results(metrics=[self._metric])
+        return eval_results[self._metric]
+
+    def _postprocess(self, study):
+        bp = study.best_params
+        lines = [
+            f"nodes={bp['nodes']}",
+            f"dropout_rate={bp['dropout_rate']}",
+            f"epochs={bp['epochs']}"
+        ]
+        return hyperopt.HPRecommendation(lines=lines, score=study.best_value)
+
+
 class MeanLayer(Layer):
     """Custom Keras layer that calculates mean values along the 2nd axis."""
     def call(self, inputs):
@@ -84,7 +161,8 @@ class MeanLayer(Layer):
 
 class NNEnsembleBackend(
         backend.AnnifLearningBackend,
-        ensemble.BaseEnsembleBackend):
+        ensemble.BaseEnsembleBackend,
+        hyperopt.AnnifHyperoptBackend):
     """Neural network ensemble backend that combines results from multiple
     projects"""
 
@@ -104,6 +182,9 @@ class NNEnsembleBackend(
 
     # defaults for uninitialized instances
     _model = None
+
+    def get_hp_optimizer(self, corpus, metric):
+        return NNEnsembleOptimizer(self, corpus, metric)
 
     def default_params(self):
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
@@ -137,18 +218,15 @@ class NNEnsembleBackend(
             np.expand_dims(score_vector.transpose(), 0))
         return VectorSuggestionResult(results[0])
 
-    def _create_model(self, sources):
-        self.info("creating NN ensemble model")
-
+    def _create_model(self, sources, params):
         inputs = Input(shape=(len(self.project.subjects), len(sources)))
 
         flat_input = Flatten()(inputs)
         drop_input = Dropout(
-            rate=float(
-                self.params['dropout_rate']))(flat_input)
-        hidden = Dense(int(self.params['nodes']),
+            rate=float(params['dropout_rate']))(flat_input)
+        hidden = Dense(int(params['nodes']),
                        activation="relu")(drop_input)
-        drop_hidden = Dropout(rate=float(self.params['dropout_rate']))(hidden)
+        drop_hidden = Dropout(rate=float(params['dropout_rate']))(hidden)
         delta = Dense(len(self.project.subjects),
                       kernel_initializer='zeros',
                       bias_initializer='zeros')(drop_hidden)
@@ -157,21 +235,23 @@ class NNEnsembleBackend(
 
         predictions = Add()([mean, delta])
 
-        self._model = Model(inputs=inputs, outputs=predictions)
-        self._model.compile(optimizer=self.params['optimizer'],
-                            loss='binary_crossentropy',
-                            metrics=['top_k_categorical_accuracy'])
-        if 'lr' in self.params:
-            self._model.optimizer.learning_rate.assign(
-                float(self.params['lr']))
+        model = Model(inputs=inputs, outputs=predictions)
+        model.compile(optimizer=params['optimizer'],
+                      loss='binary_crossentropy',
+                      metrics=['top_k_categorical_accuracy'])
+        if 'lr' in params:
+            model.optimizer.learning_rate.assign(
+                float(params['lr']))
 
         summary = []
-        self._model.summary(print_fn=summary.append)
+        model.summary(print_fn=summary.append)
         self.debug("Created model: \n" + "\n".join(summary))
+        return model
 
     def _train(self, corpus, params, jobs=0):
-        sources = annif.util.parse_sources(self.params['sources'])
-        self._create_model(sources)
+        sources = annif.util.parse_sources(params['sources'])
+        self.info("creating NN ensemble model")
+        self._model = self._create_model(sources, params)
         self._fit_model(
             corpus,
             epochs=int(params['epochs']),
@@ -236,7 +316,7 @@ class NNEnsembleBackend(
         self.info("Training neural network model...")
         with env.begin(buffers=True) as txn:
             seq = LMDBSequence(txn, batch_size=32)
-            self._model.fit(seq, verbose=True, epochs=epochs)
+            self._model.fit(seq, verbose=1, epochs=epochs)
 
         annif.util.atomic_save(
             self._model,
