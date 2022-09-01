@@ -12,4 +12,4 @@ class SimplemmaAnalyzer(analyzer.Analyzer):
         super().__init__(**kwargs)
 
     def _normalize_word(self, word):
-        return simplemma.lemmatize(word, self.lang)
+        return simplemma.lemmatize(word, lang=self.lang)
