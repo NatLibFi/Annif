@@ -8,6 +8,8 @@ on:
   pull_request:
   workflow_dispatch:
 env:
+  PIPX_HOME: "/home/runner/.cache/pipx"
+  PIPX_BIN_DIR: "/home/runner/.local/bin"
   POETRY_VERSION: "1.2.0"
 jobs:
   test:
@@ -25,11 +27,12 @@ jobs:
         sudo apt-get install \
           libvoikko1 \
           voikko-fi
-    - name: Load cached Poetry installation and repositories
+    - name: Load cached Poetry installation and repositories info
       uses: actions/cache@v3
       with:
         path: |
-          ~/.local
+          ~/.cache/pipx/venvs
+          ~/.local/bin
           ~/.cache/pypoetry/cache/repositories
         key: poetry-installation-and-repos-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}
     - name: Install Poetry
