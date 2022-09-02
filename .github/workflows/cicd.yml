@@ -2,7 +2,7 @@ name: CI/CD
 on:
   push:
     branches:
-    - tmp-poetry
+    - master
     tags:
     - '*'
   pull_request:
