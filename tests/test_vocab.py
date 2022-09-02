@@ -9,20 +9,26 @@ import rdflib.namespace
 
 
 def load_dummy_vocab(tmpdir):
-    vocab = annif.vocab.AnnifVocabulary('vocab-id', str(tmpdir), 'en')
+    vocab = annif.vocab.AnnifVocabulary('vocab-id', str(tmpdir))
     subjfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
         'dummy-subjects.tsv')
-    subjects = annif.corpus.SubjectFileTSV(subjfile)
-    vocab.load_vocabulary(subjects, 'en')
+    subjects = annif.corpus.SubjectFileTSV(subjfile, 'en')
+    vocab.load_vocabulary(subjects)
     return vocab
 
 
-def test_get_vocab_invalid():
+def test_get_vocab_invalid(registry):
     with pytest.raises(ValueError) as excinfo:
-        annif.vocab.get_vocab('', None, None)
+        registry.get_vocab('', None)
     assert 'Invalid vocabulary specification' in str(excinfo.value)
+
+
+def test_get_vocab_hyphen(registry):
+    vocab, lang = registry.get_vocab('dummy-noname', None)
+    assert vocab.vocab_id == 'dummy-noname'
+    assert vocab is not None
 
 
 def test_update_subject_index_with_no_changes(tmpdir):
@@ -32,14 +38,18 @@ def test_update_subject_index_with_no_changes(tmpdir):
         os.path.dirname(__file__),
         'corpora',
         'dummy-subjects.tsv')
-    subjects = annif.corpus.SubjectFileTSV(subjfile)
+    subjects = annif.corpus.SubjectFileTSV(subjfile, 'en')
 
-    vocab.load_vocabulary(subjects, 'en')
+    vocab.load_vocabulary(subjects)
     assert len(vocab.subjects) == 2
     assert vocab.subjects.by_uri('http://example.org/dummy') == 0
-    assert vocab.subjects[0] == ('http://example.org/dummy', 'dummy', None)
+    assert vocab.subjects[0].uri == 'http://example.org/dummy'
+    assert vocab.subjects[0].labels['en'] == 'dummy'
+    assert vocab.subjects[0].notation is None
     assert vocab.subjects.by_uri('http://example.org/none') == 1
-    assert vocab.subjects[1] == ('http://example.org/none', 'none', None)
+    assert vocab.subjects[1].uri == 'http://example.org/none'
+    assert vocab.subjects[1].labels['en'] == 'none'
+    assert vocab.subjects[1].notation == '42.42'
 
 
 def test_update_subject_index_with_removed_subject(tmpdir):
@@ -47,14 +57,18 @@ def test_update_subject_index_with_removed_subject(tmpdir):
 
     subjfile_new = tmpdir.join('subjects_new.tsv')
     subjfile_new.write("<http://example.org/dummy>\tdummy\n")
-    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new))
+    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new), 'en')
 
-    vocab.load_vocabulary(subjects_new, 'en')
+    vocab.load_vocabulary(subjects_new)
     assert len(vocab.subjects) == 2
     assert vocab.subjects.by_uri('http://example.org/dummy') == 0
-    assert vocab.subjects[0] == ('http://example.org/dummy', 'dummy', None)
+    assert vocab.subjects[0].uri == 'http://example.org/dummy'
+    assert vocab.subjects[0].labels['en'] == 'dummy'
+    assert vocab.subjects[0].notation is None
     assert vocab.subjects.by_uri('http://example.org/none') == 1
-    assert vocab.subjects[1] == ('http://example.org/none', None, None)
+    assert vocab.subjects[1].uri == 'http://example.org/none'
+    assert vocab.subjects[1].labels is None
+    assert vocab.subjects[1].notation is None
 
 
 def test_update_subject_index_with_renamed_label_and_added_notation(tmpdir):
@@ -63,15 +77,18 @@ def test_update_subject_index_with_renamed_label_and_added_notation(tmpdir):
     subjfile_new = tmpdir.join('subjects_new.tsv')
     subjfile_new.write("<http://example.org/dummy>\tdummy\n" +
                        "<http://example.org/none>\tnew none\t42.42\n")
-    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new))
+    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new), 'en')
 
-    vocab.load_vocabulary(subjects_new, 'en')
+    vocab.load_vocabulary(subjects_new)
     assert len(vocab.subjects) == 2
     assert vocab.subjects.by_uri('http://example.org/dummy') == 0
-    assert vocab.subjects[0] == ('http://example.org/dummy', 'dummy', None)
+    assert vocab.subjects[0].uri == 'http://example.org/dummy'
+    assert vocab.subjects[0].labels['en'] == 'dummy'
+    assert vocab.subjects[0].notation is None
     assert vocab.subjects.by_uri('http://example.org/none') == 1
-    assert vocab.subjects[1] == ('http://example.org/none', 'new none',
-                                 '42.42')
+    assert vocab.subjects[1].uri == 'http://example.org/none'
+    assert vocab.subjects[1].labels['en'] == 'new none'
+    assert vocab.subjects[1].notation == '42.42'
 
 
 def test_update_subject_index_with_added_subjects(tmpdir):
@@ -81,15 +98,18 @@ def test_update_subject_index_with_added_subjects(tmpdir):
                        "<http://example.org/none>\tnone\n" +
                        "<http://example.org/new-dummy>\tnew dummy\t42.42\n" +
                        "<http://example.org/new-none>\tnew none\n")
-    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new))
+    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new), 'en')
 
-    vocab.load_vocabulary(subjects_new, 'en')
+    vocab.load_vocabulary(subjects_new)
     assert len(vocab.subjects) == 4
     assert vocab.subjects.by_uri('http://example.org/dummy') == 0
-    assert vocab.subjects[0] == ('http://example.org/dummy', 'dummy', None)
+    assert vocab.subjects[0].uri == 'http://example.org/dummy'
+    assert vocab.subjects[0].labels['en'] == 'dummy'
+    assert vocab.subjects[0].notation is None
     assert vocab.subjects.by_uri('http://example.org/new-dummy') == 2
-    assert vocab.subjects[2] == ('http://example.org/new-dummy', 'new dummy',
-                                 '42.42')
+    assert vocab.subjects[2].uri == 'http://example.org/new-dummy'
+    assert vocab.subjects[2].labels['en'] == 'new dummy'
+    assert vocab.subjects[2].notation == '42.42'
 
 
 def test_update_subject_index_force(tmpdir):
@@ -98,15 +118,18 @@ def test_update_subject_index_force(tmpdir):
     subjfile_new.write("<http://example.org/dummy>\tdummy\n" +
                        "<http://example.org/new-dummy>\tnew dummy\t42.42\n" +
                        "<http://example.org/new-none>\tnew none\n")
-    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new))
+    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new), 'en')
 
-    vocab.load_vocabulary(subjects_new, 'en', force=True)
+    vocab.load_vocabulary(subjects_new, force=True)
     assert len(vocab.subjects) == 3
     assert vocab.subjects.by_uri('http://example.org/dummy') == 0
-    assert vocab.subjects[0] == ('http://example.org/dummy', 'dummy', None)
+    assert vocab.subjects[0].uri == 'http://example.org/dummy'
+    assert vocab.subjects[0].labels['en'] == 'dummy'
+    assert vocab.subjects[0].notation is None
     assert vocab.subjects.by_uri('http://example.org/new-dummy') == 1
-    assert vocab.subjects[1] == ('http://example.org/new-dummy', 'new dummy',
-                                 '42.42')
+    assert vocab.subjects[1].uri == 'http://example.org/new-dummy'
+    assert vocab.subjects[1].labels['en'] == 'new dummy'
+    assert vocab.subjects[1].notation == '42.42'
 
 
 def test_skos(tmpdir):

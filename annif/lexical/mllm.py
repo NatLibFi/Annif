@@ -112,9 +112,9 @@ def candidates_to_features(candidates, mdata):
 class MLLMCandidateGenerator(annif.parallel.BaseWorker):
 
     @classmethod
-    def generate_candidates(cls, doc_subject_ids, text):
+    def generate_candidates(cls, doc_subject_set, text):
         candidates = generate_candidates(text, **cls.args)  # pragma: no cover
-        return doc_subject_ids, candidates  # pragma: no cover
+        return doc_subject_set, candidates  # pragma: no cover
 
 
 class MLLMFeatureConverter(annif.parallel.BaseWorker):
@@ -161,16 +161,18 @@ class MLLMModel:
 
         terms = []
         subject_ids = []
-        for subj_id, uri, _, _ in vocab.subjects.active:
+        for subj_id, subject in vocab.subjects.active:
             subject_ids.append(subj_id)
 
-            for label in get_subject_labels(graph, uri, pref_label_props,
+            for label in get_subject_labels(graph, subject.uri,
+                                            pref_label_props,
                                             params['language']):
                 terms.append(Term(subject_id=subj_id,
                                   label=label,
                                   is_pref=True))
 
-            for label in get_subject_labels(graph, uri, nonpref_label_props,
+            for label in get_subject_labels(graph, subject.uri,
+                                            nonpref_label_props,
                                             params['language']):
                 terms.append(Term(subject_id=subj_id,
                                   label=label,
@@ -212,7 +214,7 @@ class MLLMModel:
 
         return subject_ids
 
-    def _prepare_train_data(self, corpus, vocab, analyzer, n_jobs):
+    def _prepare_train_data(self, corpus, analyzer, n_jobs):
         # frequency of subjects (by id) in the generated candidates
         self._doc_freq = collections.Counter()
         # frequency of manually assigned subjects ("domain keyphraseness")
@@ -231,7 +233,7 @@ class MLLMModel:
         with pool_class(jobs,
                         initializer=MLLMCandidateGenerator.init,
                         initargs=(cg_args,)) as pool:
-            params = (([vocab.subjects.by_uri(uri) for uri in doc.uris],
+            params = ((doc.subject_set,
                        doc.text)
                       for doc in corpus.documents)
             for doc_subject_ids, candidates in pool.starmap(
@@ -271,7 +273,7 @@ class MLLMModel:
 
         # convert the corpus into train data
         train_x, train_y = self._prepare_train_data(
-            corpus, vocab, analyzer, n_jobs)
+            corpus, analyzer, n_jobs)
 
         # precalculate idf values for all candidate subjects
         self._idf = self._calculate_idf(subject_ids, len(train_x))

@@ -20,6 +20,8 @@ This repo contains a rewritten production version of Annif based on the
 [prototype](https://github.com/osma/annif). It is a work in progress, but
 already functional for many common tasks.
 
+[Finto AI](https://ai.finto.fi/) is a service based on Annif; see the [source code for Finto AI](https://github.com/NatLibFi/FintoAI).
+
 # Basic install
 
 You will need Python 3.8+ to install Annif.
@@ -94,8 +96,8 @@ Many resources are available:
  * [Usage documentation in the wiki](https://github.com/NatLibFi/Annif/wiki)
  * [Annif tutorial](https://github.com/NatLibFi/Annif-tutorial) for learning to use Annif
  * [annif-users](https://groups.google.com/forum/#!forum/annif-users) discussion forum
- * [Internal API documentation](https://readthedocs.org/projects/annif/) on ReadTheDocs
- * [annif.org](http://annif.org) project web site
+ * [Internal API documentation](https://annif.readthedocs.io) on ReadTheDocs
+ * [annif.org](https://annif.org) project web site
 
 # Publications / How to cite
 

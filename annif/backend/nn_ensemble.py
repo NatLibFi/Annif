@@ -128,7 +128,7 @@ class NNEnsembleBackend(
                                  custom_objects={'MeanLayer': MeanLayer})
 
     def _merge_hits_from_sources(self, hits_from_sources, params):
-        score_vector = np.array([np.sqrt(hits.as_vector(subjects))
+        score_vector = np.array([np.sqrt(hits.as_vector(len(subjects)))
                                  * weight * len(hits_from_sources)
                                  for hits, weight, subjects
                                  in hits_from_sources],
@@ -201,18 +201,18 @@ class NNEnsembleBackend(
 
         self.info("Processing training documents...")
         with pool_class(jobs) as pool:
-            for hits, uris, labels in pool.imap_unordered(
+            for hits, subject_set in pool.imap_unordered(
                     psmap.suggest, corpus.documents):
                 doc_scores = []
                 for project_id, p_hits in hits.items():
-                    vector = p_hits.as_vector(self.project.subjects)
+                    vector = p_hits.as_vector(len(self.project.subjects))
                     doc_scores.append(np.sqrt(vector)
                                       * sources[project_id]
                                       * len(sources))
                 score_vector = np.array(doc_scores,
                                         dtype=np.float32).transpose()
-                subjects = annif.corpus.SubjectSet((uris, labels))
-                true_vector = subjects.as_vector(self.project.subjects)
+                true_vector = subject_set.as_vector(
+                    len(self.project.subjects))
                 seq.add_sample(score_vector, true_vector)
 
     def _open_lmdb(self, cached, lmdb_map_size):

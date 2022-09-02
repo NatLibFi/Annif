@@ -3,7 +3,7 @@ methods defined in the Swagger specification."""
 
 import connexion
 import annif.registry
-from annif.corpus import Document, DocumentList
+from annif.corpus import Document, DocumentList, SubjectSet
 from annif.suggestion import SuggestionFilter
 from annif.exception import AnnifException
 from annif.project import Access
@@ -48,6 +48,16 @@ def show_project(project_id):
     return project.dump()
 
 
+def _suggestion_to_dict(suggestion, subject_index, language):
+    subject = subject_index[suggestion.subject_id]
+    return {
+        'uri': subject.uri,
+        'label': subject.labels[language],
+        'notation': subject.notation,
+        'score': suggestion.score
+    }
+
+
 def suggest(project_id, text, limit, threshold):
     """suggest subjects for the given text and return a dict with results
     formatted according to Swagger spec"""
@@ -63,14 +73,17 @@ def suggest(project_id, text, limit, threshold):
         result = project.suggest(text)
     except AnnifException as err:
         return server_error(err)
-    hits = hit_filter(result).as_list(project.subjects)
-    return {'results': [hit._asdict() for hit in hits]}
+    hits = hit_filter(result).as_list()
+    return {'results': [_suggestion_to_dict(hit, project.subjects,
+                                            project.vocab_lang)
+                        for hit in hits]}
 
 
-def _documents_to_corpus(documents):
+def _documents_to_corpus(documents, subject_index):
     corpus = [Document(text=d['text'],
-                       uris=[subj['uri'] for subj in d['subjects']],
-                       labels=[subj['label'] for subj in d['subjects']])
+                       subject_set=SubjectSet(
+                           [subject_index.by_uri(subj['uri'])
+                            for subj in d['subjects']]))
               for d in documents
               if 'text' in d and 'subjects' in d]
     return DocumentList(corpus)
@@ -85,9 +98,8 @@ def learn(project_id, documents):
     except ValueError:
         return project_not_found_error(project_id)
 
-    corpus = _documents_to_corpus(documents)
-
     try:
+        corpus = _documents_to_corpus(documents, project.subjects)
         project.learn(corpus)
     except AnnifException as err:
         return server_error(err)

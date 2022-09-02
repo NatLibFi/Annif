@@ -50,8 +50,7 @@ def test_chained_transforms_corpus(document_corpus):
     for transf_doc, doc in zip(transformed_corpus.documents,
                                document_corpus.documents):
         assert transf_doc.text == doc.text[:3]
-        assert transf_doc.uris == doc.uris
-        assert transf_doc.labels == doc.labels
+        assert transf_doc.subject_set == doc.subject_set
 
     # Check with a more arbitrary transform function
     reverser = annif.transform.transform.IdentityTransform(None)
@@ -60,5 +59,4 @@ def test_chained_transforms_corpus(document_corpus):
     for transf_doc, doc in zip(transformed_corpus.documents,
                                document_corpus.documents):
         assert transf_doc.text == doc.text[:3][::-1]
-        assert transf_doc.uris == doc.uris
-        assert transf_doc.labels == doc.labels
+        assert transf_doc.subject_set == doc.subject_set

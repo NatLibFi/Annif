@@ -6,6 +6,7 @@ import requests.exceptions
 import unittest.mock
 import annif.backend.http
 from annif.exception import OperationFailedException
+from annif.corpus import Subject
 
 
 def test_http_suggest(app_project):
@@ -27,11 +28,11 @@ def test_http_suggest(app_project):
             project=app_project)
         result = http.suggest('this is some text')
         assert len(result) == 1
-        hits = result.as_list(app_project.subjects)
-        assert hits[0].uri == 'http://example.org/dummy'
-        assert hits[0].label == 'dummy'
+        hits = result.as_list()
+        assert hits[0].subject_id is not None
+        assert hits[0].subject_id == app_project.subjects.by_uri(
+            'http://example.org/dummy')
         assert hits[0].score == 1.0
-        assert hits[0].notation is None
 
 
 def test_http_suggest_with_results(app_project):
@@ -51,16 +52,18 @@ def test_http_suggest_with_results(app_project):
                 'endpoint': 'http://api.example.org/dummy/analyze',
             },
             project=app_project)
-        http.project.subjects.append(
-            'http://example.org/dummy-with-notation', 'dummy', '42.42')
+        http.project.subjects.append(Subject(
+            uri='http://example.org/dummy-with-notation',
+            labels={'en': 'dummy', 'fi': 'dummy'},
+            notation='42.42'))
 
         result = http.suggest('this is some text')
         assert len(result) == 1
-        hits = result.as_list(app_project.subjects)
-        assert hits[0].uri == 'http://example.org/dummy-with-notation'
-        assert hits[0].label == 'dummy'
+        hits = result.as_list()
+        assert hits[0].subject_id is not None
+        assert hits[0].subject_id == http.project.subjects.by_uri(
+            'http://example.org/dummy-with-notation')
         assert hits[0].score == 1.0
-        assert hits[0].notation == '42.42'
 
 
 def test_http_suggest_zero_score(project):

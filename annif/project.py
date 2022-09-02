@@ -9,7 +9,6 @@ import annif.analyzer
 import annif.corpus
 import annif.suggestion
 import annif.backend
-import annif.vocab
 from annif.datadir import DatadirMixin
 from annif.exception import AnnifException, ConfigurationException, \
     NotSupportedException, NotInitializedException
@@ -32,6 +31,7 @@ class AnnifProject(DatadirMixin):
     _analyzer = None
     _backend = None
     _vocab = None
+    _vocab_lang = None
     initialized = False
 
     # default values for configuration settings
@@ -149,17 +149,24 @@ class AnnifProject(DatadirMixin):
                     backend_id)
         return self._backend
 
+    def _initialize_vocab(self):
+        if self.vocab_spec is None:
+            raise ConfigurationException("vocab setting is missing",
+                                         project_id=self.project_id)
+        self._vocab, self._vocab_lang = self.registry.get_vocab(
+            self.vocab_spec, self.language)
+
     @property
     def vocab(self):
         if self._vocab is None:
-            if self.vocab_spec is None:
-                raise ConfigurationException("vocab setting is missing",
-                                             project_id=self.project_id)
-            self._vocab = annif.vocab.get_vocab(self.vocab_spec,
-                                                self._base_datadir,
-                                                self.language)
-
+            self._initialize_vocab()
         return self._vocab
+
+    @property
+    def vocab_lang(self):
+        if self._vocab_lang is None:
+            self._initialize_vocab()
+        return self._vocab_lang
 
     @property
     def subjects(self):
@@ -200,7 +207,6 @@ class AnnifProject(DatadirMixin):
     def train(self, corpus, backend_params=None, jobs=0):
         """train the project using documents from a metadata source"""
         if corpus != 'cached':
-            corpus.set_subject_index(self.subjects)
             corpus = self.transform.transform_corpus(corpus)
         if backend_params is None:
             backend_params = {}
@@ -209,7 +215,6 @@ class AnnifProject(DatadirMixin):
 
     def learn(self, corpus, backend_params=None):
         """further train the project using documents from a metadata source"""
-        corpus.set_subject_index(self.subjects)
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})

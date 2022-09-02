@@ -15,11 +15,3 @@ class CombinedCorpus(DocumentCorpus):
     def documents(self):
         return itertools.chain.from_iterable(
             [corpus.documents for corpus in self._corpora])
-
-    def set_subject_index(self, subject_index):
-        """Set a subject index for looking up labels that are necessary for
-        conversion"""
-
-        for corpus in self._corpora:
-            if hasattr(corpus, 'set_subject_index'):
-                corpus.set_subject_index(subject_index)

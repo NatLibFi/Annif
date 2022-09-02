@@ -19,6 +19,7 @@ import annif.registry
 from annif.project import Access
 from annif.suggestion import SuggestionFilter, ListSuggestionResult
 from annif.exception import ConfigurationException, NotSupportedException
+from annif.exception import NotInitializedException
 from annif.util import metric_code
 
 logger = annif.logger
@@ -41,25 +42,42 @@ def get_project(project_id):
         sys.exit(1)
 
 
-def open_documents(paths, docs_limit):
-    """Helper function to open a document corpus from a list of pathnames,
-    each of which is either a TSV file or a directory of TXT files. The
-    corpus will be returned as an instance of DocumentCorpus or
-    LimitingDocumentCorpus."""
+def get_vocab(vocab_id):
+    """
+    Helper function to get a vocabulary by ID and bail out if it doesn't
+    exist"""
+    try:
+        return annif.registry.get_vocab(vocab_id,
+                                        min_access=Access.private)
+    except ValueError:
+        click.echo(
+            f"No vocabularies found with the id '{vocab_id}'.",
+            err=True)
+        sys.exit(1)
 
-    def open_doc_path(path):
+
+def open_documents(paths, subject_index, vocab_lang, docs_limit):
+    """Helper function to open a document corpus from a list of pathnames,
+    each of which is either a TSV file or a directory of TXT files. For
+    directories with subjects in TSV files, the given vocabulary language
+    will be used to convert subject labels into URIs. The corpus will be
+    returned as an instance of DocumentCorpus or LimitingDocumentCorpus."""
+
+    def open_doc_path(path, subject_index):
         """open a single path and return it as a DocumentCorpus"""
         if os.path.isdir(path):
-            return annif.corpus.DocumentDirectory(path, require_subjects=True)
-        return annif.corpus.DocumentFile(path)
+            return annif.corpus.DocumentDirectory(path, subject_index,
+                                                  vocab_lang,
+                                                  require_subjects=True)
+        return annif.corpus.DocumentFile(path, subject_index)
 
     if len(paths) == 0:
         logger.warning('Reading empty file')
-        docs = open_doc_path(os.path.devnull)
+        docs = open_doc_path(os.path.devnull, subject_index)
     elif len(paths) == 1:
-        docs = open_doc_path(paths[0])
+        docs = open_doc_path(paths[0], subject_index)
     else:
-        corpora = [open_doc_path(path) for path in paths]
+        corpora = [open_doc_path(path, subject_index) for path in paths]
         docs = annif.corpus.CombinedCorpus(corpora)
     if docs_limit is not None:
         docs = annif.corpus.LimitingDocumentCorpus(docs, docs_limit)
@@ -123,7 +141,7 @@ def backend_param_option(f):
     return click.option(
         '--backend-param', '-b', multiple=True,
         help='Override backend parameter of the config file. ' +
-        'Syntax: "-b <backend>.<parameter>=<value>".')(f)
+        'Syntax: `-b <backend>.<parameter>=<value>`.')(f)
 
 
 @cli.command('list-projects')
@@ -132,6 +150,12 @@ def backend_param_option(f):
 def run_list_projects():
     """
     List available projects.
+    \f
+    Show a list of currently defined projects. Projects are defined in a
+    configuration file, normally called ``projects.cfg``. See `Project
+    configuration
+    <https://github.com/NatLibFi/Annif/wiki/Project-configuration>`_
+    for details.
     """
 
     template = "{0: <25}{1: <45}{2: <10}{3: <7}"
@@ -157,6 +181,8 @@ def run_show_project(project_id):
     click.echo(f'Project ID:        {proj.project_id}')
     click.echo(f'Project Name:      {proj.name}')
     click.echo(f'Language:          {proj.language}')
+    click.echo(f'Vocabulary:        {proj.vocab.vocab_id}')
+    click.echo(f'Vocab language:    {proj.vocab_lang}')
     click.echo(f'Access:            {proj.access.name}')
     click.echo(f'Trained:           {proj.is_trained}')
     click.echo(f'Modification time: {proj.modification_time}')
@@ -173,7 +199,34 @@ def run_clear_project(project_id):
     proj.remove_model_data()
 
 
-@cli.command('loadvoc')
+@cli.command('list-vocabs')
+@common_options
+@click_log.simple_verbosity_option(logger, default='ERROR')
+def run_list_vocabs():
+    """
+    List available vocabularies.
+    """
+
+    template = "{0: <20}{1: <20}{2: >10}  {3: <6}"
+    header = template.format(
+        "Vocabulary ID", "Languages", "Size", "Loaded")
+    click.echo(header)
+    click.echo("-" * len(header))
+    for vocab in annif.registry.get_vocabs(
+            min_access=Access.private).values():
+        try:
+            languages = ','.join(sorted(vocab.languages))
+            size = len(vocab)
+            loaded = True
+        except NotInitializedException:
+            languages = '-'
+            size = '-'
+            loaded = False
+        click.echo(template.format(
+            vocab.vocab_id, languages, size, str(loaded)))
+
+
+@cli.command('loadvoc', deprecated=True)
 @click.argument('project_id')
 @click.argument('subjectfile', type=click.Path(exists=True, dir_okay=False))
 @click.option('--force', '-f', default=False, is_flag=True,
@@ -183,15 +236,63 @@ def run_clear_project(project_id):
 def run_loadvoc(project_id, force, subjectfile):
     """
     Load a vocabulary for a project.
+    \f
+    This will load the vocabulary to be used in subject indexing. Note that
+    although ``PROJECT_ID`` is a parameter of the command, the vocabulary is
+    shared by all the projects with the same vocab identifier in the project
+    configuration, and the vocabulary only needs to be loaded for one of those
+    projects.
+
+    If a vocabulary has already been loaded, reinvoking loadvoc with a new
+    subject file will update the Annif’s internal vocabulary: label names are
+    updated and any subject not appearing in the new subject file is removed.
+    Note that new subjects will not be suggested before the project is
+    retrained with the updated vocabulary. The update behavior can be
+    overridden with the ``--force`` option.
     """
     proj = get_project(project_id)
     if annif.corpus.SubjectFileSKOS.is_rdf_file(subjectfile):
         # SKOS/RDF file supported by rdflib
         subjects = annif.corpus.SubjectFileSKOS(subjectfile)
+    elif annif.corpus.SubjectFileCSV.is_csv_file(subjectfile):
+        # CSV file
+        subjects = annif.corpus.SubjectFileCSV(subjectfile)
     else:
         # probably a TSV file
-        subjects = annif.corpus.SubjectFileTSV(subjectfile)
-    proj.vocab.load_vocabulary(subjects, proj.language, force=force)
+        subjects = annif.corpus.SubjectFileTSV(subjectfile, proj.vocab_lang)
+    proj.vocab.load_vocabulary(subjects, force=force)
+
+
+@cli.command('load-vocab')
+@click.argument('vocab_id')
+@click.argument('subjectfile', type=click.Path(exists=True, dir_okay=False))
+@click.option('--language', '-L', help='Language of subject file')
+@click.option('--force', '-f', default=False, is_flag=True,
+              help='Replace existing vocabulary completely ' +
+                   'instead of updating it')
+@common_options
+def run_load_vocab(vocab_id, language, force, subjectfile):
+    """
+    Load a vocabulary from a subject file.
+    """
+    vocab = get_vocab(vocab_id)
+    if annif.corpus.SubjectFileSKOS.is_rdf_file(subjectfile):
+        # SKOS/RDF file supported by rdflib
+        subjects = annif.corpus.SubjectFileSKOS(subjectfile)
+        click.echo(f"Loading vocabulary from SKOS file {subjectfile}...")
+    elif annif.corpus.SubjectFileCSV.is_csv_file(subjectfile):
+        # CSV file
+        subjects = annif.corpus.SubjectFileCSV(subjectfile)
+        click.echo(f"Loading vocabulary from CSV file {subjectfile}...")
+    else:
+        # probably a TSV file - we need to know its language
+        if not language:
+            click.echo("Please use --language option to set the language of " +
+                       "a TSV vocabulary.", err=True)
+            sys.exit(1)
+        click.echo(f"Loading vocabulary from TSV file {subjectfile}...")
+        subjects = annif.corpus.SubjectFileTSV(subjectfile, language)
+    vocab.load_vocabulary(subjects, force=force)
 
 
 @cli.command('train')
@@ -211,6 +312,13 @@ def run_loadvoc(project_id, force, subjectfile):
 def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
     """
     Train a project on a collection of documents.
+    \f
+    This will train the project using the documents from ``PATHS`` (directories
+    or possibly gzipped TSV files) in a single batch operation. If ``--cached``
+    is set, preprocessed training data from the previous run is reused instead
+    of documents input; see `Reusing preprocessed training data
+    <https://github.com/NatLibFi/Annif/wiki/
+    Reusing-preprocessed-training-data>`_.
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
@@ -220,7 +328,8 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
                 "Corpus paths cannot be given when using --cached option.")
         documents = 'cached'
     else:
-        documents = open_documents(paths, docs_limit)
+        documents = open_documents(paths, proj.subjects,
+                                   proj.vocab_lang, docs_limit)
     proj.train(documents, backend_params, jobs)
 
 
@@ -235,10 +344,15 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
 def run_learn(project_id, paths, docs_limit, backend_param):
     """
     Further train an existing project on a collection of documents.
+    \f
+    Similar to the ``train`` command. This will continue training an already
+    trained project using the documents given by ``PATHS`` in a single batch
+    operation. Not supported by all backends.
     """
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
-    documents = open_documents(paths, docs_limit)
+    documents = open_documents(paths, proj.subjects,
+                               proj.vocab_lang, docs_limit)
     proj.learn(documents, backend_params)
 
 
@@ -251,17 +365,23 @@ def run_learn(project_id, paths, docs_limit, backend_param):
 def run_suggest(project_id, limit, threshold, backend_param):
     """
     Suggest subjects for a single document from standard input.
+    \f
+    This will read a text document from standard input and suggest subjects for
+    it.
     """
     project = get_project(project_id)
     text = sys.stdin.read()
     backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
     hits = hit_filter(project.suggest(text, backend_params))
-    for hit in hits.as_list(project.subjects):
+    for hit in hits.as_list():
+        subj = project.subjects[hit.subject_id]
         click.echo(
             "<{}>\t{}\t{}".format(
-                hit.uri,
-                '\t'.join(filter(None, (hit.label, hit.notation))),
+                subj.uri,
+                '\t'.join(filter(None,
+                                 (subj.labels[project.vocab_lang],
+                                  subj.notation))),
                 hit.score))
 
 
@@ -283,14 +403,16 @@ def run_index(project_id, directory, suffix, force,
               limit, threshold, backend_param):
     """
     Index a directory with documents, suggesting subjects for each document.
-    Write the results in TSV files with the given suffix.
+    Write the results in TSV files with the given suffix (``.annif`` by
+    default).
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
     for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
-            directory, require_subjects=False):
+            directory, project.subjects, project.vocab_lang,
+            require_subjects=False):
         with open(docfilename, encoding='utf-8-sig') as docfile:
             text = docfile.read()
         subjectfilename = re.sub(r'\.txt$', suffix, docfilename)
@@ -301,10 +423,12 @@ def run_index(project_id, directory, suffix, force,
             continue
         with open(subjectfilename, 'w', encoding='utf-8') as subjfile:
             results = project.suggest(text, backend_params)
-            for hit in hit_filter(results).as_list(project.subjects):
+            for hit in hit_filter(results).as_list():
+                subj = project.subjects[hit.subject_id]
                 line = "<{}>\t{}\t{}".format(
-                    hit.uri,
-                    '\t'.join(filter(None, (hit.label, hit.notation))),
+                    subj.uri,
+                    '\t'.join(filter(None, (subj.labels[project.vocab_lang],
+                                            subj.notation))),
                     hit.score)
                 click.echo(line, file=subjfile)
 
@@ -357,11 +481,17 @@ def run_eval(
         jobs,
         backend_param):
     """
-    Analyze documents and evaluate the result.
+    Suggest subjects for documents and evaluate the results by comparing
+    against a gold standard.
+    \f
+    With this command the documents from ``PATHS`` (directories or possibly
+    gzipped TSV files) will be assigned subject suggestions and then
+    statistical measures are calculated that quantify how well the suggested
+    subjects match the gold-standard subjects in the documents.
 
-    Compare the results of automated indexing against a gold standard. The
-    path may be either a TSV file with short documents or a directory with
-    documents in separate files.
+    Normally the output is the list of the metrics calculated across documents.
+    If ``--results-file <FILENAME>`` option is given, the metrics are
+    calculated separately for each subject, and written to the given file.
     """
 
     project = get_project(project_id)
@@ -378,7 +508,8 @@ def run_eval(
         except Exception as e:
             raise NotSupportedException(
                 "cannot open results-file for writing: " + str(e))
-    docs = open_documents(paths, docs_limit)
+    docs = open_documents(paths, project.subjects,
+                          project.vocab_lang, docs_limit)
 
     jobs, pool_class = annif.parallel.get_pool(jobs)
 
@@ -387,13 +518,15 @@ def run_eval(
         project.registry, [project_id], backend_params, limit, threshold)
 
     with pool_class(jobs) as pool:
-        for hits, uris, labels in pool.imap_unordered(
+        for hits, subject_set in pool.imap_unordered(
                 psmap.suggest, docs.documents):
             eval_batch.evaluate(hits[project_id],
-                                annif.corpus.SubjectSet((uris, labels)))
+                                subject_set)
 
     template = "{0:<30}\t{1}"
-    metrics = eval_batch.results(metrics=metric, results_file=results_file)
+    metrics = eval_batch.results(metrics=metric,
+                                 results_file=results_file,
+                                 language=project.vocab_lang)
     for metric, score in metrics.items():
         click.echo(template.format(metric + ":", score))
     if metrics_file:
@@ -412,12 +545,14 @@ def run_eval(
 @common_options
 def run_optimize(project_id, paths, docs_limit, backend_param):
     """
-    Analyze documents, testing multiple limits and thresholds.
-
-    Evaluate the analysis results for a directory with documents against a
-    gold standard given in subject files. Test different limit/threshold
-    values and report the precision, recall and F-measure of each combination
-    of settings.
+    Suggest subjects for documents, testing multiple limits and thresholds.
+    \f
+    This command will use different limit (maximum number of subjects) and
+    score threshold values when assigning subjects to each document given by
+    ``PATHS`` and compare the results against the gold standard subjects in the
+    documents. The output is a list of parameter combinations and their scores.
+    From the output, you can determine the optimum limit and threshold
+    parameters depending on which measure you want to target.
     """
     project = get_project(project_id)
     backend_params = parse_backend_params(backend_param, project)
@@ -425,16 +560,16 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     filter_batches = generate_filter_batches(project.subjects)
 
     ndocs = 0
-    docs = open_documents(paths, docs_limit)
+    docs = open_documents(paths, project.subjects,
+                          project.vocab_lang, docs_limit)
     for doc in docs.documents:
         raw_hits = project.suggest(doc.text, backend_params)
         hits = raw_hits.filter(project.subjects, limit=BATCH_MAX_LIMIT)
         assert isinstance(hits, ListSuggestionResult), \
             "Optimize should only be done with ListSuggestionResult " + \
             "as it would be very slow with VectorSuggestionResult."
-        gold_subjects = annif.corpus.SubjectSet((doc.uris, doc.labels))
         for hit_filter, batch in filter_batches.values():
-            batch.evaluate(hit_filter(hits), gold_subjects)
+            batch.evaluate(hit_filter(hits), doc.subject_set)
         ndocs += 1
 
     click.echo("\t".join(('Limit', 'Thresh.', 'Prec.', 'Rec.', 'F1')))
@@ -503,10 +638,13 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
 def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric,
                  results_file):
     """
-    Optimize the hyperparameters of a project using a validation corpus.
+    Optimize the hyperparameters of a project using validation documents from
+    ``PATHS``. Not supported by all backends. Output is a list of trial results
+    and a report of the best performing parameters.
     """
     proj = get_project(project_id)
-    documents = open_documents(paths, docs_limit)
+    documents = open_documents(paths, proj.subjects,
+                               proj.vocab_lang, docs_limit)
     click.echo(f"Looking for optimal hyperparameters using {trials} trials")
     rec = proj.hyperopt(documents, trials, jobs, metric, results_file)
     click.echo(f"Got best {metric} score {rec.score:.4f} with:")

@@ -82,7 +82,8 @@ def test_fasttext_train_unknown_subject(tmpdir, datadir, project):
     tmpfile = tmpdir.join('document.tsv')
     tmpfile.write("nonexistent\thttp://example.com/nonexistent\n" +
                   "arkeologia\thttp://www.yso.fi/onto/yso/p1265")
-    document_corpus = annif.corpus.DocumentFile(str(tmpfile))
+    document_corpus = annif.corpus.DocumentFile(str(tmpfile),
+                                                project.subjects)
 
     fasttext.train(document_corpus)
     assert fasttext._model is not None
@@ -200,7 +201,6 @@ def test_fasttext_suggest(project):
         pohjaan.""")
 
     assert len(results) > 0
-    hits = results.as_list(project.subjects)
-    assert 'http://www.yso.fi/onto/yso/p1265' in [
-        result.uri for result in hits]
-    assert 'arkeologia' in [result.label for result in hits]
+    hits = results.as_list()
+    archaeology = project.subjects.by_uri('http://www.yso.fi/onto/yso/p1265')
+    assert archaeology in [result.subject_id for result in hits]

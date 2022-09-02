@@ -25,7 +25,6 @@ _KEY_USE_TXT_VEC = 'use_txt_vec'
 class StwfsaBackend(backend.AnnifBackend):
 
     name = "stwfsa"
-    needs_subject_index = True
 
     STWFSA_PARAMETERS = {
         _KEY_CONCEPT_TYPE_URI: str,
@@ -87,7 +86,8 @@ class StwfsaBackend(backend.AnnifBackend):
         y = []
         for doc in corpus.documents:
             X.append(doc.text)
-            y.append(doc.uris)
+            y.append([self.project.subjects[subject_id].uri
+                      for subject_id in doc.subject_set])
         return X, y
 
     def _train(self, corpus, params, jobs=0):
@@ -117,14 +117,7 @@ class StwfsaBackend(backend.AnnifBackend):
         suggestions = []
         for uri, score in result:
             subject_id = self.project.subjects.by_uri(uri)
-            if subject_id:
-                label = self.project.subjects[subject_id][1]
-            else:
-                label = None
-            suggestion = SubjectSuggestion(
-                uri,
-                label,
-                None,
-                score)
-            suggestions.append(suggestion)
+            if subject_id is not None:
+                suggestions.append(SubjectSuggestion(subject_id=subject_id,
+                                                     score=score))
         return ListSuggestionResult(suggestions)

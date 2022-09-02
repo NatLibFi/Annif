@@ -1,15 +1,32 @@
-"""Unit tests for TSV vocabulary functionality in Annif"""
+"""Unit tests for CSV vocabulary functionality in Annif"""
 
 
-from annif.corpus import SubjectFileTSV, SubjectIndex
+from annif.corpus import SubjectFileCSV, SubjectIndex
 
 
-def test_load_tsv_uri_brackets(tmpdir):
-    tmpfile = tmpdir.join('subjects.tsv')
-    tmpfile.write("<http://www.yso.fi/onto/yso/p8993>\thylyt\n" +
-                  "<http://www.yso.fi/onto/yso/p9285>\tneoliittinen kausi")
+def test_recognize_csv_lowercase():
+    assert SubjectFileCSV.is_csv_file('subjects.csv')
 
-    corpus = SubjectFileTSV(str(tmpfile), 'fi')
+
+def test_recognize_csv_uppercase():
+    assert SubjectFileCSV.is_csv_file('SUBJECTS.CSV')
+
+
+def test_recognize_tsv():
+    assert not SubjectFileCSV.is_csv_file('subjects.tsv')
+
+
+def test_recognize_noext():
+    assert not SubjectFileCSV.is_csv_file('subjects')
+
+
+def test_load_csv_uri_brackets(tmpdir):
+    tmpfile = tmpdir.join('subjects.csv')
+    tmpfile.write("uri,label_fi\n" +
+                  "<http://www.yso.fi/onto/yso/p8993>,hylyt\n" +
+                  "<http://www.yso.fi/onto/yso/p9285>,neoliittinen kausi")
+
+    corpus = SubjectFileCSV(str(tmpfile))
     subjects = list(corpus.subjects)
     assert len(subjects) == 2
     assert subjects[0].uri == 'http://www.yso.fi/onto/yso/p8993'
@@ -21,11 +38,12 @@ def test_load_tsv_uri_brackets(tmpdir):
 
 
 def test_load_tsv_uri_nobrackets(tmpdir):
-    tmpfile = tmpdir.join('subjects.tsv')
-    tmpfile.write("http://www.yso.fi/onto/yso/p8993\thylyt\n" +
-                  "http://www.yso.fi/onto/yso/p9285\tneoliittinen kausi")
+    tmpfile = tmpdir.join('subjects.csv')
+    tmpfile.write("uri,label_fi\n" +
+                  "http://www.yso.fi/onto/yso/p8993,hylyt\n" +
+                  "http://www.yso.fi/onto/yso/p9285,neoliittinen kausi")
 
-    corpus = SubjectFileTSV(str(tmpfile), 'fi')
+    corpus = SubjectFileCSV(str(tmpfile))
     subjects = list(corpus.subjects)
     assert len(subjects) == 2
     assert subjects[0].uri == 'http://www.yso.fi/onto/yso/p8993'
@@ -37,11 +55,12 @@ def test_load_tsv_uri_nobrackets(tmpdir):
 
 
 def test_load_tsv_with_notations(tmpdir):
-    tmpfile = tmpdir.join('subjects-with-notations.tsv')
-    tmpfile.write("http://www.yso.fi/onto/yso/p8993\thylyt\t42.42\n" +
-                  "http://www.yso.fi/onto/yso/p9285\tneoliittinen kausi\t42.0")
+    tmpfile = tmpdir.join('subjects-with-notations.csv')
+    tmpfile.write("uri,label_fi,notation\n" +
+                  "http://www.yso.fi/onto/yso/p8993,hylyt,42.42\n" +
+                  "http://www.yso.fi/onto/yso/p9285,neoliittinen kausi,42.0")
 
-    corpus = SubjectFileTSV(str(tmpfile), 'fi')
+    corpus = SubjectFileCSV(str(tmpfile))
     subjects = list(corpus.subjects)
     assert len(subjects) == 2
     assert subjects[0].uri == 'http://www.yso.fi/onto/yso/p8993'
@@ -53,12 +72,13 @@ def test_load_tsv_with_notations(tmpdir):
 
 
 def test_load_tsv_with_deprecated(tmpdir):
-    tmpfile = tmpdir.join('subjects.tsv')
-    tmpfile.write("<http://www.yso.fi/onto/yso/p8993>\thylyt\n" +
-                  "<http://example.org/deprecated>\t\n" +
-                  "<http://www.yso.fi/onto/yso/p9285>\tneoliittinen kausi")
+    tmpfile = tmpdir.join('subjects.csv')
+    tmpfile.write("uri,label_fi\n" +
+                  "<http://www.yso.fi/onto/yso/p8993>,hylyt\n" +
+                  "<http://example.org/deprecated>,\n" +
+                  "<http://www.yso.fi/onto/yso/p9285>,neoliittinen kausi")
 
-    corpus = SubjectFileTSV(str(tmpfile), 'fi')
+    corpus = SubjectFileCSV(str(tmpfile))
     subjects = list(corpus.subjects)
     assert len(list(corpus.subjects)) == 3
     assert subjects[1].labels is None

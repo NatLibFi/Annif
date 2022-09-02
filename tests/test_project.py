@@ -34,20 +34,31 @@ def test_get_project_fi(registry):
     assert project.language == 'fi'
     assert project.analyzer.name == 'snowball'
     assert project.analyzer.param == 'finnish'
+    assert project.vocab_lang == 'fi'
     assert project.access == Access.public
     assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
 
 
-def test_get_project_dummydummy(registry):
-    project = registry.get_project('dummydummy')
-    assert project.project_id == 'dummydummy'
+def test_get_project_dummy_private(registry):
+    project = registry.get_project('dummy-private')
+    assert project.project_id == 'dummy-private'
+    assert project.language == 'en'
+    assert project.analyzer.name == 'snowball'
+    assert project.analyzer.param == 'english'
+    assert project.access == Access.private
+    assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
+
+
+def test_get_project_dummy_vocablang(registry):
+    project = registry.get_project('dummy-vocablang')
+    assert project.project_id == 'dummy-vocablang'
     assert project.language == 'en'
     assert project.analyzer.name == 'snowball'
     assert project.analyzer.param == 'english'
     # project uses the dummy vocab, with language overridden to Finnish
     assert project.vocab.vocab_id == 'dummy'
-    assert project.vocab.language == 'fi'
-    assert project.access == Access.private
+    assert project.vocab_lang == 'fi'
+    assert project.access == Access.public
     assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
 
 
@@ -128,9 +139,9 @@ def test_get_project_invalid_config_file():
 
 def test_project_load_vocabulary_tfidf(registry, subject_file, testdatadir):
     project = registry.get_project('tfidf-fi')
-    project.vocab.load_vocabulary(subject_file, 'fi')
-    assert testdatadir.join('vocabs/yso/subjects.fi.tsv').exists()
-    assert testdatadir.join('vocabs/yso/subjects.fi.tsv').size() > 0
+    project.vocab.load_vocabulary(subject_file)
+    assert testdatadir.join('vocabs/yso/subjects.csv').exists()
+    assert testdatadir.join('vocabs/yso/subjects.csv').size() > 0
 
 
 def test_project_tfidf_is_not_trained(registry):
@@ -165,18 +176,19 @@ def test_project_train_tfidf_nodocuments(registry, empty_corpus):
 
 def test_project_learn(registry, tmpdir):
     tmpdir.join('doc1.txt').write('doc1')
-    tmpdir.join('doc1.tsv').write('<http://example.org/key1>\tkey1')
+    tmpdir.join('doc1.tsv').write('<http://example.org/none>\tnone')
     tmpdir.join('doc2.txt').write('doc2')
-    tmpdir.join('doc2.tsv').write('<http://example.org/key2>\tkey2')
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir))
+    tmpdir.join('doc2.tsv').write('<http://example.org/dummy>\tdummy')
 
     project = registry.get_project('dummy-fi')
+    docdir = annif.corpus.DocumentDirectory(
+        str(tmpdir), project.subjects, 'en')
     project.learn(docdir)
     result = project.suggest('this is some text')
     assert len(result) == 1
-    hits = result.as_list(project.subjects)
-    assert hits[0].uri == 'http://example.org/key1'
-    assert hits[0].label == 'key1'
+    hits = result.as_list()
+    assert hits[0].subject_id == project.subjects.by_uri(
+        'http://example.org/none')
     assert hits[0].score == 1.0
 
 
@@ -185,9 +197,10 @@ def test_project_learn_not_supported(registry, tmpdir):
     tmpdir.join('doc1.tsv').write('<http://example.org/key1>\tkey1')
     tmpdir.join('doc2.txt').write('doc2')
     tmpdir.join('doc2.tsv').write('<http://example.org/key2>\tkey2')
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir))
 
     project = registry.get_project('tfidf-fi')
+    docdir = annif.corpus.DocumentDirectory(
+        str(tmpdir), project.subjects, 'en')
     with pytest.raises(NotSupportedException):
         project.learn(docdir)
 
@@ -195,9 +208,9 @@ def test_project_learn_not_supported(registry, tmpdir):
 def test_project_load_vocabulary_fasttext(registry, subject_file, testdatadir):
     pytest.importorskip("annif.backend.fasttext")
     project = registry.get_project('fasttext-fi')
-    project.vocab.load_vocabulary(subject_file, 'fi')
-    assert testdatadir.join('vocabs/yso/subjects.fi.tsv').exists()
-    assert testdatadir.join('vocabs/yso/subjects.fi.tsv').size() > 0
+    project.vocab.load_vocabulary(subject_file)
+    assert testdatadir.join('vocabs/yso/subjects.csv').exists()
+    assert testdatadir.join('vocabs/yso/subjects.csv').size() > 0
 
 
 def test_project_train_fasttext(registry, document_corpus, testdatadir):
@@ -212,32 +225,22 @@ def test_project_suggest(registry):
     project = registry.get_project('dummy-en')
     result = project.suggest('this is some text')
     assert len(result) == 1
-    hits = result.as_list(project.subjects)
-    assert hits[0].uri == 'http://example.org/dummy'
-    assert hits[0].label == 'dummy'
-    assert hits[0].score == 1.0
-
-
-def test_project_suggest_combine(registry):
-    project = registry.get_project('dummydummy')
-    result = project.suggest('this is some text')
-    assert len(result) == 1
-    hits = result.as_list(project.subjects)
-    assert hits[0].uri == 'http://example.org/dummy'
-    assert hits[0].label == 'dummy'
+    hits = result.as_list()
+    assert hits[0].subject_id == project.subjects.by_uri(
+        'http://example.org/dummy')
     assert hits[0].score == 1.0
 
 
 def test_project_train_state_not_available(registry, caplog):
-    project = registry.get_project('dummydummy')
+    project = registry.get_project('dummy-vocablang')
     project.backend.is_trained = None
     with caplog.at_level(logging.WARNING):
         result = project.suggest('this is some text')
     assert project.is_trained is None
     assert len(result) == 1
-    hits = result.as_list(project.subjects)
-    assert hits[0].uri == 'http://example.org/dummy'
-    assert hits[0].label == 'dummy'
+    hits = result.as_list()
+    assert hits[0].subject_id == project.subjects.by_uri(
+        'http://example.org/dummy')
     assert hits[0].score == 1.0
     assert 'Could not get train state information' in caplog.text
 
@@ -283,7 +286,7 @@ def test_project_directory():
     app = annif.create_app(
         config_name='annif.default_config.TestingDirectoryConfig')
     with app.app_context():
-        assert len(annif.registry.get_projects()) == 16 + 2
+        assert len(annif.registry.get_projects()) == 17 + 2
         assert annif.registry.get_project('dummy-fi').project_id == 'dummy-fi'
         assert annif.registry.get_project('dummy-fi-toml').project_id \
             == 'dummy-fi-toml'

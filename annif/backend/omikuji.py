@@ -14,7 +14,6 @@ from . import mixins
 class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     """Omikuji based backend for Annif"""
     name = "omikuji"
-    needs_subject_index = True
 
     # defaults for uninitialized instances
     _model = None
@@ -56,13 +55,6 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self.initialize_vectorizer()
         self._initialize_model()
 
-    def _uris_to_subj_ids(self, uris):
-        subject_ids = [self.project.subjects.by_uri(uri)
-                       for uri in uris]
-        return [str(subj_id)
-                for subj_id in subject_ids
-                if subj_id is not None]
-
     def _create_train_file(self, veccorpus, corpus):
         self.info('creating train file')
         path = os.path.join(self.datadir, self.TRAIN_FILE)
@@ -75,7 +67,8 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                   file=trainfile)
             n_samples = 0
             for doc, vector in zip(corpus.documents, veccorpus):
-                subject_ids = self._uris_to_subj_ids(doc.uris)
+                subject_ids = [str(subject_id)
+                               for subject_id in doc.subject_set]
                 feature_values = ['{}:{}'.format(col, vector[row, col])
                                   for row, col in zip(*vector.nonzero())]
                 if not subject_ids or not feature_values:
@@ -132,10 +125,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         results = []
         limit = int(params['limit'])
         for subj_id, score in self._model.predict(feature_values, top_k=limit):
-            subject = self.project.subjects[subj_id]
             results.append(SubjectSuggestion(
-                uri=subject[0],
-                label=subject[1],
-                notation=subject[2],
+                subject_id=subj_id,
                 score=score))
         return ListSuggestionResult(results)

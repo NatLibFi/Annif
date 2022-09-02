@@ -18,14 +18,13 @@ def app():
     subjfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
-        'dummy-subjects.tsv')
-    vocab = annif.corpus.SubjectFileTSV(subjfile)
+        'dummy-subjects.csv')
     app = annif.create_app(config_name='annif.default_config.TestingConfig')
     with app.app_context():
         project = annif.registry.get_project('dummy-en')
         # the vocab is needed for both English and Finnish language projects
-        project.vocab.load_vocabulary(vocab, 'en')
-        project.vocab.load_vocabulary(vocab, 'fi')
+        vocab = annif.corpus.SubjectFileCSV(subjfile)
+        project.vocab.load_vocabulary(vocab)
     return app
 
 
@@ -71,19 +70,26 @@ def subject_file():
         'corpora',
         'archaeology',
         'subjects.tsv')
-    return annif.corpus.SubjectFileTSV(docfile)
+    return annif.corpus.SubjectFileTSV(docfile, 'fi')
+
+
+@pytest.fixture(scope='module')
+def dummy_subject_index(testdatadir):
+    """a fixture to access the subject index of the dummy vocabulary"""
+    vocab = annif.vocab.AnnifVocabulary('dummy', testdatadir)
+    return vocab.subjects
 
 
 @pytest.fixture(scope='module')
 def vocabulary(datadir):
-    vocab = annif.vocab.AnnifVocabulary('my-vocab', datadir, 'fi')
+    vocab = annif.vocab.AnnifVocabulary('my-vocab', datadir)
     subjfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',
         'archaeology',
         'yso-archaeology.ttl')
     subjects = annif.corpus.SubjectFileSKOS(subjfile)
-    vocab.load_vocabulary(subjects, 'fi')
+    vocab.load_vocabulary(subjects)
     return vocab
 
 
@@ -99,8 +105,7 @@ def document_corpus(subject_index):
         'corpora',
         'archaeology',
         'documents.tsv')
-    doc_corpus = annif.corpus.DocumentFile(docfile)
-    doc_corpus.set_subject_index(subject_index)
+    doc_corpus = annif.corpus.DocumentFile(docfile, subject_index)
     return doc_corpus
 
 
@@ -111,8 +116,7 @@ def fulltext_corpus(subject_index):
         'corpora',
         'archaeology',
         'fulltext')
-    ft_corpus = annif.corpus.DocumentDirectory(ftdir)
-    ft_corpus.set_subject_index(subject_index)
+    ft_corpus = annif.corpus.DocumentDirectory(ftdir, subject_index, 'fi')
     return ft_corpus
 
 
@@ -146,6 +150,6 @@ def app_project(app):
 
 
 @pytest.fixture(scope='function')
-def empty_corpus(tmpdir):
+def empty_corpus(tmpdir, subject_index):
     empty_file = tmpdir.ensure('empty.tsv')
-    return annif.corpus.DocumentFile(str(empty_file))
+    return annif.corpus.DocumentFile(str(empty_file), subject_index)

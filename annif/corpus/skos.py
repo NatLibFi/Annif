@@ -1,5 +1,6 @@
 """Support for subjects loaded from a SKOS/RDF file"""
 
+import collections
 import os.path
 import shutil
 import joblib
@@ -10,7 +11,7 @@ import annif.util
 from .types import Subject, SubjectCorpus
 
 
-def serialize_subjects_to_skos(subjects, language, path):
+def serialize_subjects_to_skos(subjects, path):
     """Create a SKOS representation of the given subjects and serialize it
     into a SKOS/Turtle file with the given path name."""
 
@@ -18,9 +19,10 @@ def serialize_subjects_to_skos(subjects, language, path):
     graph.namespace_manager.bind('skos', SKOS)
     for subject in subjects:
         graph.add((rdflib.URIRef(subject.uri), RDF.type, SKOS.Concept))
-        graph.add((rdflib.URIRef(subject.uri),
-                   SKOS.prefLabel,
-                   rdflib.Literal(subject.label, language)))
+        for lang, label in subject.labels.items():
+            graph.add((rdflib.URIRef(subject.uri),
+                       SKOS.prefLabel,
+                       rdflib.Literal(label, lang)))
         graph.add((rdflib.URIRef(subject.uri),
                    SKOS.notation,
                    rdflib.Literal(subject.notation)))
@@ -36,6 +38,8 @@ class SubjectFileSKOS(SubjectCorpus):
 
     PREF_LABEL_PROPERTIES = (SKOS.prefLabel, RDFS.label)
 
+    _languages = None
+
     def __init__(self, path):
         self.path = path
         if path.endswith('.dump.gz'):
@@ -47,26 +51,33 @@ class SubjectFileSKOS(SubjectCorpus):
 
     @property
     def languages(self):
-        return {label.language
-                for concept in self.concepts
-                for label_type in self.PREF_LABEL_PROPERTIES
-                for label in self.graph.objects(concept, label_type)
-                if label.language is not None}
+        if self._languages is None:
+            self._languages = {label.language
+                               for concept in self.concepts
+                               for label_type in self.PREF_LABEL_PROPERTIES
+                               for label in self.graph.objects(concept,
+                                                               label_type)
+                               if label.language is not None}
+        return self._languages
 
-    def subjects(self, language):
+    def _concept_labels(self, concept):
+        by_lang = self.get_concept_labels(concept,
+                                          self.PREF_LABEL_PROPERTIES)
+        return {lang: by_lang[lang][0] if by_lang[lang]  # correct lang
+                else by_lang[None][0] if by_lang[None]  # no language
+                else self.graph.namespace_manager.qname(concept)
+                for lang in self.languages}
+
+    @property
+    def subjects(self):
         for concept in self.concepts:
-            labels = self.get_concept_labels(
-                concept, self.PREF_LABEL_PROPERTIES, language)
-            # Use first label if available, else use qualified name (from URI)
-            label = (labels[0] if labels
-                     else self.graph.namespace_manager.qname(concept))
+            labels = self._concept_labels(concept)
 
             notation = self.graph.value(concept, SKOS.notation, None, any=True)
             if notation is not None:
                 notation = str(notation)
 
-            yield Subject(uri=str(concept), label=label, notation=notation,
-                          text=None)
+            yield Subject(uri=str(concept), labels=labels, notation=notation)
 
     @property
     def concepts(self):
@@ -75,23 +86,17 @@ class SubjectFileSKOS(SubjectCorpus):
                 continue
             yield concept
 
-    def get_concept_labels(self, concept, label_types, language):
-        all_labels = [label
-                      for label_type in label_types
-                      for label in self.graph.objects(concept, label_type)]
+    def get_concept_labels(self, concept, label_types):
+        """return all the labels of the given concept with the given label
+        properties as a dict-like object where the keys are language codes
+        and the values are lists of labels in that language"""
+        labels_by_lang = collections.defaultdict(list)
 
-        # 1. Labels with the correct language tag
-        same_lang_labels = [str(label)
-                            for label in all_labels
-                            if label.language == language]
+        for label_type in label_types:
+            for label in self.graph.objects(concept, label_type):
+                labels_by_lang[label.language].append(str(label))
 
-        # 2. Labels without a language tag
-        no_lang_labels = [str(label)
-                          for label in all_labels
-                          if label.language is None]
-
-        # Return both kinds, but better ones (with the right language) first
-        return same_lang_labels + no_lang_labels
+        return labels_by_lang
 
     @staticmethod
     def is_rdf_file(path):
@@ -101,7 +106,7 @@ class SubjectFileSKOS(SubjectCorpus):
         fmt = rdflib.util.guess_format(path)
         return fmt is not None
 
-    def save_skos(self, path, language):
+    def save_skos(self, path):
         """Save the contents of the subject vocabulary into a SKOS/Turtle
         file with the given path name."""
 

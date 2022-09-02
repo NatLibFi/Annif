@@ -46,7 +46,7 @@ class ProjectSuggestMap:
             hits = project.suggest(doc.text, self.backend_params)
             filtered_hits[project_id] = hits.filter(
                 project.subjects, self.limit, self.threshold)
-        return (filtered_hits, doc.uris, doc.labels)
+        return (filtered_hits, doc.subject_set)
 
 
 def get_pool(n_jobs):

@@ -41,7 +41,7 @@ def test_omikuji_create_train_file(tmpdir, project, datadir):
     tmpfile.write("nonexistent\thttp://example.com/nonexistent\n" +
                   "arkeologia\thttp://www.yso.fi/onto/yso/p1265\n" +
                   "...\thttp://example.com/none")
-    corpus = annif.corpus.DocumentFile(str(tmpfile))
+    corpus = annif.corpus.DocumentFile(str(tmpfile), project.subjects)
     omikuji_type = annif.backend.get_backend('omikuji')
     omikuji = omikuji_type(
         backend_id='omikuji',
@@ -151,10 +151,9 @@ def test_omikuji_suggest(project):
 
     assert len(results) > 0
     assert len(results) <= 8
-    hits = results.as_list(project.subjects)
-    assert 'http://www.yso.fi/onto/yso/p1265' in [
-        result.uri for result in hits]
-    assert 'arkeologia' in [result.label for result in hits]
+    hits = results.as_list()
+    archaeology = project.subjects.by_uri('http://www.yso.fi/onto/yso/p1265')
+    assert archaeology in [result.subject_id for result in hits]
 
 
 def test_omikuji_suggest_no_input(project):

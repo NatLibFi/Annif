@@ -12,7 +12,7 @@ def test_rest_list_projects(app):
         # hidden project should not be returned
         assert 'dummy-en' not in project_ids
         # private project should not be returned
-        assert 'dummydummy' not in project_ids
+        assert 'dummy-private' not in project_ids
         # project with no access level setting should be returned
         assert 'ensemble' in project_ids
 
@@ -34,7 +34,7 @@ def test_rest_show_project_hidden(app):
 def test_rest_show_project_private(app):
     # private projects should not be accessible via REST
     with app.app_context():
-        result = annif.rest.show_project('dummydummy')
+        result = annif.rest.show_project('dummy-private')
         assert result.status_code == 404
 
 
@@ -70,7 +70,7 @@ def test_rest_suggest_private(app):
     # private projects should not be accessible via REST
     with app.app_context():
         result = annif.rest.suggest(
-            'dummydummy',
+            'dummy-private',
             text='example text',
             limit=10,
             threshold=0.0)
@@ -97,6 +97,18 @@ def test_rest_suggest_novocab(app):
         assert result.status_code == 503
 
 
+def test_rest_suggest_with_different_vocab_language(app):
+    # project language is English - input should be in English
+    # vocab language is Finnish - subject labels should be in Finnish
+    with app.app_context():
+        result = annif.rest.suggest(
+            'dummy-vocablang',
+            text='example text',
+            limit=10,
+            threshold=0.0)
+        assert result['results'][0]['label'] == 'dummy-fi'
+
+
 def test_rest_suggest_with_notations(app):
     with app.app_context():
         result = annif.rest.suggest(
@@ -115,8 +127,8 @@ def test_rest_learn_empty(app):
 
 def test_rest_learn(app):
     documents = [{'text': 'the quick brown fox',
-                  'subjects': [{'uri': 'http://example.org/fox',
-                                'label': 'fox'}]}]
+                  'subjects': [{'uri': 'http://example.org/none',
+                                'label': 'none'}]}]
     with app.app_context():
         response = annif.rest.learn('dummy-en', documents)
         assert response == (None, 204)  # success, no output
@@ -127,8 +139,8 @@ def test_rest_learn(app):
             limit=10,
             threshold=0.0)
         assert 'results' in result
-        assert result['results'][0]['uri'] == 'http://example.org/fox'
-        assert result['results'][0]['label'] == 'fox'
+        assert result['results'][0]['uri'] == 'http://example.org/none'
+        assert result['results'][0]['label'] == 'none'
 
 
 def test_rest_learn_novocab(app):
