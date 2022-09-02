@@ -111,13 +111,15 @@ class AnnifVocabulary(DatadirMixin):
 
         if not force and os.path.exists(
                 os.path.join(self.datadir, self.INDEX_FILENAME_CSV)):
-            logger.info('updating existing vocabulary')
+            logger.info('updating existing subject index')
             self._subjects = self._update_subject_index(subject_corpus)
         else:
+            logger.info('creating subject index')
             self._subjects = self._create_subject_index(subject_corpus)
 
-        subject_corpus.save_skos(
-            os.path.join(self.datadir, self.INDEX_FILENAME_TTL))
+        skosfile = os.path.join(self.datadir, self.INDEX_FILENAME_TTL)
+        logger.info(f'saving vocabulary into SKOS file {skosfile}')
+        subject_corpus.save_skos(skosfile)
 
     def as_graph(self):
         """return the vocabulary as an rdflib graph"""
