@@ -3,7 +3,7 @@ FROM python:3.8-slim-bullseye AS builder
 LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
 
 SHELL ["/bin/bash", "-c"]
-ARG optional_dependencies=dev,voikko,pycld3,fasttext,nn,omikuji,yake,spacy
+ARG optional_dependencies=dev,voikko,pycld3,fasttext,nn,omikuji,yake,spacy,pecos
 # Bulding fastText needs some system packages
 RUN if [[ $optional_dependencies =~ "fasttext" ]]; then \
 		apt-get update && \
@@ -20,7 +20,7 @@ FROM python:3.8-slim-bullseye
 SHELL ["/bin/bash", "-c"]
 COPY --from=builder /usr/local/lib/python3.8 /usr/local/lib/python3.8
 
-ARG optional_dependencies=dev,voikko,pycld3,fasttext,nn,omikuji,yake,spacy
+ARG optional_dependencies=dev,voikko,pycld3,fasttext,nn,omikuji,yake,spacy,pecos
 # Install system dependencies needed at runtime:
 RUN apt-get update && \
 	if [[ $optional_dependencies =~ "voikko" ]]; then \
@@ -49,6 +49,10 @@ RUN if [[ $optional_dependencies =~ "spacy" ]]; then \
 			python -m spacy download $model; \
 		done; \
 	fi
+RUN if [[ $optional_dependencies =~ "pecos" ]]; then \
+                mkdir /.cache -m a=rwx; \
+        fi
+
 
 # Install Annif by copying source and make the installation editable:
 COPY annif /Annif/annif

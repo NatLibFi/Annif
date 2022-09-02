@@ -53,7 +53,7 @@ setup(
         'yake': ['yake==0.4.5'],
         'pycld3': ['pycld3'],
         'spacy': ['spacy==3.3.*'],
-        'pecos': ['libpecos==0.2.3'],
+        'pecos': ['libpecos==0.4.*'],
         'dev': [
             'codecov',
             'coverage<=6.2',
