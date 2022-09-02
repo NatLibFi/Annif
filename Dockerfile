@@ -1,24 +1,6 @@
-FROM python:3.8-slim-bullseye AS builder
-
-LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
-
-SHELL ["/bin/bash", "-c"]
-ARG optional_dependencies=dev,voikko,pycld3,fasttext,nn,omikuji,yake,spacy
-# Bulding fastText needs some system packages
-RUN if [[ $optional_dependencies =~ "fasttext" ]]; then \
-		apt-get update && \
-		apt-get install -y --no-install-recommends \
-			build-essential && \
-		pip install --upgrade pip setuptools wheel --no-cache-dir && \
-		pip install --no-cache-dir \
-			fasttext==0.9.2; \
-	fi
-
-
 FROM python:3.8-slim-bullseye
-
+LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
 SHELL ["/bin/bash", "-c"]
-COPY --from=builder /usr/local/lib/python3.8 /usr/local/lib/python3.8
 
 ARG optional_dependencies=dev,voikko,pycld3,fasttext,nn,omikuji,yake,spacy
 # Install system dependencies needed at runtime:
