@@ -272,6 +272,20 @@ def test_load_vocab_tsv(testdatadir):
     assert testdatadir.join('vocabs/yso/subjects.dump.gz').size() > 0
 
 
+def test_load_vocab_tsv_no_lang(testdatadir):
+    subjectfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'subjects.tsv')
+    failed_result = runner.invoke(annif.cli.cli,
+                                  ['load-vocab', 'yso', subjectfile])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "Please use --language option to set the language " \
+        "of a TSV vocabulary." in failed_result.output
+
+
 def test_load_vocab_tsv_with_bom(testdatadir):
     with contextlib.suppress(FileNotFoundError):
         os.remove(str(testdatadir.join('vocabs/yso/subjects.csv')))
