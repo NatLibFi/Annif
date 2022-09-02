@@ -339,6 +339,21 @@ def test_load_vocab_ttl(testdatadir):
     assert testdatadir.join('vocabs/yso/subjects.dump.gz').size() > 0
 
 
+def test_load_vocab_nonexistent_vocab():
+    subjectfile = os.path.join(
+        os.path.dirname(__file__),
+        'corpora',
+        'archaeology',
+        'yso-archaeology.ttl')
+    failed_result = runner.invoke(
+        annif.cli.cli, [
+            'load-vocab', 'notfound', subjectfile])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "No vocabularies found with the id 'notfound'." \
+        in failed_result.output
+
+
 def test_load_vocab_nonexistent_path():
     failed_result = runner.invoke(
         annif.cli.cli, [
