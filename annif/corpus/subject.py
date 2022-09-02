@@ -118,6 +118,10 @@ class SubjectIndex:
     def __len__(self):
         return len(self._subjects)
 
+    @property
+    def languages(self):
+        return self._languages
+
     def __getitem__(self, subject_id):
         return self._subjects[subject_id]
 

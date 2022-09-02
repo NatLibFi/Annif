@@ -22,10 +22,9 @@ class AnnifVocabulary(DatadirMixin):
     INDEX_FILENAME_TTL = "subjects.ttl"
     INDEX_FILENAME_CSV = "subjects.csv"
 
-    def __init__(self, vocab_id, datadir, language):
+    def __init__(self, vocab_id, datadir):
         DatadirMixin.__init__(self, datadir, 'vocabs', vocab_id)
         self.vocab_id = vocab_id
-        self.language = language
         self._skos_vocab = None
 
     def _create_subject_index(self, subject_corpus):
@@ -98,6 +97,13 @@ class AnnifVocabulary(DatadirMixin):
 
         raise NotInitializedException(f'graph file {path} not found')
 
+    def __len__(self):
+        return len(self.subjects)
+
+    @property
+    def languages(self):
+        return self.subjects.languages
+
     def load_vocabulary(self, subject_corpus, force=False):
         """Load subjects from a subject corpus and save them into one
         or more subject index files as well as a SKOS/Turtle file for later
@@ -105,13 +111,15 @@ class AnnifVocabulary(DatadirMixin):
 
         if not force and os.path.exists(
                 os.path.join(self.datadir, self.INDEX_FILENAME_CSV)):
-            logger.info('updating existing vocabulary')
+            logger.info('updating existing subject index')
             self._subjects = self._update_subject_index(subject_corpus)
         else:
+            logger.info('creating subject index')
             self._subjects = self._create_subject_index(subject_corpus)
 
-        subject_corpus.save_skos(
-            os.path.join(self.datadir, self.INDEX_FILENAME_TTL))
+        skosfile = os.path.join(self.datadir, self.INDEX_FILENAME_TTL)
+        logger.info(f'saving vocabulary into SKOS file {skosfile}')
+        subject_corpus.save_skos(skosfile)
 
     def as_graph(self):
         """return the vocabulary as an rdflib graph"""

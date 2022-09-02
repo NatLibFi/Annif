@@ -19,6 +19,7 @@ import annif.registry
 from annif.project import Access
 from annif.suggestion import SuggestionFilter, ListSuggestionResult
 from annif.exception import ConfigurationException, NotSupportedException
+from annif.exception import NotInitializedException
 from annif.util import metric_code
 
 logger = annif.logger
@@ -41,17 +42,32 @@ def get_project(project_id):
         sys.exit(1)
 
 
-def open_documents(paths, subject_index, language, docs_limit):
+def get_vocab(vocab_id):
+    """
+    Helper function to get a vocabulary by ID and bail out if it doesn't
+    exist"""
+    try:
+        return annif.registry.get_vocab(vocab_id,
+                                        min_access=Access.private)
+    except ValueError:
+        click.echo(
+            f"No vocabularies found with the id '{vocab_id}'.",
+            err=True)
+        sys.exit(1)
+
+
+def open_documents(paths, subject_index, vocab_lang, docs_limit):
     """Helper function to open a document corpus from a list of pathnames,
-    each of which is either a TSV file or a directory of TXT files. The
-    corpus will be returned as an instance of DocumentCorpus or
-    LimitingDocumentCorpus."""
+    each of which is either a TSV file or a directory of TXT files. For
+    directories with subjects in TSV files, the given vocabulary language
+    will be used to convert subject labels into URIs. The corpus will be
+    returned as an instance of DocumentCorpus or LimitingDocumentCorpus."""
 
     def open_doc_path(path, subject_index):
         """open a single path and return it as a DocumentCorpus"""
         if os.path.isdir(path):
             return annif.corpus.DocumentDirectory(path, subject_index,
-                                                  language,
+                                                  vocab_lang,
                                                   require_subjects=True)
         return annif.corpus.DocumentFile(path, subject_index)
 
@@ -165,6 +181,8 @@ def run_show_project(project_id):
     click.echo(f'Project ID:        {proj.project_id}')
     click.echo(f'Project Name:      {proj.name}')
     click.echo(f'Language:          {proj.language}')
+    click.echo(f'Vocabulary:        {proj.vocab.vocab_id}')
+    click.echo(f'Vocab language:    {proj.vocab_lang}')
     click.echo(f'Access:            {proj.access.name}')
     click.echo(f'Trained:           {proj.is_trained}')
     click.echo(f'Modification time: {proj.modification_time}')
@@ -181,7 +199,34 @@ def run_clear_project(project_id):
     proj.remove_model_data()
 
 
-@cli.command('loadvoc')
+@cli.command('list-vocabs')
+@common_options
+@click_log.simple_verbosity_option(logger, default='ERROR')
+def run_list_vocabs():
+    """
+    List available vocabularies.
+    """
+
+    template = "{0: <20}{1: <20}{2: >10}  {3: <6}"
+    header = template.format(
+        "Vocabulary ID", "Languages", "Size", "Loaded")
+    click.echo(header)
+    click.echo("-" * len(header))
+    for vocab in annif.registry.get_vocabs(
+            min_access=Access.private).values():
+        try:
+            languages = ','.join(sorted(vocab.languages))
+            size = len(vocab)
+            loaded = True
+        except NotInitializedException:
+            languages = '-'
+            size = '-'
+            loaded = False
+        click.echo(template.format(
+            vocab.vocab_id, languages, size, str(loaded)))
+
+
+@cli.command('loadvoc', deprecated=True)
 @click.argument('project_id')
 @click.argument('subjectfile', type=click.Path(exists=True, dir_okay=False))
 @click.option('--force', '-f', default=False, is_flag=True,
@@ -214,8 +259,40 @@ def run_loadvoc(project_id, force, subjectfile):
         subjects = annif.corpus.SubjectFileCSV(subjectfile)
     else:
         # probably a TSV file
-        subjects = annif.corpus.SubjectFileTSV(subjectfile, proj.language)
+        subjects = annif.corpus.SubjectFileTSV(subjectfile, proj.vocab_lang)
     proj.vocab.load_vocabulary(subjects, force=force)
+
+
+@cli.command('load-vocab')
+@click.argument('vocab_id')
+@click.argument('subjectfile', type=click.Path(exists=True, dir_okay=False))
+@click.option('--language', '-L', help='Language of subject file')
+@click.option('--force', '-f', default=False, is_flag=True,
+              help='Replace existing vocabulary completely ' +
+                   'instead of updating it')
+@common_options
+def run_load_vocab(vocab_id, language, force, subjectfile):
+    """
+    Load a vocabulary from a subject file.
+    """
+    vocab = get_vocab(vocab_id)
+    if annif.corpus.SubjectFileSKOS.is_rdf_file(subjectfile):
+        # SKOS/RDF file supported by rdflib
+        subjects = annif.corpus.SubjectFileSKOS(subjectfile)
+        click.echo(f"Loading vocabulary from SKOS file {subjectfile}...")
+    elif annif.corpus.SubjectFileCSV.is_csv_file(subjectfile):
+        # CSV file
+        subjects = annif.corpus.SubjectFileCSV(subjectfile)
+        click.echo(f"Loading vocabulary from CSV file {subjectfile}...")
+    else:
+        # probably a TSV file - we need to know its language
+        if not language:
+            click.echo("Please use --language option to set the language of " +
+                       "a TSV vocabulary.", err=True)
+            sys.exit(1)
+        click.echo(f"Loading vocabulary from TSV file {subjectfile}...")
+        subjects = annif.corpus.SubjectFileTSV(subjectfile, language)
+    vocab.load_vocabulary(subjects, force=force)
 
 
 @cli.command('train')
@@ -252,7 +329,7 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
         documents = 'cached'
     else:
         documents = open_documents(paths, proj.subjects,
-                                   proj.vocab.language, docs_limit)
+                                   proj.vocab_lang, docs_limit)
     proj.train(documents, backend_params, jobs)
 
 
@@ -275,7 +352,7 @@ def run_learn(project_id, paths, docs_limit, backend_param):
     proj = get_project(project_id)
     backend_params = parse_backend_params(backend_param, proj)
     documents = open_documents(paths, proj.subjects,
-                               proj.vocab.language, docs_limit)
+                               proj.vocab_lang, docs_limit)
     proj.learn(documents, backend_params)
 
 
@@ -303,7 +380,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
             "<{}>\t{}\t{}".format(
                 subj.uri,
                 '\t'.join(filter(None,
-                                 (subj.labels[project.vocab.language],
+                                 (subj.labels[project.vocab_lang],
                                   subj.notation))),
                 hit.score))
 
@@ -334,7 +411,7 @@ def run_index(project_id, directory, suffix, force,
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
     for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
-            directory, project.subjects, project.language,
+            directory, project.subjects, project.vocab_lang,
             require_subjects=False):
         with open(docfilename, encoding='utf-8-sig') as docfile:
             text = docfile.read()
@@ -350,7 +427,7 @@ def run_index(project_id, directory, suffix, force,
                 subj = project.subjects[hit.subject_id]
                 line = "<{}>\t{}\t{}".format(
                     subj.uri,
-                    '\t'.join(filter(None, (subj.labels[project.language],
+                    '\t'.join(filter(None, (subj.labels[project.vocab_lang],
                                             subj.notation))),
                     hit.score)
                 click.echo(line, file=subjfile)
@@ -432,7 +509,7 @@ def run_eval(
             raise NotSupportedException(
                 "cannot open results-file for writing: " + str(e))
     docs = open_documents(paths, project.subjects,
-                          project.vocab.language, docs_limit)
+                          project.vocab_lang, docs_limit)
 
     jobs, pool_class = annif.parallel.get_pool(jobs)
 
@@ -449,7 +526,7 @@ def run_eval(
     template = "{0:<30}\t{1}"
     metrics = eval_batch.results(metrics=metric,
                                  results_file=results_file,
-                                 language=project.vocab.language)
+                                 language=project.vocab_lang)
     for metric, score in metrics.items():
         click.echo(template.format(metric + ":", score))
     if metrics_file:
@@ -484,7 +561,7 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
 
     ndocs = 0
     docs = open_documents(paths, project.subjects,
-                          project.vocab.language, docs_limit)
+                          project.vocab_lang, docs_limit)
     for doc in docs.documents:
         raw_hits = project.suggest(doc.text, backend_params)
         hits = raw_hits.filter(project.subjects, limit=BATCH_MAX_LIMIT)
@@ -567,7 +644,7 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric,
     """
     proj = get_project(project_id)
     documents = open_documents(paths, proj.subjects,
-                               proj.vocab.language, docs_limit)
+                               proj.vocab_lang, docs_limit)
     click.echo(f"Looking for optimal hyperparameters using {trials} trials")
     rec = proj.hyperopt(documents, trials, jobs, metric, results_file)
     click.echo(f"Got best {metric} score {rec.score:.4f} with:")

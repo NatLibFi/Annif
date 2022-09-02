@@ -34,6 +34,7 @@ def test_get_project_fi(registry):
     assert project.language == 'fi'
     assert project.analyzer.name == 'snowball'
     assert project.analyzer.param == 'finnish'
+    assert project.vocab_lang == 'fi'
     assert project.access == Access.public
     assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
 
@@ -56,7 +57,7 @@ def test_get_project_dummy_vocablang(registry):
     assert project.analyzer.param == 'english'
     # project uses the dummy vocab, with language overridden to Finnish
     assert project.vocab.vocab_id == 'dummy'
-    assert project.vocab.language == 'fi'
+    assert project.vocab_lang == 'fi'
     assert project.access == Access.public
     assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
 

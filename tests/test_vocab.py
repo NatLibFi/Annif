@@ -9,7 +9,7 @@ import rdflib.namespace
 
 
 def load_dummy_vocab(tmpdir):
-    vocab = annif.vocab.AnnifVocabulary('vocab-id', str(tmpdir), 'en')
+    vocab = annif.vocab.AnnifVocabulary('vocab-id', str(tmpdir))
     subjfile = os.path.join(
         os.path.dirname(__file__),
         'corpora',

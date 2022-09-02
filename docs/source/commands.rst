@@ -5,10 +5,10 @@ CLI commands
 These are the command-line interface commands of Annif, with REST API
 equivalents when applicable.
 
-To reference a project most of the commands take a ``PROJECT_ID`` parameter,
-which is an alphanumeric string ``(A-Za-z0-9_-)``. Common options of the
-commands are ``--projects`` for setting a (non-default) path to a `project
-configuration file
+To reference a vocabulary or a project, most of the commands take either a
+``VOCAB_ID`` or a ``PROJECT_ID`` parameter, which are alphanumeric strings
+``(A-Za-z0-9_-)``. Common options of the commands are ``--projects`` for
+setting a (non-default) path to a `project configuration file
 <https://github.com/NatLibFi/Annif/wiki/Project-configuration>`_ and
 ``--verbosity`` for selecting logging level.
 
@@ -16,16 +16,27 @@ configuration file
    :local:
    :backlinks: none
 
-**********************
-Project administration
-**********************
+*************************
+Vocabulary administration
+*************************
 
-.. click:: annif.cli:run_loadvoc
-   :prog: annif loadvoc
+.. click:: annif.cli:run_load_vocab
+   :prog: annif load-vocab
 
 **REST equivalent**
 
    N/A
+
+.. click:: annif.cli:run_list_vocabs
+   :prog: annif list-vocabs
+
+**REST equivalent**
+
+   N/A
+
+**********************
+Project administration
+**********************
 
 .. click:: annif.cli:run_list_projects
    :prog: annif list-projects
