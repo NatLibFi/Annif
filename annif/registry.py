@@ -76,7 +76,7 @@ class AnnifRegistry:
         vocab_spec. If no language information is specified, use the given
         default language."""
 
-        match = re.match(r'(\w+)(\((.*)\))?', vocab_spec)
+        match = re.match(r'([\w-]+)(\((.*)\))?$', vocab_spec)
         if match is None:
             raise ValueError(
                 f"Invalid vocabulary specification: {vocab_spec}")
