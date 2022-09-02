@@ -108,6 +108,14 @@ jobs:
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
     - uses: actions/checkout@v3
+    - name: Load cached Poetry installation and repositories info
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/pipx/venvs
+          ~/.local/bin
+          ~/.cache/pypoetry/cache/repositories
+        key: poetry-installation-and-repos-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}
     - name: Install Poetry
       run: |
         pipx install poetry==$POETRY_VERSION
