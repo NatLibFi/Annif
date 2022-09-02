@@ -12,14 +12,15 @@ You are reading documentation for version |version|.
 
 
 .. toctree::
-   :maxdepth: 3
-   :caption: Annif API Reference:
+   :maxdepth: 1
+   :caption: Contents:
 
+   source/commands
    source/annif
 
 
 Indices and tables
-==================
+******************
 
 * :ref:`genindex`
 * :ref:`modindex`

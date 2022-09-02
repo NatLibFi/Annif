@@ -28,7 +28,7 @@ setup(
         'swagger_ui_bundle',
         'flask>=1.0.4,<3',
         'flask-cors',
-        'click==8.0.*',
+        'click==8.1.*',
         'click-log',
         'joblib==1.1.0',
         'nltk',
@@ -42,7 +42,7 @@ setup(
         'stwfsapy==0.3.*',
         'python-dateutil',
         'tomli==2.0.*',
-        'simplemma==0.7.*'
+        'simplemma==0.8.*'
     ],
     tests_require=['py', 'pytest', 'requests'],
     extras_require={

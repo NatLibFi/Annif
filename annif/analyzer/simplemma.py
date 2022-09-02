@@ -1,6 +1,5 @@
 """Simplemma analyzer for Annif, based on simplemma lemmatizer."""
 
-import functools
 import simplemma
 from . import analyzer
 
@@ -12,6 +11,5 @@ class SimplemmaAnalyzer(analyzer.Analyzer):
         self.lang = param
         super().__init__(**kwargs)
 
-    @functools.lru_cache(maxsize=500000)
     def _normalize_word(self, word):
-        return simplemma.lemmatize(word, self.lang)
+        return simplemma.lemmatize(word, lang=self.lang)
