@@ -4,6 +4,7 @@ import contextlib
 import random
 import re
 import os.path
+import shutil
 import importlib
 import json
 from click.testing import CliRunner
@@ -110,6 +111,16 @@ def test_clear_project_nonexistent_data(testdatadir, caplog):
     assert len(caplog.records) == 1
     expected_msg = 'No model data to remove for project dummy-fi.'
     assert expected_msg == caplog.records[0].message
+
+
+def test_list_vocabs_before_load(testdatadir):
+    with contextlib.suppress(FileNotFoundError):
+        shutil.rmtree(str(testdatadir.join('vocabs/yso/')))
+    result = runner.invoke(annif.cli.cli, ["list-vocabs"])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert re.search(r'^yso\s+-\s+-\s+False',
+                     result.output, re.MULTILINE)
 
 
 def test_loadvoc_csv(testdatadir):
@@ -378,7 +389,7 @@ def test_load_vocab_nonexistent_path():
            "File 'nonexistent_path' does not exist." in failed_result.output
 
 
-def test_list_vocabs():
+def test_list_vocabs_after_load():
     result = runner.invoke(annif.cli.cli, ["list-vocabs"])
     assert not result.exception
     assert result.exit_code == 0
