@@ -25,6 +25,12 @@ def test_get_vocab_invalid(registry):
     assert 'Invalid vocabulary specification' in str(excinfo.value)
 
 
+def test_get_vocab_hyphen(registry):
+    vocab, lang = registry.get_vocab('dummy-noname', None)
+    assert vocab.vocab_id == 'dummy-noname'
+    assert vocab is not None
+
+
 def test_update_subject_index_with_no_changes(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
 
