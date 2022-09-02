@@ -34,6 +34,7 @@ def test_get_project_fi(registry):
     assert project.language == 'fi'
     assert project.analyzer.name == 'snowball'
     assert project.analyzer.param == 'finnish'
+    assert project.vocab_lang == 'fi'
     assert project.access == Access.public
     assert isinstance(project.backend, annif.backend.dummy.DummyBackend)
 
