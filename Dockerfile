@@ -26,6 +26,9 @@ COPY pyproject.toml setup.cfg README.md LICENSE.txt CITATION.cff projects.cfg.di
 RUN echo "Installing dependencies for optional features: $optional_dependencies" \
 	&& poetry install -E "$optional_dependencies"
 
+# Download nltk data
+RUN python -m nltk.downloader punkt -d /usr/share/nltk_data
+
 # Download spaCy models, if the optional feature was selected
 ARG spacy_models=en_core_web_sm
 RUN if [[ $optional_dependencies =~ "spacy" ]]; then \
@@ -38,9 +41,6 @@ RUN if [[ $optional_dependencies =~ "spacy" ]]; then \
 COPY annif /Annif/annif
 COPY tests /Annif/tests
 RUN poetry install -E "$optional_dependencies"
-
-# Download nltk data
-RUN python -m nltk.downloader punkt -d /usr/share/nltk_data
 
 WORKDIR /annif-projects
 
