@@ -134,7 +134,7 @@ class NNEnsembleBackend(
                                  in hits_from_sources],
                                 dtype=np.float32)
         results = self._model.predict(
-            np.expand_dims(score_vector.transpose(), 0))
+            np.expand_dims(score_vector.transpose(), 0), verbose=0)
         return VectorSuggestionResult(results[0])
 
     def _create_model(self, sources):
