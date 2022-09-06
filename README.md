@@ -61,13 +61,16 @@ repository](https://github.com/NatLibFi/Annif).
 Clone the repository.
 
 Switch into the repository directory.
-Install poetry if you don't have it:
 
-    curl -sSL https://install.python-poetry.org | python3 -
+Install [pipx](https://pypa.github.io/pipx/) and Poetry if you don't have them:
 
-For other installation ways check the [official Poetry installation documentation](https://python-poetry.org/docs/master/#installation).
+    python3 -m pip install --user pipx
+    python3 -m pipx ensurepath
+    pipx install poetry
 
-Create a virtual environment and install dependencies (including development):
+Poetry can be installed also without pipx: check the [Poetry documentation](https://python-poetry.org/docs/master/#installation).
+
+Create a virtual environment and install dependencies (by default development dependencies are included; use option `-E` to install selected optional dependencies, or install all of them with `--all-extras`):
 
     poetry install
 
