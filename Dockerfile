@@ -48,7 +48,7 @@ WORKDIR /annif-projects
 RUN groupadd -g 998 annif_user && \
     useradd -r -u 998 -g annif_user annif_user && \
     chmod -R a+rX /Annif && \
-    mkdir /Annif/tests/data && \
+    mkdir -p /Annif/tests/data && \
     chown -R annif_user:annif_user /annif-projects /Annif/tests/data
 USER annif_user
 
