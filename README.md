@@ -118,12 +118,15 @@ has a [citable DOI](https://doi.org/10.5281/zenodo.5654173).
 See "Cite this repository" in the details of the repository.
 
 ## Annif articles
-
+<ul>
+<li> 
 Suominen, O.; Inkinen, J.; Lehtinen, M., 2022. 
 Annif and Finto AI: Developing and Implementing Automated Subject Indexing.
 JLIS.It, 13(1), pp. 265–282. URL:
-[https://www.jlis.it/index.php/jlis/article/view/437](https://www.jlis.it/index.php/jlis/article/view/437)
-
+https://www.jlis.it/index.php/jlis/article/view/437
+<details>
+<summary>See BibTex</summary>
+    
     @article{suominen2022annif,
       title={Annif and Finto AI: Developing and Implementing Automated Subject Indexing},
       author={Suominen, Osma and Inkinen, Juho and Lehtinen, Mona},
@@ -135,10 +138,32 @@ JLIS.It, 13(1), pp. 265–282. URL:
       doi = {10.4403/jlis.it-12740},
       url={https://www.jlis.it/index.php/jlis/article/view/437},
     }
+</details>
+</li> 
+<li> 
+Suominen, O.; Koskenniemi, I, 2022.
+Annif Analyzer Shootout: Comparing text lemmatization methods for automated subject indexing.
+Code4Lib Journal, (54). URL:
+https://journal.code4lib.org/articles/16719
+<details>
+<summary>See BibTex</summary>
 
+    @article{suominen2022analyzer,
+      title={Annif Analyzer Shootout: Comparing text lemmatization methods for automated subject indexing},
+      author={Suominen, Osma and Koskenniemi, Ilkka},
+      journal={Code4Lib J.},
+      number={54},
+      year={2022},
+      url={https://journal.code4lib.org/articles/16719},
+    }
+</details>
+</li> 
+<li> 
 Suominen, O., 2019. Annif: DIY automated subject indexing using multiple
 algorithms. LIBER Quarterly, 29(1), pp.1–25. DOI:
-[https://doi.org/10.18352/lq.10285](https://doi.org/10.18352/lq.10285)
+https://doi.org/10.18352/lq.10285
+<details>
+<summary>See BibTex</summary>
 
     @article{suominen2019annif,
       title={Annif: DIY automated subject indexing using multiple algorithms},
@@ -151,6 +176,9 @@ algorithms. LIBER Quarterly, 29(1), pp.1–25. DOI:
       doi = {10.18352/lq.10285},
       url = {https://doi.org/10.18352/lq.10285}
     }
+</details>
+</li>
+</ul>
 
 # License
 
