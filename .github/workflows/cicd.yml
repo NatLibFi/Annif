@@ -8,8 +8,9 @@ on:
   pull_request:
   workflow_dispatch:
 env:
-  PIP_UPGRADE: "true"  # always upgrade to latest version
-  PIP_UPGRADE_STRATEGY: "eager"  # upgrade all dependencies
+  PIPX_HOME: "/home/runner/.cache/pipx"
+  PIPX_BIN_DIR: "/home/runner/.local/bin"
+  POETRY_VERSION: "1.2.0"
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -26,47 +27,51 @@ jobs:
         sudo apt-get install \
           libvoikko1 \
           voikko-fi
+    - name: Load cached Poetry installation and repositories info
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/pipx/venvs
+          ~/.local/bin
+          ~/.cache/pypoetry/cache/repositories
+        key: poetry-installation-and-repos-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}
+    - name: Install Poetry
+      run: |
+        pipx install poetry==$POETRY_VERSION
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5  # v4.2.0
       with:
         python-version: ${{ matrix.python-version }}
-        cache: pip
-        cache-dependency-path: setup.py
+        cache: 'poetry'
+        cache-dependency-path: 'pyproject.toml'
     - name: Install Python dependencies
       run: |
-        python -m pip install pip setuptools wheel
-        python -m pip install .[dev]
-        python -m nltk.downloader punkt
         # Selectively install the optional dependencies for some Python versions
-        # Install the optional neural network dependencies (TensorFlow and LMDB)
-        # - except for one Python version (3.9) so that we can test also without them
-        if [[ ${{ matrix.python-version }} != '3.9' ]]; then pip install .[nn]; fi
-        # Install the optional Omikuji and YAKE dependencies
-        # - except for one Python version (3.9) so that we can test also without them
-        if [[ ${{ matrix.python-version }} != '3.9' ]]; then pip install .[omikuji,yake]; fi
-        # Install the optional fastText dependencies for Python 3.9 only
-        if [[ ${{ matrix.python-version }} == '3.9' ]]; then pip install .[fasttext]; fi
-        # Install the optional spaCy dependencies for Python 3.9 only
-        if [[ ${{ matrix.python-version }} == '3.9' ]]; then
-          pip install .[spacy]
-          # download the small English pretrained spaCy model needed by spacy analyzer
-          python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+        # For Python 3.8:
+        if [[ ${{ matrix.python-version }} == '3.8' ]]; then
+          poetry install -E "nn omikuji yake voikko pycld3";
         fi
-        # For Python 3.8
-        # - voikko and pycld3 dependencies
-        if [[ ${{ matrix.python-version }} == '3.8' ]]; then python -m pip install .[voikko,pycld3]; fi
-        # Verify installed packages have compatible dependencies:
-        python -m pip check
+        # For Python 3.9:
+        if [[ ${{ matrix.python-version }} == '3.9' ]]; then
+          poetry install -E "fasttext spacy";
+          # download the small English pretrained spaCy model needed by spacy analyzer
+          poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+        fi
+        # For Python 3.10:
+        if [[ ${{ matrix.python-version }} == '3.10' ]]; then
+          poetry install -E "nn omikuji yake";
+        fi
+        poetry run python -m nltk.downloader punkt
 
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest --cov=./ --cov-report xml
+        poetry run pytest --cov=./ --cov-report xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378  # v3.1.0
 
@@ -103,21 +108,30 @@ jobs:
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
     - uses: actions/checkout@v3
+    - name: Load cached Poetry installation and repositories info
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/pipx/venvs
+          ~/.local/bin
+          ~/.cache/pypoetry/cache/repositories
+        key: poetry-installation-and-repos-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}
+    - name: Install Poetry
+      run: |
+        pipx install poetry==$POETRY_VERSION
     - name: Set up Python 3.9
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5  # v4.2.0
       with:
         python-version: '3.9'
-        cache: pip
-        cache-dependency-path: setup.py
-    - name: Build distribution
+        cache: 'poetry'
+        cache-dependency-path: 'pyproject.toml'
+    - name: Build and publish distribution to PyPI
+      env:
+        POETRY_HTTP_BASIC_PYPI_USERNAME: __token__
+        POETRY_HTTP_BASIC_PYPI_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       run: |
-        python -m pip install wheel
-        python setup.py sdist bdist_wheel
-    - name: Publish distribution to PyPI
-      uses: pypa/gh-action-pypi-publish@717ba43cfbb0387f6ce311b169a825772f54d295  # v1.5.0
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
+        poetry publish --build
+
     - name: Login to Quay.io
       uses: docker/login-action@49ed152c8eca782a232dede0303416e8f356c37b  # v2.0.0
       with:

@@ -54,6 +54,7 @@ for details.
 
 A development version of Annif can be installed by cloning the [GitHub
 repository](https://github.com/NatLibFi/Annif).
+[Poetry](https://python-poetry.org/) is used for managing dependencies and virtual environment for the development version.
 
 ## Installation and setup
 
@@ -61,15 +62,26 @@ Clone the repository.
 
 Switch into the repository directory.
 
-Create and activate a virtual environment (optional, but highly recommended):
+Install [pipx](https://pypa.github.io/pipx/) and Poetry if you don't have them. First pipx:
 
-    python3 -m venv venv
-    . venv/bin/activate
+    python3 -m pip install --user pipx
+    python3 -m pipx ensurepath
 
-Install dependencies (including development) and make the installation editable:
+Open a new shell, and then install Poetry: 
 
-    pip install .[dev]
-    pip install -e .
+    pipx install poetry
+
+Poetry can be installed also without pipx: check the [Poetry documentation](https://python-poetry.org/docs/master/#installation). 
+
+Create a virtual environment and install dependencies:
+
+    poetry install
+
+By default development dependencies are included. Use option `-E` to install dependencies for selected optional features (`-E "extra1 extra2"` for multiple extras), or install all of them with `--all-extras`. By default the virtual environment directory is not under the project directory, but there is a [setting for selecting this](https://python-poetry.org/docs/configuration/#virtualenvsin-project).
+
+Enter the virtual environment:
+
+    poetry shell
 
 You will also need NLTK data files:
 
@@ -81,7 +93,7 @@ Start up the application:
 
 ## Unit tests
 
-Run `. venv/bin/activate` to enter the virtual environment and then run `pytest`.
+Run `poetry shell` to enter the virtual environment and then run `pytest`.
 To have the test suite watch for changes in code and run automatically, use
 pytest-watch by running `ptw`.
 

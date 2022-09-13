@@ -1,3 +1,0 @@
-include annif/swagger/annif.yaml
-recursive-include annif/templates *
-recursive-include annif/static *
