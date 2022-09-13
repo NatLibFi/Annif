@@ -62,17 +62,22 @@ Clone the repository.
 
 Switch into the repository directory.
 
-Install [pipx](https://pypa.github.io/pipx/) and Poetry if you don't have them:
+Install [pipx](https://pypa.github.io/pipx/) and Poetry if you don't have them. First pipx:
 
     python3 -m pip install --user pipx
     python3 -m pipx ensurepath
+
+Open a new shell, and then install Poetry: 
+
     pipx install poetry
 
-Poetry can be installed also without pipx: check the [Poetry documentation](https://python-poetry.org/docs/master/#installation).
+Poetry can be installed also without pipx: check the [Poetry documentation](https://python-poetry.org/docs/master/#installation). 
 
-Create a virtual environment and install dependencies (by default development dependencies are included; use option `-E` to install selected optional dependencies, or install all of them with `--all-extras`):
+Create a virtual environment and install dependencies:
 
     poetry install
+
+By default development dependencies are included. Use option `-E` to install dependencies for selected optional features (`-E "extra1 extra2"` for multiple extras), or install all of them with `--all-extras`. By default the virtual environment directory is not under the project directory, but there is a [setting for selecting this](https://python-poetry.org/docs/configuration/#virtualenvsin-project).
 
 Enter the virtual environment:
 
