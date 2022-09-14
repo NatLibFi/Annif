@@ -24,7 +24,8 @@ COPY pyproject.toml setup.cfg README.md LICENSE.txt CITATION.cff projects.cfg.di
 
 # First round of installation for Docker layer caching:
 RUN echo "Installing dependencies for optional features: $optional_dependencies" \
-	&& poetry install -E "$optional_dependencies"
+	&& poetry install -E "$optional_dependencies" \
+	&& rm -rf /root/.cache/pypoetry  # No need for cache because of poetry.lock
 
 # Download nltk data
 RUN python -m nltk.downloader punkt -d /usr/share/nltk_data
