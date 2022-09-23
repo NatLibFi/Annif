@@ -1,4 +1,6 @@
-## This branch contains files used for API instances of Annif
+## This branch contains files that were used for API instances of Annif in Docker Stack / Portainer environment
+
+**Deprecation note: in 2022 the Annif instances were migrated to OpenShift environment, see [Finto AI repository](https://github.com/NatLibFi/FintoAI)**
 
 The components of the API instances are combined in Docker Stacks, which are set up using Portainer GUI. 
 The Stacks do not automatically follow the docker-compose files in this branch, the files are here to allow easier referencing to them. 
