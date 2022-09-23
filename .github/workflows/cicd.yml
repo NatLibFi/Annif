@@ -14,7 +14,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10"]
@@ -79,6 +79,7 @@ jobs:
     name: publish latest Docker image
     needs: test
     runs-on: ubuntu-20.04
+    timeout-minutes: 15
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
     - name: Login to Quay.io
