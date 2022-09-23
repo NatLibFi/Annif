@@ -226,43 +226,6 @@ def run_list_vocabs():
             vocab.vocab_id, languages, size, str(loaded)))
 
 
-@cli.command('loadvoc', deprecated=True)
-@click.argument('project_id')
-@click.argument('subjectfile', type=click.Path(exists=True, dir_okay=False))
-@click.option('--force', '-f', default=False, is_flag=True,
-              help='Replace existing vocabulary completely ' +
-                   'instead of updating it')
-@common_options
-def run_loadvoc(project_id, force, subjectfile):
-    """
-    Load a vocabulary for a project.
-    \f
-    This will load the vocabulary to be used in subject indexing. Note that
-    although ``PROJECT_ID`` is a parameter of the command, the vocabulary is
-    shared by all the projects with the same vocab identifier in the project
-    configuration, and the vocabulary only needs to be loaded for one of those
-    projects.
-
-    If a vocabulary has already been loaded, reinvoking loadvoc with a new
-    subject file will update the Annif’s internal vocabulary: label names are
-    updated and any subject not appearing in the new subject file is removed.
-    Note that new subjects will not be suggested before the project is
-    retrained with the updated vocabulary. The update behavior can be
-    overridden with the ``--force`` option.
-    """
-    proj = get_project(project_id)
-    if annif.corpus.SubjectFileSKOS.is_rdf_file(subjectfile):
-        # SKOS/RDF file supported by rdflib
-        subjects = annif.corpus.SubjectFileSKOS(subjectfile)
-    elif annif.corpus.SubjectFileCSV.is_csv_file(subjectfile):
-        # CSV file
-        subjects = annif.corpus.SubjectFileCSV(subjectfile)
-    else:
-        # probably a TSV file
-        subjects = annif.corpus.SubjectFileTSV(subjectfile, proj.vocab_lang)
-    proj.vocab.load_vocabulary(subjects, force=force)
-
-
 @cli.command('load-vocab')
 @click.argument('vocab_id')
 @click.argument('subjectfile', type=click.Path(exists=True, dir_okay=False))
