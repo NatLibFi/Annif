@@ -85,6 +85,27 @@ backend=omikuji
 analyzer=snowball(english)
 vocab=yso
 
+[mllm-fi]
+name=YSO MLLM Finnish
+language=fi
+backend=mllm
+analyzer=voikko(fi)
+vocab=yso
+
+[mllm-en]
+name=YSO MLLM English
+language=en
+backend=mllm
+analyzer=snowball(english)
+vocab=yso
+
+[mllm-sv]
+name=YSO MLLM Swedish
+language=sv
+backend=mllm
+analyzer=snowball(swedish)
+vocab=yso
+
 [yake-fi]
 name=YAKE Finnish
 language=fi
@@ -98,18 +119,18 @@ name=Ensemble Finnish
 language=fi
 vocab=yso
 backend=ensemble
-sources=tfidf-fi,fasttext-fi,maui-fi
+sources=tfidf-fi,fasttext-fi,mllm-fi
 
 [ensemble-sv]
 name=Ensemble Swedish
 language=sv
 vocab=yso
 backend=ensemble
-sources=tfidf-sv,fasttext-sv,maui-sv
+sources=tfidf-sv,fasttext-sv,mllm-sv
 
 [ensemble-en]
 name=Ensemble English
 language=en
 vocab=yso
 backend=ensemble
-sources=tfidf-en,fasttext-en,maui-en
+sources=tfidf-en,fasttext-en,mllm-en
