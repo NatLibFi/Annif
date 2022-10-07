@@ -362,16 +362,18 @@ def run_suggest(project_id, limit, threshold, language, backend_param):
               help='Force overwriting of existing result files')
 @click.option('--limit', '-l', default=10, help='Maximum number of subjects')
 @click.option('--threshold', '-t', default=0.0, help='Minimum score threshold')
+@click.option('--language', '-L', help='Language of subject labels')
 @backend_param_option
 @common_options
 def run_index(project_id, directory, suffix, force,
-              limit, threshold, backend_param):
+              limit, threshold, language, backend_param):
     """
     Index a directory with documents, suggesting subjects for each document.
     Write the results in TSV files with the given suffix (``.annif`` by
     default).
     """
     project = get_project(project_id)
+    lang = language or project.vocab_lang
     backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
@@ -392,7 +394,7 @@ def run_index(project_id, directory, suffix, force,
                 subj = project.subjects[hit.subject_id]
                 line = "<{}>\t{}\t{}".format(
                     subj.uri,
-                    '\t'.join(filter(None, (subj.labels[project.vocab_lang],
+                    '\t'.join(filter(None, (subj.labels[lang],
                                             subj.notation))),
                     hit.score)
                 click.echo(line, file=subjfile)

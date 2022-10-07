@@ -520,6 +520,19 @@ def test_index(tmpdir):
         'utf-8') == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
 
 
+def test_index_with_language_override(tmpdir):
+    tmpdir.join('doc1.txt').write('nothing special')
+
+    result = runner.invoke(
+        annif.cli.cli, ['index', '--language', 'fi', 'dummy-en', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    assert tmpdir.join('doc1.annif').exists()
+    assert tmpdir.join('doc1.annif').read_text(
+        'utf-8') == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+
+
 def test_index_nonexistent_path():
     failed_result = runner.invoke(
         annif.cli.cli, [
