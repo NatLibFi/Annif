@@ -58,7 +58,7 @@ def _suggestion_to_dict(suggestion, subject_index, language):
     }
 
 
-def suggest(project_id, text, limit, threshold):
+def suggest(project_id, text, limit, threshold, language=None):
     """suggest subjects for the given text and return a dict with results
     formatted according to Swagger spec"""
 
@@ -69,13 +69,24 @@ def suggest(project_id, text, limit, threshold):
         return project_not_found_error(project_id)
 
     try:
+        lang = language or project.vocab_lang
+    except AnnifException as err:
+        return server_error(err)
+
+    if lang not in project.vocab.languages:
+        return connexion.problem(
+            status=400,
+            title='Bad Request',
+            detail=f'language "{lang}" not supported by vocabulary')
+
+    try:
         hit_filter = SuggestionFilter(project.subjects, limit, threshold)
         result = project.suggest(text)
     except AnnifException as err:
         return server_error(err)
+
     hits = hit_filter(result).as_list()
-    return {'results': [_suggestion_to_dict(hit, project.subjects,
-                                            project.vocab_lang)
+    return {'results': [_suggestion_to_dict(hit, project.subjects, lang)
                         for hit in hits]}
 
 

@@ -416,6 +416,26 @@ def test_suggest():
     assert result.exit_code == 0
 
 
+def test_suggest_with_language_override():
+    result = runner.invoke(
+        annif.cli.cli,
+        ['suggest', '--language', 'en', 'dummy-fi'],
+        input='kissa')
+    assert not result.exception
+    assert result.output == "<http://example.org/dummy>\tdummy\t1.0\n"
+    assert result.exit_code == 0
+
+
+def test_suggest_with_language_override_bad_value():
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        ['suggest', '--language', 'xx', 'dummy-fi'],
+        input='kissa')
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'language "xx" not supported by vocabulary' in failed_result.output
+
+
 def test_suggest_with_different_vocab_language():
     # project language is English - input should be in English
     # vocab language is Finnish - subject labels should be in Finnish
@@ -508,6 +528,30 @@ def test_index(tmpdir):
     assert "Not overwriting" not in result.output
     assert tmpdir.join('doc1.annif').read_text(
         'utf-8') == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+
+
+def test_index_with_language_override(tmpdir):
+    tmpdir.join('doc1.txt').write('nothing special')
+
+    result = runner.invoke(
+        annif.cli.cli, ['index', '--language', 'fi', 'dummy-en', str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    assert tmpdir.join('doc1.annif').exists()
+    assert tmpdir.join('doc1.annif').read_text(
+        'utf-8') == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+
+
+def test_index_with_language_override_bad_value(tmpdir):
+    tmpdir.join('doc1.txt').write('nothing special')
+
+    failed_result = runner.invoke(
+        annif.cli.cli, ['index', '--language', 'xx', 'dummy-en', str(tmpdir)])
+
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'language "xx" not supported by vocabulary' in failed_result.output
 
 
 def test_index_nonexistent_path():
