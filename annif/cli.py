@@ -336,6 +336,9 @@ def run_suggest(project_id, limit, threshold, language, backend_param):
     project = get_project(project_id)
     text = sys.stdin.read()
     lang = language or project.vocab_lang
+    if lang not in project.vocab.languages:
+        raise click.BadParameter(
+            f'language "{lang}" not supported by vocabulary')
     backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
     hits = hit_filter(project.suggest(text, backend_params))
@@ -374,6 +377,9 @@ def run_index(project_id, directory, suffix, force,
     """
     project = get_project(project_id)
     lang = language or project.vocab_lang
+    if lang not in project.vocab.languages:
+        raise click.BadParameter(
+            f'language "{lang}" not supported by vocabulary')
     backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
