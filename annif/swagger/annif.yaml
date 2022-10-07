@@ -83,6 +83,10 @@ paths:
           description: successful operation
           schema:
             $ref: '#/definitions/SuggestionResultList'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Problem'
         '404':
           description: Project not found
           schema:

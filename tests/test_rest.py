@@ -108,6 +108,17 @@ def test_rest_suggest_with_language_override(app):
         assert result['results'][0]['label'] == 'dummy'
 
 
+def test_rest_suggest_with_language_override_bad_value(app):
+    with app.app_context():
+        result = annif.rest.suggest(
+            'dummy-vocablang',
+            text='example text',
+            limit=10,
+            threshold=0.0,
+            language='xx')
+        assert result.status_code == 400
+
+
 def test_rest_suggest_with_different_vocab_language(app):
     # project language is English - input should be in English
     # vocab language is Finnish - subject labels should be in Finnish
