@@ -416,6 +416,16 @@ def test_suggest():
     assert result.exit_code == 0
 
 
+def test_suggest_with_language_override():
+    result = runner.invoke(
+        annif.cli.cli,
+        ['suggest', '--language', 'en', 'dummy-fi'],
+        input='kissa')
+    assert not result.exception
+    assert result.output == "<http://example.org/dummy>\tdummy\t1.0\n"
+    assert result.exit_code == 0
+
+
 def test_suggest_with_different_vocab_language():
     # project language is English - input should be in English
     # vocab language is Finnish - subject labels should be in Finnish

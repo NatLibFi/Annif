@@ -58,7 +58,7 @@ def _suggestion_to_dict(suggestion, subject_index, language):
     }
 
 
-def suggest(project_id, text, limit, threshold):
+def suggest(project_id, text, limit, threshold, language=None):
     """suggest subjects for the given text and return a dict with results
     formatted according to Swagger spec"""
 
@@ -75,7 +75,7 @@ def suggest(project_id, text, limit, threshold):
         return server_error(err)
     hits = hit_filter(result).as_list()
     return {'results': [_suggestion_to_dict(hit, project.subjects,
-                                            project.vocab_lang)
+                                            language or project.vocab_lang)
                         for hit in hits]}
 
 

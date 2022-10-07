@@ -323,9 +323,10 @@ def run_learn(project_id, paths, docs_limit, backend_param):
 @click.argument('project_id')
 @click.option('--limit', '-l', default=10, help='Maximum number of subjects')
 @click.option('--threshold', '-t', default=0.0, help='Minimum score threshold')
+@click.option('--language', '-L', help='Language of subject labels')
 @backend_param_option
 @common_options
-def run_suggest(project_id, limit, threshold, backend_param):
+def run_suggest(project_id, limit, threshold, language, backend_param):
     """
     Suggest subjects for a single document from standard input.
     \f
@@ -334,6 +335,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
     """
     project = get_project(project_id)
     text = sys.stdin.read()
+    lang = language or project.vocab_lang
     backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
     hits = hit_filter(project.suggest(text, backend_params))
@@ -343,7 +345,7 @@ def run_suggest(project_id, limit, threshold, backend_param):
             "<{}>\t{}\t{}".format(
                 subj.uri,
                 '\t'.join(filter(None,
-                                 (subj.labels[project.vocab_lang],
+                                 (subj.labels[lang],
                                   subj.notation))),
                 hit.score))
 
