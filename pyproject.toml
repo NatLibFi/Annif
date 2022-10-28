@@ -48,7 +48,7 @@ optuna = "2.10.*"
 stwfsapy = "0.3.*"
 python-dateutil = "*"
 tomli = "2.0.*"
-simplemma = "0.8.*"
+simplemma = "0.9.*"
 
 fasttext-wheel = {version = "0.9.2", optional = true}
 voikko = {version = "*", optional = true}
