@@ -2,6 +2,7 @@
 
 import multiprocessing
 import multiprocessing.dummy
+import multiprocessing.pool
 
 import annif.parallel
 
@@ -9,7 +10,7 @@ import annif.parallel
 def test_get_pool_0():
     n_jobs, pool_class = annif.parallel.get_pool(0)
     assert n_jobs is None
-    assert pool_class is multiprocessing.Pool
+    assert isinstance(pool_class(), multiprocessing.pool.Pool)
 
 
 def test_get_pool_1():
@@ -21,4 +22,4 @@ def test_get_pool_1():
 def test_get_pool_2():
     n_jobs, pool_class = annif.parallel.get_pool(2)
     assert n_jobs == 2
-    assert pool_class is multiprocessing.Pool
+    assert isinstance(pool_class(), multiprocessing.pool.Pool)

@@ -30,16 +30,22 @@ class AnnifRegistry:
 
     def __init__(self, projects_config_path, datadir, init_projects):
         self._rid = id(self)
+        self._projects_config_path = projects_config_path
         self._datadir = datadir
-        self._projects[self._rid] = self._create_projects(projects_config_path)
-        self._vocabs[self._rid] = {}
+        self._init_vars()
         if init_projects:
             for project in self._projects[self._rid].values():
                 project.initialize()
 
-    def _create_projects(self, projects_config_path):
+    def _init_vars(self):
+        # initialize the static variables, if necessary
+        if self._rid not in self._projects:
+            self._projects[self._rid] = self._create_projects()
+            self._vocabs[self._rid] = {}
+
+    def _create_projects(self):
         # parse the configuration
-        config = parse_config(projects_config_path)
+        config = parse_config(self._projects_config_path)
 
         # handle the case where the config file doesn't exist
         if config is None:
@@ -58,6 +64,7 @@ class AnnifRegistry:
         AnnifProject. The min_access parameter may be used to set the minimum
         access level required for the returned projects."""
 
+        self._init_vars()
         return {
             project_id: project
             for project_id, project in self._projects[self._rid].items()
@@ -86,6 +93,7 @@ class AnnifRegistry:
         language = posargs[0] if posargs else default_language
         vocab_key = (vocab_id, language)
 
+        self._init_vars()
         if vocab_key not in self._vocabs[self._rid]:
             self._vocabs[self._rid][vocab_key] = AnnifVocabulary(
                 vocab_id, self._datadir
