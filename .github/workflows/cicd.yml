@@ -12,6 +12,14 @@ env:
   PIPX_BIN_DIR: "/home/runner/.local/bin"
   POETRY_VERSION: "1.2.0"
 jobs:
+
+  lint:
+    runs-on: ubuntu-latest
+    name: lint with Black
+    steps:
+      - uses: actions/checkout@v3
+      - uses: psf/black@6b42c2b8c9f9bd666120a2c19b8da509fe477f27
+
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -23,6 +31,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install system packages
+
       run: |
         sudo apt-get install \
           libvoikko1 \
@@ -71,7 +80,7 @@ jobs:
 
   publish-docker-latest:
     name: publish latest Docker image
-    needs: test
+    needs: [lint, test]
     runs-on: ubuntu-20.04
     timeout-minutes: 15
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -98,7 +107,7 @@ jobs:
 
   publish-release:
     name: publish release
-    needs: test
+    needs: [lint, test]
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
