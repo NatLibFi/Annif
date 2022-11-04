@@ -9,9 +9,8 @@ from annif.exception import OperationFailedException
 def test_mllmmodel_prepare_terms(vocabulary):
     model = MLLMModel()
     graph = vocabulary.as_graph()
-    params = {'language': 'fi', 'use_hidden_labels': True}
-    terms, subject_ids = model._prepare_terms(
-        graph, vocabulary, params)
+    params = {"language": "fi", "use_hidden_labels": True}
+    terms, subject_ids = model._prepare_terms(graph, vocabulary, params)
     assert len(terms) == 163  # 130 prefLabels + 33 altLabels
     assert len(subject_ids) == 130  # 130 subjects
 
@@ -44,26 +43,22 @@ def test_mllmmodel_prepare_relations(vocabulary):
 
     # check some example cases by looking up their subject IDs
 
-    shipfinds = vocabulary.subjects.by_uri('http://www.yso.fi/onto/yso/p8869')
+    shipfinds = vocabulary.subjects.by_uri("http://www.yso.fi/onto/yso/p8869")
     # "ship finds" is not in any collection
     assert c_matrix[:, shipfinds].sum() == 0
 
-    seals = vocabulary.subjects.by_uri('http://www.yso.fi/onto/yso/p7141')
+    seals = vocabulary.subjects.by_uri("http://www.yso.fi/onto/yso/p7141")
     # "seals" is in 2 collections
     assert c_matrix[:, seals].sum() == 2
 
-    dating = vocabulary.subjects.by_uri('http://www.yso.fi/onto/yso/p7804')
+    dating = vocabulary.subjects.by_uri("http://www.yso.fi/onto/yso/p7804")
     # "dating (age estimation)" is in 3 collections
     assert c_matrix[:, dating].sum() == 3
 
 
 def test_train_sanity_check():
     model = MLLMModel()
-    params = {
-        'min_samples_leaf': 20,
-        'max_leaf_nodes': 1000,
-        'max_samples': 0.9
-    }
+    params = {"min_samples_leaf": 20, "max_leaf_nodes": 1000, "max_samples": 0.9}
     train_x = [(1, 2), (2, 3)]
     train_y = [False, False]
 

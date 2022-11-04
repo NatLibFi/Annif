@@ -6,10 +6,10 @@ import itertools
 import numpy as np
 
 
-SubjectSuggestion = collections.namedtuple(
-    'SubjectSuggestion', 'subject_id score')
+SubjectSuggestion = collections.namedtuple("SubjectSuggestion", "subject_id score")
 WeightedSuggestion = collections.namedtuple(
-    'WeightedSuggestion', 'hits weight subjects')
+    "WeightedSuggestion", "hits weight subjects"
+)
 
 
 class SuggestionFilter:
@@ -22,9 +22,8 @@ class SuggestionFilter:
 
     def __call__(self, orighits):
         return LazySuggestionResult(
-            lambda: orighits.filter(self._subject_index,
-                                    self._limit,
-                                    self._threshold))
+            lambda: orighits.filter(self._subject_index, self._limit, self._threshold)
+        )
 
 
 class SuggestionResult(metaclass=abc.ABCMeta):
@@ -104,10 +103,7 @@ class VectorSuggestionResult(SuggestionResult):
             score = self._vector[subject_id]
             if score <= 0.0:
                 break  # we can skip the remaining ones
-            hits.append(
-                SubjectSuggestion(
-                    subject_id=subject_id,
-                    score=float(score)))
+            hits.append(SubjectSuggestion(subject_id=subject_id, score=float(score)))
         return ListSuggestionResult(hits)
 
     @property
@@ -128,14 +124,15 @@ class VectorSuggestionResult(SuggestionResult):
         return self._vector
 
     def filter(self, subject_index, limit=None, threshold=0.0):
-        mask = (self._vector > threshold)
+        mask = self._vector > threshold
         deprecated_ids = subject_index.deprecated_ids()
         if limit is not None:
             limit_mask = np.zeros_like(self._vector, dtype=bool)
             deprecated_set = set(deprecated_ids)
             top_k_subjects = itertools.islice(
-                                (subj for subj in self.subject_order
-                                 if subj not in deprecated_set), limit)
+                (subj for subj in self.subject_order if subj not in deprecated_set),
+                limit,
+            )
             limit_mask[list(top_k_subjects)] = True
             mask = mask & limit_mask
         else:
@@ -153,9 +150,7 @@ class ListSuggestionResult(SuggestionResult):
     """SuggestionResult implementation based primarily on lists of hits."""
 
     def __init__(self, hits):
-        self._list = [self._enforce_score_range(hit)
-                      for hit in hits
-                      if hit.score > 0.0]
+        self._list = [self._enforce_score_range(hit) for hit in hits if hit.score > 0.0]
         self._vector = None
 
     @staticmethod
@@ -183,9 +178,11 @@ class ListSuggestionResult(SuggestionResult):
 
     def filter(self, subject_index, limit=None, threshold=0.0):
         hits = sorted(self._list, key=lambda hit: hit.score, reverse=True)
-        filtered_hits = [hit for hit in hits
-                         if hit.score >= threshold and hit.score > 0.0 and
-                         hit.subject_id is not None]
+        filtered_hits = [
+            hit
+            for hit in hits
+            if hit.score >= threshold and hit.score > 0.0 and hit.subject_id is not None
+        ]
         if limit is not None:
             filtered_hits = filtered_hits[:limit]
         return ListSuggestionResult(filtered_hits)

@@ -10,6 +10,7 @@ class SnowballAnalyzer(analyzer.Analyzer):
     def __init__(self, param, **kwargs):
         self.param = param
         import nltk.stem.snowball
+
         self.stemmer = nltk.stem.snowball.SnowballStemmer(param)
         super().__init__(**kwargs)
 

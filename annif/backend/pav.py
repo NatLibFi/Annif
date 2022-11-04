@@ -18,6 +18,7 @@ from . import ensemble
 
 class PAVBackend(ensemble.BaseEnsembleBackend):
     """PAV ensemble backend that combines results from multiple projects"""
+
     name = "pav"
 
     MODEL_FILE_PREFIX = "pav-model-"
@@ -25,7 +26,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
     # defaults for uninitialized instances
     _models = None
 
-    DEFAULT_PARAMETERS = {'min-docs': 10}
+    DEFAULT_PARAMETERS = {"min-docs": 10}
 
     def default_params(self):
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
@@ -37,17 +38,18 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         if self._models is not None:
             return  # already initialized
         self._models = {}
-        sources = annif.util.parse_sources(self.params['sources'])
+        sources = annif.util.parse_sources(self.params["sources"])
         for source_project_id, _ in sources:
             model_filename = self.MODEL_FILE_PREFIX + source_project_id
             path = os.path.join(self.datadir, model_filename)
             if os.path.exists(path):
-                self.debug('loading PAV model from {}'.format(path))
+                self.debug("loading PAV model from {}".format(path))
                 self._models[source_project_id] = joblib.load(path)
             else:
                 raise NotInitializedException(
                     "PAV model file '{}' not found".format(path),
-                    backend_id=self.backend_id)
+                    backend_id=self.backend_id,
+                )
 
     def _get_model(self, source_project_id):
         self.initialize()
@@ -63,8 +65,9 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
                 score = hit.score
             pav_result.append(
                 annif.suggestion.SubjectSuggestion(
-                    subject_id=hit.subject_id,
-                    score=score))
+                    subject_id=hit.subject_id, score=score
+                )
+            )
         pav_result.sort(key=lambda hit: hit.score, reverse=True)
         return annif.suggestion.ListSuggestionResult(pav_result)
 
@@ -84,22 +87,30 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
                 row.append(docid)
                 col.append(cid)
             for cid in np.flatnonzero(
-                    doc.subject_set.as_vector(len(source_project.subjects))):
+                doc.subject_set.as_vector(len(source_project.subjects))
+            ):
 
                 trow.append(docid)
                 tcol.append(cid)
             ndocs += 1
-        scores = coo_matrix((data, (row, col)),
-                            shape=(ndocs, len(source_project.subjects)),
-                            dtype=np.float32)
-        true = coo_matrix((np.ones(len(trow), dtype=bool), (trow, tcol)),
-                          shape=(ndocs, len(source_project.subjects)),
-                          dtype=bool)
+        scores = coo_matrix(
+            (data, (row, col)),
+            shape=(ndocs, len(source_project.subjects)),
+            dtype=np.float32,
+        )
+        true = coo_matrix(
+            (np.ones(len(trow), dtype=bool), (trow, tcol)),
+            shape=(ndocs, len(source_project.subjects)),
+            dtype=bool,
+        )
         return csc_matrix(scores), csc_matrix(true)
 
     def _create_pav_model(self, source_project_id, min_docs, corpus):
-        self.info("creating PAV model for source {}, min_docs={}".format(
-            source_project_id, min_docs))
+        self.info(
+            "creating PAV model for source {}, min_docs={}".format(
+                source_project_id, min_docs
+            )
+        )
         source_project = self.project.registry.get_project(source_project_id)
         # suggest subjects for the training corpus
         scores, true = self._suggest_train_corpus(source_project, corpus)
@@ -108,28 +119,27 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         for cid in range(len(source_project.subjects)):
             if true[:, cid].sum() < min_docs:
                 continue  # don't create model b/c of too few examples
-            reg = IsotonicRegression(out_of_bounds='clip')
+            reg = IsotonicRegression(out_of_bounds="clip")
             cid_scores = scores[:, cid].toarray().flatten().astype(np.float64)
             reg.fit(cid_scores, true[:, cid].toarray().flatten())
             pav_regressions[cid] = reg
-        self.info("created PAV model for {} concepts".format(
-            len(pav_regressions)))
+        self.info("created PAV model for {} concepts".format(len(pav_regressions)))
         model_filename = self.MODEL_FILE_PREFIX + source_project_id
         annif.util.atomic_save(
-            pav_regressions,
-            self.datadir,
-            model_filename,
-            method=joblib.dump)
+            pav_regressions, self.datadir, model_filename, method=joblib.dump
+        )
 
     def _train(self, corpus, params, jobs=0):
-        if corpus == 'cached':
+        if corpus == "cached":
             raise NotSupportedException(
-                'Training pav project from cached data not supported.')
+                "Training pav project from cached data not supported."
+            )
         if corpus.is_empty():
-            raise NotSupportedException('training backend {} with no documents'
-                                        .format(self.backend_id))
+            raise NotSupportedException(
+                "training backend {} with no documents".format(self.backend_id)
+            )
         self.info("creating PAV models")
-        sources = annif.util.parse_sources(self.params['sources'])
-        min_docs = int(params['min-docs'])
+        sources = annif.util.parse_sources(self.params["sources"])
+        min_docs = int(params["min-docs"])
         for source_project_id, _ in sources:
             self._create_pav_model(source_project_id, min_docs, corpus)

@@ -15,9 +15,9 @@ def parse_specs(transform_specs):
 
     parsed = []
     # Split by commas not inside parentheses
-    parts = re.split(r',\s*(?![^()]*\))', transform_specs)
+    parts = re.split(r",\s*(?![^()]*\))", transform_specs)
     for part in parts:
-        match = re.match(r'(\w+)(\((.*)\))?', part)
+        match = re.match(r"(\w+)(\((.*)\))?", part)
         if match is None:
             continue
         transform = match.group(1)
@@ -40,12 +40,13 @@ def get_transform(transform_specs, project):
 
 _transforms = {
     transform.IdentityTransform.name: transform.IdentityTransform,
-    inputlimiter.InputLimiter.name: inputlimiter.InputLimiter}
+    inputlimiter.InputLimiter.name: inputlimiter.InputLimiter,
+}
 
 # Optional transforms
 try:
     from . import langfilter
+
     _transforms.update({langfilter.LangFilter.name: langfilter.LangFilter})
 except ImportError:
-    annif.logger.debug(
-        "pycld3 not available, not enabling filter_language transform")
+    annif.logger.debug("pycld3 not available, not enabling filter_language transform")

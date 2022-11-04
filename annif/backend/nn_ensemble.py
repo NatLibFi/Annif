@@ -24,7 +24,7 @@ from . import ensemble
 
 def idx_to_key(idx):
     """convert an integer index to a binary key for use in LMDB"""
-    return b'%08d' % idx
+    return b"%08d" % idx
 
 
 def key_to_idx(key):
@@ -78,28 +78,27 @@ class LMDBSequence(Sequence):
 
 class MeanLayer(Layer):
     """Custom Keras layer that calculates mean values along the 2nd axis."""
+
     def call(self, inputs):
         return K.mean(inputs, axis=2)
 
 
-class NNEnsembleBackend(
-        backend.AnnifLearningBackend,
-        ensemble.BaseEnsembleBackend):
+class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBackend):
     """Neural network ensemble backend that combines results from multiple
     projects"""
 
     name = "nn_ensemble"
 
     MODEL_FILE = "nn-model.h5"
-    LMDB_FILE = 'nn-train.mdb'
+    LMDB_FILE = "nn-train.mdb"
 
     DEFAULT_PARAMETERS = {
-        'nodes': 100,
-        'dropout_rate': 0.2,
-        'optimizer': 'adam',
-        'epochs': 10,
-        'learn-epochs': 1,
-        'lmdb_map_size': 1024 * 1024 * 1024
+        "nodes": 100,
+        "dropout_rate": 0.2,
+        "optimizer": "adam",
+        "epochs": 10,
+        "learn-epochs": 1,
+        "lmdb_map_size": 1024 * 1024 * 1024,
     }
 
     # defaults for uninitialized instances
@@ -121,20 +120,25 @@ class NNEnsembleBackend(
         model_filename = os.path.join(self.datadir, self.MODEL_FILE)
         if not os.path.exists(model_filename):
             raise NotInitializedException(
-                'model file {} not found'.format(model_filename),
-                backend_id=self.backend_id)
-        self.debug('loading Keras model from {}'.format(model_filename))
-        self._model = load_model(model_filename,
-                                 custom_objects={'MeanLayer': MeanLayer})
+                "model file {} not found".format(model_filename),
+                backend_id=self.backend_id,
+            )
+        self.debug("loading Keras model from {}".format(model_filename))
+        self._model = load_model(
+            model_filename, custom_objects={"MeanLayer": MeanLayer}
+        )
 
     def _merge_hits_from_sources(self, hits_from_sources, params):
-        score_vector = np.array([np.sqrt(hits.as_vector(len(subjects)))
-                                 * weight * len(hits_from_sources)
-                                 for hits, weight, subjects
-                                 in hits_from_sources],
-                                dtype=np.float32)
+        score_vector = np.array(
+            [
+                np.sqrt(hits.as_vector(len(subjects))) * weight * len(hits_from_sources)
+                for hits, weight, subjects in hits_from_sources
+            ],
+            dtype=np.float32,
+        )
         results = self._model.predict(
-            np.expand_dims(score_vector.transpose(), 0), verbose=0)
+            np.expand_dims(score_vector.transpose(), 0), verbose=0
+        )
         return VectorSuggestionResult(results[0])
 
     def _create_model(self, sources):
@@ -143,49 +147,48 @@ class NNEnsembleBackend(
         inputs = Input(shape=(len(self.project.subjects), len(sources)))
 
         flat_input = Flatten()(inputs)
-        drop_input = Dropout(
-            rate=float(
-                self.params['dropout_rate']))(flat_input)
-        hidden = Dense(int(self.params['nodes']),
-                       activation="relu")(drop_input)
-        drop_hidden = Dropout(rate=float(self.params['dropout_rate']))(hidden)
-        delta = Dense(len(self.project.subjects),
-                      kernel_initializer='zeros',
-                      bias_initializer='zeros')(drop_hidden)
+        drop_input = Dropout(rate=float(self.params["dropout_rate"]))(flat_input)
+        hidden = Dense(int(self.params["nodes"]), activation="relu")(drop_input)
+        drop_hidden = Dropout(rate=float(self.params["dropout_rate"]))(hidden)
+        delta = Dense(
+            len(self.project.subjects),
+            kernel_initializer="zeros",
+            bias_initializer="zeros",
+        )(drop_hidden)
 
         mean = MeanLayer()(inputs)
 
         predictions = Add()([mean, delta])
 
         self._model = Model(inputs=inputs, outputs=predictions)
-        self._model.compile(optimizer=self.params['optimizer'],
-                            loss='binary_crossentropy',
-                            metrics=['top_k_categorical_accuracy'])
-        if 'lr' in self.params:
-            self._model.optimizer.learning_rate.assign(
-                float(self.params['lr']))
+        self._model.compile(
+            optimizer=self.params["optimizer"],
+            loss="binary_crossentropy",
+            metrics=["top_k_categorical_accuracy"],
+        )
+        if "lr" in self.params:
+            self._model.optimizer.learning_rate.assign(float(self.params["lr"]))
 
         summary = []
         self._model.summary(print_fn=summary.append)
         self.debug("Created model: \n" + "\n".join(summary))
 
     def _train(self, corpus, params, jobs=0):
-        sources = annif.util.parse_sources(self.params['sources'])
+        sources = annif.util.parse_sources(self.params["sources"])
         self._create_model(sources)
         self._fit_model(
             corpus,
-            epochs=int(params['epochs']),
-            lmdb_map_size=int(params['lmdb_map_size']),
-            n_jobs=jobs)
+            epochs=int(params["epochs"]),
+            lmdb_map_size=int(params["lmdb_map_size"]),
+            n_jobs=jobs,
+        )
 
     def _corpus_to_vectors(self, corpus, seq, n_jobs):
         # pass corpus through all source projects
-        sources = dict(
-            annif.util.parse_sources(self.params['sources']))
+        sources = dict(annif.util.parse_sources(self.params["sources"]))
 
         # initialize the source projects before forking, to save memory
-        self.info(
-            f"Initializing source projects: {', '.join(sources.keys())}")
+        self.info(f"Initializing source projects: {', '.join(sources.keys())}")
         for project_id in sources.keys():
             project = self.project.registry.get_project(project_id)
             project.initialize(parallel=True)
@@ -195,24 +198,24 @@ class NNEnsembleBackend(
             list(sources.keys()),
             backend_params=None,
             limit=None,
-            threshold=0.0)
+            threshold=0.0,
+        )
 
         jobs, pool_class = annif.parallel.get_pool(n_jobs)
 
         self.info("Processing training documents...")
         with pool_class(jobs) as pool:
             for hits, subject_set in pool.imap_unordered(
-                    psmap.suggest, corpus.documents):
+                psmap.suggest, corpus.documents
+            ):
                 doc_scores = []
                 for project_id, p_hits in hits.items():
                     vector = p_hits.as_vector(len(self.project.subjects))
-                    doc_scores.append(np.sqrt(vector)
-                                      * sources[project_id]
-                                      * len(sources))
-                score_vector = np.array(doc_scores,
-                                        dtype=np.float32).transpose()
-                true_vector = subject_set.as_vector(
-                    len(self.project.subjects))
+                    doc_scores.append(
+                        np.sqrt(vector) * sources[project_id] * len(sources)
+                    )
+                score_vector = np.array(doc_scores, dtype=np.float32).transpose()
+                true_vector = subject_set.as_vector(len(self.project.subjects))
                 seq.add_sample(score_vector, true_vector)
 
     def _open_lmdb(self, cached, lmdb_map_size):
@@ -222,11 +225,12 @@ class NNEnsembleBackend(
         return lmdb.open(lmdb_path, map_size=lmdb_map_size, writemap=True)
 
     def _fit_model(self, corpus, epochs, lmdb_map_size, n_jobs=1):
-        env = self._open_lmdb(corpus == 'cached', lmdb_map_size)
-        if corpus != 'cached':
+        env = self._open_lmdb(corpus == "cached", lmdb_map_size)
+        if corpus != "cached":
             if corpus.is_empty():
                 raise NotSupportedException(
-                    'Cannot train nn_ensemble project with no documents')
+                    "Cannot train nn_ensemble project with no documents"
+                )
             with env.begin(write=True, buffers=True) as txn:
                 seq = LMDBSequence(txn, batch_size=32)
                 self._corpus_to_vectors(corpus, seq, n_jobs)
@@ -238,14 +242,10 @@ class NNEnsembleBackend(
             seq = LMDBSequence(txn, batch_size=32)
             self._model.fit(seq, verbose=True, epochs=epochs)
 
-        annif.util.atomic_save(
-            self._model,
-            self.datadir,
-            self.MODEL_FILE)
+        annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)
 
     def _learn(self, corpus, params):
         self.initialize()
         self._fit_model(
-            corpus,
-            int(params['learn-epochs']),
-            int(params['lmdb_map_size']))
+            corpus, int(params["learn-epochs"]), int(params["lmdb_map_size"])
+        )

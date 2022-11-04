@@ -19,13 +19,14 @@ class AnnifConfigCFG:
     def __init__(self, filename):
         self._config = configparser.ConfigParser()
         self._config.optionxform = annif.util.identity
-        with open(filename, encoding='utf-8-sig') as projf:
+        with open(filename, encoding="utf-8-sig") as projf:
             try:
-                logger.debug(
-                    f"Reading configuration file {filename} in CFG format")
+                logger.debug(f"Reading configuration file {filename} in CFG format")
                 self._config.read_file(projf)
-            except (configparser.DuplicateOptionError,
-                    configparser.DuplicateSectionError) as err:
+            except (
+                configparser.DuplicateOptionError,
+                configparser.DuplicateSectionError,
+            ) as err:
                 raise ConfigurationException(err)
 
     @property
@@ -42,12 +43,12 @@ class AnnifConfigTOML:
     def __init__(self, filename):
         with open(filename, "rb") as projf:
             try:
-                logger.debug(
-                    f"Reading configuration file {filename} in TOML format")
+                logger.debug(f"Reading configuration file {filename} in TOML format")
                 self._config = tomli.load(projf)
             except tomli.TOMLDecodeError as err:
                 raise ConfigurationException(
-                    f"Parsing TOML file '{filename}' failed: {err}")
+                    f"Parsing TOML file '{filename}' failed: {err}"
+                )
 
     @property
     def project_ids(self):
@@ -61,8 +62,8 @@ class AnnifConfigDirectory:
     """Class for reading configuration from directory"""
 
     def __init__(self, directory):
-        files = glob(os.path.join(directory, '*.cfg'))
-        files.extend(glob(os.path.join(directory, '*.toml')))
+        files = glob(os.path.join(directory, "*.cfg"))
+        files.extend(glob(os.path.join(directory, "*.toml")))
         logger.debug(f"Reading configuration files in directory {directory}")
 
         self._config = dict()
@@ -77,7 +78,8 @@ class AnnifConfigDirectory:
             # Error message resembles configparser's DuplicateSection message
             raise ConfigurationException(
                 f'While reading from "{file}": project ID "{proj_id}" already '
-                'exists in another configuration file in the directory.')
+                "exists in another configuration file in the directory."
+            )
 
     @property
     def project_ids(self):
@@ -92,25 +94,27 @@ def check_config(projects_config_path):
         return projects_config_path
     else:
         logger.warning(
-            'Project configuration file or directory ' +
-            f'"{projects_config_path}" is missing. Please provide one. ' +
-            'You can set the path to the project configuration ' +
-            'using the ANNIF_PROJECTS environment ' +
-            'variable or the command-line option "--projects".')
+            "Project configuration file or directory "
+            + f'"{projects_config_path}" is missing. Please provide one. '
+            + "You can set the path to the project configuration "
+            + "using the ANNIF_PROJECTS environment "
+            + 'variable or the command-line option "--projects".'
+        )
         return None
 
 
 def find_config():
-    for path in ('projects.cfg', 'projects.toml', 'projects.d'):
+    for path in ("projects.cfg", "projects.toml", "projects.d"):
         if os.path.exists(path):
             return path
 
     logger.warning(
-        'Could not find project configuration ' +
-        '"projects.cfg", "projects.toml" or "projects.d". ' +
-        'You can set the path to the project configuration ' +
-        'using the ANNIF_PROJECTS environment ' +
-        'variable or the command-line option "--projects".')
+        "Could not find project configuration "
+        + '"projects.cfg", "projects.toml" or "projects.d". '
+        + "You can set the path to the project configuration "
+        + "using the ANNIF_PROJECTS environment "
+        + 'variable or the command-line option "--projects".'
+    )
     return None
 
 
@@ -125,7 +129,7 @@ def parse_config(projects_config_path):
 
     if os.path.isdir(projects_config_path):
         return AnnifConfigDirectory(projects_config_path)
-    elif projects_config_path.endswith('.toml'):  # TOML format
+    elif projects_config_path.endswith(".toml"):  # TOML format
         return AnnifConfigTOML(projects_config_path)
     else:  # classic CFG/INI style format
         return AnnifConfigCFG(projects_config_path)

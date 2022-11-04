@@ -7,10 +7,12 @@ from scipy.sparse import lil_matrix, csc_matrix
 
 
 def get_subject_labels(graph, uri, properties, language):
-    return [str(label)
-            for prop in properties
-            for label in graph.objects(URIRef(uri), prop)
-            if label.language == language]
+    return [
+        str(label)
+        for prop in properties
+        for label in graph.objects(URIRef(uri), prop)
+        if label.language == language
+    ]
 
 
 def make_relation_matrix(graph, vocab, property):
@@ -34,8 +36,7 @@ def make_collection_matrix(graph, vocab):
         if member_id is not None:
             c_members[str(coll)].append(member_id)
 
-    c_matrix = lil_matrix((len(c_members), len(vocab.subjects)),
-                          dtype=bool)
+    c_matrix = lil_matrix((len(c_members), len(vocab.subjects)), dtype=bool)
 
     # populate the matrix for collection -> subject_id
     for c_id, members in enumerate(c_members.values()):

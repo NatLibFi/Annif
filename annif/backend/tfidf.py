@@ -18,18 +18,18 @@ class SubjectBuffer:
     BUFFER_SIZE = 100
 
     def __init__(self, tempdir, subject_id):
-        filename = '{:08d}.txt'.format(subject_id)
+        filename = "{:08d}.txt".format(subject_id)
         self._path = os.path.join(tempdir, filename)
         self._buffer = []
         self._created = False
 
     def flush(self):
         if self._created:
-            mode = 'a'
+            mode = "a"
         else:
-            mode = 'w'
+            mode = "w"
 
-        with open(self._path, mode, encoding='utf-8') as subjfile:
+        with open(self._path, mode, encoding="utf-8") as subjfile:
             for text in self._buffer:
                 print(text, file=subjfile)
 
@@ -46,25 +46,25 @@ class SubjectBuffer:
             # file was never created - we can simply return the buffer content
             return "\n".join(self._buffer)
         else:
-            with open(self._path, 'r', encoding='utf-8') as subjfile:
+            with open(self._path, "r", encoding="utf-8") as subjfile:
                 return subjfile.read() + "\n" + "\n".join(self._buffer)
 
 
 class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     """TF-IDF vector space similarity based backend for Annif"""
+
     name = "tfidf"
 
     # defaults for uninitialized instances
     _index = None
 
-    INDEX_FILE = 'tfidf-index'
+    INDEX_FILE = "tfidf-index"
 
     def _generate_subjects_from_documents(self, corpus):
         with tempfile.TemporaryDirectory() as tempdir:
             subject_buffer = {}
             for subject_id in range(len(self.project.subjects)):
-                subject_buffer[subject_id] = SubjectBuffer(tempdir,
-                                                           subject_id)
+                subject_buffer[subject_id] = SubjectBuffer(tempdir, subject_id)
 
             for doc in corpus.documents:
                 tokens = self.project.analyzer.tokenize_words(doc.text)
@@ -77,47 +77,45 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     def _initialize_index(self):
         if self._index is None:
             path = os.path.join(self.datadir, self.INDEX_FILE)
-            self.debug('loading similarity index from {}'.format(path))
+            self.debug("loading similarity index from {}".format(path))
             if os.path.exists(path):
-                self._index = gensim.similarities.SparseMatrixSimilarity.load(
-                    path)
+                self._index = gensim.similarities.SparseMatrixSimilarity.load(path)
             else:
                 raise NotInitializedException(
-                    'similarity index {} not found'.format(path),
-                    backend_id=self.backend_id)
+                    "similarity index {} not found".format(path),
+                    backend_id=self.backend_id,
+                )
 
     def initialize(self, parallel=False):
         self.initialize_vectorizer()
         self._initialize_index()
 
     def _create_index(self, veccorpus):
-        self.info('creating similarity index')
+        self.info("creating similarity index")
         gscorpus = Sparse2Corpus(veccorpus, documents_columns=False)
         self._index = gensim.similarities.SparseMatrixSimilarity(
-            gscorpus, num_features=len(self.vectorizer.vocabulary_))
-        annif.util.atomic_save(
-            self._index,
-            self.datadir,
-            self.INDEX_FILE)
+            gscorpus, num_features=len(self.vectorizer.vocabulary_)
+        )
+        annif.util.atomic_save(self._index, self.datadir, self.INDEX_FILE)
 
     def _train(self, corpus, params, jobs=0):
-        if corpus == 'cached':
+        if corpus == "cached":
             raise NotSupportedException(
-                'Training tfidf project from cached data not supported.')
+                "Training tfidf project from cached data not supported."
+            )
         if corpus.is_empty():
-            raise NotSupportedException(
-                'Cannot train tfidf project with no documents')
-        self.info('transforming subject corpus')
+            raise NotSupportedException("Cannot train tfidf project with no documents")
+        self.info("transforming subject corpus")
         subjects = self._generate_subjects_from_documents(corpus)
         veccorpus = self.create_vectorizer(subjects)
         self._create_index(veccorpus)
 
     def _suggest(self, text, params):
-        self.debug('Suggesting subjects for text "{}..." (len={})'.format(
-            text[:20], len(text)))
+        self.debug(
+            'Suggesting subjects for text "{}..." (len={})'.format(text[:20], len(text))
+        )
         tokens = self.project.analyzer.tokenize_words(text)
         vectors = self.vectorizer.transform([" ".join(tokens)])
         docsim = self._index[vectors[0]]
         fullresult = VectorSuggestionResult(docsim)
-        return fullresult.filter(self.project.subjects,
-                                 limit=int(params['limit']))
+        return fullresult.filter(self.project.subjects, limit=int(params["limit"]))

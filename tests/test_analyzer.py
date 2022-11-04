@@ -60,16 +60,15 @@ def test_english_tokenize_words_no_filter():
 
 
 def test_english_filter_words_min_token():
-    analyzer = annif.analyzer.get_analyzer(
-        "snowball(english,token_min_length=2)")
+    analyzer = annif.analyzer.get_analyzer("snowball(english,token_min_length=2)")
     text = """Since 2000, a 3D printer can be used to print
     3 kinds of objects."""
     words = analyzer.tokenize_words(text)
     assert len(words) == 11
-    assert '2000' not in words
-    assert 'sinc' in words
-    assert 'object' in words
-    assert 'a' not in words
+    assert "2000" not in words
+    assert "sinc" in words
+    assert "object" in words
+    assert "a" not in words
 
 
 def test_swedish_analyzer_normalize_word():
@@ -91,6 +90,6 @@ def test_simple_analyzer():
 
 def test_simple_analyzer_token_size():
     analyzer = annif.analyzer.get_analyzer("simple(token_min_length=2)")
-    text = 'I do stuff'
+    text = "I do stuff"
     tokens = analyzer.tokenize_words(text)
     assert len(tokens) == 2

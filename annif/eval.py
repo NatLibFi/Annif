@@ -103,105 +103,115 @@ class EvaluationBatch:
         # define the available metrics as lazy lambda functions
         # so we can execute only the ones actually requested
         all_metrics = {
-            'Precision (doc avg)': lambda: precision_score(
-                y_true_sparse, y_pred_binary, average='samples'),
-            'Recall (doc avg)': lambda: recall_score(
-                y_true_sparse, y_pred_binary, average='samples'),
-            'F1 score (doc avg)': lambda: f1_score(
-                y_true_sparse, y_pred_binary, average='samples'),
-            'Precision (subj avg)': lambda: precision_score(
-                y_true_sparse, y_pred_binary, average='macro'),
-            'Recall (subj avg)': lambda: recall_score(
-                y_true_sparse, y_pred_binary, average='macro'),
-            'F1 score (subj avg)': lambda: f1_score(
-                y_true_sparse, y_pred_binary, average='macro'),
-            'Precision (weighted subj avg)': lambda: precision_score(
-                y_true_sparse, y_pred_binary, average='weighted'),
-            'Recall (weighted subj avg)': lambda: recall_score(
-                y_true_sparse, y_pred_binary, average='weighted'),
-            'F1 score (weighted subj avg)': lambda: f1_score(
-                y_true_sparse, y_pred_binary, average='weighted'),
-            'Precision (microavg)': lambda: precision_score(
-                y_true_sparse, y_pred_binary, average='micro'),
-            'Recall (microavg)': lambda: recall_score(
-                y_true_sparse, y_pred_binary, average='micro'),
-            'F1 score (microavg)': lambda: f1_score(
-                y_true_sparse, y_pred_binary, average='micro'),
-            'F1@5': lambda: f1_score(
-                y_true_sparse,
-                filter_pred_top_k(y_pred, 5) > 0.0,
-                average='samples'),
-            'NDCG': lambda: ndcg_score(y_true, y_pred),
-            'NDCG@5': lambda: ndcg_score(y_true, y_pred, limit=5),
-            'NDCG@10': lambda: ndcg_score(y_true, y_pred, limit=10),
-            'Precision@1': lambda: precision_at_k_score(
-                y_true, y_pred, limit=1),
-            'Precision@3': lambda: precision_at_k_score(
-                y_true, y_pred, limit=3),
-            'Precision@5': lambda: precision_at_k_score(
-                y_true, y_pred, limit=5),
-            'LRAP': lambda: label_ranking_average_precision_score(
-                y_true, y_pred),
-            'True positives': lambda: true_positives(
-                y_true, y_pred_binary),
-            'False positives': lambda: false_positives(
-                y_true, y_pred_binary),
-            'False negatives': lambda: false_negatives(
-                y_true, y_pred_binary),
+            "Precision (doc avg)": lambda: precision_score(
+                y_true_sparse, y_pred_binary, average="samples"
+            ),
+            "Recall (doc avg)": lambda: recall_score(
+                y_true_sparse, y_pred_binary, average="samples"
+            ),
+            "F1 score (doc avg)": lambda: f1_score(
+                y_true_sparse, y_pred_binary, average="samples"
+            ),
+            "Precision (subj avg)": lambda: precision_score(
+                y_true_sparse, y_pred_binary, average="macro"
+            ),
+            "Recall (subj avg)": lambda: recall_score(
+                y_true_sparse, y_pred_binary, average="macro"
+            ),
+            "F1 score (subj avg)": lambda: f1_score(
+                y_true_sparse, y_pred_binary, average="macro"
+            ),
+            "Precision (weighted subj avg)": lambda: precision_score(
+                y_true_sparse, y_pred_binary, average="weighted"
+            ),
+            "Recall (weighted subj avg)": lambda: recall_score(
+                y_true_sparse, y_pred_binary, average="weighted"
+            ),
+            "F1 score (weighted subj avg)": lambda: f1_score(
+                y_true_sparse, y_pred_binary, average="weighted"
+            ),
+            "Precision (microavg)": lambda: precision_score(
+                y_true_sparse, y_pred_binary, average="micro"
+            ),
+            "Recall (microavg)": lambda: recall_score(
+                y_true_sparse, y_pred_binary, average="micro"
+            ),
+            "F1 score (microavg)": lambda: f1_score(
+                y_true_sparse, y_pred_binary, average="micro"
+            ),
+            "F1@5": lambda: f1_score(
+                y_true_sparse, filter_pred_top_k(y_pred, 5) > 0.0, average="samples"
+            ),
+            "NDCG": lambda: ndcg_score(y_true, y_pred),
+            "NDCG@5": lambda: ndcg_score(y_true, y_pred, limit=5),
+            "NDCG@10": lambda: ndcg_score(y_true, y_pred, limit=10),
+            "Precision@1": lambda: precision_at_k_score(y_true, y_pred, limit=1),
+            "Precision@3": lambda: precision_at_k_score(y_true, y_pred, limit=3),
+            "Precision@5": lambda: precision_at_k_score(y_true, y_pred, limit=5),
+            "LRAP": lambda: label_ranking_average_precision_score(y_true, y_pred),
+            "True positives": lambda: true_positives(y_true, y_pred_binary),
+            "False positives": lambda: false_positives(y_true, y_pred_binary),
+            "False negatives": lambda: false_negatives(y_true, y_pred_binary),
         }
 
         if not metrics:
             metrics = all_metrics.keys()
 
         with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
+            warnings.simplefilter("ignore")
 
             return {metric: all_metrics[metric]() for metric in metrics}
 
     def _result_per_subject_header(self, results_file):
-        print('\t'.join(['URI',
-                         'Label',
-                         'Support',
-                         'True_positives',
-                         'False_positives',
-                         'False_negatives',
-                         'Precision',
-                         'Recall',
-                         'F1_score']),
-              file=results_file)
+        print(
+            "\t".join(
+                [
+                    "URI",
+                    "Label",
+                    "Support",
+                    "True_positives",
+                    "False_positives",
+                    "False_negatives",
+                    "Precision",
+                    "Recall",
+                    "F1_score",
+                ]
+            ),
+            file=results_file,
+        )
 
     def _result_per_subject_body(self, zipped_results, results_file):
         for row in zipped_results:
-            print('\t'.join((str(e) for e in row)), file=results_file)
+            print("\t".join((str(e) for e in row)), file=results_file)
 
-    def output_result_per_subject(self, y_true, y_pred,
-                                  results_file, language):
+    def output_result_per_subject(self, y_true, y_pred, results_file, language):
         """Write results per subject (non-aggregated)
         to outputfile results_file, using labels in the given language"""
 
         y_pred = y_pred.T > 0.0
         y_true = y_true.T > 0.0
 
-        true_pos = (y_true & y_pred)
-        false_pos = (~y_true & y_pred)
-        false_neg = (y_true & ~y_pred)
+        true_pos = y_true & y_pred
+        false_pos = ~y_true & y_pred
+        false_neg = y_true & ~y_pred
 
         r = len(y_true)
 
-        zipped = zip([subj.uri
-                      for subj in self._subject_index],       # URI
-                     [subj.labels[language]
-                      for subj in self._subject_index],	      # Label
-                     np.sum((true_pos + false_neg), axis=1),  # Support
-                     np.sum(true_pos, axis=1),                # True_positives
-                     np.sum(false_pos, axis=1),               # False_positives
-                     np.sum(false_neg, axis=1),               # False_negatives
-                     [precision_score(y_true[i], y_pred[i], zero_division=0)
-                      for i in range(r)],                     # Precision
-                     [recall_score(y_true[i], y_pred[i], zero_division=0)
-                      for i in range(r)],                     # Recall
-                     [f1_score(y_true[i], y_pred[i], zero_division=0)
-                      for i in range(r)])                     # F1
+        zipped = zip(
+            [subj.uri for subj in self._subject_index],  # URI
+            [subj.labels[language] for subj in self._subject_index],  # Label
+            np.sum((true_pos + false_neg), axis=1),  # Support
+            np.sum(true_pos, axis=1),  # True_positives
+            np.sum(false_pos, axis=1),  # False_positives
+            np.sum(false_neg, axis=1),  # False_negatives
+            [
+                precision_score(y_true[i], y_pred[i], zero_division=0) for i in range(r)
+            ],  # Precision
+            [
+                recall_score(y_true[i], y_pred[i], zero_division=0) for i in range(r)
+            ],  # Recall
+            [f1_score(y_true[i], y_pred[i], zero_division=0) for i in range(r)],
+        )  # F1
         self._result_per_subject_header(results_file)
         self._result_per_subject_body(zipped, results_file)
 
@@ -223,9 +233,8 @@ class EvaluationBatch:
             hits.as_vector(len(self._subject_index), destination=y_pred[idx])
 
         results = self._evaluate_samples(y_true, y_pred, metrics)
-        results['Documents evaluated'] = int(y_true.shape[0])
+        results["Documents evaluated"] = int(y_true.shape[0])
 
         if results_file:
-            self.output_result_per_subject(y_true, y_pred,
-                                           results_file, language)
+            self.output_result_per_subject(y_true, y_pred, results_file, language)
         return results

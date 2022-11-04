@@ -14,4 +14,5 @@ class CombinedCorpus(DocumentCorpus):
     @property
     def documents(self):
         return itertools.chain.from_iterable(
-            [corpus.documents for corpus in self._corpora])
+            [corpus.documents for corpus in self._corpora]
+        )

@@ -7,14 +7,9 @@ import annif.corpus
 
 def test_tfidf_default_params(project):
     tfidf_type = annif.backend.get_backend("tfidf")
-    tfidf = tfidf_type(
-        backend_id='tfidf',
-        config_params={},
-        project=project)
+    tfidf = tfidf_type(backend_id="tfidf", config_params={}, project=project)
 
-    expected_default_params = {
-        'limit': 100  # From AnnifBackend class
-    }
+    expected_default_params = {"limit": 100}  # From AnnifBackend class
     actual_params = tfidf.params
     for param, val in expected_default_params.items():
         assert param in actual_params and actual_params[param] == val
@@ -22,60 +17,53 @@ def test_tfidf_default_params(project):
 
 def test_tfidf_train(datadir, document_corpus, project):
     tfidf_type = annif.backend.get_backend("tfidf")
-    tfidf = tfidf_type(
-        backend_id='tfidf',
-        config_params={'limit': 10},
-        project=project)
+    tfidf = tfidf_type(backend_id="tfidf", config_params={"limit": 10}, project=project)
 
     tfidf.train(document_corpus)
     assert len(tfidf._index) > 0
-    assert datadir.join('tfidf-index').exists()
-    assert datadir.join('tfidf-index').size() > 0
+    assert datadir.join("tfidf-index").exists()
+    assert datadir.join("tfidf-index").size() > 0
 
 
 def test_tfidf_suggest(project):
     tfidf_type = annif.backend.get_backend("tfidf")
-    tfidf = tfidf_type(
-        backend_id='tfidf',
-        config_params={'limit': 10},
-        project=project)
+    tfidf = tfidf_type(backend_id="tfidf", config_params={"limit": 10}, project=project)
 
-    results = tfidf.suggest("""Arkeologiaa sanotaan joskus myös
+    results = tfidf.suggest(
+        """Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
-        pohjaan.""")
+        pohjaan."""
+    )
 
     assert len(results) == 10
     hits = results.as_list()
-    archaeology = project.subjects.by_uri('http://www.yso.fi/onto/yso/p1265')
+    archaeology = project.subjects.by_uri("http://www.yso.fi/onto/yso/p1265")
     assert archaeology in [result.subject_id for result in hits]
 
 
 def test_suggest_params(project):
     tfidf_type = annif.backend.get_backend("tfidf")
-    tfidf = tfidf_type(
-        backend_id='tfidf',
-        config_params={'limit': 10},
-        project=project)
-    params = {'limit': 3}
+    tfidf = tfidf_type(backend_id="tfidf", config_params={"limit": 10}, project=project)
+    params = {"limit": 3}
 
-    results = tfidf.suggest("""Arkeologiaa sanotaan joskus myös
+    results = tfidf.suggest(
+        """Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
-        pohjaan.""", params)
+        pohjaan.""",
+        params,
+    )
     assert len(results) == 3
 
 
 def test_tfidf_suggest_unknown(project):
     tfidf_type = annif.backend.get_backend("tfidf")
-    tfidf = tfidf_type(
-        backend_id='tfidf',
-        config_params={'limit': 10},
-        project=project)
+    tfidf = tfidf_type(backend_id="tfidf", config_params={"limit": 10}, project=project)
 
     results = tfidf.suggest("abcdefghijk")  # unknown word
 

@@ -15,11 +15,11 @@ class HTTPBackend(backend.AnnifBackend):
 
     @property
     def is_trained(self):
-        return self._get_project_info('is_trained')
+        return self._get_project_info("is_trained")
 
     @property
     def modification_time(self):
-        mtime = self._get_project_info('modification_time')
+        mtime = self._get_project_info("modification_time")
         if mtime is None:
             return None
         return dateutil.parser.parse(mtime)
@@ -27,7 +27,7 @@ class HTTPBackend(backend.AnnifBackend):
     def _get_project_info(self, key):
         params = self._get_backend_params(None)
         try:
-            req = requests.get(params['endpoint'].replace('/suggest', ''))
+            req = requests.get(params["endpoint"].replace("/suggest", ""))
             req.raise_for_status()
         except requests.exceptions.RequestException as err:
             msg = f"HTTP request failed: {err}"
@@ -44,12 +44,12 @@ class HTTPBackend(backend.AnnifBackend):
             return None
 
     def _suggest(self, text, params):
-        data = {'text': text}
-        if 'project' in params:
-            data['project'] = params['project']
+        data = {"text": text}
+        if "project" in params:
+            data["project"] = params["project"]
 
         try:
-            req = requests.post(params['endpoint'], data=data)
+            req = requests.post(params["endpoint"], data=data)
             req.raise_for_status()
         except requests.exceptions.RequestException as err:
             self.warning("HTTP request failed: {}".format(err))
@@ -61,16 +61,20 @@ class HTTPBackend(backend.AnnifBackend):
             self.warning("JSON decode failed: {}".format(err))
             return ListSuggestionResult([])
 
-        if 'results' in response:
-            results = response['results']
+        if "results" in response:
+            results = response["results"]
         else:
             results = response
 
         try:
-            subject_suggestions = [SubjectSuggestion(
-                subject_id=self.project.subjects.by_uri(hit['uri']),
-                score=hit['score'])
-                for hit in results if hit['score'] > 0.0]
+            subject_suggestions = [
+                SubjectSuggestion(
+                    subject_id=self.project.subjects.by_uri(hit["uri"]),
+                    score=hit["score"],
+                )
+                for hit in results
+                if hit["score"] > 0.0
+            ]
         except (TypeError, ValueError) as err:
             self.warning("Problem interpreting JSON data: {}".format(err))
             return ListSuggestionResult([])

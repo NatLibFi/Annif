@@ -26,12 +26,12 @@ class DocumentDirectory(DocumentCorpus):
         subjectfile) containing file paths. If there is no key file and
         require_subjects is False, the subjectfile will be returned as None."""
 
-        for filename in sorted(glob.glob(os.path.join(self.path, '*.txt'))):
-            tsvfilename = re.sub(r'\.txt$', '.tsv', filename)
+        for filename in sorted(glob.glob(os.path.join(self.path, "*.txt"))):
+            tsvfilename = re.sub(r"\.txt$", ".tsv", filename)
             if os.path.exists(tsvfilename):
                 yield (filename, tsvfilename)
                 continue
-            keyfilename = re.sub(r'\.txt$', '.key', filename)
+            keyfilename = re.sub(r"\.txt$", ".key", filename)
             if os.path.exists(keyfilename):
                 yield (filename, keyfilename)
                 continue
@@ -41,13 +41,12 @@ class DocumentDirectory(DocumentCorpus):
     @property
     def documents(self):
         for docfilename, keyfilename in self:
-            with open(docfilename, errors='replace',
-                      encoding='utf-8-sig') as docfile:
+            with open(docfilename, errors="replace", encoding="utf-8-sig") as docfile:
                 text = docfile.read()
-            with open(keyfilename, encoding='utf-8-sig') as keyfile:
-                subjects = SubjectSet.from_string(keyfile.read(),
-                                                  self.subject_index,
-                                                  self.language)
+            with open(keyfilename, encoding="utf-8-sig") as keyfile:
+                subjects = SubjectSet.from_string(
+                    keyfile.read(), self.subject_index, self.language
+                )
             yield Document(text=text, subject_set=subjects)
 
 
@@ -60,25 +59,24 @@ class DocumentFile(DocumentCorpus):
 
     @property
     def documents(self):
-        if self.path.endswith('.gz'):
+        if self.path.endswith(".gz"):
             opener = gzip.open
         else:
             opener = open
-        with opener(self.path, mode='rt', encoding='utf-8-sig') as tsvfile:
+        with opener(self.path, mode="rt", encoding="utf-8-sig") as tsvfile:
             for line in tsvfile:
                 yield from self._parse_tsv_line(line)
 
     def _parse_tsv_line(self, line):
-        if '\t' in line:
-            text, uris = line.split('\t', maxsplit=1)
-            subject_ids = {self.subject_index.by_uri(
-                               annif.util.cleanup_uri(uri))
-                           for uri in uris.split()}
-            yield Document(text=text,
-                           subject_set=SubjectSet(subject_ids))
+        if "\t" in line:
+            text, uris = line.split("\t", maxsplit=1)
+            subject_ids = {
+                self.subject_index.by_uri(annif.util.cleanup_uri(uri))
+                for uri in uris.split()
+            }
+            yield Document(text=text, subject_set=SubjectSet(subject_ids))
         else:
-            logger.warning('Skipping invalid line (missing tab): "%s"',
-                           line.rstrip())
+            logger.warning('Skipping invalid line (missing tab): "%s"', line.rstrip())
 
 
 class DocumentList(DocumentCorpus):
@@ -104,8 +102,9 @@ class TransformingDocumentCorpus(DocumentCorpus):
     @property
     def documents(self):
         for doc in self._orig_corpus.documents:
-            yield Document(text=self._transform_fn(doc.text),
-                           subject_set=doc.subject_set)
+            yield Document(
+                text=self._transform_fn(doc.text), subject_set=doc.subject_set
+            )
 
 
 class LimitingDocumentCorpus(DocumentCorpus):

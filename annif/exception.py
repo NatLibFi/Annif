@@ -22,13 +22,13 @@ class AnnifException(ClickException):
 
     def format_message(self):
         if self.project_id is not None:
-            return "{} project '{}': {}".format(self.prefix,
-                                                self.project_id,
-                                                self.message)
+            return "{} project '{}': {}".format(
+                self.prefix, self.project_id, self.message
+            )
         if self.backend_id is not None:
-            return "{} backend '{}': {}".format(self.prefix,
-                                                self.backend_id,
-                                                self.message)
+            return "{} backend '{}': {}".format(
+                self.prefix, self.backend_id, self.message
+            )
         return "{}: {}".format(self.prefix, self.message)
 
 

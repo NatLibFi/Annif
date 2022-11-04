@@ -16,23 +16,22 @@ def atomic_save(obj, dirname, filename, method=None):
     final name."""
 
     prefix, suffix = os.path.splitext(filename)
-    tempfd, tempfilename = tempfile.mkstemp(
-        prefix=prefix, suffix=suffix, dir=dirname)
+    tempfd, tempfilename = tempfile.mkstemp(prefix=prefix, suffix=suffix, dir=dirname)
     os.close(tempfd)
-    logger.debug('saving %s to temporary file %s', str(obj)[:90], tempfilename)
+    logger.debug("saving %s to temporary file %s", str(obj)[:90], tempfilename)
     if method is not None:
         method(obj, tempfilename)
     else:
         obj.save(tempfilename)
-    for fn in glob.glob(tempfilename + '*'):
+    for fn in glob.glob(tempfilename + "*"):
         newname = fn.replace(tempfilename, os.path.join(dirname, filename))
-        logger.debug('renaming temporary file %s to %s', fn, newname)
+        logger.debug("renaming temporary file %s to %s", fn, newname)
         os.rename(fn, newname)
 
 
 def cleanup_uri(uri):
     """remove angle brackets from a URI, if any"""
-    if uri.startswith('<') and uri.endswith('>'):
+    if uri.startswith("<") and uri.endswith(">"):
         return uri[1:-1]
     return uri
 
@@ -54,8 +53,8 @@ def parse_sources(sourcedef):
 
     sources = []
     totalweight = 0.0
-    for srcdef in sourcedef.strip().split(','):
-        srcval = srcdef.strip().split(':')
+    for srcdef in sourcedef.strip().split(","):
+        srcval = srcdef.strip().split(":")
         src_id = srcval[0]
         if len(srcval) > 1:
             weight = float(srcval[1])
@@ -74,9 +73,9 @@ def parse_args(param_string):
         return [], {}
     posargs = []
     kwargs = {}
-    param_strings = param_string.split(',')
+    param_strings = param_string.split(",")
     for p_string in param_strings:
-        parts = p_string.split('=')
+        parts = p_string.split("=")
         if len(parts) == 1:
             posargs.append(p_string)
         elif len(parts) == 2:
@@ -89,7 +88,7 @@ def boolean(val):
     True values are '1', 'yes', 'true', and 'on' (case insensitive), everything
     else is False."""
 
-    return str(val).lower() in ('1', 'yes', 'true', 'on')
+    return str(val).lower() in ("1", "yes", "true", "on")
 
 
 def identity(x):
@@ -99,4 +98,4 @@ def identity(x):
 
 def metric_code(metric):
     """Convert a human-readable metric name into an alphanumeric string"""
-    return metric.translate(metric.maketrans(' ', '_', '()'))
+    return metric.translate(metric.maketrans(" ", "_", "()"))
