@@ -11,6 +11,7 @@
 [![LGTM: Python](https://img.shields.io/lgtm/grade/python/g/NatLibFi/Annif.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/NatLibFi/Annif/context:python)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=NatLibFi_Annif&metric=alert_status)](https://sonarcloud.io/dashboard?id=NatLibFi_Annif)
 [![docs](https://readthedocs.org/projects/annif/badge/?version=latest)](https://annif.readthedocs.io/en/latest/index.html)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Annif is an automated subject indexing toolkit. It was originally created as
 a statistical automated indexing tool that used metadata from the
