@@ -2,6 +2,8 @@ engines:
   pep8:
     enabled: true
     checks:
+      E203: # Check whitespace before ':'
+        enabled: false
       E501: # Line length checks
         enabled: false
   radon:
