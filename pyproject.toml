@@ -71,7 +71,6 @@ pytest-flask = "*"
 pytest-flake8 = "*"
 flake8 = "4.*"
 bumpversion = "*"
-autopep8 = "*"
 black = "*"
 
 [tool.poetry.extras]
