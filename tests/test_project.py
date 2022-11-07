@@ -1,10 +1,12 @@
 """Unit tests for projects in Annif"""
 
 import logging
-import pytest
 from datetime import datetime, timedelta, timezone
-import annif.project
+
+import pytest
+
 import annif.backend.dummy
+import annif.project
 from annif.exception import ConfigurationException, NotSupportedException
 from annif.project import Access
 

@@ -1,9 +1,10 @@
 """Utility methods for lexical algorithms"""
 
 import collections
+
 from rdflib import URIRef
 from rdflib.namespace import SKOS
-from scipy.sparse import lil_matrix, csc_matrix
+from scipy.sparse import csc_matrix, lil_matrix
 
 
 def get_subject_labels(graph, uri, properties, language):

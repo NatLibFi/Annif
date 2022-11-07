@@ -1,13 +1,15 @@
 """Clases for supporting document corpora"""
 
 import glob
+import gzip
 import os.path
 import re
-import gzip
-import annif.util
 from itertools import islice
-from .types import DocumentCorpus, Document
+
+import annif.util
+
 from .subject import SubjectSet
+from .types import Document, DocumentCorpus
 
 logger = annif.logger
 

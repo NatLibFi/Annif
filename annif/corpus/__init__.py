@@ -1,18 +1,17 @@
 """Annif corpus operations"""
 
 
+from .combine import CombinedCorpus
 from .document import (
     DocumentDirectory,
     DocumentFile,
     DocumentList,
-    TransformingDocumentCorpus,
     LimitingDocumentCorpus,
+    TransformingDocumentCorpus,
 )
-from .subject import Subject, SubjectFileTSV, SubjectFileCSV
-from .subject import SubjectIndex, SubjectSet
 from .skos import SubjectFileSKOS
+from .subject import Subject, SubjectFileCSV, SubjectFileTSV, SubjectIndex, SubjectSet
 from .types import Document
-from .combine import CombinedCorpus
 
 __all__ = [
     "DocumentDirectory",

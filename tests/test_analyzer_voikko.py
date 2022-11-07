@@ -1,6 +1,7 @@
 """Unit tests for voikko analyzer in Annif"""
 
 import pytest
+
 import annif.analyzer
 
 voikko = pytest.importorskip("annif.analyzer.voikko")

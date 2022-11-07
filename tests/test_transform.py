@@ -1,6 +1,7 @@
 """Unit tests for the input-transforms in Annif"""
 
 import pytest
+
 import annif.transform
 from annif.exception import ConfigurationException
 from annif.transform import parse_specs

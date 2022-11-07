@@ -1,8 +1,10 @@
 """Unit tests for corpus functionality in Annif"""
 
 import gzip
+
 import numpy as np
 import pytest
+
 import annif.corpus
 from annif.corpus import TransformingDocumentCorpus
 

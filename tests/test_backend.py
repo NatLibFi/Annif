@@ -1,10 +1,12 @@
 """Unit tests for backends in Annif"""
 
+import importlib.util
+
 import pytest
+
 import annif
 import annif.backend
 import annif.corpus
-import importlib.util
 
 
 def test_get_backend_nonexistent():

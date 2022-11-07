@@ -1,6 +1,7 @@
 """Class for combining multiple corpora so they behave like a single corpus"""
 
 import itertools
+
 from .types import DocumentCorpus
 
 

@@ -2,13 +2,15 @@
 
 import collections
 import re
+
 from flask import current_app
+
 import annif
 from annif.config import parse_config
 from annif.exception import ConfigurationException
 from annif.project import Access, AnnifProject
-from annif.vocab import AnnifVocabulary
 from annif.util import parse_args
+from annif.vocab import AnnifVocabulary
 
 logger = annif.logger
 

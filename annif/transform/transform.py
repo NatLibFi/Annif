@@ -1,6 +1,7 @@
 """Common functionality for transforming text of input documents."""
 
 import abc
+
 from annif.corpus import TransformingDocumentCorpus
 from annif.exception import ConfigurationException
 

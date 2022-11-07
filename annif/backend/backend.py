@@ -4,6 +4,7 @@ import abc
 import os.path
 from datetime import datetime, timezone
 from glob import glob
+
 from annif import logger
 
 

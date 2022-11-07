@@ -1,10 +1,12 @@
 import os
+
 from stwfsapy.predictor import StwfsapyPredictor
+
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import ListSuggestionResult, SubjectSuggestion
-from . import backend
 from annif.util import atomic_save, boolean
 
+from . import backend
 
 _KEY_CONCEPT_TYPE_URI = "concept_type_uri"
 _KEY_SUBTHESAURUS_TYPE_URI = "sub_thesaurus_type_uri"

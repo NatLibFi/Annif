@@ -1,10 +1,10 @@
 """Unit tests for the MLLM backend in Annif"""
 
 import pytest
+
 import annif
 import annif.backend
-from annif.exception import NotInitializedException
-from annif.exception import NotSupportedException
+from annif.exception import NotInitializedException, NotSupportedException
 
 
 def test_mllm_default_params(project):

@@ -1,9 +1,9 @@
-from annif.backend import get_backend
-import annif.corpus
-from annif.backend.stwfsa import StwfsaBackend
-from annif.exception import NotInitializedException, NotSupportedException
 import pytest
 
+import annif.corpus
+from annif.backend import get_backend
+from annif.backend.stwfsa import StwfsaBackend
+from annif.exception import NotInitializedException, NotSupportedException
 
 _backend_conf = {
     "language": "fi",

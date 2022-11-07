@@ -1,6 +1,7 @@
 """Snowball analyzer for Annif, based on nltk Snowball stemmer."""
 
 import functools
+
 from . import analyzer
 
 

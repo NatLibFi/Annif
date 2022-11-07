@@ -2,11 +2,12 @@
 methods defined in the Swagger specification."""
 
 import connexion
+
 import annif.registry
 from annif.corpus import Document, DocumentList, SubjectSet
-from annif.suggestion import SuggestionFilter
 from annif.exception import AnnifException
 from annif.project import Access
+from annif.suggestion import SuggestionFilter
 
 
 def project_not_found_error(project_id):

@@ -2,6 +2,7 @@
 given character length."""
 
 from annif.exception import ConfigurationException
+
 from . import transform
 
 

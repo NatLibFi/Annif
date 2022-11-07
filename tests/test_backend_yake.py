@@ -1,8 +1,9 @@
 """Unit tests for the Yake backend in Annif"""
 
+import pytest
+
 import annif
 import annif.backend
-import pytest
 from annif.exception import ConfigurationException, NotSupportedException
 
 pytest.importorskip("annif.backend.yake")

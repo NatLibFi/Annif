@@ -1,13 +1,15 @@
 """Unit test module for Annif CLI commands"""
 
 import contextlib
-import random
-import re
-import os.path
-import shutil
 import importlib
 import json
+import os.path
+import random
+import re
+import shutil
+
 from click.testing import CliRunner
+
 import annif.cli
 
 runner = CliRunner(env={"ANNIF_CONFIG": "annif.default_config.TestingConfig"})

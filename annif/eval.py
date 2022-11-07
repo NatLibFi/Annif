@@ -2,10 +2,16 @@
 
 import statistics
 import warnings
+
 import numpy as np
 from scipy.sparse import csr_matrix
-from sklearn.metrics import precision_score, recall_score, f1_score
-from sklearn.metrics import label_ranking_average_precision_score
+from sklearn.metrics import (
+    f1_score,
+    label_ranking_average_precision_score,
+    precision_score,
+    recall_score,
+)
+
 from annif.exception import NotSupportedException
 
 

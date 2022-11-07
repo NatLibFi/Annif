@@ -2,9 +2,11 @@
 
 import os.path
 import shutil
-import pytest
-import py.path
 import unittest.mock
+
+import py.path
+import pytest
+
 import annif
 import annif.analyzer
 import annif.corpus

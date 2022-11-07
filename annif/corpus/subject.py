@@ -1,12 +1,15 @@
 """Classes for supporting subject corpora expressed as directories or files"""
 
 import csv
-import numpy as np
-import annif.util
 import os.path
+
+import numpy as np
+
+import annif.util
 from annif import logger
-from .types import Subject, SubjectCorpus
+
 from .skos import serialize_subjects_to_skos
+from .types import Subject, SubjectCorpus
 
 
 class SubjectFileTSV(SubjectCorpus):

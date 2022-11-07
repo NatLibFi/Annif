@@ -1,9 +1,11 @@
 """Unit tests for the PAV backend in Annif"""
 
 import logging
+from datetime import datetime, timedelta, timezone
+
 import py.path
 import pytest
-from datetime import datetime, timedelta, timezone
+
 import annif.backend
 import annif.corpus
 from annif.exception import NotSupportedException

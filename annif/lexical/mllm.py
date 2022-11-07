@@ -2,21 +2,25 @@
 
 import collections
 import math
-import joblib
-from statistics import mean
 from enum import IntEnum
+from statistics import mean
+
+import joblib
 import numpy as np
 from rdflib.namespace import SKOS
-from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.ensemble import BaggingClassifier
+from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.tree import DecisionTreeClassifier
-import annif.util
+
 import annif.parallel
+import annif.util
 from annif.exception import OperationFailedException
 from annif.lexical.tokenset import TokenSet, TokenSetIndex
-from annif.lexical.util import get_subject_labels
-from annif.lexical.util import make_relation_matrix, make_collection_matrix
-
+from annif.lexical.util import (
+    get_subject_labels,
+    make_collection_matrix,
+    make_relation_matrix,
+)
 
 Term = collections.namedtuple("Term", "subject_id label is_pref")
 

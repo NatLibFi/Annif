@@ -1,8 +1,10 @@
 """Transformation filtering out parts of a text that are in a language
 different from the language of the project."""
 
-import annif
 import cld3
+
+import annif
+
 from . import transform
 
 logger = annif.logger

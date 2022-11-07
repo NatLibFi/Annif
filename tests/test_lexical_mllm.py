@@ -2,8 +2,9 @@
 
 import numpy as np
 import pytest
-from annif.lexical.mllm import MLLMModel
+
 from annif.exception import OperationFailedException
+from annif.lexical.mllm import MLLMModel
 
 
 def test_mllmmodel_prepare_terms(vocabulary):

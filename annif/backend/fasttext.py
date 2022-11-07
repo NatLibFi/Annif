@@ -2,12 +2,14 @@
 
 import collections
 import os.path
-import annif.util
-from annif.suggestion import SubjectSuggestion, ListSuggestionResult
-from annif.exception import NotInitializedException, NotSupportedException
+
 import fasttext
-from . import backend
-from . import mixins
+
+import annif.util
+from annif.exception import NotInitializedException, NotSupportedException
+from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+
+from . import backend, mixins
 
 
 class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):

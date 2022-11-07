@@ -3,7 +3,6 @@
 import abc
 import collections
 
-
 Document = collections.namedtuple("Document", "text subject_set")
 
 

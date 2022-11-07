@@ -1,11 +1,12 @@
 """Functionality for obtaining text transformation from string specification"""
 
 import re
+
 import annif
-from . import transform
-from . import inputlimiter
-from annif.util import parse_args
 from annif.exception import ConfigurationException
+from annif.util import parse_args
+
+from . import inputlimiter, transform
 
 
 def parse_specs(transform_specs):

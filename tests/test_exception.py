@@ -1,8 +1,9 @@
 """Unit tests for Annif exception classes"""
 
 import pytest
-from annif.exception import AnnifException
 from click import ClickException
+
+from annif.exception import AnnifException
 
 
 def test_annifexception_not_instantiable():

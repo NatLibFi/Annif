@@ -3,8 +3,10 @@
 
 import abc
 import os.path
+
 import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
+
 import annif.util
 from annif.exception import NotInitializedException
 from annif.suggestion import ListSuggestionResult

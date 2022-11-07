@@ -1,6 +1,7 @@
 """Unit tests for evaluation metrics in Annif"""
 
 import numpy as np
+
 import annif.corpus
 import annif.eval
 import annif.suggestion

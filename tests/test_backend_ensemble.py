@@ -1,6 +1,7 @@
 """Unit tests for the ensemble backend in Annif"""
 
 import pytest
+
 import annif.backend
 from annif.exception import NotSupportedException
 

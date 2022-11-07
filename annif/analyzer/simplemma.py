@@ -1,6 +1,7 @@
 """Simplemma analyzer for Annif, based on simplemma lemmatizer."""
 
 import simplemma
+
 from . import analyzer
 
 

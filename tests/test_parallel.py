@@ -2,6 +2,7 @@
 
 import multiprocessing
 import multiprocessing.dummy
+
 import annif.parallel
 
 

@@ -1,17 +1,19 @@
 """Annif backend using the Omikuji classifier"""
 
-import omikuji
 import os.path
 import shutil
+
+import omikuji
+
 import annif.util
-from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 from annif.exception import (
     NotInitializedException,
     NotSupportedException,
     OperationFailedException,
 )
-from . import backend
-from . import mixins
+from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+
+from . import backend, mixins
 
 
 class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):

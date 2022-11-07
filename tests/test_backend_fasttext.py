@@ -1,7 +1,9 @@
 """Unit tests for the fastText backend in Annif"""
 
 import logging
+
 import pytest
+
 import annif.backend
 import annif.corpus
 from annif.exception import NotSupportedException

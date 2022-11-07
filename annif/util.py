@@ -4,7 +4,9 @@ import glob
 import os
 import os.path
 import tempfile
+
 import numpy as np
+
 from annif import logger
 from annif.suggestion import VectorSuggestionResult
 

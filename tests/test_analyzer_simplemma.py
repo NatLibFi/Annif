@@ -1,6 +1,7 @@
 """Unit tests for simplemma analyzer in Annif"""
 
 import pytest
+
 import annif.analyzer
 
 simplemma = pytest.importorskip("annif.analyzer.simplemma")

@@ -1,9 +1,11 @@
 """Unit tests for the nn_ensemble backend in Annif"""
 
 import time
-import pytest
-import py.path
 from datetime import datetime, timedelta, timezone
+
+import py.path
+import pytest
+
 import annif.backend
 import annif.corpus
 from annif.exception import NotInitializedException, NotSupportedException
