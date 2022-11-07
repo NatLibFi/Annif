@@ -104,11 +104,11 @@ pytest-watch by running `ptw`.
 
 Annif code should follow the [Black style](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html).
 The Black tool is included as a developoment dependency; you can run `black .` in the project root to autoformat code. 
-You can set up a [pre-commit hook](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) to automate formatting and flake8 linting to be run with every git commit by using the following in the file `.git/hooks/pre-commit`, which should have execute permission set:
+You can set up a [pre-commit hook](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) to automate linting with Black and flake8 with every git commit by using the following in the file `.git/hooks/pre-commit`, which should have execute permission set:
 ```bash
 #!/bin/sh
 
-black .
+black . --check --diff
 flake8
 ```
 
