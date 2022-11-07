@@ -10,7 +10,7 @@ logger = annif.logger
 
 class LangFilter(transform.BaseTransform):
 
-    name = 'filter_lang'
+    name = "filter_lang"
 
     def __init__(self, project, text_min_length=500, sentence_min_length=50):
         super().__init__(project)
@@ -39,4 +39,4 @@ class LangFilter(transform.BaseTransform):
             detected_lang = self._detect_language(sent)
             if detected_lang == self.project.language or detected_lang is None:
                 retained_sentences.append(sent)
-        return ' '.join(retained_sentences)
+        return " ".join(retained_sentences)

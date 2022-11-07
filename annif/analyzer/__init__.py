@@ -15,10 +15,9 @@ def register_analyzer(analyzer):
 
 
 def get_analyzer(analyzerspec):
-    match = re.match(r'(\w+)(\((.*)\))?', analyzerspec)
+    match = re.match(r"(\w+)(\((.*)\))?", analyzerspec)
     if match is None:
-        raise ValueError(
-            "Invalid analyzer specification {}".format(analyzerspec))
+        raise ValueError("Invalid analyzer specification {}".format(analyzerspec))
 
     analyzer = match.group(1)
     posargs, kwargs = parse_args(match.group(3))
@@ -36,12 +35,14 @@ register_analyzer(simplemma.SimplemmaAnalyzer)
 # Optional analyzers
 try:
     from . import voikko
+
     register_analyzer(voikko.VoikkoAnalyzer)
 except ImportError:
     annif.logger.debug("voikko not available, not enabling voikko analyzer")
 
 try:
     from . import spacy
+
     register_analyzer(spacy.SpacyAnalyzer)
 except ImportError:
     annif.logger.debug("spaCy not available, not enabling spacy analyzer")

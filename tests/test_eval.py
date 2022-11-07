@@ -97,28 +97,34 @@ def test_evaluation_batch(subject_index):
     batch = annif.eval.EvaluationBatch(subject_index)
 
     gold_set = annif.corpus.SubjectSet.from_string(
-        '<http://www.yso.fi/onto/yso/p10849>\tarkeologit',
-        subject_index, 'fi')
-    hits1 = annif.suggestion.ListSuggestionResult([
-        # subject: archaeologists (yso:p10849)
-        annif.suggestion.SubjectSuggestion(
-            subject_id=subject_index.by_uri(
-                'http://www.yso.fi/onto/yso/p10849'),
-            score=1.0)])
+        "<http://www.yso.fi/onto/yso/p10849>\tarkeologit", subject_index, "fi"
+    )
+    hits1 = annif.suggestion.ListSuggestionResult(
+        [
+            # subject: archaeologists (yso:p10849)
+            annif.suggestion.SubjectSuggestion(
+                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p10849"),
+                score=1.0,
+            )
+        ]
+    )
     batch.evaluate(hits1, gold_set)
-    hits2 = annif.suggestion.ListSuggestionResult([
-        # subject: egyptologists (yso:p1747)
-        annif.suggestion.SubjectSuggestion(
-            subject_id=subject_index.by_uri(
-                'http://www.yso.fi/onto/yso/p1747'),
-            score=1.0)])
+    hits2 = annif.suggestion.ListSuggestionResult(
+        [
+            # subject: egyptologists (yso:p1747)
+            annif.suggestion.SubjectSuggestion(
+                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p1747"),
+                score=1.0,
+            )
+        ]
+    )
     batch.evaluate(hits2, gold_set)
     results = batch.results()
-    assert results['Precision (doc avg)'] == 0.5
-    assert results['Recall (doc avg)'] == 0.5
-    assert results['LRAP'] >= 0.50
-    assert results['LRAP'] <= 0.51
-    assert results['True positives'] == 1
-    assert results['False positives'] == 1
-    assert results['False negatives'] == 1
-    assert results['Documents evaluated'] == 2
+    assert results["Precision (doc avg)"] == 0.5
+    assert results["Recall (doc avg)"] == 0.5
+    assert results["LRAP"] >= 0.50
+    assert results["LRAP"] <= 0.51
+    assert results["True positives"] == 1
+    assert results["False positives"] == 1
+    assert results["False negatives"] == 1
+    assert results["Documents evaluated"] == 2

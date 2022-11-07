@@ -7,7 +7,7 @@ from . import transform
 
 class InputLimiter(transform.BaseTransform):
 
-    name = 'limit'
+    name = "limit"
 
     def __init__(self, project, input_limit):
         super().__init__(project)
@@ -15,10 +15,11 @@ class InputLimiter(transform.BaseTransform):
         self._validate_value(self.input_limit)
 
     def transform_fn(self, text):
-        return text[:self.input_limit]
+        return text[: self.input_limit]
 
     def _validate_value(self, input_limit):
         if input_limit < 0:
             raise ConfigurationException(
-                'input_limit in limit_input transform cannot be negative',
-                project_id=self.project.project_id)
+                "input_limit in limit_input transform cannot be negative",
+                project_id=self.project.project_id,
+            )

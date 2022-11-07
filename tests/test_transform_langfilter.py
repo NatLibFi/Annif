@@ -27,7 +27,7 @@ def test_lang_filter(project):
         yhteiskunnalle. Kehitämme palveluja yhteistyössä kirjastojen,
         arkistojen, museoiden ja muiden toimijoiden kanssa.
     """
-    text = ' '.join(text.split())
+    text = " ".join(text.split())
     text_filtered = """
         Kansalliskirjasto on kaikille avoin kulttuuriperintöorganisaatio, joka
         palvelee valtakunnallisesti kansalaisia, tiedeyhteisöjä ja muita
@@ -39,7 +39,7 @@ def test_lang_filter(project):
         yhteiskunnalle. Kehitämme palveluja yhteistyössä kirjastojen,
         arkistojen, museoiden ja muiden toimijoiden kanssa.
     """
-    text_filtered = ' '.join(text_filtered.split())
+    text_filtered = " ".join(text_filtered.split())
     assert transf.transform_text(text) == text_filtered
 
 
@@ -48,17 +48,16 @@ def test_lang_filter_text_min_length(project):
     transf = annif.transform.get_transform("filter_lang", project)
     assert transf.transform_text(text) == text
     # Set a short text_min_length to apply language filtering:
-    transf = annif.transform.get_transform(
-        "filter_lang(text_min_length=50)", project)
+    transf = annif.transform.get_transform("filter_lang(text_min_length=50)", project)
     assert transf.transform_text(text) == ""
 
 
 def test_lang_filter_sentence_min_length(project):
     text = "This is a non-Finnish sentence of 42 chars. And this of 20 chars."
-    transf = annif.transform.get_transform(
-        "filter_lang(text_min_length=50)", project)
+    transf = annif.transform.get_transform("filter_lang(text_min_length=50)", project)
     assert transf.transform_text(text) == text
     # Set a short sentence_min_length to apply language filtering:
     transf = annif.transform.get_transform(
-        "filter_lang(text_min_length=50,sentence_min_length=30)", project)
+        "filter_lang(text_min_length=50,sentence_min_length=30)", project
+    )
     assert transf.transform_text(text) == "And this of 20 chars."

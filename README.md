@@ -11,6 +11,7 @@
 [![LGTM: Python](https://img.shields.io/lgtm/grade/python/g/NatLibFi/Annif.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/NatLibFi/Annif/context:python)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=NatLibFi_Annif&metric=alert_status)](https://sonarcloud.io/dashboard?id=NatLibFi_Annif)
 [![docs](https://readthedocs.org/projects/annif/badge/?version=latest)](https://annif.readthedocs.io/en/latest/index.html)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Annif is an automated subject indexing toolkit. It was originally created as
 a statistical automated indexing tool that used metadata from the
@@ -98,6 +99,18 @@ Start up the application:
 Run `poetry shell` to enter the virtual environment and then run `pytest`.
 To have the test suite watch for changes in code and run automatically, use
 pytest-watch by running `ptw`.
+
+## Code style
+
+Annif code should follow the [Black style](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html).
+The Black tool is included as a developoment dependency; you can run `black .` in the project root to autoformat code. 
+You can set up a [pre-commit hook](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) to automate linting with Black and flake8 with every git commit by using the following in the file `.git/hooks/pre-commit`, which should have execute permission set:
+```bash
+#!/bin/sh
+
+black . --check --diff
+flake8
+```
 
 # Getting help
 

@@ -26,13 +26,7 @@ class ProjectSuggestMap:
     provide a mapping method that converts Document objects to suggestions.
     Intended to be used with the multiprocessing module."""
 
-    def __init__(
-            self,
-            registry,
-            project_ids,
-            backend_params,
-            limit,
-            threshold):
+    def __init__(self, registry, project_ids, backend_params, limit, threshold):
         self.registry = registry
         self.project_ids = project_ids
         self.backend_params = backend_params
@@ -45,7 +39,8 @@ class ProjectSuggestMap:
             project = self.registry.get_project(project_id)
             hits = project.suggest(doc.text, self.backend_params)
             filtered_hits[project_id] = hits.filter(
-                project.subjects, self.limit, self.threshold)
+                project.subjects, self.limit, self.threshold
+            )
         return (filtered_hits, doc.subject_set)
 
 

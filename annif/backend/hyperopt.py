@@ -8,7 +8,7 @@ import optuna.exceptions
 from .backend import AnnifBackend
 
 
-HPRecommendation = collections.namedtuple('HPRecommendation', 'lines score')
+HPRecommendation = collections.namedtuple("HPRecommendation", "lines score")
 
 
 class TrialWriter:
@@ -26,12 +26,18 @@ class TrialWriter:
 
         if not self.header_written:
             param_names = list(trial.params.keys())
-            print('\t'.join(['trial', 'value'] + param_names),
-                  file=self.results_file)
+            print("\t".join(["trial", "value"] + param_names), file=self.results_file)
             self.header_written = True
-        print('\t'.join((str(e) for e in [trial.number, trial.value] +
-                         list(self.normalize_func(trial.params).values()))),
-              file=self.results_file)
+        print(
+            "\t".join(
+                (
+                    str(e)
+                    for e in [trial.number, trial.value]
+                    + list(self.normalize_func(trial.params).values())
+                )
+            ),
+            file=self.results_file,
+        )
 
 
 class HyperparameterOptimizer:
@@ -75,16 +81,19 @@ class HyperparameterOptimizer:
         else:
             callbacks = []
 
-        study = optuna.create_study(direction='maximize')
+        study = optuna.create_study(direction="maximize")
         # silence the ExperimentalWarning when using the Optuna progress bar
-        warnings.filterwarnings("ignore",
-                                category=optuna.exceptions.ExperimentalWarning)
-        study.optimize(self._objective,
-                       n_trials=n_trials,
-                       n_jobs=n_jobs,
-                       callbacks=callbacks,
-                       gc_after_trial=False,
-                       show_progress_bar=(n_jobs == 1))
+        warnings.filterwarnings(
+            "ignore", category=optuna.exceptions.ExperimentalWarning
+        )
+        study.optimize(
+            self._objective,
+            n_trials=n_trials,
+            n_jobs=n_jobs,
+            callbacks=callbacks,
+            gc_after_trial=False,
+            show_progress_bar=(n_jobs == 1),
+        )
         return self._postprocess(study)
 
 

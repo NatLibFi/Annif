@@ -19,17 +19,17 @@ class DummyBackend(backend.AnnifLearningBackend):
         self.initialized = True
 
     def _suggest(self, text, params):
-        score = float(params.get('score', 1.0))
+        score = float(params.get("score", 1.0))
 
         # allow overriding returned subject via uri parameter
-        if 'uri' in params:
-            subject_id = self.project.subjects.by_uri(params['uri'])
+        if "uri" in params:
+            subject_id = self.project.subjects.by_uri(params["uri"])
         else:
             subject_id = self.subject_id
 
         return ListSuggestionResult(
-            [SubjectSuggestion(subject_id=subject_id,
-                               score=score)])
+            [SubjectSuggestion(subject_id=subject_id, score=score)]
+        )
 
     def _learn(self, corpus, params):
         # in this dummy backend we "learn" by picking up the subject ID

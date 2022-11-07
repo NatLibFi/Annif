@@ -13,7 +13,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     name = None
 
-    DEFAULT_PARAMETERS = {'limit': 100}
+    DEFAULT_PARAMETERS = {"limit": 100}
 
     def __init__(self, backend_id, config_params, project):
         """Initialize backend with specific parameters. The
@@ -36,12 +36,14 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     @property
     def is_trained(self):
-        return bool(glob(os.path.join(self.datadir, '*')))
+        return bool(glob(os.path.join(self.datadir, "*")))
 
     @property
     def modification_time(self):
-        mtimes = [datetime.utcfromtimestamp(os.path.getmtime(p))
-                  for p in glob(os.path.join(self.datadir, '*'))]
+        mtimes = [
+            datetime.utcfromtimestamp(os.path.getmtime(p))
+            for p in glob(os.path.join(self.datadir, "*"))
+        ]
         most_recent = max(mtimes, default=None)
         if most_recent is None:
             return None

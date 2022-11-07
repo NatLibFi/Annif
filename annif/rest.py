@@ -14,8 +14,9 @@ def project_not_found_error(project_id):
 
     return connexion.problem(
         status=404,
-        title='Project not found',
-        detail="Project '{}' not found".format(project_id))
+        title="Project not found",
+        detail="Project '{}' not found".format(project_id),
+    )
 
 
 def server_error(err):
@@ -23,26 +24,26 @@ def server_error(err):
     or backend problem)"""
 
     return connexion.problem(
-        status=503,
-        title='Service unavailable',
-        detail=err.format_message())
+        status=503, title="Service unavailable", detail=err.format_message()
+    )
 
 
 def list_projects():
     """return a dict with projects formatted according to Swagger spec"""
 
     return {
-        'projects': [
-            proj.dump() for proj in annif.registry.get_projects(
-                min_access=Access.public).values()]}
+        "projects": [
+            proj.dump()
+            for proj in annif.registry.get_projects(min_access=Access.public).values()
+        ]
+    }
 
 
 def show_project(project_id):
     """return a single project formatted according to Swagger spec"""
 
     try:
-        project = annif.registry.get_project(
-            project_id, min_access=Access.hidden)
+        project = annif.registry.get_project(project_id, min_access=Access.hidden)
     except ValueError:
         return project_not_found_error(project_id)
     return project.dump()
@@ -51,10 +52,10 @@ def show_project(project_id):
 def _suggestion_to_dict(suggestion, subject_index, language):
     subject = subject_index[suggestion.subject_id]
     return {
-        'uri': subject.uri,
-        'label': subject.labels[language],
-        'notation': subject.notation,
-        'score': suggestion.score
+        "uri": subject.uri,
+        "label": subject.labels[language],
+        "notation": subject.notation,
+        "score": suggestion.score,
     }
 
 
@@ -63,8 +64,7 @@ def suggest(project_id, text, limit, threshold, language=None):
     formatted according to Swagger spec"""
 
     try:
-        project = annif.registry.get_project(
-            project_id, min_access=Access.hidden)
+        project = annif.registry.get_project(project_id, min_access=Access.hidden)
     except ValueError:
         return project_not_found_error(project_id)
 
@@ -76,8 +76,9 @@ def suggest(project_id, text, limit, threshold, language=None):
     if lang not in project.vocab.languages:
         return connexion.problem(
             status=400,
-            title='Bad Request',
-            detail=f'language "{lang}" not supported by vocabulary')
+            title="Bad Request",
+            detail=f'language "{lang}" not supported by vocabulary',
+        )
 
     try:
         hit_filter = SuggestionFilter(project.subjects, limit, threshold)
@@ -86,17 +87,22 @@ def suggest(project_id, text, limit, threshold, language=None):
         return server_error(err)
 
     hits = hit_filter(result).as_list()
-    return {'results': [_suggestion_to_dict(hit, project.subjects, lang)
-                        for hit in hits]}
+    return {
+        "results": [_suggestion_to_dict(hit, project.subjects, lang) for hit in hits]
+    }
 
 
 def _documents_to_corpus(documents, subject_index):
-    corpus = [Document(text=d['text'],
-                       subject_set=SubjectSet(
-                           [subject_index.by_uri(subj['uri'])
-                            for subj in d['subjects']]))
-              for d in documents
-              if 'text' in d and 'subjects' in d]
+    corpus = [
+        Document(
+            text=d["text"],
+            subject_set=SubjectSet(
+                [subject_index.by_uri(subj["uri"]) for subj in d["subjects"]]
+            ),
+        )
+        for d in documents
+        if "text" in d and "subjects" in d
+    ]
     return DocumentList(corpus)
 
 
@@ -104,8 +110,7 @@ def learn(project_id, documents):
     """learn from documents and return an empty 204 response if succesful"""
 
     try:
-        project = annif.registry.get_project(
-            project_id, min_access=Access.hidden)
+        project = annif.registry.get_project(project_id, min_access=Access.hidden)
     except ValueError:
         return project_not_found_error(project_id)
 

@@ -49,9 +49,10 @@ class TokenSetIndex:
 
         for token in tset:
             for ts in self._index[token]:
-                if tset.contains(ts) \
-                   and (ts.subject_id not in subj_tsets
-                        or not subj_tsets[ts.subject_id].is_pref):
+                if tset.contains(ts) and (
+                    ts.subject_id not in subj_tsets
+                    or not subj_tsets[ts.subject_id].is_pref
+                ):
                     subj_tsets[ts.subject_id] = ts
 
         return subj_tsets
@@ -63,11 +64,14 @@ class TokenSetIndex:
 
         subj_ambiguity = collections.Counter()
 
-        subj_ambiguity.update([ts.subject_id
-                               for ts in tsets
-                               for other in tsets
-                               if ts != other
-                               and other.contains(ts)])
+        subj_ambiguity.update(
+            [
+                ts.subject_id
+                for ts in tsets
+                for other in tsets
+                if ts != other and other.contains(ts)
+            ]
+        )
 
         return subj_ambiguity
 
@@ -80,5 +84,6 @@ class TokenSetIndex:
         subj_tsets = self._find_subj_tsets(tset)
         subj_ambiguity = self._find_subj_ambiguity(subj_tsets.values())
 
-        return [(ts, subj_ambiguity[subject_id])
-                for subject_id, ts in subj_tsets.items()]
+        return [
+            (ts, subj_ambiguity[subject_id]) for subject_id, ts in subj_tsets.items()
+        ]

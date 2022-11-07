@@ -4,7 +4,7 @@ import abc
 import collections
 
 
-Document = collections.namedtuple('Document', 'text subject_set')
+Document = collections.namedtuple("Document", "text subject_set")
 
 
 class DocumentCorpus(metaclass=abc.ABCMeta):
@@ -25,7 +25,7 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
             return True
 
 
-Subject = collections.namedtuple('Subject', 'uri labels notation')
+Subject = collections.namedtuple("Subject", "uri labels notation")
 
 
 class SubjectCorpus(metaclass=abc.ABCMeta):

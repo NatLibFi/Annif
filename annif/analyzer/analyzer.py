@@ -4,7 +4,7 @@ import abc
 import functools
 import unicodedata
 
-_KEY_TOKEN_MIN_LENGTH = 'token_min_length'
+_KEY_TOKEN_MIN_LENGTH = "token_min_length"
 
 
 class Analyzer(metaclass=abc.ABCMeta):
@@ -22,6 +22,7 @@ class Analyzer(metaclass=abc.ABCMeta):
     def tokenize_sentences(self, text):
         """Tokenize a piece of text (e.g. a document) into sentences."""
         import nltk.tokenize
+
         return nltk.tokenize.sent_tokenize(text)
 
     @functools.lru_cache(maxsize=50000)
@@ -31,7 +32,7 @@ class Analyzer(metaclass=abc.ABCMeta):
             return False
         for char in word:
             category = unicodedata.category(char)
-            if category[0] == 'L':  # letter
+            if category[0] == "L":  # letter
                 return True
         return False
 
@@ -41,9 +42,12 @@ class Analyzer(metaclass=abc.ABCMeta):
         punctuation, numbers or very short words)"""
 
         import nltk.tokenize
-        return [self._normalize_word(word)
-                for word in nltk.tokenize.word_tokenize(text)
-                if (not filter or self.is_valid_token(word))]
+
+        return [
+            self._normalize_word(word)
+            for word in nltk.tokenize.word_tokenize(text)
+            if (not filter or self.is_valid_token(word))
+        ]
 
     def _normalize_word(self, word):
         """Normalize (stem or lemmatize) a word form into a normal form."""

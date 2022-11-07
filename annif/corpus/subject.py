@@ -20,14 +20,12 @@ class SubjectFileTSV(SubjectCorpus):
         self.language = language
 
     def _parse_line(self, line):
-        vals = line.strip().split('\t', 2)
+        vals = line.strip().split("\t", 2)
         clean_uri = annif.util.cleanup_uri(vals[0])
         label = vals[1] if len(vals) >= 2 else None
         labels = {self.language: label} if label else None
         notation = vals[2] if len(vals) >= 3 else None
-        yield Subject(uri=clean_uri,
-                      labels=labels,
-                      notation=notation)
+        yield Subject(uri=clean_uri, labels=labels, notation=notation)
 
     @property
     def languages(self):
@@ -35,7 +33,7 @@ class SubjectFileTSV(SubjectCorpus):
 
     @property
     def subjects(self):
-        with open(self.path, encoding='utf-8-sig') as subjfile:
+        with open(self.path, encoding="utf-8-sig") as subjfile:
             for line in subjfile:
                 yield from self._parse_line(line)
 
@@ -54,9 +52,9 @@ class SubjectFileCSV(SubjectCorpus):
 
     def _parse_row(self, row):
         labels = {
-            fname.replace('label_', ''): value or None
+            fname.replace("label_", ""): value or None
             for fname, value in row.items()
-            if fname.startswith('label_')
+            if fname.startswith("label_")
         }
 
         # if there are no labels in any language, set labels to None
@@ -64,24 +62,28 @@ class SubjectFileCSV(SubjectCorpus):
         if set(labels.values()) == {None}:
             labels = None
 
-        yield Subject(uri=annif.util.cleanup_uri(row['uri']),
-                      labels=labels,
-                      notation=row.get('notation', None) or None)
+        yield Subject(
+            uri=annif.util.cleanup_uri(row["uri"]),
+            labels=labels,
+            notation=row.get("notation", None) or None,
+        )
 
     @property
     def languages(self):
         # infer the supported languages from the CSV column names
-        with open(self.path, encoding='utf-8-sig') as csvfile:
+        with open(self.path, encoding="utf-8-sig") as csvfile:
             reader = csv.reader(csvfile)
             fieldnames = next(reader, None)
 
-        return [fname.replace('label_', '')
-                for fname in fieldnames
-                if fname.startswith('label_')]
+        return [
+            fname.replace("label_", "")
+            for fname in fieldnames
+            if fname.startswith("label_")
+        ]
 
     @property
     def subjects(self):
-        with open(self.path, encoding='utf-8-sig') as csvfile:
+        with open(self.path, encoding="utf-8-sig") as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 yield from self._parse_row(row)
@@ -95,7 +97,7 @@ class SubjectFileCSV(SubjectCorpus):
     def is_csv_file(path):
         """return True if the path looks like a CSV file"""
 
-        return os.path.splitext(path)[1].lower() == '.csv'
+        return os.path.splitext(path)[1].lower() == ".csv"
 
 
 class SubjectIndex:
@@ -146,7 +148,7 @@ class SubjectIndex:
             return self._uri_idx[uri]
         except KeyError:
             if warnings:
-                logger.warning('Unknown subject URI <%s>', uri)
+                logger.warning("Unknown subject URI <%s>", uri)
             return None
 
     def by_label(self, label, language):
@@ -161,34 +163,36 @@ class SubjectIndex:
     def deprecated_ids(self):
         """return indices of deprecated subjects"""
 
-        return [subject_id for subject_id, subject in enumerate(self._subjects)
-                if subject.labels is None]
+        return [
+            subject_id
+            for subject_id, subject in enumerate(self._subjects)
+            if subject.labels is None
+        ]
 
     @property
     def active(self):
         """return a list of (subject_id, subject) tuples of all subjects that
         are not deprecated"""
 
-        return [(subj_id, subject)
-                for subj_id, subject
-                in enumerate(self._subjects)
-                if subject.labels is not None]
+        return [
+            (subj_id, subject)
+            for subj_id, subject in enumerate(self._subjects)
+            if subject.labels is not None
+        ]
 
     def save(self, path):
         """Save this subject index into a file with the given path name."""
 
-        fieldnames = ['uri', 'notation'] + \
-            [f'label_{lang}' for lang in self._languages]
+        fieldnames = ["uri", "notation"] + [f"label_{lang}" for lang in self._languages]
 
-        with open(path, 'w', encoding='utf-8', newline='') as csvfile:
+        with open(path, "w", encoding="utf-8", newline="") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
             for subject in self:
-                row = {'uri': subject.uri,
-                       'notation': subject.notation or ''}
+                row = {"uri": subject.uri, "notation": subject.notation or ""}
                 if subject.labels:
                     for lang, label in subject.labels.items():
-                        row[f'label_{lang}'] = label
+                        row[f"label_{lang}"] = label
                 writer.writerow(row)
 
     @classmethod
@@ -210,9 +214,9 @@ class SubjectSet:
 
         if subject_ids:
             # use set comprehension to eliminate possible duplicates
-            self._subject_ids = list({subject_id
-                                      for subject_id in subject_ids
-                                      if subject_id is not None})
+            self._subject_ids = list(
+                {subject_id for subject_id in subject_ids if subject_id is not None}
+            )
         else:
             self._subject_ids = []
 
@@ -248,9 +252,9 @@ class SubjectSet:
         vals = line.split("\t")
         for val in vals:
             val = val.strip()
-            if val == '':
+            if val == "":
                 continue
-            if val.startswith('<') and val.endswith('>'):  # URI
+            if val.startswith("<") and val.endswith(">"):  # URI
                 uri = val[1:-1]
                 continue
             label = val
@@ -259,8 +263,8 @@ class SubjectSet:
 
     def as_vector(self, size=None, destination=None):
         """Return the hits as a one-dimensional NumPy array in sklearn
-           multilabel indicator format. Use destination array if given (not
-           None), otherwise create and return a new one of the given size."""
+        multilabel indicator format. Use destination array if given (not
+        None), otherwise create and return a new one of the given size."""
 
         if destination is None:
             destination = np.zeros(size, dtype=bool)

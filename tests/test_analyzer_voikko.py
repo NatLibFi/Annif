@@ -9,7 +9,7 @@ voikko = pytest.importorskip("annif.analyzer.voikko")
 def test_voikko_getstate():
     analyzer = annif.analyzer.get_analyzer("voikko(fi)")
     state = analyzer.__getstate__()
-    assert state == {'param': 'fi', 'voikko': None}
+    assert state == {"param": "fi", "voikko": None}
 
 
 def test_voikko_finnish_analyzer_normalize_word():

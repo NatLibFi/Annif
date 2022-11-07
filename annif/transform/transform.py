@@ -23,13 +23,13 @@ class BaseTransform(metaclass=abc.ABCMeta):
 class IdentityTransform(BaseTransform):
     """Transform that does not modify text but simply passes it through."""
 
-    name = 'pass'
+    name = "pass"
 
     def transform_fn(self, text):
         return text
 
 
-class TransformChain():
+class TransformChain:
     """Class instantiating and holding the transformation objects performing
     the actual text transformation."""
 
@@ -41,13 +41,13 @@ class TransformChain():
         transforms = []
         for trans, (posargs, kwargs) in zip(transform_classes, args):
             try:
-                transforms.append(
-                    trans(self.project, *posargs, **kwargs))
+                transforms.append(trans(self.project, *posargs, **kwargs))
             except (ValueError, TypeError):
                 raise ConfigurationException(
                     f"Invalid arguments to {trans.name} transform: "
                     f"{posargs}, {kwargs})",
-                    project_id=self.project.project_id)
+                    project_id=self.project.project_id,
+                )
         return transforms
 
     def transform_text(self, text):
