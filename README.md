@@ -102,12 +102,13 @@ pytest-watch by running `ptw`.
 
 ## Code style
 
-Annif code should follow the [Black style](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html).
-The Black tool is included as a developoment dependency; you can run `black .` in the project root to autoformat code. 
-You can set up a [pre-commit hook](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) to automate linting with Black and flake8 with every git commit by using the following in the file `.git/hooks/pre-commit`, which should have execute permission set:
+Annif code should follow the [Black style](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html) and import statements should be [grouped and ordered](https://peps.python.org/pep-0008/#imports).
+To achive this, the Black and isort tools are included as developoment dependencies; you can run `black .` and `isort .` in the project root to autoformat code. 
+You can set up a [pre-commit hook](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) to automate linting with isort, Black and flake8 with every git commit by using the following in the file `.git/hooks/pre-commit`, which should have execute permission set:
 ```bash
 #!/bin/sh
 
+isort . --check-only --diff
 black . --check --diff
 flake8
 ```
