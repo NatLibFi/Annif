@@ -92,3 +92,8 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 addopts = "--flake8"
+
+[tool.isort]
+profile = "black"
+line_length = "88"
+skip_gitignore = true
