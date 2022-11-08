@@ -1,6 +1,7 @@
 """Unit tests for spacy analyzer in Annif"""
 
 import pytest
+
 import annif.analyzer
 from annif.exception import OperationFailedException
 

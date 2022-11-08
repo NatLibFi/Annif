@@ -1,10 +1,10 @@
 """Unit tests for the Omikuji backend in Annif"""
 
 import pytest
+
 import annif.backend
 import annif.corpus
-from annif.exception import NotInitializedException
-from annif.exception import NotSupportedException
+from annif.exception import NotInitializedException, NotSupportedException
 
 pytest.importorskip("annif.backend.omikuji")
 

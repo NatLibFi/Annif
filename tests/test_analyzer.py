@@ -1,6 +1,7 @@
 """Unit tests for analyzers in Annif"""
 
 import pytest
+
 import annif.analyzer
 
 

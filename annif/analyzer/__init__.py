@@ -1,11 +1,11 @@
 """Collection of language-specific analyzers and analyzer registry for Annif"""
 
 import re
-from . import simple
-from . import snowball
-from . import simplemma
+
 import annif
 from annif.util import parse_args
+
+from . import simple, simplemma, snowball
 
 _analyzers = {}
 

@@ -1,7 +1,9 @@
 """Voikko analyzer for Annif, based on libvoikko library."""
 
 import functools
+
 import voikko.libvoikko
+
 from . import analyzer
 
 

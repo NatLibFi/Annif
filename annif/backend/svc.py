@@ -1,15 +1,17 @@
 """Annif backend using a SVM classifier"""
 
 import os.path
+
 import joblib
 import numpy as np
 import scipy.special
 from sklearn.svm import LinearSVC
+
 import annif.util
-from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 from annif.exception import NotInitializedException, NotSupportedException
-from . import backend
-from . import mixins
+from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+
+from . import backend, mixins
 
 
 class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):

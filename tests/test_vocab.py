@@ -1,11 +1,13 @@
 """Unit tests for vocabulary functionality in Annif"""
 
-import pytest
 import os
+
+import pytest
+import rdflib.namespace
+
 import annif.corpus
 import annif.vocab
 from annif.exception import NotInitializedException
-import rdflib.namespace
 
 
 def load_dummy_vocab(tmpdir):

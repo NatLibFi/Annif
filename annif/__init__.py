@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
+import logging
 import os
 import os.path
-import logging
+
 import connexion
 from flask_cors import CORS
 

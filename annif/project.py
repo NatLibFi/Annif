@@ -3,18 +3,19 @@
 import enum
 import os.path
 from shutil import rmtree
+
 import annif
-import annif.transform
 import annif.analyzer
+import annif.backend
 import annif.corpus
 import annif.suggestion
-import annif.backend
+import annif.transform
 from annif.datadir import DatadirMixin
 from annif.exception import (
     AnnifException,
     ConfigurationException,
-    NotSupportedException,
     NotInitializedException,
+    NotSupportedException,
 )
 
 logger = annif.logger

@@ -1,8 +1,9 @@
 """spaCy analyzer for Annif which uses spaCy for lemmatization"""
 
-from . import analyzer
-from annif.exception import OperationFailedException
 import annif.util
+from annif.exception import OperationFailedException
+
+from . import analyzer
 
 _KEY_LOWERCASE = "lowercase"
 

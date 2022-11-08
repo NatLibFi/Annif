@@ -2,24 +2,26 @@
 projects."""
 
 
-from io import BytesIO
-import shutil
 import os.path
-import numpy as np
-from scipy.sparse import csr_matrix, csc_matrix
+import shutil
+from io import BytesIO
+
 import joblib
 import lmdb
-from tensorflow.keras.layers import Input, Dense, Add, Flatten, Dropout, Layer
+import numpy as np
+import tensorflow.keras.backend as K
+from scipy.sparse import csc_matrix, csr_matrix
+from tensorflow.keras.layers import Add, Dense, Dropout, Flatten, Input, Layer
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.utils import Sequence
-import tensorflow.keras.backend as K
+
 import annif.corpus
 import annif.parallel
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import VectorSuggestionResult
-from . import backend
-from . import ensemble
+
+from . import backend, ensemble
 
 
 def idx_to_key(idx):

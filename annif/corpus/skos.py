@@ -3,11 +3,14 @@
 import collections
 import os.path
 import shutil
+
 import joblib
 import rdflib
 import rdflib.util
-from rdflib.namespace import SKOS, RDF, OWL, RDFS
+from rdflib.namespace import OWL, RDF, RDFS, SKOS
+
 import annif.util
+
 from .types import Subject, SubjectCorpus
 
 

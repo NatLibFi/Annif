@@ -3,23 +3,28 @@ operations and printing the results to console."""
 
 
 import collections
+import json
 import os.path
 import re
 import sys
-import json
+
 import click
 import click_log
 from flask import current_app
 from flask.cli import FlaskGroup, ScriptInfo
+
 import annif
 import annif.corpus
 import annif.parallel
 import annif.project
 import annif.registry
+from annif.exception import (
+    ConfigurationException,
+    NotInitializedException,
+    NotSupportedException,
+)
 from annif.project import Access
-from annif.suggestion import SuggestionFilter, ListSuggestionResult
-from annif.exception import ConfigurationException, NotSupportedException
-from annif.exception import NotInitializedException
+from annif.suggestion import ListSuggestionResult, SuggestionFilter
 from annif.util import metric_code
 
 logger = annif.logger

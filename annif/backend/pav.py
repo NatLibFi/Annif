@@ -4,16 +4,18 @@ PAV algorithm, a.k.a. isotonic regression, to turn raw scores returned by
 individual backends into probabilities."""
 
 import os.path
+
 import joblib
+import numpy as np
 from scipy.sparse import coo_matrix, csc_matrix
 from sklearn.isotonic import IsotonicRegression
-import numpy as np
+
 import annif.corpus
 import annif.suggestion
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
-from . import backend
-from . import ensemble
+
+from . import backend, ensemble
 
 
 class PAVBackend(ensemble.BaseEnsembleBackend):

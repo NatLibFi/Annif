@@ -3,8 +3,8 @@
 import abc
 import collections
 import itertools
-import numpy as np
 
+import numpy as np
 
 SubjectSuggestion = collections.namedtuple("SubjectSuggestion", "subject_id score")
 WeightedSuggestion = collections.namedtuple(

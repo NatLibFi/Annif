@@ -3,10 +3,11 @@
 import abc
 import collections
 import warnings
+
 import optuna
 import optuna.exceptions
-from .backend import AnnifBackend
 
+from .backend import AnnifBackend
 
 HPRecommendation = collections.namedtuple("HPRecommendation", "lines score")
 

@@ -5,8 +5,10 @@ and returns the results"""
 import dateutil.parser
 import requests
 import requests.exceptions
-from annif.suggestion import SubjectSuggestion, ListSuggestionResult
+
 from annif.exception import OperationFailedException
+from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+
 from . import backend
 
 

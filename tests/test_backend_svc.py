@@ -1,10 +1,10 @@
 """Unit tests for the SVC backend in Annif"""
 
 import pytest
+
 import annif.backend
 import annif.corpus
-from annif.exception import NotInitializedException
-from annif.exception import NotSupportedException
+from annif.exception import NotInitializedException, NotSupportedException
 
 
 def test_svc_default_params(project):

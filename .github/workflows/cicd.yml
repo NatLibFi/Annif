@@ -15,9 +15,10 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    name: lint with Black
+    name: lint with isort & Black
     steps:
       - uses: actions/checkout@v3
+      - uses: isort/isort-action@f14e57e1d457956c45a19c05a89cccdf087846e5  # v1.1.0
       - uses: psf/black@6b42c2b8c9f9bd666120a2c19b8da509fe477f27
 
   test:

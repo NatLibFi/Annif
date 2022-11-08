@@ -1,16 +1,17 @@
 """Maui-like Lexical Matching backend"""
 
 import os.path
+
 import joblib
 import numpy as np
+
 import annif.eval
 import annif.util
-from annif.exception import NotInitializedException
-from annif.exception import NotSupportedException
+from annif.exception import NotInitializedException, NotSupportedException
 from annif.lexical.mllm import MLLMModel
 from annif.suggestion import VectorSuggestionResult
-from . import backend
-from . import hyperopt
+
+from . import backend, hyperopt
 
 
 class MLLMOptimizer(hyperopt.HyperparameterOptimizer):

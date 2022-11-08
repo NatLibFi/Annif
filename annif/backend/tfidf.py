@@ -3,13 +3,15 @@ TF-IDF normalized bag-of-words vector space"""
 
 import os.path
 import tempfile
-import annif.util
+
 import gensim.similarities
 from gensim.matutils import Sparse2Corpus
-from annif.suggestion import VectorSuggestionResult
+
+import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
-from . import backend
-from . import mixins
+from annif.suggestion import VectorSuggestionResult
+
+from . import backend, mixins
 
 
 class SubjectBuffer:

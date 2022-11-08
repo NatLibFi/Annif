@@ -1,15 +1,16 @@
 """Unit tests for suggestion processing in Annif"""
 
+import numpy as np
+
+from annif.corpus import Subject
 from annif.suggestion import (
-    SubjectSuggestion,
-    SuggestionResult,
     LazySuggestionResult,
     ListSuggestionResult,
-    VectorSuggestionResult,
+    SubjectSuggestion,
     SuggestionFilter,
+    SuggestionResult,
+    VectorSuggestionResult,
 )
-from annif.corpus import Subject
-import numpy as np
 
 
 def generate_suggestions(n, subject_index):

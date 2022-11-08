@@ -1,6 +1,7 @@
 """Unit tests for the language-filter transform in Annif"""
 
 import pytest
+
 import annif.transform
 
 pytest.importorskip("annif.transform.langfilter")

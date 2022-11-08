@@ -1,14 +1,15 @@
 """Configuration file handling"""
 
 
-import os.path
 import configparser
+import os.path
+from glob import glob
+
 import tomli
+
 import annif
 import annif.util
-from glob import glob
 from annif.exception import ConfigurationException
-
 
 logger = annif.logger
 

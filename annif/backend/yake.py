@@ -2,16 +2,19 @@
 # For license remarks of this backend see README.md:
 # https://github.com/NatLibFi/Annif#license.
 
-import yake
-import joblib
 import os.path
 import re
 from collections import defaultdict
+
+import joblib
+import yake
 from rdflib.namespace import SKOS
+
 import annif.util
-from . import backend
-from annif.suggestion import SubjectSuggestion, ListSuggestionResult
 from annif.exception import ConfigurationException, NotSupportedException
+from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+
+from . import backend
 
 
 class YakeBackend(backend.AnnifBackend):

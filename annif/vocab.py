@@ -1,6 +1,7 @@
 """Vocabulary management functionality for Annif"""
 
 import os.path
+
 import annif
 import annif.corpus
 import annif.util

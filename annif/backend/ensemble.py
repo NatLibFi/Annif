@@ -1,13 +1,13 @@
 """Ensemble backend that combines results from multiple projects"""
 
 
+import annif.eval
 import annif.parallel
 import annif.suggestion
 import annif.util
-import annif.eval
-from . import backend
-from . import hyperopt
 from annif.exception import NotSupportedException
+
+from . import backend, hyperopt
 
 
 class BaseEnsembleBackend(backend.AnnifBackend):

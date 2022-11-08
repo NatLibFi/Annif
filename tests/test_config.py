@@ -1,7 +1,9 @@
 """Unit tests for configuration handling in Annif"""
 
 import logging
+
 import pytest
+
 import annif.config
 from annif.exception import ConfigurationException
 

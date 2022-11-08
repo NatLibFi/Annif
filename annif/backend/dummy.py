@@ -1,7 +1,8 @@
 """Dummy backend for testing basic interaction of projects and backends"""
 
 
-from annif.suggestion import SubjectSuggestion, ListSuggestionResult
+from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+
 from . import backend
 
 

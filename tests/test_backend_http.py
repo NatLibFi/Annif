@@ -1,12 +1,14 @@
 """Unit tests for the HTTP backend in Annif"""
 
+import unittest.mock
 from datetime import datetime, timezone
+
 import pytest
 import requests.exceptions
-import unittest.mock
+
 import annif.backend.http
-from annif.exception import OperationFailedException
 from annif.corpus import Subject
+from annif.exception import OperationFailedException
 
 
 def test_http_suggest(app_project):
