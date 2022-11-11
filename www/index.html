@@ -177,6 +177,7 @@
     }
 
     #bottom-half, footer { background-color: #e7e7ec; }
+    #bottom-half h2:empty::after { content:"\200b"; }
     #get-learn-discuss h2 {
         background-position: left top;
         background-repeat: no-repeat;
@@ -190,8 +191,9 @@
     #yle { max-width: 35%; float: left; margin: -1rem 0.5rem 0rem -1rem; }
     #dnb { max-width: 35%; float: left; margin: 1.25rem 1.25rem 1.25rem 0.5rem; }
     #kirjavalitys { max-width: 43%; float: left; margin: 1rem 0.75rem 0.75rem 0; }
+    #kb { max-width: 40%; float: left; margin: -0.25rem 1.25rem 0.25rem 0; }
     #jyu { max-width: 55%; float: left; margin: -0.25rem 1.25rem 0.25rem 0; }
-	#zbw { max-width: 55%; float: left; margin: 1rem 0.75rem 0.75rem 0;  }
+	  #zbw { max-width: 55%; float: left; margin: 1rem 0.75rem 0.75rem 0;  }
     #dissemin { max-width: 20%; float: left; margin: 0 1.5rem 0.75rem 0; }
     #natlibfi { width: 12rem; }
   </style>
@@ -373,7 +375,7 @@
 <div id="bottom-half">
   <div class="container pt-4">
     <div class="row">
-      <div class="col-md-4">
+      <div class="col-md-3">
 
         <h2>Current users</h2>
         <div>
@@ -410,6 +412,20 @@
         </div>
 
         <div>
+          <a href="https://www.kb.se/">
+            <img id="kb" src="static/img/kb.png" class="img-fluid" alt="KB logo">
+          </a>
+          <p>The <a href="https://www.kb.se">National Library of Sweden</a> has integrated Annif into 
+            <a href="https://swepub.kb.se/">SwePub</a>, which is a service that harvests and makes available 
+            scholarly publication metadata from e.g. institutional repositories of Swedish universities.</p>
+        </div>
+
+      </div>
+
+      <div class="col-md-3">
+        <h2></h2>
+
+        <div>
           <a href="https://jyx.jyu.fi">
             <img id="jyu" src="static/img/jyu.svg" class="img-fluid" alt="JYX logo">
           </a>
@@ -442,7 +458,7 @@
 
       </div>
 
-      <div class="col-md-4">
+      <div class="col-md-3">
         <h2>Publications</h2>
         <p><a href="https://www.jlis.it/index.php/jlis/article/view/437"> An article about
         Annif and Finto AI</a> has been published in 2022 in the
@@ -466,9 +482,9 @@
         snippets.</p>
       </div>
 
-      <div class="col-md-4">
+      <div class="col-md-3">
         <h2>Watch the videos</h2>
-        <iframe width="350" height="200"
+        <iframe width="250" height="140"
         src="https://www.youtube.com/embed/nzK97hzPMNE" frameborder="0"
         allow="accelerometer; autoplay; encrypted-media; gyroscope;
         picture-in-picture" allowfullscreen></iframe>
