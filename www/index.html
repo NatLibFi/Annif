@@ -177,7 +177,6 @@
     }
 
     #bottom-half, footer { background-color: #e7e7ec; }
-    #bottom-half h2:empty::after { content:"\200b"; }
     #get-learn-discuss h2 {
         background-position: left top;
         background-repeat: no-repeat;
@@ -187,14 +186,15 @@
     #get-annif { background-image: url('static/img/get-annif.svg'); }
     #learn-annif { background-image: url('static/img/learn-annif.svg'); }
     #discuss-annif { background-image: url('static/img/discuss-annif.svg'); }
-    #finto-ai { max-width: 40%; float: left; margin: 0.75rem 1.5rem 0.75rem -0.25rem; }
-    #yle { max-width: 35%; float: left; margin: -1rem 0.5rem 0rem -1rem; }
-    #dnb { max-width: 35%; float: left; margin: 1.25rem 1.25rem 1.25rem 0.5rem; }
-    #kirjavalitys { max-width: 43%; float: left; margin: 1rem 0.75rem 0.75rem 0; }
-    #kb { max-width: 40%; float: left; margin: -0.25rem 1.25rem 0.25rem 0; }
-    #jyu { max-width: 55%; float: left; margin: -0.25rem 1.25rem 0.25rem 0; }
-	  #zbw { max-width: 55%; float: left; margin: 1rem 0.75rem 0.75rem 0;  }
-    #dissemin { max-width: 20%; float: left; margin: 0 1.5rem 0.75rem 0; }
+    .annif-users { border-bottom: 1px dotted #343260; }
+    #finto-ai { max-width: 20%; margin: 0.75rem 0rem 0.75rem 0rem; }
+    #yle { max-width: 25%; margin: 0rem 0rem 0rem -1rem; }
+    #dnb { max-width: 20%; margin: 0.75rem 0rem 0.75rem 0rem; }
+    #kirjavalitys { max-width: 30%; margin: 0.75rem 0rem 0.75rem 0rem; }
+    #kb { max-width: 20%; margin: 0.75rem 0rem 0.75rem 0rem; }
+    #jyu { max-width: 40%; margin: 0.75rem 0rem 0.75rem 0rem; }
+	  #zbw { max-width: 40%; margin: 0.75rem 0rem 0.75rem 0rem;  }
+    #dissemin { max-width: 15%; margin: 0.75rem 0rem 0.75rem 0rem; }
     #natlibfi { width: 12rem; }
   </style>
 </head>
@@ -373,19 +373,25 @@
 </div>
 
 <div id="bottom-half">
-  <div class="container pt-4">
-    <div class="row">
-      <div class="col-md-3">
+  <div class="container py-4">
 
+    <div class="row">
+      <div class="col-md-12">
         <h2>Current users</h2>
-        <div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 pr-4">
+
+        <div class="annif-users">
           <a href="https://ai.finto.fi">
             <img id="finto-ai" src="static/img/FintoAI-RGB.svg" class="img-fluid" alt="Finto AI logo">
           </a>
           <p><a href="https://ai.finto.fi">Finto AI</a> - service for automated subject indexing.</p>
         </div>
 
-        <div>
+        <div class="annif-users">
           <a href="https://yle.fi">
             <img id="yle" src="static/img/Yle-logo_RGB_turkoosi.png" class="img-fluid" alt="Yle logo">
           </a>
@@ -393,7 +399,7 @@
             <a href="https://yle.fi/aihe/a/20-10001817">assign tags to online news articles.</a></p>
         </div>
 
-        <div>
+        <div class="annif-users">
           <a href="https://www.dnb.de">
             <img id="dnb" src="static/img/dnb.svg" class="img-fluid" alt="DNB logo">
           </a>
@@ -401,14 +407,6 @@
             The <a href="https://www.dnb.de" title="German National Library">German National Library</a> uses Annif as the core of
             its automated subject indexing system <a href="https://groups.google.com/g/annif-users/c/KVQB-hvLrbA/m/I9RwM9EPBgAJ">Erschließungsmaschine (EMa)</a>.
           </p>
-        </div>
-
-        <div>
-          <a href="https://www.kirjavalitys.fi/">
-            <img id="kirjavalitys" src="static/img/kirjavalitys.png" class="img-fluid" alt="Kirjavälitys Oy logo">
-          </a>
-          <p><a href="https://www.kirjavalitys.fi">Kirjavälitys Oy</a> generates
-            metadata about upcoming books with Annif.</p>
         </div>
 
         <div>
@@ -422,10 +420,17 @@
 
       </div>
 
-      <div class="col-md-3">
-        <h2></h2>
+      <div class="col-md-6 pl-4">
 
-        <div>
+        <div class="annif-users">
+          <a href="https://www.kirjavalitys.fi/">
+            <img id="kirjavalitys" src="static/img/kirjavalitys.png" class="img-fluid" alt="Kirjavälitys Oy logo">
+          </a>
+          <p><a href="https://www.kirjavalitys.fi">Kirjavälitys Oy</a> generates
+            metadata about upcoming books with Annif.</p>
+        </div>
+
+        <div class="annif-users">
           <a href="https://jyx.jyu.fi">
             <img id="jyu" src="static/img/jyu.svg" class="img-fluid" alt="JYX logo">
           </a>
@@ -436,7 +441,7 @@
             Annif assists the subject indexing of theses and dissertations.</p>
         </div>
 		
-        <div>
+        <div class="annif-users">
           <a href="https://dissem.in">
             <img id="dissemin" src="static/img/dissemin.png" class="img-fluid" alt="Dissemin logo">
           </a>
@@ -444,59 +449,64 @@
             academic papers uploaded to open repositories.</p>
         </div>
 				
-	    <div>
-	      <a href="https://www.zbw.eu/en/home">
+	      <div class="annif-users">
+	        <a href="https://www.zbw.eu/en/home">
             <img id="zbw" src="static/img/logo-zbw.gif" class="img-fluid" alt="ZBW logo">
-		  </a>
+		      </a>
           <p><a href="https://www.zbw.eu/en/home">ZBW</a> – The Leibniz Information Centre for Economics uses Annif as a part of their automated indexing service AutoSE (<a href="https://www.zbw.eu/en/about-us/key-activities/automated-subject-indexing">read more here</a>).</p>
         </div>
 		
-        <div>
+        <div class="pt-3">
           <p><a href="https://www.kiwi.fi/x/gIB7Cg">More users</a> of Annif
           and/or Finto AI</p>
         </div>
 
       </div>
+      
+    </div>
+  </div>
+</div>
+ 
+<div class="container py-4">
+  <div class="row">
+    <div class="col-md-6 pr-4">
+      <h2>Publications</h2>
+      <p><a href="https://www.jlis.it/index.php/jlis/article/view/437"> An article about
+      Annif and Finto AI</a> has been published in 2022 in the
+      peer-reviewed Open Access journal <a href="https://www.jlis.it">JLIS.it</a>.
+      </p>
+      <p>
+      <a href="https://journal.code4lib.org/articles/16719">
+      Annif Analyzer Shootout paper</a> was also published in 2022 in
+      <a href="https://journal.code4lib.org/">Code4Lib</a>.
+      </p>
+      <p>
+      <a href="https://doi.org/10.18352/lq.10285">The first article about Annif</a>
+      was published in 2019 in LIBER Quarterly.
+      </p>
+      <p>
+      The software itself is also archived on Zenodo and
+      has a <a href="https://doi.org/10.5281/zenodo.2578948">citable
+      DOI</a>. See the <a
+      href="https://github.com/NatLibFi/Annif#publications--how-to-cite">README</a>
+      on the Annif GitHub project site for more details including BiBTeX
+      snippets.</p>
+    </div>
 
-      <div class="col-md-3">
-        <h2>Publications</h2>
-        <p><a href="https://www.jlis.it/index.php/jlis/article/view/437"> An article about
-        Annif and Finto AI</a> has been published in 2022 in the
-        peer-reviewed Open Access journal <a href="https://www.jlis.it">JLIS.it</a>.
-        </p>
-        <p>
-        <a href="https://journal.code4lib.org/articles/16719">
-        Annif Analyzer Shootout paper</a> was also published in 2022 in
-        <a href="https://journal.code4lib.org/">Code4Lib</a>.
-        </p>
-        <p>
-        <a href="https://doi.org/10.18352/lq.10285">The first article about Annif</a>
-        was published in 2019 in LIBER Quarterly.
-        </p>
-        <p>
-        The software itself is also archived on Zenodo and
-        has a <a href="https://doi.org/10.5281/zenodo.2578948">citable
-        DOI</a>. See the <a
-        href="https://github.com/NatLibFi/Annif#publications--how-to-cite">README</a>
-        on the Annif GitHub project site for more details including BiBTeX
-        snippets.</p>
-      </div>
-
-      <div class="col-md-3">
-        <h2>Watch the videos</h2>
-        <iframe width="250" height="140"
-        src="https://www.youtube.com/embed/nzK97hzPMNE" frameborder="0"
-        allow="accelerometer; autoplay; encrypted-media; gyroscope;
-        picture-in-picture" allowfullscreen></iframe>
-        <p>Above is the presentation of Annif and Finto AI at <a href="http://swib.org/swib20/">SWIB20.</a>
-        </p>
-        <p>
-        See also <a href="https://www.youtube.com/watch?v=lSrFP3D-uTg">the SWIB18 presentation</a>,
-        <a href="https://tech.ebu.ch/contents/publications/events/presentations/mdn2020/yle-meets-annif--an-open-source-tool-for-automated-subject-indexing"> MDN Workshop 2020 presentation</a>,
-        and <a href="https://player.vimeo.com/video/212577974">
-        the video of the first prototype of Annif</a>.
-        </p>
-      </div>
+    <div class="col-md-6 pl-4">
+      <h2>Watch the videos</h2>
+      <iframe width="400" height="230"
+      src="https://www.youtube.com/embed/nzK97hzPMNE" frameborder="0"
+      allow="accelerometer; autoplay; encrypted-media; gyroscope;
+      picture-in-picture" allowfullscreen></iframe>
+      <p>Above is the presentation of Annif and Finto AI at <a href="http://swib.org/swib20/">SWIB20.</a>
+      </p>
+      <p>
+      See also <a href="https://www.youtube.com/watch?v=lSrFP3D-uTg">the SWIB18 presentation</a>,
+      <a href="https://tech.ebu.ch/contents/publications/events/presentations/mdn2020/yle-meets-annif--an-open-source-tool-for-automated-subject-indexing"> MDN Workshop 2020 presentation</a>,
+      and <a href="https://player.vimeo.com/video/212577974">
+      the video of the first prototype of Annif</a>.
+      </p>
     </div>
   </div>
 </div>
@@ -507,7 +517,7 @@
       <div class="col-5 text-center">
         <a href="https://www.kansalliskirjasto.fi/en/"><img src="static/img/natlibfi-logo.svg" alt="National Library of Finland"
         class="p-4" id="natlibfi"></a>
-        <p>2020 National Library of Finland</p>
+        <p>2020-2022 National Library of Finland</p>
         <p>See the <a href="accessibility.html">accessibility statement</a> of this website.</p>
       </div>
     </div>
