@@ -1,7 +1,7 @@
 """Transformation filtering out parts of a text that are in a language
 different from the language of the project."""
 
-import cld3
+from simplemma.langdetect import in_target_language
 
 import annif
 
@@ -14,20 +14,13 @@ class LangFilter(transform.BaseTransform):
 
     name = "filter_lang"
 
-    def __init__(self, project, text_min_length=500, sentence_min_length=50):
+    def __init__(
+        self, project, text_min_length=500, sentence_min_length=50, min_ratio=0.5
+    ):
         super().__init__(project)
         self.text_min_length = int(text_min_length)
         self.sentence_min_length = int(sentence_min_length)
-
-    def _detect_language(self, text):
-        """Tries to detect the language of a text input. Outputs a BCP-47-style
-        language code (e.g. 'en')."""
-
-        lan_info = cld3.get_language(text)
-        if lan_info is not None and lan_info.is_reliable:
-            return lan_info.language
-        else:
-            return None
+        self.min_ratio = float(min_ratio)
 
     def transform_fn(self, text):
         if len(text) < self.text_min_length:
@@ -38,7 +31,7 @@ class LangFilter(transform.BaseTransform):
             if len(sent) < self.sentence_min_length:
                 retained_sentences.append(sent)
                 continue
-            detected_lang = self._detect_language(sent)
-            if detected_lang == self.project.language or detected_lang is None:
+            proportion = in_target_language(sent, lang=self.project.language)
+            if proportion >= self.min_ratio:
                 retained_sentences.append(sent)
         return " ".join(retained_sentences)

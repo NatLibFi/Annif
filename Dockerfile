@@ -2,7 +2,7 @@ FROM python:3.8-slim-bullseye
 LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
 SHELL ["/bin/bash", "-c"]
 
-ARG optional_dependencies="fasttext voikko pycld3 fasttext nn omikuji yake spacy"
+ARG optional_dependencies="fasttext voikko fasttext nn omikuji yake spacy"
 ARG POETRY_VIRTUALENVS_CREATE=false
 
 # Install system dependencies needed at runtime:
