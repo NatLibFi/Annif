@@ -69,6 +69,7 @@
 </div>
 
 <script src="/static/js/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
 <!-- bootstrap dependencies -->
 <script src="/static/js/jquery-3.6.1.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
@@ -229,32 +230,29 @@ new Vue({
     },
     loadProjects: function() {
       var this_ = this;
-      $.ajax({
-        url: "/v1/projects",
-        method: 'GET',
-        success: function(data) {
-          this_.projects = data.projects;
-          if(data.projects && data.projects.length > 0){
-            this_.project = data.projects[0].project_id
+      axios.get('/v1/projects')
+        .then(res => {
+          this_.projects = res.data.projects;
+          if(res.data.projects && res.data.projects.length > 0){
+            this_.project = res.data.projects[0].project_id;
           }
-        },
-        error: function(data) {
-          if (data.responseJSON == null) {
+        })
+        .catch(error => {
+          if (!error.response) {
             this_.problems.push(new Problem('No response from server', '', true));
           } else {
-            var title = data.responseJSON.title || '';
-            var detail = data.responseJSON.detail || '';
+            var title = error.response.data.title || '';
+            var detail = error.response.data.detail || '';
             this_.problems.push(new Problem(title, detail, true));
           }
-        }
-      });
+        });
     },
     suggest: function(event) {
       this.problems = [];
-      if (this.text.trim() === "") {
+      if (this.text.trim() === '') {
         this.problems.push(new Problem('', 'You need to enter the text to get suggestions for', false));
       }
-      if (this.project.trim() === "") {
+      if (this.project.trim() === '') {
         this.problems.push(new Problem('', 'You need to select one project', false));
       }
       this.clearResults();
@@ -263,39 +261,33 @@ new Vue({
         return;
       }
       var this_ = this;
-      $.ajax({
-        url: "/v1/projects/" + this_.project + "/suggest",
-        method: 'POST',
-        data: {
-          text: this_.text,
-          limit: this_.limit,
-        },
-        beforeSend: function() {
-          this_.loading = true;
-        },
-        success: function(data) {
-          if (data.results.length === 0) {
+      var formData = new FormData();
+      formData.append('text', this_.text);
+      formData.append('limit', this_.limit);
+      this_.loading = true;
+      axios.post('/v1/projects/'+ this_.project + '/suggest', formData)
+        .then(function(res) {
+          if (res.data.results.length === 0) {
             this_.problems.push(new Problem('No results returned', '', false));
           } else {
-            for (var i = 0; i < data.results.length; i++) {
-              var result = data.results[i];
+            for (var i = 0; i < res.data.results.length; i++) {
+              var result = res.data.results[i];
               this_.results.push(result);
             }
           }
-        },
-        error: function(data) {
-          if (data.responseJSON == null) {
+        })
+        .catch(function(error) {
+          if (!error.response) {
             this_.problems.push(new Problem('No response from server', '', true));
           } else {
-            var title = data.responseJSON.title || '';
-            var detail = data.responseJSON.detail || '';
+            var title = error.response.data.title || '';
+            var detail = error.response.data.detail || '';
             this_.problems.push(new Problem(title, detail, true));
           }
-        },
-        complete: function() {
+        })
+        .then(function() {
           this_.loading = false;
-        }
-    });
+        });
     }
   }
 });
