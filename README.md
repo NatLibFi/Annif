@@ -58,6 +58,8 @@ A development version of Annif can be installed by cloning the [GitHub
 repository](https://github.com/NatLibFi/Annif).
 [Poetry](https://python-poetry.org/) is used for managing dependencies and virtual environment for the development version.
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for information on [unit tests](CONTRIBUTING.md#unit-tests), [code style](CONTRIBUTING.md#code-style), [development flow](CONTRIBUTING.md#development-flow) etc. details that are useful when participating in Annif development.
+
 ## Installation and setup
 
 Clone the repository.
@@ -92,12 +94,6 @@ You will also need NLTK data files:
 Start up the application:
 
     annif
-
-## Unit tests
-
-Run `poetry shell` to enter the virtual environment and then run `pytest`.
-To have the test suite watch for changes in code and run automatically, use
-pytest-watch by running `ptw`.
 
 # Getting help
 
