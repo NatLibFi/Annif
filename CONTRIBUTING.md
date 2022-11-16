@@ -76,6 +76,11 @@ for your changes. Some basic principles:
    process](https://github.com/NatLibFi/Annif/wiki/Release-process) for the details of
    making a release.
 
+#### Commits
+Try to produce a commit history that is easy to follow with meaningful commit messages.
+See commit best practices e.g. in
+[here](https://gist.github.com/luismts/495d982e8c5b1a0ced4a57cf3d93cf60#file-gitcommitbestpractices-md).
+
 #### Branches
 
 At any time, these branches typically exist:
@@ -130,6 +135,12 @@ Alternatively, you can set a pre-commit hook to also autoformat code using the
 [pre-commit framework](https://pre-commit.com/), and configure it to use
 [Black](https://black.readthedocs.io/en/stable/integrations/source_version_control.html)
 and [isort](https://pycqa.github.io/isort/docs/configuration/pre-commit.html).
+
+Other points:
+- Names of the identifiers in the code (variables, functions, classes etc.) should be
+meaningful. Do not use names of only single character.
+ - Write docstrings for the entities you create. They end up in the [Annif's internal API
+documentation](https://annif.readthedocs.io/en/latest/source/annif.html).
 
 ## Creating a new backend
 Annif backend code is in the
