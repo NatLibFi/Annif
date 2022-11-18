@@ -38,15 +38,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Project'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Project'
         404:
           description: Project not found
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
@@ -94,33 +88,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuggestionResultList'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/SuggestionResultList'
         400:
           description: Bad Request
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
         404:
           description: Project not found
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
         503:
           description: Service Unavailable
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
@@ -153,18 +135,12 @@ paths:
         404:
           description: Project not found
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
         503:
           description: Service Unavailable
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
@@ -310,4 +286,3 @@ components:
       schema:
         type: string
       example: dummy-fi
-
