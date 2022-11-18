@@ -16,7 +16,7 @@ def create_app(config_name=None):
     # 'cxapp' here is the Connexion application that has a normal Flask app
     # as a property (cxapp.app)
 
-    specdir = os.path.join(os.path.dirname(__file__), "swagger")
+    specdir = os.path.join(os.path.dirname(__file__), "openapi")
     cxapp = connexion.App(__name__, specification_dir=specdir)
     if config_name is None:
         config_name = os.environ.get("ANNIF_CONFIG")

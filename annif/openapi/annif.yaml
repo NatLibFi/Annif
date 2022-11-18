@@ -1,0 +1,313 @@
+openapi: 3.0.1
+info:
+  title: Annif REST API
+  version: v1
+servers:
+- url: /v1
+paths:
+  /projects:
+    get:
+      tags:
+      - Project administration
+      summary: get a list of projects
+      operationId: annif.rest.list_projects
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectList'
+  /projects/{project_id}:
+    get:
+      tags:
+      - Project administration
+      summary: show project information
+      operationId: annif.rest.show_project
+      parameters:
+      - name: project_id
+        in: path
+        description: project identifier
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        404:
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /projects/{project_id}/suggest:
+    post:
+      tags:
+      - Automatic subject indexing
+      summary: suggest subjects for a given text
+      operationId: annif.rest.suggest
+      parameters:
+      - name: project_id
+        in: path
+        description: project identifier
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              required:
+              - text
+              properties:
+                text:
+                  type: string
+                  description: input text
+                limit:
+                  type: integer
+                  description: maximum number of results to return
+                  format: int32
+                  default: 10
+                threshold:
+                  type: number
+                  description: minimum score threshold, below which results will not
+                    be returned
+                  default: 0.0
+                language:
+                  type: string
+                  description: language of subject labels
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionResultList'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/SuggestionResultList'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        404:
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        503:
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /projects/{project_id}/learn:
+    post:
+      tags:
+      - Learning from feedback
+      summary: learn from manually indexed documents
+      operationId: annif.rest.learn
+      parameters:
+      - name: project_id
+        in: path
+        description: project identifier
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: documents to learn from
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/IndexedDocument'
+        required: true
+      responses:
+        204:
+          description: successful operation
+          content: {}
+        404:
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        503:
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      x-codegen-request-body-name: documents
+components:
+  schemas:
+    ProjectBackend:
+      required:
+      - backend_id
+      type: object
+      properties:
+        backend_id:
+          type: string
+          example: my-backend
+      description: A backend of a project
+    Project:
+      required:
+      - backend
+      - language
+      - name
+      - project_id
+      type: object
+      properties:
+        project_id:
+          type: string
+          example: my-project
+        name:
+          type: string
+          example: My Project
+        language:
+          type: string
+          example: en
+        backend:
+          $ref: '#/components/schemas/ProjectBackend'
+        is_trained:
+          type: boolean
+          example: true
+        modification_time:
+          type: string
+          format: date-time
+          example: 2020-05-19T16:42:42Z
+      description: A project definition
+    ProjectList:
+      type: object
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+      description: A list of projects
+    SuggestionResult:
+      required:
+      - label
+      - score
+      - uri
+      type: object
+      properties:
+        uri:
+          type: string
+          example: http://example.org/subject1
+        label:
+          type: string
+          example: Archaeology
+        notation:
+          type: string
+          example: "42.42"
+        score:
+          type: number
+          example: 0.85
+      description: A single candidate subject for a document
+    SuggestionResultList:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SuggestionResult'
+      description: A list of analysis results
+    IndexedDocument:
+      type: object
+      properties:
+        text:
+          type: string
+          example: A quick brown fox jumped over the lazy dog.
+        subjects:
+          type: array
+          items:
+            type: object
+            properties:
+              uri:
+                type: string
+                example: http://example.org/subject1
+              label:
+                type: string
+                example: Vulpes vulpes
+      description: A document with attached, known good subjects
+    Problem:
+      type: object
+      properties:
+        type:
+          type: string
+          description: |
+            An absolute URI that identifies the problem type.  When dereferenced,
+            it SHOULD provide human-readable documentation for the problem type
+            (e.g., using HTML).
+          format: uri
+          example: https://zalando.github.io/problem/constraint-violation
+          default: about:blank
+        title:
+          type: string
+          description: |
+            A short, summary of the problem type. Written in english and readable
+            for engineers (usually not suited for non technical stakeholders and
+            not localized); example: Service Unavailable
+        status:
+          maximum: 6E+2
+          exclusiveMaximum: true
+          minimum: 1E+2
+          type: integer
+          description: |
+            The HTTP status code generated by the origin server for this occurrence
+            of the problem.
+          format: int32
+          example: 503
+        detail:
+          type: string
+          description: |
+            A human readable explanation specific to this occurrence of the
+            problem.
+          example: Connection to database timed out
+        instance:
+          type: string
+          description: |
+            An absolute URI that identifies the specific occurrence of the problem.
+            It may or may not yield further information if dereferenced.
+          format: uri
+  parameters:
+    project_id:
+      name: project_id
+      in: path
+      description: project identifier
+      required: true
+      schema:
+        type: string
+      example: dummy-fi
+
