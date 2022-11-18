@@ -25,12 +25,7 @@ paths:
       summary: show project information
       operationId: annif.rest.show_project
       parameters:
-      - name: project_id
-        in: path
-        description: project identifier
-        required: true
-        schema:
-          type: string
+      - $ref: '#/parameters/project_id'
       responses:
         200:
           description: successful operation
@@ -51,12 +46,7 @@ paths:
       summary: suggest subjects for a given text
       operationId: annif.rest.suggest
       parameters:
-      - name: project_id
-        in: path
-        description: project identifier
-        required: true
-        schema:
-          type: string
+      - $ref: '#/parameters/project_id'
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -113,12 +103,7 @@ paths:
       summary: learn from manually indexed documents
       operationId: annif.rest.learn
       parameters:
-      - name: project_id
-        in: path
-        description: project identifier
-        required: true
-        schema:
-          type: string
+      - $ref: '#/parameters/project_id'
       requestBody:
         description: documents to learn from
         content:
@@ -277,12 +262,12 @@ components:
             An absolute URI that identifies the specific occurrence of the problem.
             It may or may not yield further information if dereferenced.
           format: uri
-  parameters:
-    project_id:
-      name: project_id
-      in: path
-      description: project identifier
-      required: true
-      schema:
-        type: string
-      example: dummy-fi
+parameters:
+  project_id:
+    name: project_id
+    in: path
+    description: project identifier
+    required: true
+    schema:
+      type: string
+    example: dummy-fi
