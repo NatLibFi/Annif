@@ -2,6 +2,8 @@
 and returns the results"""
 
 
+import importlib
+
 import dateutil.parser
 import requests
 import requests.exceptions
@@ -14,6 +16,13 @@ from . import backend
 
 class HTTPBackend(backend.AnnifBackend):
     name = "http"
+
+    @property
+    def _headers(self):
+        version = importlib.metadata.version("annif")
+        return {
+            "User-Agent": f"Annif/{version}",
+        }
 
     @property
     def is_trained(self):
@@ -29,7 +38,9 @@ class HTTPBackend(backend.AnnifBackend):
     def _get_project_info(self, key):
         params = self._get_backend_params(None)
         try:
-            req = requests.get(params["endpoint"].replace("/suggest", ""))
+            req = requests.get(
+                params["endpoint"].replace("/suggest", ""), headers=self._headers
+            )
             req.raise_for_status()
         except requests.exceptions.RequestException as err:
             msg = f"HTTP request failed: {err}"
@@ -51,7 +62,7 @@ class HTTPBackend(backend.AnnifBackend):
             data["project"] = params["project"]
 
         try:
-            req = requests.post(params["endpoint"], data=data)
+            req = requests.post(params["endpoint"], data=data, headers=self._headers)
             req.raise_for_status()
         except requests.exceptions.RequestException as err:
             self.warning("HTTP request failed: {}".format(err))
