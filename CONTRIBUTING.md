@@ -98,12 +98,16 @@ Generally, the aim is to cover every line of the codebase with the [unit
 tests](https://github.com/NatLibFi/Annif/tree/master/tests). If you've added new
 functionality or you've found out that the existing tests are lacking, we'd be happy if
 you could provide additional tests to cover it. The development dependencies include
-`pytest`, which you can execute in the project root to run the unit tests. `flake8`
-checks are run together with the unit tests. It is best to verify that the unit tests
+[`pytest`](https://docs.pytest.org/), which you can execute in the project root to run the unit tests:
+```
+pytest
+```
+To run only a subset of tests, you can pass a path to a tests file as an argument, e.g.: `pytest tests/test_analyzer.py`.
+Also [`flake8`](https://flake8.pycqa.org/) checks are run together with the unit tests. It is best to verify that the unit tests
 pass locally before pushing commits to GitHub repository.
 
 When a (draft) PR is opened or new commits are pushed to a branch belonging to a PR, the
-unit tests for the code are run in the GitHub Actions CI/CD pipeline. The tests are run
+unit tests for the code are run in the [GitHub Actions CI/CD pipeline](https://github.com/NatLibFi/Annif/actions/workflows/cicd.yml). The tests are run
 on all the minor versions of Python that Annif aims to support with varying
 configurations of the optional dependencies, see the
 [cicd.yaml](https://github.com/NatLibFi/Annif/blob/master/.github/workflows/cicd.yml)
@@ -117,7 +121,7 @@ and import statements should be [grouped and
 ordered](https://peps.python.org/pep-0008/#imports). To achieve this, the Black and
 [isort](https://pycqa.github.io/isort/) tools are included as development dependencies;
 you can run `black .` and `isort .` in the project root to autoformat code. These tools
-together with `flake8` are run also in GitHub Actions CI/CD pipeline checking the code
+together with [`flake8`](https://flake8.pycqa.org/) are run also in GitHub Actions CI/CD pipeline checking the code
 style compliance.
 
 You can set up a [pre-commit
