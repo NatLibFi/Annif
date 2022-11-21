@@ -1,5 +1,6 @@
 """Unit tests for the HTTP backend in Annif"""
 
+import importlib
 import unittest.mock
 from datetime import datetime, timezone
 
@@ -263,3 +264,22 @@ def test_http_get_project_info_json_decode_error(project):
         )
         with pytest.raises(OperationFailedException):
             http._get_project_info("is_trained")
+
+
+def test_headers(project):
+    with unittest.mock.patch("requests.post"):
+        http_type = annif.backend.get_backend("http")
+        http = http_type(
+            backend_id="http",
+            config_params={
+                "endpoint": "http://api.example.org/suggest",
+                "project": "dummy",
+            },
+            project=project,
+        )
+        http.suggest("this is some text")
+
+        version = importlib.metadata.version("annif")
+        assert requests.post.call_args.kwargs["headers"] == {
+            "User-Agent": f"Annif/{version}"
+        }
