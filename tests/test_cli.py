@@ -11,6 +11,7 @@ import shutil
 from click.testing import CliRunner
 
 import annif.cli
+import annif.parallel
 
 runner = CliRunner(env={"ANNIF_CONFIG": "annif.default_config.TestingConfig"})
 
@@ -795,6 +796,22 @@ def test_eval_two_jobs(tmpdir):
     tmpdir.join("doc2.key").write("none")
     tmpdir.join("doc3.txt").write("doc3")
 
+    result = runner.invoke(
+        annif.cli.cli, ["eval", "--jobs", "2", "dummy-en", str(tmpdir)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+
+def test_eval_two_jobs_spawn(tmpdir, monkeypatch):
+    tmpdir.join("doc1.txt").write("doc1")
+    tmpdir.join("doc1.key").write("dummy")
+    tmpdir.join("doc2.txt").write("doc2")
+    tmpdir.join("doc2.key").write("none")
+    tmpdir.join("doc3.txt").write("doc3")
+
+    # use spawn method for starting multiprocessing worker processes
+    monkeypatch.setattr(annif.parallel, "MP_START_METHOD", "spawn")
     result = runner.invoke(
         annif.cli.cli, ["eval", "--jobs", "2", "dummy-en", str(tmpdir)]
     )

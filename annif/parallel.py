@@ -4,6 +4,11 @@
 import multiprocessing
 import multiprocessing.dummy
 
+# Start method for processes created by the multiprocessing module.
+# A value of None means using the platform-specific default.
+# Intended to be overridden in unit tests.
+MP_START_METHOD = None
+
 
 class BaseWorker:
     """Base class for workers that implement tasks executed via
@@ -48,13 +53,15 @@ def get_pool(n_jobs):
     """return a suitable multiprocessing pool class, and the correct jobs
     argument for its constructor, for the given amount of parallel jobs"""
 
+    ctx = multiprocessing.get_context(MP_START_METHOD)
+
     if n_jobs < 1:
         n_jobs = None
-        pool_class = multiprocessing.Pool
+        pool_class = ctx.Pool
     elif n_jobs == 1:
         # use the dummy wrapper around threading to avoid subprocess overhead
         pool_class = multiprocessing.dummy.Pool
     else:
-        pool_class = multiprocessing.Pool
+        pool_class = ctx.Pool
 
     return n_jobs, pool_class
