@@ -70,7 +70,7 @@ def suggest(project_id, body):
         return project_not_found_error(project_id)
 
     try:
-        lang = body.get("language", project.vocab_lang)
+        lang = body.get("language") or project.vocab_lang
     except AnnifException as err:
         return server_error(err)
 
