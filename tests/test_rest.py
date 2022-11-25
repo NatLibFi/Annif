@@ -48,7 +48,7 @@ def test_rest_suggest_public(app):
     # public projects should be accessible via REST
     with app.app_context():
         result = annif.rest.suggest(
-            "dummy-fi", text="example text", limit=10, threshold=0.0
+            "dummy-fi", {"text": "example text", "limit": 10, "threshold": 0.0}
         )
         assert "results" in result
 
@@ -57,7 +57,7 @@ def test_rest_suggest_hidden(app):
     # hidden projects should be accessible if you know the project id
     with app.app_context():
         result = annif.rest.suggest(
-            "dummy-en", text="example text", limit=10, threshold=0.0
+            "dummy-en", {"text": "example text", "limit": 10, "threshold": 0.0}
         )
         assert "results" in result
 
@@ -66,7 +66,7 @@ def test_rest_suggest_private(app):
     # private projects should not be accessible via REST
     with app.app_context():
         result = annif.rest.suggest(
-            "dummy-private", text="example text", limit=10, threshold=0.0
+            "dummy-private", {"text": "example text", "limit": 10, "threshold": 0.0}
         )
         assert result.status_code == 404
 
@@ -74,7 +74,7 @@ def test_rest_suggest_private(app):
 def test_rest_suggest_nonexistent(app):
     with app.app_context():
         result = annif.rest.suggest(
-            "nonexistent", text="example text", limit=10, threshold=0.0
+            "nonexistent", {"text": "example text", "limit": 10, "threshold": 0.0}
         )
         assert result.status_code == 404
 
@@ -82,7 +82,7 @@ def test_rest_suggest_nonexistent(app):
 def test_rest_suggest_novocab(app):
     with app.app_context():
         result = annif.rest.suggest(
-            "novocab", text="example text", limit=10, threshold=0.0
+            "novocab", {"text": "example text", "limit": 10, "threshold": 0.0}
         )
         assert result.status_code == 503
 
@@ -91,10 +91,7 @@ def test_rest_suggest_with_language_override(app):
     with app.app_context():
         result = annif.rest.suggest(
             "dummy-vocablang",
-            text="example text",
-            limit=10,
-            threshold=0.0,
-            language="en",
+            {"text": "example text", "limit": 10, "threshold": 0.0, "language": "en"},
         )
         assert result["results"][0]["label"] == "dummy"
 
@@ -103,10 +100,7 @@ def test_rest_suggest_with_language_override_bad_value(app):
     with app.app_context():
         result = annif.rest.suggest(
             "dummy-vocablang",
-            text="example text",
-            limit=10,
-            threshold=0.0,
-            language="xx",
+            {"text": "example text", "limit": 10, "threshold": 0.0, "language": "xx"},
         )
         assert result.status_code == 400
 
@@ -116,7 +110,7 @@ def test_rest_suggest_with_different_vocab_language(app):
     # vocab language is Finnish - subject labels should be in Finnish
     with app.app_context():
         result = annif.rest.suggest(
-            "dummy-vocablang", text="example text", limit=10, threshold=0.0
+            "dummy-vocablang", {"text": "example text", "limit": 10, "threshold": 0.0}
         )
         assert result["results"][0]["label"] == "dummy-fi"
 
@@ -124,7 +118,7 @@ def test_rest_suggest_with_different_vocab_language(app):
 def test_rest_suggest_with_notations(app):
     with app.app_context():
         result = annif.rest.suggest(
-            "dummy-fi", text="example text", limit=10, threshold=0.0
+            "dummy-fi", {"text": "example text", "limit": 10, "threshold": 0.0}
         )
         assert result["results"][0]["notation"] is None
 
@@ -147,7 +141,7 @@ def test_rest_learn(app):
         assert response == (None, 204)  # success, no output
 
         result = annif.rest.suggest(
-            "dummy-en", text="example text", limit=10, threshold=0.0
+            "dummy-en", {"text": "example text", "limit": 10, "threshold": 0.0}
         )
         assert "results" in result
         assert result["results"][0]["uri"] == "http://example.org/none"
