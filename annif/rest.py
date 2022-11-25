@@ -110,7 +110,7 @@ def _documents_to_corpus(documents, subject_index):
     return DocumentList(corpus)
 
 
-def learn(project_id, documents=[]):
+def learn(project_id, body):
     """learn from documents and return an empty 204 response if succesful"""
 
     try:
@@ -119,7 +119,7 @@ def learn(project_id, documents=[]):
         return project_not_found_error(project_id)
 
     try:
-        corpus = _documents_to_corpus(documents, project.subjects)
+        corpus = _documents_to_corpus(body, project.subjects)
         project.learn(corpus)
     except AnnifException as err:
         return server_error(err)
