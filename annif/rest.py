@@ -60,7 +60,7 @@ def _suggestion_to_dict(suggestion, subject_index, language):
     }
 
 
-def suggest(project_id, text, limit, threshold, language=None):
+def suggest(project_id, text="", limit=10, threshold=0.0, language=None):
     """suggest subjects for the given text and return a dict with results
     formatted according to Swagger spec"""
 
@@ -107,7 +107,7 @@ def _documents_to_corpus(documents, subject_index):
     return DocumentList(corpus)
 
 
-def learn(project_id, documents):
+def learn(project_id, documents=[]):
     """learn from documents and return an empty 204 response if succesful"""
 
     try:
