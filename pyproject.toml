@@ -67,7 +67,6 @@ coverage = "<=6.2"
 pytest-cov = "*"
 pytest-watch = "*"
 pytest-flask = "*"
-pytest-flake8 = "*"
 flake8 = "4.*"
 bumpversion = "*"
 black = "*"
@@ -87,9 +86,6 @@ annif = "annif.cli:cli"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.pytest.ini_options]
-addopts = "--flake8"
 
 [tool.isort]
 profile = "black"
