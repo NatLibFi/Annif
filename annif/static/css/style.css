@@ -33,12 +33,14 @@ h1 { font-size: 2rem; }
 }
 label, #suggestions {
   border-top: 1px solid #343260;
+  margin-bottom: 0.5rem;
   padding-top: 0.5rem;
   text-transform: uppercase;
   font-size: 1.1rem;
   display: block;
 }
 .form-control { border-radius: 0px; }
+.form-group { margin-bottom: 1rem; }
 select {
   -moz-appearance: none;
   -webkit-appearance: none;
@@ -67,7 +69,7 @@ select {
   border-width: 0px;
   font-weight: 500;
 }
-#limit-buttons .active {
+#limit-buttons .btn-check:checked + .btn {
   background-color: #6280dc;
   color: white;
 }
