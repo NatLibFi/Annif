@@ -25,7 +25,7 @@
         <img src="static/img/annif-RGB.svg" class="img-fluid" alt="Annif">
       </div>
       <div class="col-10 my-auto px-0">
-        <h1 class="text-right my-0">Web UI</h1>
+        <h1 class="text-end my-0">Web UI</h1>
       </div>
     </div>
   </div></header>
@@ -34,7 +34,7 @@
 
   <p>Welcome!</p>
 
-  <p>See the <a href="v1/ui/">Swagger documentation</a> for an interactive REST API specification.</p>
+  <p>See the <a href="v1/ui/">OpenAPI documentation</a> for an interactive REST API specification.</p>
 </div>
 
 <div id="form">
@@ -160,22 +160,16 @@ Vue.component('annif-limit', {
     }
   },
   template: '<div class="form-group">\
-      <label>Max # of suggestions</label>\
-      <div id="limit-buttons" class="btn-group btn-group-toggle" data-toggle="buttons" @click="handleLimitSelected">\
-        <label class="btn btn-secondary">\
-          <input v-bind="limit" type="radio" name="limit" value="10" checked>\
-          10\
-        </label>\
-        <label class="btn btn-secondary">\
-          <input v-bind="limit" type="radio" name="limit" value="15">\
-          15\
-        </label>\
-        <label class="btn btn-secondary">\
-          <input v-bind="limit" type="radio" name="limit" value="20">\
-          20\
-        </label>\
-      </div>\
-    </div>'
+    <label>Max # of suggestions</label>\
+  <div id="limit-buttons" @click="handleLimitSelected">\
+    <input type="radio" class="btn-check" v-bind="limit" name="limit" value="10" id="l1" checked>\
+    <label class="btn btn-secondary" for="l1">10</label>\
+    <input type="radio" class="btn-check" v-bind="limit" name="limit" value="15" id="l2">\
+    <label class="btn btn-secondary" for="l2">15</label>\
+    <input type="radio" class="btn-check" v-bind="limit" name="limit" value="20" id="l3">\
+    <label class="btn btn-secondary" for="l3">20</label>\
+  </div>\
+</div>'
 });
 
 // Component with the list of results

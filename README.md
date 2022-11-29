@@ -58,6 +58,8 @@ A development version of Annif can be installed by cloning the [GitHub
 repository](https://github.com/NatLibFi/Annif).
 [Poetry](https://python-poetry.org/) is used for managing dependencies and virtual environment for the development version.
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for information on [unit tests](CONTRIBUTING.md#unit-tests), [code style](CONTRIBUTING.md#code-style), [development flow](CONTRIBUTING.md#development-flow) etc. details that are useful when participating in Annif development.
+
 ## Installation and setup
 
 Clone the repository.
@@ -92,25 +94,6 @@ You will also need NLTK data files:
 Start up the application:
 
     annif
-
-## Unit tests
-
-Run `poetry shell` to enter the virtual environment and then run `pytest`.
-To have the test suite watch for changes in code and run automatically, use
-pytest-watch by running `ptw`.
-
-## Code style
-
-Annif code should follow the [Black style](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html) and import statements should be [grouped and ordered](https://peps.python.org/pep-0008/#imports).
-To achive this, the Black and isort tools are included as developoment dependencies; you can run `black .` and `isort .` in the project root to autoformat code. 
-You can set up a [pre-commit hook](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) to automate linting with isort, Black and flake8 with every git commit by using the following in the file `.git/hooks/pre-commit`, which should have execute permission set:
-```bash
-#!/bin/sh
-
-isort . --check-only --diff
-black . --check --diff
-flake8
-```
 
 # Getting help
 
