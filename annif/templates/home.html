@@ -54,6 +54,7 @@
         </div>
         <div class="col-md-4">
           <annif-projects :projects="projects" @project-selected="onProjectSelected"></annif-projects>
+          <annif-project-info :projects="projects" :project="project"></annif-project-info>
           <annif-limit :limit="limit" @limit-selected="onLimitSelected"></annif-limit>
           <button id="get-suggestions" type="button" class="btn btn-primary" @click="suggest" :disabled="loading">
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="loading"></span>
@@ -143,6 +144,41 @@ Vue.component('annif-projects', {
     <select class="form-control" id="project" @input="handleProjectSelected">\
       <option v-for="project in projects" v-bind:value="project.project_id"><% project.name %></option>\
     </select>\
+    </div>\
+  </div>\
+</div>'
+});
+
+Vue.component('annif-project-info', {
+  delimiters: ['<%','%>'],
+  props: ['projects', 'project'],
+  methods: {
+    getSelectedProject: function() {
+      // Returns the selected project as an object
+      return this.projects.find(p => {return p.project_id===this.project})
+    },
+    getDateString: function(d) {
+      // Returns modification time in the format 'yyyy-mm-dd hh:mm:ss UTC'
+      date = new Date(d);
+      return (
+        [ date.getUTCFullYear(), ('0' + date.getUTCMonth()).slice(-2), ('0' + date.getUTCDate()).slice(-2) ].join('-') + ' ' +
+        [ ('0' + date.getUTCHours()).slice(-2), ('0' + date.getUTCMinutes()).slice(-2), ('0' + date.getUTCSeconds()).slice(-2) ].join(':') + ' UTC'
+      );
+    }
+  },
+  template: '<div v-if="projects.length > 0">\
+  <button id="show-project-info" class="btn btn-primary collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-info" aria-expanded="false" aria-controls="collapse-info">\
+    <span class="if-collapsed">Show project info</span>\
+    <span class="if-not-collapsed">Hide project info</span>\
+  </button>\
+  <div id="collapse-info" class="collapse">\
+    <div id="project-info" class="card card-body">\
+      <span id="project-name"><strong><% getSelectedProject().name %></strong></span>\
+      <span>Project ID: <% getSelectedProject().project_id %></span>\
+      <span>Language: <% getSelectedProject().language %></span>\
+      <span>Backend type: <% getSelectedProject().backend.backend_id %></span>\
+      <span>Trained: <% getSelectedProject().is_trained ? "Yes" : "No" %></span>\
+      <span>Last modified: <% getDateString(getSelectedProject().modification_time) %></span>\
     </div>\
   </div>\
 </div>'

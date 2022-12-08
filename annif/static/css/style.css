@@ -73,6 +73,30 @@ select {
   background-color: #6280dc;
   color: white;
 }
+#show-project-info {
+  background-color: #6280dc;
+  color: white;
+  border: none;
+  border-radius: 0px;
+  margin-bottom: 1rem;
+}
+#show-project-info.collapsed .if-not-collapsed {
+  display: none;
+}
+#show-project-info:not(.collapsed) .if-collapsed {
+  display: none;
+}
+#project-info {
+  border-radius: 0px;
+  margin-bottom: 1rem;
+}
+#project-info span {
+  font-size: 1.1rem;
+}
+#project-name {
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+}
 #get-suggestions {
   margin: 2rem 0;
   background-color: #6280dc;
