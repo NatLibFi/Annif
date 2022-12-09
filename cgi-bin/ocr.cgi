@@ -9,7 +9,8 @@ import io
 import functools
 import configparser
 
-from PIL import Image, Transpose
+from PIL import Image
+from PIL.Image import Transpose
 
 config = configparser.ConfigParser()
 config.read('/etc/annif/ocr.ini')
