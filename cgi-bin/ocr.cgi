@@ -9,7 +9,7 @@ import io
 import functools
 import configparser
 
-from PIL import Image
+from PIL import Image, Transpose
 
 config = configparser.ConfigParser()
 config.read('/etc/annif/ocr.ini')
@@ -37,13 +37,13 @@ def image_transpose_exif(im):
     exif_orientation_tag = 0x0112 # contains an integer, 1 through 8
     exif_transpose_sequences = [  # corresponding to the following
         [],
-        [Image.FLIP_LEFT_RIGHT],
-        [Image.ROTATE_180],
-        [Image.FLIP_TOP_BOTTOM],
-        [Image.FLIP_LEFT_RIGHT, Image.ROTATE_90],
-        [Image.ROTATE_270],
-        [Image.FLIP_TOP_BOTTOM, Image.ROTATE_90],
-        [Image.ROTATE_90],
+        [Transpose.FLIP_LEFT_RIGHT],
+        [Transpose.ROTATE_180],
+        [Transpose.FLIP_TOP_BOTTOM],
+        [Transpose.FLIP_LEFT_RIGHT, Transpose.ROTATE_90],
+        [Transpose.ROTATE_270],
+        [Transpose.FLIP_TOP_BOTTOM, Transpose.ROTATE_90],
+        [Transpose.ROTATE_90],
     ]
 
     try:
