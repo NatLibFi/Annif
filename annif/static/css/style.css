@@ -39,8 +39,10 @@ label, #suggestions {
   font-size: 1.1rem;
   display: block;
 }
+#project-selection-wrapper {
+  margin-bottom: 1rem;
+}
 .form-control { border-radius: 0px; }
-.form-group { margin-bottom: 1rem; }
 select {
   -moz-appearance: none;
   -webkit-appearance: none;
@@ -74,11 +76,12 @@ select {
   color: white;
 }
 #show-project-info {
-  background-color: #6280dc;
-  color: white;
+  background: none;
+  color: #343260;
+  font-size: 1.1rem;
   border: none;
-  border-radius: 0px;
-  margin-bottom: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0;
 }
 #show-project-info.collapsed .if-not-collapsed {
   display: none;
@@ -87,15 +90,9 @@ select {
   display: none;
 }
 #project-info {
-  border-radius: 0px;
-  margin-bottom: 1rem;
-}
-#project-info span {
   font-size: 1.1rem;
-}
-#project-name {
-  margin-bottom: 0.5rem;
-  font-size: 1.2rem;
+  margin-top: 0.5rem;
+  margin-left: 1.75rem;
 }
 #get-suggestions {
   margin: 2rem 0;
