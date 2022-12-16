@@ -61,6 +61,7 @@ select {
 #limit-buttons label {
   border-radius: 50%;
   margin-right: 0.4rem;
+  margin-bottom: 1rem;
   width: 2rem;
   height: 2rem;
   display: inline-flex;
