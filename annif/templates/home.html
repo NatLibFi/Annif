@@ -162,9 +162,10 @@ Vue.component('annif-project-info', {
     },
     getDateString: function(d) {
       // Returns modification time in the format 'yyyy-mm-dd hh:mm:ss UTC'
+      console.log(d)
       date = new Date(d);
       return (
-        [ date.getUTCFullYear(), ('0' + date.getUTCMonth()).slice(-2), ('0' + date.getUTCDate()).slice(-2) ].join('-') + ' ' +
+        [ date.getUTCFullYear(), ('0' + (date.getUTCMonth() + 1)).slice(-2), ('0' + date.getUTCDate()).slice(-2) ].join('-') + ' ' +
         [ ('0' + date.getUTCHours()).slice(-2), ('0' + date.getUTCMinutes()).slice(-2), ('0' + date.getUTCSeconds()).slice(-2) ].join(':') + ' UTC'
       );
     }
