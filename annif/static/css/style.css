@@ -39,8 +39,10 @@ label, #suggestions {
   font-size: 1.1rem;
   display: block;
 }
+#project-selection-wrapper {
+  margin-bottom: 1rem;
+}
 .form-control { border-radius: 0px; }
-.form-group { margin-bottom: 1rem; }
 select {
   -moz-appearance: none;
   -webkit-appearance: none;
@@ -59,6 +61,7 @@ select {
 #limit-buttons label {
   border-radius: 50%;
   margin-right: 0.4rem;
+  margin-bottom: 1rem;
   width: 2rem;
   height: 2rem;
   display: inline-flex;
@@ -72,6 +75,30 @@ select {
 #limit-buttons .btn-check:checked + .btn {
   background-color: #6280dc;
   color: white;
+}
+#show-project-info {
+  background: none;
+  color: #343260;
+  font-size: 1.1rem;
+  border: none;
+  padding-top: 0.5rem;
+  padding-bottom: 0;
+  padding-left: 0;
+}
+#show-project-info.collapsed .if-not-collapsed {
+  display: none;
+}
+#show-project-info:not(.collapsed) .if-collapsed {
+  display: none;
+}
+#show-project-info span span {
+  display: inline-block;
+  width: 1.25rem;
+}
+#project-info {
+  font-size: 1.1rem;
+  margin-top: 0.5rem;
+  margin-left: 1.25rem;
 }
 #get-suggestions {
   margin: 2rem 0;
