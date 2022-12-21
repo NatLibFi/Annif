@@ -83,6 +83,7 @@ select {
   border: none;
   padding-top: 0.5rem;
   padding-bottom: 0;
+  padding-left: 0;
 }
 #show-project-info.collapsed .if-not-collapsed {
   display: none;
@@ -90,10 +91,14 @@ select {
 #show-project-info:not(.collapsed) .if-collapsed {
   display: none;
 }
+#show-project-info span span {
+  display: inline-block;
+  width: 1.25rem;
+}
 #project-info {
   font-size: 1.1rem;
   margin-top: 0.5rem;
-  margin-left: 1.75rem;
+  margin-left: 1.25rem;
 }
 #get-suggestions {
   margin: 2rem 0;

@@ -172,8 +172,8 @@ Vue.component('annif-project-info', {
   },
   template: '<div v-if="projects.length > 0">\
   <button id="show-project-info" class="btn btn-primary collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-info" aria-expanded="false" aria-controls="collapse-info">\
-    <span class="if-collapsed"><strong>▸ Project information<strong></span>\
-    <span class="if-not-collapsed"><strong>▾ Project information<strong></span>\
+    <span class="if-collapsed"><span>▸</span>Project information</span>\
+    <span class="if-not-collapsed"><span>▾</span>Project information</span>\
   </button>\
   <div id="collapse-info" class="collapse">\
     <div id="project-info">\
