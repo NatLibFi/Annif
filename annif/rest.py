@@ -1,9 +1,9 @@
 """Definitions for REST API operations. These are wired via Connexion to
 methods defined in the Swagger specification."""
 
-import connexion
-
 import importlib
+
+import connexion
 
 import annif.registry
 from annif.corpus import Document, DocumentList, SubjectSet
