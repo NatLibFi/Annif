@@ -35,13 +35,13 @@ jobs:
         poetry install --only dev
     - name: Lint with isort
       run: |
-        isort . --check-only --diff
+        poetry run isort . --check-only --diff
     - name: Lint with Black
       run: |
-        black . --check --diff
+        poetry run black . --check --diff
     - name: Lint with flake8
       run: |
-        flake8
+        poetry run flake8
 
   test:
     runs-on: ubuntu-latest
