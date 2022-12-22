@@ -16,6 +16,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     name: lint with isort, Black & flake8
+    env:
+      PYTHON_VERSION: "3.10"
     steps:
 
     - uses: actions/checkout@v3
@@ -26,11 +28,17 @@ jobs:
           ~/.cache/pipx/venvs
           ~/.local/bin
           ~/.cache/pypoetry/cache/repositories
-        key: poetry-installation-and-repos-3.10-${{ env.POETRY_VERSION }}  # Fixed Python version
+        key: poetry-installation-and-repos-${{ env.PYTHON_VERSION }}-${{ env.POETRY_VERSION }}
     - name: Install Poetry
       run: |
         pipx install poetry==$POETRY_VERSION
-    - name: Install dev dependencies
+    - name: Set up Python ${{ env.python-version }}
+      uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5  # v4.2.0
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'poetry'
+        cache-dependency-path: 'pyproject.toml'
+    - name: Install Python dev dependencies
       run: |
         poetry install --only dev
     - name: Lint with isort
