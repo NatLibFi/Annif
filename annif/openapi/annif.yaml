@@ -5,6 +5,19 @@ info:
 servers:
 - url: /v1
 paths:
+  /:
+    get:
+      tags:
+      - API information
+      summary: get basic information about the API service
+      operationId: annif.rest.show_info
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiInfo'
   /projects:
     get:
       tags:
@@ -136,6 +149,19 @@ paths:
       x-codegen-request-body-name: documents
 components:
   schemas:
+    ApiInfo:
+      required:
+      - title
+      - version
+      type: object
+      properties:
+        title:
+          type: string
+          example: Annif REST API
+        version:
+          type: string
+          example: 0.60.0
+      description: REST API information
     ProjectBackend:
       required:
       - backend_id

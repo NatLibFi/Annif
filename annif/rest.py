@@ -3,6 +3,8 @@ methods defined in the Swagger specification."""
 
 import connexion
 
+import importlib
+
 import annif.registry
 from annif.corpus import Document, DocumentList, SubjectSet
 from annif.exception import AnnifException
@@ -27,6 +29,15 @@ def server_error(err):
     return connexion.problem(
         status=503, title="Service unavailable", detail=err.format_message()
     )
+
+
+def show_info():
+    """return version of annif and a title for the api according to Swager spec"""
+
+    return {
+        "title": "Annif REST API",
+        "version": importlib.metadata.version("annif")
+    }
 
 
 def list_projects():
