@@ -182,6 +182,39 @@ paths:
         "503":
           $ref: '#/components/responses/ServiceUnavailable'
       x-codegen-request-body-name: documents
+  /detect_language:
+    post:
+      tags:
+      - Languages detection
+      summary: detect the language of a text given a list of candidate languages
+      operationId: annif.rest.detect_language
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+              - text
+              - candidates
+              properties:
+                text:
+                  type: string
+                  description: input text
+                candidates:
+                  type: array
+                  description: candidate languages as ISO 639-1 codes
+                  items:
+                    type: string
+                    maxLength: 2
+                    minLength: 2
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetectedLanguages'
 components:
   schemas:
     ApiInfo:
@@ -316,6 +349,21 @@ components:
                 type: string
                 example: Vulpes vulpes
       description: A document with attached, known good subjects
+    DetectedLanguages:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              language:
+                type: string
+                example: en
+              score:
+                type: number
+                example: 0.85
+      description: Candidate languages with their associated scores
     Problem:
       type: object
       properties:
