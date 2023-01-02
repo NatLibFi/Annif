@@ -1,4 +1,0 @@
-extraction:
-  python:
-    python_setup:
-      exclude_requirements: "fasttext"
