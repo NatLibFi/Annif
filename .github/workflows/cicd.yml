@@ -16,14 +16,40 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     name: lint with isort, Black & flake8
+    env:
+      PYTHON_VERSION: "3.10"
     steps:
-      - uses: actions/checkout@v3
-      - uses: isort/isort-action@f14e57e1d457956c45a19c05a89cccdf087846e5  # v1.1.0
-      - uses: psf/black@6b42c2b8c9f9bd666120a2c19b8da509fe477f27
-      - name: Lint with flake8
-        run: |
-          pip install flake8
-          flake8
+
+    - uses: actions/checkout@v3
+    - name: Load cached Poetry installation and repositories info
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/pipx/venvs
+          ~/.local/bin
+          ~/.cache/pypoetry/cache/repositories
+        key: poetry-installation-and-repos-${{ env.PYTHON_VERSION }}-${{ env.POETRY_VERSION }}
+    - name: Install Poetry
+      run: |
+        pipx install poetry==$POETRY_VERSION
+    - name: Set up Python ${{ env.python-version }}
+      uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5  # v4.2.0
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'poetry'
+        cache-dependency-path: 'pyproject.toml'
+    - name: Install Python dev dependencies
+      run: |
+        poetry install --only dev
+    - name: Lint with isort
+      run: |
+        poetry run isort . --check-only --diff
+    - name: Lint with Black
+      run: |
+        poetry run black . --check --diff
+    - name: Lint with flake8
+      run: |
+        poetry run flake8
 
   test:
     runs-on: ubuntu-latest
