@@ -182,7 +182,7 @@ paths:
         "503":
           $ref: '#/components/responses/ServiceUnavailable'
       x-codegen-request-body-name: documents
-  /detect_language:
+  /detect-language:
     post:
       tags:
       - Languages detection
