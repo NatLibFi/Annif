@@ -32,6 +32,9 @@ class DummyBackend(backend.AnnifLearningBackend):
             [SubjectSuggestion(subject_id=subject_id, score=score)]
         )
 
+    def _suggest_batch(self, documents, transform, params):
+        return [self._suggest(text, params) for text in documents]
+
     def _learn(self, corpus, params):
         # in this dummy backend we "learn" by picking up the subject ID
         # of the first subject of the first document in the learning set

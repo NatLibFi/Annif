@@ -229,6 +229,18 @@ def test_project_suggest(registry):
     assert hits[0].score == 1.0
 
 
+def test_project_suggest_batch(registry, fulltext_corpus):
+    project = registry.get_project("dummy-en")
+    result = project.suggest_batch(fulltext_corpus)
+    assert len(result) == 28  # Number of documents
+    fist_doc_hits = result[0].as_list()
+    assert len(fist_doc_hits) == 1
+    assert fist_doc_hits[0].subject_id == project.subjects.by_uri(
+        "http://example.org/dummy"
+    )
+    assert fist_doc_hits[0].score == 1.0
+
+
 def test_project_train_state_not_available(registry, caplog):
     project = registry.get_project("dummy-vocablang")
     project.backend.is_trained = None

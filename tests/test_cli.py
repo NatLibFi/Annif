@@ -465,6 +465,30 @@ def test_suggest_ensemble():
     assert result.exit_code == 0
 
 
+def test_suggest_files(tmpdir):
+    docfile = tmpdir.join("doc1.txt")
+    docfile.write("nothing special")
+
+    result = runner.invoke(
+        annif.cli.cli, ["suggest", "dummy-fi", str(docfile), str(docfile)]
+    )
+    assert not result.exception
+    assert "<http://example.org/dummy>\tdummy-fi\t1.0\n" in result.output
+    assert result.exit_code == 0
+
+
+def test_suggest_file_nonexistent():
+    failed_result = runner.invoke(
+        annif.cli.cli, ["suggest", "dummy-fi", "nonexistent_path"]
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert (
+        "Invalid value for '[PATHS]...': "
+        "File 'nonexistent_path' does not exist." in failed_result.output
+    )
+
+
 def test_index(tmpdir):
     tmpdir.join("doc1.txt").write("nothing special")
 

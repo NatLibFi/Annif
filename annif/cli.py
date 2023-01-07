@@ -7,6 +7,7 @@ import json
 import os.path
 import re
 import sys
+from itertools import islice
 
 import click
 import click_log
@@ -345,26 +346,59 @@ def run_learn(project_id, paths, docs_limit, backend_param):
 
 @cli.command("suggest")
 @click.argument("project_id")
+@click.argument("paths", type=click.Path(dir_okay=False, exists=True), nargs=-1)
 @click.option("--limit", "-l", default=10, help="Maximum number of subjects")
 @click.option("--threshold", "-t", default=0.0, help="Minimum score threshold")
 @click.option("--language", "-L", help="Language of subject labels")
+@click.option(
+    "--docs-limit",
+    "-d",
+    default=None,
+    type=click.IntRange(0, None),
+    help="Maximum number of documents to use",
+)
 @backend_param_option
 @common_options
-def run_suggest(project_id, limit, threshold, language, backend_param):
+def run_suggest(
+    project_id, paths, limit, threshold, language, backend_param, docs_limit
+):
     """
-    Suggest subjects for a single document from standard input.
+    Suggest subjects for a single document from standard input or for one or more
+    document file(s) given its/their path(s).
     \f
     This will read a text document from standard input and suggest subjects for
-    it.
+    it, or if given path(s) to file(s), suggest subjects for it/them.
     """
     project = get_project(project_id)
-    text = sys.stdin.read()
     lang = language or project.vocab_lang
     if lang not in project.vocab.languages:
         raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
     backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
-    hits = hit_filter(project.suggest(text, backend_params))
+
+    if sys.stdin.isatty():
+        documents, filenames = open_docs(paths, docs_limit)
+        hit_sets = project.suggest_batch(documents, backend_params)
+        for filename, subjects in zip(filenames, hit_sets):
+            click.echo(f"Suggestions for {filename}")
+            hits = hit_filter(subjects)
+            show_hits(hits, project, lang)
+    else:
+        text = sys.stdin.read()
+        hits = hit_filter(project.suggest(text, backend_params))
+        show_hits(hits, project, lang)
+
+
+def open_docs(paths, docs_limit):
+    docs, filenames = [], []
+    for path in islice(paths, docs_limit):
+        with open(path, errors="replace", encoding="utf-8-sig") as docfile:
+            filenames.append(path)
+            docs.append(docfile.read())
+    return docs, filenames
+
+
+def show_hits(hits, project, lang):
     for hit in hits.as_list():
         subj = project.subjects[hit.subject_id]
         click.echo(
@@ -408,11 +442,12 @@ def run_index(
     backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
-    for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
+    documents = annif.corpus.DocumentDirectory(
         directory, project.subjects, project.vocab_lang, require_subjects=False
-    ):
-        with open(docfilename, encoding="utf-8-sig") as docfile:
-            text = docfile.read()
+    )
+    hit_sets = project.suggest_batch(documents, backend_params)
+
+    for (docfilename, dummy_subjectfn), subjects in zip(documents, hit_sets):
         subjectfilename = re.sub(r"\.txt$", suffix, docfilename)
         if os.path.exists(subjectfilename) and not force:
             click.echo(
@@ -420,8 +455,7 @@ def run_index(
             )
             continue
         with open(subjectfilename, "w", encoding="utf-8") as subjfile:
-            results = project.suggest(text, backend_params)
-            for hit in hit_filter(results).as_list():
+            for hit in hit_filter(subjects).as_list():
                 subj = project.subjects[hit.subject_id]
                 line = "<{}>\t{}\t{}".format(
                     subj.uri,
