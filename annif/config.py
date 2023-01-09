@@ -68,7 +68,7 @@ class AnnifConfigDirectory:
         logger.debug(f"Reading configuration files in directory {directory}")
 
         self._config = dict()
-        for file in files:
+        for file in sorted(files):
             source_config = parse_config(file)
             for proj_id in source_config.project_ids:
                 self._check_duplicate_project_ids(proj_id, file)
