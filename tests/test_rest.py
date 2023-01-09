@@ -1,5 +1,7 @@
 """Unit tests for REST API backend code in Annif"""
 
+import importlib
+
 import annif.rest
 
 
@@ -15,6 +17,13 @@ def test_rest_list_projects(app):
         assert "dummy-private" not in project_ids
         # project with no access level setting should be returned
         assert "ensemble" in project_ids
+
+
+def test_rest_show_info(app):
+    with app.app_context():
+        result = annif.rest.show_info()
+        version = importlib.metadata.version("annif")
+        assert result == {"title": "Annif REST API", "version": version}
 
 
 def test_rest_show_project_public(app):
