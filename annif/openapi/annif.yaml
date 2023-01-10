@@ -185,7 +185,7 @@ paths:
   /detect-language:
     post:
       tags:
-      - Languages detection
+      - Language detection
       summary: detect the language of a text given a list of candidate languages
       operationId: annif.rest.detect_language
       requestBody:
@@ -203,10 +203,10 @@ paths:
                   example: A quick brown fox jumped over the lazy dog.
                 candidates:
                   type: array
-                  description: candidate languages as ISO 639-1 codes
+                  description: candidate languages as IETF BCP 47 codes
                   items:
                     type: string
-                    maxLength: 2
+                    maxLength: 3
                     minLength: 2
                     example: en
         required: true
