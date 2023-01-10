@@ -53,6 +53,24 @@ def test_rest_show_project_nonexistent(app):
         assert result.status_code == 404
 
 
+def test_rest_detect_language_english(app):
+    # english text should be detected
+    with app.app_context():
+        result = annif.rest.detect_language(
+            {"text": "example text", "candidates": ["en", "fi", "sv"]}
+        )
+        assert {"language": "en", "score": 1} in result["results"]
+
+
+def test_rest_detect_language_unknown(app):
+    # an unknown language should return None
+    with app.app_context():
+        result = annif.rest.detect_language(
+            {"text": "example text", "candidates": ["fi", "sv"]}
+        )
+        assert {"language": None, "score": 1} in result["results"]
+
+
 def test_rest_suggest_public(app):
     # public projects should be accessible via REST
     with app.app_context():
