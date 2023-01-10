@@ -89,8 +89,8 @@ def detect_language(body):
     scores = lang_detector(body.get("text"), tuple(body.get("candidates")))
     return {
         "results": [
-            {"language": s[0] if s[0] != "unk" else None, "score": s[1]}
-            for s in scores
+            {"language": lang if lang != "unk" else None, "score": score}
+            for lang, score in scores
         ]
     }
 
