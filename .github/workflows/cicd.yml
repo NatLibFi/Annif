@@ -117,20 +117,20 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
     - name: Login to Quay.io
-      uses: docker/login-action@49ed152c8eca782a232dede0303416e8f356c37b  # v2.0.0
+      uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a  # v2.1.0
       with:
         registry: quay.io
         username: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_USERNAME }}
         password: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_PASSWORD }}
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@69f6fc9d46f2f8bf0d5491e4aabe0bb8c6a4678a  # v4.0.1
+      uses: docker/metadata-action@57396166ad8aefe6098280995947635806a0e6ea  # v4.1.1
       with:
         images: quay.io/natlibfi/annif
         tags: |
           latest
     - name: Build and push to Quay.io
-      uses: docker/build-push-action@e551b19e49efd4e98792db7592c17c09b89db8d8  # v3.0.0
+      uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5  # v3.2.0
       with:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
@@ -168,21 +168,21 @@ jobs:
         poetry publish --build
 
     - name: Login to Quay.io
-      uses: docker/login-action@49ed152c8eca782a232dede0303416e8f356c37b  # v2.0.0
+      uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a  # v2.1.0
       with:
         registry: quay.io
         username: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_USERNAME }}
         password: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_PASSWORD }}
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@69f6fc9d46f2f8bf0d5491e4aabe0bb8c6a4678a  # v4.0.1
+      uses: docker/metadata-action@57396166ad8aefe6098280995947635806a0e6ea  # v4.1.1
       with:
         images: quay.io/natlibfi/annif
         tags: |
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
     - name: Build and push to Quay.io
-      uses: docker/build-push-action@e551b19e49efd4e98792db7592c17c09b89db8d8  # v3.0.0
+      uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5  # v3.2.0
       with:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
