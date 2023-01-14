@@ -104,6 +104,58 @@ def suggest(project_id, body):
     }
 
 
+def suggest_batch(project_id, body):
+    """suggest subjects for the given documents and return a list of dicts with results
+    formatted according to Swagger spec"""
+
+    try:
+        project = annif.registry.get_project(project_id, min_access=Access.hidden)
+    except ValueError:
+        return project_not_found_error(project_id)
+
+    parameters = body.get("parameters", {})
+    try:
+        lang = parameters.get("language") or project.vocab_lang
+    except AnnifException as err:
+        return server_error(err)
+
+    if lang not in project.vocab.languages:
+        return connexion.problem(
+            status=400,
+            title="Bad Request",
+            detail=f'language "{lang}" not supported by vocabulary',
+        )
+
+    limit = parameters.get("limit", 10)
+    threshold = parameters.get("threshold", 0.0)
+
+    documents = DocumentList(
+        [
+            Document(
+                text=d["text"],
+                subject_set=None,
+            )
+            for d in body["documents"]
+        ]
+    )
+
+    try:
+        hit_filter = SuggestionFilter(project.subjects, limit, threshold)
+        hit_sets = project.suggest_batch(documents)
+    except AnnifException as err:
+        return server_error(err)
+
+    return [
+        {
+            "results": [
+                _suggestion_to_dict(hit, project.subjects, lang)
+                for hit in hit_filter(hits).as_list()
+            ]
+        }
+        for hits in hit_sets
+    ]
+
+
 def _documents_to_corpus(documents, subject_index):
     corpus = [
         Document(
