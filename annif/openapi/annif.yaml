@@ -100,6 +100,55 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /projects/{project_id}/suggest-batch:
+    post:
+      tags:
+      - Automatic subject indexing
+      summary: suggest subjects for given documents using batched backend operations
+      operationId: annif.rest.suggest_batch
+      parameters:
+      - $ref: '#/components/parameters/project_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - documents
+              properties:
+                documents:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Document'
+                parameters:
+                  $ref: '#/components/schemas/SuggestParameters'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchSuggestionResultList'
+        400:
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        404:
+          description: Project not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        503:
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      x-codegen-request-body-name: documents
   /projects/{project_id}/learn:
     post:
       tags:
@@ -208,6 +257,37 @@ components:
           items:
             $ref: '#/components/schemas/SuggestionResult'
       description: A list of analysis results
+    BatchSuggestionResultList:
+      type: array
+      items:
+        $ref: '#/components/schemas/SuggestionResultList'
+      description: A list of batch analysis results
+    SuggestParameters:
+      type: object
+      properties:
+        limit:
+          type: integer
+          description: maximum number of results to return
+          format: int32
+          default: 10
+          minimum: 0
+        threshold:
+          type: number
+          description: minimum score threshold, below which results will not
+            be returned
+          default: 0.0
+          minimum: 0.0
+          maximum: 1.0
+        language:
+          type: string
+          description: language of subject labels
+    Document:
+      type: object
+      properties:
+        text:
+          type: string
+          example: A quick brown fox jumped over the lazy dog.
+      description: A document with text
     IndexedDocument:
       type: object
       properties:
@@ -225,7 +305,7 @@ components:
               label:
                 type: string
                 example: Vulpes vulpes
-      description: A document with attached, known good subjects
+      description: A document with text and attached, known good subjects
     Problem:
       type: object
       properties:

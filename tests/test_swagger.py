@@ -49,6 +49,29 @@ def test_swagger_suggest_novocab(app_client):
     assert req.status_code == 503
 
 
+def test_swagger_suggest_batch(app_client):
+    data = {
+        "documents": [
+            {"text": "A quick brown fox jumped over the lazy dog."},
+            {"text": "A quick brown fox jumped over the lazy dog."},
+        ]
+    }
+    req = app_client.post(
+        "http://localhost:8000/v1/projects/dummy-fi/suggest-batch", json=data
+    )
+    assert req.status_code == 200
+    assert len(req.get_json()) == 2
+    assert "results" in req.get_json()[0]
+
+
+def test_swagger_suggest_batch_no_docs(app_client):
+    data = {}
+    req = app_client.post(
+        "http://localhost:8000/v1/projects/dummy-fi/suggest-batch", json=data
+    )
+    assert req.status_code == 400
+
+
 def test_swagger_learn(app_client):
     data = [
         {
