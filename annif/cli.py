@@ -84,6 +84,17 @@ def open_documents(paths, subject_index, vocab_lang, docs_limit):
     return docs
 
 
+def show_hits(hits, project, lang, file=None):
+    for hit in hits.as_list():
+        subj = project.subjects[hit.subject_id]
+        line = "<{}>\t{}\t{}".format(
+            subj.uri,
+            "\t".join(filter(None, (subj.labels[lang], subj.notation))),
+            hit.score,
+        )
+        click.echo(line, file=file)
+
+
 def parse_backend_params(backend_param, project):
     """Parse a list of backend parameters given with the --backend-param
     option into a nested dict structure"""
@@ -378,8 +389,8 @@ def run_suggest(
 
     if sys.stdin.isatty():
         documents, filenames = open_docs(paths, docs_limit)
-        hit_sets = project.suggest_batch(documents, backend_params)
-        for filename, subjects in zip(filenames, hit_sets):
+        subject_sets = project.suggest_batch(documents, backend_params)
+        for filename, subjects in zip(filenames, subject_sets):
             click.echo(f"Suggestions for {filename}")
             hits = hit_filter(subjects)
             show_hits(hits, project, lang)
@@ -396,18 +407,6 @@ def open_docs(paths, docs_limit):
             filenames.append(path)
             docs.append(docfile.read())
     return docs, filenames
-
-
-def show_hits(hits, project, lang):
-    for hit in hits.as_list():
-        subj = project.subjects[hit.subject_id]
-        click.echo(
-            "<{}>\t{}\t{}".format(
-                subj.uri,
-                "\t".join(filter(None, (subj.labels[lang], subj.notation))),
-                hit.score,
-            )
-        )
 
 
 @cli.command("index")
@@ -445,24 +444,18 @@ def run_index(
     documents = annif.corpus.DocumentDirectory(
         directory, project.subjects, project.vocab_lang, require_subjects=False
     )
-    hit_sets = project.suggest_batch(documents, backend_params)
+    subject_sets = project.suggest_batch(documents, backend_params)
 
-    for (docfilename, dummy_subjectfn), subjects in zip(documents, hit_sets):
+    for (docfilename, dummy_subjectfn), subjects in zip(documents, subject_sets):
         subjectfilename = re.sub(r"\.txt$", suffix, docfilename)
         if os.path.exists(subjectfilename) and not force:
             click.echo(
                 "Not overwriting {} (use --force to override)".format(subjectfilename)
             )
             continue
+        hits = hit_filter(subjects)
         with open(subjectfilename, "w", encoding="utf-8") as subjfile:
-            for hit in hit_filter(subjects).as_list():
-                subj = project.subjects[hit.subject_id]
-                line = "<{}>\t{}\t{}".format(
-                    subj.uri,
-                    "\t".join(filter(None, (subj.labels[lang], subj.notation))),
-                    hit.score,
-                )
-                click.echo(line, file=subjfile)
+            show_hits(hits, project, lang, file=subjfile)
 
 
 @cli.command("eval")
