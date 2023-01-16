@@ -32,7 +32,7 @@ def server_error(err):
 
 
 def show_info():
-    """return version of annif and a title for the api according to Swager spec"""
+    """return version of annif and a title for the api according to Swagger spec"""
 
     return {"title": "Annif REST API", "version": importlib.metadata.version("annif")}
 
