@@ -79,15 +79,14 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         the suggest functionality, with pre-processed parameters."""
         pass  # pragma: no cover
 
-    def _suggest_batch(self, documents, transform, params):
+    def _suggest_batch(self, corpus, transform, params):
         """This method can be implemented by backends to use batching of documents in
         their operations. This default implementation uses the regular suggest
         functionality."""
-        hit_sets = []
-        for text in documents:
-            text = transform.transform_text(text)
-            hit_sets.append(self._suggest(text, params))
-        return hit_sets
+        return [
+            self._suggest(transform.transform_text(doc.text), params)
+            for doc in corpus.documents
+        ]
 
     def suggest(self, text, params=None):
         """Suggest subjects for the input text and return a list of subjects
@@ -96,12 +95,12 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         self.initialize()
         return self._suggest(text, params=beparams)
 
-    def suggest_batch(self, documents, transform, params=None):
+    def suggest_batch(self, corpus, transform, params=None):
         """Suggest subjects for the input documents and return a list of subject sets
         represented as a list of SubjectSuggestion objects."""
         beparams = self._get_backend_params(params)
         self.initialize()
-        return self._suggest_batch(documents, transform, params=beparams)
+        return self._suggest_batch(corpus, transform, params=beparams)
 
     def debug(self, message):
         """Log a debug message from this backend"""

@@ -7,7 +7,6 @@ import json
 import os.path
 import re
 import sys
-from itertools import islice
 
 import click
 import click_log
@@ -82,6 +81,14 @@ def open_documents(paths, subject_index, vocab_lang, docs_limit):
     if docs_limit is not None:
         docs = annif.corpus.LimitingDocumentCorpus(docs, docs_limit)
     return docs
+
+
+def open_text_documents(paths, docs_limit):
+    docs = []
+    for path in paths[:docs_limit]:
+        with open(path, errors="replace", encoding="utf-8-sig") as docfile:
+            docs.append(annif.corpus.Document(text=docfile.read(), subject_set=None))
+    return annif.corpus.DocumentList(docs)
 
 
 def show_hits(hits, project, lang, file=None):
@@ -388,25 +395,19 @@ def run_suggest(
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
     if sys.stdin.isatty():
-        documents, filenames = open_docs(paths, docs_limit)
-        subject_sets = project.suggest_batch(documents, backend_params)
-        for filename, subjects in zip(filenames, subject_sets):
-            click.echo(f"Suggestions for {filename}")
+        docs = open_text_documents(paths, docs_limit)
+        subject_sets = project.suggest_batch(docs, backend_params)
+        for (
+            subjects,
+            path,
+        ) in zip(subject_sets, paths):
+            click.echo(f"Suggestions for {path}")
             hits = hit_filter(subjects)
             show_hits(hits, project, lang)
     else:
         text = sys.stdin.read()
         hits = hit_filter(project.suggest(text, backend_params))
         show_hits(hits, project, lang)
-
-
-def open_docs(paths, docs_limit):
-    docs, filenames = [], []
-    for path in islice(paths, docs_limit):
-        with open(path, errors="replace", encoding="utf-8-sig") as docfile:
-            filenames.append(path)
-            docs.append(docfile.read())
-    return docs, filenames
 
 
 @cli.command("index")
@@ -442,7 +443,7 @@ def run_index(
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
     documents = annif.corpus.DocumentDirectory(
-        directory, project.subjects, project.vocab_lang, require_subjects=False
+        directory, None, None, require_subjects=False
     )
     subject_sets = project.suggest_batch(documents, backend_params)
 

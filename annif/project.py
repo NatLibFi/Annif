@@ -117,11 +117,11 @@ class AnnifProject(DatadirMixin):
         logger.debug("Got %d hits from backend %s", len(hits), self.backend.backend_id)
         return hits
 
-    def _suggest_batch_with_backend(self, text, transform, backend_params):
+    def _suggest_batch_with_backend(self, corpus, transform, backend_params):
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-        subject_sets = self.backend.suggest_batch(text, transform, beparams)
+        subject_sets = self.backend.suggest_batch(corpus, transform, beparams)
         # logger.debug("Got %d hits from backend %s", len(hits), self.backend.backend_id
         return subject_sets
 
@@ -223,7 +223,7 @@ class AnnifProject(DatadirMixin):
         logger.debug("%d hits from backend", len(hits))
         return hits
 
-    def suggest_batch(self, documents, backend_params=None):
+    def suggest_batch(self, corpus, backend_params=None):
         """Suggest subjects for the given documents using batches of documents in their
         operations when possible."""
         if not self.is_trained:
@@ -233,7 +233,7 @@ class AnnifProject(DatadirMixin):
                 raise NotInitializedException("Project is not trained.")
         # logger.debug(f"Suggesting subjects for {sum(1 for _ in documents)} documents")
         hit_sets = self._suggest_batch_with_backend(
-            documents, self.transform, backend_params
+            corpus, self.transform, backend_params
         )
         return hit_sets
 

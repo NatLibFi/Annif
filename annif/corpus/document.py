@@ -45,6 +45,9 @@ class DocumentDirectory(DocumentCorpus):
         for docfilename, keyfilename in self:
             with open(docfilename, errors="replace", encoding="utf-8-sig") as docfile:
                 text = docfile.read()
+            if keyfilename is None:
+                yield Document(text=text, subject_set=None)
+                continue
             with open(keyfilename, encoding="utf-8-sig") as keyfile:
                 subjects = SubjectSet.from_string(
                     keyfile.read(), self.subject_index, self.language
