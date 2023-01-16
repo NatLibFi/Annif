@@ -22,6 +22,9 @@ class DummyBackend(backend.AnnifLearningBackend):
     def _suggest(self, text, params):
         score = float(params.get("score", 1.0))
 
+        # Ensure tests fail if "text" with wrong type ends up here
+        assert isinstance(text, str)
+
         # allow overriding returned subject via uri parameter
         if "uri" in params:
             subject_id = self.project.subjects.by_uri(params["uri"])
@@ -32,8 +35,8 @@ class DummyBackend(backend.AnnifLearningBackend):
             [SubjectSuggestion(subject_id=subject_id, score=score)]
         )
 
-    def _suggest_batch(self, documents, transform, params):
-        return [self._suggest(text, params) for text in documents]
+    def _suggest_batch(self, corpus, transform, params):
+        return [self._suggest(doc.text, params) for doc in corpus.documents]
 
     def _learn(self, corpus, params):
         # in this dummy backend we "learn" by picking up the subject ID
