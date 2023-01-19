@@ -217,6 +217,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DetectedLanguages'
+        400:
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   schemas:
     ApiInfo:

@@ -86,7 +86,25 @@ def show_project(
 def detect_language(body):
     """return scores for detected languages formatted according to Swagger spec"""
 
-    scores = lang_detector(body.get("text"), tuple(body.get("candidates")))
+    text = body.get("text")
+    candidates = body.get("candidates")
+
+    if not candidates:
+        return connexion.problem(
+            status=400,
+            title="Bad Request",
+            detail="no candidate languages given",
+        )
+
+    scores = lang_detector(text, tuple(candidates))
+
+    if not scores:
+        return connexion.problem(
+            status=400,
+            title="Bad Request",
+            detail="unsupported candidate languages",
+        )
+
     return {
         "results": [
             {"language": lang if lang != "unk" else None, "score": score}
