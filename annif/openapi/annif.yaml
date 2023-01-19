@@ -54,26 +54,12 @@ paths:
               type: object
               required:
               - text
-              properties:
-                text:
-                  type: string
-                  description: input text
-                limit:
-                  type: integer
-                  description: maximum number of results to return
-                  format: int32
-                  default: 10
-                  minimum: 0
-                threshold:
-                  type: number
-                  description: minimum score threshold, below which results will not
-                    be returned
-                  default: 0.0
-                  minimum: 0.0
-                  maximum: 1.0
-                language:
-                  type: string
-                  description: language of subject labels
+              allOf:
+                - properties:
+                    text:
+                      type: string
+                      description: input text
+                - $ref: '#/components/schemas/SuggestParameters'
         required: true
       responses:
         200:
