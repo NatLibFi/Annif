@@ -71,6 +71,26 @@ def test_rest_detect_language_unknown(app):
         assert {"language": None, "score": 1} in result["results"]
 
 
+def test_rest_detect_language_no_text(app):
+    with app.app_context():
+        result = annif.rest.detect_language({"text": "", "candidates": ["en"]})
+        assert {"language": None, "score": 1} in result["results"]
+
+
+def test_rest_detect_language_no_candidates(app):
+    with app.app_context():
+        result = annif.rest.detect_language({"text": "example text", "candidates": []})
+        assert result.status_code == 400
+
+
+def test_rest_detect_language_unsupported_candidates(app):
+    with app.app_context():
+        result = annif.rest.detect_language(
+            {"text": "example text", "candidates": ["unk"]}
+        )
+        assert result.status_code == 400
+
+
 def test_rest_suggest_public(app):
     # public projects should be accessible via REST
     with app.app_context():
