@@ -7,9 +7,9 @@ import os.path
 import random
 import re
 import shutil
+from unittest import mock
 
 from click.testing import CliRunner
-from unittest import mock
 
 import annif.cli
 import annif.parallel
