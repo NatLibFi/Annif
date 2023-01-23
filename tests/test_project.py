@@ -229,6 +229,12 @@ def test_project_suggest(registry):
     assert hits[0].score == 1.0
 
 
+def test_project_suggest_transform_limit(registry):
+    project = registry.get_project("limit-transform")
+    result = project.suggest("this is some text")
+    assert len(result) == 0
+
+
 def test_project_suggest_batch(registry, fulltext_corpus):
     project = registry.get_project("dummy-en")
     result = project.suggest_batch(fulltext_corpus)
@@ -239,6 +245,13 @@ def test_project_suggest_batch(registry, fulltext_corpus):
         "http://example.org/dummy"
     )
     assert fist_doc_hits[0].score == 1.0
+
+
+def test_project_suggest_batch_transform_limit(registry, fulltext_corpus):
+    project = registry.get_project("limit-transform")
+    result = project.suggest_batch(fulltext_corpus)
+    assert len(result) == 28  # Number of documents
+    assert len(result[0]) == 0
 
 
 def test_project_train_state_not_available(registry, caplog):
@@ -289,6 +302,6 @@ def test_project_file_toml():
 def test_project_directory():
     app = annif.create_app(config_name="annif.default_config.TestingDirectoryConfig")
     with app.app_context():
-        assert len(annif.registry.get_projects()) == 17 + 2
+        assert len(annif.registry.get_projects()) == 18 + 2
         assert annif.registry.get_project("dummy-fi").project_id == "dummy-fi"
         assert annif.registry.get_project("dummy-fi-toml").project_id == "dummy-fi-toml"
