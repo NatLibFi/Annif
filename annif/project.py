@@ -117,13 +117,15 @@ class AnnifProject(DatadirMixin):
         logger.debug("Got %d hits from backend %s", len(hits), self.backend.backend_id)
         return hits
 
-    def _suggest_batch_with_backend(self, corpus, transform, backend_params):
+    def _suggest_batch_with_backend(self, corpus, backend_params):
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-        subject_sets = self.backend.suggest_batch(corpus, transform, beparams)
-        # logger.debug("Got %d hits from backend %s", len(hits), self.backend.backend_id
-        return subject_sets
+        hit_sets = self.backend.suggest_batch(corpus, beparams)
+        logger.debug(
+            "Got %d hit sets from backend %s", len(hit_sets), self.backend.backend_id
+        )
+        return hit_sets
 
     @property
     def analyzer(self):
@@ -231,11 +233,12 @@ class AnnifProject(DatadirMixin):
                 logger.warning("Could not get train state information.")
             else:
                 raise NotInitializedException("Project is not trained.")
-        # logger.debug(f"Suggesting subjects for {sum(1 for _ in documents)} documents")
-        hit_sets = self._suggest_batch_with_backend(
-            corpus, self.transform, backend_params
+        corpus = self.transform.transform_corpus(corpus)
+        logger.debug(
+            f"Suggesting subjects for a batch of {sum(1 for _ in corpus.documents)}"
+            " documents"
         )
-        return hit_sets
+        return self._suggest_batch_with_backend(corpus, backend_params)
 
     def train(self, corpus, backend_params=None, jobs=0):
         """train the project using documents from a metadata source"""

@@ -39,7 +39,7 @@ class DummyBackend(backend.AnnifLearningBackend):
             [SubjectSuggestion(subject_id=subject_id, score=score)]
         )
 
-    def _suggest_batch(self, corpus, transform, params):
+    def _suggest_batch(self, corpus, params):
         return [self._suggest(doc.text, params) for doc in corpus.documents]
 
     def _learn(self, corpus, params):
