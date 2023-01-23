@@ -9,6 +9,7 @@ import re
 import shutil
 
 from click.testing import CliRunner
+from unittest import mock
 
 import annif.cli
 import annif.parallel
@@ -465,15 +466,56 @@ def test_suggest_ensemble():
     assert result.exit_code == 0
 
 
-def test_suggest_files(tmpdir):
-    docfile = tmpdir.join("doc1.txt")
+def test_suggest_file(tmpdir):
+    docfile = tmpdir.join("doc.txt")
     docfile.write("nothing special")
 
-    result = runner.invoke(
-        annif.cli.cli, ["suggest", "dummy-fi", str(docfile), str(docfile)]
-    )
+    with mock.patch("click.get_text_stream") as get_text_stream:
+        get_text_stream("stdin").isatty.return_value = True
+        result = runner.invoke(annif.cli.cli, ["suggest", "dummy-fi", str(docfile)])
+
     assert not result.exception
+    assert f"Suggestions for {docfile}" in result.output
     assert "<http://example.org/dummy>\tdummy-fi\t1.0\n" in result.output
+    assert result.exit_code == 0
+
+
+def test_suggest_two_files(tmpdir):
+    docfile1 = tmpdir.join("doc-1.txt")
+    docfile1.write("nothing special")
+    docfile2 = tmpdir.join("doc-2.txt")
+    docfile2.write("again nothing special")
+
+    with mock.patch("click.get_text_stream") as get_text_stream:
+        get_text_stream("stdin").isatty.return_value = True
+        result = runner.invoke(
+            annif.cli.cli, ["suggest", "dummy-fi", str(docfile1), str(docfile2)]
+        )
+
+    assert not result.exception
+    assert f"Suggestions for {docfile1}" in result.output
+    assert f"Suggestions for {docfile2}" in result.output
+    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0\n") == 2
+    assert result.exit_code == 0
+
+
+def test_suggest_two_files_docs_limit(tmpdir):
+    docfile1 = tmpdir.join("doc-1.txt")
+    docfile1.write("nothing special")
+    docfile2 = tmpdir.join("doc-2.txt")
+    docfile2.write("again nothing special")
+
+    with mock.patch("click.get_text_stream") as get_text_stream:
+        get_text_stream("stdin").isatty.return_value = True
+        result = runner.invoke(
+            annif.cli.cli,
+            ["suggest", "dummy-fi", str(docfile1), str(docfile2), "--docs-limit", "1"],
+        )
+
+    assert not result.exception
+    assert f"Suggestions for {docfile1}" in result.output
+    assert f"Suggestions for {docfile2}" not in result.output
+    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0\n") == 1
     assert result.exit_code == 0
 
 

@@ -394,7 +394,8 @@ def run_suggest(
     backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
-    if sys.stdin.isatty():
+    if click.get_text_stream("stdin").isatty():
+
         docs = open_text_documents(paths, docs_limit)
         subject_sets = project.suggest_batch(docs, backend_params)
         for (
