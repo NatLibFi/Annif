@@ -272,7 +272,13 @@ components:
     BatchSuggestionResultList:
       type: array
       items:
-        $ref: '#/components/schemas/SuggestionResultList'
+        allOf:
+        - $ref: '#/components/schemas/SuggestionResultList'
+        - type: object
+          properties:
+            id:
+              type: string
+              example: doc-1234
       description: A list of batch analysis results
     SuggestParameters:
       type: object
@@ -295,11 +301,16 @@ components:
           description: language of subject labels
     Document:
       type: object
+      required:
+        - text
       properties:
         text:
           type: string
           example: A quick brown fox jumped over the lazy dog.
-      description: A document with text
+        id:
+          type: string
+          example: doc-1234
+      description: A document with text and an optional identifier
     IndexedDocument:
       type: object
       properties:
