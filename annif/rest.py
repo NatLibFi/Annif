@@ -1,6 +1,8 @@
 """Definitions for REST API operations. These are wired via Connexion to
 methods defined in the Swagger specification."""
 
+import importlib
+
 import connexion
 
 import annif.registry
@@ -37,6 +39,12 @@ def language_not_supported_error(lang):
         title="Bad Request",
         detail=f'language "{lang}" not supported by vocabulary',
     )
+
+
+def show_info():
+    """return version of annif and a title for the api according to Swagger spec"""
+
+    return {"title": "Annif REST API", "version": importlib.metadata.version("annif")}
 
 
 def list_projects():
