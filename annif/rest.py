@@ -99,7 +99,14 @@ def suggest_batch(project_id, body):
     formatted according to Swagger spec"""
 
     parameters = body.get("parameters", {})
-    return _suggest(project_id, body["documents"], parameters)
+    result = _suggest(project_id, body["documents"], parameters)
+
+    if isinstance(result, list):
+        for ind, doc_results in enumerate(result):
+            doc_results["id"] = body["documents"][ind].get("id")
+        return result
+    else:
+        return result  # connexion problem
 
 
 def _suggest(project_id, documents, parameters):
