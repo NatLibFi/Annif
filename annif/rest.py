@@ -29,6 +29,16 @@ def server_error(err):
     )
 
 
+def language_not_supported_error(lang):
+    """return a Connexion error object when attempting to use unsupported language"""
+
+    return connexion.problem(
+        status=400,
+        title="Bad Request",
+        detail=f'language "{lang}" not supported by vocabulary',
+    )
+
+
 def list_projects():
     """return a dict with projects formatted according to Swagger spec"""
 
@@ -106,11 +116,7 @@ def _suggest(project_id, documents, parameters):
         return server_error(err)
 
     if lang not in project.vocab.languages:
-        return connexion.problem(
-            status=400,
-            title="Bad Request",
-            detail=f'language "{lang}" not supported by vocabulary',
-        )
+        return language_not_supported_error(lang)
 
     limit = parameters.get("limit", 10)
     threshold = parameters.get("threshold", 0.0)
