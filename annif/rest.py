@@ -72,48 +72,42 @@ def suggest(project_id, body):
     """suggest subjects for the given text and return a dict with results
     formatted according to Swagger spec"""
 
-    try:
-        project = annif.registry.get_project(project_id, min_access=Access.hidden)
-    except ValueError:
-        return project_not_found_error(project_id)
+    parameters = dict(
+        (key, body[key]) for key in ["language", "limit", "threshold"] if key in body
+    )
+    documents = [{"text": body["text"]}]
+    result = _suggest(project_id, documents, parameters)
 
-    try:
-        lang = body.get("language") or project.vocab_lang
-    except AnnifException as err:
-        return server_error(err)
-
-    if lang not in project.vocab.languages:
-        return connexion.problem(
-            status=400,
-            title="Bad Request",
-            detail=f'language "{lang}" not supported by vocabulary',
-        )
-
-    limit = body.get("limit", 10)
-    threshold = body.get("threshold", 0.0)
-
-    try:
-        hit_filter = SuggestionFilter(project.subjects, limit, threshold)
-        result = project.suggest([body["text"]])[0]
-    except AnnifException as err:
-        return server_error(err)
-
-    hits = hit_filter(result).as_list()
-    return {
-        "results": [_suggestion_to_dict(hit, project.subjects, lang) for hit in hits]
-    }
+    if isinstance(result, list):
+        return result[0]  # successful operation
+    else:
+        return result  # connexion problem
 
 
 def suggest_batch(project_id, body):
     """suggest subjects for the given documents and return a list of dicts with results
     formatted according to Swagger spec"""
 
+    parameters = body.get("parameters", {})
+    return _suggest(project_id, body["documents"], parameters)
+
+
+def _suggest(project_id, documents, parameters):
+    corpus = DocumentList(
+        [
+            Document(
+                text=d["text"],
+                subject_set=None,
+            )
+            for d in documents
+        ]
+    )
+
     try:
         project = annif.registry.get_project(project_id, min_access=Access.hidden)
     except ValueError:
         return project_not_found_error(project_id)
 
-    parameters = body.get("parameters", {})
     try:
         lang = parameters.get("language") or project.vocab_lang
     except AnnifException as err:
@@ -129,19 +123,9 @@ def suggest_batch(project_id, body):
     limit = parameters.get("limit", 10)
     threshold = parameters.get("threshold", 0.0)
 
-    documents = DocumentList(
-        [
-            Document(
-                text=d["text"],
-                subject_set=None,
-            )
-            for d in body["documents"]
-        ]
-    )
-
     try:
         hit_filter = SuggestionFilter(project.subjects, limit, threshold)
-        hit_sets = project.suggest_batch(documents)
+        hit_sets = project.suggest_corpus(corpus)
     except AnnifException as err:
         return server_error(err)
 
