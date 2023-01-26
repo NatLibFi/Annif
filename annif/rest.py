@@ -78,6 +78,18 @@ def _suggestion_to_dict(suggestion, subject_index, language):
     }
 
 
+def _hit_sets_to_list(hit_sets, hit_filter, subjects, lang):
+    return [
+        {
+            "results": [
+                _suggestion_to_dict(hit, subjects, lang)
+                for hit in hit_filter(hits).as_list()
+            ]
+        }
+        for hits in hit_sets
+    ]
+
+
 def suggest(project_id, body):
     """suggest subjects for the given text and return a dict with results
     formatted according to Swagger spec"""
@@ -99,27 +111,17 @@ def suggest_batch(project_id, body):
     formatted according to Swagger spec"""
 
     parameters = body.get("parameters", {})
-    result = _suggest(project_id, body["documents"], parameters)
+    documents = body["documents"]
+    result = _suggest(project_id, documents, parameters)
 
     if isinstance(result, list):
-        for ind, doc_results in enumerate(result):
-            doc_results["id"] = body["documents"][ind].get("id")
-        return result
-    else:
-        return result  # connexion problem
+        for document_results, document in zip(result, documents):
+            document_results["id"] = document.get("id")
+    return result
 
 
 def _suggest(project_id, documents, parameters):
-    corpus = DocumentList(
-        [
-            Document(
-                text=d["text"],
-                subject_set=None,
-            )
-            for d in documents
-        ]
-    )
-
+    corpus = _documents_to_corpus(documents, subject_index=None)
     try:
         project = annif.registry.get_project(project_id, min_access=Access.hidden)
     except ValueError:
@@ -142,28 +144,25 @@ def _suggest(project_id, documents, parameters):
     except AnnifException as err:
         return server_error(err)
 
-    return [
-        {
-            "results": [
-                _suggestion_to_dict(hit, project.subjects, lang)
-                for hit in hit_filter(hits).as_list()
-            ]
-        }
-        for hits in hit_sets
-    ]
+    return _hit_sets_to_list(hit_sets, hit_filter, project.subjects, lang)
 
 
 def _documents_to_corpus(documents, subject_index):
-    corpus = [
-        Document(
-            text=d["text"],
-            subject_set=SubjectSet(
-                [subject_index.by_uri(subj["uri"]) for subj in d["subjects"]]
-            ),
-        )
-        for d in documents
-        if "text" in d and "subjects" in d
-    ]
+    if subject_index is not None:
+        corpus = [
+            Document(
+                text=d["text"],
+                subject_set=SubjectSet(
+                    [subject_index.by_uri(subj["uri"]) for subj in d["subjects"]]
+                ),
+            )
+            for d in documents
+            if "text" in d and "subjects" in d
+        ]
+    else:
+        corpus = [
+            Document(text=d["text"], subject_set=None) for d in documents if "text" in d
+        ]
     return DocumentList(corpus)
 
 
