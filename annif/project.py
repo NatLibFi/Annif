@@ -234,10 +234,6 @@ class AnnifProject(DatadirMixin):
             else:
                 raise NotInitializedException("Project is not trained.")
         corpus = self.transform.transform_corpus(corpus)
-        logger.debug(
-            f"Suggesting subjects for a batch of {sum(1 for _ in corpus.documents)}"
-            " documents"
-        )
         return self._suggest_batch_with_backend(corpus, backend_params)
 
     def train(self, corpus, backend_params=None, jobs=0):
