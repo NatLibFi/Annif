@@ -111,14 +111,13 @@ def suggest_batch(project_id, body):
     formatted according to Swagger spec"""
 
     parameters = body.get("parameters", {})
-    result = _suggest(project_id, body["documents"], parameters)
+    documents = body["documents"]
+    result = _suggest(project_id, documents, parameters)
 
     if isinstance(result, list):
-        for ind, doc_results in enumerate(result):
-            doc_results["id"] = body["documents"][ind].get("id")
-        return result
-    else:
-        return result  # connexion problem
+        for document_results, document in zip(result, documents):
+            document_results["id"] = document.get("id")
+    return result
 
 
 def _suggest(project_id, documents, parameters):
@@ -149,18 +148,21 @@ def _suggest(project_id, documents, parameters):
 
 
 def _documents_to_corpus(documents, subject_index):
-    corpus = [
-        Document(
-            text=d["text"],
-            subject_set=SubjectSet(
-                [subject_index.by_uri(subj["uri"]) for subj in d["subjects"]]
+    if subject_index is not None:
+        corpus = [
+            Document(
+                text=d["text"],
+                subject_set=SubjectSet(
+                    [subject_index.by_uri(subj["uri"]) for subj in d["subjects"]]
+                ),
             )
-            if subject_index is not None
-            else None,
-        )
-        for d in documents
-        if "text" in d and ("subjects" in d or subject_index is None)
-    ]
+            for d in documents
+            if "text" in d and "subjects" in d
+        ]
+    else:
+        corpus = [
+            Document(text=d["text"], subject_set=None) for d in documents if "text" in d
+        ]
     return DocumentList(corpus)
 
 
