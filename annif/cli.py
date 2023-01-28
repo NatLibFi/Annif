@@ -86,8 +86,13 @@ def open_documents(paths, subject_index, vocab_lang, docs_limit):
 def open_text_documents(paths, docs_limit):
     docs = []
     for path in paths[:docs_limit]:
-        with open(path, errors="replace", encoding="utf-8-sig") as docfile:
-            docs.append(annif.corpus.Document(text=docfile.read(), subject_set=None))
+        if path == "-":
+            docs.append(annif.corpus.Document(text=sys.stdin.read(), subject_set=None))
+        else:
+            with open(path, errors="replace", encoding="utf-8-sig") as docfile:
+                docs.append(
+                    annif.corpus.Document(text=docfile.read(), subject_set=None)
+                )
     return annif.corpus.DocumentList(docs)
 
 
@@ -364,7 +369,9 @@ def run_learn(project_id, paths, docs_limit, backend_param):
 
 @cli.command("suggest")
 @click.argument("project_id")
-@click.argument("paths", type=click.Path(dir_okay=False, exists=True), nargs=-1)
+@click.argument(
+    "paths", type=click.Path(dir_okay=False, exists=True, allow_dash=True), nargs=-1
+)
 @click.option("--limit", "-l", default=10, help="Maximum number of subjects")
 @click.option("--threshold", "-t", default=0.0, help="Minimum score threshold")
 @click.option("--language", "-L", help="Language of subject labels")
@@ -394,8 +401,7 @@ def run_suggest(
     backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
-    if click.get_text_stream("stdin").isatty():
-
+    if paths and not (len(paths) == 1 and paths[0] == "-"):
         docs = open_text_documents(paths, docs_limit)
         subject_sets = project.suggest_batch(docs, backend_params)
         for (

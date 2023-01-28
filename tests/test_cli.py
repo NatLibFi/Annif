@@ -531,6 +531,15 @@ def test_suggest_file_nonexistent():
     )
 
 
+def test_suggest_dash_path():
+    result = runner.invoke(
+        annif.cli.cli, ["suggest", "dummy-fi", "-"], input="the cat sat on the mat"
+    )
+    assert not result.exception
+    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+    assert result.exit_code == 0
+
+
 def test_index(tmpdir):
     tmpdir.join("doc1.txt").write("nothing special")
 
