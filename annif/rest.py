@@ -31,16 +31,6 @@ def server_error(err):
     )
 
 
-def language_not_supported_error(lang):
-    """return a Connexion error object when attempting to use unsupported language"""
-
-    return connexion.problem(
-        status=400,
-        title="Bad Request",
-        detail=f'language "{lang}" not supported by vocabulary',
-    )
-
-
 def show_info():
     """return version of annif and a title for the api according to Swagger spec"""
 
@@ -78,91 +68,53 @@ def _suggestion_to_dict(suggestion, subject_index, language):
     }
 
 
-def _hit_sets_to_list(hit_sets, hit_filter, subjects, lang):
-    return [
-        {
-            "results": [
-                _suggestion_to_dict(hit, subjects, lang)
-                for hit in hit_filter(hits).as_list()
-            ]
-        }
-        for hits in hit_sets
-    ]
-
-
 def suggest(project_id, body):
     """suggest subjects for the given text and return a dict with results
     formatted according to Swagger spec"""
 
-    parameters = dict(
-        (key, body[key]) for key in ["language", "limit", "threshold"] if key in body
-    )
-    documents = [{"text": body["text"]}]
-    result = _suggest(project_id, documents, parameters)
-
-    if isinstance(result, list):
-        return result[0]  # successful operation
-    else:
-        return result  # connexion problem
-
-
-def suggest_batch(project_id, body):
-    """suggest subjects for the given documents and return a list of dicts with results
-    formatted according to Swagger spec"""
-
-    parameters = body.get("parameters", {})
-    documents = body["documents"]
-    result = _suggest(project_id, documents, parameters)
-
-    if isinstance(result, list):
-        for document_results, document in zip(result, documents):
-            document_results["id"] = document.get("id")
-    return result
-
-
-def _suggest(project_id, documents, parameters):
-    corpus = _documents_to_corpus(documents, subject_index=None)
     try:
         project = annif.registry.get_project(project_id, min_access=Access.hidden)
     except ValueError:
         return project_not_found_error(project_id)
 
     try:
-        lang = parameters.get("language") or project.vocab_lang
+        lang = body.get("language") or project.vocab_lang
     except AnnifException as err:
         return server_error(err)
 
     if lang not in project.vocab.languages:
-        return language_not_supported_error(lang)
+        return connexion.problem(
+            status=400,
+            title="Bad Request",
+            detail=f'language "{lang}" not supported by vocabulary',
+        )
 
-    limit = parameters.get("limit", 10)
-    threshold = parameters.get("threshold", 0.0)
+    limit = body.get("limit", 10)
+    threshold = body.get("threshold", 0.0)
 
     try:
         hit_filter = SuggestionFilter(project.subjects, limit, threshold)
-        hit_sets = project.suggest_batch(corpus)
+        result = project.suggest(body["text"])
     except AnnifException as err:
         return server_error(err)
 
-    return _hit_sets_to_list(hit_sets, hit_filter, project.subjects, lang)
+    hits = hit_filter(result).as_list()
+    return {
+        "results": [_suggestion_to_dict(hit, project.subjects, lang) for hit in hits]
+    }
 
 
 def _documents_to_corpus(documents, subject_index):
-    if subject_index is not None:
-        corpus = [
-            Document(
-                text=d["text"],
-                subject_set=SubjectSet(
-                    [subject_index.by_uri(subj["uri"]) for subj in d["subjects"]]
-                ),
-            )
-            for d in documents
-            if "text" in d and "subjects" in d
-        ]
-    else:
-        corpus = [
-            Document(text=d["text"], subject_set=None) for d in documents if "text" in d
-        ]
+    corpus = [
+        Document(
+            text=d["text"],
+            subject_set=SubjectSet(
+                [subject_index.by_uri(subj["uri"]) for subj in d["subjects"]]
+            ),
+        )
+        for d in documents
+        if "text" in d and "subjects" in d
+    ]
     return DocumentList(corpus)
 
 
