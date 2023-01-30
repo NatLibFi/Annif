@@ -84,16 +84,16 @@ def open_documents(paths, subject_index, vocab_lang, docs_limit):
 
 
 def open_text_documents(paths, docs_limit):
-    docs = []
-    for path in paths[:docs_limit]:
-        if path == "-":
-            docs.append(annif.corpus.Document(text=sys.stdin.read(), subject_set=None))
-        else:
-            with open(path, errors="replace", encoding="utf-8-sig") as docfile:
-                docs.append(
-                    annif.corpus.Document(text=docfile.read(), subject_set=None)
-                )
-    return annif.corpus.DocumentList(docs)
+    def _docs(paths):
+        for path in paths:
+            if path == "-":
+                doc = annif.corpus.Document(text=sys.stdin.read(), subject_set=None)
+            else:
+                with open(path, errors="replace", encoding="utf-8-sig") as docfile:
+                    doc = annif.corpus.Document(text=docfile.read(), subject_set=None)
+            yield doc
+
+    return annif.corpus.DocumentList(_docs(paths[:docs_limit]))
 
 
 def show_hits(hits, project, lang, file=None):
