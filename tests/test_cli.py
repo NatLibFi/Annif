@@ -512,6 +512,21 @@ def test_suggest_two_files_docs_limit(tmpdir):
     assert result.exit_code == 0
 
 
+def test_suggest_file_and_stdin(tmpdir):
+    docfile1 = tmpdir.join("doc-1.txt")
+    docfile1.write("nothing special")
+
+    result = runner.invoke(
+        annif.cli.cli, ["suggest", "dummy-fi", str(docfile1), "-"], input="kissa"
+    )
+
+    assert not result.exception
+    assert f"Suggestions for {docfile1}" in result.output
+    assert "Suggestions for -" in result.output
+    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0\n") == 2
+    assert result.exit_code == 0
+
+
 def test_suggest_file_nonexistent():
     failed_result = runner.invoke(
         annif.cli.cli, ["suggest", "dummy-fi", "nonexistent_path"]
