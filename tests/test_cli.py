@@ -7,7 +7,6 @@ import os.path
 import random
 import re
 import shutil
-from unittest import mock
 
 from click.testing import CliRunner
 
@@ -470,9 +469,7 @@ def test_suggest_file(tmpdir):
     docfile = tmpdir.join("doc.txt")
     docfile.write("nothing special")
 
-    with mock.patch("click.get_text_stream") as get_text_stream:
-        get_text_stream("stdin").isatty.return_value = True
-        result = runner.invoke(annif.cli.cli, ["suggest", "dummy-fi", str(docfile)])
+    result = runner.invoke(annif.cli.cli, ["suggest", "dummy-fi", str(docfile)])
 
     assert not result.exception
     assert f"Suggestions for {docfile}" in result.output
@@ -486,11 +483,9 @@ def test_suggest_two_files(tmpdir):
     docfile2 = tmpdir.join("doc-2.txt")
     docfile2.write("again nothing special")
 
-    with mock.patch("click.get_text_stream") as get_text_stream:
-        get_text_stream("stdin").isatty.return_value = True
-        result = runner.invoke(
-            annif.cli.cli, ["suggest", "dummy-fi", str(docfile1), str(docfile2)]
-        )
+    result = runner.invoke(
+        annif.cli.cli, ["suggest", "dummy-fi", str(docfile1), str(docfile2)]
+    )
 
     assert not result.exception
     assert f"Suggestions for {docfile1}" in result.output
@@ -505,12 +500,10 @@ def test_suggest_two_files_docs_limit(tmpdir):
     docfile2 = tmpdir.join("doc-2.txt")
     docfile2.write("again nothing special")
 
-    with mock.patch("click.get_text_stream") as get_text_stream:
-        get_text_stream("stdin").isatty.return_value = True
-        result = runner.invoke(
-            annif.cli.cli,
-            ["suggest", "dummy-fi", str(docfile1), str(docfile2), "--docs-limit", "1"],
-        )
+    result = runner.invoke(
+        annif.cli.cli,
+        ["suggest", "dummy-fi", str(docfile1), str(docfile2), "--docs-limit", "1"],
+    )
 
     assert not result.exception
     assert f"Suggestions for {docfile1}" in result.output
