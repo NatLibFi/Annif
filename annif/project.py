@@ -2,6 +2,7 @@
 
 import enum
 import os.path
+from itertools import islice
 from shutil import rmtree
 
 import annif
@@ -42,6 +43,7 @@ class AnnifProject(DatadirMixin):
 
     # default values for configuration settings
     DEFAULT_ACCESS = "public"
+    MINIBATCH_SIZE = 32
 
     def __init__(self, project_id, config, datadir, registry):
         DatadirMixin.__init__(self, datadir, "projects", project_id)
@@ -117,11 +119,24 @@ class AnnifProject(DatadirMixin):
         logger.debug("Got %d hits from backend %s", len(hits), self.backend.backend_id)
         return hits
 
+    def _batched(self, iterable, n):
+        # From https://docs.python.org/3/library/itertools.html#itertools-recipes
+        it = iter(iterable)
+        while True:
+            batch = list(islice(it, n))
+            if not batch:
+                return
+            yield batch
+
     def _suggest_batch_with_backend(self, corpus, backend_params):
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-        hit_sets = self.backend.suggest_batch(corpus, beparams)
+
+        hit_sets = []
+        for docs_minibatch in self._batched(corpus.documents, self.MINIBATCH_SIZE):
+            texts = [doc.text for doc in docs_minibatch]
+            hit_sets.extend(self.backend.suggest_batch(texts, beparams))
         logger.debug(
             "Got %d hit sets from backend %s", len(hit_sets), self.backend.backend_id
         )
