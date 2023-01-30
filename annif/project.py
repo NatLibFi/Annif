@@ -1,8 +1,8 @@
 """Project management functionality for Annif"""
 
 import enum
+import itertools
 import os.path
-from itertools import islice
 from shutil import rmtree
 
 import annif
@@ -123,7 +123,7 @@ class AnnifProject(DatadirMixin):
         # From https://docs.python.org/3/library/itertools.html#itertools-recipes
         it = iter(iterable)
         while True:
-            batch = list(islice(it, n))
+            batch = list(itertools.islice(it, n))
             if not batch:
                 return
             yield batch
@@ -132,15 +132,9 @@ class AnnifProject(DatadirMixin):
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-
-        hit_sets = []
         for docs_minibatch in self._batched(corpus.documents, self.MINIBATCH_SIZE):
             texts = [doc.text for doc in docs_minibatch]
-            hit_sets.extend(self.backend.suggest_batch(texts, beparams))
-        logger.debug(
-            "Got %d hit sets from backend %s", len(hit_sets), self.backend.backend_id
-        )
-        return hit_sets
+            yield self.backend.suggest_batch(texts, beparams)
 
     @property
     def analyzer(self):
@@ -249,7 +243,9 @@ class AnnifProject(DatadirMixin):
             else:
                 raise NotInitializedException("Project is not trained.")
         corpus = self.transform.transform_corpus(corpus)
-        return self._suggest_batch_with_backend(corpus, backend_params)
+        return itertools.chain.from_iterable(
+            self._suggest_batch_with_backend(corpus, backend_params)
+        )
 
     def train(self, corpus, backend_params=None, jobs=0):
         """train the project using documents from a metadata source"""
