@@ -454,7 +454,7 @@ def run_index(
     )
     subject_sets = project.suggest_batch(documents, backend_params)
 
-    for (docfilename, dummy_subjectfn), subjects in zip(documents, subject_sets):
+    for (docfilename, _), subjects in zip(documents, subject_sets):
         subjectfilename = re.sub(r"\.txt$", suffix, docfilename)
         if os.path.exists(subjectfilename) and not force:
             click.echo(
