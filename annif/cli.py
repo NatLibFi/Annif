@@ -127,14 +127,14 @@ def validate_backend_params(backend, beparam, project):
         )
 
 
-BATCH_MAX_LIMIT = 15
+FILTER_BATCH_MAX_LIMIT = 15
 
 
 def generate_filter_batches(subjects):
     import annif.eval
 
     filter_batches = collections.OrderedDict()
-    for limit in range(1, BATCH_MAX_LIMIT + 1):
+    for limit in range(1, FILTER_BATCH_MAX_LIMIT + 1):
         for threshold in [i * 0.05 for i in range(20)]:
             hit_filter = SuggestionFilter(subjects, limit, threshold)
             batch = annif.eval.EvaluationBatch(subjects)
@@ -403,7 +403,7 @@ def run_suggest(
 
     if paths and not (len(paths) == 1 and paths[0] == "-"):
         docs = open_text_documents(paths, docs_limit)
-        subject_sets = project.suggest_batch(docs, backend_params)
+        subject_sets = project.suggest_corpus(docs, backend_params)
         for (
             subjects,
             path,
@@ -452,7 +452,7 @@ def run_index(
     documents = annif.corpus.DocumentDirectory(
         directory, None, None, require_subjects=False
     )
-    subject_sets = project.suggest_batch(documents, backend_params)
+    subject_sets = project.suggest_corpus(documents, backend_params)
 
     for (docfilename, _), subjects in zip(documents, subject_sets):
         subjectfilename = re.sub(r"\.txt$", suffix, docfilename)
@@ -550,7 +550,7 @@ def run_eval(
                 "cannot open results-file for writing: " + str(e)
             )
     docs = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
-
+    corpus = annif.corpus.BatchingDocumentCorpus(docs)
     jobs, pool_class = annif.parallel.get_pool(jobs)
 
     project.initialize(parallel=True)
@@ -559,8 +559,11 @@ def run_eval(
     )
 
     with pool_class(jobs) as pool:
-        for hits, subject_set in pool.imap_unordered(psmap.suggest, docs.documents):
-            eval_batch.evaluate(hits[project_id], subject_set)
+        for hit_sets, subject_sets in pool.imap_unordered(
+            psmap.suggest_batch, corpus.doc_batches(project.DOC_BATCH_SIZE)
+        ):
+            for hits, subject_set in zip(hit_sets[project_id], subject_sets):
+                eval_batch.evaluate(hits, subject_set)
 
     template = "{0:<30}\t{1}"
     metrics = eval_batch.results(
@@ -606,16 +609,21 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
 
     ndocs = 0
     docs = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
-    for doc in docs.documents:
-        raw_hits = project.suggest(doc.text, backend_params)
-        hits = raw_hits.filter(project.subjects, limit=BATCH_MAX_LIMIT)
-        assert isinstance(hits, ListSuggestionResult), (
-            "Optimize should only be done with ListSuggestionResult "
-            + "as it would be very slow with VectorSuggestionResult."
-        )
-        for hit_filter, batch in filter_batches.values():
-            batch.evaluate(hit_filter(hits), doc.subject_set)
-        ndocs += 1
+    corpus = annif.corpus.BatchingDocumentCorpus(docs)
+
+    for docs_batch in corpus.doc_batches(project.DOC_BATCH_SIZE):
+        texts, subject_sets = zip(*[(doc.text, doc.subject_set) for doc in docs_batch])
+
+        raw_hit_sets = project.suggest_batch(texts, backend_params)
+        for raw_hits, subject_set in zip(raw_hit_sets, subject_sets):
+            hits = raw_hits.filter(project.subjects, limit=FILTER_BATCH_MAX_LIMIT)
+            assert isinstance(hits, ListSuggestionResult), (
+                "Optimize should only be done with ListSuggestionResult "
+                + "as it would be very slow with VectorSuggestionResult."
+            )
+            for hit_filter, filter_batch in filter_batches.values():
+                filter_batch.evaluate(hit_filter(hits), subject_set)
+            ndocs += 1
 
     click.echo("\t".join(("Limit", "Thresh.", "Prec.", "Rec.", "F1")))
 

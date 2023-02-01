@@ -235,9 +235,9 @@ def test_project_suggest_transform_limit(registry):
     assert len(result) == 0
 
 
-def test_project_suggest_batch(registry, fulltext_corpus):
+def test_project_suggest_corpus(registry, fulltext_corpus):
     project = registry.get_project("dummy-en")
-    result = list(project.suggest_batch(fulltext_corpus))
+    result = list(project.suggest_corpus(fulltext_corpus))
     assert len(result) == 28  # Number of documents
     first_doc_hits = result[0].as_list()
     assert len(first_doc_hits) == 1
@@ -247,9 +247,9 @@ def test_project_suggest_batch(registry, fulltext_corpus):
     assert first_doc_hits[0].score == 1.0
 
 
-def test_project_suggest_batch_transform_limit(registry, fulltext_corpus):
+def test_project_suggest_corpus_transform_limit(registry, fulltext_corpus):
     project = registry.get_project("limit-transform")
-    result = list(project.suggest_batch(fulltext_corpus))
+    result = list(project.suggest_corpus(fulltext_corpus))
     assert len(result) == 28  # Number of documents
     assert len(result[0]) == 0
 

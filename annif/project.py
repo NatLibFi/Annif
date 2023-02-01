@@ -43,7 +43,7 @@ class AnnifProject(DatadirMixin):
 
     # default values for configuration settings
     DEFAULT_ACCESS = "public"
-    MINIBATCH_SIZE = 32
+    DOC_BATCH_SIZE = 32
 
     def __init__(self, project_id, config, datadir, registry):
         DatadirMixin.__init__(self, datadir, "projects", project_id)
@@ -119,22 +119,11 @@ class AnnifProject(DatadirMixin):
         logger.debug("Got %d hits from backend %s", len(hits), self.backend.backend_id)
         return hits
 
-    def _batched(self, iterable, n):
-        # From https://docs.python.org/3/library/itertools.html#itertools-recipes
-        it = iter(iterable)
-        while True:
-            batch = list(itertools.islice(it, n))
-            if not batch:
-                return
-            yield batch
-
-    def _suggest_batch_with_backend(self, corpus, backend_params):
+    def _suggest_batch_with_backend(self, texts, backend_params):
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-        for docs_minibatch in self._batched(corpus.documents, self.MINIBATCH_SIZE):
-            texts = [doc.text for doc in docs_minibatch]
-            yield self.backend.suggest_batch(texts, beparams)
+        return self.backend.suggest_batch(texts, beparams)
 
     @property
     def analyzer(self):
@@ -234,18 +223,24 @@ class AnnifProject(DatadirMixin):
         logger.debug("%d hits from backend", len(hits))
         return hits
 
-    def suggest_batch(self, corpus, backend_params=None):
-        """Suggest subjects for the given documents using batches of documents in their
-        operations when possible."""
+    def suggest_corpus(self, corpus, backend_params=None):
+        """Suggest subjects for the given documents corpus in batches of documents."""
+        corpus = annif.corpus.BatchingDocumentCorpus(corpus)
+        suggestions = (
+            self.suggest_batch([doc.text for doc in doc_batch], backend_params)
+            for doc_batch in corpus.doc_batches(self.DOC_BATCH_SIZE)
+        )
+        return itertools.chain.from_iterable(suggestions)
+
+    def suggest_batch(self, texts, backend_params=None):
+        """Suggest subjects for the given documents batch."""
         if not self.is_trained:
             if self.is_trained is None:
                 logger.warning("Could not get train state information.")
             else:
                 raise NotInitializedException("Project is not trained.")
-        corpus = self.transform.transform_corpus(corpus)
-        return itertools.chain.from_iterable(
-            self._suggest_batch_with_backend(corpus, backend_params)
-        )
+        texts = [self.transform.transform_text(text) for text in texts]
+        return self._suggest_batch_with_backend(texts, backend_params)
 
     def train(self, corpus, backend_params=None, jobs=0):
         """train the project using documents from a metadata source"""
