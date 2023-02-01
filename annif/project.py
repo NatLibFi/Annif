@@ -225,7 +225,6 @@ class AnnifProject(DatadirMixin):
 
     def suggest_corpus(self, corpus, backend_params=None):
         """Suggest subjects for the given documents corpus in batches of documents."""
-        corpus = annif.corpus.BatchingDocumentCorpus(corpus)
         suggestions = (
             self.suggest_batch([doc.text for doc in doc_batch], backend_params)
             for doc_batch in corpus.doc_batches(self.DOC_BATCH_SIZE)

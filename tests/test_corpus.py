@@ -306,6 +306,23 @@ def test_docfile_is_empty(tmpdir, subject_index):
     assert docs.is_empty()
 
 
+def test_docfile_batches(tmpdir, subject_index):
+    docfile = tmpdir.join("documents.tsv")
+    docfile.write(
+        """Läntinen\t<http://www.yso.fi/onto/yso/p2557>
+        Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
+        Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>"""
+    )
+
+    docs = annif.corpus.DocumentFile(str(docfile), subject_index)
+    batches = docs.doc_batches(batch_size=1)
+    assert len(list(batches)) == 3
+    batches = docs.doc_batches(batch_size=3)
+    assert len(list(batches)) == 1
+    for batch in docs.doc_batches(batch_size=3):
+        assert len(batch) == 3  # Number of documents in the batch
+
+
 def test_combinedcorpus(tmpdir, subject_index):
     docfile = tmpdir.join("documents.tsv")
     docfile.write(

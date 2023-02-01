@@ -549,8 +549,7 @@ def run_eval(
             raise NotSupportedException(
                 "cannot open results-file for writing: " + str(e)
             )
-    docs = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
-    corpus = annif.corpus.BatchingDocumentCorpus(docs)
+    corpus = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
     jobs, pool_class = annif.parallel.get_pool(jobs)
 
     project.initialize(parallel=True)
@@ -608,8 +607,7 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     filter_batches = generate_filter_batches(project.subjects)
 
     ndocs = 0
-    docs = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
-    corpus = annif.corpus.BatchingDocumentCorpus(docs)
+    corpus = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
 
     for docs_batch in corpus.doc_batches(project.DOC_BATCH_SIZE):
         texts, subject_sets = zip(*[(doc.text, doc.subject_set) for doc in docs_batch])
