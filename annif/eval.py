@@ -92,8 +92,9 @@ def ndcg_score(y_true, y_pred, limit=None):
 
 class EvaluationBatch:
     """A class for evaluating batches of results using all available metrics.
-    The evaluate() method is called once per document in the batch.
-    Final results can be queried using the results() method."""
+    The evaluate() method is called once per document in the batch or evaluate_many()
+    for a list of documents of the batch. Final results can be queried using the
+    results() method."""
 
     def __init__(self, subject_index):
         self._subject_index = subject_index
@@ -101,6 +102,10 @@ class EvaluationBatch:
 
     def evaluate(self, hits, gold_subjects):
         self._samples.append((hits, gold_subjects))
+
+    def evaluate_many(self, hit_sets, gold_subject_sets):
+        for hits, gold_subjects in zip(hit_sets, gold_subject_sets):
+            self._samples.append((hits, gold_subjects))
 
     def _evaluate_samples(self, y_true, y_pred, metrics=[]):
         y_pred_binary = y_pred > 0.0

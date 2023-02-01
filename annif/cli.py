@@ -561,8 +561,7 @@ def run_eval(
         for hit_sets, subject_sets in pool.imap_unordered(
             psmap.suggest_batch, corpus.doc_batches(project.DOC_BATCH_SIZE)
         ):
-            for hits, subject_set in zip(hit_sets[project_id], subject_sets):
-                eval_batch.evaluate(hits, subject_set)
+            eval_batch.evaluate_many(hit_sets[project_id], subject_sets)
 
     template = "{0:<30}\t{1}"
     metrics = eval_batch.results(
@@ -608,20 +607,21 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
 
     ndocs = 0
     corpus = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
-
     for docs_batch in corpus.doc_batches(project.DOC_BATCH_SIZE):
         texts, subject_sets = zip(*[(doc.text, doc.subject_set) for doc in docs_batch])
-
         raw_hit_sets = project.suggest_batch(texts, backend_params)
-        for raw_hits, subject_set in zip(raw_hit_sets, subject_sets):
-            hits = raw_hits.filter(project.subjects, limit=FILTER_BATCH_MAX_LIMIT)
-            assert isinstance(hits, ListSuggestionResult), (
-                "Optimize should only be done with ListSuggestionResult "
-                + "as it would be very slow with VectorSuggestionResult."
-            )
-            for hit_filter, filter_batch in filter_batches.values():
-                filter_batch.evaluate(hit_filter(hits), subject_set)
-            ndocs += 1
+        hit_sets = [
+            raw_hits.filter(project.subjects, limit=FILTER_BATCH_MAX_LIMIT)
+            for raw_hits in raw_hit_sets
+        ]
+        assert isinstance(hit_sets[0], ListSuggestionResult), (
+            "Optimize should only be done with ListSuggestionResult "
+            + "as it would be very slow with VectorSuggestionResult."
+        )
+        for hit_filter, filter_batch in filter_batches.values():
+            filtered_hits = [hit_filter(hits) for hits in hit_sets]
+            filter_batch.evaluate_many(filtered_hits, subject_sets)
+        ndocs += len(texts)
 
     click.echo("\t".join(("Limit", "Thresh.", "Prec.", "Rec.", "F1")))
 
