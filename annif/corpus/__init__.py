@@ -3,6 +3,7 @@
 
 from .combine import CombinedCorpus
 from .document import (
+    BatchingDocumentCorpus,
     DocumentDirectory,
     DocumentFile,
     DocumentList,
@@ -27,4 +28,5 @@ __all__ = [
     "CombinedCorpus",
     "TransformingDocumentCorpus",
     "LimitingDocumentCorpus",
+    "BatchingDocumentCorpus",
 ]

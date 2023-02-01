@@ -124,3 +124,23 @@ class LimitingDocumentCorpus(DocumentCorpus):
     def documents(self):
         for doc in islice(self._orig_corpus.documents, self.docs_limit):
             yield doc
+
+
+class BatchingDocumentCorpus(DocumentCorpus):
+    """A document corpus that wraps another document corpus to allow iterating over the
+    documents in batches of a given size; a batch is a list of documents."""
+
+    def __init__(self, corpus):
+        self._orig_corpus = corpus
+
+    @property
+    def documents(self):
+        yield from self._orig_corpus.documents
+
+    def doc_batches(self, batch_size):
+        it = iter(self.documents)
+        while True:
+            docs_batch = list(islice(it, batch_size))
+            if not docs_batch:
+                return
+            yield docs_batch
