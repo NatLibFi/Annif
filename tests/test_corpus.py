@@ -317,10 +317,10 @@ def test_docfile_batches(tmpdir, subject_index):
     docs = annif.corpus.DocumentFile(str(docfile), subject_index)
     docs.DOC_BATCH_SIZE = 1
     assert len(list(docs.doc_batches)) == 3
+    assert len(list(docs.doc_batches)[0]) == 1
     docs.DOC_BATCH_SIZE = 3
     assert len(list(docs.doc_batches)) == 1
-    for batch in docs.doc_batches:
-        assert len(batch) == 3  # Number of documents in the batch
+    assert len(list(docs.doc_batches)[0]) == 3
 
 
 def test_combinedcorpus(tmpdir, subject_index):
