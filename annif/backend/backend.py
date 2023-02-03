@@ -73,10 +73,10 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         parallel operation."""
         pass
 
-    @abc.abstractmethod
     def _suggest(self, text, params):
-        """This method should implemented by backends. It implements
-        the suggest functionality, with pre-processed parameters."""
+        """Either this method or _suggest_batch should be implemented by by
+        backends.  It implements the suggest functionality for a single
+        document, with pre-processed parameters."""
         pass  # pragma: no cover
 
     def _suggest_batch(self, texts, params):

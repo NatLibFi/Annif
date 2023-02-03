@@ -157,7 +157,12 @@ A backend can define these key fields and methods:
 * `name`: field for a name for the backend (a single word, all lowercase)
 * `initialize` (optional): method setting up the necessary internal data structures
 * `_train` (optional): method for training the model on a given document corpus
-* `_suggest`: method for feeding a single document (text) and getting suggested subjects
+* `_suggest`: method for feeding a single document (text) and getting suggested subjects for it
+* `_suggest_batch`: method for feeding a batch of documents (texts) and getting suggested subjects for each of them
+
+It is only necessary to implement either `_suggest` or `_suggest_batch`, but
+not both. Processing batches is often more efficient and should be used if
+possible.
 
 Learning backends additionally implement:
 
