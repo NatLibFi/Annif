@@ -131,6 +131,7 @@ paths:
               properties:
                 documents:
                   type: array
+                  maxItems: 32
                   items:
                     $ref: '#/components/schemas/Document'
                 parameters:
