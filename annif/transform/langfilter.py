@@ -11,7 +11,6 @@ logger = annif.logger
 
 
 class LangFilter(transform.BaseTransform):
-
     name = "filter_lang"
 
     def __init__(

@@ -23,7 +23,6 @@ _KEY_USE_TXT_VEC = "use_txt_vec"
 
 
 class StwfsaBackend(backend.AnnifBackend):
-
     name = "stwfsa"
 
     STWFSA_PARAMETERS = {

@@ -91,7 +91,6 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
             for cid in np.flatnonzero(
                 doc.subject_set.as_vector(len(source_project.subjects))
             ):
-
                 trow.append(docid)
                 tcol.append(cid)
             ndocs += 1
