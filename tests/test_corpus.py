@@ -315,11 +315,11 @@ def test_docfile_batches(tmpdir, subject_index):
     )
 
     docs = annif.corpus.DocumentFile(str(docfile), subject_index)
-    batches = docs.doc_batches(batch_size=1)
-    assert len(list(batches)) == 3
-    batches = docs.doc_batches(batch_size=3)
-    assert len(list(batches)) == 1
-    for batch in docs.doc_batches(batch_size=3):
+    docs.DOC_BATCH_SIZE = 1
+    assert len(list(docs.doc_batches)) == 3
+    docs.DOC_BATCH_SIZE = 3
+    assert len(list(docs.doc_batches)) == 1
+    for batch in docs.doc_batches:
         assert len(batch) == 3  # Number of documents in the batch
 
 

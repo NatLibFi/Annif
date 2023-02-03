@@ -43,7 +43,6 @@ class AnnifProject(DatadirMixin):
 
     # default values for configuration settings
     DEFAULT_ACCESS = "public"
-    DOC_BATCH_SIZE = 32
 
     def __init__(self, project_id, config, datadir, registry):
         DatadirMixin.__init__(self, datadir, "projects", project_id)
@@ -227,7 +226,7 @@ class AnnifProject(DatadirMixin):
         """Suggest subjects for the given documents corpus in batches of documents."""
         suggestions = (
             self.suggest_batch([doc.text for doc in doc_batch], backend_params)
-            for doc_batch in corpus.doc_batches(self.DOC_BATCH_SIZE)
+            for doc_batch in corpus.doc_batches
         )
         return itertools.chain.from_iterable(suggestions)
 

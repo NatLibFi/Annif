@@ -559,7 +559,7 @@ def run_eval(
 
     with pool_class(jobs) as pool:
         for hit_sets, subject_sets in pool.imap_unordered(
-            psmap.suggest_batch, corpus.doc_batches(project.DOC_BATCH_SIZE)
+            psmap.suggest_batch, corpus.doc_batches
         ):
             eval_batch.evaluate_many(hit_sets[project_id], subject_sets)
 
@@ -607,7 +607,7 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
 
     ndocs = 0
     corpus = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
-    for docs_batch in corpus.doc_batches(project.DOC_BATCH_SIZE):
+    for docs_batch in corpus.doc_batches:
         texts, subject_sets = zip(*[(doc.text, doc.subject_set) for doc in docs_batch])
         raw_hit_sets = project.suggest_batch(texts, backend_params)
         hit_sets = [
