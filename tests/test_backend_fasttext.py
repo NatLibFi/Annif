@@ -182,13 +182,15 @@ def test_fasttext_suggest(project):
     )
 
     results = fasttext.suggest(
-        """Arkeologiaa sanotaan joskus myös
+        [
+            """Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan."""
-    )
+        ]
+    )[0]
 
     assert len(results) > 0
     hits = results.as_list()

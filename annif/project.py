@@ -1,6 +1,7 @@
 """Project management functionality for Annif"""
 
 import enum
+import itertools
 import os.path
 from shutil import rmtree
 
@@ -109,13 +110,11 @@ class AnnifProject(DatadirMixin):
 
         self.initialized = True
 
-    def _suggest_with_backend(self, text, backend_params):
+    def _suggest_with_backend(self, texts, backend_params):
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-        hits = self.backend.suggest(text, beparams)
-        logger.debug("Got %d hits from backend %s", len(hits), self.backend.backend_id)
-        return hits
+        return self.backend.suggest(texts, beparams)
 
     @property
     def analyzer(self):
@@ -199,21 +198,23 @@ class AnnifProject(DatadirMixin):
     def modification_time(self):
         return self._get_info("modification_time")
 
-    def suggest(self, text, backend_params=None):
-        """Suggest subjects the given text by passing it to the backend. Returns a
-        list of SubjectSuggestion objects ordered by decreasing score."""
+    def suggest_corpus(self, corpus, backend_params=None):
+        """Suggest subjects for the given documents corpus in batches of documents."""
+        suggestions = (
+            self.suggest([doc.text for doc in doc_batch], backend_params)
+            for doc_batch in corpus.doc_batches
+        )
+        return itertools.chain.from_iterable(suggestions)
+
+    def suggest(self, texts, backend_params=None):
+        """Suggest subjects for the given documents batch."""
         if not self.is_trained:
             if self.is_trained is None:
                 logger.warning("Could not get train state information.")
             else:
                 raise NotInitializedException("Project is not trained.")
-        logger.debug(
-            'Suggesting subjects for text "%s..." (len=%d)', text[:20], len(text)
-        )
-        text = self.transform.transform_text(text)
-        hits = self._suggest_with_backend(text, backend_params)
-        logger.debug("%d hits from backend", len(hits))
-        return hits
+        texts = [self.transform.transform_text(text) for text in texts]
+        return self._suggest_with_backend(texts, backend_params)
 
     def train(self, corpus, backend_params=None, jobs=0):
         """train the project using documents from a metadata source"""

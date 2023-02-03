@@ -83,6 +83,30 @@ def open_documents(paths, subject_index, vocab_lang, docs_limit):
     return docs
 
 
+def open_text_documents(paths, docs_limit):
+    def _docs(paths):
+        for path in paths:
+            if path == "-":
+                doc = annif.corpus.Document(text=sys.stdin.read(), subject_set=None)
+            else:
+                with open(path, errors="replace", encoding="utf-8-sig") as docfile:
+                    doc = annif.corpus.Document(text=docfile.read(), subject_set=None)
+            yield doc
+
+    return annif.corpus.DocumentList(_docs(paths[:docs_limit]))
+
+
+def show_hits(hits, project, lang, file=None):
+    for hit in hits.as_list():
+        subj = project.subjects[hit.subject_id]
+        line = "<{}>\t{}\t{}".format(
+            subj.uri,
+            "\t".join(filter(None, (subj.labels[lang], subj.notation))),
+            hit.score,
+        )
+        click.echo(line, file=file)
+
+
 def parse_backend_params(backend_param, project):
     """Parse a list of backend parameters given with the --backend-param
     option into a nested dict structure"""
@@ -103,14 +127,14 @@ def validate_backend_params(backend, beparam, project):
         )
 
 
-BATCH_MAX_LIMIT = 15
+FILTER_BATCH_MAX_LIMIT = 15
 
 
 def generate_filter_batches(subjects):
     import annif.eval
 
     filter_batches = collections.OrderedDict()
-    for limit in range(1, BATCH_MAX_LIMIT + 1):
+    for limit in range(1, FILTER_BATCH_MAX_LIMIT + 1):
         for threshold in [i * 0.05 for i in range(20)]:
             hit_filter = SuggestionFilter(subjects, limit, threshold)
             batch = annif.eval.EvaluationBatch(subjects)
@@ -345,35 +369,52 @@ def run_learn(project_id, paths, docs_limit, backend_param):
 
 @cli.command("suggest")
 @click.argument("project_id")
+@click.argument(
+    "paths", type=click.Path(dir_okay=False, exists=True, allow_dash=True), nargs=-1
+)
 @click.option("--limit", "-l", default=10, help="Maximum number of subjects")
 @click.option("--threshold", "-t", default=0.0, help="Minimum score threshold")
 @click.option("--language", "-L", help="Language of subject labels")
+@click.option(
+    "--docs-limit",
+    "-d",
+    default=None,
+    type=click.IntRange(0, None),
+    help="Maximum number of documents to use",
+)
 @backend_param_option
 @common_options
-def run_suggest(project_id, limit, threshold, language, backend_param):
+def run_suggest(
+    project_id, paths, limit, threshold, language, backend_param, docs_limit
+):
     """
-    Suggest subjects for a single document from standard input.
+    Suggest subjects for a single document from standard input or for one or more
+    document file(s) given its/their path(s).
     \f
     This will read a text document from standard input and suggest subjects for
-    it.
+    it, or if given path(s) to file(s), suggest subjects for it/them.
     """
     project = get_project(project_id)
-    text = sys.stdin.read()
     lang = language or project.vocab_lang
     if lang not in project.vocab.languages:
         raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
     backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
-    hits = hit_filter(project.suggest(text, backend_params))
-    for hit in hits.as_list():
-        subj = project.subjects[hit.subject_id]
-        click.echo(
-            "<{}>\t{}\t{}".format(
-                subj.uri,
-                "\t".join(filter(None, (subj.labels[lang], subj.notation))),
-                hit.score,
-            )
-        )
+
+    if paths and not (len(paths) == 1 and paths[0] == "-"):
+        docs = open_text_documents(paths, docs_limit)
+        subject_sets = project.suggest_corpus(docs, backend_params)
+        for (
+            subjects,
+            path,
+        ) in zip(subject_sets, paths):
+            click.echo(f"Suggestions for {path}")
+            hits = hit_filter(subjects)
+            show_hits(hits, project, lang)
+    else:
+        text = sys.stdin.read()
+        hits = hit_filter(project.suggest([text], backend_params)[0])
+        show_hits(hits, project, lang)
 
 
 @cli.command("index")
@@ -408,27 +449,21 @@ def run_index(
     backend_params = parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
-    for docfilename, dummy_subjectfn in annif.corpus.DocumentDirectory(
-        directory, project.subjects, project.vocab_lang, require_subjects=False
-    ):
-        with open(docfilename, encoding="utf-8-sig") as docfile:
-            text = docfile.read()
+    documents = annif.corpus.DocumentDirectory(
+        directory, None, None, require_subjects=False
+    )
+    subject_sets = project.suggest_corpus(documents, backend_params)
+
+    for (docfilename, _), subjects in zip(documents, subject_sets):
         subjectfilename = re.sub(r"\.txt$", suffix, docfilename)
         if os.path.exists(subjectfilename) and not force:
             click.echo(
                 "Not overwriting {} (use --force to override)".format(subjectfilename)
             )
             continue
+        hits = hit_filter(subjects)
         with open(subjectfilename, "w", encoding="utf-8") as subjfile:
-            results = project.suggest(text, backend_params)
-            for hit in hit_filter(results).as_list():
-                subj = project.subjects[hit.subject_id]
-                line = "<{}>\t{}\t{}".format(
-                    subj.uri,
-                    "\t".join(filter(None, (subj.labels[lang], subj.notation))),
-                    hit.score,
-                )
-                click.echo(line, file=subjfile)
+            show_hits(hits, project, lang, file=subjfile)
 
 
 @cli.command("eval")
@@ -514,8 +549,7 @@ def run_eval(
             raise NotSupportedException(
                 "cannot open results-file for writing: " + str(e)
             )
-    docs = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
-
+    corpus = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
     jobs, pool_class = annif.parallel.get_pool(jobs)
 
     project.initialize(parallel=True)
@@ -524,8 +558,10 @@ def run_eval(
     )
 
     with pool_class(jobs) as pool:
-        for hits, subject_set in pool.imap_unordered(psmap.suggest, docs.documents):
-            eval_batch.evaluate(hits[project_id], subject_set)
+        for hit_sets, subject_sets in pool.imap_unordered(
+            psmap.suggest_batch, corpus.doc_batches
+        ):
+            eval_batch.evaluate_many(hit_sets[project_id], subject_sets)
 
     template = "{0:<30}\t{1}"
     metrics = eval_batch.results(
@@ -570,17 +606,22 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     filter_batches = generate_filter_batches(project.subjects)
 
     ndocs = 0
-    docs = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
-    for doc in docs.documents:
-        raw_hits = project.suggest(doc.text, backend_params)
-        hits = raw_hits.filter(project.subjects, limit=BATCH_MAX_LIMIT)
-        assert isinstance(hits, ListSuggestionResult), (
+    corpus = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
+    for docs_batch in corpus.doc_batches:
+        texts, subject_sets = zip(*[(doc.text, doc.subject_set) for doc in docs_batch])
+        raw_hit_sets = project.suggest(texts, backend_params)
+        hit_sets = [
+            raw_hits.filter(project.subjects, limit=FILTER_BATCH_MAX_LIMIT)
+            for raw_hits in raw_hit_sets
+        ]
+        assert isinstance(hit_sets[0], ListSuggestionResult), (
             "Optimize should only be done with ListSuggestionResult "
             + "as it would be very slow with VectorSuggestionResult."
         )
-        for hit_filter, batch in filter_batches.values():
-            batch.evaluate(hit_filter(hits), doc.subject_set)
-        ndocs += 1
+        for hit_filter, filter_batch in filter_batches.values():
+            filtered_hits = [hit_filter(hits) for hits in hit_sets]
+            filter_batch.evaluate_many(filtered_hits, subject_sets)
+        ndocs += len(texts)
 
     click.echo("\t".join(("Limit", "Thresh.", "Prec.", "Rec.", "F1")))
 

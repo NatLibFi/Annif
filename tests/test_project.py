@@ -185,7 +185,7 @@ def test_project_learn(registry, tmpdir):
     project = registry.get_project("dummy-fi")
     docdir = annif.corpus.DocumentDirectory(str(tmpdir), project.subjects, "en")
     project.learn(docdir)
-    result = project.suggest("this is some text")
+    result = project.suggest(["this is some text"])[0]
     assert len(result) == 1
     hits = result.as_list()
     assert hits[0].subject_id == project.subjects.by_uri("http://example.org/none")
@@ -222,18 +222,43 @@ def test_project_train_fasttext(registry, document_corpus, testdatadir):
 
 def test_project_suggest(registry):
     project = registry.get_project("dummy-en")
-    result = project.suggest("this is some text")
+    result = project.suggest(["this is some text"])[0]
     assert len(result) == 1
     hits = result.as_list()
     assert hits[0].subject_id == project.subjects.by_uri("http://example.org/dummy")
     assert hits[0].score == 1.0
 
 
+def test_project_suggest_transform_limit(registry):
+    project = registry.get_project("limit-transform")
+    result = project.suggest(["this is some text"])[0]
+    assert len(result) == 0
+
+
+def test_project_suggest_corpus(registry, fulltext_corpus):
+    project = registry.get_project("dummy-en")
+    result = list(project.suggest_corpus(fulltext_corpus))
+    assert len(result) == 28  # Number of documents
+    first_doc_hits = result[0].as_list()
+    assert len(first_doc_hits) == 1
+    assert first_doc_hits[0].subject_id == project.subjects.by_uri(
+        "http://example.org/dummy"
+    )
+    assert first_doc_hits[0].score == 1.0
+
+
+def test_project_suggest_corpus_transform_limit(registry, fulltext_corpus):
+    project = registry.get_project("limit-transform")
+    result = list(project.suggest_corpus(fulltext_corpus))
+    assert len(result) == 28  # Number of documents
+    assert len(result[0]) == 0
+
+
 def test_project_train_state_not_available(registry, caplog):
     project = registry.get_project("dummy-vocablang")
     project.backend.is_trained = None
     with caplog.at_level(logging.WARNING):
-        result = project.suggest("this is some text")
+        result = project.suggest(["this is some text"])[0]
     assert project.is_trained is None
     assert len(result) == 1
     hits = result.as_list()
@@ -277,6 +302,6 @@ def test_project_file_toml():
 def test_project_directory():
     app = annif.create_app(config_name="annif.default_config.TestingDirectoryConfig")
     with app.app_context():
-        assert len(annif.registry.get_projects()) == 17 + 2
+        assert len(annif.registry.get_projects()) == 18 + 2
         assert annif.registry.get_project("dummy-fi").project_id == "dummy-fi"
         assert annif.registry.get_project("dummy-fi-toml").project_id == "dummy-fi-toml"

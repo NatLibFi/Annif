@@ -30,13 +30,15 @@ def test_tfidf_suggest(project):
     tfidf = tfidf_type(backend_id="tfidf", config_params={"limit": 10}, project=project)
 
     results = tfidf.suggest(
-        """Arkeologiaa sanotaan joskus myös
+        [
+            """Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan."""
-    )
+        ]
+    )[0]
 
     assert len(results) == 10
     hits = results.as_list()
@@ -50,14 +52,16 @@ def test_suggest_params(project):
     params = {"limit": 3}
 
     results = tfidf.suggest(
-        """Arkeologiaa sanotaan joskus myös
+        [
+            """Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
-        pohjaan.""",
+        pohjaan."""
+        ],
         params,
-    )
+    )[0]
     assert len(results) == 3
 
 
@@ -65,6 +69,6 @@ def test_tfidf_suggest_unknown(project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(backend_id="tfidf", config_params={"limit": 10}, project=project)
 
-    results = tfidf.suggest("abcdefghijk")  # unknown word
+    results = tfidf.suggest(["abcdefghijk"])[0]  # unknown word
 
     assert len(results) == 0

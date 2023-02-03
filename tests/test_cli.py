@@ -465,6 +465,89 @@ def test_suggest_ensemble():
     assert result.exit_code == 0
 
 
+def test_suggest_file(tmpdir):
+    docfile = tmpdir.join("doc.txt")
+    docfile.write("nothing special")
+
+    result = runner.invoke(annif.cli.cli, ["suggest", "dummy-fi", str(docfile)])
+
+    assert not result.exception
+    assert f"Suggestions for {docfile}" in result.output
+    assert "<http://example.org/dummy>\tdummy-fi\t1.0\n" in result.output
+    assert result.exit_code == 0
+
+
+def test_suggest_two_files(tmpdir):
+    docfile1 = tmpdir.join("doc-1.txt")
+    docfile1.write("nothing special")
+    docfile2 = tmpdir.join("doc-2.txt")
+    docfile2.write("again nothing special")
+
+    result = runner.invoke(
+        annif.cli.cli, ["suggest", "dummy-fi", str(docfile1), str(docfile2)]
+    )
+
+    assert not result.exception
+    assert f"Suggestions for {docfile1}" in result.output
+    assert f"Suggestions for {docfile2}" in result.output
+    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0\n") == 2
+    assert result.exit_code == 0
+
+
+def test_suggest_two_files_docs_limit(tmpdir):
+    docfile1 = tmpdir.join("doc-1.txt")
+    docfile1.write("nothing special")
+    docfile2 = tmpdir.join("doc-2.txt")
+    docfile2.write("again nothing special")
+
+    result = runner.invoke(
+        annif.cli.cli,
+        ["suggest", "dummy-fi", str(docfile1), str(docfile2), "--docs-limit", "1"],
+    )
+
+    assert not result.exception
+    assert f"Suggestions for {docfile1}" in result.output
+    assert f"Suggestions for {docfile2}" not in result.output
+    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0\n") == 1
+    assert result.exit_code == 0
+
+
+def test_suggest_file_and_stdin(tmpdir):
+    docfile1 = tmpdir.join("doc-1.txt")
+    docfile1.write("nothing special")
+
+    result = runner.invoke(
+        annif.cli.cli, ["suggest", "dummy-fi", str(docfile1), "-"], input="kissa"
+    )
+
+    assert not result.exception
+    assert f"Suggestions for {docfile1}" in result.output
+    assert "Suggestions for -" in result.output
+    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0\n") == 2
+    assert result.exit_code == 0
+
+
+def test_suggest_file_nonexistent():
+    failed_result = runner.invoke(
+        annif.cli.cli, ["suggest", "dummy-fi", "nonexistent_path"]
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert (
+        "Invalid value for '[PATHS]...': "
+        "File 'nonexistent_path' does not exist." in failed_result.output
+    )
+
+
+def test_suggest_dash_path():
+    result = runner.invoke(
+        annif.cli.cli, ["suggest", "dummy-fi", "-"], input="the cat sat on the mat"
+    )
+    assert not result.exception
+    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+    assert result.exit_code == 0
+
+
 def test_index(tmpdir):
     tmpdir.join("doc1.txt").write("nothing special")
 

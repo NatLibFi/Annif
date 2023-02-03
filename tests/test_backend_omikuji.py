@@ -122,13 +122,15 @@ def test_omikuji_suggest(project):
     )
 
     results = omikuji.suggest(
-        """Arkeologiaa sanotaan joskus myös
+        [
+            """Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan."""
-    )
+        ]
+    )[0]
 
     assert len(results) > 0
     assert len(results) <= 8
@@ -143,7 +145,7 @@ def test_omikuji_suggest_no_input(project):
         backend_id="omikuji", config_params={"limit": 8}, project=project
     )
 
-    results = omikuji.suggest("j")
+    results = omikuji.suggest(["j"])[0]
     assert len(results) == 0
 
 
@@ -153,4 +155,4 @@ def test_omikuji_suggest_no_model(datadir, project):
 
     datadir.join("omikuji-model").remove()
     with pytest.raises(NotInitializedException):
-        omikuji.suggest("example text")
+        omikuji.suggest(["example text"])[0]

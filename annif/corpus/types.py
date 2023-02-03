@@ -2,6 +2,7 @@
 
 import abc
 import collections
+from itertools import islice
 
 Document = collections.namedtuple("Document", "text subject_set")
 
@@ -9,11 +10,24 @@ Document = collections.namedtuple("Document", "text subject_set")
 class DocumentCorpus(metaclass=abc.ABCMeta):
     """Abstract base class for document corpora"""
 
+    DOC_BATCH_SIZE = 32
+
     @property
     @abc.abstractmethod
     def documents(self):
         """Iterate through the document corpus, yielding Document objects."""
         pass  # pragma: no cover
+
+    @property
+    def doc_batches(self):
+        """Iterate through the document corpus in batches, yielding lists of Document
+        objects."""
+        it = iter(self.documents)
+        while True:
+            docs_batch = list(islice(it, self.DOC_BATCH_SIZE))
+            if not docs_batch:
+                return
+            yield docs_batch
 
     def is_empty(self):
         """Check if there are no documents to iterate."""

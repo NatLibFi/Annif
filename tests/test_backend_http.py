@@ -31,7 +31,7 @@ def test_http_suggest(app_project):
             },
             project=app_project,
         )
-        result = http.suggest("this is some text")
+        result = http.suggest(["this is some text"])[0]
         assert len(result) == 1
         hits = result.as_list()
         assert hits[0].subject_id is not None
@@ -74,7 +74,7 @@ def test_http_suggest_with_results(app_project):
             )
         )
 
-        result = http.suggest("this is some text")
+        result = http.suggest(["this is some text"])[0]
         assert len(result) == 1
         hits = result.as_list()
         assert hits[0].subject_id is not None
@@ -103,7 +103,7 @@ def test_http_suggest_zero_score(project):
             },
             project=project,
         )
-        result = http.suggest("this is some text")
+        result = http.suggest(["this is some text"])[0]
         assert len(result) == 0
 
 
@@ -120,7 +120,7 @@ def test_http_suggest_error(project):
             },
             project=project,
         )
-        result = http.suggest("this is some text")
+        result = http.suggest(["this is some text"])[0]
         assert len(result) == 0
 
 
@@ -141,7 +141,7 @@ def test_http_suggest_json_fails(project):
             },
             project=project,
         )
-        result = http.suggest("this is some text")
+        result = http.suggest(["this is some text"])[0]
         assert len(result) == 0
 
 
@@ -162,7 +162,7 @@ def test_http_suggest_unexpected_json(project):
             },
             project=project,
         )
-        result = http.suggest("this is some text")
+        result = http.suggest(["this is some text"])[0]
         assert len(result) == 0
 
 

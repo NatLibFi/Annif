@@ -41,7 +41,7 @@ def test_stwfsa_not_initialized(project):
     stwfsa_type = get_backend(StwfsaBackend.name)
     stwfsa = stwfsa_type(backend_id="stwfsa", config_params={}, project=project)
     with pytest.raises(NotInitializedException):
-        stwfsa.suggest("example text")
+        stwfsa.suggest(["example text"])[0]
 
 
 def test_stwfsa_train(document_corpus, project, datadir):
@@ -81,7 +81,7 @@ def test_stwfsa_suggest_unknown(project):
     stwfsa = stwfsa_type(
         backend_id=StwfsaBackend.name, config_params=dict(), project=project
     )
-    results = stwfsa.suggest("1234")
+    results = stwfsa.suggest(["1234"])[0]
     assert len(results) == 0
 
 
@@ -93,7 +93,8 @@ def test_stwfsa_suggest(project, datadir):
     # Just some randomly selected words, taken from YSO archaeology group.
     # And "random" words between them
     results = stwfsa.suggest(
-        """random
+        [
+            """random
     muinais-DNA random random
     labyrintit random random random
     Eurooppalainen yleissopimus arkeologisen perinnön suojelusta random
@@ -104,7 +105,8 @@ def test_stwfsa_suggest(project, datadir):
     muinaismuistoalueet  random random random
     zikkuratit random random
     termoluminesenssi random random random"""
-    )
+        ]
+    )[0]
     assert len(results) == 10
     hits = results.as_list()
     labyrinths = project.subjects.by_uri("http://www.yso.fi/onto/yso/p14174")

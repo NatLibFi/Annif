@@ -37,7 +37,7 @@ def test_nn_ensemble_suggest_no_model(project):
     )
 
     with pytest.raises(NotInitializedException):
-        nn_ensemble.suggest("example text")
+        nn_ensemble.suggest(["example text"])[0]
 
 
 def test_nn_ensemble_is_not_trained(app_project):
@@ -242,13 +242,15 @@ def test_nn_ensemble_suggest(app_project):
     )
 
     results = nn_ensemble.suggest(
-        """Arkeologiaa sanotaan joskus myös
+        [
+            """Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen
         tiede tai oikeammin joukko tieteitä, jotka tutkivat ihmisen
         menneisyyttä. Tutkimusta tehdään analysoimalla muinaisjäännöksiä
         eli niitä jälkiä, joita ihmisten toiminta on jättänyt maaperään
         tai vesistöjen pohjaan."""
-    )
+        ]
+    )[0]
 
     assert nn_ensemble._model is not None
     assert len(results) > 0

@@ -22,6 +22,13 @@ class DummyBackend(backend.AnnifLearningBackend):
     def _suggest(self, text, params):
         score = float(params.get("score", 1.0))
 
+        # Ensure tests fail if "text" with wrong type ends up here
+        assert isinstance(text, str)
+
+        # Give no hits for no text
+        if len(text) == 0:
+            return ListSuggestionResult([])
+
         # allow overriding returned subject via uri parameter
         if "uri" in params:
             subject_id = self.project.subjects.by_uri(params["uri"])
