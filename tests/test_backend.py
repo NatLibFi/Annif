@@ -17,7 +17,7 @@ def test_get_backend_nonexistent():
 def test_get_backend_dummy(project, dummy_subject_index):
     dummy_type = annif.backend.get_backend("dummy")
     dummy = dummy_type(backend_id="dummy", config_params={}, project=project)
-    result = dummy.suggest(text="this is some text")
+    result = dummy.suggest(["this is some text"])[0]
     assert len(result) == 1
     hits = result.as_list()
     assert hits[0].subject_id == dummy_subject_index.by_uri("http://example.org/dummy")
@@ -36,7 +36,7 @@ def test_learn_dummy(project, tmpdir):
 
     dummy.learn(docdir)
 
-    result = dummy.suggest(text="this is some text")
+    result = dummy.suggest(["this is some text"])[0]
     assert len(result) == 1
     hits = result.as_list()
     assert hits[0].subject_id is not None

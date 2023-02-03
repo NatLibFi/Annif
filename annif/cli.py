@@ -413,7 +413,7 @@ def run_suggest(
             show_hits(hits, project, lang)
     else:
         text = sys.stdin.read()
-        hits = hit_filter(project.suggest(text, backend_params))
+        hits = hit_filter(project.suggest([text], backend_params)[0])
         show_hits(hits, project, lang)
 
 
@@ -609,7 +609,7 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     corpus = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
     for docs_batch in corpus.doc_batches:
         texts, subject_sets = zip(*[(doc.text, doc.subject_set) for doc in docs_batch])
-        raw_hit_sets = project.suggest_batch(texts, backend_params)
+        raw_hit_sets = project.suggest(texts, backend_params)
         hit_sets = [
             raw_hits.filter(project.subjects, limit=FILTER_BATCH_MAX_LIMIT)
             for raw_hits in raw_hit_sets

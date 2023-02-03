@@ -79,13 +79,15 @@ def test_mllm_suggest(project):
     )
 
     results = mllm.suggest(
-        """Arkeologia on tieteenala, jota sanotaan joskus
+        [
+            """Arkeologia on tieteenala, jota sanotaan joskus
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan."""
-    )
+        ]
+    )[0]
 
     assert len(results) > 0
     assert len(results) <= 8
@@ -100,7 +102,7 @@ def test_mllm_suggest_no_matches(project):
         backend_id="mllm", config_params={"limit": 8, "language": "fi"}, project=project
     )
 
-    results = mllm.suggest("Nothing matches this.")
+    results = mllm.suggest(["Nothing matches this."])[0]
 
     assert len(results) == 0
 

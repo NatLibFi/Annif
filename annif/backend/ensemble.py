@@ -37,7 +37,7 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         hits_from_sources = []
         for project_id, weight in sources:
             source_project = self.project.registry.get_project(project_id)
-            hits = source_project.suggest(text)
+            hits = source_project.suggest([text])[0]
             self.debug(
                 "Got {} hits from project {}, weight {}".format(
                     len(hits), source_project.project_id, weight

@@ -94,7 +94,7 @@ def suggest(project_id, body):
 
     try:
         hit_filter = SuggestionFilter(project.subjects, limit, threshold)
-        result = project.suggest(body["text"])
+        result = project.suggest([body["text"]])[0]
     except AnnifException as err:
         return server_error(err)
 

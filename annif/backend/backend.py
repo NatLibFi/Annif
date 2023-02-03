@@ -85,14 +85,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         functionality."""
         return [self._suggest(text, params) for text in texts]
 
-    def suggest(self, text, params=None):
-        """Suggest subjects for the input text and return a list of subjects
-        represented as a list of SubjectSuggestion objects."""
-        beparams = self._get_backend_params(params)
-        self.initialize()
-        return self._suggest(text, params=beparams)
-
-    def suggest_batch(self, texts, params=None):
+    def suggest(self, texts, params=None):
         """Suggest subjects for the input documents and return a list of subject sets
         represented as a list of SubjectSuggestion objects."""
         beparams = self._get_backend_params(params)
