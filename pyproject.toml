@@ -68,7 +68,7 @@ pytest-watch = "*"
 pytest-flask = "*"
 flake8 = "*"
 bumpversion = "*"
-black = "*"
+black = "23.*"
 isort = "*"
 
 [tool.poetry.extras]
