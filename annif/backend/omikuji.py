@@ -122,18 +122,18 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             self.info("Reusing cached training data from previous run.")
         self._create_model(params, jobs)
 
-    def _suggest(self, text, params):
-        self.debug(
-            'Suggesting subjects for text "{}..." (len={})'.format(text[:20], len(text))
-        )
-        vector = self.vectorizer.transform([text])
-        if vector.nnz == 0:  # All zero vector, empty result
-            return ListSuggestionResult([])
-        feature_values = [
-            (col, vector[row, col]) for row, col in zip(*vector.nonzero())
-        ]
-        results = []
+    def _suggest_batch(self, texts, params):
+        vector = self.vectorizer.transform(texts)
         limit = int(params["limit"])
-        for subj_id, score in self._model.predict(feature_values, top_k=limit):
-            results.append(SubjectSuggestion(subject_id=subj_id, score=score))
-        return ListSuggestionResult(results)
+
+        batch_results = []
+        for row in vector:
+            if row.nnz == 0:  # All zero vector, empty result
+                batch_results.append(ListSuggestionResult([]))
+                continue
+            feature_values = [(col, row[0, col]) for col in row.nonzero()[1]]
+            results = []
+            for subj_id, score in self._model.predict(feature_values, top_k=limit):
+                results.append(SubjectSuggestion(subject_id=subj_id, score=score))
+            batch_results.append(ListSuggestionResult(results))
+        return batch_results
