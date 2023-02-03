@@ -12,7 +12,6 @@ def test_annifexception_not_instantiable():
 
 
 def test_annifexception_is_clickexception():
-
     # we need to define a custom class to make an instantiable exception
     class CustomException(AnnifException):
         @property

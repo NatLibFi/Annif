@@ -7,7 +7,6 @@ from . import transform
 
 
 class InputLimiter(transform.BaseTransform):
-
     name = "limit"
 
     def __init__(self, project, input_limit):
