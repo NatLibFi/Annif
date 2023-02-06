@@ -96,14 +96,14 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                 )
         return ListSuggestionResult(results)
 
-    def _suggest(self, text, params):
-        self.debug(
-            'Suggesting subjects for text "{}..." (len={})'.format(text[:20], len(text))
-        )
-        vector = self.vectorizer.transform([text])
-        if vector.nnz == 0:  # All zero vector, empty result
-            return ListSuggestionResult([])
-        confidences = self._model.decision_function(vector)[0]
+    def _suggest_batch(self, texts, params):
+        vector = self.vectorizer.transform(texts)
+        confidences = self._model.decision_function(vector)
         # convert to 0..1 score range using logistic function
-        scores = scipy.special.expit(confidences)
-        return self._scores_to_suggestions(scores, params)
+        scores_list = scipy.special.expit(confidences)
+        return [
+            ListSuggestionResult([])
+            if row.nnz == 0
+            else self._scores_to_suggestions(scores, params)
+            for scores, row in zip(scores_list, vector)
+        ]
