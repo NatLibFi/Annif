@@ -7,7 +7,9 @@ import os.path
 import connexion
 from flask_cors import CORS
 
+logging.basicConfig()
 logger = logging.getLogger("annif")
+logger.setLevel(level=logging.INFO)
 
 import annif.backend  # noqa
 
@@ -36,6 +38,7 @@ def create_app(config_name=None):
 
     if cxapp.app.config["INITIALIZE_PROJECTS"]:
         annif.registry.initialize_projects(cxapp.app)
+        logger.info("finished initializing projects")
 
     # register the views via blueprints
     from annif.views import bp
