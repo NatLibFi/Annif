@@ -104,7 +104,7 @@ def test_train_fasttext_params(document_corpus, project, caplog):
     )
     params = {"dim": 1, "lr": 42.1, "epoch": 0}
 
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.DEBUG, logger="annif"):
         fasttext.train(document_corpus, params)
     parameters_heading = "Backend fasttext: Model parameters:"
     assert parameters_heading in caplog.text
