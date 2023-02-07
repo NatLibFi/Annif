@@ -114,14 +114,16 @@ class StwfsaBackend(backend.AnnifBackend):
             lambda model, store_path: model.store(store_path),
         )
 
-    def _suggest(self, text, params):
-        self.debug(f'Suggesting subjects for text "{text[:20]}..." (len={len(text)})')
-        result = self._model.suggest_proba([text])[0]
-        suggestions = []
-        for uri, score in result:
-            subject_id = self.project.subjects.by_uri(uri)
-            if subject_id is not None:
-                suggestions.append(
-                    SubjectSuggestion(subject_id=subject_id, score=score)
-                )
-        return ListSuggestionResult(suggestions)
+    def _suggest_batch(self, texts, params):
+        probas = self._model.suggest_proba(texts)
+        results = []
+        for proba in probas:
+            suggestions = []
+            for uri, score in proba:
+                subject_id = self.project.subjects.by_uri(uri)
+                if subject_id is not None:
+                    suggestions.append(
+                        SubjectSuggestion(subject_id=subject_id, score=score)
+                    )
+            results.append(ListSuggestionResult(suggestions))
+        return results
