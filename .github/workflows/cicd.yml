@@ -28,14 +28,14 @@ jobs:
           ~/.cache/pipx/venvs
           ~/.local/bin
           ~/.cache/pypoetry/cache/repositories
-        key: poetry-installation-and-repos-${{ env.PYTHON_VERSION }}-${{ env.POETRY_VERSION }}
+        key: poetry-installation-and-repos-${{ env.PYTHON_VERSION }}-${{env.POETRY_VERSION }}-${{ github.job }}
     - name: Install Poetry
       run: |
         pipx install poetry==$POETRY_VERSION
     - name: Set up Python ${{ env.python-version }}
       uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912  # v4.4.0
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        python-version: "${{ env.PYTHON_VERSION }}"
         cache: 'poetry'
         cache-dependency-path: 'pyproject.toml'
     - name: Install Python dev dependencies
@@ -74,7 +74,7 @@ jobs:
           ~/.cache/pipx/venvs
           ~/.local/bin
           ~/.cache/pypoetry/cache/repositories
-        key: poetry-installation-and-repos-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}
+        key: poetry-installation-and-repos-${{ matrix.python-version }}-${{env.POETRY_VERSION }}-${{ github.job }}
     - name: Install Poetry
       run: |
         pipx install poetry==$POETRY_VERSION
@@ -150,7 +150,7 @@ jobs:
           ~/.cache/pipx/venvs
           ~/.local/bin
           ~/.cache/pypoetry/cache/repositories
-        key: poetry-installation-and-repos-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}
+        key: poetry-installation-and-repos-${{ matrix.python-version }}-${{env.POETRY_VERSION }}-${{ github.job }}
     - name: Install Poetry
       run: |
         pipx install poetry==$POETRY_VERSION
