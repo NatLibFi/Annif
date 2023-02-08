@@ -1,6 +1,7 @@
 """Utility functions for Annif"""
 
 import glob
+import logging
 import os
 import os.path
 import tempfile
@@ -9,6 +10,20 @@ import numpy as np
 
 from annif import logger
 from annif.suggestion import VectorSuggestionResult
+
+
+class DuplicateFilter(logging.Filter):
+    """Filter out log messages that have already been displayed."""
+
+    def __init__(self):
+        self.logged = set()
+
+    def filter(self, record):
+        current_log = hash((record.module, record.levelno, record.msg, record.args))
+        if current_log not in self.logged:
+            self.logged.add(current_log)
+            return True
+        return False
 
 
 def atomic_save(obj, dirname, filename, method=None):

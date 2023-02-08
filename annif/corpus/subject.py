@@ -11,6 +11,9 @@ from annif import logger
 from .skos import serialize_subjects_to_skos
 from .types import Subject, SubjectCorpus
 
+logger = logger.getChild("subject")
+logger.addFilter(annif.util.DuplicateFilter())
+
 
 class SubjectFileTSV(SubjectCorpus):
     """A monolingual subject vocabulary stored in a TSV file."""
