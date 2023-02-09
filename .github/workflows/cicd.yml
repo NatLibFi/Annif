@@ -21,13 +21,13 @@ jobs:
     steps:
 
     - uses: actions/checkout@v3
-    - name: Load cached Poetry installation and repositories info
+    - name: Load cached Poetry installation and its cache
       uses: actions/cache@v3
       with:
         path: |
           ~/.cache/pipx/venvs
           ~/.local/bin
-          ~/.cache/pypoetry/cache/repositories
+          ~/.cache/pypoetry
         key: poetry-installation-and-repos-${{ env.PYTHON_VERSION }}-${{env.POETRY_VERSION }}-${{ github.job }}
     - name: Install Poetry
       run: |
@@ -67,13 +67,13 @@ jobs:
         sudo apt-get install \
           libvoikko1 \
           voikko-fi
-    - name: Load cached Poetry installation and repositories info
+    - name: Load cached Poetry installation and its cache
       uses: actions/cache@v3
       with:
         path: |
           ~/.cache/pipx/venvs
           ~/.local/bin
-          ~/.cache/pypoetry/cache/repositories
+          ~/.cache/pypoetry
         key: poetry-installation-and-repos-${{ matrix.python-version }}-${{env.POETRY_VERSION }}-${{ github.job }}
     - name: Install Poetry
       run: |
@@ -143,13 +143,13 @@ jobs:
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
     - uses: actions/checkout@v3
-    - name: Load cached Poetry installation and repositories info
+    - name: Load cached Poetry installation and its cache
       uses: actions/cache@v3
       with:
         path: |
           ~/.cache/pipx/venvs
           ~/.local/bin
-          ~/.cache/pypoetry/cache/repositories
+          ~/.cache/pypoetry
         key: poetry-installation-and-repos-${{ matrix.python-version }}-${{env.POETRY_VERSION }}-${{ github.job }}
     - name: Install Poetry
       run: |
