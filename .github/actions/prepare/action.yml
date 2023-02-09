@@ -8,13 +8,13 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Load cached Poetry installation and its repo info & venvs
+    - name: Load cached Poetry installation and its all cache
       uses: actions/cache@v3
       with:
         path: |
           ~/.cache/pipx/venvs
           ~/.local/bin
-          ~/.cache/pypoetry/{cache/repositories,virtualenvs}
+          ~/.cache/pypoetry/
         key: poetry-installation-and-repos-${{ inputs.python-version }}-${{ inputs.poetry-version }}-${{ github.job }}
     - name: Install Poetry
       shell: bash
