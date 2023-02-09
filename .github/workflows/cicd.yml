@@ -16,14 +16,13 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     name: lint with isort, Black & flake8
-    env:
-      PYTHON_VERSION: "3.10"
     steps:
     - uses: actions/checkout@v3
     - name: Load caches, install Poetry, Set up Python
       uses: ./.github/actions/prepare
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        # Use different (patch) version than the test job to avoid reserved cache key error:
+        python-version: "3.10.8"
         poetry-version: ${{ env.POETRY_VERSION }}
     - name: Install Python dev dependencies
       run: |
