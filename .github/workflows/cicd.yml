@@ -19,25 +19,12 @@ jobs:
     env:
       PYTHON_VERSION: "3.10"
     steps:
-
     - uses: actions/checkout@v3
-    - name: Load cached Poetry installation and its repo info & venvs
-      uses: actions/cache@v3
+    - name: Load caches, install Poetry, Set up Python
+      uses: ./.github/actions/prepare
       with:
-        path: |
-          ~/.cache/pipx/venvs
-          ~/.local/bin
-          ~/.cache/pypoetry/{cache/repositories,virtualenvs}
-        key: poetry-installation-and-repos-${{ env.PYTHON_VERSION }}-${{env.POETRY_VERSION }}-${{ github.job }}
-    - name: Install Poetry
-      run: |
-        pipx install poetry==$POETRY_VERSION
-    - name: Set up Python ${{ env.python-version }}
-      uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912  # v4.4.0
-      with:
-        python-version: "${{ env.PYTHON_VERSION }}"
-        cache: 'poetry'
-        cache-dependency-path: 'pyproject.toml'
+        python-version: ${{ env.PYTHON_VERSION }}
+        poetry-version: ${{ env.POETRY_VERSION }}
     - name: Install Python dev dependencies
       run: |
         poetry install --only dev
@@ -62,28 +49,15 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install system packages
-
       run: |
         sudo apt-get install \
           libvoikko1 \
           voikko-fi
-    - name: Load cached Poetry installation and its repo info & venvs
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/pipx/venvs
-          ~/.local/bin
-          ~/.cache/pypoetry/{cache/repositories,virtualenvs}
-        key: poetry-installation-and-repos-${{ matrix.python-version }}-${{env.POETRY_VERSION }}-${{ github.job }}
-    - name: Install Poetry
-      run: |
-        pipx install poetry==$POETRY_VERSION
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912  # v4.4.0
+    - name: Load caches, install Poetry, Set up Python
+      uses: ./.github/actions/prepare
       with:
         python-version: ${{ matrix.python-version }}
-        cache: 'poetry'
-        cache-dependency-path: 'pyproject.toml'
+        poetry-version: ${{ env.POETRY_VERSION }}
     - name: Install Python dependencies
       run: |
         # Selectively install the optional dependencies for some Python versions
@@ -143,23 +117,11 @@ jobs:
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
     - uses: actions/checkout@v3
-    - name: Load cached Poetry installation and its repo info & venvs
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/pipx/venvs
-          ~/.local/bin
-          ~/.cache/pypoetry/{cache/repositories,virtualenvs}
-        key: poetry-installation-and-repos-${{ matrix.python-version }}-${{env.POETRY_VERSION }}-${{ github.job }}
-    - name: Install Poetry
-      run: |
-        pipx install poetry==$POETRY_VERSION
-    - name: Set up Python 3.9
-      uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912  # v4.4.0
+    - name: Load caches, install Poetry, Set up Python
+      uses: ./.github/actions/prepare
       with:
         python-version: '3.9'
-        cache: 'poetry'
-        cache-dependency-path: 'pyproject.toml'
+        poetry-version: ${{ env.POETRY_VERSION }}
     - name: Build and publish distribution to PyPI
       env:
         POETRY_HTTP_BASIC_PYPI_USERNAME: __token__

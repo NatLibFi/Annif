@@ -1,0 +1,28 @@
+name: Prepare
+description:
+inputs:
+  python-version:
+    required: true
+  poetry-version:
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Load cached Poetry installation and its repo info & venvs
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/pipx/venvs
+          ~/.local/bin
+          ~/.cache/pypoetry/{cache/repositories,virtualenvs}
+        key: poetry-installation-and-repos-${{ inputs.python-version }}-${{ inputs.poetry-version }}-${{ github.job }}
+    - name: Install Poetry
+      shell: bash
+      run: |
+        pipx install poetry==${{ inputs.poetry-version }}
+    - name: Set up Python ${{ inputs.python-version }}
+      uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912  # v4.4.0
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: 'poetry'
+        cache-dependency-path: 'pyproject.toml'
