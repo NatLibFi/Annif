@@ -18,11 +18,10 @@ jobs:
     name: lint with isort, Black & flake8
     steps:
     - uses: actions/checkout@v3
-    - name: Load caches, install Poetry, Set up Python
+    - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
-        # Use different (patch) version than the test job to avoid reserved cache key error:
-        python-version: "3.10.8"
+        python-version: "3.10"
         poetry-version: ${{ env.POETRY_VERSION }}
     - name: Install Python dev dependencies
       run: |
@@ -44,7 +43,6 @@ jobs:
       matrix:
         python-version: ["3.8", "3.9", "3.10"]
     name: test on Python ${{ matrix.python-version }}
-
     steps:
     - uses: actions/checkout@v3
     - name: Install system packages
@@ -52,7 +50,7 @@ jobs:
         sudo apt-get install \
           libvoikko1 \
           voikko-fi
-    - name: Load caches, install Poetry, Set up Python
+    - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
         python-version: ${{ matrix.python-version }}
@@ -75,12 +73,19 @@ jobs:
           poetry install -E "nn omikuji yake";
         fi
         poetry run python -m nltk.downloader punkt
-
     - name: Test with pytest
       run: |
         poetry run pytest --cov=./ --cov-report xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378  # v3.1.0
+    - name: Save cache
+      uses: actions/cache/save@v3
+      with:
+        path: |
+          ~/.cache/pipx/venvs
+          ~/.local/bin
+          ~/.cache/pypoetry/
+        key: ${{ steps.restore-cache.outputs.cache-primary-key }}
 
   publish-docker-latest:
     name: publish latest Docker image
@@ -116,7 +121,7 @@ jobs:
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
     - uses: actions/checkout@v3
-    - name: Load caches, install Poetry, Set up Python
+    - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
         python-version: '3.9'

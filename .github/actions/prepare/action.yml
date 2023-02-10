@@ -8,14 +8,15 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Load cached Poetry installation and its all cache
-      uses: actions/cache@v3
+    - name: Restore cached Poetry installation and its cache
+      id: restore-cache
+      uses: actions/cache/restore@v3
       with:
         path: |
           ~/.cache/pipx/venvs
           ~/.local/bin
           ~/.cache/pypoetry/
-        key: poetry-installation-and-repos-${{ inputs.python-version }}-${{ inputs.poetry-version }}-${{ github.job }}
+        key: poetry-installation-and-cache-${{ inputs.python-version }}-${{ inputs.poetry-version }}
     - name: Install Poetry
       shell: bash
       run: |
