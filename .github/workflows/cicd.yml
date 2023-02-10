@@ -86,7 +86,8 @@ jobs:
           ~/.cache/pipx/venvs
           ~/.local/bin
           ~/.cache/pypoetry/
-        key: ${{ steps.prepare.outputs.cache-key }}
+        # A new key is created to update the cache if some dependency has been updated
+        key:  poetry-installation-and-cache-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}
 
   publish-docker-latest:
     name: publish latest Docker image

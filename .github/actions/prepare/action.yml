@@ -5,22 +5,19 @@ inputs:
     required: true
   poetry-version:
     required: true
-outputs:
-  cache-key:
-    value: ${{ steps.restore-cache.outputs.cache-primary-key }}
 runs:
   using: "composite"
   steps:
     - name: Restore cached Poetry installation and its cache
-      id: restore-cache
       uses: actions/cache/restore@v3
       with:
         path: |
           ~/.cache/pipx/venvs
           ~/.local/bin
           ~/.cache/pypoetry/
-        key: poetry-installation-and-cache-${{ inputs.python-version }}-${{ inputs.poetry-version }}-${{ hashFiles('pyproject.toml') }}
-
+        key: ignore-me
+        restore-keys: |
+          poetry-installation-and-cache-${{ inputs.python-version }}-${{ inputs.poetry-version }}-
     - name: Install Poetry
       shell: bash
       run: |
