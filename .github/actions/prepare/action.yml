@@ -5,6 +5,9 @@ inputs:
     required: true
   poetry-version:
     required: true
+outputs:
+  cache-key:
+    value: ${{ steps.restore-cache.outputs.cache-primary-key }}
 runs:
   using: "composite"
   steps:

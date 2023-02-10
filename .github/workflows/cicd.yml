@@ -51,6 +51,7 @@ jobs:
           libvoikko1 \
           voikko-fi
     - name: "Prepare: restore caches, install Poetry, set up Python"
+      id: prepare
       uses: ./.github/actions/prepare
       with:
         python-version: ${{ matrix.python-version }}
@@ -85,8 +86,7 @@ jobs:
           ~/.cache/pipx/venvs
           ~/.local/bin
           ~/.cache/pypoetry/
-        key: poetry-installation-and-cache-${{ inputs.python-version }}-${{ inputs.poetry-version }}-${{ hashFiles('pyproject.toml') }}
-
+        key: ${{ steps.prepare.outputs.cache-key }}
 
   publish-docker-latest:
     name: publish latest Docker image
