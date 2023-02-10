@@ -16,6 +16,7 @@ class DuplicateFilter(logging.Filter):
     """Filter out log messages that have already been displayed."""
 
     def __init__(self):
+        super().__init__()
         self.logged = set()
 
     def filter(self, record):
