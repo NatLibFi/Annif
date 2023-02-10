@@ -85,7 +85,8 @@ jobs:
           ~/.cache/pipx/venvs
           ~/.local/bin
           ~/.cache/pypoetry/
-        key: poetry-installation-and-cache-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}
+        key: poetry-installation-and-cache-${{ inputs.python-version }}-${{ inputs.poetry-version }}-${{ hashFiles('pyproject.toml') }}
+
 
   publish-docker-latest:
     name: publish latest Docker image

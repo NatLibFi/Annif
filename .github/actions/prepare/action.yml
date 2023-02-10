@@ -16,7 +16,8 @@ runs:
           ~/.cache/pipx/venvs
           ~/.local/bin
           ~/.cache/pypoetry/
-        key: poetry-installation-and-cache-${{ inputs.python-version }}-${{ inputs.poetry-version }}
+        key: poetry-installation-and-cache-${{ inputs.python-version }}-${{ inputs.poetry-version }}-${{ hashFiles('pyproject.toml') }}
+
     - name: Install Poetry
       shell: bash
       run: |
@@ -25,5 +26,3 @@ runs:
       uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912  # v4.4.0
       with:
         python-version: ${{ inputs.python-version }}
-        cache: 'poetry'
-        cache-dependency-path: 'pyproject.toml'
