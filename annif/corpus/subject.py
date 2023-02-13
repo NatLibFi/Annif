@@ -5,13 +5,13 @@ import os.path
 
 import numpy as np
 
+import annif
 import annif.util
-from annif import logger
 
 from .skos import serialize_subjects_to_skos
 from .types import Subject, SubjectCorpus
 
-logger = logger.getChild("subject")
+logger = annif.logger.getChild("subject")
 logger.addFilter(annif.util.DuplicateFilter())
 
 
