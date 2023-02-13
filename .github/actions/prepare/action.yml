@@ -5,10 +5,14 @@ inputs:
     required: true
   poetry-version:
     required: true
+outputs:
+  cache-matched-key:
+    value: ${{ steps.restore-cache.outputs.cache-matched-key }}
 runs:
   using: "composite"
   steps:
     - name: Restore cached Poetry installation and its cache
+      id: restore-cache
       uses: actions/cache/restore@v3
       with:
         path: |

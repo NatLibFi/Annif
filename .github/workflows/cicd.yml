@@ -80,6 +80,7 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378  # v3.1.0
     - name: Save cache
+      if: steps.prepare.outputs.cache-matched-key != format('poetry-installation-and-cache-{0}-{1}-{2}', matrix.python-version, env.POETRY_VERSION, hashFiles('**/poetry.lock'))
       uses: actions/cache/save@v3
       with:
         path: |
