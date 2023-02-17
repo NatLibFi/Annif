@@ -97,6 +97,13 @@ def open_documents(paths, subject_index, vocab_lang, docs_limit):
 
 
 def open_text_documents(paths, docs_limit):
+    """
+    Helper function to read text documents from the given file paths. Returns a
+    DocumentList object with Documents having no subjects. If a path is "-", the
+    document text is read from standard input. The maximum number of documents to read
+    is set by docs_limit parameter.
+    """
+
     def _docs(paths):
         for path in paths:
             if path == "-":
@@ -110,6 +117,11 @@ def open_text_documents(paths, docs_limit):
 
 
 def show_hits(hits, project, lang, file=None):
+    """
+    Print subject suggestions to the console or a file. The suggestions are displayed as
+    a table, with one row per hit. Each row contains the URI, label, possible notation,
+    and score of the suggestion. The label is given in the specified language.
+    """
     for hit in hits.as_list():
         subj = project.subjects[hit.subject_id]
         line = "<{}>\t{}\t{}".format(
