@@ -143,7 +143,7 @@ def validate_backend_params(backend, beparam, project):
 def generate_filter_batches(subjects, filter_batch_max_limit):
     import annif.eval
 
-    filter_batches = collections.OrderedDict()
+    filter_batches = {}
     for limit in range(1, filter_batch_max_limit + 1):
         for threshold in [i * 0.05 for i in range(20)]:
             hit_filter = SuggestionFilter(subjects, limit, threshold)
