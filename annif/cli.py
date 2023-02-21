@@ -17,18 +17,7 @@ import annif.corpus
 import annif.parallel
 import annif.project
 import annif.registry
-from annif.cli_util import (
-    backend_param_option,
-    common_options,
-    docs_limit_option,
-    generate_filter_batches,
-    get_project,
-    get_vocab,
-    open_documents,
-    open_text_documents,
-    parse_backend_params,
-    show_hits,
-)
+from annif import cli_util
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.project import Access
 from annif.suggestion import ListSuggestionResult, SuggestionFilter
@@ -42,7 +31,7 @@ cli = click.version_option(message="%(version)s")(cli)
 
 
 @cli.command("list-projects")
-@common_options
+@cli_util.common_options
 @click_log.simple_verbosity_option(logger, default="ERROR")
 def run_list_projects():
     """
@@ -69,13 +58,13 @@ def run_list_projects():
 
 @cli.command("show-project")
 @click.argument("project_id")
-@common_options
+@cli_util.common_options
 def run_show_project(project_id):
     """
     Show information about a project.
     """
 
-    proj = get_project(project_id)
+    proj = cli_util.get_project(project_id)
     click.echo(f"Project ID:        {proj.project_id}")
     click.echo(f"Project Name:      {proj.name}")
     click.echo(f"Language:          {proj.language}")
@@ -88,17 +77,17 @@ def run_show_project(project_id):
 
 @cli.command("clear")
 @click.argument("project_id")
-@common_options
+@cli_util.common_options
 def run_clear_project(project_id):
     """
     Initialize the project to its original, untrained state.
     """
-    proj = get_project(project_id)
+    proj = cli_util.get_project(project_id)
     proj.remove_model_data()
 
 
 @cli.command("list-vocabs")
-@common_options
+@cli_util.common_options
 @click_log.simple_verbosity_option(logger, default="ERROR")
 def run_list_vocabs():
     """
@@ -132,12 +121,12 @@ def run_list_vocabs():
     is_flag=True,
     help="Replace existing vocabulary completely instead of updating it",
 )
-@common_options
+@cli_util.common_options
 def run_load_vocab(vocab_id, language, force, subjectfile):
     """
     Load a vocabulary from a subject file.
     """
-    vocab = get_vocab(vocab_id)
+    vocab = cli_util.get_vocab(vocab_id)
     if annif.corpus.SubjectFileSKOS.is_rdf_file(subjectfile):
         # SKOS/RDF file supported by rdflib
         subjects = annif.corpus.SubjectFileSKOS(subjectfile)
@@ -174,9 +163,9 @@ def run_load_vocab(vocab_id, language, force, subjectfile):
     default=0,
     help="Number of parallel jobs (0 means choose automatically)",
 )
-@docs_limit_option
-@backend_param_option
-@common_options
+@cli_util.docs_limit_option
+@cli_util.backend_param_option
+@cli_util.common_options
 def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
     """
     Train a project on a collection of documents.
@@ -188,8 +177,8 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
     <https://github.com/NatLibFi/Annif/wiki/
     Reusing-preprocessed-training-data>`_.
     """
-    proj = get_project(project_id)
-    backend_params = parse_backend_params(backend_param, proj)
+    proj = cli_util.get_project(project_id)
+    backend_params = cli_util.parse_backend_params(backend_param, proj)
     if cached:
         if len(paths) > 0:
             raise click.UsageError(
@@ -197,16 +186,18 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
             )
         documents = "cached"
     else:
-        documents = open_documents(paths, proj.subjects, proj.vocab_lang, docs_limit)
+        documents = cli_util.open_documents(
+            paths, proj.subjects, proj.vocab_lang, docs_limit
+        )
     proj.train(documents, backend_params, jobs)
 
 
 @cli.command("learn")
 @click.argument("project_id")
 @click.argument("paths", type=click.Path(exists=True), nargs=-1)
-@docs_limit_option
-@backend_param_option
-@common_options
+@cli_util.docs_limit_option
+@cli_util.backend_param_option
+@cli_util.common_options
 def run_learn(project_id, paths, docs_limit, backend_param):
     """
     Further train an existing project on a collection of documents.
@@ -215,9 +206,11 @@ def run_learn(project_id, paths, docs_limit, backend_param):
     trained project using the documents given by ``PATHS`` in a single batch
     operation. Not supported by all backends.
     """
-    proj = get_project(project_id)
-    backend_params = parse_backend_params(backend_param, proj)
-    documents = open_documents(paths, proj.subjects, proj.vocab_lang, docs_limit)
+    proj = cli_util.get_project(project_id)
+    backend_params = cli_util.parse_backend_params(backend_param, proj)
+    documents = cli_util.open_documents(
+        paths, proj.subjects, proj.vocab_lang, docs_limit
+    )
     proj.learn(documents, backend_params)
 
 
@@ -229,9 +222,9 @@ def run_learn(project_id, paths, docs_limit, backend_param):
 @click.option("--limit", "-l", default=10, help="Maximum number of subjects")
 @click.option("--threshold", "-t", default=0.0, help="Minimum score threshold")
 @click.option("--language", "-L", help="Language of subject labels")
-@docs_limit_option
-@backend_param_option
-@common_options
+@cli_util.docs_limit_option
+@cli_util.backend_param_option
+@cli_util.common_options
 def run_suggest(
     project_id, paths, limit, threshold, language, backend_param, docs_limit
 ):
@@ -242,15 +235,15 @@ def run_suggest(
     This will read a text document from standard input and suggest subjects for
     it, or if given path(s) to file(s), suggest subjects for it/them.
     """
-    project = get_project(project_id)
+    project = cli_util.get_project(project_id)
     lang = language or project.vocab_lang
     if lang not in project.vocab.languages:
         raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
-    backend_params = parse_backend_params(backend_param, project)
+    backend_params = cli_util.parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
     if paths and not (len(paths) == 1 and paths[0] == "-"):
-        docs = open_text_documents(paths, docs_limit)
+        docs = cli_util.open_text_documents(paths, docs_limit)
         subject_sets = project.suggest_corpus(docs, backend_params)
         for (
             subjects,
@@ -258,11 +251,11 @@ def run_suggest(
         ) in zip(subject_sets, paths):
             click.echo(f"Suggestions for {path}")
             hits = hit_filter(subjects)
-            show_hits(hits, project, lang)
+            cli_util.show_hits(hits, project, lang)
     else:
         text = sys.stdin.read()
         hits = hit_filter(project.suggest([text], backend_params)[0])
-        show_hits(hits, project, lang)
+        cli_util.show_hits(hits, project, lang)
 
 
 @cli.command("index")
@@ -280,8 +273,8 @@ def run_suggest(
 @click.option("--limit", "-l", default=10, help="Maximum number of subjects")
 @click.option("--threshold", "-t", default=0.0, help="Minimum score threshold")
 @click.option("--language", "-L", help="Language of subject labels")
-@backend_param_option
-@common_options
+@cli_util.backend_param_option
+@cli_util.common_options
 def run_index(
     project_id, directory, suffix, force, limit, threshold, language, backend_param
 ):
@@ -290,11 +283,11 @@ def run_index(
     Write the results in TSV files with the given suffix (``.annif`` by
     default).
     """
-    project = get_project(project_id)
+    project = cli_util.get_project(project_id)
     lang = language or project.vocab_lang
     if lang not in project.vocab.languages:
         raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
-    backend_params = parse_backend_params(backend_param, project)
+    backend_params = cli_util.parse_backend_params(backend_param, project)
     hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
     documents = annif.corpus.DocumentDirectory(
@@ -311,7 +304,7 @@ def run_index(
             continue
         hits = hit_filter(subjects)
         with open(subjectfilename, "w", encoding="utf-8") as subjfile:
-            show_hits(hits, project, lang, file=subjfile)
+            cli_util.show_hits(hits, project, lang, file=subjfile)
 
 
 @cli.command("eval")
@@ -343,9 +336,9 @@ def run_index(
 @click.option(
     "--jobs", "-j", default=1, help="Number of parallel jobs (0 means all CPUs)"
 )
-@docs_limit_option
-@backend_param_option
-@common_options
+@cli_util.docs_limit_option
+@cli_util.backend_param_option
+@cli_util.common_options
 def run_eval(
     project_id,
     paths,
@@ -372,8 +365,8 @@ def run_eval(
     calculated separately for each subject, and written to the given file.
     """
 
-    project = get_project(project_id)
-    backend_params = parse_backend_params(backend_param, project)
+    project = cli_util.get_project(project_id)
+    backend_params = cli_util.parse_backend_params(backend_param, project)
 
     import annif.eval
 
@@ -391,7 +384,9 @@ def run_eval(
             raise NotSupportedException(
                 "cannot open results-file for writing: " + str(e)
             )
-    corpus = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
+    corpus = cli_util.open_documents(
+        paths, project.subjects, project.vocab_lang, docs_limit
+    )
     jobs, pool_class = annif.parallel.get_pool(jobs)
 
     project.initialize(parallel=True)
@@ -425,9 +420,9 @@ FILTER_BATCH_MAX_LIMIT = 15
 @cli.command("optimize")
 @click.argument("project_id")
 @click.argument("paths", type=click.Path(exists=True), nargs=-1)
-@docs_limit_option
-@backend_param_option
-@common_options
+@cli_util.docs_limit_option
+@cli_util.backend_param_option
+@cli_util.common_options
 def run_optimize(project_id, paths, docs_limit, backend_param):
     """
     Suggest subjects for documents, testing multiple limits and thresholds.
@@ -439,13 +434,17 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     From the output, you can determine the optimum limit and threshold
     parameters depending on which measure you want to target.
     """
-    project = get_project(project_id)
-    backend_params = parse_backend_params(backend_param, project)
+    project = cli_util.get_project(project_id)
+    backend_params = cli_util.parse_backend_params(backend_param, project)
 
-    filter_batches = generate_filter_batches(project.subjects, FILTER_BATCH_MAX_LIMIT)
+    filter_batches = cli_util.generate_filter_batches(
+        project.subjects, FILTER_BATCH_MAX_LIMIT
+    )
 
     ndocs = 0
-    corpus = open_documents(paths, project.subjects, project.vocab_lang, docs_limit)
+    corpus = cli_util.open_documents(
+        paths, project.subjects, project.vocab_lang, docs_limit
+    )
     for docs_batch in corpus.doc_batches:
         texts, subject_sets = zip(*[(doc.text, doc.subject_set) for doc in docs_batch])
         raw_hit_sets = project.suggest(texts, backend_params)
@@ -520,16 +519,18 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     help="""Specify file path to write trial results as CSV.
     File directory must exist, existing file will be overwritten.""",
 )
-@docs_limit_option
-@common_options
+@cli_util.docs_limit_option
+@cli_util.common_options
 def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric, results_file):
     """
     Optimize the hyperparameters of a project using validation documents from
     ``PATHS``. Not supported by all backends. Output is a list of trial results
     and a report of the best performing parameters.
     """
-    proj = get_project(project_id)
-    documents = open_documents(paths, proj.subjects, proj.vocab_lang, docs_limit)
+    proj = cli_util.get_project(project_id)
+    documents = cli_util.open_documents(
+        paths, proj.subjects, proj.vocab_lang, docs_limit
+    )
     click.echo(f"Looking for optimal hyperparameters using {trials} trials")
     rec = proj.hyperopt(documents, trials, jobs, metric, results_file)
     click.echo(f"Got best {metric} score {rec.score:.4f} with:")
