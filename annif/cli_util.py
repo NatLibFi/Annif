@@ -47,6 +47,18 @@ def backend_param_option(f):
     )(f)
 
 
+def docs_limit_option(f):
+    """Decorator to add an option for CLI commands to limit the number of documents to
+    use"""
+    return click.option(
+        "--docs-limit",
+        "-d",
+        default=None,
+        type=click.IntRange(0, None),
+        help="Maximum number of documents to use",
+    )(f)
+
+
 def get_project(project_id):
     """
     Helper function to get a project by ID and bail out if it doesn't exist"""

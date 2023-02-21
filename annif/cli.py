@@ -20,6 +20,7 @@ import annif.registry
 from annif.cli_util import (
     backend_param_option,
     common_options,
+    docs_limit_option,
     generate_filter_batches,
     get_project,
     get_vocab,
@@ -169,18 +170,12 @@ def run_load_vocab(vocab_id, language, force, subjectfile):
     help="Reuse preprocessed training data from previous run",
 )
 @click.option(
-    "--docs-limit",
-    "-d",
-    default=None,
-    type=click.IntRange(0, None),
-    help="Maximum number of documents to use",
-)
-@click.option(
     "--jobs",
     "-j",
     default=0,
     help="Number of parallel jobs (0 means choose automatically)",
 )
+@docs_limit_option
 @backend_param_option
 @common_options
 def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
@@ -210,13 +205,7 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
 @cli.command("learn")
 @click.argument("project_id")
 @click.argument("paths", type=click.Path(exists=True), nargs=-1)
-@click.option(
-    "--docs-limit",
-    "-d",
-    default=None,
-    type=click.IntRange(0, None),
-    help="Maximum number of documents to use",
-)
+@docs_limit_option
 @backend_param_option
 @common_options
 def run_learn(project_id, paths, docs_limit, backend_param):
@@ -241,13 +230,7 @@ def run_learn(project_id, paths, docs_limit, backend_param):
 @click.option("--limit", "-l", default=10, help="Maximum number of subjects")
 @click.option("--threshold", "-t", default=0.0, help="Minimum score threshold")
 @click.option("--language", "-L", help="Language of subject labels")
-@click.option(
-    "--docs-limit",
-    "-d",
-    default=None,
-    type=click.IntRange(0, None),
-    help="Maximum number of documents to use",
-)
+@docs_limit_option
 @backend_param_option
 @common_options
 def run_suggest(
@@ -338,13 +321,6 @@ def run_index(
 @click.option("--limit", "-l", default=10, help="Maximum number of subjects")
 @click.option("--threshold", "-t", default=0.0, help="Minimum score threshold")
 @click.option(
-    "--docs-limit",
-    "-d",
-    default=None,
-    type=click.IntRange(0, None),
-    help="Maximum number of documents to use",
-)
-@click.option(
     "--metric",
     "-m",
     default=[],
@@ -368,6 +344,7 @@ def run_index(
 @click.option(
     "--jobs", "-j", default=1, help="Number of parallel jobs (0 means all CPUs)"
 )
+@docs_limit_option
 @backend_param_option
 @common_options
 def run_eval(
@@ -449,13 +426,7 @@ FILTER_BATCH_MAX_LIMIT = 15
 @cli.command("optimize")
 @click.argument("project_id")
 @click.argument("paths", type=click.Path(exists=True), nargs=-1)
-@click.option(
-    "--docs-limit",
-    "-d",
-    default=None,
-    type=click.IntRange(0, None),
-    help="Maximum number of documents to use",
-)
+@docs_limit_option
 @backend_param_option
 @common_options
 def run_optimize(project_id, paths, docs_limit, backend_param):
@@ -536,13 +507,6 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
 @cli.command("hyperopt")
 @click.argument("project_id")
 @click.argument("paths", type=click.Path(exists=True), nargs=-1)
-@click.option(
-    "--docs-limit",
-    "-d",
-    default=None,
-    type=click.IntRange(0, None),
-    help="Maximum number of documents to use",
-)
 @click.option("--trials", "-T", default=10, help="Number of trials")
 @click.option(
     "--jobs", "-j", default=1, help="Number of parallel runs (0 means all CPUs)"
@@ -557,6 +521,7 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     help="""Specify file path to write trial results as CSV.
     File directory must exist, existing file will be overwritten.""",
 )
+@docs_limit_option
 @common_options
 def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric, results_file):
     """
