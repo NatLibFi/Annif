@@ -15,7 +15,7 @@ from annif.suggestion import SuggestionFilter
 logger = annif.logger
 
 
-def set_project_config_file_path(ctx, param, value):
+def _set_project_config_file_path(ctx, param, value):
     """Override the default path or the path given in env by CLI option"""
     with ctx.ensure_object(ScriptInfo).load_app().app_context():
         if value:
@@ -29,7 +29,7 @@ def common_options(f):
         "--projects",
         help="Set path to project configuration file or directory",
         type=click.Path(dir_okay=True, exists=True),
-        callback=set_project_config_file_path,
+        callback=_set_project_config_file_path,
         expose_value=False,
         is_eager=True,
     )(f)
@@ -151,12 +151,12 @@ def parse_backend_params(backend_param, project):
     for beparam in backend_param:
         backend, param = beparam.split(".", 1)
         key, val = param.split("=", 1)
-        validate_backend_params(backend, beparam, project)
+        _validate_backend_params(backend, beparam, project)
         backend_params[backend][key] = val
     return backend_params
 
 
-def validate_backend_params(backend, beparam, project):
+def _validate_backend_params(backend, beparam, project):
     if backend != project.config["backend"]:
         raise ConfigurationException(
             'The backend {} in CLI option "-b {}" not matching the project'
