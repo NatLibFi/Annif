@@ -130,7 +130,7 @@ def run_list_vocabs():
     "-f",
     default=False,
     is_flag=True,
-    help="Replace existing vocabulary completely " + "instead of updating it",
+    help="Replace existing vocabulary completely instead of updating it",
 )
 @common_options
 def run_load_vocab(vocab_id, language, force, subjectfile):
@@ -150,8 +150,7 @@ def run_load_vocab(vocab_id, language, force, subjectfile):
         # probably a TSV file - we need to know its language
         if not language:
             click.echo(
-                "Please use --language option to set the language of "
-                + "a TSV vocabulary.",
+                "Please use --language option to set the language of a TSV vocabulary.",
                 err=True,
             )
             sys.exit(1)
