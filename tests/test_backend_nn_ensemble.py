@@ -144,6 +144,30 @@ def test_nn_ensemble_train_cached(registry):
     assert datadir.join("nn-model.h5").size() > 0
 
 
+def test_nn_ensemble_train_two_sources(registry, tmpdir):
+    project = registry.get_project("dummy-en")
+    nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
+    nn_ensemble = nn_ensemble_type(
+        backend_id="nn_ensemble",
+        config_params={"sources": "dummy-en,dummy-fi", "epochs": 1},
+        project=project,
+    )
+
+    tmpfile = tmpdir.join("document.tsv")
+    tmpfile.write(
+        "dummy\thttp://example.org/dummy\n"
+        + "another\thttp://example.org/dummy\n"
+        + "none\thttp://example.org/none\n" * 40
+    )
+    document_corpus = annif.corpus.DocumentFile(str(tmpfile), project.subjects)
+
+    nn_ensemble.train(document_corpus)
+
+    datadir = py.path.local(project.datadir)
+    assert datadir.join("nn-model.h5").exists()
+    assert datadir.join("nn-model.h5").size() > 0
+
+
 def test_nn_ensemble_train_and_learn_params(registry, tmpdir, capfd):
     project = registry.get_project("dummy-en")
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
