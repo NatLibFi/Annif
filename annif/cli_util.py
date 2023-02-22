@@ -5,7 +5,6 @@ import sys
 import click
 import click_log
 from flask import current_app
-from flask.cli import ScriptInfo
 
 import annif
 from annif.exception import ConfigurationException
@@ -17,7 +16,7 @@ logger = annif.logger
 
 def _set_project_config_file_path(ctx, param, value):
     """Override the default path or the path given in env by CLI option"""
-    with ctx.ensure_object(ScriptInfo).load_app().app_context():
+    with ctx.obj.load_app().app_context():
         if value:
             current_app.config["PROJECTS_CONFIG_PATH"] = value
 
