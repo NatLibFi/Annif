@@ -4,6 +4,7 @@ projects."""
 
 import os.path
 import shutil
+from collections import defaultdict
 from io import BytesIO
 
 import joblib
@@ -207,18 +208,22 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
         self.info("Processing training documents...")
         with pool_class(jobs) as pool:
-            for hits, subject_set in pool.imap_unordered(
-                psmap.suggest, corpus.documents
+            for hit_sets, subject_sets in pool.imap_unordered(
+                psmap.suggest_batch, corpus.doc_batches
             ):
-                doc_scores = []
-                for project_id, p_hits in hits.items():
-                    vector = p_hits.as_vector(len(self.project.subjects))
-                    doc_scores.append(
-                        np.sqrt(vector) * sources[project_id] * len(sources)
-                    )
-                score_vector = np.array(doc_scores, dtype=np.float32).transpose()
-                true_vector = subject_set.as_vector(len(self.project.subjects))
-                seq.add_sample(score_vector, true_vector)
+                score_vectors = defaultdict(list)
+                for project_id, p_hit_sets in hit_sets.items():
+                    for doc_ind, p_hits in enumerate(p_hit_sets):
+                        vector = p_hits.as_vector(len(self.project.subjects))
+                        scaled_vector = (
+                            np.sqrt(vector) * sources[project_id] * len(sources)
+                        )
+                        score_vectors[doc_ind].append(scaled_vector)
+                true_vectors = [
+                    ss.as_vector(len(self.project.subjects)) for ss in subject_sets
+                ]
+                for sv, tv in zip(score_vectors.values(), true_vectors):
+                    seq.add_sample(np.array(sv, dtype=np.float32).transpose(), tv)
 
     def _open_lmdb(self, cached, lmdb_map_size):
         lmdb_path = os.path.join(self.datadir, self.LMDB_FILE)
