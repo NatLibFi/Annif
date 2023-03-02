@@ -143,7 +143,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             ],
             dtype=np.float32,
         ).transpose(0, 2, 1)
-        results = self._model.predict(score_vectors, verbose=0)
+        results = self._model(score_vectors).numpy()
         return [VectorSuggestionResult(res) for res in results]
 
     def _suggest_batch(self, texts, params):
