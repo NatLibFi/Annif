@@ -130,18 +130,29 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             model_filename, custom_objects={"MeanLayer": MeanLayer}
         )
 
-    def _merge_hits_from_sources(self, hits_from_sources, params):
-        score_vector = np.array(
+    def _merge_hits_from_sources(self, hit_sets_from_sources, params):
+        score_vectors = np.array(
             [
-                np.sqrt(hits.as_vector(len(subjects))) * weight * len(hits_from_sources)
-                for hits, weight, subjects in hits_from_sources
+                [
+                    np.sqrt(hits.as_vector(len(subjects)))
+                    * weight
+                    * len(hit_sets_from_sources)
+                    for hits, weight, subjects in hits_from_sources
+                ]
+                for hits_from_sources in hit_sets_from_sources
             ],
             dtype=np.float32,
-        )
-        results = self._model.predict(
-            np.expand_dims(score_vector.transpose(), 0), verbose=0
-        )
-        return VectorSuggestionResult(results[0])
+        ).transpose(0, 2, 1)
+        results = self._model.predict(score_vectors, verbose=0)
+        return [VectorSuggestionResult(res) for res in results]
+
+    def _suggest_batch(self, texts, params):
+        sources = annif.util.parse_sources(params["sources"])
+        hit_sets_from_sources = [
+            self._suggest_with_sources(text, sources) for text in texts
+        ]
+        merged_hits = self._merge_hits_from_sources(hit_sets_from_sources, params)
+        return merged_hits
 
     def _create_model(self, sources):
         self.info("creating NN ensemble model")
