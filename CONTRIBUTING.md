@@ -129,12 +129,16 @@ hook](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) to automate lint
 isort, Black and flake8 with every git commit by using the following in the file
 `.git/hooks/pre-commit`, which should have execute permission set:
 ```bash
-#!/bin/sh
+#!/bin/bash
+
+set -e
 
 isort . --check-only --diff
 black . --check --diff
 flake8
 ```
+If the hook complains and intercepts the commit, you can run `isort .` and/or `black .` for an automatical fix.
+
 Alternatively, you can set a pre-commit hook to also autoformat code using the
 [pre-commit framework](https://pre-commit.com/), and configure it to use
 [Black](https://black.readthedocs.io/en/stable/integrations/source_version_control.html)
