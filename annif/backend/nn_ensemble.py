@@ -130,7 +130,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             model_filename, custom_objects={"MeanLayer": MeanLayer}
         )
 
-    def _merge_hits_from_sources(self, hit_sets_from_sources, params):
+    def _merge_hit_sets_from_sources(self, hit_sets_from_sources, params):
         score_vectors = np.array(
             [
                 [
