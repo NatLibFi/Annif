@@ -96,11 +96,15 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         jobs, pool_class = annif.parallel.get_pool(n_jobs)
 
         with pool_class(jobs) as pool:
-            for hits, subject_set in pool.imap_unordered(
-                psmap.suggest, self._corpus.documents
+            for hit_sets, subject_sets in pool.imap_unordered(
+                psmap.suggest_batch, self._corpus.doc_batches
             ):
-                self._gold_subjects.append(subject_set)
-                self._source_hits.append(hits)
+                self._gold_subjects.extend(subject_sets)
+                self._source_hits.extend(self._hit_sets_to_list(hit_sets))
+
+    def _hit_sets_to_list(self, hit_sets):
+        """Convert a dict of lists of hits to a list of dicts of hits"""
+        return [dict(zip(hit_sets.keys(), hit)) for hit in zip(*hit_sets.values())]
 
     def _normalize(self, hps):
         total = sum(hps.values())
