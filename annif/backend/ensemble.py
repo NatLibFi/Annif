@@ -33,35 +33,36 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         by subclasses."""
         return hits
 
-    def _suggest_with_sources(self, text, sources):
-        hits_from_sources = []
+    def _suggest_with_sources(self, texts, sources):
+        hit_sets_from_sources = []
         for project_id, weight in sources:
             source_project = self.project.registry.get_project(project_id)
-            hits = source_project.suggest([text])[0]
-            self.debug(
-                "Got {} hits from project {}, weight {}".format(
-                    len(hits), source_project.project_id, weight
-                )
+            hit_sets = source_project.suggest(texts)
+            norm_hit_sets = [
+                self._normalize_hits(hits, source_project) for hits in hit_sets
+            ]
+            hit_sets_from_sources.append(
+                [
+                    annif.suggestion.WeightedSuggestion(
+                        hits=norm_hits, weight=weight, subjects=source_project.subjects
+                    )
+                    for norm_hits in norm_hit_sets
+                ]
             )
-            norm_hits = self._normalize_hits(hits, source_project)
-            hits_from_sources.append(
-                annif.suggestion.WeightedSuggestion(
-                    hits=norm_hits, weight=weight, subjects=source_project.subjects
-                )
-            )
-        return hits_from_sources
+        return hit_sets_from_sources
 
-    def _merge_hits_from_sources(self, hits_from_sources, params):
+    def _merge_hit_sets_from_sources(self, hit_sets_from_sources, params):
         """Hook for merging hits from sources. Can be overridden by
         subclasses."""
-        return annif.util.merge_hits(hits_from_sources, len(self.project.subjects))
+        return [
+            annif.util.merge_hits(hits, len(self.project.subjects))
+            for hits in hit_sets_from_sources
+        ]
 
-    def _suggest(self, text, params):
+    def _suggest_batch(self, texts, params):
         sources = annif.util.parse_sources(params["sources"])
-        hits_from_sources = self._suggest_with_sources(text, sources)
-        merged_hits = self._merge_hits_from_sources(hits_from_sources, params)
-        self.debug("{} hits after merging".format(len(merged_hits)))
-        return merged_hits
+        hit_sets_from_sources = self._suggest_with_sources(texts, sources)
+        return self._merge_hit_sets_from_sources(hit_sets_from_sources, params)
 
 
 class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
