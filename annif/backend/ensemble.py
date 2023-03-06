@@ -42,22 +42,18 @@ class BaseEnsembleBackend(backend.AnnifBackend):
                 self._normalize_hits(hits, source_project) for hits in hit_sets
             ]
             hit_sets_from_sources.append(
-                [
-                    annif.suggestion.WeightedSuggestion(
-                        hits=norm_hits, weight=weight, subjects=source_project.subjects
-                    )
-                    for norm_hits in norm_hit_sets
-                ]
+                annif.suggestion.WeightedSuggestionsBatch(
+                    hit_sets=norm_hit_sets,
+                    weight=weight,
+                    subjects=source_project.subjects,
+                )
             )
         return hit_sets_from_sources
 
     def _merge_hit_sets_from_sources(self, hit_sets_from_sources, params):
-        """Hook for merging hits from sources. Can be overridden by
+        """Hook for merging hit sets from sources. Can be overridden by
         subclasses."""
-        return [
-            annif.util.merge_hits(hits, len(self.project.subjects))
-            for hits in hit_sets_from_sources
-        ]
+        return annif.util.merge_hits(hit_sets_from_sources, len(self.project.subjects))
 
     def _suggest_batch(self, texts, params):
         sources = annif.util.parse_sources(params["sources"])
@@ -133,8 +129,8 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
             weighted_hits = []
             for project_id, hits in srchits.items():
                 weighted_hits.append(
-                    annif.suggestion.WeightedSuggestion(
-                        hits=hits,
+                    annif.suggestion.WeightedSuggestionsBatch(
+                        hit_sets=[hits],
                         weight=weights[project_id],
                         subjects=self._backend.project.subjects,
                     )
@@ -142,7 +138,7 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
             batch.evaluate(
                 annif.util.merge_hits(
                     weighted_hits, len(self._backend.project.subjects)
-                ),
+                )[0],
                 goldsubj,
             )
         results = batch.results(metrics=[self._metric])

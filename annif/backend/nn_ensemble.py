@@ -137,9 +137,9 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                     np.sqrt(hits.as_vector(len(subjects)))
                     * weight
                     * len(hit_sets_from_sources)
-                    for hits, weight, subjects in hits_from_sources
+                    for hits in proj_hit_set
                 ]
-                for hits_from_sources in hit_sets_from_sources
+                for proj_hit_set, weight, subjects in hit_sets_from_sources
             ],
             dtype=np.float32,
         ).transpose(1, 2, 0)

@@ -7,8 +7,8 @@ import itertools
 import numpy as np
 
 SubjectSuggestion = collections.namedtuple("SubjectSuggestion", "subject_id score")
-WeightedSuggestion = collections.namedtuple(
-    "WeightedSuggestion", "hits weight subjects"
+WeightedSuggestionsBatch = collections.namedtuple(
+    "WeightedSuggestionsBatch", "hit_sets weight subjects"
 )
 
 
