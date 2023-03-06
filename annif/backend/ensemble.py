@@ -103,8 +103,16 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                 self._source_hits.extend(self._hit_sets_to_list(hit_sets))
 
     def _hit_sets_to_list(self, hit_sets):
-        """Convert a dict of lists of hits to a list of dicts of hits"""
-        return [dict(zip(hit_sets.keys(), hit)) for hit in zip(*hit_sets.values())]
+        """Convert a dict of lists of hits to a list of dicts of hits, e.g.
+        {"proj-1": [p-1-doc-1-hits, p-1-doc-2-hits]
+         "proj-2": [p-2-doc-1-hits, p-2-doc-2-hits]}
+        to
+        [{"proj-1": p-1-doc-1-hits, "proj-2": p-2-doc-1-hits},
+         {"proj-1": p-1-doc-2-hits, "proj-2": p-2-doc-2-hits}]
+        """
+        return [
+            dict(zip(hit_sets.keys(), doc_hits)) for doc_hits in zip(*hit_sets.values())
+        ]
 
     def _normalize(self, hps):
         total = sum(hps.values())
