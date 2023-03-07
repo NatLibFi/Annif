@@ -54,15 +54,20 @@ def cleanup_uri(uri):
     return uri
 
 
-def merge_hits(weighted_hits, size):
-    """Merge hits from multiple sources. Input is a sequence of WeightedSuggestion
-    objects. The size parameter determines the length of the subject vector.
-    Returns an SuggestionResult object."""
+def merge_hits(weighted_hits_batches, size):
+    """Merge hit sets from multiple sources. Input is a sequence of
+    WeightedSuggestionsBatch objects. The size parameter determines the length of the
+    subject vector. Returns a list of SuggestionResult objects."""
 
-    weights = [whit.weight for whit in weighted_hits]
-    scores = [whit.hits.as_vector(size) for whit in weighted_hits]
-    result = np.average(scores, axis=0, weights=weights)
-    return VectorSuggestionResult(result)
+    weights = [batch.weight for batch in weighted_hits_batches]
+    score_vectors = np.array(
+        [
+            [whits.as_vector(size) for whits in batch.hit_sets]
+            for batch in weighted_hits_batches
+        ]
+    )
+    results = np.average(score_vectors, axis=0, weights=weights)
+    return [VectorSuggestionResult(res) for res in results]
 
 
 def parse_sources(sourcedef):

@@ -33,35 +33,32 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         by subclasses."""
         return hits
 
-    def _suggest_with_sources(self, text, sources):
-        hits_from_sources = []
+    def _suggest_with_sources(self, texts, sources):
+        hit_sets_from_sources = []
         for project_id, weight in sources:
             source_project = self.project.registry.get_project(project_id)
-            hits = source_project.suggest([text])[0]
-            self.debug(
-                "Got {} hits from project {}, weight {}".format(
-                    len(hits), source_project.project_id, weight
+            hit_sets = source_project.suggest(texts)
+            norm_hit_sets = [
+                self._normalize_hits(hits, source_project) for hits in hit_sets
+            ]
+            hit_sets_from_sources.append(
+                annif.suggestion.WeightedSuggestionsBatch(
+                    hit_sets=norm_hit_sets,
+                    weight=weight,
+                    subjects=source_project.subjects,
                 )
             )
-            norm_hits = self._normalize_hits(hits, source_project)
-            hits_from_sources.append(
-                annif.suggestion.WeightedSuggestion(
-                    hits=norm_hits, weight=weight, subjects=source_project.subjects
-                )
-            )
-        return hits_from_sources
+        return hit_sets_from_sources
 
-    def _merge_hits_from_sources(self, hits_from_sources, params):
-        """Hook for merging hits from sources. Can be overridden by
+    def _merge_hit_sets_from_sources(self, hit_sets_from_sources, params):
+        """Hook for merging hit sets from sources. Can be overridden by
         subclasses."""
-        return annif.util.merge_hits(hits_from_sources, len(self.project.subjects))
+        return annif.util.merge_hits(hit_sets_from_sources, len(self.project.subjects))
 
-    def _suggest(self, text, params):
+    def _suggest_batch(self, texts, params):
         sources = annif.util.parse_sources(params["sources"])
-        hits_from_sources = self._suggest_with_sources(text, sources)
-        merged_hits = self._merge_hits_from_sources(hits_from_sources, params)
-        self.debug("{} hits after merging".format(len(merged_hits)))
-        return merged_hits
+        hit_sets_from_sources = self._suggest_with_sources(texts, sources)
+        return self._merge_hit_sets_from_sources(hit_sets_from_sources, params)
 
 
 class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
@@ -95,11 +92,23 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         jobs, pool_class = annif.parallel.get_pool(n_jobs)
 
         with pool_class(jobs) as pool:
-            for hits, subject_set in pool.imap_unordered(
-                psmap.suggest, self._corpus.documents
+            for hit_sets, subject_sets in pool.imap_unordered(
+                psmap.suggest_batch, self._corpus.doc_batches
             ):
-                self._gold_subjects.append(subject_set)
-                self._source_hits.append(hits)
+                self._gold_subjects.extend(subject_sets)
+                self._source_hits.extend(self._hit_sets_to_list(hit_sets))
+
+    def _hit_sets_to_list(self, hit_sets):
+        """Convert a dict of lists of hits to a list of dicts of hits, e.g.
+        {"proj-1": [p-1-doc-1-hits, p-1-doc-2-hits]
+         "proj-2": [p-2-doc-1-hits, p-2-doc-2-hits]}
+        to
+        [{"proj-1": p-1-doc-1-hits, "proj-2": p-2-doc-1-hits},
+         {"proj-1": p-1-doc-2-hits, "proj-2": p-2-doc-2-hits}]
+        """
+        return [
+            dict(zip(hit_sets.keys(), doc_hits)) for doc_hits in zip(*hit_sets.values())
+        ]
 
     def _normalize(self, hps):
         total = sum(hps.values())
@@ -120,8 +129,8 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
             weighted_hits = []
             for project_id, hits in srchits.items():
                 weighted_hits.append(
-                    annif.suggestion.WeightedSuggestion(
-                        hits=hits,
+                    annif.suggestion.WeightedSuggestionsBatch(
+                        hit_sets=[hits],
                         weight=weights[project_id],
                         subjects=self._backend.project.subjects,
                     )
@@ -129,7 +138,7 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
             batch.evaluate(
                 annif.util.merge_hits(
                     weighted_hits, len(self._backend.project.subjects)
-                ),
+                )[0],
                 goldsubj,
             )
         results = batch.results(metrics=[self._metric])

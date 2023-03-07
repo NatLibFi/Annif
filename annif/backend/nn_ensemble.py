@@ -130,18 +130,21 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             model_filename, custom_objects={"MeanLayer": MeanLayer}
         )
 
-    def _merge_hits_from_sources(self, hits_from_sources, params):
-        score_vector = np.array(
+    def _merge_hit_sets_from_sources(self, hit_sets_from_sources, params):
+        score_vectors = np.array(
             [
-                np.sqrt(hits.as_vector(len(subjects))) * weight * len(hits_from_sources)
-                for hits, weight, subjects in hits_from_sources
+                [
+                    np.sqrt(hits.as_vector(len(subjects)))
+                    * weight
+                    * len(hit_sets_from_sources)
+                    for hits in proj_hit_set
+                ]
+                for proj_hit_set, weight, subjects in hit_sets_from_sources
             ],
             dtype=np.float32,
-        )
-        results = self._model.predict(
-            np.expand_dims(score_vector.transpose(), 0), verbose=0
-        )
-        return VectorSuggestionResult(results[0])
+        ).transpose(1, 2, 0)
+        results = self._model(score_vectors).numpy()
+        return [VectorSuggestionResult(res) for res in results]
 
     def _create_model(self, sources):
         self.info("creating NN ensemble model")
