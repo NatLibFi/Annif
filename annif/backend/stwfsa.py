@@ -4,7 +4,7 @@ from stwfsapy.predictor import StwfsapyPredictor
 
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import ListSuggestionResult, SubjectSuggestion
-from annif.util import atomic_save, boolean
+from annif.util import apply_param_parse_config, atomic_save, boolean
 
 from . import backend
 
@@ -95,11 +95,7 @@ class StwfsaBackend(backend.AnnifBackend):
 
     def _train(self, corpus, params, jobs=0):
         X, y = self._load_data(corpus)
-        new_params = {
-            key: self.STWFSA_PARAMETERS[key](val)
-            for key, val in params.items()
-            if key in self.STWFSA_PARAMETERS
-        }
+        new_params = apply_param_parse_config(self.STWFSA_PARAMETERS, params)
         p = StwfsapyPredictor(
             graph=self.project.vocab.as_graph(),
             langs=frozenset([params["language"]]),

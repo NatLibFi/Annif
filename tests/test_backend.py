@@ -91,3 +91,13 @@ def test_get_backend_yake_not_installed():
     with pytest.raises(ValueError) as excinfo:
         annif.backend.get_backend("yake")
     assert "YAKE not available" in str(excinfo.value)
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("pecos") is not None,
+    reason="test requires that YAKE is NOT installed",
+)
+def test_get_backend_xtransformer_not_installed():
+    with pytest.raises(ValueError) as excinfo:
+        annif.backend.get_backend("xtransformer")
+    assert "XTransformer not available" in str(excinfo.value)
