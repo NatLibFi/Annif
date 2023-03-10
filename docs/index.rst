@@ -6,7 +6,7 @@
 Welcome to Annif's API documentation!
 =====================================
 
-See `installation instructions <https://github.com/NatLibFi/Annif/blob/master/README.md>`_  and `Wiki pages <https://github.com/NatLibFi/Annif/wiki>`_ in GitHub, and also http://annif.org/.
+See `installation instructions <https://github.com/NatLibFi/Annif/blob/main/README.md>`_  and `Wiki pages <https://github.com/NatLibFi/Annif/wiki>`_ in GitHub, and also http://annif.org/.
 
 You are reading documentation for version |version|.
 
