@@ -214,7 +214,8 @@ class AnnifProject(DatadirMixin):
             else:
                 raise NotInitializedException("Project is not trained.")
         texts = [self.transform.transform_text(text) for text in texts]
-        return self._suggest_with_backend(texts, backend_params)
+        suggestions = self._suggest_with_backend(texts, backend_params)
+        return annif.suggestion.SuggestionBatch(suggestions, len(self.subjects))
 
     def train(self, corpus, backend_params=None, jobs=0):
         """train the project using documents from a metadata source"""

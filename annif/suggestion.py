@@ -5,6 +5,7 @@ import collections
 import itertools
 
 import numpy as np
+from scipy.sparse import dok_array
 
 SubjectSuggestion = collections.namedtuple("SubjectSuggestion", "subject_id score")
 WeightedSuggestionsBatch = collections.namedtuple(
@@ -189,3 +190,19 @@ class ListSuggestionResult(SuggestionResult):
 
     def __len__(self):
         return len(self._list)
+
+
+class SuggestionBatch:
+    """Subject suggestions for a batch of documents."""
+
+    def __init__(self, suggestion_results, vocab_size):
+        """Create a new SuggestionBatch from a sequence of SuggestionResult objects."""
+        # create a dok_array for fast construction
+        ar = dok_array((len(suggestion_results), vocab_size), dtype=np.float32)
+        for idx, result in enumerate(suggestion_results):
+            for suggestion in result.as_list():
+                ar[idx, suggestion.subject_id] = suggestion.score
+        self.array = ar.tocsr()
+
+    def __getitem__(self, idx):
+        return VectorSuggestionResult(self.array[[idx], :].toarray()[0])

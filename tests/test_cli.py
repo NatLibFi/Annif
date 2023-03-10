@@ -436,7 +436,7 @@ def test_suggest_param():
         input="kissa",
     )
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy-fi\t0.8\n"
+    assert result.output.startswith("<http://example.org/dummy>\tdummy-fi\t0.8")
     assert result.exit_code == 0
 
 
