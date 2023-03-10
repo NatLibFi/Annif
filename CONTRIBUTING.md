@@ -41,7 +41,7 @@ already working on it.
 
 ### Installation for development
 See [Development install in
-README.md](https://github.com/NatLibFi/Annif/blob/master/README.md#development-install)
+README.md](https://github.com/NatLibFi/Annif/blob/main/README.md#development-install)
 or use the [Docker image for
 development](https://github.com/NatLibFi/Annif/wiki/Usage-with-Docker#using-docker-in-annif-development).
 
@@ -51,8 +51,8 @@ flow](https://guides.github.com/introduction/flow/). Feel free to [fork the
 Annif-repository](https://docs.github.com/en/get-started/quickstart/contributing-to-projects)
 for your changes. Some basic principles:
 
-1. The `master` branch is always a working, deployable version of Annif. The code on the
-   `master` branch will eventually be released as the next release.
+1. The `main` branch is always a working, deployable version of Annif. The code on the
+   `main` branch will eventually be released as the next release.
 2. All development happens on feature branches, whether branched from NatLibFi's origin
    or from a fork. Feature branches are normally named according to the issue they are
    addressing: e.g. `issue267-cli-analyze-to-suggest` which implements the change
@@ -71,7 +71,7 @@ for your changes. Some basic principles:
    targeting an issue when applicable, so when the PR is merged, the issue is
    automatically closed.
 5. Feature branches should be deleted after the pull request has been merged.
-6. A new release is made whenever some important changes have landed in `master`.
+6. A new release is made whenever some important changes have landed in `main`.
    Releases are intended to be frequent. See [Release
    process](https://github.com/NatLibFi/Annif/wiki/Release-process) for the details of
    making a release.
@@ -84,7 +84,7 @@ See commit best practices e.g. in
 #### Branches
 
 At any time, these branches typically exist:
-* the `master` branch
+* the `main` branch
 * feature branches under development
 * experimental branches that are not under active development but which we don't want to delete in case the code is later needed
 
@@ -95,7 +95,7 @@ process](https://github.com/NatLibFi/Annif/wiki/Release-process) for details.
 
 ### Unit tests
 Generally, the aim is to cover every line of the codebase with the [unit
-tests](https://github.com/NatLibFi/Annif/tree/master/tests). If you've added new
+tests](https://github.com/NatLibFi/Annif/tree/main/tests). If you've added new
 functionality or you've found out that the existing tests are lacking, we'd be happy if
 you could provide additional tests to cover it. The development dependencies include
 [`pytest`](https://docs.pytest.org/), which you can execute in the project root to run the unit tests:
@@ -110,7 +110,7 @@ When a (draft) PR is opened or new commits are pushed to a branch belonging to a
 unit tests for the code are run in the [GitHub Actions CI/CD pipeline](https://github.com/NatLibFi/Annif/actions/workflows/cicd.yml). The tests are run
 on all the minor versions of Python that Annif aims to support with varying
 configurations of the optional dependencies, see the
-[cicd.yaml](https://github.com/NatLibFi/Annif/blob/master/.github/workflows/cicd.yml)
+[cicd.yaml](https://github.com/NatLibFi/Annif/blob/main/.github/workflows/cicd.yml)
 for the pipeline setup.
 
 ### Code style
@@ -152,7 +152,7 @@ documentation](https://annif.readthedocs.io/en/latest/source/annif.html).
 
 ## Creating a new backend
 Annif backend code is in the
-[annif/backend](https://github.com/NatLibFi/Annif/tree/master/annif/backend) module.
+[annif/backend](https://github.com/NatLibFi/Annif/tree/main/annif/backend) module.
 Each backend is implemented as a subclass of `AnnifBackend`, or its more specific
 subclass `AnnifLearningBackend` (for backends that support online learning) or
 `BaseEnsembleBackend` (for backends that combine results from multiple projects).
