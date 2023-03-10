@@ -192,11 +192,44 @@ class ListSuggestionResult(SuggestionResult):
         return len(self._list)
 
 
+class SparseSuggestionResult(SuggestionResult):
+    """SuggestionResult implementation backed by a single row of a sparse array."""
+
+    def __init__(self, array, idx):
+        self._array = array
+        self._idx = idx
+
+    def as_list(self):
+        _, cols = self._array[[self._idx], :].nonzero()
+        suggestions = [
+            SubjectSuggestion(subject_id=col, score=float(self._array[self._idx, col]))
+            for col in cols
+        ]
+        return sorted(
+            suggestions, key=lambda suggestion: suggestion.score, reverse=True
+        )
+
+    def as_vector(self, size, destination=None):
+        if destination is not None:
+            print("as_vector called with destination not None")
+            return None
+        return self._array[[self._idx], :].toarray()[0]
+
+    def filter(self, subject_index, limit=None, threshold=0.0):
+        lsr = ListSuggestionResult(self.as_list())
+        return lsr.filter(subject_index, limit, threshold)
+
+    def __len__(self):
+        _, cols = self._array[[self._idx], :].nonzero()
+        return len(cols)
+
+
 class SuggestionBatch:
     """Subject suggestions for a batch of documents."""
 
     def __init__(self, suggestion_results, vocab_size):
         """Create a new SuggestionBatch from a sequence of SuggestionResult objects."""
+
         # create a dok_array for fast construction
         ar = dok_array((len(suggestion_results), vocab_size), dtype=np.float32)
         for idx, result in enumerate(suggestion_results):
@@ -205,4 +238,9 @@ class SuggestionBatch:
         self.array = ar.tocsr()
 
     def __getitem__(self, idx):
-        return VectorSuggestionResult(self.array[[idx], :].toarray()[0])
+        if idx < 0 or idx >= len(self):
+            raise IndexError
+        return SparseSuggestionResult(self.array, idx)
+
+    def __len__(self):
+        return self.array.shape[0]
