@@ -135,11 +135,11 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                         subjects=self._backend.project.subjects,
                     )
                 )
-            batch.evaluate(
+            batch.evaluate_many(
                 annif.util.merge_hits(
                     weighted_hits, len(self._backend.project.subjects)
-                )[0],
-                goldsubj,
+                ),
+                [goldsubj],
             )
         results = batch.results(metrics=[self._metric])
         return results[self._metric]

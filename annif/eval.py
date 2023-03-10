@@ -100,9 +100,6 @@ class EvaluationBatch:
         self._subject_index = subject_index
         self._samples = []
 
-    def evaluate(self, hits, gold_subjects):
-        self._samples.append((hits, gold_subjects))
-
     def evaluate_many(self, hit_sets, gold_subject_sets):
         for hits, gold_subjects in zip(hit_sets, gold_subject_sets):
             self._samples.append((hits, gold_subjects))

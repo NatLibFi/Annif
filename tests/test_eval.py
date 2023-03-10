@@ -109,7 +109,7 @@ def test_evaluation_batch(subject_index):
             )
         ]
     )
-    batch.evaluate(hits1, gold_set)
+    batch.evaluate_many([hits1], [gold_set])
     hits2 = annif.suggestion.ListSuggestionResult(
         [
             # subject: egyptologists (yso:p1747)
@@ -119,7 +119,7 @@ def test_evaluation_batch(subject_index):
             )
         ]
     )
-    batch.evaluate(hits2, gold_set)
+    batch.evaluate_many([hits2], [gold_set])
     results = batch.results()
     assert results["Precision (doc avg)"] == 0.5
     assert results["Recall (doc avg)"] == 0.5

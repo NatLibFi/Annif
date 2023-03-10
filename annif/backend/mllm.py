@@ -48,7 +48,7 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
             else:
                 ranking = []
             results = self._backend._prediction_to_result(ranking, params)
-            batch.evaluate(results, goldsubj)
+            batch.evaluate_many([results], [goldsubj])
         results = batch.results(metrics=[self._metric])
         return results[self._metric]
 
