@@ -10,7 +10,7 @@ on:
 env:
   PIPX_HOME: "/home/runner/.cache/pipx"
   PIPX_BIN_DIR: "/home/runner/.local/bin"
-  POETRY_VERSION: "1.2.0"
+  POETRY_VERSION: "1.4.0"
 jobs:
 
   lint:
