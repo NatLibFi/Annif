@@ -15,37 +15,37 @@ def test_filter_pred_top_k():
 
 
 def test_true_positives():
-    y_true = np.array([[True, False, True, False, True, False]])
-    y_pred = np.array([[True, True, False, True, True, False]])
+    y_true = csr_array([[True, False, True, False, True, False]])
+    y_pred = csr_array([[True, True, False, True, True, False]])
     tp = annif.eval.true_positives(y_true, y_pred)
     assert tp == 2
 
-    y_true = np.array([[True, True, False, True, True, False]])
-    y_pred = np.array([[True, False, True, True, True, False]])
+    y_true = csr_array([[True, True, False, True, True, False]])
+    y_pred = csr_array([[True, False, True, True, True, False]])
     tp2 = annif.eval.true_positives(y_true, y_pred)
     assert tp2 == 3
 
 
 def test_false_positives():
-    y_true = np.array([[True, False, True, False, True, False]])
-    y_pred = np.array([[True, True, False, True, True, False]])
+    y_true = csr_array([[True, False, True, False, True, False]])
+    y_pred = csr_array([[True, True, False, True, True, False]])
     fp = annif.eval.false_positives(y_true, y_pred)
     assert fp == 2
 
-    y_true = np.array([[True, True, False, True, True, False]])
-    y_pred = np.array([[True, False, True, True, True, False]])
+    y_true = csr_array([[True, True, False, True, True, False]])
+    y_pred = csr_array([[True, False, True, True, True, False]])
     fp2 = annif.eval.false_positives(y_true, y_pred)
     assert fp2 == 1
 
 
 def test_false_negatives():
-    y_true = np.array([[True, False, True, False, True, False]])
-    y_pred = np.array([[True, True, False, True, True, False]])
+    y_true = csr_array([[True, False, True, False, True, False]])
+    y_pred = csr_array([[True, True, False, True, True, False]])
     fn = annif.eval.false_negatives(y_true, y_pred)
     assert fn == 1
 
-    y_true = np.array([[True, True, False, True, True, False]])
-    y_pred = np.array([[True, False, True, True, False, False]])
+    y_true = csr_array([[True, True, False, True, True, False]])
+    y_pred = csr_array([[True, False, True, True, False, False]])
     fn2 = annif.eval.false_negatives(y_true, y_pred)
     assert fn2 == 2
 

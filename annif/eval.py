@@ -32,19 +32,19 @@ def filter_pred_top_k(preds, limit):
 def true_positives(y_true, y_pred):
     """calculate the number of true positives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
-    return int((y_true & y_pred).sum())
+    return int((y_true.multiply(y_pred)).sum())
 
 
 def false_positives(y_true, y_pred):
     """calculate the number of false positives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
-    return int((~y_true & y_pred).sum())
+    return int((y_true < y_pred).sum())
 
 
 def false_negatives(y_true, y_pred):
     """calculate the number of false negatives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
-    return int((y_true & ~y_pred).sum())
+    return int((y_true > y_pred).sum())
 
 
 def precision_at_k_score(y_true, y_pred, limit):
@@ -122,7 +122,6 @@ class EvaluationBatch:
         y_pred_binary = y_pred > 0.0
         # dense versions of sparse arrays, for functions that need them
         # FIXME: conversion to dense arrays should be avoided
-        y_pred_binary_dense = y_pred_binary.toarray()
         y_pred_dense = y_pred.toarray()
         y_true_dense = y_true.toarray()
 
@@ -181,13 +180,9 @@ class EvaluationBatch:
                 y_true_dense, y_pred_dense, limit=5
             ),
             "LRAP": lambda: label_ranking_average_precision_score(y_true, y_pred_dense),
-            "True positives": lambda: true_positives(y_true_dense, y_pred_binary_dense),
-            "False positives": lambda: false_positives(
-                y_true_dense, y_pred_binary_dense
-            ),
-            "False negatives": lambda: false_negatives(
-                y_true_dense, y_pred_binary_dense
-            ),
+            "True positives": lambda: true_positives(y_true, y_pred_binary),
+            "False positives": lambda: false_positives(y_true, y_pred_binary),
+            "False negatives": lambda: false_negatives(y_true, y_pred_binary),
         }
 
         if not metrics:
