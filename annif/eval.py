@@ -4,7 +4,7 @@ import statistics
 import warnings
 
 import numpy as np
-from scipy.sparse import csr_matrix
+import scipy.sparse
 from sklearn.metrics import (
     f1_score,
     label_ranking_average_precision_score,
@@ -13,19 +13,20 @@ from sklearn.metrics import (
 )
 
 from annif.exception import NotSupportedException
+from annif.suggestion import SuggestionBatch
 
 
 def filter_pred_top_k(preds, limit):
     """filter a 2D prediction vector, retaining only the top K suggestions
     for each individual prediction; the rest will be set to zeros"""
 
-    masks = []
-    for pred in preds:
-        mask = np.zeros_like(pred, dtype=bool)
-        top_k = np.argsort(pred)[::-1][:limit]
-        mask[top_k] = True
-        masks.append(mask)
-    return preds * np.array(masks)
+    filtered = scipy.sparse.dok_array(preds.shape, dtype=np.float32)
+    for row in range(preds.shape[0]):
+        ar = preds.getrow(row).toarray()[0]
+        top_k = np.argsort(ar)[::-1][:limit]
+        for col in top_k:
+            filtered[row, col] = preds[row, col]
+    return filtered.tocsr()
 
 
 def true_positives(y_true, y_pred):
@@ -98,68 +99,95 @@ class EvaluationBatch:
 
     def __init__(self, subject_index):
         self._subject_index = subject_index
-        self._samples = []
+        self._suggestion_arrays = []
+        self._gold_subject_arrays = []
 
-    def evaluate_many(self, hit_sets, gold_subject_sets):
-        for hits, gold_subjects in zip(hit_sets, gold_subject_sets):
-            self._samples.append((hits, gold_subjects))
+    def evaluate_many(self, suggestion_batch, gold_subject_batch):
+        if not isinstance(suggestion_batch, SuggestionBatch):
+            suggestion_batch = SuggestionBatch(
+                suggestion_batch, len(self._subject_index)
+            )
+        self._suggestion_arrays.append(suggestion_batch.array)
+
+        # convert gold_subject_batch to sparse matrix
+        ar = scipy.sparse.dok_array(
+            (len(gold_subject_batch), len(self._subject_index)), dtype=bool
+        )
+        for idx, subject_set in enumerate(gold_subject_batch):
+            for subject_id in subject_set:
+                ar[idx, subject_id] = True
+        self._gold_subject_arrays.append(ar.tocsr())
 
     def _evaluate_samples(self, y_true, y_pred, metrics=[]):
         y_pred_binary = y_pred > 0.0
-        y_true_sparse = csr_matrix(y_true)
+        # dense versions of sparse arrays, for functions that need them
+        # FIXME: conversion to dense arrays should be avoided
+        y_pred_binary_dense = y_pred_binary.toarray()
+        y_pred_dense = y_pred.toarray()
+        y_true_dense = y_true.toarray()
 
         # define the available metrics as lazy lambda functions
         # so we can execute only the ones actually requested
         all_metrics = {
             "Precision (doc avg)": lambda: precision_score(
-                y_true_sparse, y_pred_binary, average="samples"
+                y_true, y_pred_binary, average="samples"
             ),
             "Recall (doc avg)": lambda: recall_score(
-                y_true_sparse, y_pred_binary, average="samples"
+                y_true, y_pred_binary, average="samples"
             ),
             "F1 score (doc avg)": lambda: f1_score(
-                y_true_sparse, y_pred_binary, average="samples"
+                y_true, y_pred_binary, average="samples"
             ),
             "Precision (subj avg)": lambda: precision_score(
-                y_true_sparse, y_pred_binary, average="macro"
+                y_true, y_pred_binary, average="macro"
             ),
             "Recall (subj avg)": lambda: recall_score(
-                y_true_sparse, y_pred_binary, average="macro"
+                y_true, y_pred_binary, average="macro"
             ),
             "F1 score (subj avg)": lambda: f1_score(
-                y_true_sparse, y_pred_binary, average="macro"
+                y_true, y_pred_binary, average="macro"
             ),
             "Precision (weighted subj avg)": lambda: precision_score(
-                y_true_sparse, y_pred_binary, average="weighted"
+                y_true, y_pred_binary, average="weighted"
             ),
             "Recall (weighted subj avg)": lambda: recall_score(
-                y_true_sparse, y_pred_binary, average="weighted"
+                y_true, y_pred_binary, average="weighted"
             ),
             "F1 score (weighted subj avg)": lambda: f1_score(
-                y_true_sparse, y_pred_binary, average="weighted"
+                y_true, y_pred_binary, average="weighted"
             ),
             "Precision (microavg)": lambda: precision_score(
-                y_true_sparse, y_pred_binary, average="micro"
+                y_true, y_pred_binary, average="micro"
             ),
             "Recall (microavg)": lambda: recall_score(
-                y_true_sparse, y_pred_binary, average="micro"
+                y_true, y_pred_binary, average="micro"
             ),
             "F1 score (microavg)": lambda: f1_score(
-                y_true_sparse, y_pred_binary, average="micro"
+                y_true, y_pred_binary, average="micro"
             ),
             "F1@5": lambda: f1_score(
-                y_true_sparse, filter_pred_top_k(y_pred, 5) > 0.0, average="samples"
+                y_true, filter_pred_top_k(y_pred, 5) > 0.0, average="samples"
             ),
-            "NDCG": lambda: ndcg_score(y_true, y_pred),
-            "NDCG@5": lambda: ndcg_score(y_true, y_pred, limit=5),
-            "NDCG@10": lambda: ndcg_score(y_true, y_pred, limit=10),
-            "Precision@1": lambda: precision_at_k_score(y_true, y_pred, limit=1),
-            "Precision@3": lambda: precision_at_k_score(y_true, y_pred, limit=3),
-            "Precision@5": lambda: precision_at_k_score(y_true, y_pred, limit=5),
-            "LRAP": lambda: label_ranking_average_precision_score(y_true, y_pred),
-            "True positives": lambda: true_positives(y_true, y_pred_binary),
-            "False positives": lambda: false_positives(y_true, y_pred_binary),
-            "False negatives": lambda: false_negatives(y_true, y_pred_binary),
+            "NDCG": lambda: ndcg_score(y_true_dense, y_pred_dense),
+            "NDCG@5": lambda: ndcg_score(y_true_dense, y_pred_dense, limit=5),
+            "NDCG@10": lambda: ndcg_score(y_true_dense, y_pred_dense, limit=10),
+            "Precision@1": lambda: precision_at_k_score(
+                y_true_dense, y_pred_dense, limit=1
+            ),
+            "Precision@3": lambda: precision_at_k_score(
+                y_true_dense, y_pred_dense, limit=3
+            ),
+            "Precision@5": lambda: precision_at_k_score(
+                y_true_dense, y_pred_dense, limit=5
+            ),
+            "LRAP": lambda: label_ranking_average_precision_score(y_true, y_pred_dense),
+            "True positives": lambda: true_positives(y_true_dense, y_pred_binary_dense),
+            "False positives": lambda: false_positives(
+                y_true_dense, y_pred_binary_dense
+            ),
+            "False negatives": lambda: false_negatives(
+                y_true_dense, y_pred_binary_dense
+            ),
         }
 
         if not metrics:
@@ -196,8 +224,9 @@ class EvaluationBatch:
         """Write results per subject (non-aggregated)
         to outputfile results_file, using labels in the given language"""
 
-        y_pred = y_pred.T > 0.0
-        y_true = y_true.T > 0.0
+        # FIXME: conversion to dense arrays should be avoided
+        y_pred = y_pred.T.toarray() > 0.0
+        y_true = y_true.T.toarray() > 0.0
 
         true_pos = y_true & y_pred
         false_pos = ~y_true & y_pred
@@ -229,16 +258,11 @@ class EvaluationBatch:
         If results_file (file object) given, write results per subject to it
         with labels expressed in the given language."""
 
-        if not self._samples:
+        if not self._suggestion_arrays:
             raise NotSupportedException("cannot evaluate empty corpus")
 
-        shape = (len(self._samples), len(self._subject_index))
-        y_true = np.zeros(shape, dtype=bool)
-        y_pred = np.zeros(shape, dtype=np.float32)
-
-        for idx, (hits, gold_subjects) in enumerate(self._samples):
-            gold_subjects.as_vector(destination=y_true[idx])
-            hits.as_vector(len(self._subject_index), destination=y_pred[idx])
+        y_pred = scipy.sparse.vstack(self._suggestion_arrays)
+        y_true = scipy.sparse.vstack(self._gold_subject_arrays)
 
         results = self._evaluate_samples(y_true, y_pred, metrics)
         results["Documents evaluated"] = int(y_true.shape[0])
