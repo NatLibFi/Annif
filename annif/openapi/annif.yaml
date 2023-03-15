@@ -121,6 +121,27 @@ paths:
       operationId: annif.rest.suggest_batch
       parameters:
       - $ref: '#/components/parameters/project_id'
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          format: int32
+          default: 10
+          minimum: 0
+        description: maximum number of results to return
+      - in: query
+        name: threshold
+        schema:
+          type: number
+          default: 0.0
+          minimum: 0.0
+          maximum: 1.0
+        description: minimum score threshold, below which results will not be returned
+      - in: query
+        name: language
+        schema:
+          type: string
+        description: language of subject labels
       requestBody:
         content:
           application/json:
@@ -134,8 +155,6 @@ paths:
                   maxItems: 32
                   items:
                     $ref: '#/components/schemas/Document'
-                parameters:
-                  $ref: '#/components/schemas/SuggestParameters'
         required: true
       responses:
         200:
@@ -299,25 +318,6 @@ components:
               example: doc-1234
               nullable: true
       description: A list of batch analysis results
-    SuggestParameters:
-      type: object
-      properties:
-        limit:
-          type: integer
-          description: maximum number of results to return
-          format: int32
-          default: 10
-          minimum: 0
-        threshold:
-          type: number
-          description: minimum score threshold, below which results will not
-            be returned
-          default: 0.0
-          minimum: 0.0
-          maximum: 1.0
-        language:
-          type: string
-          description: language of subject labels
     Document:
       type: object
       required:
