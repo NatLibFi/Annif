@@ -170,7 +170,6 @@ components:
         backend_id:
           type: string
           example: my-backend
-          nullable: true
       description: A backend of a project
     Project:
       required:
