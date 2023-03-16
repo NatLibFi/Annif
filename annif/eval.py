@@ -219,31 +219,27 @@ class EvaluationBatch:
         """Write results per subject (non-aggregated)
         to outputfile results_file, using labels in the given language"""
 
-        # FIXME: conversion to dense arrays should be avoided
-        y_pred = y_pred.T.toarray() > 0.0
-        y_true = y_true.T.toarray() > 0.0
+        y_pred = y_pred.T > 0.0
+        y_true = y_true.T
 
-        true_pos = y_true & y_pred
-        false_pos = ~y_true & y_pred
-        false_neg = y_true & ~y_pred
-
-        r = len(y_true)
+        true_pos = y_true.multiply(y_pred).sum(axis=1)
+        false_pos = (y_true < y_pred).sum(axis=1)
+        false_neg = (y_true > y_pred).sum(axis=1)
+        precision = np.nan_to_num(true_pos / (true_pos + false_pos))
+        recall = np.nan_to_num(true_pos / (true_pos + false_neg))
+        f1_score = np.nan_to_num(2 * (precision * recall) / (precision + recall))
 
         zipped = zip(
             [subj.uri for subj in self._subject_index],  # URI
             [subj.labels[language] for subj in self._subject_index],  # Label
-            np.sum((true_pos + false_neg), axis=1),  # Support
-            np.sum(true_pos, axis=1),  # True_positives
-            np.sum(false_pos, axis=1),  # False_positives
-            np.sum(false_neg, axis=1),  # False_negatives
-            [
-                precision_score(y_true[i], y_pred[i], zero_division=0) for i in range(r)
-            ],  # Precision
-            [
-                recall_score(y_true[i], y_pred[i], zero_division=0) for i in range(r)
-            ],  # Recall
-            [f1_score(y_true[i], y_pred[i], zero_division=0) for i in range(r)],
-        )  # F1
+            y_true.sum(axis=1),  # Support
+            true_pos,  # True positives
+            false_pos,  # False positives
+            false_neg,  # False negatives
+            precision,  # Precision
+            recall,  # Recall
+            f1_score,  # F1 score
+        )
         self._result_per_subject_header(results_file)
         self._result_per_subject_body(zipped, results_file)
 
@@ -256,8 +252,8 @@ class EvaluationBatch:
         if not self._suggestion_arrays:
             raise NotSupportedException("cannot evaluate empty corpus")
 
-        y_pred = scipy.sparse.vstack(self._suggestion_arrays)
-        y_true = scipy.sparse.vstack(self._gold_subject_arrays)
+        y_pred = scipy.sparse.csr_array(scipy.sparse.vstack(self._suggestion_arrays))
+        y_true = scipy.sparse.csr_array(scipy.sparse.vstack(self._gold_subject_arrays))
 
         results = self._evaluate_samples(y_true, y_pred, metrics)
         results["Documents evaluated"] = int(y_true.shape[0])
