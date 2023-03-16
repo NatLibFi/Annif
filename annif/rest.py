@@ -112,13 +112,11 @@ def suggest(project_id, body):
     return result[0]
 
 
-def suggest_batch(project_id, body):
+def suggest_batch(project_id, body, **query_parameters):
     """suggest subjects for the given documents and return a list of dicts with results
     formatted according to Swagger spec"""
-
-    parameters = body.get("parameters", {})
     documents = body["documents"]
-    result = _suggest(project_id, documents, parameters)
+    result = _suggest(project_id, documents, query_parameters)
 
     if _is_error(result):
         return result

@@ -173,8 +173,8 @@ def test_rest_suggest_batch_with_language_override(app):
             "dummy-vocablang",
             {
                 "documents": [{"text": "example text"}],
-                "parameters": {"language": "en"},
             },
+            language="en",
         )
         assert result[0]["results"][0]["label"] == "dummy"
 
@@ -185,8 +185,8 @@ def test_rest_suggest_batch_with_limit_override(app):
             "dummy-fi",
             {
                 "documents": [{"text": "example text"}],
-                "parameters": {"limit": 0},
             },
+            limit=0,
         )
         assert len(result[0]["results"]) == 0
 
