@@ -47,22 +47,6 @@ def false_negatives(y_true, y_pred):
     return int((y_true > y_pred).sum())
 
 
-def precision_at_k_score(y_true, y_pred, limit):
-    """calculate the precision at K, i.e. the number of relevant items
-    among the top K predicted ones"""
-    scores = []
-    for true, pred in zip(y_true, y_pred):
-        order = pred.argsort()[::-1]
-        orderlimit = min(limit, np.count_nonzero(pred))
-        order = order[:orderlimit]
-        gain = true[order]
-        if orderlimit > 0:
-            scores.append(gain.sum() / orderlimit)
-        else:
-            scores.append(0.0)
-    return statistics.mean(scores)
-
-
 def dcg_score(y_true, y_pred, limit=None):
     """return the discounted cumulative gain (DCG) score for the selected
     labels vs. relevant labels"""
@@ -170,14 +154,14 @@ class EvaluationBatch:
             "NDCG": lambda: ndcg_score(y_true_dense, y_pred_dense),
             "NDCG@5": lambda: ndcg_score(y_true_dense, y_pred_dense, limit=5),
             "NDCG@10": lambda: ndcg_score(y_true_dense, y_pred_dense, limit=10),
-            "Precision@1": lambda: precision_at_k_score(
-                y_true_dense, y_pred_dense, limit=1
+            "Precision@1": lambda: precision_score(
+                y_true, filter_pred_top_k(y_pred, 1) > 0.0, average="samples"
             ),
-            "Precision@3": lambda: precision_at_k_score(
-                y_true_dense, y_pred_dense, limit=3
+            "Precision@3": lambda: precision_score(
+                y_true, filter_pred_top_k(y_pred, 3) > 0.0, average="samples"
             ),
-            "Precision@5": lambda: precision_at_k_score(
-                y_true_dense, y_pred_dense, limit=5
+            "Precision@5": lambda: precision_score(
+                y_true, filter_pred_top_k(y_pred, 5) > 0.0, average="samples"
             ),
             "LRAP": lambda: label_ranking_average_precision_score(y_true, y_pred_dense),
             "True positives": lambda: true_positives(y_true, y_pred_binary),

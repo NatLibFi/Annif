@@ -50,22 +50,6 @@ def test_false_negatives():
     assert fn2 == 2
 
 
-def test_precision_at_k():
-    y_true = np.array([[1, 0, 1, 0, 1, 0]])
-    y_pred = np.array([[6, 5, 4, 3, 2, 1]])
-    prec_10 = annif.eval.precision_at_k_score(y_true, y_pred, 10)
-    assert prec_10 == 0.5
-    prec_5 = annif.eval.precision_at_k_score(y_true, y_pred, 5)
-    assert prec_5 == 0.6
-    prec_4 = annif.eval.precision_at_k_score(y_true, y_pred, 4)
-    assert prec_4 == 0.5
-    prec_3 = annif.eval.precision_at_k_score(y_true, y_pred, 3)
-    assert prec_3 > 0.66
-    assert prec_3 < 0.67
-    prec_1 = annif.eval.precision_at_k_score(y_true, y_pred, 1)
-    assert prec_1 == 1.0
-
-
 # DCG@6 example from https://en.wikipedia.org/wiki/Discounted_cumulative_gain
 def test_dcg():
     y_true = np.array([3, 2, 3, 0, 1, 2])
