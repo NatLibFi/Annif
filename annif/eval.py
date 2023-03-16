@@ -5,12 +5,7 @@ import warnings
 
 import numpy as np
 import scipy.sparse
-from sklearn.metrics import (
-    f1_score,
-    label_ranking_average_precision_score,
-    precision_score,
-    recall_score,
-)
+from sklearn.metrics import f1_score, precision_score, recall_score
 
 from annif.exception import NotSupportedException
 from annif.suggestion import SuggestionBatch
@@ -107,10 +102,6 @@ class EvaluationBatch:
 
     def _evaluate_samples(self, y_true, y_pred, metrics=[]):
         y_pred_binary = y_pred > 0.0
-        # dense versions of sparse arrays, for functions that need them
-        # FIXME: conversion to dense arrays should be avoided
-        y_pred_dense = y_pred.toarray()
-        y_true_dense = y_true.toarray()
 
         # define the available metrics as lazy lambda functions
         # so we can execute only the ones actually requested
@@ -166,7 +157,6 @@ class EvaluationBatch:
             "Precision@5": lambda: precision_score(
                 y_true, filter_pred_top_k(y_pred, 5) > 0.0, average="samples"
             ),
-            "LRAP": lambda: label_ranking_average_precision_score(y_true, y_pred_dense),
             "True positives": lambda: true_positives(y_true, y_pred_binary),
             "False positives": lambda: false_positives(y_true, y_pred_binary),
             "False negatives": lambda: false_negatives(y_true, y_pred_binary),

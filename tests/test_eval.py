@@ -145,8 +145,6 @@ def test_evaluation_batch(subject_index, tmpdir):
     results = batch.results(results_file=outfile.open("w"), language="en")
     assert results["Precision (doc avg)"] == 0.5
     assert results["Recall (doc avg)"] == 0.5
-    assert results["LRAP"] >= 0.50
-    assert results["LRAP"] <= 0.51
     assert results["True positives"] == 1
     assert results["False positives"] == 1
     assert results["False negatives"] == 1
