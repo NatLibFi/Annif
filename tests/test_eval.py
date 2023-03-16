@@ -1,6 +1,5 @@
 """Unit tests for evaluation metrics in Annif"""
 
-import numpy as np
 from scipy.sparse import csr_array
 
 import annif.corpus

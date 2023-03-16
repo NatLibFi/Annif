@@ -1,6 +1,5 @@
 """Evaluation metrics for Annif"""
 
-import statistics
 import warnings
 
 import numpy as np
