@@ -131,7 +131,7 @@ def test_ndcg_empty2():
     assert ndcg == 1.0
 
 
-def test_evaluation_batch(subject_index):
+def test_evaluation_batch(subject_index, tmpdir):
     batch = annif.eval.EvaluationBatch(subject_index)
 
     gold_set = annif.corpus.SubjectSet.from_string(
@@ -157,7 +157,8 @@ def test_evaluation_batch(subject_index):
         ]
     )
     batch.evaluate_many([hits2], [gold_set])
-    results = batch.results()
+    outfile = tmpdir.join("results.tsv")
+    results = batch.results(results_file=outfile.open("w"), language="en")
     assert results["Precision (doc avg)"] == 0.5
     assert results["Recall (doc avg)"] == 0.5
     assert results["LRAP"] >= 0.50
@@ -166,3 +167,23 @@ def test_evaluation_batch(subject_index):
     assert results["False positives"] == 1
     assert results["False negatives"] == 1
     assert results["Documents evaluated"] == 2
+
+    output = outfile.readlines()
+    assert len(output) == 131
+    assert (
+        output[0]
+        == "\t".join(
+            [
+                "URI",
+                "Label",
+                "Support",
+                "True_positives",
+                "False_positives",
+                "False_negatives",
+                "Precision",
+                "Recall",
+                "F1_score",
+            ]
+        )
+        + "\n"
+    )
