@@ -50,29 +50,32 @@ def false_negatives(y_true, y_pred):
 def dcg_score(y_true, y_pred, limit=None):
     """return the discounted cumulative gain (DCG) score for the selected
     labels vs. relevant labels"""
-    order = y_pred.argsort()[::-1]
-    n_pred = np.count_nonzero(y_pred)
+
+    n_pred = y_pred.count_nonzero()
     if limit is not None:
         n_pred = min(limit, n_pred)
-    order = order[:n_pred]
-    gain = y_true[order]
-    discount = np.log2(np.arange(order.size) + 2)
 
+    top_k = y_pred.data.argsort()[-n_pred:][::-1]
+    order = y_pred.indices[top_k]
+    gain = y_true[:, order]
+    discount = np.log2(np.arange(1, n_pred + 1) + 1)
     return (gain / discount).sum()
 
 
 def ndcg_score(y_true, y_pred, limit=None):
     """return the normalized discounted cumulative gain (nDCG) score for the
     selected labels vs. relevant labels"""
-    scores = []
-    for true, pred in zip(y_true, y_pred):
+
+    scores = np.ones(y_true.shape[0], dtype=np.float32)
+    for i in range(y_true.shape[0]):
+        true = y_true.getrow(i)
         idcg = dcg_score(true, true, limit)
-        dcg = dcg_score(true, pred, limit)
         if idcg > 0:
-            scores.append(dcg / idcg)
-        else:
-            scores.append(1.0)  # perfect score for no relevant hits case
-    return statistics.mean(scores)
+            pred = y_pred.getrow(i)
+            dcg = dcg_score(true, pred, limit)
+            scores[i] = dcg / idcg
+
+    return float(scores.mean())
 
 
 class EvaluationBatch:
@@ -151,9 +154,9 @@ class EvaluationBatch:
             "F1@5": lambda: f1_score(
                 y_true, filter_pred_top_k(y_pred, 5) > 0.0, average="samples"
             ),
-            "NDCG": lambda: ndcg_score(y_true_dense, y_pred_dense),
-            "NDCG@5": lambda: ndcg_score(y_true_dense, y_pred_dense, limit=5),
-            "NDCG@10": lambda: ndcg_score(y_true_dense, y_pred_dense, limit=10),
+            "NDCG": lambda: ndcg_score(y_true, y_pred),
+            "NDCG@5": lambda: ndcg_score(y_true, y_pred, limit=5),
+            "NDCG@10": lambda: ndcg_score(y_true, y_pred, limit=10),
             "Precision@1": lambda: precision_score(
                 y_true, filter_pred_top_k(y_pred, 1) > 0.0, average="samples"
             ),
