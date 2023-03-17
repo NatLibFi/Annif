@@ -58,7 +58,10 @@ class BaseEnsembleBackend(backend.AnnifBackend):
     def _suggest_batch(self, texts, params):
         sources = annif.util.parse_sources(params["sources"])
         hit_sets_from_sources = self._suggest_with_sources(texts, sources)
-        return self._merge_hit_sets_from_sources(hit_sets_from_sources, params)
+        return annif.suggestion.SuggestionBatch(
+            self._merge_hit_sets_from_sources(hit_sets_from_sources, params),
+            len(self.project.subjects),
+        )
 
 
 class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):

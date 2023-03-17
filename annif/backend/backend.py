@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from glob import glob
 
 from annif import logger
+from annif.suggestion import SuggestionBatch
 
 
 class AnnifBackend(metaclass=abc.ABCMeta):
@@ -83,7 +84,9 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         """This method can be implemented by backends to use batching of documents in
         their operations. This default implementation uses the regular suggest
         functionality."""
-        return [self._suggest(text, params) for text in texts]
+        return SuggestionBatch(
+            [self._suggest(text, params) for text in texts], len(self.project.subjects)
+        )
 
     def suggest(self, texts, params=None):
         """Suggest subjects for the input documents and return a list of subject sets

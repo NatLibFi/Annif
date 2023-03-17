@@ -11,7 +11,7 @@ from annif.exception import (
     NotSupportedException,
     OperationFailedException,
 )
-from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+from annif.suggestion import ListSuggestionResult, SubjectSuggestion, SuggestionBatch
 
 from . import backend, mixins
 
@@ -136,4 +136,4 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             for subj_id, score in self._model.predict(feature_values, top_k=limit):
                 results.append(SubjectSuggestion(subject_id=subj_id, score=score))
             batch_results.append(ListSuggestionResult(results))
-        return batch_results
+        return SuggestionBatch(batch_results, len(self.project.subjects))
