@@ -13,20 +13,6 @@ WeightedSuggestionsBatch = collections.namedtuple(
 )
 
 
-class SuggestionFilter:
-    """A reusable filter for filtering SubjectSuggestion objects."""
-
-    def __init__(self, subject_index, limit=None, threshold=0.0):
-        self._subject_index = subject_index
-        self._limit = limit
-        self._threshold = threshold
-
-    def __call__(self, orighits):
-        return LazySuggestionResult(
-            lambda: orighits.filter(self._subject_index, self._limit, self._threshold)
-        )
-
-
 class SuggestionResult(metaclass=abc.ABCMeta):
     """Abstract base class for a set of hits returned by an analysis
     operation."""

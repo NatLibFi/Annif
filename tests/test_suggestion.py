@@ -2,13 +2,10 @@
 
 import numpy as np
 
-from annif.corpus import Subject
 from annif.suggestion import (
     LazySuggestionResult,
     ListSuggestionResult,
     SubjectSuggestion,
-    SuggestionFilter,
-    SuggestionResult,
     VectorSuggestionResult,
 )
 
@@ -18,73 +15,6 @@ def generate_suggestions(n, subject_index):
     for i in range(n):
         suggestions.append(SubjectSuggestion(subject_id=i, score=1.0 / (i + 1)))
     return ListSuggestionResult(suggestions)
-
-
-def test_hitfilter_limit(subject_index):
-    origsuggestions = generate_suggestions(10, subject_index)
-    suggestions = SuggestionFilter(subject_index, limit=5)(origsuggestions)
-    assert isinstance(suggestions, SuggestionResult)
-    assert len(suggestions) == 5
-
-
-def test_hitfilter_threshold(subject_index):
-    origsuggestions = generate_suggestions(10, subject_index)
-    suggestions = SuggestionFilter(subject_index, threshold=0.5)(origsuggestions)
-    assert isinstance(suggestions, SuggestionResult)
-    assert len(suggestions) == 2
-
-
-def test_hitfilter_zero_score(subject_index):
-    origsuggestions = ListSuggestionResult([SubjectSuggestion(subject_id=0, score=0.0)])
-    suggestions = SuggestionFilter(subject_index)(origsuggestions)
-    assert isinstance(suggestions, SuggestionResult)
-    assert len(suggestions) == 0
-
-
-def test_hitfilter_list_suggestion_results_with_deprecated_subjects(subject_index):
-    subject_index.append(
-        Subject(uri="http://example.org/deprecated", labels=None, notation=None)
-    )
-    suggestions = ListSuggestionResult(
-        [
-            # subject: seals (labels)
-            SubjectSuggestion(
-                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p7141"),
-                score=1.0,
-            ),
-            # subject: Vikings
-            SubjectSuggestion(
-                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p6479"),
-                score=0.5,
-            ),
-            # a deprecated subject
-            SubjectSuggestion(subject_id=None, score=0.5),
-        ]
-    )
-    filtered_suggestions = SuggestionFilter(subject_index)(suggestions)
-    assert isinstance(filtered_suggestions, SuggestionResult)
-    assert len(filtered_suggestions) == 2
-    assert filtered_suggestions.as_list()[0] == suggestions.as_list()[0]
-    assert filtered_suggestions.as_list()[1] == suggestions.as_list()[1]
-
-
-def test_hitfilter_vector_suggestion_results_with_deprecated_subjects(subject_index):
-    subject_index.append(
-        Subject(uri="http://example.org/deprecated", labels=None, notation=None)
-    )
-    vector = np.ones(len(subject_index))
-    suggestions = VectorSuggestionResult(vector)
-    filtered_suggestions = SuggestionFilter(subject_index)(suggestions)
-
-    assert len(suggestions) == len(filtered_suggestions) + len(
-        subject_index.deprecated_ids()
-    )
-
-    deprecated_id = subject_index.by_uri("http://example.org/deprecated")
-    deprecated = SubjectSuggestion(subject_id=deprecated_id, score=1.0)
-
-    assert deprecated in suggestions.as_list()
-    assert deprecated not in filtered_suggestions.as_list()
 
 
 def test_lazy_suggestion_result(subject_index):
