@@ -1,7 +1,6 @@
 """Project management functionality for Annif"""
 
 import enum
-import itertools
 import os.path
 from shutil import rmtree
 
@@ -204,7 +203,7 @@ class AnnifProject(DatadirMixin):
             self.suggest([doc.text for doc in doc_batch], backend_params)
             for doc_batch in corpus.doc_batches
         )
-        return itertools.chain.from_iterable(suggestions)
+        return annif.suggestion.SuggestionResults(suggestions)
 
     def suggest(self, texts, backend_params=None):
         """Suggest subjects for the given documents batch."""

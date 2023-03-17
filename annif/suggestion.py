@@ -5,7 +5,7 @@ import collections
 import itertools
 
 import numpy as np
-from scipy.sparse import csr_array, dok_array
+from scipy.sparse import dok_array
 
 SubjectSuggestion = collections.namedtuple("SubjectSuggestion", "subject_id score")
 WeightedSuggestionsBatch = collections.namedtuple(
@@ -257,3 +257,24 @@ class SuggestionBatch:
 
     def __len__(self):
         return self.array.shape[0]
+
+
+class SuggestionResults:
+    """Subject suggestions for a potentially very large number of documents."""
+
+    def __init__(self, batches):
+        """Initialize a new SuggestionResults from an iterable that provides
+        SuggestionBatch objects."""
+
+        self.batches = batches
+
+    def filter(self, limit=None, threshold=0.0):
+        """Return a view of these suggestions, filtered by the given limit
+        and/or threshold, as another SuggestionResults object."""
+
+        return SuggestionResults(
+            (batch.filter(limit, threshold) for batch in self.batches)
+        )
+
+    def __iter__(self):
+        return iter(itertools.chain.from_iterable(self.batches))

@@ -20,7 +20,7 @@ import annif.registry
 from annif import cli_util
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.project import Access
-from annif.suggestion import ListSuggestionResult, SuggestionFilter
+from annif.suggestion import ListSuggestionResult
 from annif.util import metric_code
 
 logger = annif.logger
@@ -240,22 +240,22 @@ def run_suggest(
     if lang not in project.vocab.languages:
         raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
     backend_params = cli_util.parse_backend_params(backend_param, project)
-    hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
     if paths and not (len(paths) == 1 and paths[0] == "-"):
         docs = cli_util.open_text_documents(paths, docs_limit)
-        subject_sets = project.suggest_corpus(docs, backend_params)
+        results = project.suggest_corpus(docs, backend_params).filter(limit, threshold)
         for (
-            subjects,
+            suggestions,
             path,
-        ) in zip(subject_sets, paths):
+        ) in zip(results, paths):
             click.echo(f"Suggestions for {path}")
-            hits = hit_filter(subjects)
-            cli_util.show_hits(hits, project, lang)
+            cli_util.show_hits(suggestions, project, lang)
     else:
         text = sys.stdin.read()
-        hits = hit_filter(project.suggest([text], backend_params)[0])
-        cli_util.show_hits(hits, project, lang)
+        suggestions = project.suggest([text], backend_params).filter(limit, threshold)[
+            0
+        ]
+        cli_util.show_hits(suggestions, project, lang)
 
 
 @cli.command("index")
@@ -288,23 +288,21 @@ def run_index(
     if lang not in project.vocab.languages:
         raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
     backend_params = cli_util.parse_backend_params(backend_param, project)
-    hit_filter = SuggestionFilter(project.subjects, limit, threshold)
 
     documents = annif.corpus.DocumentDirectory(
         directory, None, None, require_subjects=False
     )
-    subject_sets = project.suggest_corpus(documents, backend_params)
+    results = project.suggest_corpus(documents, backend_params).filter(limit, threshold)
 
-    for (docfilename, _), subjects in zip(documents, subject_sets):
+    for (docfilename, _), suggestions in zip(documents, results):
         subjectfilename = re.sub(r"\.txt$", suffix, docfilename)
         if os.path.exists(subjectfilename) and not force:
             click.echo(
                 "Not overwriting {} (use --force to override)".format(subjectfilename)
             )
             continue
-        hits = hit_filter(subjects)
         with open(subjectfilename, "w", encoding="utf-8") as subjfile:
-            cli_util.show_hits(hits, project, lang, file=subjfile)
+            cli_util.show_hits(suggestions, project, lang, file=subjfile)
 
 
 @cli.command("eval")
