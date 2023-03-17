@@ -20,7 +20,7 @@ import annif.registry
 from annif import cli_util
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.project import Access
-from annif.suggestion import ListSuggestionResult
+from annif.suggestion import SuggestionResults
 from annif.util import metric_code
 
 logger = annif.logger
@@ -413,15 +413,19 @@ def run_eval(
 
 
 FILTER_BATCH_MAX_LIMIT = 15
+OPTIMIZE_METRICS = ["Precision (doc avg)", "Recall (doc avg)", "F1 score (doc avg)"]
 
 
 @cli.command("optimize")
 @click.argument("project_id")
 @click.argument("paths", type=click.Path(exists=True), nargs=-1)
+@click.option(
+    "--jobs", "-j", default=1, help="Number of parallel jobs (0 means all CPUs)"
+)
 @cli_util.docs_limit_option
 @cli_util.backend_param_option
 @cli_util.common_options
-def run_optimize(project_id, paths, docs_limit, backend_param):
+def run_optimize(project_id, paths, jobs, docs_limit, backend_param):
     """
     Suggest subjects for documents, testing multiple limits and thresholds.
     \f
@@ -434,30 +438,37 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     """
     project = cli_util.get_project(project_id)
     backend_params = cli_util.parse_backend_params(backend_param, project)
+    filter_params = cli_util.generate_filter_params(FILTER_BATCH_MAX_LIMIT)
 
-    filter_batches = cli_util.generate_filter_batches(
-        project.subjects, FILTER_BATCH_MAX_LIMIT
-    )
+    import annif.eval
 
-    ndocs = 0
     corpus = cli_util.open_documents(
         paths, project.subjects, project.vocab_lang, docs_limit
     )
-    for docs_batch in corpus.doc_batches:
-        texts, subject_sets = zip(*[(doc.text, doc.subject_set) for doc in docs_batch])
-        raw_hit_sets = project.suggest(texts, backend_params)
-        hit_sets = [
-            raw_hits.filter(project.subjects, limit=FILTER_BATCH_MAX_LIMIT)
-            for raw_hits in raw_hit_sets
-        ]
-        assert isinstance(hit_sets[0], ListSuggestionResult), (
-            "Optimize should only be done with ListSuggestionResult "
-            + "as it would be very slow with VectorSuggestionResult."
-        )
-        for hit_filter, filter_batch in filter_batches.values():
-            filtered_hits = [hit_filter(hits) for hits in hit_sets]
-            filter_batch.evaluate_many(filtered_hits, subject_sets)
-        ndocs += len(texts)
+
+    jobs, pool_class = annif.parallel.get_pool(jobs)
+
+    project.initialize(parallel=True)
+    psmap = annif.parallel.ProjectSuggestMap(
+        project.registry,
+        [project_id],
+        backend_params,
+        limit=FILTER_BATCH_MAX_LIMIT,
+        threshold=0.0,
+    )
+
+    ndocs = 0
+    suggestion_batches = []
+    subject_set_batches = []
+    with pool_class(jobs) as pool:
+        for suggestion_batch, subject_sets in pool.imap_unordered(
+            psmap.suggest_batch, corpus.doc_batches
+        ):
+            ndocs += len(suggestion_batch[project_id])
+            suggestion_batches.append(suggestion_batch[project_id])
+            subject_set_batches.append(subject_sets)
+
+    orig_suggestion_results = SuggestionResults(suggestion_batches)
 
     click.echo("\t".join(("Limit", "Thresh.", "Prec.", "Rec.", "F1")))
 
@@ -465,21 +476,22 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
     best_params = {}
 
     template = "{:d}\t{:.02f}\t{:.04f}\t{:.04f}\t{:.04f}"
-    # Store the batches in a list that gets consumed along the way
-    # This way GC will have a chance to reclaim the memory
-    filter_batches = list(filter_batches.items())
-    while filter_batches:
-        params, filter_batch = filter_batches.pop(0)
-        metrics = ["Precision (doc avg)", "Recall (doc avg)", "F1 score (doc avg)"]
-        results = filter_batch[1].results(metrics=metrics)
+    import annif.eval
+
+    for limit, threshold in filter_params:
+        eval_batch = annif.eval.EvaluationBatch(project.subjects)
+        filtered_results = orig_suggestion_results.filter(limit, threshold)
+        for batch, subject_sets in zip(filtered_results.batches, subject_set_batches):
+            eval_batch.evaluate_many(batch, subject_sets)
+        results = eval_batch.results(metrics=OPTIMIZE_METRICS)
         for metric, score in results.items():
             if score >= best_scores[metric]:
                 best_scores[metric] = score
-                best_params[metric] = params
+                best_params[metric] = (limit, threshold)
         click.echo(
             template.format(
-                params[0],
-                params[1],
+                limit,
+                threshold,
                 results["Precision (doc avg)"],
                 results["Recall (doc avg)"],
                 results["F1 score (doc avg)"],
@@ -488,7 +500,7 @@ def run_optimize(project_id, paths, docs_limit, backend_param):
 
     click.echo()
     template2 = "Best {:>19}: {:.04f}\tLimit: {:d}\tThreshold: {:.02f}"
-    for metric in metrics:
+    for metric in OPTIMIZE_METRICS:
         click.echo(
             template2.format(
                 metric,
