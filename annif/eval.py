@@ -8,25 +8,7 @@ from sklearn.metrics import f1_score, precision_score, recall_score
 
 from annif.exception import NotSupportedException
 from annif.suggestion import SuggestionBatch
-
-
-def filter_pred_top_k(preds, limit=None, threshold=0.0):
-    """filter a 2D prediction vector, retaining only the top K suggestions
-    with a score above or equal to the threshold for each individual
-    prediction; the rest will be left as zeros"""
-
-    filtered = scipy.sparse.dok_array(preds.shape, dtype=np.float32)
-    for row in range(preds.shape[0]):
-        arow = preds.getrow(row)
-        top_k = arow.data.argsort()[::-1]
-        if limit is not None:
-            top_k = top_k[:limit]
-        for idx in top_k:
-            val = arow.data[idx]
-            if val < threshold:
-                break
-            filtered[row, arow.indices[idx]] = val
-    return filtered.tocsr()
+from annif.util import filter_suggestion
 
 
 def true_positives(y_true, y_pred):
@@ -148,19 +130,19 @@ class EvaluationBatch:
                 y_true, y_pred_binary, average="micro"
             ),
             "F1@5": lambda: f1_score(
-                y_true, filter_pred_top_k(y_pred, 5) > 0.0, average="samples"
+                y_true, filter_suggestion(y_pred, 5) > 0.0, average="samples"
             ),
             "NDCG": lambda: ndcg_score(y_true, y_pred),
             "NDCG@5": lambda: ndcg_score(y_true, y_pred, limit=5),
             "NDCG@10": lambda: ndcg_score(y_true, y_pred, limit=10),
             "Precision@1": lambda: precision_score(
-                y_true, filter_pred_top_k(y_pred, 1) > 0.0, average="samples"
+                y_true, filter_suggestion(y_pred, 1) > 0.0, average="samples"
             ),
             "Precision@3": lambda: precision_score(
-                y_true, filter_pred_top_k(y_pred, 3) > 0.0, average="samples"
+                y_true, filter_suggestion(y_pred, 3) > 0.0, average="samples"
             ),
             "Precision@5": lambda: precision_score(
-                y_true, filter_pred_top_k(y_pred, 5) > 0.0, average="samples"
+                y_true, filter_suggestion(y_pred, 5) > 0.0, average="samples"
             ),
             "True positives": lambda: true_positives(y_true, y_pred_binary),
             "False positives": lambda: false_positives(y_true, y_pred_binary),
