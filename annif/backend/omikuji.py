@@ -136,4 +136,4 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             for subj_id, score in self._model.predict(feature_values, top_k=limit):
                 results.append(SubjectSuggestion(subject_id=subj_id, score=score))
             batch_results.append(ListSuggestionResult(results))
-        return SuggestionBatch(batch_results, len(self.project.subjects))
+        return SuggestionBatch.from_sequence(batch_results, len(self.project.subjects))

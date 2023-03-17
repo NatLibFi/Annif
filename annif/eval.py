@@ -73,7 +73,7 @@ class EvaluationBatch:
 
     def evaluate_many(self, suggestion_batch, gold_subject_batch):
         if not isinstance(suggestion_batch, SuggestionBatch):
-            suggestion_batch = SuggestionBatch(
+            suggestion_batch = SuggestionBatch.from_sequence(
                 suggestion_batch, len(self._subject_index)
             )
         self._suggestion_arrays.append(suggestion_batch.array)

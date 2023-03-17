@@ -101,7 +101,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         confidences = self._model.decision_function(vector)
         # convert to 0..1 score range using logistic function
         scores_list = scipy.special.expit(confidences)
-        return SuggestionBatch(
+        return SuggestionBatch.from_sequence(
             [
                 ListSuggestionResult([])
                 if row.nnz == 0

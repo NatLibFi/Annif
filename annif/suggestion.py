@@ -5,7 +5,7 @@ import collections
 import itertools
 
 import numpy as np
-from scipy.sparse import dok_array
+from scipy.sparse import csr_array, dok_array
 
 SubjectSuggestion = collections.namedtuple("SubjectSuggestion", "subject_id score")
 WeightedSuggestionsBatch = collections.namedtuple(
@@ -227,7 +227,12 @@ class SparseSuggestionResult(SuggestionResult):
 class SuggestionBatch:
     """Subject suggestions for a batch of documents."""
 
-    def __init__(self, suggestion_results, vocab_size):
+    def __init__(self, array):
+        """Create a new SuggestionBatch from a csr_array"""
+        self.array = array
+
+    @classmethod
+    def from_sequence(cls, suggestion_results, vocab_size):
         """Create a new SuggestionBatch from a sequence of SuggestionResult objects."""
 
         # create a dok_array for fast construction
@@ -235,7 +240,15 @@ class SuggestionBatch:
         for idx, result in enumerate(suggestion_results):
             for suggestion in result.as_list():
                 ar[idx, suggestion.subject_id] = suggestion.score
-        self.array = ar.tocsr()
+        return cls(ar.tocsr())
+
+    def filter(self, subject_index, limit=None, threshold=0.0):
+        """Return a subset of the hits, filtered by the given limit and
+        score threshold, as another SuggestionBatch object."""
+
+        from annif.util import filter_suggestion
+
+        return SuggestionBatch(filter_suggestion(self.array, limit, threshold))
 
     def __getitem__(self, idx):
         if idx < 0 or idx >= len(self):

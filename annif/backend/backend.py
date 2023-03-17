@@ -84,7 +84,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         """This method can be implemented by backends to use batching of documents in
         their operations. This default implementation uses the regular suggest
         functionality."""
-        return SuggestionBatch(
+        return SuggestionBatch.from_sequence(
             [self._suggest(text, params) for text in texts], len(self.project.subjects)
         )
 
