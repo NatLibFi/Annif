@@ -7,10 +7,22 @@ import annif.eval
 import annif.suggestion
 
 
-def test_filter_pred_top_k():
+def test_filter_pred_top_k_limit():
     pred = csr_array([[0, 1, 3, 2], [1, 4, 3, 0]])
-    filtered = annif.eval.filter_pred_top_k(pred, 2)
+    filtered = annif.eval.filter_pred_top_k(pred, limit=2)
     assert filtered.toarray().tolist() == [[0, 0, 3, 2], [0, 4, 3, 0]]
+
+
+def test_filter_pred_top_k_threshold():
+    pred = csr_array([[0, 1, 3, 2], [1, 4, 3, 0]])
+    filtered = annif.eval.filter_pred_top_k(pred, threshold=2)
+    assert filtered.toarray().tolist() == [[0, 0, 3, 2], [0, 4, 3, 0]]
+
+
+def test_filter_pred_top_k_limit_and_threshold():
+    pred = csr_array([[0, 1, 3, 2], [1, 4, 3, 0]])
+    filtered = annif.eval.filter_pred_top_k(pred, limit=2, threshold=3)
+    assert filtered.toarray().tolist() == [[0, 0, 3, 0], [0, 4, 3, 0]]
 
 
 def test_true_positives():

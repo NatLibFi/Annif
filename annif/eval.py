@@ -10,16 +10,22 @@ from annif.exception import NotSupportedException
 from annif.suggestion import SuggestionBatch
 
 
-def filter_pred_top_k(preds, limit):
+def filter_pred_top_k(preds, limit=None, threshold=0.0):
     """filter a 2D prediction vector, retaining only the top K suggestions
-    for each individual prediction; the rest will be set to zeros"""
+    with a score above or equal to the threshold for each individual
+    prediction; the rest will be left as zeros"""
 
     filtered = scipy.sparse.dok_array(preds.shape, dtype=np.float32)
     for row in range(preds.shape[0]):
-        ar = preds.getrow(row).toarray()[0]
-        top_k = np.argsort(ar)[::-1][:limit]
-        for col in top_k:
-            filtered[row, col] = preds[row, col]
+        arow = preds.getrow(row)
+        top_k = arow.data.argsort()[::-1]
+        if limit is not None:
+            top_k = top_k[:limit]
+        for idx in top_k:
+            val = arow.data[idx]
+            if val < threshold:
+                break
+            filtered[row, arow.indices[idx]] = val
     return filtered.tocsr()
 
 
