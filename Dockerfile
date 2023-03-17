@@ -1,5 +1,5 @@
 FROM python:3.8-slim-bullseye
-LABEL maintainer="Juho Inkinen <juho.inkinen@helsinki.fi>"
+LABEL org.opencontainers.image.authors="grp-natlibfi-annif@helsinki.fi"
 SHELL ["/bin/bash", "-c"]
 
 ARG optional_dependencies="fasttext voikko fasttext nn omikuji yake spacy"
