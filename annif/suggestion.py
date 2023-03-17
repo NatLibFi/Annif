@@ -42,38 +42,6 @@ class SuggestionResult(metaclass=abc.ABCMeta):
         pass  # pragma: no cover
 
 
-class LazySuggestionResult(SuggestionResult):
-    """SuggestionResult implementation that wraps another SuggestionResult which
-    is initialized lazily only when it is actually accessed. Method calls
-    will be proxied to the wrapped SuggestionResult."""
-
-    def __init__(self, construct):
-        """Create the proxy object. The given construct function will be
-        called to create the actual SuggestionResult when it is needed."""
-        self._construct = construct
-        self._object = None
-
-    def _initialize(self):
-        if self._object is None:
-            self._object = self._construct()
-
-    def as_list(self):
-        self._initialize()
-        return self._object.as_list()
-
-    def as_vector(self, size, destination=None):
-        self._initialize()
-        return self._object.as_vector(size, destination)
-
-    def filter(self, subject_index, limit=None, threshold=0.0):
-        self._initialize()
-        return self._object.filter(subject_index, limit, threshold)
-
-    def __len__(self):
-        self._initialize()
-        return len(self._object)
-
-
 class VectorSuggestionResult(SuggestionResult):
     """SuggestionResult implementation based primarily on NumPy vectors."""
 

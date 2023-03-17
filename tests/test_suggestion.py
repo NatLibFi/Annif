@@ -3,7 +3,6 @@
 import numpy as np
 
 from annif.suggestion import (
-    LazySuggestionResult,
     ListSuggestionResult,
     SubjectSuggestion,
     VectorSuggestionResult,
@@ -15,18 +14,6 @@ def generate_suggestions(n, subject_index):
     for i in range(n):
         suggestions.append(SubjectSuggestion(subject_id=i, score=1.0 / (i + 1)))
     return ListSuggestionResult(suggestions)
-
-
-def test_lazy_suggestion_result(subject_index):
-    lsr = LazySuggestionResult(lambda: generate_suggestions(10, subject_index))
-    assert lsr._object is None
-    assert len(lsr) == 10
-    assert len(lsr.as_list()) == 10
-    assert lsr.as_vector(len(subject_index)) is not None
-    assert lsr.as_list()[0] is not None
-    filtered = lsr.filter(subject_index, limit=5, threshold=0.0)
-    assert len(filtered) == 5
-    assert lsr._object is not None
 
 
 def test_list_suggestion_result_vector(subject_index):
