@@ -242,7 +242,7 @@ class SuggestionBatch:
                 ar[idx, suggestion.subject_id] = suggestion.score
         return cls(ar.tocsr())
 
-    def filter(self, subject_index, limit=None, threshold=0.0):
+    def filter(self, limit=None, threshold=0.0):
         """Return a subset of the hits, filtered by the given limit and
         score threshold, as another SuggestionBatch object."""
 
