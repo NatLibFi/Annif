@@ -43,13 +43,6 @@ class SuggestionResult(metaclass=abc.ABCMeta):
         pass  # pragma: no cover
 
     @abc.abstractmethod
-    def as_vector(self, size, destination=None):
-        """Return the hits as a one-dimensional score vector of given size.
-        If destination array is given (not None) it will be used, otherwise a
-        new array will be created."""
-        pass  # pragma: no cover
-
-    @abc.abstractmethod
     def __len__(self):
         """Return the number of hits with non-zero scores."""
         pass  # pragma: no cover
@@ -85,12 +78,6 @@ class VectorSuggestionResult(SuggestionResult):
             self._lsr = self._vector_to_list_suggestion()
         return iter(self._lsr)
 
-    def as_vector(self, size, destination=None):
-        if destination is not None:
-            np.copyto(destination, self._vector)
-            return destination
-        return self._vector
-
     def __len__(self):
         return (self._vector > 0.0).sum()
 
@@ -112,10 +99,7 @@ class SparseSuggestionResult(SuggestionResult):
             sorted(suggestions, key=lambda suggestion: suggestion.score, reverse=True)
         )
 
-    def as_vector(self, size, destination=None):
-        if destination is not None:
-            print("as_vector called with destination not None")
-            return None
+    def as_vector(self, size):
         return self._array[[self._idx], :].toarray()[0]
 
     def __len__(self):

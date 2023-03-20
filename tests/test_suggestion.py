@@ -1,16 +1,10 @@
 """Unit tests for suggestion processing in Annif"""
 
-import numpy as np
 import pytest
 from scipy.sparse import csr_array
 
 from annif.corpus import Subject
-from annif.suggestion import (
-    SubjectSuggestion,
-    SuggestionBatch,
-    VectorSuggestionResult,
-    filter_suggestion,
-)
+from annif.suggestion import SubjectSuggestion, SuggestionBatch, filter_suggestion
 
 
 def generate_suggestions(n, subject_index):
@@ -33,32 +27,6 @@ def test_filter_suggestion_limit_and_threshold():
     pred = csr_array([[0, 1, 3, 2], [1, 4, 3, 0]])
     filtered = filter_suggestion(pred, limit=2, threshold=3)
     assert filtered.toarray().tolist() == [[0, 0, 3, 0], [0, 4, 3, 0]]
-
-
-def test_vector_suggestion_result_as_vector(subject_index):
-    orig_vector = np.ones(len(subject_index), dtype=np.float32)
-    suggestions = VectorSuggestionResult(orig_vector)
-    vector = suggestions.as_vector(len(subject_index))
-    assert (vector == orig_vector).all()
-
-
-def test_vector_suggestions_enforce_score_range(subject_index):
-    orig_vector = np.array([-0.1, 0.0, 0.5, 1.0, 1.5], dtype=np.float32)
-    suggestions = VectorSuggestionResult(orig_vector)
-    vector = suggestions.as_vector(len(subject_index))
-    expected = np.array([0.0, 0.0, 0.5, 1.0, 1.0], dtype=np.float32)
-    assert (vector == expected).all()
-
-
-def test_vector_suggestion_result_as_vector_destination(subject_index):
-    orig_vector = np.ones(len(subject_index), dtype=np.float32)
-    suggestions = VectorSuggestionResult(orig_vector)
-    destination = np.zeros(len(subject_index), dtype=np.float32)
-    assert not (destination == orig_vector).all()  # destination is all zeros
-
-    vector = suggestions.as_vector(len(subject_index), destination=destination)
-    assert vector is destination
-    assert (destination == orig_vector).all()  # destination now all ones
 
 
 def test_suggestionbatch_from_sequence(dummy_subject_index):
