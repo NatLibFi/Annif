@@ -144,8 +144,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
         vector = np.zeros(len(self.project.subjects), dtype=np.float32)
         for score, subject_id in prediction:
             vector[subject_id] = score
-        result = VectorSuggestionResult(vector)
-        return result.filter(self.project.subjects, limit=int(params["limit"]))
+        return VectorSuggestionResult(vector)
 
     def _suggest(self, text, params):
         candidates = self._generate_candidates(text)

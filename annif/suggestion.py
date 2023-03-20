@@ -205,13 +205,13 @@ class SuggestionBatch:
         self.array = array
 
     @classmethod
-    def from_sequence(cls, suggestion_results, vocab_size):
+    def from_sequence(cls, suggestion_results, vocab_size, limit=None):
         """Create a new SuggestionBatch from a sequence of SuggestionResult objects."""
 
         # create a dok_array for fast construction
         ar = dok_array((len(suggestion_results), vocab_size), dtype=np.float32)
         for idx, result in enumerate(suggestion_results):
-            for suggestion in result:
+            for suggestion in itertools.islice(result, limit):
                 ar[idx, suggestion.subject_id] = suggestion.score
         return cls(ar.tocsr())
 

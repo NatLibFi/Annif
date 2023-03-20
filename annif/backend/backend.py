@@ -85,7 +85,9 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         their operations. This default implementation uses the regular suggest
         functionality."""
         return SuggestionBatch.from_sequence(
-            [self._suggest(text, params) for text in texts], len(self.project.subjects)
+            [self._suggest(text, params) for text in texts],
+            len(self.project.subjects),
+            limit=int(params.get("limit")),
         )
 
     def suggest(self, texts, params=None):
