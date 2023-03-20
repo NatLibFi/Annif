@@ -1,11 +1,13 @@
 """Unit tests for suggestion processing in Annif"""
 
 import numpy as np
+from scipy.sparse import csr_array
 
 from annif.suggestion import (
     ListSuggestionResult,
     SubjectSuggestion,
     VectorSuggestionResult,
+    filter_suggestion,
 )
 
 
@@ -14,6 +16,24 @@ def generate_suggestions(n, subject_index):
     for i in range(n):
         suggestions.append(SubjectSuggestion(subject_id=i, score=1.0 / (i + 1)))
     return ListSuggestionResult(suggestions)
+
+
+def test_filter_suggestion_limit():
+    pred = csr_array([[0, 1, 3, 2], [1, 4, 3, 0]])
+    filtered = filter_suggestion(pred, limit=2)
+    assert filtered.toarray().tolist() == [[0, 0, 3, 2], [0, 4, 3, 0]]
+
+
+def test_filter_suggestion_threshold():
+    pred = csr_array([[0, 1, 3, 2], [1, 4, 3, 0]])
+    filtered = filter_suggestion(pred, threshold=2)
+    assert filtered.toarray().tolist() == [[0, 0, 3, 2], [0, 4, 3, 0]]
+
+
+def test_filter_suggestion_limit_and_threshold():
+    pred = csr_array([[0, 1, 3, 2], [1, 4, 3, 0]])
+    filtered = filter_suggestion(pred, limit=2, threshold=3)
+    assert filtered.toarray().tolist() == [[0, 0, 3, 0], [0, 4, 3, 0]]
 
 
 def test_list_suggestion_result_vector(subject_index):

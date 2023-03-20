@@ -7,7 +7,6 @@ import os.path
 import tempfile
 
 import numpy as np
-import scipy.sparse
 
 from annif import logger
 from annif.suggestion import VectorSuggestionResult
@@ -123,22 +122,3 @@ def identity(x):
 def metric_code(metric):
     """Convert a human-readable metric name into an alphanumeric string"""
     return metric.translate(metric.maketrans(" ", "_", "()"))
-
-
-def filter_suggestion(preds, limit=None, threshold=0.0):
-    """filter a 2D sparse suggestion array (csr_array), retaining only the
-    top K suggestions with a score above or equal to the threshold for each
-    individual prediction; the rest will be left as zeros"""
-
-    filtered = scipy.sparse.dok_array(preds.shape, dtype=np.float32)
-    for row in range(preds.shape[0]):
-        arow = preds.getrow(row)
-        top_k = arow.data.argsort()[::-1]
-        if limit is not None:
-            top_k = top_k[:limit]
-        for idx in top_k:
-            val = arow.data[idx]
-            if val < threshold:
-                break
-            filtered[row, arow.indices[idx]] = val
-    return filtered.tocsr()

@@ -13,6 +13,25 @@ WeightedSuggestionsBatch = collections.namedtuple(
 )
 
 
+def filter_suggestion(preds, limit=None, threshold=0.0):
+    """filter a 2D sparse suggestion array (csr_array), retaining only the
+    top K suggestions with a score above or equal to the threshold for each
+    individual prediction; the rest will be left as zeros"""
+
+    filtered = dok_array(preds.shape, dtype=np.float32)
+    for row in range(preds.shape[0]):
+        arow = preds.getrow(row)
+        top_k = arow.data.argsort()[::-1]
+        if limit is not None:
+            top_k = top_k[:limit]
+        for idx in top_k:
+            val = arow.data[idx]
+            if val < threshold:
+                break
+            filtered[row, arow.indices[idx]] = val
+    return filtered.tocsr()
+
+
 class SuggestionResult(metaclass=abc.ABCMeta):
     """Abstract base class for a set of hits returned by an analysis
     operation."""
@@ -199,8 +218,6 @@ class SuggestionBatch:
     def filter(self, limit=None, threshold=0.0):
         """Return a subset of the hits, filtered by the given limit and
         score threshold, as another SuggestionBatch object."""
-
-        from annif.util import filter_suggestion
 
         return SuggestionBatch(filter_suggestion(self.array, limit, threshold))
 

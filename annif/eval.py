@@ -7,8 +7,7 @@ import scipy.sparse
 from sklearn.metrics import f1_score, precision_score, recall_score
 
 from annif.exception import NotSupportedException
-from annif.suggestion import SuggestionBatch
-from annif.util import filter_suggestion
+from annif.suggestion import SuggestionBatch, filter_suggestion
 
 
 def true_positives(y_true, y_pred):
