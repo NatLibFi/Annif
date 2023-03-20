@@ -114,25 +114,21 @@ def test_evaluation_batch(subject_index, tmpdir):
     gold_set = annif.corpus.SubjectSet.from_string(
         "<http://www.yso.fi/onto/yso/p10849>\tarkeologit", subject_index, "fi"
     )
-    hits1 = annif.suggestion.ListSuggestionResult(
-        [
-            # subject: archaeologists (yso:p10849)
-            annif.suggestion.SubjectSuggestion(
-                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p10849"),
-                score=1.0,
-            )
-        ]
-    )
+    hits1 = [
+        # subject: archaeologists (yso:p10849)
+        annif.suggestion.SubjectSuggestion(
+            subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p10849"),
+            score=1.0,
+        )
+    ]
     batch.evaluate_many([hits1], [gold_set])
-    hits2 = annif.suggestion.ListSuggestionResult(
-        [
-            # subject: egyptologists (yso:p1747)
-            annif.suggestion.SubjectSuggestion(
-                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p1747"),
-                score=1.0,
-            )
-        ]
-    )
+    hits2 = [
+        # subject: egyptologists (yso:p1747)
+        annif.suggestion.SubjectSuggestion(
+            subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p1747"),
+            score=1.0,
+        )
+    ]
     batch.evaluate_many([hits2], [gold_set])
     outfile = tmpdir.join("results.tsv")
     results = batch.results(results_file=outfile.open("w"), language="en")

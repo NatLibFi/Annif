@@ -9,7 +9,7 @@ from sklearn.svm import LinearSVC
 
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
-from annif.suggestion import ListSuggestionResult, SubjectSuggestion, SuggestionBatch
+from annif.suggestion import SubjectSuggestion, SuggestionBatch
 
 from . import backend, mixins
 
@@ -94,7 +94,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                 results.append(
                     SubjectSuggestion(subject_id=subject_id, score=scores[class_id])
                 )
-        return ListSuggestionResult(results)
+        return results
 
     def _suggest_batch(self, texts, params):
         vector = self.vectorizer.transform(texts)
@@ -103,9 +103,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         scores_list = scipy.special.expit(confidences)
         return SuggestionBatch.from_sequence(
             [
-                ListSuggestionResult([])
-                if row.nnz == 0
-                else self._scores_to_suggestions(scores, params)
+                [] if row.nnz == 0 else self._scores_to_suggestions(scores, params)
                 for scores, row in zip(scores_list, vector)
             ],
             self.project.subjects,

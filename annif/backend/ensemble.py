@@ -28,27 +28,25 @@ class BaseEnsembleBackend(backend.AnnifBackend):
             project = self.project.registry.get_project(project_id)
             project.initialize(parallel)
 
-    def _normalize_hits(self, hits, source_project):
-        """Hook for processing hits from backends. Intended to be overridden
-        by subclasses."""
-        return hits
+    def _normalize_suggestion_batch(self, batch, source_project):
+        """Hook for processing a batch of suggestions from backends.
+        Intended to be overridden by subclasses."""
+        return batch
 
     def _suggest_with_sources(self, texts, sources):
-        hit_sets_from_sources = []
+        batches_from_sources = []
         for project_id, weight in sources:
             source_project = self.project.registry.get_project(project_id)
-            hit_sets = source_project.suggest(texts)
-            norm_hit_sets = [
-                self._normalize_hits(hits, source_project) for hits in hit_sets
-            ]
-            hit_sets_from_sources.append(
+            batch = source_project.suggest(texts)
+            norm_batch = self._normalize_suggestion_batch(batch, source_project)
+            batches_from_sources.append(
                 annif.suggestion.WeightedSuggestionsBatch(
-                    hit_sets=norm_hit_sets,
+                    hit_sets=norm_batch,
                     weight=weight,
                     subjects=source_project.subjects,
                 )
             )
-        return hit_sets_from_sources
+        return batches_from_sources
 
     def _merge_hit_sets_from_sources(self, hit_sets_from_sources, params):
         """Hook for merging hit sets from sources. Can be overridden by

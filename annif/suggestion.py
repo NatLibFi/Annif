@@ -72,7 +72,7 @@ class VectorSuggestionResult(SuggestionResult):
             if score <= 0.0:
                 break  # we can skip the remaining ones
             hits.append(SubjectSuggestion(subject_id=subject_id, score=float(score)))
-        return ListSuggestionResult(hits)
+        return hits
 
     @property
     def subject_order(self):
@@ -93,40 +93,6 @@ class VectorSuggestionResult(SuggestionResult):
 
     def __len__(self):
         return (self._vector > 0.0).sum()
-
-
-class ListSuggestionResult(SuggestionResult):
-    """SuggestionResult implementation based primarily on lists of hits."""
-
-    def __init__(self, hits):
-        self._list = [self._enforce_score_range(hit) for hit in hits if hit.score > 0.0]
-        self._vector = None
-
-    @staticmethod
-    def _enforce_score_range(hit):
-        if hit.score > 1.0:
-            return hit._replace(score=1.0)
-        return hit
-
-    def _list_to_vector(self, size, destination):
-        if destination is None:
-            destination = np.zeros(size, dtype=np.float32)
-
-        for hit in self._list:
-            if hit.subject_id is not None:
-                destination[hit.subject_id] = hit.score
-        return destination
-
-    def __iter__(self):
-        return iter(self._list)
-
-    def as_vector(self, size, destination=None):
-        if self._vector is None:
-            self._vector = self._list_to_vector(size, destination)
-        return self._vector
-
-    def __len__(self):
-        return len(self._list)
 
 
 class SparseSuggestionResult(SuggestionResult):

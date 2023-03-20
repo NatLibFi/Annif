@@ -3,7 +3,7 @@ import os
 from stwfsapy.predictor import StwfsapyPredictor
 
 from annif.exception import NotInitializedException, NotSupportedException
-from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+from annif.suggestion import SubjectSuggestion
 from annif.util import atomic_save, boolean
 
 from . import backend
@@ -124,4 +124,4 @@ class StwfsaBackend(backend.AnnifBackend):
                 suggestions.append(
                     SubjectSuggestion(subject_id=subject_id, score=score)
                 )
-        return ListSuggestionResult(suggestions)
+        return suggestions

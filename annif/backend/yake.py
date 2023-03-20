@@ -12,7 +12,7 @@ from rdflib.namespace import SKOS
 
 import annif.util
 from annif.exception import ConfigurationException, NotSupportedException
-from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+from annif.suggestion import SubjectSuggestion
 
 from . import backend
 
@@ -130,7 +130,7 @@ class YakeBackend(backend.AnnifBackend):
             for uri, score in suggestions[:limit]
             if score > 0.0
         ]
-        return ListSuggestionResult(subject_suggestions)
+        return subject_suggestions
 
     def _keyphrases2suggestions(self, keyphrases):
         suggestions = []

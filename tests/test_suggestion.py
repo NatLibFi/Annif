@@ -6,7 +6,6 @@ from scipy.sparse import csr_array
 
 from annif.corpus import Subject
 from annif.suggestion import (
-    ListSuggestionResult,
     SubjectSuggestion,
     SuggestionBatch,
     VectorSuggestionResult,
@@ -15,10 +14,7 @@ from annif.suggestion import (
 
 
 def generate_suggestions(n, subject_index):
-    suggestions = []
-    for i in range(n):
-        suggestions.append(SubjectSuggestion(subject_id=i, score=1.0 / (i + 1)))
-    return ListSuggestionResult(suggestions)
+    return [SubjectSuggestion(subject_id=i, score=1.0 / (i + 1)) for i in range(n)]
 
 
 def test_filter_suggestion_limit():
@@ -37,115 +33,6 @@ def test_filter_suggestion_limit_and_threshold():
     pred = csr_array([[0, 1, 3, 2], [1, 4, 3, 0]])
     filtered = filter_suggestion(pred, limit=2, threshold=3)
     assert filtered.toarray().tolist() == [[0, 0, 3, 0], [0, 4, 3, 0]]
-
-
-def test_list_suggestion_result_vector(subject_index):
-    suggestions = ListSuggestionResult(
-        [
-            # subject: seals (labels)
-            SubjectSuggestion(
-                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p7141"),
-                score=1.0,
-            ),
-            # subject: Vikings
-            SubjectSuggestion(
-                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p6479"),
-                score=0.5,
-            ),
-        ]
-    )
-    vector = suggestions.as_vector(len(subject_index))
-    assert isinstance(vector, np.ndarray)
-    assert len(vector) == len(subject_index)
-    assert vector.sum() == 1.5
-    for subject_id, score in enumerate(vector):
-        if subject_index[subject_id].labels is None:  # deprecated
-            assert score == 0.0
-        elif subject_index[subject_id].labels["fi"] == "sinetit":
-            assert score == 1.0
-        elif subject_index[subject_id].labels["fi"] == "viikingit":
-            assert score == 0.5
-        else:
-            assert score == 0.0
-
-
-def test_list_suggestions_vector_enforce_score_range(subject_index):
-    suggestions = ListSuggestionResult(
-        [
-            # subject: seals (labels)
-            SubjectSuggestion(
-                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p7141"),
-                score=1.5,
-            ),
-            # subject: Vikings
-            SubjectSuggestion(
-                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p6479"),
-                score=1.0,
-            ),
-            # subject: excavations
-            SubjectSuggestion(
-                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p14173"),
-                score=0.5,
-            ),
-            # subject: runestones
-            SubjectSuggestion(
-                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p14588"),
-                score=0.0,
-            ),
-            # subject: Viking Age
-            SubjectSuggestion(
-                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p12738"),
-                score=-0.5,
-            ),
-        ]
-    )
-    vector = suggestions.as_vector(len(subject_index))
-    assert vector.sum() == 2.5
-    found = 0
-    for subject_id, score in enumerate(vector):
-        if subject_index[subject_id].labels is None:
-            continue  # skip deprecated subjects
-        if subject_index[subject_id].labels["fi"] == "sinetit":
-            assert score == 1.0
-            found += 1
-        elif subject_index[subject_id].labels["fi"] == "viikinkiaika":
-            assert score == 0.0
-            found += 1
-        else:
-            assert score in (1.0, 0.5, 0.0)
-    assert found == 2
-
-
-def test_list_suggestion_result_vector_destination(subject_index):
-    suggestions = ListSuggestionResult(
-        [
-            # subject: seals (labels)
-            SubjectSuggestion(
-                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p7141"),
-                score=1.0,
-            ),
-            # subject: Vikings
-            SubjectSuggestion(
-                subject_id=subject_index.by_uri("http://www.yso.fi/onto/yso/p6479"),
-                score=0.5,
-            ),
-        ]
-    )
-    destination = np.zeros(len(subject_index), dtype=np.float32)
-    vector = suggestions.as_vector(len(subject_index), destination=destination)
-    assert vector is destination
-
-
-def test_list_suggestion_result_vector_notfound(subject_index):
-    suggestions = ListSuggestionResult(
-        [
-            SubjectSuggestion(
-                subject_id=subject_index.by_uri("http://example.com/notfound"),
-                score=1.0,
-            )
-        ]
-    )
-    assert suggestions.as_vector(len(subject_index)).sum() == 0
 
 
 def test_vector_suggestion_result_as_vector(subject_index):
@@ -176,18 +63,16 @@ def test_vector_suggestion_result_as_vector_destination(subject_index):
 
 def test_suggestionbatch_from_sequence(dummy_subject_index):
     orig_suggestions = [
-        ListSuggestionResult(
-            [
-                SubjectSuggestion(
-                    subject_id=dummy_subject_index.by_uri("http://example.org/dummy"),
-                    score=0.8,
-                ),
-                SubjectSuggestion(
-                    subject_id=dummy_subject_index.by_uri("http://example.org/none"),
-                    score=0.2,
-                ),
-            ]
-        )
+        [
+            SubjectSuggestion(
+                subject_id=dummy_subject_index.by_uri("http://example.org/dummy"),
+                score=0.8,
+            ),
+            SubjectSuggestion(
+                subject_id=dummy_subject_index.by_uri("http://example.org/none"),
+                score=0.2,
+            ),
+        ]
     ]
 
     sbatch = SuggestionBatch.from_sequence(orig_suggestions, dummy_subject_index)
@@ -210,24 +95,20 @@ def test_suggestionbatch_from_sequence_with_deprecated(dummy_subject_index):
     )
 
     orig_suggestions = [
-        ListSuggestionResult(
-            [
-                SubjectSuggestion(
-                    subject_id=dummy_subject_index.by_uri("http://example.org/dummy"),
-                    score=0.8,
-                ),
-                SubjectSuggestion(
-                    subject_id=dummy_subject_index.by_uri(
-                        "http://example.org/deprecated"
-                    ),
-                    score=0.5,
-                ),
-                SubjectSuggestion(
-                    subject_id=dummy_subject_index.by_uri("http://example.org/none"),
-                    score=0.2,
-                ),
-            ]
-        )
+        [
+            SubjectSuggestion(
+                subject_id=dummy_subject_index.by_uri("http://example.org/dummy"),
+                score=0.8,
+            ),
+            SubjectSuggestion(
+                subject_id=dummy_subject_index.by_uri("http://example.org/deprecated"),
+                score=0.5,
+            ),
+            SubjectSuggestion(
+                subject_id=dummy_subject_index.by_uri("http://example.org/none"),
+                score=0.2,
+            ),
+        ]
     ]
 
     sbatch = SuggestionBatch.from_sequence(orig_suggestions, dummy_subject_index)

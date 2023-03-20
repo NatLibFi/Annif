@@ -11,9 +11,9 @@ from scipy.sparse import coo_matrix, csc_matrix
 from sklearn.isotonic import IsotonicRegression
 
 import annif.corpus
-import annif.suggestion
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
+from annif.suggestion import SubjectSuggestion, SuggestionBatch
 
 from . import backend, ensemble
 
@@ -57,21 +57,22 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         self.initialize()
         return self._models[source_project_id]
 
-    def _normalize_hits(self, hits, source_project):
+    def _normalize_suggestion_batch(self, batch, source_project):
         reg_models = self._get_model(source_project.project_id)
-        pav_result = []
-        for hit in hits:
-            if hit.subject_id in reg_models:
-                score = reg_models[hit.subject_id].predict([hit.score])[0]
-            else:  # default to raw score
-                score = hit.score
-            pav_result.append(
-                annif.suggestion.SubjectSuggestion(
-                    subject_id=hit.subject_id, score=score
+        pav_batch = []
+        for result in batch:
+            pav_result = []
+            for sugg in result:
+                if sugg.subject_id in reg_models:
+                    score = reg_models[sugg.subject_id].predict([sugg.score])[0]
+                else:  # default to raw score
+                    score = sugg.score
+                pav_result.append(
+                    SubjectSuggestion(subject_id=sugg.subject_id, score=score)
                 )
-            )
-        pav_result.sort(key=lambda hit: hit.score, reverse=True)
-        return annif.suggestion.ListSuggestionResult(pav_result)
+            pav_result.sort(key=lambda hit: hit.score, reverse=True)
+            pav_batch.append(pav_result)
+        return SuggestionBatch.from_sequence(pav_batch, self.project.subjects)
 
     @staticmethod
     def _suggest_train_corpus(source_project, corpus):

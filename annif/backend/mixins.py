@@ -9,7 +9,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 import annif.util
 from annif.exception import NotInitializedException
-from annif.suggestion import ListSuggestionResult
 
 
 class ChunkingBackend(metaclass=abc.ABCMeta):
@@ -39,7 +38,7 @@ class ChunkingBackend(metaclass=abc.ABCMeta):
             chunktexts.append(" ".join(sentences[i : i + chunksize]))
         self.debug("Split sentences into {} chunks".format(len(chunktexts)))
         if len(chunktexts) == 0:  # no input, empty result
-            return ListSuggestionResult([])
+            return []
         return self._suggest_chunks(chunktexts, params)
 
 

@@ -9,7 +9,7 @@ import requests
 import requests.exceptions
 
 from annif.exception import OperationFailedException
-from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+from annif.suggestion import SubjectSuggestion
 
 from . import backend
 
@@ -69,13 +69,13 @@ class HTTPBackend(backend.AnnifBackend):
             req.raise_for_status()
         except requests.exceptions.RequestException as err:
             self.warning("HTTP request failed: {}".format(err))
-            return ListSuggestionResult([])
+            return []
 
         try:
             response = req.json()
         except ValueError as err:
             self.warning("JSON decode failed: {}".format(err))
-            return ListSuggestionResult([])
+            return []
 
         if "results" in response:
             results = response["results"]
@@ -93,6 +93,6 @@ class HTTPBackend(backend.AnnifBackend):
             ]
         except (TypeError, ValueError) as err:
             self.warning("Problem interpreting JSON data: {}".format(err))
-            return ListSuggestionResult([])
+            return []
 
-        return ListSuggestionResult(subject_suggestions)
+        return subject_suggestions

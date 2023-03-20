@@ -7,7 +7,7 @@ import fasttext
 
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
-from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+from annif.suggestion import SubjectSuggestion
 
 from . import backend, mixins
 
@@ -163,4 +163,4 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                     score=score / len(chunktexts),
                 )
             )
-        return ListSuggestionResult(results)
+        return results
