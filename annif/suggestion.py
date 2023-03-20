@@ -50,12 +50,6 @@ class SuggestionResult(metaclass=abc.ABCMeta):
         pass  # pragma: no cover
 
     @abc.abstractmethod
-    def filter(self, subject_index, limit=None, threshold=0.0):
-        """Return a subset of the hits, filtered by the given limit and
-        score threshold, as another SuggestionResult object."""
-        pass  # pragma: no cover
-
-    @abc.abstractmethod
     def __len__(self):
         """Return the number of hits with non-zero scores."""
         pass  # pragma: no cover
@@ -97,25 +91,6 @@ class VectorSuggestionResult(SuggestionResult):
             return destination
         return self._vector
 
-    def filter(self, subject_index, limit=None, threshold=0.0):
-        mask = self._vector > threshold
-        deprecated_ids = subject_index.deprecated_ids()
-        if limit is not None:
-            limit_mask = np.zeros_like(self._vector, dtype=bool)
-            deprecated_set = set(deprecated_ids)
-            top_k_subjects = itertools.islice(
-                (subj for subj in self.subject_order if subj not in deprecated_set),
-                limit,
-            )
-            limit_mask[list(top_k_subjects)] = True
-            mask = mask & limit_mask
-        else:
-            deprecated_mask = np.ones_like(self._vector, dtype=bool)
-            deprecated_mask[deprecated_ids] = False
-            mask = mask & deprecated_mask
-        vsr = VectorSuggestionResult(self._vector * mask)
-        return ListSuggestionResult(vsr)
-
     def __len__(self):
         return (self._vector > 0.0).sum()
 
@@ -150,17 +125,6 @@ class ListSuggestionResult(SuggestionResult):
             self._vector = self._list_to_vector(size, destination)
         return self._vector
 
-    def filter(self, subject_index, limit=None, threshold=0.0):
-        hits = sorted(self._list, key=lambda hit: hit.score, reverse=True)
-        filtered_hits = [
-            hit
-            for hit in hits
-            if hit.score >= threshold and hit.score > 0.0 and hit.subject_id is not None
-        ]
-        if limit is not None:
-            filtered_hits = filtered_hits[:limit]
-        return ListSuggestionResult(filtered_hits)
-
     def __len__(self):
         return len(self._list)
 
@@ -187,10 +151,6 @@ class SparseSuggestionResult(SuggestionResult):
             print("as_vector called with destination not None")
             return None
         return self._array[[self._idx], :].toarray()[0]
-
-    def filter(self, subject_index, limit=None, threshold=0.0):
-        lsr = ListSuggestionResult(self)
-        return lsr.filter(subject_index, limit, threshold)
 
     def __len__(self):
         _, cols = self._array[[self._idx], :].nonzero()
