@@ -1,5 +1,5 @@
 """Definitions for REST API operations. These are wired via Connexion to
-methods defined in the Swagger specification."""
+methods defined in the OpenAPI specification."""
 
 import importlib
 
@@ -32,7 +32,7 @@ def server_error(err):
 
 
 def show_info():
-    """return version of annif and a title for the api according to Swagger spec"""
+    """return version of annif and a title for the api according to OpenAPI spec"""
 
     return {"title": "Annif REST API", "version": importlib.metadata.version("annif")}
 
@@ -48,7 +48,7 @@ def language_not_supported_error(lang):
 
 
 def list_projects():
-    """return a dict with projects formatted according to Swagger spec"""
+    """return a dict with projects formatted according to OpenAPI spec"""
 
     return {
         "projects": [
@@ -59,7 +59,7 @@ def list_projects():
 
 
 def show_project(project_id):
-    """return a single project formatted according to Swagger spec"""
+    """return a single project formatted according to OpenAPI spec"""
 
     try:
         project = annif.registry.get_project(project_id, min_access=Access.hidden)
@@ -99,7 +99,7 @@ def _is_error(result):
 
 def suggest(project_id, body):
     """suggest subjects for the given text and return a dict with results
-    formatted according to Swagger spec"""
+    formatted according to OpenAPI spec"""
 
     parameters = dict(
         (key, body[key]) for key in ["language", "limit", "threshold"] if key in body
@@ -114,7 +114,8 @@ def suggest(project_id, body):
 
 def suggest_batch(project_id, body, **query_parameters):
     """suggest subjects for the given documents and return a list of dicts with results
-    formatted according to Swagger spec"""
+    formatted according to OpenAPI spec"""
+
     documents = body["documents"]
     result = _suggest(project_id, documents, query_parameters)
 

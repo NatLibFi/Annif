@@ -1,4 +1,5 @@
-"""Unit tests for Annif REST API / Swagger spec"""
+"""Unit tests for Annif REST API / OpenAPI spec"""
+
 import pytest
 import schemathesis
 from hypothesis import settings
