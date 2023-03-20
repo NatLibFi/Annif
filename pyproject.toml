@@ -31,7 +31,6 @@ classifiers=[
 python = ">=3.8,<3.11"
 
 connexion = {version = "2.14.*", extras = ["swagger-ui"]}
-swagger_ui_bundle = "*"
 flask = ">=1.0.4,<3"
 flask-cors = "*"
 click = "8.1.*"
