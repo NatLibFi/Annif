@@ -1,3 +1,6 @@
+"""Utility functions for Annif CLI commands"""
+
+
 import collections
 import os
 import sys
