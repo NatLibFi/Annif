@@ -90,6 +90,13 @@ def _hit_sets_to_list(hit_sets, hit_filter, subjects, lang):
     ]
 
 
+def _is_error(result):
+    return (
+        isinstance(result, connexion.lifecycle.ConnexionResponse)
+        and result.status_code >= 400
+    )
+
+
 def suggest(project_id, body):
     """suggest subjects for the given text and return a dict with results
     formatted according to Swagger spec"""
@@ -100,10 +107,9 @@ def suggest(project_id, body):
     documents = [{"text": body["text"]}]
     result = _suggest(project_id, documents, parameters)
 
-    if isinstance(result, list):
-        return result[0]  # successful operation
-    else:
-        return result  # connexion problem
+    if _is_error(result):
+        return result
+    return result[0]
 
 
 def suggest_batch(project_id, body):
@@ -114,9 +120,10 @@ def suggest_batch(project_id, body):
     documents = body["documents"]
     result = _suggest(project_id, documents, parameters)
 
-    if isinstance(result, list):
-        for document_results, document in zip(result, documents):
-            document_results["id"] = document.get("id")
+    if _is_error(result):
+        return result
+    for document_results, document in zip(result, documents):
+        document_results["id"] = document.get("id")
     return result
 
 
