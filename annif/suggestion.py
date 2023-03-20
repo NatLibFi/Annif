@@ -140,9 +140,9 @@ class SuggestionBatch:
         ar = dok_array((len(suggestion_results), len(subject_index)), dtype=np.float32)
         for idx, result in enumerate(suggestion_results):
             for suggestion in itertools.islice(result, limit):
-                if suggestion.subject_id in deprecated:
+                if suggestion.subject_id in deprecated or suggestion.score < 0.0:
                     continue
-                ar[idx, suggestion.subject_id] = suggestion.score
+                ar[idx, suggestion.subject_id] = min(suggestion.score, 1.0)
         return cls(ar.tocsr())
 
     def filter(self, limit=None, threshold=0.0):
