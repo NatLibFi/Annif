@@ -41,9 +41,8 @@ def test_tfidf_suggest(project):
     )[0]
 
     assert len(results) == 10
-    hits = results.as_list()
     archaeology = project.subjects.by_uri("http://www.yso.fi/onto/yso/p1265")
-    assert archaeology in [result.subject_id for result in hits]
+    assert archaeology in [result.subject_id for result in results]
 
 
 def test_suggest_params(project):

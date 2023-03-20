@@ -193,6 +193,5 @@ def test_fasttext_suggest(project):
     )[0]
 
     assert len(results) > 0
-    hits = results.as_list()
     archaeology = project.subjects.by_uri("http://www.yso.fi/onto/yso/p1265")
-    assert archaeology in [result.subject_id for result in hits]
+    assert archaeology in [result.subject_id for result in results]

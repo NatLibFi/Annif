@@ -97,9 +97,7 @@ def suggest(project_id, body):
         return server_error(err)
 
     return {
-        "results": [
-            _suggestion_to_dict(hit, project.subjects, lang) for hit in hits.as_list()
-        ]
+        "results": [_suggestion_to_dict(hit, project.subjects, lang) for hit in hits]
     }
 
 

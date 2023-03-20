@@ -37,8 +37,8 @@ class SuggestionResult(metaclass=abc.ABCMeta):
     operation."""
 
     @abc.abstractmethod
-    def as_list(self):
-        """Return the hits as an ordered sequence of SubjectSuggestion objects,
+    def __iter__(self):
+        """Return the hits as an iterator that returns SubjectSuggestion objects,
         highest scores first."""
         pass  # pragma: no cover
 
@@ -86,10 +86,10 @@ class VectorSuggestionResult(SuggestionResult):
             self._subject_order = np.argsort(self._vector)[::-1]
         return self._subject_order
 
-    def as_list(self):
+    def __iter__(self):
         if self._lsr is None:
             self._lsr = self._vector_to_list_suggestion()
-        return self._lsr.as_list()
+        return iter(self._lsr)
 
     def as_vector(self, size, destination=None):
         if destination is not None:
@@ -114,7 +114,7 @@ class VectorSuggestionResult(SuggestionResult):
             deprecated_mask[deprecated_ids] = False
             mask = mask & deprecated_mask
         vsr = VectorSuggestionResult(self._vector * mask)
-        return ListSuggestionResult(vsr.as_list())
+        return ListSuggestionResult(vsr)
 
     def __len__(self):
         return (self._vector > 0.0).sum()
@@ -142,8 +142,8 @@ class ListSuggestionResult(SuggestionResult):
                 destination[hit.subject_id] = hit.score
         return destination
 
-    def as_list(self):
-        return self._list
+    def __iter__(self):
+        return iter(self._list)
 
     def as_vector(self, size, destination=None):
         if self._vector is None:
@@ -172,14 +172,14 @@ class SparseSuggestionResult(SuggestionResult):
         self._array = array
         self._idx = idx
 
-    def as_list(self):
+    def __iter__(self):
         _, cols = self._array[[self._idx], :].nonzero()
         suggestions = [
             SubjectSuggestion(subject_id=col, score=float(self._array[self._idx, col]))
             for col in cols
         ]
-        return sorted(
-            suggestions, key=lambda suggestion: suggestion.score, reverse=True
+        return iter(
+            sorted(suggestions, key=lambda suggestion: suggestion.score, reverse=True)
         )
 
     def as_vector(self, size, destination=None):
@@ -189,7 +189,7 @@ class SparseSuggestionResult(SuggestionResult):
         return self._array[[self._idx], :].toarray()[0]
 
     def filter(self, subject_index, limit=None, threshold=0.0):
-        lsr = ListSuggestionResult(self.as_list())
+        lsr = ListSuggestionResult(self)
         return lsr.filter(subject_index, limit, threshold)
 
     def __len__(self):
@@ -211,7 +211,7 @@ class SuggestionBatch:
         # create a dok_array for fast construction
         ar = dok_array((len(suggestion_results), vocab_size), dtype=np.float32)
         for idx, result in enumerate(suggestion_results):
-            for suggestion in result.as_list():
+            for suggestion in result:
                 ar[idx, suggestion.subject_id] = suggestion.score
         return cls(ar.tocsr())
 
