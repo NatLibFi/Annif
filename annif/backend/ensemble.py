@@ -60,7 +60,7 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         hit_sets_from_sources = self._suggest_with_sources(texts, sources)
         return annif.suggestion.SuggestionBatch.from_sequence(
             self._merge_hit_sets_from_sources(hit_sets_from_sources, params),
-            len(self.project.subjects),
+            self.project.subjects,
         )
 
 

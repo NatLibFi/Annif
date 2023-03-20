@@ -86,7 +86,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         functionality."""
         return SuggestionBatch.from_sequence(
             [self._suggest(text, params) for text in texts],
-            len(self.project.subjects),
+            self.project.subjects,
             limit=int(params.get("limit")),
         )
 

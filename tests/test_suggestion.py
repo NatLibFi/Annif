@@ -1,11 +1,14 @@
 """Unit tests for suggestion processing in Annif"""
 
 import numpy as np
+import pytest
 from scipy.sparse import csr_array
 
+from annif.corpus import Subject
 from annif.suggestion import (
     ListSuggestionResult,
     SubjectSuggestion,
+    SuggestionBatch,
     VectorSuggestionResult,
     filter_suggestion,
 )
@@ -169,3 +172,73 @@ def test_vector_suggestion_result_as_vector_destination(subject_index):
     vector = suggestions.as_vector(len(subject_index), destination=destination)
     assert vector is destination
     assert (destination == orig_vector).all()  # destination now all ones
+
+
+def test_suggestionbatch_from_sequence(dummy_subject_index):
+    orig_suggestions = [
+        ListSuggestionResult(
+            [
+                SubjectSuggestion(
+                    subject_id=dummy_subject_index.by_uri("http://example.org/dummy"),
+                    score=0.8,
+                ),
+                SubjectSuggestion(
+                    subject_id=dummy_subject_index.by_uri("http://example.org/none"),
+                    score=0.2,
+                ),
+            ]
+        )
+    ]
+
+    sbatch = SuggestionBatch.from_sequence(orig_suggestions, dummy_subject_index)
+    assert len(sbatch) == 1
+    suggestions = list(sbatch[0])
+    assert len(suggestions) == 2
+    assert suggestions[0].subject_id == dummy_subject_index.by_uri(
+        "http://example.org/dummy"
+    )
+    assert suggestions[0].score == pytest.approx(0.8)
+    assert suggestions[1].subject_id == dummy_subject_index.by_uri(
+        "http://example.org/none"
+    )
+    assert suggestions[1].score == pytest.approx(0.2)
+
+
+def test_suggestionbatch_from_sequence_with_deprecated(dummy_subject_index):
+    dummy_subject_index.append(
+        Subject(uri="http://example.org/deprecated", labels=None, notation=None)
+    )
+
+    orig_suggestions = [
+        ListSuggestionResult(
+            [
+                SubjectSuggestion(
+                    subject_id=dummy_subject_index.by_uri("http://example.org/dummy"),
+                    score=0.8,
+                ),
+                SubjectSuggestion(
+                    subject_id=dummy_subject_index.by_uri(
+                        "http://example.org/deprecated"
+                    ),
+                    score=0.5,
+                ),
+                SubjectSuggestion(
+                    subject_id=dummy_subject_index.by_uri("http://example.org/none"),
+                    score=0.2,
+                ),
+            ]
+        )
+    ]
+
+    sbatch = SuggestionBatch.from_sequence(orig_suggestions, dummy_subject_index)
+    assert len(sbatch) == 1
+    suggestions = list(sbatch[0])
+    assert len(suggestions) == 2
+    assert suggestions[0].subject_id == dummy_subject_index.by_uri(
+        "http://example.org/dummy"
+    )
+    assert suggestions[0].score == pytest.approx(0.8)
+    assert suggestions[1].subject_id == dummy_subject_index.by_uri(
+        "http://example.org/none"
+    )
+    assert suggestions[1].score == pytest.approx(0.2)

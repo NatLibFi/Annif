@@ -165,13 +165,17 @@ class SuggestionBatch:
         self.array = array
 
     @classmethod
-    def from_sequence(cls, suggestion_results, vocab_size, limit=None):
+    def from_sequence(cls, suggestion_results, subject_index, limit=None):
         """Create a new SuggestionBatch from a sequence of SuggestionResult objects."""
 
+        deprecated = set(subject_index.deprecated_ids())
+
         # create a dok_array for fast construction
-        ar = dok_array((len(suggestion_results), vocab_size), dtype=np.float32)
+        ar = dok_array((len(suggestion_results), len(subject_index)), dtype=np.float32)
         for idx, result in enumerate(suggestion_results):
             for suggestion in itertools.islice(result, limit):
+                if suggestion.subject_id in deprecated:
+                    continue
                 ar[idx, suggestion.subject_id] = suggestion.score
         return cls(ar.tocsr())
 

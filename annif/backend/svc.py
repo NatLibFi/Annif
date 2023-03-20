@@ -108,5 +108,5 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                 else self._scores_to_suggestions(scores, params)
                 for scores, row in zip(scores_list, vector)
             ],
-            len(self.project.subjects),
+            self.project.subjects,
         )
