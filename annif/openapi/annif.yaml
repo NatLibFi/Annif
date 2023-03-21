@@ -224,6 +224,7 @@ components:
         notation:
           type: string
           example: "42.42"
+          nullable: true
         score:
           type: number
           example: 0.85
@@ -246,6 +247,8 @@ components:
           type: array
           items:
             type: object
+            required:
+              - uri
             properties:
               uri:
                 type: string
