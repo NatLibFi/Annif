@@ -15,3 +15,11 @@ def check_cors(response, case):
 def test_api(case, app):
     response = case.call_wsgi(app)
     case.validate_response(response, additional_checks=(check_cors,))
+
+
+@schema.parametrize(endpoint="/v1/projects/{project_id}")
+@settings(max_examples=100)
+def test_api_target_dummy_fi(case, app):
+    case.path_parameters = {"project_id": "dummy-fi"}
+    response = case.call_wsgi(app)
+    case.validate_response(response)
