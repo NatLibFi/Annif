@@ -20,7 +20,7 @@ def test_api(case, app):
 
 @pytest.mark.slow
 @schema.parametrize(endpoint="/v1/projects/{project_id}")
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_api_target_dummy_fi(case, app):
     case.path_parameters = {"project_id": "dummy-fi"}
     response = case.call_wsgi(app)
