@@ -77,6 +77,9 @@ jobs:
     - name: Test with pytest
       run: |
         poetry run pytest --cov=./ --cov-report xml
+        if [[ ${{ matrix.python-version }} == '3.9' ]]; then
+          poetry run pytest --cov=./ --cov-report xml --cov-append -m slow
+        fi
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378  # v3.1.0
     - name: Save cache
