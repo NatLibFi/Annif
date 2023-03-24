@@ -32,25 +32,25 @@ python = ">=3.8,<3.11"
 
 connexion = {version = "2.14.*", extras = ["swagger-ui"]}
 flask = ">=1.0.4,<3"
-flask-cors = "*"
+flask-cors = "3.0.*"
 click = "8.1.*"
-click-log = "*"
+click-log = "0.4.*"
 joblib = "1.2.*"
-nltk = "*"
+nltk = "3.8.*"
 gensim = "4.3.*"
 scikit-learn = "1.2.2"
 scipy = "1.10.*"
 rdflib = ">=4.2,<7.0"
-gunicorn = "*"
+gunicorn = "20.1.*"
 numpy = "1.24.*"
 optuna = "2.10.*"
 stwfsapy = "0.3.*"
-python-dateutil = "*"
+python-dateutil = "2.8.*"
 tomli = "2.0.*"
 simplemma = "0.9.*"
 
 fasttext-wheel = {version = "0.9.2", optional = true}
-voikko = {version = "*", optional = true}
+voikko = {version = "0.5.*", optional = true}
 tensorflow-cpu = {version = "2.11.*", optional = true}
 lmdb = {version = "1.4.0", optional = true}
 omikuji = {version = "0.5.*", optional = true}
