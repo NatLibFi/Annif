@@ -277,7 +277,7 @@ components:
         - $ref: '#/components/schemas/SuggestionResultList'
         - type: object
           properties:
-            id:
+            document_id:
               type: string
               example: doc-1234
               nullable: true
@@ -290,7 +290,7 @@ components:
         text:
           type: string
           example: A quick brown fox jumped over the lazy dog.
-        id:
+        document_id:
           type: string
           example: doc-1234
       description: A document with an optional identifier

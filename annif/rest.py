@@ -122,7 +122,7 @@ def suggest_batch(project_id, body, **query_parameters):
     if _is_error(result):
         return result
     for document_results, document in zip(result, documents):
-        document_results["id"] = document.get("id")
+        document_results["document_id"] = document.get("document_id")
     return result
 
 

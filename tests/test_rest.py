@@ -139,17 +139,18 @@ def test_rest_suggest_batch_one_doc(app):
         )
         assert len(result) == 1
         assert result[0]["results"][0]["label"] == "dummy-fi"
-        assert result[0]["id"] is None
+        assert result[0]["document_id"] is None
 
 
 def test_rest_suggest_batch_one_doc_with_id(app):
     with app.app_context():
         result = annif.rest.suggest_batch(
-            "dummy-fi", {"documents": [{"text": "example text", "id": "doc-0"}]}
+            "dummy-fi",
+            {"documents": [{"text": "example text", "document_id": "doc-0"}]},
         )
         assert len(result) == 1
         assert result[0]["results"][0]["label"] == "dummy-fi"
-        assert result[0]["id"] == "doc-0"
+        assert result[0]["document_id"] == "doc-0"
 
 
 def test_rest_suggest_batch_two_docs(app):
