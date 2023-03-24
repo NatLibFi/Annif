@@ -69,7 +69,7 @@ flake8 = "*"
 bumpversion = "*"
 black = "23.*"
 isort = "*"
-schemathesis = "3.18.*"
+schemathesis = "3.19.*"
 
 [tool.poetry.extras]
 fasttext = ["fasttext-wheel"]
