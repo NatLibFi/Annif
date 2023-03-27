@@ -7,6 +7,8 @@ import os.path
 import connexion
 from flask_cors import CORS
 
+from annif.openapi.validation import CustomRequestBodyValidator
+
 logging.basicConfig()
 logger = logging.getLogger("annif")
 logger.setLevel(level=logging.INFO)
@@ -31,7 +33,10 @@ def create_app(config_name=None):
     cxapp.app.config.from_object(config_name)
     cxapp.app.config.from_envvar("ANNIF_SETTINGS", silent=True)
 
-    cxapp.add_api("annif.yaml")
+    validator_map = {
+        "body": CustomRequestBodyValidator,
+    }
+    cxapp.add_api("annif.yaml", validator_map=validator_map)
 
     # add CORS support
     CORS(cxapp.app)
