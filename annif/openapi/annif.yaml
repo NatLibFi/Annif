@@ -101,7 +101,7 @@ paths:
     post:
       tags:
       - Automatic subject indexing
-      summary: suggest subjects for given documents using batched backend operations
+      summary: suggest subjects for the given batch of up to 32 documents
       operationId: annif.rest.suggest_batch
       parameters:
       - $ref: '#/components/parameters/project_id'
