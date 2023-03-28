@@ -49,6 +49,7 @@ stwfsapy = "0.3.*"
 python-dateutil = "*"
 tomli = "2.0.*"
 simplemma = "0.9.*"
+jsonschema = "4.17.*"
 
 fasttext-wheel = {version = "0.9.2", optional = true}
 voikko = {version = "*", optional = true}
