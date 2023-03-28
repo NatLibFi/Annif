@@ -70,6 +70,26 @@ def test_openapi_suggest_novocab(app_client):
     assert req.status_code == 503
 
 
+def test_openapi_suggest_batch(app_client):
+    data = {"documents": [{"text": "A quick brown fox jumped over the lazy dog."}] * 32}
+    req = app_client.post(
+        "http://localhost:8000/v1/projects/dummy-fi/suggest-batch", json=data
+    )
+    assert req.status_code == 200
+    body = req.get_json()
+    assert len(body) == 32
+    assert body[0]["results"][0]["label"] == "dummy-fi"
+
+
+def test_openapi_suggest_batch_too_many_documents(app_client):
+    data = {"documents": [{"text": "A quick brown fox jumped over the lazy dog."}] * 33}
+    req = app_client.post(
+        "http://localhost:8000/v1/projects/dummy-fi/suggest-batch", json=data
+    )
+    assert req.status_code == 400
+    assert req.get_json()["detail"] == "too many items - 'documents'"
+
+
 def test_openapi_learn(app_client):
     data = [
         {
