@@ -33,6 +33,12 @@ def app_with_initialize():
     return app
 
 
+@pytest.fixture
+def app_client(app):
+    with app.test_client() as app_client:
+        yield app_client
+
+
 @pytest.fixture(scope="module")
 def registry(app):
     with app.app_context():
