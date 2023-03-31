@@ -188,9 +188,11 @@ class EvaluationBatch:
         true_pos = y_true.multiply(y_pred).sum(axis=1)
         false_pos = (y_true < y_pred).sum(axis=1)
         false_neg = (y_true > y_pred).sum(axis=1)
-        precision = np.nan_to_num(true_pos / (true_pos + false_pos))
-        recall = np.nan_to_num(true_pos / (true_pos + false_neg))
-        f1_score = np.nan_to_num(2 * (precision * recall) / (precision + recall))
+
+        with np.errstate(invalid="ignore"):
+            precision = np.nan_to_num(true_pos / (true_pos + false_pos))
+            recall = np.nan_to_num(true_pos / (true_pos + false_neg))
+            f1_score = np.nan_to_num(2 * (precision * recall) / (precision + recall))
 
         zipped = zip(
             [subj.uri for subj in self._subject_index],  # URI
