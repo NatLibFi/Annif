@@ -21,7 +21,7 @@ class CustomRequestBodyValidator(decorators.validation.RequestBodyValidator):
         """Validate the request body against the schema."""
 
         if self.is_null_value_valid and is_null(data):
-            return None  # noqa
+            return None  # pragma: no cover
 
         try:
             self.validator.validate(data)
