@@ -49,6 +49,7 @@ stwfsapy = "0.3.*"
 python-dateutil = "*"
 tomli = "2.0.*"
 simplemma = "0.9.*"
+jsonschema = "4.17.*"
 
 fasttext-wheel = {version = "0.9.2", optional = true}
 voikko = {version = "*", optional = true}
@@ -91,3 +92,6 @@ build-backend = "poetry.core.masonry.api"
 profile = "black"
 line_length = "88"
 skip_gitignore = true
+
+[tool.pytest.ini_options]
+addopts = "-m 'not slow'"
