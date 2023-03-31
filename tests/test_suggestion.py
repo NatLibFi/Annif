@@ -7,10 +7,6 @@ from annif.corpus import Subject
 from annif.suggestion import SubjectSuggestion, SuggestionBatch, filter_suggestion
 
 
-def generate_suggestions(n, subject_index):
-    return [SubjectSuggestion(subject_id=i, score=1.0 / (i + 1)) for i in range(n)]
-
-
 def test_filter_suggestion_limit():
     pred = csr_array([[0, 1, 3, 2], [1, 4, 3, 0]])
     filtered = filter_suggestion(pred, limit=2)
