@@ -20,7 +20,6 @@ import annif.registry
 from annif import cli_util
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.project import Access
-from annif.suggestion import SuggestionResults
 from annif.util import metric_code
 
 logger = annif.logger
@@ -467,6 +466,8 @@ def run_optimize(project_id, paths, jobs, docs_limit, backend_param):
             ndocs += len(suggestion_batch[project_id])
             suggestion_batches.append(suggestion_batch[project_id])
             subject_set_batches.append(subject_sets)
+
+    from annif.suggestion import SuggestionResults
 
     orig_suggestion_results = SuggestionResults(suggestion_batches)
 

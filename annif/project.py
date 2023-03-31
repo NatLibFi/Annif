@@ -8,7 +8,6 @@ import annif
 import annif.analyzer
 import annif.backend
 import annif.corpus
-import annif.suggestion
 import annif.transform
 from annif.datadir import DatadirMixin
 from annif.exception import (
@@ -203,6 +202,8 @@ class AnnifProject(DatadirMixin):
             self.suggest([doc.text for doc in doc_batch], backend_params)
             for doc_batch in corpus.doc_batches
         )
+        import annif.suggestion
+
         return annif.suggestion.SuggestionResults(suggestions)
 
     def suggest(self, texts, backend_params=None):
