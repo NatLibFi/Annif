@@ -48,7 +48,7 @@ class SuggestionResult:
             sorted(suggestions, key=lambda suggestion: suggestion.score, reverse=True)
         )
 
-    def as_vector(self, size):
+    def as_vector(self):
         return self._array[[self._idx], :].toarray()[0]
 
     def __len__(self):

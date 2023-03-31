@@ -133,9 +133,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         score_vectors = np.array(
             [
                 [
-                    np.sqrt(hits.as_vector(len(subjects)))
-                    * weight
-                    * len(hit_sets_from_sources)
+                    np.sqrt(hits.as_vector()) * weight * len(hit_sets_from_sources)
                     for hits in proj_hit_set
                 ]
                 for proj_hit_set, weight, subjects in hit_sets_from_sources
@@ -213,7 +211,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             ):
                 doc_scores = []
                 for project_id, p_hits in hits.items():
-                    vector = p_hits.as_vector(len(self.project.subjects))
+                    vector = p_hits.as_vector()
                     doc_scores.append(
                         np.sqrt(vector) * sources[project_id] * len(sources)
                     )

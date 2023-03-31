@@ -53,15 +53,14 @@ def cleanup_uri(uri):
     return uri
 
 
-def merge_hits(weighted_hits_batches, size):
+def merge_hits(weighted_hits_batches):
     """Merge hit sets from multiple sources. Input is a sequence of
-    WeightedSuggestionsBatch objects. The size parameter determines the length of the
-    subject vector. Returns a list of SuggestionResult objects."""
+    WeightedSuggestionsBatch objects. Returns a NumPy array."""
 
     weights = [batch.weight for batch in weighted_hits_batches]
     score_vectors = np.array(
         [
-            [whits.as_vector(size) for whits in batch.hit_sets]
+            [whits.as_vector() for whits in batch.hit_sets]
             for batch in weighted_hits_batches
         ]
     )

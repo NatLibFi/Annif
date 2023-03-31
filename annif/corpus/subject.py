@@ -273,6 +273,7 @@ class SubjectSet:
         None), otherwise create and return a new one of the given size."""
 
         if destination is None:
+            assert size is not None and size > 0
             destination = np.zeros(size, dtype=bool)
 
         destination[list(self._subject_ids)] = True
