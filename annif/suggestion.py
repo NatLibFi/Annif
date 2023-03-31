@@ -4,7 +4,7 @@ import collections
 import itertools
 
 import numpy as np
-from scipy.sparse import dok_array
+from scipy.sparse import csr_array, dok_array
 
 SubjectSuggestion = collections.namedtuple("SubjectSuggestion", "subject_id score")
 WeightedSuggestionsBatch = collections.namedtuple(
@@ -61,6 +61,7 @@ class SuggestionBatch:
 
     def __init__(self, array):
         """Create a new SuggestionBatch from a csr_array"""
+        assert isinstance(array, csr_array)
         self.array = array
 
     @staticmethod
@@ -79,13 +80,12 @@ class SuggestionBatch:
 
         deprecated = set(subject_index.deprecated_ids())
 
-        # create a dok_array for fast construction
         ar = dok_array((len(suggestion_results), len(subject_index)), dtype=np.float32)
         for idx, result in enumerate(suggestion_results):
             if isinstance(result, np.ndarray):
                 result = cls._vector_to_suggestions(result)
             for suggestion in itertools.islice(result, limit):
-                if suggestion.subject_id in deprecated or suggestion.score < 0.0:
+                if suggestion.subject_id in deprecated or suggestion.score <= 0.0:
                     continue
                 ar[idx, suggestion.subject_id] = min(suggestion.score, 1.0)
         return cls(ar.tocsr())
