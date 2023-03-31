@@ -32,8 +32,8 @@ def filter_suggestion(preds, limit=None, threshold=0.0):
     return filtered.tocsr()
 
 
-class SparseSuggestionResult:
-    """SuggestionResult implementation backed by a single row of a sparse array."""
+class SuggestionResult:
+    """Suggestions for a single document, backed by a row of a sparse array."""
 
     def __init__(self, array, idx):
         self._array = array
@@ -100,7 +100,7 @@ class SuggestionBatch:
     def __getitem__(self, idx):
         if idx < 0 or idx >= len(self):
             raise IndexError
-        return SparseSuggestionResult(self.array, idx)
+        return SuggestionResult(self.array, idx)
 
     def __len__(self):
         return self.array.shape[0]
