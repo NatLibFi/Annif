@@ -9,7 +9,6 @@ import tempfile
 import numpy as np
 
 from annif import logger
-from annif.suggestion import VectorSuggestionResult
 
 
 class DuplicateFilter(logging.Filter):
@@ -66,8 +65,7 @@ def merge_hits(weighted_hits_batches, size):
             for batch in weighted_hits_batches
         ]
     )
-    results = np.average(score_vectors, axis=0, weights=weights)
-    return [VectorSuggestionResult(res) for res in results]
+    return np.average(score_vectors, axis=0, weights=weights)
 
 
 def parse_sources(sourcedef):

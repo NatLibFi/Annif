@@ -32,57 +32,7 @@ def filter_suggestion(preds, limit=None, threshold=0.0):
     return filtered.tocsr()
 
 
-class SuggestionResult(metaclass=abc.ABCMeta):
-    """Abstract base class for a set of hits returned by an analysis
-    operation."""
-
-    @abc.abstractmethod
-    def __iter__(self):
-        """Return the hits as an iterator that returns SubjectSuggestion objects,
-        highest scores first."""
-        pass  # pragma: no cover
-
-    @abc.abstractmethod
-    def __len__(self):
-        """Return the number of hits with non-zero scores."""
-        pass  # pragma: no cover
-
-
-class VectorSuggestionResult(SuggestionResult):
-    """SuggestionResult implementation based primarily on NumPy vectors."""
-
-    def __init__(self, vector):
-        vector_f32 = vector.astype(np.float32)
-        # limit scores to the range 0.0 .. 1.0
-        self._vector = np.minimum(np.maximum(vector_f32, 0.0), 1.0)
-        self._subject_order = None
-        self._lsr = None
-
-    def _vector_to_list_suggestion(self):
-        hits = []
-        for subject_id in self.subject_order:
-            score = self._vector[subject_id]
-            if score <= 0.0:
-                break  # we can skip the remaining ones
-            hits.append(SubjectSuggestion(subject_id=subject_id, score=float(score)))
-        return hits
-
-    @property
-    def subject_order(self):
-        if self._subject_order is None:
-            self._subject_order = np.argsort(self._vector)[::-1]
-        return self._subject_order
-
-    def __iter__(self):
-        if self._lsr is None:
-            self._lsr = self._vector_to_list_suggestion()
-        return iter(self._lsr)
-
-    def __len__(self):
-        return (self._vector > 0.0).sum()
-
-
-class SparseSuggestionResult(SuggestionResult):
+class SparseSuggestionResult:
     """SuggestionResult implementation backed by a single row of a sparse array."""
 
     def __init__(self, array, idx):
@@ -114,6 +64,16 @@ class SuggestionBatch:
         """Create a new SuggestionBatch from a csr_array"""
         self.array = array
 
+    @staticmethod
+    def _vector_to_suggestions(vector):
+        hits = []
+        for subject_id in np.argsort(vector)[::-1]:
+            score = vector[subject_id]
+            if score <= 0.0:
+                break  # we can skip the remaining ones
+            hits.append(SubjectSuggestion(subject_id=subject_id, score=float(score)))
+        return hits
+
     @classmethod
     def from_sequence(cls, suggestion_results, subject_index, limit=None):
         """Create a new SuggestionBatch from a sequence of SuggestionResult objects."""
@@ -123,6 +83,8 @@ class SuggestionBatch:
         # create a dok_array for fast construction
         ar = dok_array((len(suggestion_results), len(subject_index)), dtype=np.float32)
         for idx, result in enumerate(suggestion_results):
+            if isinstance(result, np.ndarray):
+                result = cls._vector_to_suggestions(result)
             for suggestion in itertools.islice(result, limit):
                 if suggestion.subject_id in deprecated or suggestion.score < 0.0:
                     continue

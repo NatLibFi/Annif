@@ -19,7 +19,6 @@ import annif.corpus
 import annif.parallel
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
-from annif.suggestion import VectorSuggestionResult
 
 from . import backend, ensemble
 
@@ -143,8 +142,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             ],
             dtype=np.float32,
         ).transpose(1, 2, 0)
-        results = self._model(score_vectors).numpy()
-        return [VectorSuggestionResult(res) for res in results]
+        return self._model(score_vectors).numpy()
 
     def _create_model(self, sources):
         self.info("creating NN ensemble model")
