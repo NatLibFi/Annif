@@ -132,6 +132,66 @@ def test_rest_suggest_with_notations(app):
         assert result["results"][0]["notation"] is None
 
 
+def test_rest_suggest_batch_one_doc(app):
+    with app.app_context():
+        result = annif.rest.suggest_batch(
+            "dummy-fi", {"documents": [{"text": "example text"}]}
+        )
+        assert len(result) == 1
+        assert result[0]["results"][0]["label"] == "dummy-fi"
+        assert result[0]["document_id"] is None
+
+
+def test_rest_suggest_batch_one_doc_with_id(app):
+    with app.app_context():
+        result = annif.rest.suggest_batch(
+            "dummy-fi",
+            {"documents": [{"text": "example text", "document_id": "doc-0"}]},
+        )
+        assert len(result) == 1
+        assert result[0]["results"][0]["label"] == "dummy-fi"
+        assert result[0]["document_id"] == "doc-0"
+
+
+def test_rest_suggest_batch_two_docs(app):
+    with app.app_context():
+        result = annif.rest.suggest_batch(
+            "dummy-fi",
+            {
+                "documents": [
+                    {"text": "example text"},
+                    {"text": "another example text"},
+                ]
+            },
+        )
+        assert len(result) == 2
+        assert result[1]["results"][0]["label"] == "dummy-fi"
+
+
+def test_rest_suggest_batch_with_language_override(app):
+    with app.app_context():
+        result = annif.rest.suggest_batch(
+            "dummy-vocablang",
+            {
+                "documents": [{"text": "example text"}],
+            },
+            language="en",
+        )
+        assert result[0]["results"][0]["label"] == "dummy"
+
+
+def test_rest_suggest_batch_with_limit_override(app):
+    with app.app_context():
+        result = annif.rest.suggest_batch(
+            "dummy-fi",
+            {
+                "documents": [{"text": "example text"}],
+            },
+            limit=0,
+        )
+        assert len(result[0]["results"]) == 0
+
+
 def test_rest_learn_empty(app):
     with app.app_context():
         response = annif.rest.learn("dummy-en", [])
