@@ -1,6 +1,5 @@
 """Representing suggested subjects."""
 
-import abc
 import collections
 import itertools
 
