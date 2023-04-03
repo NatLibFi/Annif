@@ -65,9 +65,9 @@ class SuggestionBatch:
         self.array = array
 
     @staticmethod
-    def _vector_to_suggestions(vector):
+    def _vector_to_suggestions(vector, limit):
         hits = []
-        for subject_id in np.argsort(vector)[::-1]:
+        for subject_id in np.argsort(vector)[::-1][:limit]:
             score = vector[subject_id]
             if score <= 0.0:
                 break  # we can skip the remaining ones
@@ -76,14 +76,16 @@ class SuggestionBatch:
 
     @classmethod
     def from_sequence(cls, suggestion_results, subject_index, limit=None):
-        """Create a new SuggestionBatch from a sequence of SuggestionResult objects."""
+        """Create a new SuggestionBatch from a sequence where each item is
+        either a sequence of SubjectSuggestion objects or a 1D NumPy
+        score vector."""
 
         deprecated = set(subject_index.deprecated_ids())
 
         ar = dok_array((len(suggestion_results), len(subject_index)), dtype=np.float32)
         for idx, result in enumerate(suggestion_results):
             if isinstance(result, np.ndarray):
-                result = cls._vector_to_suggestions(result)
+                result = cls._vector_to_suggestions(result, limit)
             for suggestion in itertools.islice(result, limit):
                 if suggestion.subject_id in deprecated or suggestion.score <= 0.0:
                     continue

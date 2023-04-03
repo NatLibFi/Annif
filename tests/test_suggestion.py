@@ -1,5 +1,6 @@
 """Unit tests for suggestion processing in Annif"""
 
+import numpy as np
 import pytest
 from scipy.sparse import csr_array
 
@@ -51,6 +52,34 @@ def test_suggestionbatch_from_sequence(dummy_subject_index):
         "http://example.org/none"
     )
     assert suggestions[1].score == pytest.approx(0.2)
+
+
+def test_suggestionbatch_from_sequence_vector(dummy_subject_index):
+    vector = np.zeros(len(dummy_subject_index), dtype=np.float32)
+    vector[0] = 0.2
+    vector[1] = 0.8
+
+    sbatch = SuggestionBatch.from_sequence([vector], dummy_subject_index)
+    assert len(sbatch) == 1
+    suggestions = list(sbatch[0])
+    assert len(suggestions) == 2
+    assert suggestions[0].subject_id == 1
+    assert suggestions[0].score == pytest.approx(0.8)
+    assert suggestions[1].subject_id == 0
+    assert suggestions[1].score == pytest.approx(0.2)
+
+
+def test_suggestionbatch_from_sequence_vector_limit(dummy_subject_index):
+    vector = np.zeros(len(dummy_subject_index), dtype=np.float32)
+    vector[0] = 0.2
+    vector[1] = 0.8
+
+    sbatch = SuggestionBatch.from_sequence([vector], dummy_subject_index, limit=1)
+    assert len(sbatch) == 1
+    suggestions = list(sbatch[0])
+    assert len(suggestions) == 1
+    assert suggestions[0].subject_id == 1
+    assert suggestions[0].score == pytest.approx(0.8)
 
 
 def test_suggestionbatch_from_sequence_enforce_score_range(dummy_subject_index):
