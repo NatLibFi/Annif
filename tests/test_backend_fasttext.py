@@ -195,3 +195,23 @@ def test_fasttext_suggest(project):
     assert len(results) > 0
     archaeology = project.subjects.by_uri("http://www.yso.fi/onto/yso/p1265")
     assert archaeology in [result.subject_id for result in results]
+
+
+def test_fasttext_suggest_empty_chunks(project):
+    fasttext_type = annif.backend.get_backend("fasttext")
+    fasttext = fasttext_type(
+        backend_id="fasttext",
+        config_params={
+            "limit": 50,
+            "chunksize": 1,
+            "dim": 100,
+            "lr": 0.25,
+            "epoch": 20,
+            "loss": "hs",
+        },
+        project=project,
+    )
+
+    results = fasttext.suggest([""])[0]
+
+    assert len(results) == 0
