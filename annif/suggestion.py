@@ -12,6 +12,16 @@ WeightedSuggestionsBatch = collections.namedtuple(
 )
 
 
+def vector_to_suggestions(vector, limit):
+    hits = []
+    for subject_id in np.argsort(vector)[::-1][:limit]:
+        score = vector[subject_id]
+        if score <= 0.0:
+            break  # we can skip the remaining ones
+        hits.append(SubjectSuggestion(subject_id=subject_id, score=float(score)))
+    return hits
+
+
 def filter_suggestion(preds, limit=None, threshold=0.0):
     """filter a 2D sparse suggestion array (csr_array), retaining only the
     top K suggestions with a score above or equal to the threshold for each
@@ -64,28 +74,15 @@ class SuggestionBatch:
         assert isinstance(array, csr_array)
         self.array = array
 
-    @staticmethod
-    def _vector_to_suggestions(vector, limit):
-        hits = []
-        for subject_id in np.argsort(vector)[::-1][:limit]:
-            score = vector[subject_id]
-            if score <= 0.0:
-                break  # we can skip the remaining ones
-            hits.append(SubjectSuggestion(subject_id=subject_id, score=float(score)))
-        return hits
-
     @classmethod
     def from_sequence(cls, suggestion_results, subject_index, limit=None):
         """Create a new SuggestionBatch from a sequence where each item is
-        either a sequence of SubjectSuggestion objects or a 1D NumPy
-        score vector."""
+        a sequence of SubjectSuggestion objects."""
 
         deprecated = set(subject_index.deprecated_ids())
 
         ar = dok_array((len(suggestion_results), len(subject_index)), dtype=np.float32)
         for idx, result in enumerate(suggestion_results):
-            if isinstance(result, np.ndarray):
-                result = cls._vector_to_suggestions(result, limit)
             for suggestion in itertools.islice(result, limit):
                 if suggestion.subject_id in deprecated or suggestion.score <= 0.0:
                     continue

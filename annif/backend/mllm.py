@@ -9,6 +9,7 @@ import annif.eval
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.lexical.mllm import MLLMModel
+from annif.suggestion import vector_to_suggestions
 
 from . import backend, hyperopt
 
@@ -143,7 +144,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
         vector = np.zeros(len(self.project.subjects), dtype=np.float32)
         for score, subject_id in prediction:
             vector[subject_id] = score
-        return vector
+        return vector_to_suggestions(vector, int(params["limit"]))
 
     def _suggest(self, text, params):
         candidates = self._generate_candidates(text)

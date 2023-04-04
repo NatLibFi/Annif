@@ -9,6 +9,7 @@ from gensim.matutils import Sparse2Corpus
 
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
+from annif.suggestion import vector_to_suggestions
 
 from . import backend, mixins
 
@@ -117,4 +118,4 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         )
         tokens = self.project.analyzer.tokenize_words(text)
         vectors = self.vectorizer.transform([" ".join(tokens)])
-        return self._index[vectors[0]]
+        return vector_to_suggestions(self._index[vectors[0]], int(params["limit"]))

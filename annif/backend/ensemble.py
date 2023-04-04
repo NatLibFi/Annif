@@ -6,6 +6,7 @@ import annif.parallel
 import annif.suggestion
 import annif.util
 from annif.exception import NotSupportedException
+from annif.suggestion import vector_to_suggestions
 
 from . import backend, hyperopt
 
@@ -57,7 +58,12 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         sources = annif.util.parse_sources(params["sources"])
         hit_sets_from_sources = self._suggest_with_sources(texts, sources)
         return annif.suggestion.SuggestionBatch.from_sequence(
-            self._merge_hit_sets_from_sources(hit_sets_from_sources, params),
+            [
+                vector_to_suggestions(row, int(params["limit"]))
+                for row in self._merge_hit_sets_from_sources(
+                    hit_sets_from_sources, params
+                )
+            ],
             self.project.subjects,
         )
 
@@ -137,7 +143,10 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                     )
                 )
             batch.evaluate_many(
-                annif.util.merge_hits(weighted_hits),
+                [
+                    vector_to_suggestions(row, int(self._backend.params["limit"]))
+                    for row in annif.util.merge_hits(weighted_hits)
+                ],
                 [goldsubj],
             )
         results = batch.results(metrics=[self._metric])
