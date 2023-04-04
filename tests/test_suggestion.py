@@ -18,8 +18,8 @@ def test_vector_to_suggestions():
     vector[2] = 0.2
     vector[5] = 0.8
 
-    suggestions = vector_to_suggestions(vector, 5)
-    assert len(suggestions) == 2
+    suggestions = list(vector_to_suggestions(vector, 5))
+    assert len(suggestions) == 5
     assert [
         sugg
         for sugg in suggestions
@@ -37,7 +37,7 @@ def test_vector_to_suggestions_limit():
     vector[2] = 0.2
     vector[5] = 0.8
 
-    suggestions = vector_to_suggestions(vector, 1)
+    suggestions = list(vector_to_suggestions(vector, 1))
     assert len(suggestions) == 1
     assert [
         sugg

@@ -13,13 +13,11 @@ WeightedSuggestionsBatch = collections.namedtuple(
 
 
 def vector_to_suggestions(vector, limit):
-    hits = []
-    for subject_id in np.argsort(vector)[::-1][:limit]:
-        score = vector[subject_id]
-        if score <= 0.0:
-            break  # we can skip the remaining ones
-        hits.append(SubjectSuggestion(subject_id=subject_id, score=float(score)))
-    return hits
+    limit = min(len(vector), limit)
+    topk_idx = np.argpartition(vector, -limit)[-limit:]
+    return (
+        SubjectSuggestion(subject_id=idx, score=float(vector[idx])) for idx in topk_idx
+    )
 
 
 def filter_suggestion(preds, limit=None, threshold=0.0):
