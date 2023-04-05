@@ -8,6 +8,7 @@ import random
 import re
 import shutil
 
+from click.shell_completion import ShellComplete
 from click.testing import CliRunner
 
 import annif.cli
@@ -1005,3 +1006,19 @@ def test_version_option():
     assert result.exit_code == 0
     version = importlib.metadata.version("annif")
     assert result.output.strip() == version.strip()
+
+
+def get_completions(cli, args, incomplete):
+    completer = ShellComplete(cli, {}, cli.name, "_ANNIF_COMPLETE")
+    completions = completer.get_completions(args, incomplete)
+    return [c.value for c in completions]
+
+
+def test_completion_list_commands():
+    completions = get_completions(annif.cli.cli, [""], "list")
+    assert completions == ["list-projects", "list-vocabs"]
+
+
+def test_completion_version_option():
+    completions = get_completions(annif.cli.cli, [""], "--ver")
+    assert completions == ["--version"]
