@@ -59,19 +59,20 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
 
     def _normalize_suggestion_batch(self, batch, source_project):
         reg_models = self._get_model(source_project.project_id)
-        pav_batch = []
-        for result in batch:
-            pav_result = []
-            for sugg in result:
-                if sugg.subject_id in reg_models:
-                    score = reg_models[sugg.subject_id].predict([sugg.score])[0]
-                else:  # default to raw score
-                    score = sugg.score
-                pav_result.append(
-                    SubjectSuggestion(subject_id=sugg.subject_id, score=score)
+        pav_batch = [
+            [
+                SubjectSuggestion(
+                    subject_id=sugg.subject_id,
+                    score=reg_models[sugg.subject_id].predict([sugg.score])[0],
                 )
-            pav_result.sort(key=lambda hit: hit.score, reverse=True)
-            pav_batch.append(pav_result)
+                if sugg.subject_id in reg_models
+                else SubjectSuggestion(
+                    subject_id=sugg.subject_id, score=sugg.score
+                )  # default to raw score
+                for sugg in result
+            ]
+            for result in batch
+        ]
         return SuggestionBatch.from_sequence(pav_batch, self.project.subjects)
 
     @staticmethod
