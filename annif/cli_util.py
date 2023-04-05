@@ -170,3 +170,8 @@ def generate_filter_params(filter_batch_max_limit):
     limits = range(1, filter_batch_max_limit + 1)
     thresholds = [i * 0.05 for i in range(20)]
     return list(itertools.product(limits, thresholds))
+
+
+def complete_project_id(ctx, param, incomplete):
+    with ctx.obj.load_app().app_context():
+        return [p for p in annif.registry.get_projects() if p.startswith(incomplete)]

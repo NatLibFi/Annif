@@ -56,7 +56,7 @@ def run_list_projects():
 
 
 @cli.command("show-project")
-@click.argument("project_id")
+@click.argument("project_id", shell_complete=cli_util.complete_project_id)
 @cli_util.common_options
 def run_show_project(project_id):
     """
@@ -75,7 +75,7 @@ def run_show_project(project_id):
 
 
 @cli.command("clear")
-@click.argument("project_id")
+@click.argument("project_id", shell_complete=cli_util.complete_project_id)
 @cli_util.common_options
 def run_clear_project(project_id):
     """
@@ -148,7 +148,7 @@ def run_load_vocab(vocab_id, language, force, subjectfile):
 
 
 @cli.command("train")
-@click.argument("project_id")
+@click.argument("project_id", shell_complete=cli_util.complete_project_id)
 @click.argument("paths", type=click.Path(exists=True), nargs=-1)
 @click.option(
     "--cached/--no-cached",
@@ -192,7 +192,7 @@ def run_train(project_id, paths, cached, docs_limit, jobs, backend_param):
 
 
 @cli.command("learn")
-@click.argument("project_id")
+@click.argument("project_id", shell_complete=cli_util.complete_project_id)
 @click.argument("paths", type=click.Path(exists=True), nargs=-1)
 @cli_util.docs_limit_option
 @cli_util.backend_param_option
@@ -214,7 +214,7 @@ def run_learn(project_id, paths, docs_limit, backend_param):
 
 
 @cli.command("suggest")
-@click.argument("project_id")
+@click.argument("project_id", shell_complete=cli_util.complete_project_id)
 @click.argument(
     "paths", type=click.Path(dir_okay=False, exists=True, allow_dash=True), nargs=-1
 )
@@ -258,7 +258,7 @@ def run_suggest(
 
 
 @cli.command("index")
-@click.argument("project_id")
+@click.argument("project_id", shell_complete=cli_util.complete_project_id)
 @click.argument("directory", type=click.Path(exists=True, file_okay=False))
 @click.option(
     "--suffix", "-s", default=".annif", help="File name suffix for result files"
@@ -305,7 +305,7 @@ def run_index(
 
 
 @cli.command("eval")
-@click.argument("project_id")
+@click.argument("project_id", shell_complete=cli_util.complete_project_id)
 @click.argument("paths", type=click.Path(exists=True), nargs=-1)
 @click.option("--limit", "-l", default=10, help="Maximum number of subjects")
 @click.option("--threshold", "-t", default=0.0, help="Minimum score threshold")
@@ -416,7 +416,7 @@ OPTIMIZE_METRICS = ["Precision (doc avg)", "Recall (doc avg)", "F1 score (doc av
 
 
 @cli.command("optimize")
-@click.argument("project_id")
+@click.argument("project_id", shell_complete=cli_util.complete_project_id)
 @click.argument("paths", type=click.Path(exists=True), nargs=-1)
 @click.option(
     "--jobs", "-j", default=1, help="Number of parallel jobs (0 means all CPUs)"
@@ -514,7 +514,7 @@ def run_optimize(project_id, paths, jobs, docs_limit, backend_param):
 
 
 @cli.command("hyperopt")
-@click.argument("project_id")
+@click.argument("project_id", shell_complete=cli_util.complete_project_id)
 @click.argument("paths", type=click.Path(exists=True), nargs=-1)
 @click.option("--trials", "-T", default=10, help="Number of trials")
 @click.option(

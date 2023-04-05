@@ -7,6 +7,7 @@ import os.path
 import random
 import re
 import shutil
+from unittest import mock
 
 from click.shell_completion import ShellComplete
 from click.testing import CliRunner
@@ -1022,3 +1023,40 @@ def test_completion_list_commands():
 def test_completion_version_option():
     completions = get_completions(annif.cli.cli, [""], "--ver")
     assert completions == ["--version"]
+
+
+@mock.patch.dict(os.environ, {"ANNIF_CONFIG": "annif.default_config.TestingConfig"})
+def test_completion_show_project_project_ids_all():
+    completions = get_completions(annif.cli.cli, ["show-project"], "")
+    assert completions == [
+        "dummy-fi",
+        "dummy-en",
+        "dummy-private",
+        "dummy-vocablang",
+        "dummy-transform",
+        "limit-transform",
+        "ensemble",
+        "noanalyzer",
+        "novocab",
+        "nobackend",
+        "noname",
+        "noparams-tfidf-fi",
+        "noparams-fasttext-fi",
+        "pav",
+        "tfidf-fi",
+        "tfidf-en",
+        "fasttext-en",
+        "fasttext-fi",
+    ]
+
+
+@mock.patch.dict(os.environ, {"ANNIF_CONFIG": "annif.default_config.TestingConfig"})
+def test_completion_show_project_project_ids_dummy():
+    completions = get_completions(annif.cli.cli, ["show-project"], "dummy")
+    assert completions == [
+        "dummy-fi",
+        "dummy-en",
+        "dummy-private",
+        "dummy-vocablang",
+        "dummy-transform",
+    ]
