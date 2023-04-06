@@ -43,13 +43,14 @@ class BaseEnsembleBackend(backend.AnnifBackend):
 
         batches = [batch_by_source[project_id] for project_id, _ in sources]
         weights = [weight for _, weight in sources]
-        return SuggestionBatch.from_averaged(batches, weights)
+        return SuggestionBatch.from_averaged(batches, weights).filter(
+            limit=int(params["limit"])
+        )
 
     def _suggest_batch(self, texts, params):
         sources = annif.util.parse_sources(params["sources"])
         batch_by_source = self._suggest_with_sources(texts, sources)
-        merged = self._merge_source_batches(batch_by_source, sources, params)
-        return merged.filter(limit=int(params["limit"]))
+        return self._merge_source_batches(batch_by_source, sources, params)
 
 
 class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
