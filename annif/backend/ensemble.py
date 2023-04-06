@@ -29,43 +29,27 @@ class BaseEnsembleBackend(backend.AnnifBackend):
             project = self.project.registry.get_project(project_id)
             project.initialize(parallel)
 
-    def _normalize_suggestion_batch(self, batch, source_project):
-        """Hook for processing a batch of suggestions from backends.
-        Intended to be overridden by subclasses."""
-        return batch
-
     def _suggest_with_sources(self, texts, sources):
-        batches_from_sources = []
-        for project_id, weight in sources:
-            source_project = self.project.registry.get_project(project_id)
-            batch = source_project.suggest(texts)
-            norm_batch = self._normalize_suggestion_batch(batch, source_project)
-            batches_from_sources.append(
-                annif.suggestion.WeightedSuggestionsBatch(
-                    hit_sets=norm_batch,
-                    weight=weight,
-                    subjects=source_project.subjects,
-                )
-            )
-        return batches_from_sources
+        return {
+            project_id: self.project.registry.get_project(project_id).suggest(texts)
+            for project_id, _ in sources
+        }
 
-    def _merge_hit_sets_from_sources(self, hit_sets_from_sources, params):
-        """Hook for merging hit sets from sources. Can be overridden by
-        subclasses."""
-        return annif.util.merge_hits(hit_sets_from_sources)
+    def _merge_source_batches(self, batch_by_source, sources, params):
+        """Merge the given SuggestionBatches from each source into a single
+        SuggestionBatch. The default implementation computes a weighted
+        average based on the weights given in the sources tuple. Intended
+        to be overridden in subclasses."""
+
+        batches = [batch_by_source[project_id] for project_id, _ in sources]
+        weights = [weight for _, weight in sources]
+        return SuggestionBatch.from_averaged(batches, weights)
 
     def _suggest_batch(self, texts, params):
         sources = annif.util.parse_sources(params["sources"])
-        hit_sets_from_sources = self._suggest_with_sources(texts, sources)
-        return annif.suggestion.SuggestionBatch.from_sequence(
-            [
-                vector_to_suggestions(row, int(params["limit"]))
-                for row in self._merge_hit_sets_from_sources(
-                    hit_sets_from_sources, params
-                )
-            ],
-            self.project.subjects,
-        )
+        batch_by_source = self._suggest_with_sources(texts, sources)
+        merged = self._merge_source_batches(batch_by_source, sources, params)
+        return merged.filter(limit=int(params["limit"]))
 
 
 class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):

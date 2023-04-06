@@ -57,23 +57,29 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         self.initialize()
         return self._models[source_project_id]
 
-    def _normalize_suggestion_batch(self, batch, source_project):
-        reg_models = self._get_model(source_project.project_id)
-        pav_batch = [
-            [
-                SubjectSuggestion(
-                    subject_id=sugg.subject_id,
-                    score=reg_models[sugg.subject_id].predict([sugg.score])[0],
-                )
-                if sugg.subject_id in reg_models
-                else SubjectSuggestion(
-                    subject_id=sugg.subject_id, score=sugg.score
-                )  # default to raw score
-                for sugg in result
+    def _merge_source_batches(self, batch_by_source, sources, params):
+        reg_batch_by_source = {}
+        for project_id, batch in batch_by_source.items():
+            reg_models = self._get_model(project_id)
+            pav_batch = [
+                [
+                    SubjectSuggestion(
+                        subject_id=sugg.subject_id,
+                        score=reg_models[sugg.subject_id].predict([sugg.score])[0],
+                    )
+                    if sugg.subject_id in reg_models
+                    else SubjectSuggestion(
+                        subject_id=sugg.subject_id, score=sugg.score
+                    )  # default to raw score
+                    for sugg in result
+                ]
+                for result in batch
             ]
-            for result in batch
-        ]
-        return SuggestionBatch.from_sequence(pav_batch, self.project.subjects)
+            reg_batch_by_source[project_id] = SuggestionBatch.from_sequence(
+                pav_batch, self.project.subjects
+            )
+
+        return super()._merge_source_batches(reg_batch_by_source, sources, params)
 
     @staticmethod
     def _suggest_train_corpus(source_project, corpus):

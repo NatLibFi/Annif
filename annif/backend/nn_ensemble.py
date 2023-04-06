@@ -19,6 +19,7 @@ import annif.corpus
 import annif.parallel
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
+from annif.suggestion import SuggestionBatch, vector_to_suggestions
 
 from . import backend, ensemble
 
@@ -129,18 +130,28 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             model_filename, custom_objects={"MeanLayer": MeanLayer}
         )
 
-    def _merge_hit_sets_from_sources(self, hit_sets_from_sources, params):
+    def _merge_source_batches(self, batch_by_source, sources, params):
+        src_weight = dict(sources)
         score_vectors = np.array(
             [
                 [
-                    np.sqrt(hits.as_vector()) * weight * len(hit_sets_from_sources)
-                    for hits in proj_hit_set
+                    np.sqrt(suggestions.as_vector())
+                    * src_weight[project_id]
+                    * len(batch_by_source)
+                    for suggestions in batch
                 ]
-                for proj_hit_set, weight, subjects in hit_sets_from_sources
+                for project_id, batch in batch_by_source.items()
             ],
             dtype=np.float32,
         ).transpose(1, 2, 0)
-        return self._model(score_vectors).numpy()
+        prediction = self._model(score_vectors).numpy()
+        return SuggestionBatch.from_sequence(
+            [
+                vector_to_suggestions(row, limit=int(params["limit"]))
+                for row in prediction
+            ],
+            self.project.subjects,
+        )
 
     def _create_model(self, sources):
         self.info("creating NN ensemble model")
