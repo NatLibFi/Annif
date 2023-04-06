@@ -87,6 +87,16 @@ class SuggestionBatch:
                 ar[idx, suggestion.subject_id] = min(suggestion.score, 1.0)
         return cls(ar.tocsr())
 
+    @classmethod
+    def from_averaged(cls, batches, weights):
+        """Create a new SuggestionBatch where the subject scores are the
+        weighted average of scores in several SuggestionBatches"""
+
+        avg_array = sum(
+            [batch.array * weight for batch, weight in zip(batches, weights)]
+        ) / sum(weights)
+        return SuggestionBatch(avg_array)
+
     def filter(self, limit=None, threshold=0.0):
         """Return a subset of the hits, filtered by the given limit and
         score threshold, as another SuggestionBatch object."""

@@ -150,3 +150,14 @@ def test_suggestionbatch_from_sequence_with_deprecated(dummy_subject_index):
         "http://example.org/none"
     )
     assert suggestions[1].score == pytest.approx(0.2)
+
+
+def test_suggestionbatch_from_averaged():
+    batch1 = SuggestionBatch(csr_array([[0, 1, 0], [1, 0, 0]]))
+    batch2 = SuggestionBatch(csr_array([[1, 0, 0], [1, 1, 0]]))
+    weights = [1, 3]
+
+    avg_batch = SuggestionBatch.from_averaged([batch1, batch2], weights)
+    assert (
+        avg_batch.array.toarray() == np.array([[0.75, 0.25, 0], [1, 0.75, 0]])
+    ).all()

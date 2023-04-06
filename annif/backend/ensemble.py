@@ -6,7 +6,7 @@ import annif.parallel
 import annif.suggestion
 import annif.util
 from annif.exception import NotSupportedException
-from annif.suggestion import vector_to_suggestions
+from annif.suggestion import SuggestionBatch, vector_to_suggestions
 
 from . import backend, hyperopt
 
@@ -81,8 +81,8 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         ]
 
     def _prepare(self, n_jobs=1):
-        self._gold_subjects = []
-        self._source_hits = []
+        self._gold_batches = []
+        self._source_batches = []
 
         for project_id in self._sources:
             project = self._backend.project.registry.get_project(project_id)
@@ -99,23 +99,11 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         jobs, pool_class = annif.parallel.get_pool(n_jobs)
 
         with pool_class(jobs) as pool:
-            for hit_sets, subject_sets in pool.imap_unordered(
+            for suggestions, gold_batch in pool.imap_unordered(
                 psmap.suggest_batch, self._corpus.doc_batches
             ):
-                self._gold_subjects.extend(subject_sets)
-                self._source_hits.extend(self._hit_sets_to_list(hit_sets))
-
-    def _hit_sets_to_list(self, hit_sets):
-        """Convert a dict of lists of hits to a list of dicts of hits, e.g.
-        {"proj-1": [p-1-doc-1-hits, p-1-doc-2-hits]
-         "proj-2": [p-2-doc-1-hits, p-2-doc-2-hits]}
-        to
-        [{"proj-1": p-1-doc-1-hits, "proj-2": p-2-doc-1-hits},
-         {"proj-1": p-1-doc-2-hits, "proj-2": p-2-doc-2-hits}]
-        """
-        return [
-            dict(zip(hit_sets.keys(), doc_hits)) for doc_hits in zip(*hit_sets.values())
-        ]
+                self._source_batches.append(suggestions)
+                self._gold_batches.append(gold_batch)
 
     def _normalize(self, hps):
         total = sum(hps.values())
@@ -127,29 +115,19 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         )
 
     def _objective(self, trial):
-        batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
-        weights = {
+        eval_batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
+        proj_weights = {
             project_id: trial.suggest_uniform(project_id, 0.0, 1.0)
             for project_id in self._sources
         }
-        for goldsubj, srchits in zip(self._gold_subjects, self._source_hits):
-            weighted_hits = []
-            for project_id, hits in srchits.items():
-                weighted_hits.append(
-                    annif.suggestion.WeightedSuggestionsBatch(
-                        hit_sets=[hits],
-                        weight=weights[project_id],
-                        subjects=self._backend.project.subjects,
-                    )
-                )
-            batch.evaluate_many(
-                [
-                    vector_to_suggestions(row, int(self._backend.params["limit"]))
-                    for row in annif.util.merge_hits(weighted_hits)
-                ],
-                [goldsubj],
+        for gold_batch, src_batches in zip(self._gold_batches, self._source_batches):
+            batches = [src_batches[project_id] for project_id in self._sources]
+            weights = [proj_weights[project_id] for project_id in self._sources]
+            avg_batch = SuggestionBatch.from_averaged(batches, weights).filter(
+                limit=int(self._backend.params["limit"])
             )
-        results = batch.results(metrics=[self._metric])
+            eval_batch.evaluate_many(avg_batch, gold_batch)
+        results = eval_batch.results(metrics=[self._metric])
         return results[self._metric]
 
     def _postprocess(self, study):
