@@ -7,9 +7,6 @@ import numpy as np
 from scipy.sparse import csr_array, dok_array
 
 SubjectSuggestion = collections.namedtuple("SubjectSuggestion", "subject_id score")
-WeightedSuggestionsBatch = collections.namedtuple(
-    "WeightedSuggestionsBatch", "hit_sets weight subjects"
-)
 
 
 def vector_to_suggestions(vector, limit):

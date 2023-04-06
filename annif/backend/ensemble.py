@@ -6,7 +6,7 @@ import annif.parallel
 import annif.suggestion
 import annif.util
 from annif.exception import NotSupportedException
-from annif.suggestion import SuggestionBatch, vector_to_suggestions
+from annif.suggestion import SuggestionBatch
 
 from . import backend, hyperopt
 

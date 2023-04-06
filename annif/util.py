@@ -6,8 +6,6 @@ import os
 import os.path
 import tempfile
 
-import numpy as np
-
 from annif import logger
 
 
@@ -51,20 +49,6 @@ def cleanup_uri(uri):
     if uri.startswith("<") and uri.endswith(">"):
         return uri[1:-1]
     return uri
-
-
-def merge_hits(weighted_hits_batches):
-    """Merge hit sets from multiple sources. Input is a sequence of
-    WeightedSuggestionsBatch objects. Returns a NumPy array."""
-
-    weights = [batch.weight for batch in weighted_hits_batches]
-    score_vectors = np.array(
-        [
-            [whits.as_vector() for whits in batch.hit_sets]
-            for batch in weighted_hits_batches
-        ]
-    )
-    return np.average(score_vectors, axis=0, weights=weights)
 
 
 def parse_sources(sourcedef):
