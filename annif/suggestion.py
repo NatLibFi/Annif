@@ -75,14 +75,21 @@ class SuggestionBatch:
         a sequence of SubjectSuggestion objects."""
 
         deprecated = set(subject_index.deprecated_ids())
-
-        ar = dok_array((len(suggestion_results), len(subject_index)), dtype=np.float32)
+        data, rows, cols = [], [], []
         for idx, result in enumerate(suggestion_results):
             for suggestion in itertools.islice(result, limit):
                 if suggestion.subject_id in deprecated or suggestion.score <= 0.0:
                     continue
-                ar[idx, suggestion.subject_id] = min(suggestion.score, 1.0)
-        return cls(ar.tocsr())
+                data.append(min(suggestion.score, 1.0))
+                rows.append(idx)
+                cols.append(suggestion.subject_id)
+        return cls(
+            csr_array(
+                (data, (rows, cols)),
+                shape=(len(suggestion_results), len(subject_index)),
+                dtype=np.float32,
+            )
+        )
 
     @classmethod
     def from_averaged(cls, batches, weights):
