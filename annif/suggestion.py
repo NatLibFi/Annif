@@ -4,7 +4,7 @@ import collections
 import itertools
 
 import numpy as np
-from scipy.sparse import csr_array, dok_array
+from scipy.sparse import csr_array
 
 SubjectSuggestion = collections.namedtuple("SubjectSuggestion", "subject_id score")
 
@@ -22,18 +22,22 @@ def filter_suggestion(preds, limit=None, threshold=0.0):
     top K suggestions with a score above or equal to the threshold for each
     individual prediction; the rest will be left as zeros"""
 
-    filtered = dok_array(preds.shape, dtype=np.float32)
+    if limit == 0:
+        return csr_array(preds.shape, dtype=np.float32)  # empty
+
+    data, rows, cols = [], [], []
     for row in range(preds.shape[0]):
         arow = preds.getrow(row)
-        top_k = arow.data.argsort()[::-1]
-        if limit is not None:
-            top_k = top_k[:limit]
-        for idx in top_k:
-            val = arow.data[idx]
-            if val < threshold:
-                break
-            filtered[row, arow.indices[idx]] = val
-    return filtered.tocsr()
+        if limit is not None and limit < len(arow.data):
+            topk_idx = arow.data.argpartition(-limit)[-limit:]
+        else:
+            topk_idx = range(len(arow.data))
+        for idx in topk_idx:
+            if arow.data[idx] >= threshold:
+                data.append(arow.data[idx])
+                rows.append(row)
+                cols.append(arow.indices[idx])
+    return csr_array((data, (rows, cols)), shape=preds.shape, dtype=np.float32)
 
 
 class SuggestionResult:

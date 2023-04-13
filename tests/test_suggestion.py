@@ -52,6 +52,18 @@ def test_filter_suggestion_limit():
     assert filtered.toarray().tolist() == [[0, 0, 3, 2], [0, 4, 3, 0]]
 
 
+def test_filter_suggestion_limit_big():
+    pred = csr_array([[0, 1, 3, 2], [1, 4, 3, 0]])
+    filtered = filter_suggestion(pred, limit=20)
+    assert filtered.toarray().tolist() == [[0, 1, 3, 2], [1, 4, 3, 0]]
+
+
+def test_filter_suggestion_limit_zero():
+    pred = csr_array([[0, 1, 3, 2], [1, 4, 3, 0]])
+    filtered = filter_suggestion(pred, limit=0)
+    assert filtered.toarray().tolist() == [[0, 0, 0, 0], [0, 0, 0, 0]]
+
+
 def test_filter_suggestion_threshold():
     pred = csr_array([[0, 1, 3, 2], [1, 4, 3, 0]])
     filtered = filter_suggestion(pred, threshold=2)
