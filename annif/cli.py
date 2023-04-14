@@ -43,16 +43,26 @@ def run_list_projects():
     for details.
     """
 
-    template = "{0: <25}{1: <45}{2: <10}{3: <7}"
-    header = template.format("Project ID", "Project Name", "Language", "Trained")
+    entries = [
+        (proj.project_id, proj.name, proj.language, str(proj.is_trained))
+        for proj in annif.registry.get_projects(min_access=Access.private).values()
+    ]
+    header_fields = ("Project ID", "Project Name", "Language", "Trained")
+
+    max_field_lengths = collections.defaultdict(int)
+    for entry in (*entries, header_fields):
+        for ind, field in enumerate(entry):
+            max_field_lengths[ind] = max(max_field_lengths[ind], len(field))
+
+    template = "{{0: <{0}}}   {{1: <{1}}}   {{2: <{2}}}   {{3: <{3}}}".format(
+        *max_field_lengths.values()
+    )
+
+    header = template.format(*header_fields)
     click.echo(header)
     click.echo("-" * len(header))
-    for proj in annif.registry.get_projects(min_access=Access.private).values():
-        click.echo(
-            template.format(
-                proj.project_id, proj.name, proj.language, str(proj.is_trained)
-            )
-        )
+    for entry in entries:
+        click.echo(template.format(*entry))
 
 
 @cli.command("show-project")
