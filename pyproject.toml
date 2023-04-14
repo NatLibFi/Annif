@@ -61,7 +61,6 @@ spacy = {version = "3.5.*", optional = true}
 py = "*"
 pytest = "*"
 requests = "*"
-codecov = "*"
 pytest-cov = "*"
 pytest-watch = "*"
 pytest-flask = "*"
