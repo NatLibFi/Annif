@@ -1,4 +1,4 @@
-FROM python:3.8-slim-bullseye
+FROM python:3.10-slim-bullseye
 LABEL org.opencontainers.image.authors="grp-natlibfi-annif@helsinki.fi"
 SHELL ["/bin/bash", "-c"]
 
