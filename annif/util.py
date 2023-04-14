@@ -6,10 +6,7 @@ import os
 import os.path
 import tempfile
 
-import numpy as np
-
 from annif import logger
-from annif.suggestion import VectorSuggestionResult
 
 
 class DuplicateFilter(logging.Filter):
@@ -52,22 +49,6 @@ def cleanup_uri(uri):
     if uri.startswith("<") and uri.endswith(">"):
         return uri[1:-1]
     return uri
-
-
-def merge_hits(weighted_hits_batches, size):
-    """Merge hit sets from multiple sources. Input is a sequence of
-    WeightedSuggestionsBatch objects. The size parameter determines the length of the
-    subject vector. Returns a list of SuggestionResult objects."""
-
-    weights = [batch.weight for batch in weighted_hits_batches]
-    score_vectors = np.array(
-        [
-            [whits.as_vector(size) for whits in batch.hit_sets]
-            for batch in weighted_hits_batches
-        ]
-    )
-    results = np.average(score_vectors, axis=0, weights=weights)
-    return [VectorSuggestionResult(res) for res in results]
 
 
 def parse_sources(sourcedef):

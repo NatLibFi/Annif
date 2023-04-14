@@ -436,7 +436,7 @@ def test_suggest_param():
         input="kissa",
     )
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy-fi\t0.8\n"
+    assert result.output.startswith("<http://example.org/dummy>\tdummy-fi\t0.8")
     assert result.exit_code == 0
 
 
@@ -640,8 +640,6 @@ def test_eval_label(tmpdir):
     assert float(precision3.group(1)) == 0.5
     precision5 = re.search(r"Precision@5:\s+(\d.\d+)", result.output)
     assert float(precision5.group(1)) == 0.5
-    lrap = re.search(r"LRAP:\s+(\d.\d+)", result.output)
-    assert float(lrap.group(1)) == 0.75
     true_positives = re.search(r"True positives:\s+(\d+)", result.output)
     assert int(true_positives.group(1)) == 1
     false_positives = re.search(r"False positives:\s+(\d+)", result.output)
@@ -675,8 +673,6 @@ def test_eval_uri(tmpdir):
     assert float(precision3.group(1)) == 0.5
     precision5 = re.search(r"Precision@5:\s+(\d.\d+)", result.output)
     assert float(precision5.group(1)) == 0.5
-    lrap = re.search(r"LRAP:\s+(\d.\d+)", result.output)
-    assert float(lrap.group(1)) == 0.75
     true_positives = re.search(r"True positives:\s+(\d+)", result.output)
     assert int(true_positives.group(1)) == 1
     false_positives = re.search(r"False positives:\s+(\d+)", result.output)

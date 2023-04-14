@@ -1,7 +1,7 @@
 """Dummy backend for testing basic interaction of projects and backends"""
 
 
-from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+from annif.suggestion import SubjectSuggestion
 
 from . import backend
 
@@ -27,7 +27,7 @@ class DummyBackend(backend.AnnifLearningBackend):
 
         # Give no hits for no text
         if len(text) == 0:
-            return ListSuggestionResult([])
+            return []
 
         # allow overriding returned subject via uri parameter
         if "uri" in params:
@@ -35,9 +35,7 @@ class DummyBackend(backend.AnnifLearningBackend):
         else:
             subject_id = self.subject_id
 
-        return ListSuggestionResult(
-            [SubjectSuggestion(subject_id=subject_id, score=score)]
-        )
+        return [SubjectSuggestion(subject_id=subject_id, score=score)]
 
     def _learn(self, corpus, params):
         # in this dummy backend we "learn" by picking up the subject ID

@@ -2,6 +2,7 @@
 
 
 import collections
+import itertools
 import os
 import sys
 
@@ -12,7 +13,6 @@ from flask import current_app
 import annif
 from annif.exception import ConfigurationException
 from annif.project import Access
-from annif.suggestion import SuggestionFilter
 
 logger = annif.logger
 
@@ -136,7 +136,7 @@ def show_hits(hits, project, lang, file=None):
     a table, with one row per hit. Each row contains the URI, label, possible notation,
     and score of the suggestion. The label is given in the specified language.
     """
-    for hit in hits.as_list():
+    for hit in hits:
         subj = project.subjects[hit.subject_id]
         line = "<{}>\t{}\t{}".format(
             subj.uri,
@@ -166,13 +166,7 @@ def _validate_backend_params(backend, beparam, project):
         )
 
 
-def generate_filter_batches(subjects, filter_batch_max_limit):
-    import annif.eval
-
-    filter_batches = {}
-    for limit in range(1, filter_batch_max_limit + 1):
-        for threshold in [i * 0.05 for i in range(20)]:
-            hit_filter = SuggestionFilter(subjects, limit, threshold)
-            batch = annif.eval.EvaluationBatch(subjects)
-            filter_batches[(limit, threshold)] = (hit_filter, batch)
-    return filter_batches
+def generate_filter_params(filter_batch_max_limit):
+    limits = range(1, filter_batch_max_limit + 1)
+    thresholds = [i * 0.05 for i in range(20)]
+    return list(itertools.product(limits, thresholds))

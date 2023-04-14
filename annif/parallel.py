@@ -3,7 +3,6 @@
 
 import multiprocessing
 import multiprocessing.dummy
-from collections import defaultdict
 
 # Start method for processes created by the multiprocessing module.
 # A value of None means using the platform-specific default.
@@ -43,23 +42,18 @@ class ProjectSuggestMap:
         filtered_hits = {}
         for project_id in self.project_ids:
             project = self.registry.get_project(project_id)
-            hits = project.suggest([doc.text], self.backend_params)[0]
-            filtered_hits[project_id] = hits.filter(
-                project.subjects, self.limit, self.threshold
-            )
+            batch = project.suggest([doc.text], self.backend_params)
+            filtered_hits[project_id] = batch.filter(self.limit, self.threshold)[0]
         return (filtered_hits, doc.subject_set)
 
     def suggest_batch(self, batch):
-        filtered_hit_sets = defaultdict(list)
+        filtered_hit_sets = {}
         texts, subject_sets = zip(*[(doc.text, doc.subject_set) for doc in batch])
 
         for project_id in self.project_ids:
             project = self.registry.get_project(project_id)
-            hit_sets = project.suggest(texts, self.backend_params)
-            for hits in hit_sets:
-                filtered_hit_sets[project_id].append(
-                    hits.filter(project.subjects, self.limit, self.threshold)
-                )
+            batch = project.suggest(texts, self.backend_params)
+            filtered_hit_sets[project_id] = batch.filter(self.limit, self.threshold)
         return (filtered_hit_sets, subject_sets)
 
 

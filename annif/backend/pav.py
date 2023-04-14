@@ -11,9 +11,9 @@ from scipy.sparse import coo_matrix, csc_matrix
 from sklearn.isotonic import IsotonicRegression
 
 import annif.corpus
-import annif.suggestion
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
+from annif.suggestion import SubjectSuggestion, SuggestionBatch
 
 from . import backend, ensemble
 
@@ -57,21 +57,29 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         self.initialize()
         return self._models[source_project_id]
 
-    def _normalize_hits(self, hits, source_project):
-        reg_models = self._get_model(source_project.project_id)
-        pav_result = []
-        for hit in hits.as_list():
-            if hit.subject_id in reg_models:
-                score = reg_models[hit.subject_id].predict([hit.score])[0]
-            else:  # default to raw score
-                score = hit.score
-            pav_result.append(
-                annif.suggestion.SubjectSuggestion(
-                    subject_id=hit.subject_id, score=score
-                )
+    def _merge_source_batches(self, batch_by_source, sources, params):
+        reg_batch_by_source = {}
+        for project_id, batch in batch_by_source.items():
+            reg_models = self._get_model(project_id)
+            pav_batch = [
+                [
+                    SubjectSuggestion(
+                        subject_id=sugg.subject_id,
+                        score=reg_models[sugg.subject_id].predict([sugg.score])[0],
+                    )
+                    if sugg.subject_id in reg_models
+                    else SubjectSuggestion(
+                        subject_id=sugg.subject_id, score=sugg.score
+                    )  # default to raw score
+                    for sugg in result
+                ]
+                for result in batch
+            ]
+            reg_batch_by_source[project_id] = SuggestionBatch.from_sequence(
+                pav_batch, self.project.subjects
             )
-        pav_result.sort(key=lambda hit: hit.score, reverse=True)
-        return annif.suggestion.ListSuggestionResult(pav_result)
+
+        return super()._merge_source_batches(reg_batch_by_source, sources, params)
 
     @staticmethod
     def _suggest_train_corpus(source_project, corpus):
@@ -83,7 +91,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         ndocs = 0
         for docid, doc in enumerate(corpus.documents):
             hits = source_project.suggest([doc.text])[0]
-            vector = hits.as_vector(len(source_project.subjects))
+            vector = hits.as_vector()
             for cid in np.flatnonzero(vector):
                 data.append(vector[cid])
                 row.append(docid)

@@ -9,7 +9,6 @@ import annif.registry
 from annif.corpus import Document, DocumentList, SubjectSet
 from annif.exception import AnnifException
 from annif.project import Access
-from annif.suggestion import SuggestionFilter
 
 
 def project_not_found_error(project_id):
@@ -78,14 +77,9 @@ def _suggestion_to_dict(suggestion, subject_index, language):
     }
 
 
-def _hit_sets_to_list(hit_sets, hit_filter, subjects, lang):
+def _hit_sets_to_list(hit_sets, subjects, lang):
     return [
-        {
-            "results": [
-                _suggestion_to_dict(hit, subjects, lang)
-                for hit in hit_filter(hits).as_list()
-            ]
-        }
+        {"results": [_suggestion_to_dict(hit, subjects, lang) for hit in hits]}
         for hits in hit_sets
     ]
 
@@ -145,12 +139,11 @@ def _suggest(project_id, documents, parameters):
     threshold = parameters.get("threshold", 0.0)
 
     try:
-        hit_filter = SuggestionFilter(project.subjects, limit, threshold)
-        hit_sets = project.suggest_corpus(corpus)
+        hit_sets = project.suggest_corpus(corpus).filter(limit, threshold)
     except AnnifException as err:
         return server_error(err)
 
-    return _hit_sets_to_list(hit_sets, hit_filter, project.subjects, lang)
+    return _hit_sets_to_list(hit_sets, project.subjects, lang)
 
 
 def _documents_to_corpus(documents, subject_index):

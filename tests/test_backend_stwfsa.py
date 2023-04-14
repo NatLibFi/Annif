@@ -60,7 +60,7 @@ def test_empty_corpus(project):
     corpus = annif.corpus.DocumentList([])
     stwfsa_type = get_backend(StwfsaBackend.name)
     stwfsa = stwfsa_type(
-        backend_id=StwfsaBackend.name, config_params=dict(), project=project
+        backend_id=StwfsaBackend.name, config_params={"limit": 10}, project=project
     )
     with pytest.raises(NotSupportedException):
         stwfsa.train(corpus)
@@ -70,7 +70,7 @@ def test_cached_corpus(project):
     corpus = "cached"
     stwfsa_type = get_backend(StwfsaBackend.name)
     stwfsa = stwfsa_type(
-        backend_id=StwfsaBackend.name, config_params=dict(), project=project
+        backend_id=StwfsaBackend.name, config_params={"limit": 10}, project=project
     )
     with pytest.raises(NotSupportedException):
         stwfsa.train(corpus)
@@ -79,7 +79,7 @@ def test_cached_corpus(project):
 def test_stwfsa_suggest_unknown(project):
     stwfsa_type = get_backend(StwfsaBackend.name)
     stwfsa = stwfsa_type(
-        backend_id=StwfsaBackend.name, config_params=dict(), project=project
+        backend_id=StwfsaBackend.name, config_params={"limit": 10}, project=project
     )
     results = stwfsa.suggest(["1234"])[0]
     assert len(results) == 0
@@ -88,7 +88,7 @@ def test_stwfsa_suggest_unknown(project):
 def test_stwfsa_suggest(project, datadir):
     stwfsa_type = get_backend(StwfsaBackend.name)
     stwfsa = stwfsa_type(
-        backend_id=StwfsaBackend.name, config_params=dict(), project=project
+        backend_id=StwfsaBackend.name, config_params={"limit": 10}, project=project
     )
     # Just some randomly selected words, taken from YSO archaeology group.
     # And "random" words between them
@@ -108,6 +108,5 @@ def test_stwfsa_suggest(project, datadir):
         ]
     )[0]
     assert len(results) == 10
-    hits = results.as_list()
     labyrinths = project.subjects.by_uri("http://www.yso.fi/onto/yso/p14174")
-    assert labyrinths in [result.subject_id for result in hits]
+    assert labyrinths in [result.subject_id for result in results]

@@ -3,9 +3,9 @@
 
 import annif.eval
 import annif.parallel
-import annif.suggestion
 import annif.util
 from annif.exception import NotSupportedException
+from annif.suggestion import SuggestionBatch
 
 from . import backend, hyperopt
 
@@ -28,37 +28,28 @@ class BaseEnsembleBackend(backend.AnnifBackend):
             project = self.project.registry.get_project(project_id)
             project.initialize(parallel)
 
-    def _normalize_hits(self, hits, source_project):
-        """Hook for processing hits from backends. Intended to be overridden
-        by subclasses."""
-        return hits
-
     def _suggest_with_sources(self, texts, sources):
-        hit_sets_from_sources = []
-        for project_id, weight in sources:
-            source_project = self.project.registry.get_project(project_id)
-            hit_sets = source_project.suggest(texts)
-            norm_hit_sets = [
-                self._normalize_hits(hits, source_project) for hits in hit_sets
-            ]
-            hit_sets_from_sources.append(
-                annif.suggestion.WeightedSuggestionsBatch(
-                    hit_sets=norm_hit_sets,
-                    weight=weight,
-                    subjects=source_project.subjects,
-                )
-            )
-        return hit_sets_from_sources
+        return {
+            project_id: self.project.registry.get_project(project_id).suggest(texts)
+            for project_id, _ in sources
+        }
 
-    def _merge_hit_sets_from_sources(self, hit_sets_from_sources, params):
-        """Hook for merging hit sets from sources. Can be overridden by
-        subclasses."""
-        return annif.util.merge_hits(hit_sets_from_sources, len(self.project.subjects))
+    def _merge_source_batches(self, batch_by_source, sources, params):
+        """Merge the given SuggestionBatches from each source into a single
+        SuggestionBatch. The default implementation computes a weighted
+        average based on the weights given in the sources tuple. Intended
+        to be overridden in subclasses."""
+
+        batches = [batch_by_source[project_id] for project_id, _ in sources]
+        weights = [weight for _, weight in sources]
+        return SuggestionBatch.from_averaged(batches, weights).filter(
+            limit=int(params["limit"])
+        )
 
     def _suggest_batch(self, texts, params):
         sources = annif.util.parse_sources(params["sources"])
-        hit_sets_from_sources = self._suggest_with_sources(texts, sources)
-        return self._merge_hit_sets_from_sources(hit_sets_from_sources, params)
+        batch_by_source = self._suggest_with_sources(texts, sources)
+        return self._merge_source_batches(batch_by_source, sources, params)
 
 
 class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
@@ -74,8 +65,8 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         ]
 
     def _prepare(self, n_jobs=1):
-        self._gold_subjects = []
-        self._source_hits = []
+        self._gold_batches = []
+        self._source_batches = []
 
         for project_id in self._sources:
             project = self._backend.project.registry.get_project(project_id)
@@ -92,23 +83,11 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         jobs, pool_class = annif.parallel.get_pool(n_jobs)
 
         with pool_class(jobs) as pool:
-            for hit_sets, subject_sets in pool.imap_unordered(
+            for suggestions, gold_batch in pool.imap_unordered(
                 psmap.suggest_batch, self._corpus.doc_batches
             ):
-                self._gold_subjects.extend(subject_sets)
-                self._source_hits.extend(self._hit_sets_to_list(hit_sets))
-
-    def _hit_sets_to_list(self, hit_sets):
-        """Convert a dict of lists of hits to a list of dicts of hits, e.g.
-        {"proj-1": [p-1-doc-1-hits, p-1-doc-2-hits]
-         "proj-2": [p-2-doc-1-hits, p-2-doc-2-hits]}
-        to
-        [{"proj-1": p-1-doc-1-hits, "proj-2": p-2-doc-1-hits},
-         {"proj-1": p-1-doc-2-hits, "proj-2": p-2-doc-2-hits}]
-        """
-        return [
-            dict(zip(hit_sets.keys(), doc_hits)) for doc_hits in zip(*hit_sets.values())
-        ]
+                self._source_batches.append(suggestions)
+                self._gold_batches.append(gold_batch)
 
     def _normalize(self, hps):
         total = sum(hps.values())
@@ -120,28 +99,19 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         )
 
     def _objective(self, trial):
-        batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
-        weights = {
+        eval_batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
+        proj_weights = {
             project_id: trial.suggest_uniform(project_id, 0.0, 1.0)
             for project_id in self._sources
         }
-        for goldsubj, srchits in zip(self._gold_subjects, self._source_hits):
-            weighted_hits = []
-            for project_id, hits in srchits.items():
-                weighted_hits.append(
-                    annif.suggestion.WeightedSuggestionsBatch(
-                        hit_sets=[hits],
-                        weight=weights[project_id],
-                        subjects=self._backend.project.subjects,
-                    )
-                )
-            batch.evaluate(
-                annif.util.merge_hits(
-                    weighted_hits, len(self._backend.project.subjects)
-                )[0],
-                goldsubj,
+        for gold_batch, src_batches in zip(self._gold_batches, self._source_batches):
+            batches = [src_batches[project_id] for project_id in self._sources]
+            weights = [proj_weights[project_id] for project_id in self._sources]
+            avg_batch = SuggestionBatch.from_averaged(batches, weights).filter(
+                limit=int(self._backend.params["limit"])
             )
-        results = batch.results(metrics=[self._metric])
+            eval_batch.evaluate_many(avg_batch, gold_batch)
+        results = eval_batch.results(metrics=[self._metric])
         return results[self._metric]
 
     def _postprocess(self, study):

@@ -187,7 +187,7 @@ def test_project_learn(registry, tmpdir):
     project.learn(docdir)
     result = project.suggest(["this is some text"])[0]
     assert len(result) == 1
-    hits = result.as_list()
+    hits = list(result)
     assert hits[0].subject_id == project.subjects.by_uri("http://example.org/none")
     assert hits[0].score == 1.0
 
@@ -224,7 +224,7 @@ def test_project_suggest(registry):
     project = registry.get_project("dummy-en")
     result = project.suggest(["this is some text"])[0]
     assert len(result) == 1
-    hits = result.as_list()
+    hits = list(result)
     assert hits[0].subject_id == project.subjects.by_uri("http://example.org/dummy")
     assert hits[0].score == 1.0
 
@@ -239,7 +239,7 @@ def test_project_suggest_corpus(registry, fulltext_corpus):
     project = registry.get_project("dummy-en")
     result = list(project.suggest_corpus(fulltext_corpus))
     assert len(result) == 28  # Number of documents
-    first_doc_hits = result[0].as_list()
+    first_doc_hits = list(result[0])
     assert len(first_doc_hits) == 1
     assert first_doc_hits[0].subject_id == project.subjects.by_uri(
         "http://example.org/dummy"
@@ -261,7 +261,7 @@ def test_project_train_state_not_available(registry, caplog):
         result = project.suggest(["this is some text"])[0]
     assert project.is_trained is None
     assert len(result) == 1
-    hits = result.as_list()
+    hits = list(result)
     assert hits[0].subject_id == project.subjects.by_uri("http://example.org/dummy")
     assert hits[0].score == 1.0
     assert "Could not get train state information" in caplog.text
