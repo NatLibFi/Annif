@@ -44,19 +44,34 @@ def run_list_projects():
     """
 
     entries = [
-        (proj.project_id, proj.name, proj.language, str(proj.is_trained))
+        (
+            proj.project_id,
+            proj.name,
+            proj.vocab.vocab_id,
+            proj.language,
+            str(proj.is_trained),
+            str(proj.modification_time),
+        )
         for proj in annif.registry.get_projects(min_access=Access.private).values()
     ]
-    header_fields = ("Project ID", "Project Name", "Language", "Trained")
+    header_fields = (
+        "Project ID",
+        "Project Name",
+        "Vocabulary ID",
+        "Language",
+        "Trained",
+        "Modification time",
+    )
 
     max_field_lengths = collections.defaultdict(int)
     for entry in (*entries, header_fields):
         for ind, field in enumerate(entry):
             max_field_lengths[ind] = max(max_field_lengths[ind], len(field))
 
-    template = "{{0: <{0}}}   {{1: <{1}}}   {{2: <{2}}}   {{3: <{3}}}".format(
-        *max_field_lengths.values()
-    )
+    template = (
+        "{{0: <{0}}}   {{1: <{1}}}   {{2: <{2}}}   {{3: <{3}}}   "
+        "{{4: <{4}}}   {{5: <{5}}}"
+    ).format(*max_field_lengths.values())
 
     header = template.format(*header_fields)
     click.echo(header)
