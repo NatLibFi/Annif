@@ -130,7 +130,7 @@ jobs:
     - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
-        python-version: '3.9'
+        python-version: '3.10'
         poetry-version: ${{ env.POETRY_VERSION }}
     - name: Build and publish distribution to PyPI
       env:
