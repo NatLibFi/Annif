@@ -14,7 +14,7 @@ env:
 jobs:
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: lint with isort, Black & flake8
     steps:
     - uses: actions/checkout@v3
@@ -37,7 +37,7 @@ jobs:
         poetry run flake8
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 15
     strategy:
       matrix:
