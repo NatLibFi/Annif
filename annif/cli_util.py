@@ -40,7 +40,7 @@ def common_options(f):
 
 def project_id(f):
     """Decorator to add a project ID parameter to a CLI command"""
-    return click.argument("project_id", shell_complete=complete_project_id)(f)
+    return click.argument("project_id", shell_complete=complete_param)(f)
 
 
 def backend_param_option(f):
@@ -177,11 +177,12 @@ def generate_filter_params(filter_batch_max_limit):
     return list(itertools.product(limits, thresholds))
 
 
-def complete_project_id(ctx, param, incomplete):
+def complete_param(ctx, param, incomplete):
+    if param.name == "project_id":
+        get_choices = annif.registry.get_projects
+    elif param.name == "vocab_id":
+        get_choices = annif.registry.get_vocabs
+    else:
+        return []
     with ctx.obj.load_app().app_context():
-        return [p for p in annif.registry.get_projects() if p.startswith(incomplete)]
-
-
-def complete_vocab_id(ctx, param, incomplete):
-    with ctx.obj.load_app().app_context():
-        return [p for p in annif.registry.get_vocabs() if p.startswith(incomplete)]
+        return [choice for choice in get_choices() if choice.startswith(incomplete)]
