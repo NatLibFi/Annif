@@ -1060,3 +1060,9 @@ def test_completion_show_project_project_ids_dummy():
         "dummy-vocablang",
         "dummy-transform",
     ]
+
+
+@mock.patch.dict(os.environ, {"ANNIF_CONFIG": "annif.default_config.TestingConfig"})
+def test_completion_load_vocab_vocab_ids_all():
+    completions = get_completions(annif.cli.cli, ["load-vocab"], "")
+    assert completions == ["dummy", "dummy-noname", "yso"]

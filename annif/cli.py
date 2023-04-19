@@ -110,7 +110,7 @@ def run_list_vocabs():
 
 
 @cli.command("load-vocab")
-@click.argument("vocab_id")
+@click.argument("vocab_id", shell_complete=cli_util.complete_vocab_id)
 @click.argument("subjectfile", type=click.Path(exists=True, dir_okay=False))
 @click.option("--language", "-L", help="Language of subject file")
 @click.option(

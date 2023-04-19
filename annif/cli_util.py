@@ -175,3 +175,8 @@ def generate_filter_params(filter_batch_max_limit):
 def complete_project_id(ctx, param, incomplete):
     with ctx.obj.load_app().app_context():
         return [p for p in annif.registry.get_projects() if p.startswith(incomplete)]
+
+
+def complete_vocab_id(ctx, param, incomplete):
+    with ctx.obj.load_app().app_context():
+        return [p for p in annif.registry.get_vocabs() if p.startswith(incomplete)]
