@@ -1009,6 +1009,12 @@ def test_version_option():
     assert result.output.strip() == version.strip()
 
 
+def test_completion_script_generation():
+    result = runner.invoke(annif.cli.cli, ["completion", "--bash"])
+    assert not result.exception
+    assert result.exit_code == 0
+
+
 def get_completions(cli, args, incomplete):
     completer = ShellComplete(cli, {}, cli.name, "_ANNIF_COMPLETE")
     completions = completer.get_completions(args, incomplete)
