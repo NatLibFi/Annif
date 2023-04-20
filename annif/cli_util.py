@@ -177,10 +177,19 @@ def generate_filter_params(filter_batch_max_limit):
     return list(itertools.product(limits, thresholds))
 
 
-def complete_param(ctx, param, incomplete):
+def _get_completion_choices(param):
     if param.name == "project_id":
-        get_choices = annif.registry.get_projects
+        return annif.registry.get_projects()
     elif param.name == "vocab_id":
-        get_choices = annif.registry.get_vocabs
+        return annif.registry.get_vocabs()
+    else:
+        return []
+
+
+def complete_param(ctx, param, incomplete):
     with ctx.obj.load_app().app_context():
-        return [choice for choice in get_choices() if choice.startswith(incomplete)]
+        return [
+            choice
+            for choice in _get_completion_choices(param)
+            if choice.startswith(incomplete)
+        ]
