@@ -82,6 +82,24 @@ def get_vocab(vocab_id):
         sys.exit(1)
 
 
+def make_list_template(*rows):
+    """Helper function to create a template for a list of entries with fields of
+    variable width. The width of each field is determined by the longest item in the
+    field in the given rows."""
+
+    max_field_widths = collections.defaultdict(int)
+    for row in rows:
+        for field_ind, item in enumerate(row):
+            max_field_widths[field_ind] = max(max_field_widths[field_ind], len(item))
+
+    return "  ".join(
+        [
+            f"{{{field_ind}: <{field_width}}}"
+            for field_ind, field_width in max_field_widths.items()
+        ]
+    )
+
+
 def open_documents(paths, subject_index, vocab_lang, docs_limit):
     """Helper function to open a document corpus from a list of pathnames,
     each of which is either a TSV file or a directory of TXT files. For
