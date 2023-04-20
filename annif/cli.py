@@ -108,10 +108,8 @@ def run_list_vocabs():
     List available vocabularies.
     """
 
-    template = "{0: <20}{1: <20}{2: >10}  {3: <6}"
-    header = template.format("Vocabulary ID", "Languages", "Size", "Loaded")
-    click.echo(header)
-    click.echo("-" * len(header))
+    column_headings = ("Vocabulary ID", "Languages", "Size", "Loaded")
+    table = []
     for vocab in annif.registry.get_vocabs(min_access=Access.private).values():
         try:
             languages = ",".join(sorted(vocab.languages))
@@ -121,7 +119,15 @@ def run_list_vocabs():
             languages = "-"
             size = "-"
             loaded = False
-        click.echo(template.format(vocab.vocab_id, languages, size, str(loaded)))
+        row = (vocab.vocab_id, languages, str(size), str(loaded))
+        table.append(row)
+
+    template = cli_util.make_list_template(column_headings, *table)
+    header = template.format(*column_headings)
+    click.echo(header)
+    click.echo("-" * len(header))
+    for row in table:
+        click.echo(template.format(*row))
 
 
 @cli.command("load-vocab")
