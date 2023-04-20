@@ -182,7 +182,5 @@ def complete_param(ctx, param, incomplete):
         get_choices = annif.registry.get_projects
     elif param.name == "vocab_id":
         get_choices = annif.registry.get_vocabs
-    else:
-        return []
     with ctx.obj.load_app().app_context():
         return [choice for choice in get_choices() if choice.startswith(incomplete)]
