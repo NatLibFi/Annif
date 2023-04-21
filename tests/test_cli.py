@@ -82,7 +82,7 @@ def test_show_project():
     is_trained = re.search(r"Trained:\s+(.+)", result.output)
     assert is_trained.group(1) == "True"
     modification_time = re.search(r"Modification time:\s+(.+)", result.output)
-    assert modification_time.group(1) == "None"
+    assert modification_time.group(1) == "-"
 
 
 def test_show_project_nonexistent():

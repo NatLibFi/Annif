@@ -100,6 +100,13 @@ def make_list_template(*rows):
     )
 
 
+def format_datetime(dt):
+    """Helper function to format a datetime object as a string in the local time."""
+    if dt is None:
+        return "-"
+    return dt.astimezone().strftime("%Y-%m-%d %H:%M:%S")
+
+
 def open_documents(paths, subject_index, vocab_lang, docs_limit):
     """Helper function to open a document corpus from a list of pathnames,
     each of which is either a TSV file or a directory of TXT files. For

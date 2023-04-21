@@ -58,7 +58,7 @@ def run_list_projects():
             proj.vocab.vocab_id if proj.vocab_spec else "-",
             proj.language,
             str(proj.is_trained),
-            str(proj.modification_time),
+            cli_util.format_datetime(proj.modification_time),
         )
         for proj in annif.registry.get_projects(min_access=Access.private).values()
     ]
@@ -86,7 +86,7 @@ def run_show_project(project_id):
     click.echo(f"Vocab language:    {proj.vocab_lang}")
     click.echo(f"Access:            {proj.access.name}")
     click.echo(f"Trained:           {proj.is_trained}")
-    click.echo(f"Modification time: {proj.modification_time}")
+    click.echo(f"Modification time: {cli_util.format_datetime(proj.modification_time)}")
 
 
 @cli.command("clear")
