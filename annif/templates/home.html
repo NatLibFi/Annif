@@ -161,7 +161,10 @@ Vue.component('annif-project-info', {
       return this.projects.find(p => {return p.project_id===this.project})
     },
     getDateString: function(d) {
-      // Returns modification time in the format 'yyyy-mm-dd hh:mm:ss UTC'
+      // Returns modification time in the format 'yyyy-mm-dd hh:mm:ss UTC' or '-' in
+      // case of null modification time
+      if (d === null)
+        return '-';
       date = new Date(d);
       return (
         [ date.getUTCFullYear(), ('0' + (date.getUTCMonth() + 1)).slice(-2), ('0' + date.getUTCDate()).slice(-2) ].join('-') + ' ' +
