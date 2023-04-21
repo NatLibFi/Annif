@@ -80,6 +80,8 @@ def test_show_project():
     assert project_lang.group(1) == "en"
     access = re.search(r"Access:\s+(.+)", result.output)
     assert access.group(1) == "hidden"
+    access = re.search(r"Backend:\s+(.+)", result.output)
+    assert access.group(1) == "dummy"
     is_trained = re.search(r"Trained:\s+(.+)", result.output)
     assert is_trained.group(1) == "True"
     modification_time = re.search(r"Modification time:\s+(.+)", result.output)

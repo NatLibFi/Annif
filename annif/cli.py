@@ -85,6 +85,7 @@ def run_show_project(project_id):
     click.echo(f"Vocabulary:        {proj.vocab.vocab_id}")
     click.echo(f"Vocab language:    {proj.vocab_lang}")
     click.echo(f"Access:            {proj.access.name}")
+    click.echo(f"Backend:           {proj.backend.name}")
     click.echo(f"Trained:           {proj.is_trained}")
     click.echo(f"Modification time: {cli_util.format_datetime(proj.modification_time)}")
 
