@@ -7,6 +7,7 @@ import os.path
 import random
 import re
 import shutil
+from datetime import datetime, timedelta
 
 from click.testing import CliRunner
 
@@ -83,6 +84,21 @@ def test_show_project():
     assert is_trained.group(1) == "True"
     modification_time = re.search(r"Modification time:\s+(.+)", result.output)
     assert modification_time.group(1) == "-"
+
+
+def test_show_project_modification_time(testdatadir):
+    dirpath = os.path.join(str(testdatadir), "projects", "tfidf-fi")
+    fpath = os.path.join(str(dirpath), "test_show_project_datafile")
+    os.makedirs(dirpath)
+    open(fpath, "a").close()
+
+    result = runner.invoke(annif.cli.cli, ["show-project", "tfidf-fi"])
+    assert not result.exception
+    modification_time = re.search(r"Modification time:\s+(.+)", result.output)
+    modification_time_obj = datetime.strptime(
+        modification_time.group(1), "%Y-%m-%d %H:%M:%S"
+    )
+    assert datetime.now() - modification_time_obj < timedelta(1)
 
 
 def test_show_project_nonexistent():
