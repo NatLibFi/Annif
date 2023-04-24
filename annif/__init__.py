@@ -24,7 +24,7 @@ def create_flask_app(config_name=None):
 
 
 def create_app(config_name=None):
-    """ "Create a Connexion app to be used for the API."""
+    """Create a Connexion app to be used for the API."""
     # 'cxapp' here is the Connexion application that has a normal Flask app
     # as a property (cxapp.app)
     import connexion
@@ -64,8 +64,8 @@ def _get_config_name(config_name):
     if config_name is None:
         config_name = os.environ.get("ANNIF_CONFIG")
     if config_name is None:
-        if os.environ.get("FLASK_RUN_FROM_CLI") == "true":
+        if os.environ.get("FLASK_RUN_FROM_CLI") == "true":  # pragma: no cover
             config_name = "annif.default_config.Config"
         else:
-            config_name = "annif.default_config.ProductionConfig"
+            config_name = "annif.default_config.ProductionConfig"  # pragma: no cover
     return config_name

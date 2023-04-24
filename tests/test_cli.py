@@ -1005,3 +1005,10 @@ def test_version_option():
     assert result.exit_code == 0
     version = importlib.metadata.version("annif")
     assert result.output.strip() == version.strip()
+
+
+def test_run():
+    result = runner.invoke(annif.cli.cli, ["run", "--help"])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Run a local development server." in result.output
