@@ -25,7 +25,14 @@ from annif.util import metric_code
 logger = annif.logger
 click_log.basic_config(logger)
 
-cli = FlaskGroup(create_app=annif.create_app, add_version_option=False)
+
+if len(sys.argv) > 1 and sys.argv[1] == "run":
+    create_app = annif.create_app  # Use Flask with Connexion
+else:
+    # Connexion is not needed for most CLI commands, use plain Flask
+    create_app = annif.create_flask_app
+
+cli = FlaskGroup(create_app=create_app, add_version_option=False)
 cli = click.version_option(message="%(version)s")(cli)
 
 
