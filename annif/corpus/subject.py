@@ -3,8 +3,6 @@
 import csv
 import os.path
 
-import numpy as np
-
 import annif
 import annif.util
 
@@ -273,6 +271,8 @@ class SubjectSet:
         None), otherwise create and return a new one of the given size."""
 
         if destination is None:
+            import numpy as np
+
             assert size is not None and size > 0
             destination = np.zeros(size, dtype=bool)
 
