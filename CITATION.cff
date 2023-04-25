@@ -33,11 +33,11 @@ authors:
     affiliation: "National Library of Finland"
 title: "Annif"
 abstract: "Annif is an automatic indexing software."
-version: 0.61.0-dev
+version: 1.0.0-dev
 license: 
   - Apache-2.0
   - GPL-3.0
-date-released: 2023-01-20
+date-released: 2023-04-18
 doi: 10.5281/zenodo.2578948
 repository-code: "https://github.com/NatLibFi/Annif"
 contact:

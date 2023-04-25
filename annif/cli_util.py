@@ -38,6 +38,11 @@ def common_options(f):
     return click_log.simple_verbosity_option(logger)(f)
 
 
+def project_id(f):
+    """Decorator to add a project ID parameter to a CLI command"""
+    return click.argument("project_id", shell_complete=complete_param)(f)
+
+
 def backend_param_option(f):
     """Decorator to add an option for CLI commands to override BE parameters"""
     return click.option(
@@ -195,3 +200,21 @@ def generate_filter_params(filter_batch_max_limit):
     limits = range(1, filter_batch_max_limit + 1)
     thresholds = [i * 0.05 for i in range(20)]
     return list(itertools.product(limits, thresholds))
+
+
+def _get_completion_choices(param):
+    if param.name == "project_id":
+        return annif.registry.get_projects()
+    elif param.name == "vocab_id":
+        return annif.registry.get_vocabs()
+    else:
+        return []
+
+
+def complete_param(ctx, param, incomplete):
+    with ctx.obj.load_app().app_context():
+        return [
+            choice
+            for choice in _get_completion_choices(param)
+            if choice.startswith(incomplete)
+        ]
