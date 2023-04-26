@@ -44,6 +44,7 @@ COPY tests /Annif/tests
 RUN poetry install -E "$optional_dependencies"
 
 WORKDIR /annif-projects
+RUN annif completion --bash >> /etc/bash.bashrc  # Enable tab completion
 
 # Switch user to non-root:
 RUN groupadd -g 998 annif_user && \
