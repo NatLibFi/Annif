@@ -30,19 +30,21 @@ def create_app(config_name=None):
     import connexion
     from flask_cors import CORS
 
-    from annif.openapi.validation import CustomRequestBodyValidator
+    import annif.registry
+
+    # from annif.openapi.validation import CustomRequestBodyValidator  # TODO Re-enable
 
     specdir = os.path.join(os.path.dirname(__file__), "openapi")
-    cxapp = connexion.App(__name__, specification_dir=specdir)
+    cxapp = connexion.FlaskApp(__name__, specification_dir=specdir)
     config_name = _get_config_name(config_name)
     logger.debug(f"creating connexion app with configuration {config_name}")
     cxapp.app.config.from_object(config_name)
     cxapp.app.config.from_envvar("ANNIF_SETTINGS", silent=True)
 
-    validator_map = {
-        "body": CustomRequestBodyValidator,
-    }
-    cxapp.add_api("annif.yaml", validator_map=validator_map)
+    # validator_map = {
+    #     "body": CustomRequestBodyValidator,
+    # }
+    cxapp.add_api("annif.yaml")  # validator_map=validator_map)
 
     # add CORS support
     CORS(cxapp.app)
@@ -56,8 +58,8 @@ def create_app(config_name=None):
 
     cxapp.app.register_blueprint(bp)
 
-    # return the Flask app
-    return cxapp.app
+    # return the Connexion app
+    return cxapp
 
 
 def _get_config_name(config_name):

@@ -30,7 +30,7 @@ classifiers=[
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
 
-connexion = {version = "2.14.*", extras = ["swagger-ui"]}
+connexion = {version = "3.0.0a6", allow-prereleases = true, extras = ["flask","uvicorn", "swagger-ui"]}
 flask = ">=1.0.4,<3"
 flask-cors = "3.0.*"
 click = "8.1.*"
