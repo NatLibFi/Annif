@@ -33,7 +33,8 @@ def server_error(err):
 def show_info():
     """return version of annif and a title for the api according to OpenAPI spec"""
 
-    return {"title": "Annif REST API", "version": importlib.metadata.version("annif")}
+    result = {"title": "Annif REST API", "version": importlib.metadata.version("annif")}
+    return result, 200, {"Content-Type": "application/json"}
 
 
 def language_not_supported_error(lang):
@@ -49,12 +50,13 @@ def language_not_supported_error(lang):
 def list_projects():
     """return a dict with projects formatted according to OpenAPI spec"""
 
-    return {
+    result = {
         "projects": [
             proj.dump()
             for proj in annif.registry.get_projects(min_access=Access.public).values()
         ]
     }
+    return result, 200, {"Content-Type": "application/json"}
 
 
 def show_project(project_id):
@@ -64,7 +66,7 @@ def show_project(project_id):
         project = annif.registry.get_project(project_id, min_access=Access.hidden)
     except ValueError:
         return project_not_found_error(project_id)
-    return project.dump()
+    return project.dump(), 200, {"Content-Type": "application/json"}
 
 
 def _suggestion_to_dict(suggestion, subject_index, language):
@@ -103,7 +105,7 @@ def suggest(project_id, body):
 
     if _is_error(result):
         return result
-    return result[0]
+    return result[0], 200, {"Content-Type": "application/json"}
 
 
 def suggest_batch(project_id, body, **query_parameters):
@@ -117,7 +119,7 @@ def suggest_batch(project_id, body, **query_parameters):
         return result
     for document_results, document in zip(result, documents):
         document_results["document_id"] = document.get("document_id")
-    return result
+    return result, 200, {"Content-Type": "application/json"}
 
 
 def _suggest(project_id, documents, parameters):
@@ -179,4 +181,4 @@ def learn(project_id, body):
     except AnnifException as err:
         return server_error(err)
 
-    return None, 204
+    return None, 204, {"Content-Type": "application/json"}
