@@ -61,7 +61,7 @@ jobs:
         # Selectively install the optional dependencies for some Python versions
         # For Python 3.8:
         if [[ ${{ matrix.python-version }} == '3.8' ]]; then
-          poetry install -E "nn omikuji yake voikko";
+          poetry install -E "nn omikuji yake voikko stwfsa";
         fi
         # For Python 3.9:
         if [[ ${{ matrix.python-version }} == '3.9' ]]; then
@@ -71,7 +71,7 @@ jobs:
         fi
         # For Python 3.10:
         if [[ ${{ matrix.python-version }} == '3.10' ]]; then
-          poetry install -E "nn omikuji yake";
+          poetry install -E "nn omikuji yake stwfsa";
         fi
         poetry run python -m nltk.downloader punkt
     - name: Test with pytest
