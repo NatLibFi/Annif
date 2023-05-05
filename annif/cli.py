@@ -27,7 +27,7 @@ logger = annif.logger
 click_log.basic_config(logger)
 
 
-if len(sys.argv) > 1 and sys.argv[1] == "run":
+if len(sys.argv) > 1 and sys.argv[1] in ("run", "routes"):
     create_app = annif.create_app  # Use Flask with Connexion
 else:
     # Connexion is not needed for most CLI commands, use plain Flask
