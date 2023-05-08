@@ -62,9 +62,12 @@ def _pav():
 
 
 def _stwfsa():
-    from . import stwfsa
+    try:
+        from . import stwfsa
 
-    return stwfsa.StwfsaBackend
+        return stwfsa.StwfsaBackend
+    except ImportError:
+        raise ValueError("STWFSA not available, cannot use stwfsa backend")
 
 
 def _svc():

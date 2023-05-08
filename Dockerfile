@@ -2,7 +2,7 @@ FROM python:3.10-slim-bullseye
 LABEL org.opencontainers.image.authors="grp-natlibfi-annif@helsinki.fi"
 SHELL ["/bin/bash", "-c"]
 
-ARG optional_dependencies="fasttext voikko fasttext nn omikuji yake spacy"
+ARG optional_dependencies="fasttext voikko fasttext nn omikuji yake spacy stwfsa"
 ARG POETRY_VIRTUALENVS_CREATE=false
 
 # Install system dependencies needed at runtime:
