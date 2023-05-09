@@ -296,7 +296,7 @@ new Vue({
         return;
       }
       var this_ = this;
-      var formData = new FormData();
+      var formData = new URLSearchParams();
       formData.append('text', this_.text);
       formData.append('limit', this_.limit);
       this_.loading = true;
