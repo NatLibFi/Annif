@@ -1016,6 +1016,20 @@ def test_run():
     assert "Run a local development server." in result.output
 
 
+def test_routes_with_flask_app():
+    # When using plain Flask only the static endpoint exists
+    result = runner.invoke(annif.cli.cli, ["routes"])
+    assert re.search(r"static\s+GET\s+\/static\/\<path:filename\>", result.output)
+    assert not re.search(r"app.home\s+GET\s+\/", result.output)
+
+
+def test_routes_with_connexion_app():
+    # When using Connexion all endpoints exist
+    result = os.popen("python annif/cli.py routes").read()
+    assert re.search(r"static\s+GET\s+\/static\/<path:filename>", result)
+    assert re.search(r"app.home\s+GET\s+\/", result)
+
+
 def test_completion_script_generation():
     result = runner.invoke(annif.cli.cli, ["completion", "--bash"])
     assert not result.exception
