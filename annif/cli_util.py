@@ -166,9 +166,10 @@ def show_hits(hits, project, lang, file=None):
     a table, with one row per hit. Each row contains the URI, label, possible notation,
     and score of the suggestion. The label is given in the specified language.
     """
+    template = "<{}>\t{}\t{:.04f}"
     for hit in hits:
         subj = project.subjects[hit.subject_id]
-        line = "<{}>\t{}\t{}".format(
+        line = template.format(
             subj.uri,
             "\t".join(filter(None, (subj.labels[lang], subj.notation))),
             hit.score,

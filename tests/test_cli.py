@@ -398,7 +398,7 @@ def test_learn_nonexistent_path():
 def test_suggest():
     result = runner.invoke(annif.cli.cli, ["suggest", "dummy-fi"], input="kissa")
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0000\n"
     assert result.exit_code == 0
 
 
@@ -407,7 +407,7 @@ def test_suggest_with_language_override():
         annif.cli.cli, ["suggest", "--language", "en", "dummy-fi"], input="kissa"
     )
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy\t1.0\n"
+    assert result.output == "<http://example.org/dummy>\tdummy\t1.0000\n"
     assert result.exit_code == 0
 
 
@@ -427,7 +427,7 @@ def test_suggest_with_different_vocab_language():
         annif.cli.cli, ["suggest", "dummy-vocablang"], input="the cat sat on the mat"
     )
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0000\n"
     assert result.exit_code == 0
 
 
@@ -438,7 +438,7 @@ def test_suggest_with_notations():
         input="kissa",
     )
     assert not result.exception
-    assert result.output == "<http://example.org/none>\tnone-fi\t42.42\t1.0\n"
+    assert result.output == "<http://example.org/none>\tnone-fi\t42.42\t1.0000\n"
     assert result.exit_code == 0
 
 
@@ -481,7 +481,7 @@ def test_suggest_ensemble():
         annif.cli.cli, ["suggest", "ensemble"], input="the cat sat on the mat"
     )
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy\t1.0\n"
+    assert result.output == "<http://example.org/dummy>\tdummy\t1.0000\n"
     assert result.exit_code == 0
 
 
@@ -493,7 +493,7 @@ def test_suggest_file(tmpdir):
 
     assert not result.exception
     assert f"Suggestions for {docfile}" in result.output
-    assert "<http://example.org/dummy>\tdummy-fi\t1.0\n" in result.output
+    assert "<http://example.org/dummy>\tdummy-fi\t1.0000\n" in result.output
     assert result.exit_code == 0
 
 
@@ -510,7 +510,7 @@ def test_suggest_two_files(tmpdir):
     assert not result.exception
     assert f"Suggestions for {docfile1}" in result.output
     assert f"Suggestions for {docfile2}" in result.output
-    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0\n") == 2
+    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0000\n") == 2
     assert result.exit_code == 0
 
 
@@ -528,7 +528,7 @@ def test_suggest_two_files_docs_limit(tmpdir):
     assert not result.exception
     assert f"Suggestions for {docfile1}" in result.output
     assert f"Suggestions for {docfile2}" not in result.output
-    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0\n") == 1
+    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0000\n") == 1
     assert result.exit_code == 0
 
 
@@ -543,7 +543,7 @@ def test_suggest_file_and_stdin(tmpdir):
     assert not result.exception
     assert f"Suggestions for {docfile1}" in result.output
     assert "Suggestions for -" in result.output
-    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0\n") == 2
+    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0000\n") == 2
     assert result.exit_code == 0
 
 
@@ -564,7 +564,7 @@ def test_suggest_dash_path():
         annif.cli.cli, ["suggest", "dummy-fi", "-"], input="the cat sat on the mat"
     )
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0000\n"
     assert result.exit_code == 0
 
 
@@ -578,7 +578,7 @@ def test_index(tmpdir):
     assert tmpdir.join("doc1.annif").exists()
     assert (
         tmpdir.join("doc1.annif").read_text("utf-8")
-        == "<http://example.org/dummy>\tdummy\t1.0\n"
+        == "<http://example.org/dummy>\tdummy\t1.0000\n"
     )
 
     # make sure that preexisting subject files are not overwritten
@@ -593,7 +593,7 @@ def test_index(tmpdir):
     assert "Not overwriting" not in result.output
     assert (
         tmpdir.join("doc1.annif").read_text("utf-8")
-        == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+        == "<http://example.org/dummy>\tdummy-fi\t1.0000\n"
     )
 
 
@@ -609,7 +609,7 @@ def test_index_with_language_override(tmpdir):
     assert tmpdir.join("doc1.annif").exists()
     assert (
         tmpdir.join("doc1.annif").read_text("utf-8")
-        == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+        == "<http://example.org/dummy>\tdummy-fi\t1.0000\n"
     )
 
 
