@@ -51,16 +51,31 @@ def run_list_projects():
     for details.
     """
 
-    template = "{0: <25}{1: <45}{2: <10}{3: <7}"
-    header = template.format("Project ID", "Project Name", "Language", "Trained")
+    column_headings = (
+        "Project ID",
+        "Project Name",
+        "Vocabulary ID",
+        "Language",
+        "Trained",
+        "Modification time",
+    )
+    table = [
+        (
+            proj.project_id,
+            proj.name,
+            proj.vocab.vocab_id if proj.vocab_spec else "-",
+            proj.language,
+            str(proj.is_trained),
+            cli_util.format_datetime(proj.modification_time),
+        )
+        for proj in annif.registry.get_projects(min_access=Access.private).values()
+    ]
+    template = cli_util.make_list_template(column_headings, *table)
+    header = template.format(*column_headings)
     click.echo(header)
     click.echo("-" * len(header))
-    for proj in annif.registry.get_projects(min_access=Access.private).values():
-        click.echo(
-            template.format(
-                proj.project_id, proj.name, proj.language, str(proj.is_trained)
-            )
-        )
+    for row in table:
+        click.echo(template.format(*row))
 
 
 @cli.command("show-project")
@@ -78,8 +93,9 @@ def run_show_project(project_id):
     click.echo(f"Vocabulary:        {proj.vocab.vocab_id}")
     click.echo(f"Vocab language:    {proj.vocab_lang}")
     click.echo(f"Access:            {proj.access.name}")
+    click.echo(f"Backend:           {proj.backend.name}")
     click.echo(f"Trained:           {proj.is_trained}")
-    click.echo(f"Modification time: {proj.modification_time}")
+    click.echo(f"Modification time: {cli_util.format_datetime(proj.modification_time)}")
 
 
 @cli.command("clear")
@@ -101,10 +117,8 @@ def run_list_vocabs():
     List available vocabularies.
     """
 
-    template = "{0: <20}{1: <20}{2: >10}  {3: <6}"
-    header = template.format("Vocabulary ID", "Languages", "Size", "Loaded")
-    click.echo(header)
-    click.echo("-" * len(header))
+    column_headings = ("Vocabulary ID", "Languages", "Size", "Loaded")
+    table = []
     for vocab in annif.registry.get_vocabs(min_access=Access.private).values():
         try:
             languages = ",".join(sorted(vocab.languages))
@@ -114,7 +128,15 @@ def run_list_vocabs():
             languages = "-"
             size = "-"
             loaded = False
-        click.echo(template.format(vocab.vocab_id, languages, size, str(loaded)))
+        row = (vocab.vocab_id, languages, str(size), str(loaded))
+        table.append(row)
+
+    template = cli_util.make_list_template(column_headings, *table)
+    header = template.format(*column_headings)
+    click.echo(header)
+    click.echo("-" * len(header))
+    for row in table:
+        click.echo(template.format(*row))
 
 
 @cli.command("load-vocab")
