@@ -827,7 +827,7 @@ def test_eval_resultsfile(tmpdir):
             denominator += 1
     assert precision_numerator / denominator == precision
     assert recall_numerator / denominator == recall
-    assert f_measure_numerator / denominator == f_measure
+    assert round(f_measure_numerator / denominator, 4) == f_measure
 
 
 def test_eval_badresultsfile(tmpdir):

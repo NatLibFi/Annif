@@ -427,12 +427,16 @@ def run_eval(
         ):
             eval_batch.evaluate_many(hit_sets[project_id], subject_sets)
 
-    template = "{0:<30}\t{1}"
+    template = "{0:<30}\t{1:{fmt_spec}}"
     metrics = eval_batch.results(
         metrics=metric, results_file=results_file, language=project.vocab_lang
     )
     for metric, score in metrics.items():
-        click.echo(template.format(metric + ":", score))
+        if isinstance(score, int):
+            fmt_spec = "d"
+        elif isinstance(score, float):
+            fmt_spec = ".04f"
+        click.echo(template.format(metric + ":", score, fmt_spec=fmt_spec))
     if metrics_file:
         json.dump(
             {metric_code(mname): val for mname, val in metrics.items()},
