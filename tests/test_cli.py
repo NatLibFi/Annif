@@ -570,6 +570,9 @@ def test_suggest_dash_path():
 
 def test_index(tmpdir):
     tmpdir.join("doc1.txt").write("nothing special")
+    # Existing subject files should not have an effect
+    tmpdir.join("doc1.tsv").write("<http://example.org/dummy>\tdummy")
+    tmpdir.join("doc1.key").write("<http://example.org/dummy>\tdummy")
 
     result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(tmpdir)])
     assert not result.exception
