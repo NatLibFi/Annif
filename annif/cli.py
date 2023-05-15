@@ -319,7 +319,7 @@ def run_index(
     backend_params = cli_util.parse_backend_params(backend_param, project)
 
     documents = annif.corpus.DocumentDirectory(
-        directory, None, None, require_subjects=False
+        directory, project.subjects, lang, require_subjects=False
     )
     results = project.suggest_corpus(documents, backend_params).filter(limit, threshold)
 
