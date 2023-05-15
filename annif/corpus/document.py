@@ -42,15 +42,15 @@ class DocumentDirectory(DocumentCorpus):
 
     @property
     def documents(self):
-        for docfilename, keyfilename in self:
+        for docfilename, subjfilename in self:
             with open(docfilename, errors="replace", encoding="utf-8-sig") as docfile:
                 text = docfile.read()
-            if keyfilename is None:
+            if subjfilename is None:
                 yield Document(text=text, subject_set=None)
                 continue
-            with open(keyfilename, encoding="utf-8-sig") as keyfile:
+            with open(subjfilename, encoding="utf-8-sig") as subjfile:
                 subjects = SubjectSet.from_string(
-                    keyfile.read(), self.subject_index, self.language
+                    subjfile.read(), self.subject_index, self.language
                 )
             yield Document(text=text, subject_set=subjects)
 
