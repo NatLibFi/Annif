@@ -318,9 +318,7 @@ def run_index(
         raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
     backend_params = cli_util.parse_backend_params(backend_param, project)
 
-    documents = annif.corpus.DocumentDirectory(
-        directory, project.subjects, lang, require_subjects=False
-    )
+    documents = annif.corpus.DocumentDirectory(directory, require_subjects=False)
     results = project.suggest_corpus(documents, backend_params).filter(limit, threshold)
 
     for (docfilename, _), suggestions in zip(documents, results):
