@@ -183,7 +183,9 @@ def test_project_learn(registry, tmpdir):
     tmpdir.join("doc2.tsv").write("<http://example.org/dummy>\tdummy")
 
     project = registry.get_project("dummy-fi")
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), project.subjects, "en")
+    docdir = annif.corpus.DocumentDirectory(
+        str(tmpdir), project.subjects, "en", require_subjects=True
+    )
     project.learn(docdir)
     result = project.suggest(["this is some text"])[0]
     assert len(result) == 1
