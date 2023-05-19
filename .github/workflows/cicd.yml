@@ -36,6 +36,24 @@ jobs:
       run: |
         poetry run flake8
 
+  time-startup:
+    runs-on: ubuntu-22.04
+    name: check CLI startup time
+    steps:
+    - uses: actions/checkout@v3
+    - name: "Prepare: restore caches, install Poetry, set up Python"
+      id: prepare
+      uses: ./.github/actions/prepare
+      with:
+        python-version: "3.9"
+        poetry-version: ${{ env.POETRY_VERSION }}
+    - name: Install Python dependencies
+      run: |
+        poetry install
+    - name: Check startup time
+      run: |
+        poetry run tests/time-startup.sh
+
   test:
     runs-on: ubuntu-22.04
     timeout-minutes: 15
