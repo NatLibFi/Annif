@@ -158,7 +158,7 @@ class MLLMModel:
         return generate_candidates(text, analyzer, self._vectorizer, self._index)
 
     @property
-    def _model_data(self) -> "ModelData":
+    def _model_data(self) -> ModelData:
         return ModelData(
             broader=self._broader_matrix,
             narrower=self._narrower_matrix,
@@ -370,5 +370,5 @@ class MLLMModel:
         return joblib.dump(self, filename)
 
     @staticmethod
-    def load(filename: str) -> "MLLMModel":
+    def load(filename: str) -> MLLMModel:
         return joblib.load(filename)

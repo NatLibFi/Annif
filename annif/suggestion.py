@@ -88,7 +88,7 @@ class SuggestionBatch:
         suggestion_results: List[List[SubjectSuggestion]],
         subject_index: SubjectIndex,
         limit: Optional[int] = None,
-    ) -> "SuggestionBatch":
+    ) -> SuggestionBatch:
         """Create a new SuggestionBatch from a sequence where each item is
         a sequence of SubjectSuggestion objects."""
 
@@ -112,7 +112,7 @@ class SuggestionBatch:
     @classmethod
     def from_averaged(
         cls, batches: List[SuggestionBatch], weights: List[Union[int, float]]
-    ) -> "SuggestionBatch":
+    ) -> SuggestionBatch:
         """Create a new SuggestionBatch where the subject scores are the
         weighted average of scores in several SuggestionBatches"""
 
@@ -123,7 +123,7 @@ class SuggestionBatch:
 
     def filter(
         self, limit: Optional[int] = None, threshold: float = 0.0
-    ) -> "SuggestionBatch":
+    ) -> SuggestionBatch:
         """Return a subset of the hits, filtered by the given limit and
         score threshold, as another SuggestionBatch object."""
 
@@ -149,7 +149,7 @@ class SuggestionResults:
 
     def filter(
         self, limit: Optional[int] = None, threshold: float = 0.0
-    ) -> "SuggestionResults":
+    ) -> SuggestionResults:
         """Return a view of these suggestions, filtered by the given limit
         and/or threshold, as another SuggestionResults object."""
 

@@ -209,7 +209,7 @@ class SubjectIndex:
                 writer.writerow(row)
 
     @classmethod
-    def load(cls, path: str) -> "SubjectIndex":
+    def load(cls, path: str) -> SubjectIndex:
         """Load a subject index from a CSV file and return it."""
 
         corpus = SubjectFileCSV(path)
@@ -251,7 +251,7 @@ class SubjectSet:
     @classmethod
     def from_string(
         cls, subj_data: str, subject_index: SubjectIndex, language: str
-    ) -> "SubjectSet":
+    ) -> SubjectSet:
         subject_ids = set()
         for line in subj_data.splitlines():
             uri, label = cls._parse_line(line)

@@ -30,7 +30,7 @@ class TokenSet:
     def __iter__(self):
         return iter(self._tokens)
 
-    def contains(self, other: "TokenSet") -> bool:
+    def contains(self, other: TokenSet) -> bool:
         """Returns True iff the tokens in the other TokenSet are all
         included within this TokenSet."""
 

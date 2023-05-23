@@ -74,7 +74,7 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
     """Hyperparameter optimizer for the ensemble backend"""
 
     def __init__(
-        self, backend: "EnsembleBackend", corpus: DocumentDirectory, metric: str
+        self, backend: EnsembleBackend, corpus: DocumentDirectory, metric: str
     ) -> None:
         super().__init__(backend, corpus, metric)
         self._sources = [
