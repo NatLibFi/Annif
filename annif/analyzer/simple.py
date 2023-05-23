@@ -1,8 +1,6 @@
 """Simple analyzer for Annif. Only folds words to lower case."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from . import analyzer
 
 

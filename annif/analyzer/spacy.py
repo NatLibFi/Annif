@@ -1,7 +1,7 @@
 """spaCy analyzer for Annif which uses spaCy for lemmatization"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import annif.util
 from annif.exception import OperationFailedException

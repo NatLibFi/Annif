@@ -9,8 +9,6 @@ import numpy as np
 from scipy.sparse import csr_array
 
 if TYPE_CHECKING:
-    from scipy.sparse._arrays import csr_array
-
     from annif.corpus.subject import SubjectIndex
 
 SubjectSuggestion = collections.namedtuple("SubjectSuggestion", "subject_id score")
@@ -25,10 +23,10 @@ def vector_to_suggestions(vector: np.ndarray, limit: int) -> Iterator[Any]:
 
 
 def filter_suggestion(
-    preds: scipy.sparse._arrays.csr_array,
+    preds: csr_array,
     limit: Optional[int] = None,
     threshold: Union[int, float] = 0.0,
-) -> scipy.sparse._arrays.csr_array:
+) -> csr_array:
     """filter a 2D sparse suggestion array (csr_array), retaining only the
     top K suggestions with a score above or equal to the threshold for each
     individual prediction; the rest will be left as zeros"""
@@ -54,7 +52,7 @@ def filter_suggestion(
 class SuggestionResult:
     """Suggestions for a single document, backed by a row of a sparse array."""
 
-    def __init__(self, array: scipy.sparse._arrays.csr_array, idx: int) -> None:
+    def __init__(self, array: csr_array, idx: int) -> None:
         self._array = array
         self._idx = idx
 
@@ -79,7 +77,7 @@ class SuggestionResult:
 class SuggestionBatch:
     """Subject suggestions for a batch of documents."""
 
-    def __init__(self, array: scipy.sparse._arrays.csr_array) -> None:
+    def __init__(self, array: csr_array) -> None:
         """Create a new SuggestionBatch from a csr_array"""
         assert isinstance(array, csr_array)
         self.array = array

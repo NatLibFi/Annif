@@ -27,8 +27,6 @@ from .types import Subject, SubjectCorpus
 if TYPE_CHECKING:
     from rdflib.term import URIRef
 
-    from annif.corpus.types import Subject
-
 
 def serialize_subjects_to_skos(subjects: Iterator[Any], path: str) -> None:
     """Create a SKOS representation of the given subjects and serialize it

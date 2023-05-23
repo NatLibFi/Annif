@@ -10,14 +10,12 @@ from scipy.sparse import csc_matrix, lil_matrix
 
 if TYPE_CHECKING:
     from rdflib.graph import Graph
-    from rdflib.term import URIRef
-    from scipy.sparse._csc import csc_matrix
 
     from annif.vocab import AnnifVocabulary
 
 
 def get_subject_labels(
-    graph: Graph, uri: str, properties: List[rdflib.term.URIRef], language: str
+    graph: Graph, uri: str, properties: List[URIRef], language: str
 ) -> List[Union[Any, str]]:
     return [
         str(label)
@@ -28,8 +26,8 @@ def get_subject_labels(
 
 
 def make_relation_matrix(
-    graph: Graph, vocab: AnnifVocabulary, property: rdflib.term.URIRef
-) -> scipy.sparse._csc.csc_matrix:
+    graph: Graph, vocab: AnnifVocabulary, property: URIRef
+) -> csc_matrix:
     n_subj = len(vocab.subjects)
     matrix = lil_matrix((n_subj, n_subj), dtype=bool)
 
@@ -42,9 +40,7 @@ def make_relation_matrix(
     return csc_matrix(matrix)
 
 
-def make_collection_matrix(
-    graph: Graph, vocab: AnnifVocabulary
-) -> scipy.sparse._csc.csc_matrix:
+def make_collection_matrix(graph: Graph, vocab: AnnifVocabulary) -> csc_matrix:
     # make an index with all collection members
     c_members = collections.defaultdict(list)
     for coll, member in graph.subject_objects(SKOS.member):

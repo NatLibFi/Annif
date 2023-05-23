@@ -4,7 +4,7 @@ from __future__ import annotations
 import abc
 import functools
 import unicodedata
-from typing import TYPE_CHECKING, Any, List, Union
+from typing import Any, List, Union
 
 _KEY_TOKEN_MIN_LENGTH = "token_min_length"
 

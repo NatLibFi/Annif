@@ -1,8 +1,6 @@
 """Simplemma analyzer for Annif, based on simplemma lemmatizer."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import simplemma
 
 from . import analyzer

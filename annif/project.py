@@ -41,7 +41,6 @@ if TYPE_CHECKING:
     )
     from annif.corpus.subject import SubjectIndex
     from annif.registry import AnnifRegistry
-    from annif.suggestion import SuggestionBatch, SuggestionResults
     from annif.transform.transform import TransformChain
     from annif.vocab import AnnifVocabulary
 

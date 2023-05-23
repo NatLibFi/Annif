@@ -4,7 +4,7 @@ from __future__ import annotations
 import abc
 import collections
 from itertools import islice
-from typing import TYPE_CHECKING, Iterator, List
+from typing import Iterator, List
 
 Document = collections.namedtuple("Document", "text subject_set")
 

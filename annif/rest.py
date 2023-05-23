@@ -17,7 +17,6 @@ if TYPE_CHECKING:
 
     from connexion.lifecycle import ConnexionResponse
 
-    from annif.corpus.document import DocumentList
     from annif.corpus.subject import SubjectIndex
     from annif.exception import ConfigurationException, NotSupportedException
     from annif.suggestion import SubjectSuggestion, SuggestionResults

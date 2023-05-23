@@ -10,14 +10,7 @@ from annif.exception import ConfigurationException
 if TYPE_CHECKING:
     from unittest.mock import Mock
 
-    from annif.corpus.combine import CombinedCorpus
-    from annif.corpus.document import (
-        DocumentDirectory,
-        DocumentFile,
-        DocumentList,
-        LimitingDocumentCorpus,
-        TransformingDocumentCorpus,
-    )
+    from annif.corpus import DocumentCorpus
     from annif.project import AnnifProject
     from annif.transform.inputlimiter import InputLimiter
     from annif.transform.langfilter import LangFilter
@@ -98,14 +91,5 @@ class TransformChain:
             text = trans.transform_fn(text)
         return text
 
-    def transform_corpus(
-        self,
-        corpus: Union[
-            annif.corpus.document.DocumentDirectory,
-            annif.corpus.document.LimitingDocumentCorpus,
-            CombinedCorpus,
-            annif.corpus.document.DocumentList,
-            annif.corpus.document.DocumentFile,
-        ],
-    ) -> annif.corpus.document.TransformingDocumentCorpus:
+    def transform_corpus(self, corpus: DocumentCorpus) -> TransformingDocumentCorpus:
         return TransformingDocumentCorpus(corpus, self.transform_text)

@@ -20,8 +20,6 @@ from annif.suggestion import SubjectSuggestion, SuggestionBatch
 from . import backend, ensemble
 
 if TYPE_CHECKING:
-    from scipy.sparse._csc import csc_matrix
-
     from annif.corpus.document import DocumentFile
     from annif.project import AnnifProject
 
@@ -97,7 +95,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
     @staticmethod
     def _suggest_train_corpus(
         source_project: AnnifProject, corpus: DocumentFile
-    ) -> Tuple[scipy.sparse._csc.csc_matrix, scipy.sparse._csc.csc_matrix]:
+    ) -> Tuple[csc_matrix, csc_matrix]:
         # lists for constructing score matrix
         data, row, col = [], [], []
         # lists for constructing true label matrix

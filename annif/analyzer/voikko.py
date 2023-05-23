@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import Dict, Optional
 
 import voikko.libvoikko
 

@@ -27,7 +27,6 @@ from annif.lexical.util import (
 if TYPE_CHECKING:
     from rdflib.graph import Graph
     from rdflib.term import URIRef
-    from sklearn.ensemble._bagging import BaggingClassifier
 
     from annif.analyzer.snowball import SnowballAnalyzer
     from annif.corpus.document import DocumentDirectory
@@ -325,7 +324,7 @@ class MLLMModel:
 
     def _create_classifier(
         self, params: Dict[str, Union[int, float, bool, str]]
-    ) -> sklearn.ensemble._bagging.BaggingClassifier:
+    ) -> BaggingClassifier:
         return BaggingClassifier(
             DecisionTreeClassifier(
                 min_samples_leaf=int(params["min_samples_leaf"]),

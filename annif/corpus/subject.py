@@ -12,8 +12,9 @@ from .skos import serialize_subjects_to_skos
 from .types import Subject, SubjectCorpus
 
 if TYPE_CHECKING:
+    import numpy as np
+
     from annif.corpus.skos import SubjectFileSKOS
-    from annif.corpus.types import Subject
 
 logger = annif.logger.getChild("subject")
 logger.addFilter(annif.util.DuplicateFilter())
