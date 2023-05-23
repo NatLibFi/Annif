@@ -1,9 +1,10 @@
 """Maui-like Lexical Matching backend"""
+from __future__ import annotations
 
 import os.path
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Tuple, Union
 
 import joblib
-import numpy as np
 
 import annif.eval
 import annif.util
@@ -13,11 +14,20 @@ from annif.suggestion import vector_to_suggestions
 
 from . import backend, hyperopt
 
+if TYPE_CHECKING:
+    from numpy import float64, ndarray
+    from optuna.study.study import Study
+    from optuna.trial._trial import Trial
+
+    from annif.backend.hyperopt import HPRecommendation
+    from annif.corpus.document import DocumentDirectory, DocumentFile
+    from annif.lexical.mllm import Candidate
+
 
 class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
     """Hyperparameter optimizer for the MLLM backend"""
 
-    def _prepare(self, n_jobs=1):
+    def _prepare(self, n_jobs: int = 1) -> None:
         self._backend.initialize()
         self._train_x, self._train_y = self._backend._load_train_data()
         self._candidates = []
@@ -29,7 +39,7 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
             self._candidates.append(candidates)
             self._gold_subjects.append(doc.subject_set)
 
-    def _objective(self, trial):
+    def _objective(self, trial: Trial) -> float:
         params = {
             "min_samples_leaf": trial.suggest_int("min_samples_leaf", 5, 30),
             "max_leaf_nodes": trial.suggest_int("max_leaf_nodes", 100, 2000),
@@ -52,7 +62,7 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
         results = batch.results(metrics=[self._metric])
         return results[self._metric]
 
-    def _postprocess(self, study):
+    def _postprocess(self, study: Study) -> HPRecommendation:
         bp = study.best_params
         lines = [
             f"min_samples_leaf={bp['min_samples_leaf']}",
@@ -80,15 +90,15 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
         "use_hidden_labels": False,
     }
 
-    def get_hp_optimizer(self, corpus, metric):
+    def get_hp_optimizer(self, corpus: DocumentDirectory, metric: str) -> MLLMOptimizer:
         return MLLMOptimizer(self, corpus, metric)
 
-    def default_params(self):
+    def default_params(self) -> Dict[str, Union[int, float, bool]]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
         return params
 
-    def _load_model(self):
+    def _load_model(self) -> MLLMModel:
         path = os.path.join(self.datadir, self.MODEL_FILE)
         self.debug("loading model from {}".format(path))
         if os.path.exists(path):
@@ -98,7 +108,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
                 "model {} not found".format(path), backend_id=self.backend_id
             )
 
-    def _load_train_data(self):
+    def _load_train_data(self) -> Tuple[ndarray, ndarray]:
         path = os.path.join(self.datadir, self.TRAIN_FILE)
         if os.path.exists(path):
             return joblib.load(path)
@@ -107,11 +117,16 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
                 "train data file {} not found".format(path), backend_id=self.backend_id
             )
 
-    def initialize(self, parallel=False):
+    def initialize(self, parallel: bool = False) -> None:
         if self._model is None:
             self._model = self._load_model()
 
-    def _train(self, corpus, params, jobs=0):
+    def _train(
+        self,
+        corpus: Union[DocumentFile, str, DocumentDirectory],
+        params: Dict[str, Union[int, float, bool, str]],
+        jobs: int = 0,
+    ) -> None:
         self.info("starting train")
         if corpus != "cached":
             if corpus.is_empty():
@@ -137,16 +152,22 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
         self.info("saving model")
         annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)
 
-    def _generate_candidates(self, text):
+    def _generate_candidates(self, text: str) -> List[Union[Candidate, Any]]:
         return self._model.generate_candidates(text, self.project.analyzer)
 
-    def _prediction_to_result(self, prediction, params):
+    def _prediction_to_result(
+        self,
+        prediction: List[Union[Tuple[float64, int], Any]],
+        params: Dict[str, Union[int, float, bool, str]],
+    ) -> Iterator[Any]:
         vector = np.zeros(len(self.project.subjects), dtype=np.float32)
         for score, subject_id in prediction:
             vector[subject_id] = score
         return vector_to_suggestions(vector, int(params["limit"]))
 
-    def _suggest(self, text, params):
+    def _suggest(
+        self, text: str, params: Dict[str, Union[int, float, bool, str]]
+    ) -> Iterator[Any]:
         candidates = self._generate_candidates(text)
         prediction = self._model.predict(candidates)
         return self._prediction_to_result(prediction, params)

@@ -1,11 +1,17 @@
 """Transformation filtering out parts of a text that are in a language
 different from the language of the project."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Union
 
 from simplemma.langdetect import in_target_language
 
 import annif
 
 from . import transform
+
+if TYPE_CHECKING:
+    from unittest.mock import Mock
 
 logger = annif.logger
 
@@ -14,14 +20,18 @@ class LangFilter(transform.BaseTransform):
     name = "filter_lang"
 
     def __init__(
-        self, project, text_min_length=500, sentence_min_length=50, min_ratio=0.5
-    ):
+        self,
+        project: Mock,
+        text_min_length: Union[int, str] = 500,
+        sentence_min_length: Union[int, str] = 50,
+        min_ratio: float = 0.5,
+    ) -> None:
         super().__init__(project)
         self.text_min_length = int(text_min_length)
         self.sentence_min_length = int(sentence_min_length)
         self.min_ratio = float(min_ratio)
 
-    def transform_fn(self, text):
+    def transform_fn(self, text: str) -> str:
         if len(text) < self.text_min_length:
             return text
 

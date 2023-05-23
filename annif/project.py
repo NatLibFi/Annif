@@ -1,8 +1,10 @@
 """Project management functionality for Annif"""
+from __future__ import annotations
 
 import enum
 import os.path
 from shutil import rmtree
+from typing import TYPE_CHECKING, DefaultDict, Dict, List, Optional, Union
 
 import annif
 import annif.analyzer
@@ -16,6 +18,32 @@ from annif.exception import (
     NotInitializedException,
     NotSupportedException,
 )
+
+if TYPE_CHECKING:
+    from configparser import SectionProxy
+    from datetime import datetime
+
+    from click.utils import LazyFile
+
+    from annif.analyzer.snowball import SnowballAnalyzer
+    from annif.backend.dummy import DummyBackend
+    from annif.backend.ensemble import EnsembleBackend
+    from annif.backend.fasttext import FastTextBackend
+    from annif.backend.hyperopt import HPRecommendation
+    from annif.backend.pav import PAVBackend
+    from annif.backend.tfidf import TFIDFBackend
+    from annif.corpus.combine import CombinedCorpus
+    from annif.corpus.document import (
+        DocumentDirectory,
+        DocumentFile,
+        DocumentList,
+        LimitingDocumentCorpus,
+    )
+    from annif.corpus.subject import SubjectIndex
+    from annif.registry import AnnifRegistry
+    from annif.suggestion import SuggestionBatch, SuggestionResults
+    from annif.transform.transform import TransformChain
+    from annif.vocab import AnnifVocabulary
 
 logger = annif.logger
 
@@ -42,7 +70,13 @@ class AnnifProject(DatadirMixin):
     # default values for configuration settings
     DEFAULT_ACCESS = "public"
 
-    def __init__(self, project_id, config, datadir, registry):
+    def __init__(
+        self,
+        project_id: str,
+        config: Union[Dict[str, str], SectionProxy],
+        datadir: str,
+        registry: AnnifRegistry,
+    ) -> None:
         DatadirMixin.__init__(self, datadir, "projects", project_id)
         self.project_id = project_id
         self.name = config.get("name", project_id)
@@ -55,7 +89,7 @@ class AnnifProject(DatadirMixin):
         self.registry = registry
         self._init_access()
 
-    def _init_access(self):
+    def _init_access(self) -> None:
         access = self.config.get("access", self.DEFAULT_ACCESS)
         try:
             self.access = getattr(Access, access)
@@ -65,7 +99,7 @@ class AnnifProject(DatadirMixin):
                 project_id=self.project_id,
             )
 
-    def _initialize_analyzer(self):
+    def _initialize_analyzer(self) -> None:
         if not self.analyzer_spec:
             return  # not configured, so assume it's not needed
         analyzer = self.analyzer
@@ -73,7 +107,7 @@ class AnnifProject(DatadirMixin):
             "Project '%s': initialized analyzer: %s", self.project_id, str(analyzer)
         )
 
-    def _initialize_subjects(self):
+    def _initialize_subjects(self) -> None:
         try:
             subjects = self.subjects
             logger.debug(
@@ -82,7 +116,7 @@ class AnnifProject(DatadirMixin):
         except AnnifException as err:
             logger.warning(err.format_message())
 
-    def _initialize_backend(self, parallel):
+    def _initialize_backend(self, parallel: bool) -> None:
         logger.debug("Project '%s': initializing backend", self.project_id)
         try:
             if not self.backend:
@@ -92,7 +126,7 @@ class AnnifProject(DatadirMixin):
         except AnnifException as err:
             logger.warning(err.format_message())
 
-    def initialize(self, parallel=False):
+    def initialize(self, parallel: bool = False) -> None:
         """Initialize this project and its backend so that they are ready to
         be used. If parallel is True, expect that the project will be used
         for parallel processing."""
@@ -108,14 +142,18 @@ class AnnifProject(DatadirMixin):
 
         self.initialized = True
 
-    def _suggest_with_backend(self, texts, backend_params):
+    def _suggest_with_backend(
+        self,
+        texts: List[str],
+        backend_params: Optional[DefaultDict[str, Dict[str, str]]],
+    ) -> annif.suggestion.SuggestionBatch:
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
         return self.backend.suggest(texts, beparams)
 
     @property
-    def analyzer(self):
+    def analyzer(self) -> SnowballAnalyzer:
         if self._analyzer is None:
             if self.analyzer_spec:
                 self._analyzer = annif.analyzer.get_analyzer(self.analyzer_spec)
@@ -126,7 +164,7 @@ class AnnifProject(DatadirMixin):
         return self._analyzer
 
     @property
-    def transform(self):
+    def transform(self) -> TransformChain:
         if self._transform is None:
             self._transform = annif.transform.get_transform(
                 self.transform_spec, project=self
@@ -134,7 +172,11 @@ class AnnifProject(DatadirMixin):
         return self._transform
 
     @property
-    def backend(self):
+    def backend(
+        self,
+    ) -> Union[
+        DummyBackend, EnsembleBackend, PAVBackend, TFIDFBackend, FastTextBackend
+    ]:
         if self._backend is None:
             if "backend" not in self.config:
                 raise ConfigurationException(
@@ -154,7 +196,7 @@ class AnnifProject(DatadirMixin):
                 )
         return self._backend
 
-    def _initialize_vocab(self):
+    def _initialize_vocab(self) -> None:
         if self.vocab_spec is None:
             raise ConfigurationException(
                 "vocab setting is missing", project_id=self.project_id
@@ -164,22 +206,22 @@ class AnnifProject(DatadirMixin):
         )
 
     @property
-    def vocab(self):
+    def vocab(self) -> AnnifVocabulary:
         if self._vocab is None:
             self._initialize_vocab()
         return self._vocab
 
     @property
-    def vocab_lang(self):
+    def vocab_lang(self) -> str:
         if self._vocab_lang is None:
             self._initialize_vocab()
         return self._vocab_lang
 
     @property
-    def subjects(self):
+    def subjects(self) -> SubjectIndex:
         return self.vocab.subjects
 
-    def _get_info(self, key):
+    def _get_info(self, key: str) -> Optional[Union[bool, datetime]]:
         try:
             be = self.backend
             if be is not None:
@@ -189,24 +231,31 @@ class AnnifProject(DatadirMixin):
             return None
 
     @property
-    def is_trained(self):
+    def is_trained(self) -> Optional[bool]:
         return self._get_info("is_trained")
 
     @property
-    def modification_time(self):
+    def modification_time(self) -> Optional[datetime]:
         return self._get_info("modification_time")
 
-    def suggest_corpus(self, corpus, backend_params=None):
+    def suggest_corpus(
+        self,
+        corpus: Union[DocumentDirectory, DocumentList],
+        backend_params: None = None,
+    ) -> annif.suggestion.SuggestionResults:
         """Suggest subjects for the given documents corpus in batches of documents."""
         suggestions = (
             self.suggest([doc.text for doc in doc_batch], backend_params)
             for doc_batch in corpus.doc_batches
         )
-        import annif.suggestion
 
         return annif.suggestion.SuggestionResults(suggestions)
 
-    def suggest(self, texts, backend_params=None):
+    def suggest(
+        self,
+        texts: List[str],
+        backend_params: Optional[DefaultDict[str, Dict[str, str]]] = None,
+    ) -> annif.suggestion.SuggestionBatch:
         """Suggest subjects for the given documents batch."""
         if not self.is_trained:
             if self.is_trained is None:
@@ -216,7 +265,12 @@ class AnnifProject(DatadirMixin):
         texts = [self.transform.transform_text(text) for text in texts]
         return self._suggest_with_backend(texts, backend_params)
 
-    def train(self, corpus, backend_params=None, jobs=0):
+    def train(
+        self,
+        corpus: Union[CombinedCorpus, LimitingDocumentCorpus, DocumentFile, str],
+        backend_params: None = None,
+        jobs: int = 0,
+    ) -> None:
         """train the project using documents from a metadata source"""
         if corpus != "cached":
             corpus = self.transform.transform_corpus(corpus)
@@ -225,7 +279,11 @@ class AnnifProject(DatadirMixin):
         beparams = backend_params.get(self.backend.backend_id, {})
         self.backend.train(corpus, beparams, jobs)
 
-    def learn(self, corpus, backend_params=None):
+    def learn(
+        self,
+        corpus: Union[DocumentDirectory, DocumentFile, DocumentList],
+        backend_params: None = None,
+    ) -> None:
         """further train the project using documents from a metadata source"""
         if backend_params is None:
             backend_params = {}
@@ -238,7 +296,14 @@ class AnnifProject(DatadirMixin):
                 "Learning not supported by backend", project_id=self.project_id
             )
 
-    def hyperopt(self, corpus, trials, jobs, metric, results_file):
+    def hyperopt(
+        self,
+        corpus: DocumentDirectory,
+        trials: int,
+        jobs: int,
+        metric: str,
+        results_file: Optional[LazyFile],
+    ) -> HPRecommendation:
         """optimize the hyperparameters of the project using a validation
         corpus against a given metric"""
         if isinstance(self.backend, annif.backend.hyperopt.AnnifHyperoptBackend):
@@ -250,7 +315,7 @@ class AnnifProject(DatadirMixin):
             project_id=self.project_id,
         )
 
-    def dump(self):
+    def dump(self) -> Dict[str, Optional[Union[str, Dict[str, str], bool, datetime]]]:
         """return this project as a dict"""
         return {
             "project_id": self.project_id,
@@ -261,7 +326,7 @@ class AnnifProject(DatadirMixin):
             "modification_time": self.modification_time,
         }
 
-    def remove_model_data(self):
+    def remove_model_data(self) -> None:
         """remove the data of this project"""
         datadir_path = self._datadir_path
         if os.path.isdir(datadir_path):

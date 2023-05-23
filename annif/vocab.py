@@ -1,12 +1,20 @@
 """Vocabulary management functionality for Annif"""
+from __future__ import annotations
 
 import os.path
+from typing import TYPE_CHECKING, List, Union
 
 import annif
 import annif.corpus
 import annif.util
 from annif.datadir import DatadirMixin
 from annif.exception import NotInitializedException
+
+if TYPE_CHECKING:
+    from rdflib.graph import Graph
+
+    from annif.corpus.skos import SubjectFileSKOS
+    from annif.corpus.subject import SubjectFileCSV, SubjectFileTSV, SubjectIndex
 
 logger = annif.logger
 
@@ -23,18 +31,20 @@ class AnnifVocabulary(DatadirMixin):
     INDEX_FILENAME_TTL = "subjects.ttl"
     INDEX_FILENAME_CSV = "subjects.csv"
 
-    def __init__(self, vocab_id, datadir):
+    def __init__(self, vocab_id: str, datadir: str) -> None:
         DatadirMixin.__init__(self, datadir, "vocabs", vocab_id)
         self.vocab_id = vocab_id
         self._skos_vocab = None
 
-    def _create_subject_index(self, subject_corpus):
+    def _create_subject_index(
+        self, subject_corpus: Union[SubjectFileCSV, SubjectFileTSV, SubjectFileSKOS]
+    ) -> SubjectIndex:
         subjects = annif.corpus.SubjectIndex()
         subjects.load_subjects(subject_corpus)
         annif.util.atomic_save(subjects, self.datadir, self.INDEX_FILENAME_CSV)
         return subjects
 
-    def _update_subject_index(self, subject_corpus):
+    def _update_subject_index(self, subject_corpus: SubjectFileTSV) -> SubjectIndex:
         old_subjects = self.subjects
         new_subjects = annif.corpus.SubjectIndex()
         new_subjects.load_subjects(subject_corpus)
@@ -55,7 +65,7 @@ class AnnifVocabulary(DatadirMixin):
         return updated_subjects
 
     @property
-    def subjects(self):
+    def subjects(self) -> SubjectIndex:
         if self._subjects is None:
             path = os.path.join(self.datadir, self.INDEX_FILENAME_CSV)
             if os.path.exists(path):
@@ -66,7 +76,7 @@ class AnnifVocabulary(DatadirMixin):
         return self._subjects
 
     @property
-    def skos(self):
+    def skos(self) -> SubjectFileSKOS:
         """return the subject vocabulary from SKOS file"""
         if self._skos_vocab is not None:
             return self._skos_vocab
@@ -94,14 +104,18 @@ class AnnifVocabulary(DatadirMixin):
 
         raise NotInitializedException(f"graph file {path} not found")
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.subjects)
 
     @property
-    def languages(self):
+    def languages(self) -> List[str]:
         return self.subjects.languages
 
-    def load_vocabulary(self, subject_corpus, force=False):
+    def load_vocabulary(
+        self,
+        subject_corpus: Union[SubjectFileCSV, SubjectFileTSV, SubjectFileSKOS],
+        force: bool = False,
+    ) -> None:
         """Load subjects from a subject corpus and save them into one
         or more subject index files as well as a SKOS/Turtle file for later
         use. If force=True, replace the existing subject index completely."""
@@ -119,6 +133,6 @@ class AnnifVocabulary(DatadirMixin):
         logger.info(f"saving vocabulary into SKOS file {skosfile}")
         subject_corpus.save_skos(skosfile)
 
-    def as_graph(self):
+    def as_graph(self) -> Graph:
         """return the vocabulary as an rdflib graph"""
         return self.skos.graph

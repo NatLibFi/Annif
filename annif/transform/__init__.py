@@ -1,6 +1,8 @@
 """Functionality for obtaining text transformation from string specification"""
+from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import annif
 from annif.exception import ConfigurationException
@@ -8,8 +10,23 @@ from annif.util import parse_args
 
 from . import inputlimiter, transform
 
+if TYPE_CHECKING:
+    from unittest.mock import Mock
 
-def parse_specs(transform_specs):
+    from annif.project import AnnifProject
+    from annif.transform.transform import TransformChain
+
+
+def parse_specs(
+    transform_specs: str,
+) -> List[
+    Union[
+        Tuple[str, List[Any], Dict[Any, Any]],
+        Tuple[str, List[str], Dict[str, str]],
+        Tuple[str, List[str], Dict[Any, Any]],
+        Tuple[str, List[Any], Dict[str, str]],
+    ]
+]:
     """Parse a transformation specification into a list of tuples, e.g.
     'transf_1(x),transf_2(y=42),transf_3' is parsed to
     [(transf_1, [x], {}), (transf_2, [], {y: 42}), (transf_3, [], {})]."""
@@ -27,7 +44,9 @@ def parse_specs(transform_specs):
     return parsed
 
 
-def get_transform(transform_specs, project):
+def get_transform(
+    transform_specs: str, project: Optional[Union[AnnifProject, Mock]]
+) -> TransformChain:
     transform_defs = parse_specs(transform_specs)
     transform_classes = []
     args = []

@@ -1,8 +1,9 @@
 """HTTP/REST client backend that makes calls to a web service
 and returns the results"""
-
+from __future__ import annotations
 
 import importlib
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import dateutil.parser
 import requests
@@ -13,13 +14,16 @@ from annif.suggestion import SubjectSuggestion
 
 from . import backend
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
 
 class HTTPBackend(backend.AnnifBackend):
     name = "http"
     _headers = None
 
     @property
-    def headers(self):
+    def headers(self) -> Dict[str, str]:
         if self._headers is None:
             version = importlib.metadata.version("annif")
             self._headers = {
@@ -28,17 +32,17 @@ class HTTPBackend(backend.AnnifBackend):
         return self._headers
 
     @property
-    def is_trained(self):
+    def is_trained(self) -> bool:
         return self._get_project_info("is_trained")
 
     @property
-    def modification_time(self):
+    def modification_time(self) -> Optional[datetime]:
         mtime = self._get_project_info("modification_time")
         if mtime is None:
             return None
         return dateutil.parser.parse(mtime)
 
-    def _get_project_info(self, key):
+    def _get_project_info(self, key: str) -> Optional[Union[bool, str]]:
         params = self._get_backend_params(None)
         try:
             req = requests.get(
@@ -59,7 +63,9 @@ class HTTPBackend(backend.AnnifBackend):
         else:
             return None
 
-    def _suggest(self, text, params):
+    def _suggest(
+        self, text: str, params: Dict[str, Union[int, str]]
+    ) -> List[Union[Any, SubjectSuggestion]]:
         data = {"text": text}
         if "project" in params:
             data["project"] = params["project"]

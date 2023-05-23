@@ -1,12 +1,26 @@
 """Common functionality for backends."""
+from __future__ import annotations
 
 import abc
 import os.path
 from datetime import datetime, timezone
 from glob import glob
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from annif import logger
 from annif.suggestion import SuggestionBatch
+
+if TYPE_CHECKING:
+    from unittest.mock import Mock
+
+    from annif.corpus.document import (
+        DocumentDirectory,
+        DocumentFile,
+        DocumentList,
+        LimitingDocumentCorpus,
+        TransformingDocumentCorpus,
+    )
+    from annif.project import AnnifProject
 
 
 class AnnifBackend(metaclass=abc.ABCMeta):
@@ -17,7 +31,9 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     DEFAULT_PARAMETERS = {"limit": 100}
 
-    def __init__(self, backend_id, config_params, project):
+    def __init__(
+        self, backend_id: str, config_params: Any, project: Union[Mock, AnnifProject]
+    ) -> None:
         """Initialize backend with specific parameters. The
         parameters are a dict. Keys and values depend on the specific
         backend type."""
@@ -26,22 +42,22 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         self.project = project
         self.datadir = project.datadir
 
-    def default_params(self):
+    def default_params(self) -> Dict[str, Union[str, bool, int]]:
         return self.DEFAULT_PARAMETERS
 
     @property
-    def params(self):
+    def params(self) -> Dict[str, Any]:
         params = {}
         params.update(self.default_params())
         params.update(self.config_params)
         return params
 
     @property
-    def is_trained(self):
+    def is_trained(self) -> bool:
         return bool(glob(os.path.join(self.datadir, "*")))
 
     @property
-    def modification_time(self):
+    def modification_time(self) -> Optional[datetime.datetime]:
         mtimes = [
             datetime.utcfromtimestamp(os.path.getmtime(p))
             for p in glob(os.path.join(self.datadir, "*"))
@@ -51,23 +67,44 @@ class AnnifBackend(metaclass=abc.ABCMeta):
             return None
         return most_recent.replace(tzinfo=timezone.utc)
 
-    def _get_backend_params(self, params):
+    def _get_backend_params(
+        self,
+        params: Optional[
+            Union[Dict[str, str], Dict[str, int], Dict[str, Union[float, int]]]
+        ],
+    ) -> Dict[str, Any]:
         backend_params = dict(self.params)
         if params is not None:
             backend_params.update(params)
         return backend_params
 
-    def _train(self, corpus, params, jobs=0):
+    def _train(
+        self,
+        corpus: TransformingDocumentCorpus,
+        params: Dict[str, Union[int, str]],
+        jobs: int = 0,
+    ) -> None:
         """This method can be overridden by backends. It implements
         the train functionality, with pre-processed parameters."""
         pass  # default is to do nothing, subclasses may override
 
-    def train(self, corpus, params=None, jobs=0):
+    def train(
+        self,
+        corpus: Union[
+            str,
+            TransformingDocumentCorpus,
+            DocumentList,
+            DocumentFile,
+            DocumentDirectory,
+        ],
+        params: Optional[Union[Dict[str, Union[float, int]], Dict[str, int]]] = None,
+        jobs: int = 0,
+    ) -> None:
         """Train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)
         return self._train(corpus, params=beparams, jobs=jobs)
 
-    def initialize(self, parallel=False):
+    def initialize(self, parallel: bool = False) -> None:
         """This method can be overridden by backends. It should cause the
         backend to pre-load all data it needs during operation.
         If parallel is True, the backend should expect to be used for
@@ -80,7 +117,9 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         document, with pre-processed parameters."""
         pass  # pragma: no cover
 
-    def _suggest_batch(self, texts, params):
+    def _suggest_batch(
+        self, texts: Union[str, List[str]], params: Dict[str, Any]
+    ) -> SuggestionBatch:
         """This method can be implemented by backends to use batching of documents in
         their operations. This default implementation uses the regular suggest
         functionality."""
@@ -90,22 +129,26 @@ class AnnifBackend(metaclass=abc.ABCMeta):
             limit=int(params.get("limit")),
         )
 
-    def suggest(self, texts, params=None):
+    def suggest(
+        self,
+        texts: Union[str, List[str]],
+        params: Optional[Union[Dict[str, str], Dict[str, int]]] = None,
+    ) -> SuggestionBatch:
         """Suggest subjects for the input documents and return a list of subject sets
         represented as a list of SubjectSuggestion objects."""
         beparams = self._get_backend_params(params)
         self.initialize()
         return self._suggest_batch(texts, params=beparams)
 
-    def debug(self, message):
+    def debug(self, message: str) -> None:
         """Log a debug message from this backend"""
         logger.debug("Backend {}: {}".format(self.backend_id, message))
 
-    def info(self, message):
+    def info(self, message: str) -> None:
         """Log an info message from this backend"""
         logger.info("Backend {}: {}".format(self.backend_id, message))
 
-    def warning(self, message):
+    def warning(self, message: str) -> None:
         """Log a warning message from this backend"""
         logger.warning("Backend {}: {}".format(self.backend_id, message))
 
@@ -119,7 +162,16 @@ class AnnifLearningBackend(AnnifBackend):
         functionality, with pre-processed parameters."""
         pass  # pragma: no cover
 
-    def learn(self, corpus, params=None):
+    def learn(
+        self,
+        corpus: Union[
+            DocumentDirectory,
+            TransformingDocumentCorpus,
+            LimitingDocumentCorpus,
+            DocumentFile,
+        ],
+        params: Optional[Dict[str, int]] = None,
+    ) -> None:
         """Further train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)
         return self._learn(corpus, params=beparams)

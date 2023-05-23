@@ -1,13 +1,24 @@
 """Utility methods for lexical algorithms"""
+from __future__ import annotations
 
 import collections
+from typing import TYPE_CHECKING, Any, List, Union
 
 from rdflib import URIRef
 from rdflib.namespace import SKOS
 from scipy.sparse import csc_matrix, lil_matrix
 
+if TYPE_CHECKING:
+    from rdflib.graph import Graph
+    from rdflib.term import URIRef
+    from scipy.sparse._csc import csc_matrix
 
-def get_subject_labels(graph, uri, properties, language):
+    from annif.vocab import AnnifVocabulary
+
+
+def get_subject_labels(
+    graph: Graph, uri: str, properties: List[rdflib.term.URIRef], language: str
+) -> List[Union[Any, str]]:
     return [
         str(label)
         for prop in properties
@@ -16,7 +27,9 @@ def get_subject_labels(graph, uri, properties, language):
     ]
 
 
-def make_relation_matrix(graph, vocab, property):
+def make_relation_matrix(
+    graph: Graph, vocab: AnnifVocabulary, property: rdflib.term.URIRef
+) -> scipy.sparse._csc.csc_matrix:
     n_subj = len(vocab.subjects)
     matrix = lil_matrix((n_subj, n_subj), dtype=bool)
 
@@ -29,7 +42,9 @@ def make_relation_matrix(graph, vocab, property):
     return csc_matrix(matrix)
 
 
-def make_collection_matrix(graph, vocab):
+def make_collection_matrix(
+    graph: Graph, vocab: AnnifVocabulary
+) -> scipy.sparse._csc.csc_matrix:
     # make an index with all collection members
     c_members = collections.defaultdict(list)
     for coll, member in graph.subject_objects(SKOS.member):

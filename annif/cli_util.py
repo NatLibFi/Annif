@@ -1,10 +1,11 @@
 """Utility functions for Annif CLI commands"""
-
+from __future__ import annotations
 
 import collections
 import itertools
 import os
 import sys
+from typing import TYPE_CHECKING, DefaultDict, Dict, List, Optional, Tuple, Union
 
 import click
 import click_log
@@ -14,10 +15,30 @@ import annif
 from annif.exception import ConfigurationException
 from annif.project import Access
 
+if TYPE_CHECKING:
+    from datetime import datetime
+    from io import TextIOWrapper
+
+    from click.core import Argument, Context, Option
+
+    from annif.corpus.combine import CombinedCorpus
+    from annif.corpus.document import (
+        DocumentDirectory,
+        DocumentFile,
+        DocumentList,
+        LimitingDocumentCorpus,
+    )
+    from annif.corpus.subject import SubjectIndex
+    from annif.project import AnnifProject
+    from annif.suggestion import SuggestionResult
+    from annif.vocab import AnnifVocabulary
+
 logger = annif.logger
 
 
-def _set_project_config_file_path(ctx, param, value):
+def _set_project_config_file_path(
+    ctx: Context, param: Option, value: Optional[str]
+) -> None:
     """Override the default path or the path given in env by CLI option"""
     with ctx.obj.load_app().app_context():
         if value:
@@ -66,7 +87,7 @@ def docs_limit_option(f):
     )(f)
 
 
-def get_project(project_id):
+def get_project(project_id: str) -> AnnifProject:
     """
     Helper function to get a project by ID and bail out if it doesn't exist"""
     try:
@@ -76,7 +97,7 @@ def get_project(project_id):
         sys.exit(1)
 
 
-def get_vocab(vocab_id):
+def get_vocab(vocab_id: str) -> AnnifVocabulary:
     """
     Helper function to get a vocabulary by ID and bail out if it doesn't
     exist"""
@@ -87,7 +108,7 @@ def get_vocab(vocab_id):
         sys.exit(1)
 
 
-def make_list_template(*rows):
+def make_list_template(*rows) -> str:
     """Helper function to create a template for a list of entries with fields of
     variable width. The width of each field is determined by the longest item in the
     field in the given rows."""
@@ -105,14 +126,19 @@ def make_list_template(*rows):
     )
 
 
-def format_datetime(dt):
+def format_datetime(dt: Optional[datetime]) -> str:
     """Helper function to format a datetime object as a string in the local time."""
     if dt is None:
         return "-"
     return dt.astimezone().strftime("%Y-%m-%d %H:%M:%S")
 
 
-def open_documents(paths, subject_index, vocab_lang, docs_limit):
+def open_documents(
+    paths: Union[Tuple[str], Tuple[str, str], Tuple[()]],
+    subject_index: SubjectIndex,
+    vocab_lang: str,
+    docs_limit: Optional[int],
+) -> Union[LimitingDocumentCorpus, DocumentDirectory, CombinedCorpus, DocumentFile]:
     """Helper function to open a document corpus from a list of pathnames,
     each of which is either a TSV file or a directory of TXT files. For
     directories with subjects in TSV files, the given vocabulary language
@@ -140,7 +166,9 @@ def open_documents(paths, subject_index, vocab_lang, docs_limit):
     return docs
 
 
-def open_text_documents(paths, docs_limit):
+def open_text_documents(
+    paths: Union[Tuple[str], Tuple[str, str]], docs_limit: Optional[int]
+) -> DocumentList:
     """
     Helper function to read text documents from the given file paths. Returns a
     DocumentList object with Documents having no subjects. If a path is "-", the
@@ -160,7 +188,12 @@ def open_text_documents(paths, docs_limit):
     return annif.corpus.DocumentList(_docs(paths[:docs_limit]))
 
 
-def show_hits(hits, project, lang, file=None):
+def show_hits(
+    hits: SuggestionResult,
+    project: AnnifProject,
+    lang: str,
+    file: Optional[TextIOWrapper] = None,
+) -> None:
     """
     Print subject suggestions to the console or a file. The suggestions are displayed as
     a table, with one row per hit. Each row contains the URI, label, possible notation,
@@ -177,7 +210,9 @@ def show_hits(hits, project, lang, file=None):
         click.echo(line, file=file)
 
 
-def parse_backend_params(backend_param, project):
+def parse_backend_params(
+    backend_param: Union[Tuple[str], Tuple[()]], project: AnnifProject
+) -> DefaultDict[str, Dict[str, str]]:
     """Parse a list of backend parameters given with the --backend-param
     option into a nested dict structure"""
     backend_params = collections.defaultdict(dict)
@@ -189,7 +224,7 @@ def parse_backend_params(backend_param, project):
     return backend_params
 
 
-def _validate_backend_params(backend, beparam, project):
+def _validate_backend_params(backend: str, beparam: str, project: AnnifProject) -> None:
     if backend != project.config["backend"]:
         raise ConfigurationException(
             'The backend {} in CLI option "-b {}" not matching the project'
@@ -197,13 +232,15 @@ def _validate_backend_params(backend, beparam, project):
         )
 
 
-def generate_filter_params(filter_batch_max_limit):
+def generate_filter_params(filter_batch_max_limit: int) -> List[Tuple[int, float]]:
     limits = range(1, filter_batch_max_limit + 1)
     thresholds = [i * 0.05 for i in range(20)]
     return list(itertools.product(limits, thresholds))
 
 
-def _get_completion_choices(param):
+def _get_completion_choices(
+    param: Argument,
+) -> Dict[str, Union[AnnifVocabulary, AnnifProject]]:
     if param.name == "project_id":
         return annif.registry.get_projects()
     elif param.name == "vocab_id":
@@ -212,7 +249,7 @@ def _get_completion_choices(param):
         return []
 
 
-def complete_param(ctx, param, incomplete):
+def complete_param(ctx: Context, param: Argument, incomplete: str) -> List[str]:
     with ctx.obj.load_app().app_context():
         return [
             choice

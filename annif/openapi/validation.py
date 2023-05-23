@@ -1,6 +1,8 @@
 """Custom validator for the Annif API."""
+from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import jsonschema
 from connexion import decorators
@@ -14,10 +16,20 @@ class CustomRequestBodyValidator(decorators.validation.RequestBodyValidator):
     """Custom request body validator that overrides the default error message for the
     'maxItems' validator for the 'documents' property."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def validate_schema(self, data, url):
+    def validate_schema(
+        self,
+        data: Union[
+            List[Dict[str, Union[List[Dict[str, str]], str]]],
+            List[Dict[str, Optional[List[bool]]]],
+            Dict[str, List[Any]],
+            Dict[str, str],
+            Dict[str, List[Dict[str, str]]],
+        ],
+        url: str,
+    ) -> None:
         """Validate the request body against the schema."""
 
         if self.is_null_value_valid and is_null(data):

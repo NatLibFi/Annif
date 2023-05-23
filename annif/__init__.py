@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
+
 import logging
 import os
 import os.path
@@ -8,10 +10,15 @@ logging.basicConfig()
 logger = logging.getLogger("annif")
 logger.setLevel(level=logging.INFO)
 
+from typing import TYPE_CHECKING, Optional
+
 import annif.backend  # noqa
 
+if TYPE_CHECKING:
+    from flask.app import Flask
 
-def create_flask_app(config_name=None):
+
+def create_flask_app(config_name: None = None) -> flask.app.Flask:
     """Create a Flask app to be used by the CLI."""
     from flask import Flask
 
@@ -23,7 +30,7 @@ def create_flask_app(config_name=None):
     return app
 
 
-def create_app(config_name=None):
+def create_app(config_name: Optional[str] = None) -> flask.app.Flask:
     """Create a Connexion app to be used for the API."""
     # 'cxapp' here is the Connexion application that has a normal Flask app
     # as a property (cxapp.app)
@@ -60,7 +67,7 @@ def create_app(config_name=None):
     return cxapp.app
 
 
-def _get_config_name(config_name):
+def _get_config_name(config_name: Optional[str]) -> str:
     if config_name is None:
         config_name = os.environ.get("ANNIF_CONFIG")
     if config_name is None:

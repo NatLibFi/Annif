@@ -1,7 +1,9 @@
 """Annif backend using the fastText classifier"""
+from __future__ import annotations
 
 import collections
 import os.path
+from typing import TYPE_CHECKING, Dict, List, Tuple, Union
 
 import fasttext
 
@@ -10,6 +12,12 @@ from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import SubjectSuggestion
 
 from . import backend, mixins
+
+if TYPE_CHECKING:
+    from fasttext.FastText import _FastText
+    from numpy import ndarray
+
+    from annif.corpus.document import DocumentFile, TransformingDocumentCorpus
 
 
 class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
@@ -48,14 +56,14 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     # defaults for uninitialized instances
     _model = None
 
-    def default_params(self):
+    def default_params(self) -> Dict[str, Union[int, float, str]]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(mixins.ChunkingBackend.DEFAULT_PARAMETERS)
         params.update(self.DEFAULT_PARAMETERS)
         return params
 
     @staticmethod
-    def _load_model(path):
+    def _load_model(path: str) -> _FastText:
         # monkey patch fasttext.FastText.eprint to avoid spurious warning
         # see https://github.com/facebookresearch/fastText/issues/1067
         orig_eprint = fasttext.FastText.eprint
@@ -65,7 +73,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         fasttext.FastText.eprint = orig_eprint
         return model
 
-    def initialize(self, parallel=False):
+    def initialize(self, parallel: bool = False) -> None:
         if self._model is None:
             path = os.path.join(self.datadir, self.MODEL_FILE)
             self.debug("loading fastText model from {}".format(path))
@@ -79,14 +87,16 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                 )
 
     @staticmethod
-    def _id_to_label(subject_id):
+    def _id_to_label(subject_id: int) -> str:
         return "__label__{:d}".format(subject_id)
 
-    def _label_to_subject_id(self, label):
+    def _label_to_subject_id(self, label: str) -> int:
         labelnum = label.replace("__label__", "")
         return int(labelnum)
 
-    def _write_train_file(self, corpus, filename):
+    def _write_train_file(
+        self, corpus: Union[TransformingDocumentCorpus, DocumentFile], filename: str
+    ) -> None:
         with open(filename, "w", encoding="utf-8") as trainfile:
             for doc in corpus.documents:
                 text = self._normalize_text(doc.text)
@@ -98,17 +108,21 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
                 else:
                     self.warning(f'no labels for document "{doc.text}"')
 
-    def _normalize_text(self, text):
+    def _normalize_text(self, text: str) -> str:
         return " ".join(self.project.analyzer.tokenize_words(text))
 
-    def _create_train_file(self, corpus):
+    def _create_train_file(
+        self, corpus: Union[TransformingDocumentCorpus, DocumentFile]
+    ) -> None:
         self.info("creating fastText training file")
 
         annif.util.atomic_save(
             corpus, self.datadir, self.TRAIN_FILE, method=self._write_train_file
         )
 
-    def _create_model(self, params, jobs):
+    def _create_model(
+        self, params: Dict[str, Union[int, float, str]], jobs: int
+    ) -> None:
         self.info("creating fastText model")
         trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
         modelpath = os.path.join(self.datadir, self.MODEL_FILE)
@@ -123,7 +137,12 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         self._model = fasttext.train_supervised(trainpath, **params)
         self._model.save_model(modelpath)
 
-    def _train(self, corpus, params, jobs=0):
+    def _train(
+        self,
+        corpus: Union[TransformingDocumentCorpus, DocumentFile, str],
+        params: Dict[str, Union[int, float, str]],
+        jobs: int = 0,
+    ) -> None:
         if corpus != "cached":
             if corpus.is_empty():
                 raise NotSupportedException(
@@ -134,7 +153,9 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             self.info("Reusing cached training data from previous run.")
         self._create_model(params, jobs)
 
-    def _predict_chunks(self, chunktexts, limit):
+    def _predict_chunks(
+        self, chunktexts: List[str], limit: int
+    ) -> Tuple[List[List[str]], List[ndarray]]:
         return self._model.predict(
             list(
                 filter(
@@ -144,7 +165,9 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             limit,
         )
 
-    def _suggest_chunks(self, chunktexts, params):
+    def _suggest_chunks(
+        self, chunktexts: List[str], params: Dict[str, Union[int, float, str]]
+    ) -> List[SubjectSuggestion]:
         limit = int(params["limit"])
         chunklabels, chunkscores = self._predict_chunks(chunktexts, limit)
         label_scores = collections.defaultdict(float)

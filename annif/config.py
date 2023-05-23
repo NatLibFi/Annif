@@ -1,9 +1,9 @@
 """Configuration file handling"""
+from __future__ import annotations
 
-
-import configparser
 import os.path
 from glob import glob
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 import tomli
 
@@ -11,13 +11,16 @@ import annif
 import annif.util
 from annif.exception import ConfigurationException
 
+if TYPE_CHECKING:
+    from configparser import SectionProxy
+
 logger = annif.logger
 
 
 class AnnifConfigCFG:
     """Class for reading configuration in CFG/INI format"""
 
-    def __init__(self, filename):
+    def __init__(self, filename: str) -> None:
         self._config = configparser.ConfigParser()
         self._config.optionxform = annif.util.identity
         with open(filename, encoding="utf-8-sig") as projf:
@@ -31,17 +34,17 @@ class AnnifConfigCFG:
                 raise ConfigurationException(err)
 
     @property
-    def project_ids(self):
+    def project_ids(self) -> List[str]:
         return self._config.sections()
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> configparser.SectionProxy:
         return self._config[key]
 
 
 class AnnifConfigTOML:
     """Class for reading configuration in TOML format"""
 
-    def __init__(self, filename):
+    def __init__(self, filename: str) -> None:
         with open(filename, "rb") as projf:
             try:
                 logger.debug(f"Reading configuration file {filename} in TOML format")
@@ -55,14 +58,14 @@ class AnnifConfigTOML:
     def project_ids(self):
         return self._config.keys()
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Dict[str, str]:
         return self._config[key]
 
 
 class AnnifConfigDirectory:
     """Class for reading configuration from directory"""
 
-    def __init__(self, directory):
+    def __init__(self, directory: str) -> None:
         files = glob(os.path.join(directory, "*.cfg"))
         files.extend(glob(os.path.join(directory, "*.toml")))
         logger.debug(f"Reading configuration files in directory {directory}")
@@ -74,7 +77,7 @@ class AnnifConfigDirectory:
                 self._check_duplicate_project_ids(proj_id, file)
                 self._config[proj_id] = source_config[proj_id]
 
-    def _check_duplicate_project_ids(self, proj_id, file):
+    def _check_duplicate_project_ids(self, proj_id: str, file: str) -> None:
         if proj_id in self._config:
             # Error message resembles configparser's DuplicateSection message
             raise ConfigurationException(
@@ -86,11 +89,11 @@ class AnnifConfigDirectory:
     def project_ids(self):
         return self._config.keys()
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Union[Dict[str, str], configparser.SectionProxy]:
         return self._config[key]
 
 
-def check_config(projects_config_path):
+def check_config(projects_config_path: str) -> Optional[str]:
     if os.path.exists(projects_config_path):
         return projects_config_path
     else:
@@ -104,7 +107,7 @@ def check_config(projects_config_path):
         return None
 
 
-def find_config():
+def find_config() -> Optional[str]:
     for path in ("projects.cfg", "projects.toml", "projects.d"):
         if os.path.exists(path):
             return path
@@ -119,7 +122,9 @@ def find_config():
     return None
 
 
-def parse_config(projects_config_path):
+def parse_config(
+    projects_config_path: str,
+) -> Optional[Union[AnnifConfigDirectory, AnnifConfigCFG, AnnifConfigTOML]]:
     if projects_config_path:
         projects_config_path = check_config(projects_config_path)
     else:

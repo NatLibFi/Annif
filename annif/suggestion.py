@@ -1,15 +1,23 @@
 """Representing suggested subjects."""
+from __future__ import annotations
 
 import collections
-import itertools
+from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Union
 
-import numpy as np
 from scipy.sparse import csr_array
+
+if TYPE_CHECKING:
+    from itertools import chain
+
+    from numpy import ndarray
+    from scipy.sparse._arrays import csr_array
+
+    from annif.corpus.subject import SubjectIndex
 
 SubjectSuggestion = collections.namedtuple("SubjectSuggestion", "subject_id score")
 
 
-def vector_to_suggestions(vector, limit):
+def vector_to_suggestions(vector: ndarray, limit: int) -> Iterator[Any]:
     limit = min(len(vector), limit)
     topk_idx = np.argpartition(vector, -limit)[-limit:]
     return (
@@ -17,7 +25,11 @@ def vector_to_suggestions(vector, limit):
     )
 
 
-def filter_suggestion(preds, limit=None, threshold=0.0):
+def filter_suggestion(
+    preds: scipy.sparse._arrays.csr_array,
+    limit: Optional[int] = None,
+    threshold: Union[int, float] = 0.0,
+) -> scipy.sparse._arrays.csr_array:
     """filter a 2D sparse suggestion array (csr_array), retaining only the
     top K suggestions with a score above or equal to the threshold for each
     individual prediction; the rest will be left as zeros"""
@@ -43,7 +55,7 @@ def filter_suggestion(preds, limit=None, threshold=0.0):
 class SuggestionResult:
     """Suggestions for a single document, backed by a row of a sparse array."""
 
-    def __init__(self, array, idx):
+    def __init__(self, array: scipy.sparse._arrays.csr_array, idx: int) -> None:
         self._array = array
         self._idx = idx
 
@@ -57,10 +69,10 @@ class SuggestionResult:
             sorted(suggestions, key=lambda suggestion: suggestion.score, reverse=True)
         )
 
-    def as_vector(self):
+    def as_vector(self) -> ndarray:
         return self._array[[self._idx], :].toarray()[0]
 
-    def __len__(self):
+    def __len__(self) -> int:
         _, cols = self._array[[self._idx], :].nonzero()
         return len(cols)
 
@@ -68,13 +80,18 @@ class SuggestionResult:
 class SuggestionBatch:
     """Subject suggestions for a batch of documents."""
 
-    def __init__(self, array):
+    def __init__(self, array: scipy.sparse._arrays.csr_array) -> None:
         """Create a new SuggestionBatch from a csr_array"""
         assert isinstance(array, csr_array)
         self.array = array
 
     @classmethod
-    def from_sequence(cls, suggestion_results, subject_index, limit=None):
+    def from_sequence(
+        cls,
+        suggestion_results: List[List[SubjectSuggestion]],
+        subject_index: SubjectIndex,
+        limit: Optional[int] = None,
+    ) -> "SuggestionBatch":
         """Create a new SuggestionBatch from a sequence where each item is
         a sequence of SubjectSuggestion objects."""
 
@@ -96,7 +113,9 @@ class SuggestionBatch:
         )
 
     @classmethod
-    def from_averaged(cls, batches, weights):
+    def from_averaged(
+        cls, batches: List[SuggestionBatch], weights: List[Union[int, float]]
+    ) -> "SuggestionBatch":
         """Create a new SuggestionBatch where the subject scores are the
         weighted average of scores in several SuggestionBatches"""
 
@@ -105,31 +124,35 @@ class SuggestionBatch:
         ) / sum(weights)
         return SuggestionBatch(avg_array)
 
-    def filter(self, limit=None, threshold=0.0):
+    def filter(
+        self, limit: Optional[int] = None, threshold: float = 0.0
+    ) -> "SuggestionBatch":
         """Return a subset of the hits, filtered by the given limit and
         score threshold, as another SuggestionBatch object."""
 
         return SuggestionBatch(filter_suggestion(self.array, limit, threshold))
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> SuggestionResult:
         if idx < 0 or idx >= len(self):
             raise IndexError
         return SuggestionResult(self.array, idx)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.array.shape[0]
 
 
 class SuggestionResults:
     """Subject suggestions for a potentially very large number of documents."""
 
-    def __init__(self, batches):
+    def __init__(self, batches: List[SuggestionBatch]) -> None:
         """Initialize a new SuggestionResults from an iterable that provides
         SuggestionBatch objects."""
 
         self.batches = batches
 
-    def filter(self, limit=None, threshold=0.0):
+    def filter(
+        self, limit: Optional[int] = None, threshold: float = 0.0
+    ) -> "SuggestionResults":
         """Return a view of these suggestions, filtered by the given limit
         and/or threshold, as another SuggestionResults object."""
 
@@ -137,5 +160,5 @@ class SuggestionResults:
             (batch.filter(limit, threshold) for batch in self.batches)
         )
 
-    def __iter__(self):
+    def __iter__(self) -> itertools.chain:
         return iter(itertools.chain.from_iterable(self.batches))

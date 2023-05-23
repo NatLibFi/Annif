@@ -1,11 +1,20 @@
 """Collection of language-specific analyzers and analyzer registry for Annif"""
+from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING, Union
 
 import annif
 from annif.util import parse_args
 
 from . import simple, simplemma, snowball
+
+if TYPE_CHECKING:
+    from annif.analyzer.simple import SimpleAnalyzer
+    from annif.analyzer.simplemma import SimplemmaAnalyzer
+    from annif.analyzer.snowball import SnowballAnalyzer
+    from annif.analyzer.spacy import SpacyAnalyzer
+    from annif.analyzer.voikko import VoikkoAnalyzer
 
 _analyzers = {}
 
@@ -14,7 +23,11 @@ def register_analyzer(analyzer):
     _analyzers[analyzer.name] = analyzer
 
 
-def get_analyzer(analyzerspec):
+def get_analyzer(
+    analyzerspec: str,
+) -> Union[
+    SimplemmaAnalyzer, SimpleAnalyzer, SnowballAnalyzer, SpacyAnalyzer, VoikkoAnalyzer
+]:
     match = re.match(r"(\w+)(\((.*)\))?", analyzerspec)
     if match is None:
         raise ValueError("Invalid analyzer specification {}".format(analyzerspec))

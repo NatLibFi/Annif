@@ -1,34 +1,47 @@
 """Evaluation metrics for Annif"""
+from __future__ import annotations
 
 import warnings
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple, Union
 
-import numpy as np
 import scipy.sparse
 from sklearn.metrics import f1_score, precision_score, recall_score
 
 from annif.exception import NotSupportedException
 from annif.suggestion import SuggestionBatch, filter_suggestion
 
+if TYPE_CHECKING:
+    from io import TextIOWrapper
 
-def true_positives(y_true, y_pred):
+    from click.utils import LazyFile
+    from numpy import float64
+    from scipy.sparse._arrays import csr_array
+
+    from annif.corpus.subject import SubjectIndex, SubjectSet
+    from annif.suggestion import SubjectSuggestion
+
+
+def true_positives(y_true: csr_array, y_pred: csr_array) -> int:
     """calculate the number of true positives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
     return int((y_true.multiply(y_pred)).sum())
 
 
-def false_positives(y_true, y_pred):
+def false_positives(y_true: csr_array, y_pred: csr_array) -> int:
     """calculate the number of false positives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
     return int((y_true < y_pred).sum())
 
 
-def false_negatives(y_true, y_pred):
+def false_negatives(y_true: csr_array, y_pred: csr_array) -> int:
     """calculate the number of false negatives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
     return int((y_true > y_pred).sum())
 
 
-def dcg_score(y_true, y_pred, limit=None):
+def dcg_score(
+    y_true: csr_array, y_pred: csr_array, limit: Optional[int] = None
+) -> float64:
     """return the discounted cumulative gain (DCG) score for the selected
     labels vs. relevant labels"""
 
@@ -43,7 +56,9 @@ def dcg_score(y_true, y_pred, limit=None):
     return (gain / discount).sum()
 
 
-def ndcg_score(y_true, y_pred, limit=None):
+def ndcg_score(
+    y_true: csr_array, y_pred: csr_array, limit: Optional[int] = None
+) -> float:
     """return the normalized discounted cumulative gain (nDCG) score for the
     selected labels vs. relevant labels"""
 
@@ -65,12 +80,57 @@ class EvaluationBatch:
     for a list of documents of the batch. Final results can be queried using the
     results() method."""
 
-    def __init__(self, subject_index):
+    def __init__(self, subject_index: SubjectIndex) -> None:
         self._subject_index = subject_index
         self._suggestion_arrays = []
         self._gold_subject_arrays = []
 
-    def evaluate_many(self, suggestion_batch, gold_subject_batch):
+    def evaluate_many(
+        self,
+        suggestion_batch: Union[
+            List[List[SubjectSuggestion]], SuggestionBatch, List[Iterator[Any]]
+        ],
+        gold_subject_batch: Union[
+            Tuple[SubjectSet, SubjectSet, SubjectSet],
+            Tuple[SubjectSet, SubjectSet, SubjectSet, SubjectSet],
+            Tuple[SubjectSet, SubjectSet],
+            Tuple[
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+                SubjectSet,
+            ],
+            List[SubjectSet],
+        ],
+    ) -> None:
         if not isinstance(suggestion_batch, SuggestionBatch):
             suggestion_batch = SuggestionBatch.from_sequence(
                 suggestion_batch, self._subject_index
@@ -86,7 +146,12 @@ class EvaluationBatch:
                 ar[idx, subject_id] = True
         self._gold_subject_arrays.append(ar.tocsr())
 
-    def _evaluate_samples(self, y_true, y_pred, metrics=[]):
+    def _evaluate_samples(
+        self,
+        y_true: csr_array,
+        y_pred: csr_array,
+        metrics: Union[Tuple[str, str], Tuple[()], List[str]] = [],
+    ) -> Dict[str, Union[float64, float, int]]:
         y_pred_binary = y_pred > 0.0
 
         # define the available metrics as lazy lambda functions
@@ -156,7 +221,9 @@ class EvaluationBatch:
 
             return {metric: all_metrics[metric]() for metric in metrics}
 
-    def _result_per_subject_header(self, results_file):
+    def _result_per_subject_header(
+        self, results_file: Union[LazyFile, TextIOWrapper]
+    ) -> None:
         print(
             "\t".join(
                 [
@@ -174,11 +241,19 @@ class EvaluationBatch:
             file=results_file,
         )
 
-    def _result_per_subject_body(self, zipped_results, results_file):
+    def _result_per_subject_body(
+        self, zipped_results: zip, results_file: Union[LazyFile, TextIOWrapper]
+    ) -> None:
         for row in zipped_results:
             print("\t".join((str(e) for e in row)), file=results_file)
 
-    def output_result_per_subject(self, y_true, y_pred, results_file, language):
+    def output_result_per_subject(
+        self,
+        y_true: csr_array,
+        y_pred: csr_array,
+        results_file: Union[TextIOWrapper, LazyFile],
+        language: str,
+    ) -> None:
         """Write results per subject (non-aggregated)
         to outputfile results_file, using labels in the given language"""
 
@@ -208,7 +283,12 @@ class EvaluationBatch:
         self._result_per_subject_header(results_file)
         self._result_per_subject_body(zipped, results_file)
 
-    def results(self, metrics=[], results_file=None, language=None):
+    def results(
+        self,
+        metrics: Union[Tuple[str, str], Tuple[()], List[str]] = [],
+        results_file: Optional[Union[LazyFile, TextIOWrapper]] = None,
+        language: Optional[str] = None,
+    ) -> Dict[str, Union[float64, float, int]]:
         """evaluate a set of selected subjects against a gold standard using
         different metrics. If metrics is empty, use all available metrics.
         If results_file (file object) given, write results per subject to it

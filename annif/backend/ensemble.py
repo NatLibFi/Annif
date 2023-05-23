@@ -1,5 +1,7 @@
 """Ensemble backend that combines results from multiple projects"""
+from __future__ import annotations
 
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import annif.eval
 import annif.parallel
@@ -9,11 +11,18 @@ from annif.suggestion import SuggestionBatch
 
 from . import backend, hyperopt
 
+if TYPE_CHECKING:
+    from optuna.study.study import Study
+    from optuna.trial._trial import Trial
+
+    from annif.backend.hyperopt import HPRecommendation
+    from annif.corpus.document import DocumentDirectory, DocumentFile
+
 
 class BaseEnsembleBackend(backend.AnnifBackend):
     """Base class for ensemble backends"""
 
-    def _get_sources_attribute(self, attr):
+    def _get_sources_attribute(self, attr: str) -> List[Optional[bool]]:
         params = self._get_backend_params(None)
         sources = annif.util.parse_sources(params["sources"])
         return [
@@ -21,20 +30,27 @@ class BaseEnsembleBackend(backend.AnnifBackend):
             for project_id, _ in sources
         ]
 
-    def initialize(self, parallel=False):
+    def initialize(self, parallel: bool = False) -> None:
         # initialize all the source projects
         params = self._get_backend_params(None)
         for project_id, _ in annif.util.parse_sources(params["sources"]):
             project = self.project.registry.get_project(project_id)
             project.initialize(parallel)
 
-    def _suggest_with_sources(self, texts, sources):
+    def _suggest_with_sources(
+        self, texts: List[str], sources: List[Tuple[str, float]]
+    ) -> Dict[str, SuggestionBatch]:
         return {
             project_id: self.project.registry.get_project(project_id).suggest(texts)
             for project_id, _ in sources
         }
 
-    def _merge_source_batches(self, batch_by_source, sources, params):
+    def _merge_source_batches(
+        self,
+        batch_by_source: Dict[str, SuggestionBatch],
+        sources: List[Tuple[str, float]],
+        params: Dict[str, Union[int, str]],
+    ) -> SuggestionBatch:
         """Merge the given SuggestionBatches from each source into a single
         SuggestionBatch. The default implementation computes a weighted
         average based on the weights given in the sources tuple. Intended
@@ -46,7 +62,9 @@ class BaseEnsembleBackend(backend.AnnifBackend):
             limit=int(params["limit"])
         )
 
-    def _suggest_batch(self, texts, params):
+    def _suggest_batch(
+        self, texts: List[str], params: Dict[str, Union[int, float, str]]
+    ) -> SuggestionBatch:
         sources = annif.util.parse_sources(params["sources"])
         batch_by_source = self._suggest_with_sources(texts, sources)
         return self._merge_source_batches(batch_by_source, sources, params)
@@ -55,7 +73,9 @@ class BaseEnsembleBackend(backend.AnnifBackend):
 class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
     """Hyperparameter optimizer for the ensemble backend"""
 
-    def __init__(self, backend, corpus, metric):
+    def __init__(
+        self, backend: "EnsembleBackend", corpus: DocumentDirectory, metric: str
+    ) -> None:
         super().__init__(backend, corpus, metric)
         self._sources = [
             project_id
@@ -64,7 +84,7 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
             )
         ]
 
-    def _prepare(self, n_jobs=1):
+    def _prepare(self, n_jobs: int = 1) -> None:
         self._gold_batches = []
         self._source_batches = []
 
@@ -89,16 +109,16 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                 self._source_batches.append(suggestions)
                 self._gold_batches.append(gold_batch)
 
-    def _normalize(self, hps):
+    def _normalize(self, hps: Dict[str, float]) -> Dict[str, float]:
         total = sum(hps.values())
         return {source: hps[source] / total for source in hps}
 
-    def _format_cfg_line(self, hps):
+    def _format_cfg_line(self, hps: Dict[str, float]) -> str:
         return "sources=" + ",".join(
             [f"{src}:{weight:.4f}" for src, weight in hps.items()]
         )
 
-    def _objective(self, trial):
+    def _objective(self, trial: Trial) -> float:
         eval_batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
         proj_weights = {
             project_id: trial.suggest_uniform(project_id, 0.0, 1.0)
@@ -114,7 +134,7 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         results = eval_batch.results(metrics=[self._metric])
         return results[self._metric]
 
-    def _postprocess(self, study):
+    def _postprocess(self, study: Study) -> HPRecommendation:
         line = self._format_cfg_line(self._normalize(study.best_params))
         return hyperopt.HPRecommendation(lines=[line], score=study.best_value)
 
@@ -125,17 +145,21 @@ class EnsembleBackend(BaseEnsembleBackend, hyperopt.AnnifHyperoptBackend):
     name = "ensemble"
 
     @property
-    def is_trained(self):
+    def is_trained(self) -> bool:
         sources_trained = self._get_sources_attribute("is_trained")
         return all(sources_trained)
 
     @property
-    def modification_time(self):
+    def modification_time(self) -> None:
         mtimes = self._get_sources_attribute("modification_time")
         return max(filter(None, mtimes), default=None)
 
-    def get_hp_optimizer(self, corpus, metric):
+    def get_hp_optimizer(
+        self, corpus: DocumentDirectory, metric: str
+    ) -> EnsembleOptimizer:
         return EnsembleOptimizer(self, corpus, metric)
 
-    def _train(self, corpus, params, jobs=0):
+    def _train(
+        self, corpus: DocumentFile, params: Dict[str, Union[int, str]], jobs: int = 0
+    ):
         raise NotSupportedException("Training ensemble backend is not possible.")

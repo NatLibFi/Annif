@@ -2,8 +2,10 @@
 learns which concept suggestions from each backend are trustworthy using the
 PAV algorithm, a.k.a. isotonic regression, to turn raw scores returned by
 individual backends into probabilities."""
+from __future__ import annotations
 
 import os.path
+from typing import TYPE_CHECKING, Dict, List, Tuple, Union
 
 import joblib
 import numpy as np
@@ -16,6 +18,12 @@ from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
 
 from . import backend, ensemble
+
+if TYPE_CHECKING:
+    from scipy.sparse._csc import csc_matrix
+
+    from annif.corpus.document import DocumentFile
+    from annif.project import AnnifProject
 
 
 class PAVBackend(ensemble.BaseEnsembleBackend):
@@ -30,12 +38,12 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
 
     DEFAULT_PARAMETERS = {"min-docs": 10}
 
-    def default_params(self):
+    def default_params(self) -> Dict[str, int]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
         return params
 
-    def initialize(self, parallel=False):
+    def initialize(self, parallel: bool = False) -> None:
         super().initialize(parallel)
         if self._models is not None:
             return  # already initialized
@@ -53,11 +61,16 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
                     backend_id=self.backend_id,
                 )
 
-    def _get_model(self, source_project_id):
+    def _get_model(self, source_project_id: str) -> Dict[int, IsotonicRegression]:
         self.initialize()
         return self._models[source_project_id]
 
-    def _merge_source_batches(self, batch_by_source, sources, params):
+    def _merge_source_batches(
+        self,
+        batch_by_source: Dict[str, SuggestionBatch],
+        sources: List[Tuple[str, float]],
+        params: Dict[str, Union[int, str]],
+    ) -> SuggestionBatch:
         reg_batch_by_source = {}
         for project_id, batch in batch_by_source.items():
             reg_models = self._get_model(project_id)
@@ -82,7 +95,9 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         return super()._merge_source_batches(reg_batch_by_source, sources, params)
 
     @staticmethod
-    def _suggest_train_corpus(source_project, corpus):
+    def _suggest_train_corpus(
+        source_project: AnnifProject, corpus: DocumentFile
+    ) -> Tuple[scipy.sparse._csc.csc_matrix, scipy.sparse._csc.csc_matrix]:
         # lists for constructing score matrix
         data, row, col = [], [], []
         # lists for constructing true label matrix
@@ -114,7 +129,9 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         )
         return csc_matrix(scores), csc_matrix(true)
 
-    def _create_pav_model(self, source_project_id, min_docs, corpus):
+    def _create_pav_model(
+        self, source_project_id: str, min_docs: int, corpus: DocumentFile
+    ) -> None:
         self.info(
             "creating PAV model for source {}, min_docs={}".format(
                 source_project_id, min_docs
@@ -138,7 +155,12 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
             pav_regressions, self.datadir, model_filename, method=joblib.dump
         )
 
-    def _train(self, corpus, params, jobs=0):
+    def _train(
+        self,
+        corpus: Union[str, DocumentFile],
+        params: Dict[str, Union[int, str]],
+        jobs: int = 0,
+    ) -> None:
         if corpus == "cached":
             raise NotSupportedException(
                 "Training pav project from cached data not supported."

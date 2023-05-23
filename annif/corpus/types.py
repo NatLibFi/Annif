@@ -1,8 +1,10 @@
 """Basic types for document and subject corpora"""
+from __future__ import annotations
 
 import abc
 import collections
 from itertools import islice
+from typing import TYPE_CHECKING, Iterator, List
 
 Document = collections.namedtuple("Document", "text subject_set")
 
@@ -19,7 +21,7 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
         pass  # pragma: no cover
 
     @property
-    def doc_batches(self):
+    def doc_batches(self) -> Iterator[List[Document]]:
         """Iterate through the document corpus in batches, yielding lists of Document
         objects."""
         it = iter(self.documents)
@@ -29,7 +31,7 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
                 return
             yield docs_batch
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         """Check if there are no documents to iterate."""
         try:
             next(self.documents)
