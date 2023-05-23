@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os.path
-from typing import TYPE_CHECKING, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Tuple
 
 import joblib
 import numpy as np
@@ -18,7 +18,7 @@ from . import backend, mixins
 if TYPE_CHECKING:
     from scipy.sparse._csr import csr_matrix
 
-    from annif.corpus.document import DocumentFile
+    from annif.corpus.document import DocumentCorpus
 
 
 class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
@@ -54,7 +54,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self._initialize_model()
 
     def _corpus_to_texts_and_classes(
-        self, corpus: DocumentFile
+        self, corpus: DocumentCorpus
     ) -> Tuple[List[str], List[int]]:
         texts = []
         classes = []
@@ -79,7 +79,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         )
 
     def _train(
-        self, corpus: Union[DocumentFile, str], params: Dict[str, int], jobs: int = 0
+        self, corpus: DocumentCorpus, params: Dict[str, int], jobs: int = 0
     ) -> None:
         if corpus == "cached":
             raise NotSupportedException(

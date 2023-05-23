@@ -20,7 +20,7 @@ from . import backend, mixins
 if TYPE_CHECKING:
     from scipy.sparse._csr import csr_matrix
 
-    from annif.corpus.document import DocumentFile
+    from annif.corpus.document import DocumentCorpus
 
 
 class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
@@ -69,7 +69,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self.initialize_vectorizer()
         self._initialize_model()
 
-    def _create_train_file(self, veccorpus: csr_matrix, corpus: DocumentFile) -> None:
+    def _create_train_file(self, veccorpus: csr_matrix, corpus: DocumentCorpus) -> None:
         self.info("creating train file")
         path = os.path.join(self.datadir, self.TRAIN_FILE)
         with open(path, "w", encoding="utf-8") as trainfile:
@@ -113,7 +113,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
 
     def _train(
         self,
-        corpus: Union[DocumentFile, str],
+        corpus: DocumentCorpus,
         params: Dict[str, Union[int, bool]],
         jobs: int = 0,
     ) -> None:

@@ -4,34 +4,23 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Type
 
 if TYPE_CHECKING:
-    from annif.backend.dummy import DummyBackend
-    from annif.backend.ensemble import EnsembleBackend
-    from annif.backend.fasttext import FastTextBackend
-    from annif.backend.http import HTTPBackend
-    from annif.backend.mllm import MLLMBackend
-    from annif.backend.nn_ensemble import NNEnsembleBackend
-    from annif.backend.omikuji import OmikujiBackend
-    from annif.backend.pav import PAVBackend
-    from annif.backend.stwfsa import StwfsaBackend
-    from annif.backend.svc import SVCBackend
-    from annif.backend.tfidf import TFIDFBackend
-    from annif.backend.yake import YakeBackend
+    from annif.backend.backend import AnnifBackend
 
 
 # define functions for lazily importing each backend (alphabetical order)
-def _dummy() -> Type[DummyBackend]:
+def _dummy() -> Type[AnnifBackend]:
     from . import dummy
 
     return dummy.DummyBackend
 
 
-def _ensemble() -> Type[EnsembleBackend]:
+def _ensemble() -> Type[AnnifBackend]:
     from . import ensemble
 
     return ensemble.EnsembleBackend
 
 
-def _fasttext() -> Type[FastTextBackend]:
+def _fasttext() -> Type[AnnifBackend]:
     try:
         from . import fasttext
 
@@ -40,19 +29,19 @@ def _fasttext() -> Type[FastTextBackend]:
         raise ValueError("fastText not available, cannot use fasttext backend")
 
 
-def _http() -> Type[HTTPBackend]:
+def _http() -> Type[AnnifBackend]:
     from . import http
 
     return http.HTTPBackend
 
 
-def _mllm() -> Type[MLLMBackend]:
+def _mllm() -> Type[AnnifBackend]:
     from . import mllm
 
     return mllm.MLLMBackend
 
 
-def _nn_ensemble() -> Type[NNEnsembleBackend]:
+def _nn_ensemble() -> Type[AnnifBackend]:
     try:
         from . import nn_ensemble
 
@@ -63,7 +52,7 @@ def _nn_ensemble() -> Type[NNEnsembleBackend]:
         )
 
 
-def _omikuji() -> Type[OmikujiBackend]:
+def _omikuji() -> Type[AnnifBackend]:
     try:
         from . import omikuji
 
@@ -72,13 +61,13 @@ def _omikuji() -> Type[OmikujiBackend]:
         raise ValueError("Omikuji not available, cannot use omikuji backend")
 
 
-def _pav() -> Type[PAVBackend]:
+def _pav() -> Type[AnnifBackend]:
     from . import pav
 
     return pav.PAVBackend
 
 
-def _stwfsa() -> Type[StwfsaBackend]:
+def _stwfsa() -> Type[AnnifBackend]:
     try:
         from . import stwfsa
 
@@ -87,19 +76,19 @@ def _stwfsa() -> Type[StwfsaBackend]:
         raise ValueError("STWFSA not available, cannot use stwfsa backend")
 
 
-def _svc() -> Type[SVCBackend]:
+def _svc() -> Type[AnnifBackend]:
     from . import svc
 
     return svc.SVCBackend
 
 
-def _tfidf() -> Type[TFIDFBackend]:
+def _tfidf() -> Type[AnnifBackend]:
     from . import tfidf
 
     return tfidf.TFIDFBackend
 
 
-def _yake() -> Type[YakeBackend]:
+def _yake() -> Type[AnnifBackend]:
     try:
         from . import yake
 

@@ -27,7 +27,7 @@ from . import backend, ensemble
 if TYPE_CHECKING:
     from tensorflow.python.framework.ops import EagerTensor
 
-    from annif.corpus.document import DocumentFile, LimitingDocumentCorpus
+    from annif.corpus.document import DocumentCorpus
 
 
 def idx_to_key(idx: int) -> bytes:
@@ -198,7 +198,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
     def _train(
         self,
-        corpus: Union[DocumentFile, str],
+        corpus: DocumentCorpus,
         params: Dict[str, Union[int, float, str]],
         jobs: int = 0,
     ) -> None:
@@ -213,7 +213,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
     def _corpus_to_vectors(
         self,
-        corpus: Union[LimitingDocumentCorpus, DocumentFile],
+        corpus: DocumentCorpus,
         seq: LMDBSequence,
         n_jobs: int,
     ) -> None:
@@ -259,7 +259,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
     def _fit_model(
         self,
-        corpus: Union[LimitingDocumentCorpus, DocumentFile, str],
+        corpus: DocumentCorpus,
         epochs: int,
         lmdb_map_size: int,
         n_jobs: int = 1,
@@ -285,7 +285,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
     def _learn(
         self,
-        corpus: Union[LimitingDocumentCorpus, DocumentFile],
+        corpus: DocumentCorpus,
         params: Dict[str, Union[int, float, str]],
     ) -> None:
         self.initialize()

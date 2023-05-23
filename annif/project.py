@@ -25,20 +25,10 @@ if TYPE_CHECKING:
 
     from click.utils import LazyFile
 
-    from annif.analyzer.snowball import SnowballAnalyzer
-    from annif.backend.dummy import DummyBackend
-    from annif.backend.ensemble import EnsembleBackend
-    from annif.backend.fasttext import FastTextBackend
+    from annif.analyzer import Analyzer
+    from annif.backend import AnnifBackend
     from annif.backend.hyperopt import HPRecommendation
-    from annif.backend.pav import PAVBackend
-    from annif.backend.tfidf import TFIDFBackend
-    from annif.corpus.combine import CombinedCorpus
-    from annif.corpus.document import (
-        DocumentDirectory,
-        DocumentFile,
-        DocumentList,
-        LimitingDocumentCorpus,
-    )
+    from annif.corpus.document import DocumentCorpus
     from annif.corpus.subject import SubjectIndex
     from annif.registry import AnnifRegistry
     from annif.transform.transform import TransformChain
@@ -152,7 +142,7 @@ class AnnifProject(DatadirMixin):
         return self.backend.suggest(texts, beparams)
 
     @property
-    def analyzer(self) -> SnowballAnalyzer:
+    def analyzer(self) -> Analyzer:
         if self._analyzer is None:
             if self.analyzer_spec:
                 self._analyzer = annif.analyzer.get_analyzer(self.analyzer_spec)
@@ -171,11 +161,7 @@ class AnnifProject(DatadirMixin):
         return self._transform
 
     @property
-    def backend(
-        self,
-    ) -> Union[
-        DummyBackend, EnsembleBackend, PAVBackend, TFIDFBackend, FastTextBackend
-    ]:
+    def backend(self) -> AnnifBackend:
         if self._backend is None:
             if "backend" not in self.config:
                 raise ConfigurationException(
@@ -239,7 +225,7 @@ class AnnifProject(DatadirMixin):
 
     def suggest_corpus(
         self,
-        corpus: Union[DocumentDirectory, DocumentList],
+        corpus: DocumentCorpus,
         backend_params: None = None,
     ) -> annif.suggestion.SuggestionResults:
         """Suggest subjects for the given documents corpus in batches of documents."""
@@ -266,7 +252,7 @@ class AnnifProject(DatadirMixin):
 
     def train(
         self,
-        corpus: Union[CombinedCorpus, LimitingDocumentCorpus, DocumentFile, str],
+        corpus: DocumentCorpus,
         backend_params: None = None,
         jobs: int = 0,
     ) -> None:
@@ -280,7 +266,7 @@ class AnnifProject(DatadirMixin):
 
     def learn(
         self,
-        corpus: Union[DocumentDirectory, DocumentFile, DocumentList],
+        corpus: DocumentCorpus,
         backend_params: None = None,
     ) -> None:
         """further train the project using documents from a metadata source"""
@@ -297,7 +283,7 @@ class AnnifProject(DatadirMixin):
 
     def hyperopt(
         self,
-        corpus: DocumentDirectory,
+        corpus: DocumentCorpus,
         trials: int,
         jobs: int,
         metric: str,

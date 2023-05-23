@@ -12,7 +12,7 @@ from annif.util import atomic_save, boolean
 from . import backend
 
 if TYPE_CHECKING:
-    from annif.corpus.document import DocumentFile, DocumentList
+    from annif.corpus.document import DocumentCorpus
 
 _KEY_CONCEPT_TYPE_URI = "concept_type_uri"
 _KEY_SUBTHESAURUS_TYPE_URI = "sub_thesaurus_type_uri"
@@ -78,7 +78,7 @@ class StwfsaBackend(backend.AnnifBackend):
                 )
 
     def _load_data(
-        self, corpus: Union[DocumentList, DocumentFile, str]
+        self, corpus: DocumentCorpus
     ) -> Tuple[List[str], List[List[Union[str, Any]]]]:
         if corpus == "cached":
             raise NotSupportedException(
@@ -103,7 +103,7 @@ class StwfsaBackend(backend.AnnifBackend):
 
     def _train(
         self,
-        corpus: Union[DocumentList, DocumentFile, str],
+        corpus: DocumentCorpus,
         params: Dict[str, Union[str, bool, int]],
         jobs: int = 0,
     ) -> None:

@@ -21,13 +21,7 @@ if TYPE_CHECKING:
 
     from click.core import Argument, Context, Option
 
-    from annif.corpus.combine import CombinedCorpus
-    from annif.corpus.document import (
-        DocumentDirectory,
-        DocumentFile,
-        DocumentList,
-        LimitingDocumentCorpus,
-    )
+    from annif.corpus.document import DocumentCorpus, DocumentList
     from annif.corpus.subject import SubjectIndex
     from annif.project import AnnifProject
     from annif.suggestion import SuggestionResult
@@ -138,7 +132,7 @@ def open_documents(
     subject_index: SubjectIndex,
     vocab_lang: str,
     docs_limit: Optional[int],
-) -> Union[LimitingDocumentCorpus, DocumentDirectory, CombinedCorpus, DocumentFile]:
+) -> DocumentCorpus:
     """Helper function to open a document corpus from a list of pathnames,
     each of which is either a TSV file or a directory of TXT files. For
     directories with subjects in TSV files, the given vocabulary language

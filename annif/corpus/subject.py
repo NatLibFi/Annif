@@ -14,8 +14,6 @@ from .types import Subject, SubjectCorpus
 if TYPE_CHECKING:
     import numpy as np
 
-    from annif.corpus.skos import SubjectFileSKOS
-
 logger = annif.logger.getChild("subject")
 logger.addFilter(annif.util.DuplicateFilter())
 
@@ -121,9 +119,7 @@ class SubjectIndex:
         self._label_idx = {}
         self._languages = None
 
-    def load_subjects(
-        self, corpus: Union[SubjectFileSKOS, SubjectFileCSV, SubjectFileTSV]
-    ) -> None:
+    def load_subjects(self, corpus: SubjectCorpus) -> None:
         """Initialize the subject index from a subject corpus"""
 
         self._languages = corpus.languages

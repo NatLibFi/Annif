@@ -28,8 +28,8 @@ if TYPE_CHECKING:
     from rdflib.graph import Graph
     from rdflib.term import URIRef
 
-    from annif.analyzer.snowball import SnowballAnalyzer
-    from annif.corpus.document import DocumentDirectory
+    from annif.analyzer import Analyzer
+    from annif.corpus.document import DocumentCorpus
     from annif.vocab import AnnifVocabulary
 
 Term = collections.namedtuple("Term", "subject_id label is_pref")
@@ -79,7 +79,7 @@ def conflate_matches(
 
 def generate_candidates(
     text: str,
-    analyzer: SnowballAnalyzer,
+    analyzer: Analyzer,
     vectorizer: CountVectorizer,
     index: TokenSetIndex,
 ) -> List[Union[Candidate, Any]]:
@@ -153,7 +153,7 @@ class MLLMModel:
     """Maui-like Lexical Matching model"""
 
     def generate_candidates(
-        self, text: str, analyzer: SnowballAnalyzer
+        self, text: str, analyzer: Analyzer
     ) -> List[Union[Candidate, Any]]:
         return generate_candidates(text, analyzer, self._vectorizer, self._index)
 
@@ -219,7 +219,7 @@ class MLLMModel:
     def _prepare_train_index(
         self,
         vocab: AnnifVocabulary,
-        analyzer: SnowballAnalyzer,
+        analyzer: Analyzer,
         params: Dict[str, Union[int, float, bool, str]],
     ) -> List[int]:
         graph = vocab.as_graph()
@@ -245,7 +245,7 @@ class MLLMModel:
         return subject_ids
 
     def _prepare_train_data(
-        self, corpus: DocumentDirectory, analyzer: SnowballAnalyzer, n_jobs: int
+        self, corpus: DocumentCorpus, analyzer: Analyzer, n_jobs: int
     ) -> Tuple[List[List[Union[Candidate, Any]]], List[bool]]:
         # frequency of subjects (by id) in the generated candidates
         self._doc_freq = collections.Counter()
@@ -302,9 +302,9 @@ class MLLMModel:
 
     def prepare_train(
         self,
-        corpus: DocumentDirectory,
+        corpus: DocumentCorpus,
         vocab: AnnifVocabulary,
-        analyzer: SnowballAnalyzer,
+        analyzer: Analyzer,
         params: Dict[str, Union[int, float, bool, str]],
         n_jobs: int,
     ) -> Tuple[np.ndarray, np.ndarray]:

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from fasttext.FastText import _FastText
     from numpy import ndarray
 
-    from annif.corpus.document import DocumentFile, TransformingDocumentCorpus
+    from annif.corpus.document import DocumentCorpus
 
 
 class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
@@ -94,9 +94,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         labelnum = label.replace("__label__", "")
         return int(labelnum)
 
-    def _write_train_file(
-        self, corpus: Union[TransformingDocumentCorpus, DocumentFile], filename: str
-    ) -> None:
+    def _write_train_file(self, corpus: DocumentCorpus, filename: str) -> None:
         with open(filename, "w", encoding="utf-8") as trainfile:
             for doc in corpus.documents:
                 text = self._normalize_text(doc.text)
@@ -112,7 +110,8 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         return " ".join(self.project.analyzer.tokenize_words(text))
 
     def _create_train_file(
-        self, corpus: Union[TransformingDocumentCorpus, DocumentFile]
+        self,
+        corpus: DocumentCorpus,
     ) -> None:
         self.info("creating fastText training file")
 
@@ -139,7 +138,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
 
     def _train(
         self,
-        corpus: Union[TransformingDocumentCorpus, DocumentFile, str],
+        corpus: DocumentCorpus,
         params: Dict[str, Union[int, float, str]],
         jobs: int = 0,
     ) -> None:

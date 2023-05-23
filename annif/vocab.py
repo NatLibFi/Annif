@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os.path
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, List
 
 import annif
 import annif.corpus
@@ -14,7 +14,8 @@ if TYPE_CHECKING:
     from rdflib.graph import Graph
 
     from annif.corpus.skos import SubjectFileSKOS
-    from annif.corpus.subject import SubjectFileCSV, SubjectFileTSV, SubjectIndex
+    from annif.corpus.subject import SubjectCorpus, SubjectIndex
+
 
 logger = annif.logger
 
@@ -36,15 +37,13 @@ class AnnifVocabulary(DatadirMixin):
         self.vocab_id = vocab_id
         self._skos_vocab = None
 
-    def _create_subject_index(
-        self, subject_corpus: Union[SubjectFileCSV, SubjectFileTSV, SubjectFileSKOS]
-    ) -> SubjectIndex:
+    def _create_subject_index(self, subject_corpus: SubjectCorpus) -> SubjectIndex:
         subjects = annif.corpus.SubjectIndex()
         subjects.load_subjects(subject_corpus)
         annif.util.atomic_save(subjects, self.datadir, self.INDEX_FILENAME_CSV)
         return subjects
 
-    def _update_subject_index(self, subject_corpus: SubjectFileTSV) -> SubjectIndex:
+    def _update_subject_index(self, subject_corpus: SubjectCorpus) -> SubjectIndex:
         old_subjects = self.subjects
         new_subjects = annif.corpus.SubjectIndex()
         new_subjects.load_subjects(subject_corpus)
@@ -113,7 +112,7 @@ class AnnifVocabulary(DatadirMixin):
 
     def load_vocabulary(
         self,
-        subject_corpus: Union[SubjectFileCSV, SubjectFileTSV, SubjectFileSKOS],
+        subject_corpus: SubjectCorpus,
         force: bool = False,
     ) -> None:
         """Load subjects from a subject corpus and save them into one

@@ -10,10 +10,8 @@ from annif.exception import ConfigurationException
 if TYPE_CHECKING:
     from unittest.mock import Mock
 
-    from annif.corpus import DocumentCorpus
+    from annif.corpus.types import DocumentCorpus
     from annif.project import AnnifProject
-    from annif.transform.inputlimiter import InputLimiter
-    from annif.transform.langfilter import LangFilter
 
 
 class BaseTransform(metaclass=abc.ABCMeta):
@@ -46,9 +44,7 @@ class TransformChain:
 
     def __init__(
         self,
-        transform_classes: List[
-            Union[Type[InputLimiter], Type[IdentityTransform], Type[LangFilter]]
-        ],
+        transform_classes: List[Type[BaseTransform]],
         args: List[
             Union[
                 Tuple[List[Any], Dict[str, str]],
@@ -63,9 +59,7 @@ class TransformChain:
 
     def _init_transforms(
         self,
-        transform_classes: List[
-            Union[Type[InputLimiter], Type[IdentityTransform], Type[LangFilter]]
-        ],
+        transform_classes: List[Type[BaseTransform]],
         args: List[
             Union[
                 Tuple[List[Any], Dict[str, str]],
@@ -73,7 +67,7 @@ class TransformChain:
                 Tuple[List[Any], Dict[Any, Any]],
             ]
         ],
-    ) -> List[Union[InputLimiter, IdentityTransform, LangFilter]]:
+    ) -> List[Type[BaseTransform]]:
         transforms = []
         for trans, (posargs, kwargs) in zip(transform_classes, args):
             try:

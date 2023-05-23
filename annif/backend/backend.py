@@ -13,13 +13,7 @@ from annif.suggestion import SuggestionBatch
 if TYPE_CHECKING:
     from unittest.mock import Mock
 
-    from annif.corpus.document import (
-        DocumentDirectory,
-        DocumentFile,
-        DocumentList,
-        LimitingDocumentCorpus,
-        TransformingDocumentCorpus,
-    )
+    from annif.corpus.document import DocumentCorpus
     from annif.project import AnnifProject
 
 
@@ -80,7 +74,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     def _train(
         self,
-        corpus: TransformingDocumentCorpus,
+        corpus: DocumentCorpus,
         params: Dict[str, Union[int, str]],
         jobs: int = 0,
     ) -> None:
@@ -90,13 +84,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     def train(
         self,
-        corpus: Union[
-            str,
-            TransformingDocumentCorpus,
-            DocumentList,
-            DocumentFile,
-            DocumentDirectory,
-        ],
+        corpus: DocumentCorpus,
         params: Optional[Union[Dict[str, Union[float, int]], Dict[str, int]]] = None,
         jobs: int = 0,
     ) -> None:
@@ -164,12 +152,7 @@ class AnnifLearningBackend(AnnifBackend):
 
     def learn(
         self,
-        corpus: Union[
-            DocumentDirectory,
-            TransformingDocumentCorpus,
-            LimitingDocumentCorpus,
-            DocumentFile,
-        ],
+        corpus: DocumentCorpus,
         params: Optional[Dict[str, int]] = None,
     ) -> None:
         """Further train the model on the given document or subject corpus."""

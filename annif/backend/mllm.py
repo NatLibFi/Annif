@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from optuna.trial._trial import Trial
 
     from annif.backend.hyperopt import HPRecommendation
-    from annif.corpus.document import DocumentDirectory, DocumentFile
+    from annif.corpus.document import DocumentCorpus
     from annif.lexical.mllm import Candidate
 
 
@@ -90,7 +90,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
         "use_hidden_labels": False,
     }
 
-    def get_hp_optimizer(self, corpus: DocumentDirectory, metric: str) -> MLLMOptimizer:
+    def get_hp_optimizer(self, corpus: DocumentCorpus, metric: str) -> MLLMOptimizer:
         return MLLMOptimizer(self, corpus, metric)
 
     def default_params(self) -> Dict[str, Union[int, float, bool]]:
@@ -123,7 +123,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
 
     def _train(
         self,
-        corpus: Union[DocumentFile, str, DocumentDirectory],
+        corpus: DocumentCorpus,
         params: Dict[str, Union[int, float, bool, str]],
         jobs: int = 0,
     ) -> None:

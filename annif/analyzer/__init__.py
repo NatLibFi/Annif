@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 import annif
 from annif.util import parse_args
@@ -10,11 +10,7 @@ from annif.util import parse_args
 from . import simple, simplemma, snowball
 
 if TYPE_CHECKING:
-    from annif.analyzer.simple import SimpleAnalyzer
-    from annif.analyzer.simplemma import SimplemmaAnalyzer
-    from annif.analyzer.snowball import SnowballAnalyzer
-    from annif.analyzer.spacy import SpacyAnalyzer
-    from annif.analyzer.voikko import VoikkoAnalyzer
+    from annif.analyzer.analyzer import Analyzer
 
 _analyzers = {}
 
@@ -23,11 +19,7 @@ def register_analyzer(analyzer):
     _analyzers[analyzer.name] = analyzer
 
 
-def get_analyzer(
-    analyzerspec: str,
-) -> Union[
-    SimplemmaAnalyzer, SimpleAnalyzer, SnowballAnalyzer, SpacyAnalyzer, VoikkoAnalyzer
-]:
+def get_analyzer(analyzerspec: str) -> Analyzer:
     match = re.match(r"(\w+)(\((.*)\))?", analyzerspec)
     if match is None:
         raise ValueError("Invalid analyzer specification {}".format(analyzerspec))

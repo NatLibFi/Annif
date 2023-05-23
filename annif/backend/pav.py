@@ -20,7 +20,7 @@ from annif.suggestion import SubjectSuggestion, SuggestionBatch
 from . import backend, ensemble
 
 if TYPE_CHECKING:
-    from annif.corpus.document import DocumentFile
+    from annif.corpus.document import DocumentCorpus
     from annif.project import AnnifProject
 
 
@@ -94,7 +94,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
 
     @staticmethod
     def _suggest_train_corpus(
-        source_project: AnnifProject, corpus: DocumentFile
+        source_project: AnnifProject, corpus: DocumentCorpus
     ) -> Tuple[csc_matrix, csc_matrix]:
         # lists for constructing score matrix
         data, row, col = [], [], []
@@ -128,7 +128,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         return csc_matrix(scores), csc_matrix(true)
 
     def _create_pav_model(
-        self, source_project_id: str, min_docs: int, corpus: DocumentFile
+        self, source_project_id: str, min_docs: int, corpus: DocumentCorpus
     ) -> None:
         self.info(
             "creating PAV model for source {}, min_docs={}".format(
@@ -155,7 +155,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
 
     def _train(
         self,
-        corpus: Union[str, DocumentFile],
+        corpus: DocumentCorpus,
         params: Dict[str, Union[int, str]],
         jobs: int = 0,
     ) -> None:

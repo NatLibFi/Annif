@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from optuna.trial._trial import Trial
 
     from annif.backend.hyperopt import HPRecommendation
-    from annif.corpus.document import DocumentDirectory, DocumentFile
+    from annif.corpus.document import DocumentCorpus
 
 
 class BaseEnsembleBackend(backend.AnnifBackend):
@@ -74,7 +74,7 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
     """Hyperparameter optimizer for the ensemble backend"""
 
     def __init__(
-        self, backend: EnsembleBackend, corpus: DocumentDirectory, metric: str
+        self, backend: EnsembleBackend, corpus: DocumentCorpus, metric: str
     ) -> None:
         super().__init__(backend, corpus, metric)
         self._sources = [
@@ -155,11 +155,11 @@ class EnsembleBackend(BaseEnsembleBackend, hyperopt.AnnifHyperoptBackend):
         return max(filter(None, mtimes), default=None)
 
     def get_hp_optimizer(
-        self, corpus: DocumentDirectory, metric: str
+        self, corpus: DocumentCorpus, metric: str
     ) -> EnsembleOptimizer:
         return EnsembleOptimizer(self, corpus, metric)
 
     def _train(
-        self, corpus: DocumentFile, params: Dict[str, Union[int, str]], jobs: int = 0
+        self, corpus: DocumentCorpus, params: Dict[str, Union[int, str]], jobs: int = 0
     ):
         raise NotSupportedException("Training ensemble backend is not possible.")

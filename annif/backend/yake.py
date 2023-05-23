@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from numpy import float64
     from rdflib.term import URIRef
 
-    from annif.corpus.document import DocumentFile
+    from annif.corpus.document import DocumentCorpus
 
 
 class YakeBackend(backend.AnnifBackend):
@@ -196,5 +196,5 @@ class YakeBackend(backend.AnnifBackend):
         confl = score1 * score2 / (score1 * score2 + (1 - score1) * (1 - score2))
         return (confl - 0.5) * 2
 
-    def _train(self, corpus: DocumentFile, params: Dict[str, Any], jobs: int = 0):
+    def _train(self, corpus: DocumentCorpus, params: Dict[str, Any], jobs: int = 0):
         raise NotSupportedException("Training yake backend is not possible.")

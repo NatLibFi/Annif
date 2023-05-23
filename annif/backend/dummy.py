@@ -8,7 +8,7 @@ from annif.suggestion import SubjectSuggestion
 from . import backend
 
 if TYPE_CHECKING:
-    from annif.corpus.document import DocumentDirectory, TransformingDocumentCorpus
+    from annif.corpus.document import DocumentCorpus
 
 
 class DummyBackend(backend.AnnifLearningBackend):
@@ -46,7 +46,7 @@ class DummyBackend(backend.AnnifLearningBackend):
 
     def _learn(
         self,
-        corpus: Union[TransformingDocumentCorpus, DocumentDirectory],
+        corpus: DocumentCorpus,
         params: Dict[str, Union[int, str]],
     ) -> None:
         # in this dummy backend we "learn" by picking up the subject ID

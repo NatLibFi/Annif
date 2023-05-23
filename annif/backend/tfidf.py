@@ -18,7 +18,7 @@ from . import backend, mixins
 if TYPE_CHECKING:
     from scipy.sparse._csr import csr_matrix
 
-    from annif.corpus.document import DocumentFile, TransformingDocumentCorpus
+    from annif.corpus.document import DocumentCorpus
 
 
 class SubjectBuffer:
@@ -70,7 +70,7 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     INDEX_FILE = "tfidf-index"
 
     def _generate_subjects_from_documents(
-        self, corpus: Union[TransformingDocumentCorpus, DocumentFile]
+        self, corpus: DocumentCorpus
     ) -> Iterator[str]:
         with tempfile.TemporaryDirectory() as tempdir:
             subject_buffer = {}
@@ -111,7 +111,7 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
 
     def _train(
         self,
-        corpus: Union[TransformingDocumentCorpus, DocumentFile, str],
+        corpus: DocumentCorpus,
         params: Dict[str, Union[str, int]],
         jobs: int = 0,
     ) -> None:
