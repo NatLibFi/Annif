@@ -14,8 +14,6 @@ from annif.util import parse_args
 from annif.vocab import AnnifVocabulary
 
 if TYPE_CHECKING:
-    from collections import OrderedDict
-
     from werkzeug.local import LocalProxy
 
 logger = annif.logger
@@ -51,7 +49,7 @@ class AnnifRegistry:
             self._projects[self._rid] = self._create_projects()
             self._vocabs[self._rid] = {}
 
-    def _create_projects(self) -> collections.OrderedDict:
+    def _create_projects(self) -> Dict:
         # parse the configuration
         config = parse_config(self._projects_config_path)
 
@@ -60,7 +58,7 @@ class AnnifRegistry:
             return {}
 
         # create AnnifProject objects from the configuration file
-        projects = collections.OrderedDict()
+        projects = dict()
         for project_id in config.project_ids:
             projects[project_id] = AnnifProject(
                 project_id, config[project_id], self._datadir, self
