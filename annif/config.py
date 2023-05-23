@@ -1,18 +1,16 @@
 """Configuration file handling"""
 from __future__ import annotations
 
+import configparser
 import os.path
 from glob import glob
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import tomli
 
 import annif
 import annif.util
 from annif.exception import ConfigurationException
-
-if TYPE_CHECKING:
-    from configparser import SectionProxy
 
 logger = annif.logger
 

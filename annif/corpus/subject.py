@@ -12,8 +12,6 @@ from .skos import serialize_subjects_to_skos
 from .types import Subject, SubjectCorpus
 
 if TYPE_CHECKING:
-    from numpy import int32, ndarray
-
     from annif.corpus.skos import SubjectFileSKOS
     from annif.corpus.types import Subject
 
@@ -138,7 +136,7 @@ class SubjectIndex:
     def languages(self) -> List[str]:
         return self._languages
 
-    def __getitem__(self, subject_id: Union[int, int32]) -> Subject:
+    def __getitem__(self, subject_id: Union[int, np.int32]) -> Subject:
         return self._subjects[subject_id]
 
     def append(self, subject: Subject) -> None:
@@ -280,13 +278,15 @@ class SubjectSet:
         return uri, label
 
     def as_vector(
-        self, size: Optional[int] = None, destination: Optional[ndarray] = None
-    ) -> ndarray:
+        self, size: Optional[int] = None, destination: Optional[np.ndarray] = None
+    ) -> np.ndarray:
         """Return the hits as a one-dimensional NumPy array in sklearn
         multilabel indicator format. Use destination array if given (not
         None), otherwise create and return a new one of the given size."""
 
         if destination is None:
+            import numpy as np
+
             assert size is not None and size > 0
             destination = np.zeros(size, dtype=bool)
 

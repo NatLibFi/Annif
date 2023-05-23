@@ -8,6 +8,7 @@ from statistics import mean
 from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Tuple, Union
 
 import joblib
+import numpy as np
 from rdflib.namespace import SKOS
 from sklearn.ensemble import BaggingClassifier
 from sklearn.feature_extraction.text import CountVectorizer
@@ -24,7 +25,6 @@ from annif.lexical.util import (
 )
 
 if TYPE_CHECKING:
-    from numpy import float64, ndarray
     from rdflib.graph import Graph
     from rdflib.term import URIRef
     from sklearn.ensemble._bagging import BaggingClassifier
@@ -104,7 +104,9 @@ def generate_candidates(
     return conflate_matches(matches, len(sentences))
 
 
-def candidates_to_features(candidates: List[Candidate], mdata: "ModelData") -> ndarray:
+def candidates_to_features(
+    candidates: List[Candidate], mdata: "ModelData"
+) -> np.ndarray:
     """Convert a list of Candidates to a NumPy feature matrix"""
 
     matrix = np.zeros((len(candidates), len(Feature)), dtype=np.float32)
@@ -168,7 +170,7 @@ class MLLMModel:
             idf=self._idf,
         )
 
-    def _candidates_to_features(self, candidates: List[Candidate]) -> ndarray:
+    def _candidates_to_features(self, candidates: List[Candidate]) -> np.ndarray:
         return candidates_to_features(candidates, self._model_data)
 
     @staticmethod
@@ -286,7 +288,7 @@ class MLLMModel:
 
     def _prepare_features(
         self, train_x: List[List[Union[Candidate, Any]]], n_jobs: int
-    ) -> List[ndarray]:
+    ) -> List[np.ndarray]:
         fc_args = {"mdata": self._model_data}
         jobs, pool_class = annif.parallel.get_pool(n_jobs)
 
@@ -306,7 +308,7 @@ class MLLMModel:
         analyzer: SnowballAnalyzer,
         params: Dict[str, Union[int, float, bool, str]],
         n_jobs: int,
-    ) -> Tuple[ndarray, ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray]:
         # create an index from the vocabulary terms
         subject_ids = self._prepare_train_index(vocab, analyzer, params)
 
@@ -334,8 +336,8 @@ class MLLMModel:
 
     def train(
         self,
-        train_x: Union[ndarray, List[Tuple[int, int]]],
-        train_y: Union[List[bool], ndarray],
+        train_x: Union[np.ndarray, List[Tuple[int, int]]],
+        train_y: Union[List[bool], np.ndarray],
         params: Dict[str, Union[int, float, bool, str]],
     ) -> None:
         # fit the model on the training corpus
@@ -351,14 +353,14 @@ class MLLMModel:
             )
 
     def _prediction_to_list(
-        self, scores: ndarray, candidates: List[Candidate]
-    ) -> List[Tuple[float64, int]]:
+        self, scores: np.ndarray, candidates: List[Candidate]
+    ) -> List[Tuple[np.float64, int]]:
         subj_scores = [(score[1], c.subject_id) for score, c in zip(scores, candidates)]
         return sorted(subj_scores, reverse=True)
 
     def predict(
         self, candidates: List[Union[Candidate, Any]]
-    ) -> List[Union[Any, Tuple[float64, int]]]:
+    ) -> List[Union[Any, Tuple[np.float64, int]]]:
         if not candidates:
             return []
         features = self._candidates_to_features(candidates)

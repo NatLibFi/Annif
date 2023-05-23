@@ -5,6 +5,7 @@ import os.path
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Tuple, Union
 
 import joblib
+import numpy as np
 
 import annif.eval
 import annif.util
@@ -15,7 +16,6 @@ from annif.suggestion import vector_to_suggestions
 from . import backend, hyperopt
 
 if TYPE_CHECKING:
-    from numpy import float64, ndarray
     from optuna.study.study import Study
     from optuna.trial._trial import Trial
 
@@ -39,7 +39,7 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
             self._candidates.append(candidates)
             self._gold_subjects.append(doc.subject_set)
 
-    def _objective(self, trial: Trial) -> float:
+    def _objective(self, trial: Trial) -> np.float:
         params = {
             "min_samples_leaf": trial.suggest_int("min_samples_leaf", 5, 30),
             "max_leaf_nodes": trial.suggest_int("max_leaf_nodes", 100, 2000),
@@ -108,7 +108,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
                 "model {} not found".format(path), backend_id=self.backend_id
             )
 
-    def _load_train_data(self) -> Tuple[ndarray, ndarray]:
+    def _load_train_data(self) -> Tuple[np.ndarray, np.ndarray]:
         path = os.path.join(self.datadir, self.TRAIN_FILE)
         if os.path.exists(path):
             return joblib.load(path)
@@ -157,7 +157,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
 
     def _prediction_to_result(
         self,
-        prediction: List[Union[Tuple[float64, int], Any]],
+        prediction: List[Union[Tuple[np.float64, int], Any]],
         params: Dict[str, Union[int, float, bool, str]],
     ) -> Iterator[Any]:
         vector = np.zeros(len(self.project.subjects), dtype=np.float32)

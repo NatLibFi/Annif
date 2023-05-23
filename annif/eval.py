@@ -4,6 +4,7 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple, Union
 
+import numpy as np
 import scipy.sparse
 from sklearn.metrics import f1_score, precision_score, recall_score
 
@@ -14,7 +15,6 @@ if TYPE_CHECKING:
     from io import TextIOWrapper
 
     from click.utils import LazyFile
-    from numpy import float64
     from scipy.sparse._arrays import csr_array
 
     from annif.corpus.subject import SubjectIndex, SubjectSet
@@ -41,7 +41,7 @@ def false_negatives(y_true: csr_array, y_pred: csr_array) -> int:
 
 def dcg_score(
     y_true: csr_array, y_pred: csr_array, limit: Optional[int] = None
-) -> float64:
+) -> np.float64:
     """return the discounted cumulative gain (DCG) score for the selected
     labels vs. relevant labels"""
 
@@ -151,7 +151,7 @@ class EvaluationBatch:
         y_true: csr_array,
         y_pred: csr_array,
         metrics: Union[Tuple[str, str], Tuple[()], List[str]] = [],
-    ) -> Dict[str, Union[float64, float, int]]:
+    ) -> Dict[str, Union[np.float64, float, int]]:
         y_pred_binary = y_pred > 0.0
 
         # define the available metrics as lazy lambda functions
@@ -288,7 +288,7 @@ class EvaluationBatch:
         metrics: Union[Tuple[str, str], Tuple[()], List[str]] = [],
         results_file: Optional[Union[LazyFile, TextIOWrapper]] = None,
         language: Optional[str] = None,
-    ) -> Dict[str, Union[float64, float, int]]:
+    ) -> Dict[str, Union[np.float64, float, int]]:
         """evaluate a set of selected subjects against a gold standard using
         different metrics. If metrics is empty, use all available metrics.
         If results_file (file object) given, write results per subject to it

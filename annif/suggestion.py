@@ -2,14 +2,13 @@
 from __future__ import annotations
 
 import collections
+import itertools
 from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Union
 
+import numpy as np
 from scipy.sparse import csr_array
 
 if TYPE_CHECKING:
-    from itertools import chain
-
-    from numpy import ndarray
     from scipy.sparse._arrays import csr_array
 
     from annif.corpus.subject import SubjectIndex
@@ -17,7 +16,7 @@ if TYPE_CHECKING:
 SubjectSuggestion = collections.namedtuple("SubjectSuggestion", "subject_id score")
 
 
-def vector_to_suggestions(vector: ndarray, limit: int) -> Iterator[Any]:
+def vector_to_suggestions(vector: np.ndarray, limit: int) -> Iterator[Any]:
     limit = min(len(vector), limit)
     topk_idx = np.argpartition(vector, -limit)[-limit:]
     return (
@@ -69,7 +68,7 @@ class SuggestionResult:
             sorted(suggestions, key=lambda suggestion: suggestion.score, reverse=True)
         )
 
-    def as_vector(self) -> ndarray:
+    def as_vector(self) -> np.ndarray:
         return self._array[[self._idx], :].toarray()[0]
 
     def __len__(self) -> int:

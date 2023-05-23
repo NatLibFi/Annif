@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Dict, List, Tuple, Union
 
 import joblib
 import lmdb
+import numpy as np
 import tensorflow.keras.backend as K
 from scipy.sparse import csc_matrix, csr_matrix
 from tensorflow.keras.layers import Add, Dense, Dropout, Flatten, Input, Layer
@@ -24,7 +25,6 @@ from annif.suggestion import SuggestionBatch, vector_to_suggestions
 from . import backend, ensemble
 
 if TYPE_CHECKING:
-    from numpy import ndarray
     from tensorflow.python.framework.ops import EagerTensor
 
     from annif.corpus.document import DocumentFile, LimitingDocumentCorpus
@@ -53,7 +53,7 @@ class LMDBSequence(Sequence):
             self._counter = 0
         self._batch_size = batch_size
 
-    def add_sample(self, inputs: ndarray, targets: ndarray) -> None:
+    def add_sample(self, inputs: np.ndarray, targets: np.ndarray) -> None:
         # use zero-padded 8-digit key
         key = idx_to_key(self._counter)
         self._counter += 1
@@ -64,7 +64,7 @@ class LMDBSequence(Sequence):
         buf.seek(0)
         self._txn.put(key, buf.read())
 
-    def __getitem__(self, idx: int) -> Tuple[ndarray, ndarray]:
+    def __getitem__(self, idx: int) -> Tuple[np.ndarray, np.ndarray]:
         """get a particular batch of samples"""
         cursor = self._txn.cursor()
         first_key = idx * self._batch_size

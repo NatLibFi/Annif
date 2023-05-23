@@ -5,6 +5,7 @@ import os.path
 from typing import TYPE_CHECKING, Dict, List, Tuple, Union
 
 import joblib
+import numpy as np
 import scipy.special
 from sklearn.svm import LinearSVC
 
@@ -15,7 +16,6 @@ from annif.suggestion import SubjectSuggestion, SuggestionBatch
 from . import backend, mixins
 
 if TYPE_CHECKING:
-    from numpy import ndarray
     from scipy.sparse._csr import csr_matrix
 
     from annif.corpus.document import DocumentFile
@@ -97,7 +97,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self._train_classifier(veccorpus, classes)
 
     def _scores_to_suggestions(
-        self, scores: ndarray, params: Dict[str, int]
+        self, scores: np.ndarray, params: Dict[str, int]
     ) -> List[SubjectSuggestion]:
         results = []
         limit = int(params["limit"])
