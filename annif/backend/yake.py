@@ -1,4 +1,6 @@
 """Annif backend using Yake keyword extraction"""
+# For license remarks of this backend see README.md:
+# https://github.com/NatLibFi/Annif#license.
 from __future__ import annotations
 
 import os.path
@@ -15,10 +17,6 @@ from annif.exception import ConfigurationException, NotSupportedException
 from annif.suggestion import SubjectSuggestion
 
 from . import backend
-
-# For license remarks of this backend see README.md:
-# https://github.com/NatLibFi/Annif#license.
-
 
 if TYPE_CHECKING:
     from numpy import float64
