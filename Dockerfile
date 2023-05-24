@@ -6,7 +6,7 @@ ARG optional_dependencies="voikko fasttext nn omikuji yake spacy stwfsa"
 ARG POETRY_VIRTUALENVS_CREATE=false
 
 # Install system dependencies needed at runtime:
-RUN apt-get update && \
+RUN apt-get update && apt-get upgrade && \
 	if [[ $optional_dependencies =~ "voikko" ]]; then \
 		apt-get install -y --no-install-recommends \
 			libvoikko1 \
