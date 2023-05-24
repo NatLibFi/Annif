@@ -226,7 +226,7 @@ class AnnifProject(DatadirMixin):
     def suggest_corpus(
         self,
         corpus: DocumentCorpus,
-        backend_params: None = None,
+        backend_params: Optional[DefaultDict[str, Dict[str, str]]] = None,
     ) -> annif.suggestion.SuggestionResults:
         """Suggest subjects for the given documents corpus in batches of documents."""
         suggestions = (
@@ -253,7 +253,7 @@ class AnnifProject(DatadirMixin):
     def train(
         self,
         corpus: DocumentCorpus,
-        backend_params: None = None,
+        backend_params: Optional[DefaultDict[str, Dict[str, str]]] = None,
         jobs: int = 0,
     ) -> None:
         """train the project using documents from a metadata source"""
@@ -267,7 +267,7 @@ class AnnifProject(DatadirMixin):
     def learn(
         self,
         corpus: DocumentCorpus,
-        backend_params: None = None,
+        backend_params: Optional[DefaultDict[str, Dict[str, str]]] = None,
     ) -> None:
         """further train the project using documents from a metadata source"""
         if backend_params is None:

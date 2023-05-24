@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import csv
 import os.path
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import annif
 import annif.util
@@ -238,7 +238,7 @@ class SubjectSet:
     def __bool__(self) -> bool:
         return bool(self._subject_ids)
 
-    def __eq__(self, other: Union[SubjectSet, List[int], Set[int]]) -> bool:
+    def __eq__(self, other: SubjectSet) -> bool:
         if isinstance(other, SubjectSet):
             return self._subject_ids == other._subject_ids
 

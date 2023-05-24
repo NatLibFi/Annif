@@ -8,8 +8,6 @@ from annif.corpus import TransformingDocumentCorpus
 from annif.exception import ConfigurationException
 
 if TYPE_CHECKING:
-    from unittest.mock import Mock
-
     from annif.corpus.types import DocumentCorpus
     from annif.project import AnnifProject
 
@@ -20,7 +18,7 @@ class BaseTransform(metaclass=abc.ABCMeta):
 
     name = None
 
-    def __init__(self, project: Optional[Union[AnnifProject, Mock]]) -> None:
+    def __init__(self, project: Optional[AnnifProject]) -> None:
         self.project = project
 
     @abc.abstractmethod
@@ -52,7 +50,7 @@ class TransformChain:
                 Tuple[List[Any], Dict[Any, Any]],
             ]
         ],
-        project: Optional[Union[AnnifProject, Mock]],
+        project: Optional[AnnifProject],
     ) -> None:
         self.project = project
         self.transforms = self._init_transforms(transform_classes, args)

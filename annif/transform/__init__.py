@@ -11,8 +11,6 @@ from annif.util import parse_args
 from . import inputlimiter, transform
 
 if TYPE_CHECKING:
-    from unittest.mock import Mock
-
     from annif.project import AnnifProject
     from annif.transform.transform import TransformChain
 
@@ -45,7 +43,7 @@ def parse_specs(
 
 
 def get_transform(
-    transform_specs: str, project: Optional[Union[AnnifProject, Mock]]
+    transform_specs: str, project: Optional[AnnifProject]
 ) -> TransformChain:
     transform_defs = parse_specs(transform_specs)
     transform_classes = []

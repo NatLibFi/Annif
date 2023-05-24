@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from flask.app import Flask
 
 
-def create_flask_app(config_name: None = None) -> Flask:
+def create_flask_app(config_name: Optional[str] = None) -> Flask:
     """Create a Flask app to be used by the CLI."""
     from flask import Flask
 

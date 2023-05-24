@@ -11,7 +11,7 @@ import annif
 from . import transform
 
 if TYPE_CHECKING:
-    from unittest.mock import Mock
+    from annif.project import AnnifProject
 
 logger = annif.logger
 
@@ -21,7 +21,7 @@ class LangFilter(transform.BaseTransform):
 
     def __init__(
         self,
-        project: Mock,
+        project: AnnifProject,
         text_min_length: Union[int, str] = 500,
         sentence_min_length: Union[int, str] = 50,
         min_ratio: float = 0.5,

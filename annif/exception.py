@@ -7,7 +7,6 @@ from click import ClickException
 
 if TYPE_CHECKING:
     from configparser import DuplicateSectionError
-    from unittest.mock import Mock
 
 
 class AnnifException(ClickException):
@@ -18,7 +17,7 @@ class AnnifException(ClickException):
     def __init__(
         self,
         message: Union[DuplicateSectionError, str],
-        project_id: Optional[Union[Mock, str]] = None,
+        project_id: Optional[str] = None,
         backend_id: Optional[str] = None,
     ) -> None:
         super().__init__(message)

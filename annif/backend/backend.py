@@ -11,8 +11,6 @@ from annif import logger
 from annif.suggestion import SuggestionBatch
 
 if TYPE_CHECKING:
-    from unittest.mock import Mock
-
     from annif.corpus.document import DocumentCorpus
     from annif.project import AnnifProject
 
@@ -26,7 +24,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     DEFAULT_PARAMETERS = {"limit": 100}
 
     def __init__(
-        self, backend_id: str, config_params: Any, project: Union[Mock, AnnifProject]
+        self, backend_id: str, config_params: Any, project: AnnifProject
     ) -> None:
         """Initialize backend with specific parameters. The
         parameters are a dict. Keys and values depend on the specific
@@ -106,7 +104,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         pass  # pragma: no cover
 
     def _suggest_batch(
-        self, texts: Union[str, List[str]], params: Dict[str, Any]
+        self, texts: List[str], params: Dict[str, Any]
     ) -> SuggestionBatch:
         """This method can be implemented by backends to use batching of documents in
         their operations. This default implementation uses the regular suggest
@@ -119,7 +117,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     def suggest(
         self,
-        texts: Union[str, List[str]],
+        texts: List[str],
         params: Optional[Union[Dict[str, str], Dict[str, int]]] = None,
     ) -> SuggestionBatch:
         """Suggest subjects for the input documents and return a list of subject sets

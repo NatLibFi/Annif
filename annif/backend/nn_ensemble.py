@@ -164,7 +164,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             self.project.subjects,
         )
 
-    def _create_model(self, sources: List[Union[Tuple[str, float], str]]) -> None:
+    def _create_model(self, sources: List[Tuple[str, float]]) -> None:
         self.info("creating NN ensemble model")
 
         inputs = Input(shape=(len(self.project.subjects), len(sources)))
