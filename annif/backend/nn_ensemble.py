@@ -112,7 +112,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     # defaults for uninitialized instances
     _model = None
 
-    def default_params(self) -> Dict[str, Union[int, float, str]]:
+    def default_params(self) -> Dict[str, Union[float, str]]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
         return params
@@ -140,7 +140,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         self,
         batch_by_source: Dict[str, SuggestionBatch],
         sources: List[Tuple[str, float]],
-        params: Dict[str, Union[int, float, str]],
+        params: Dict[str, Union[float, str]],
     ) -> SuggestionBatch:
         src_weight = dict(sources)
         score_vectors = np.array(
@@ -199,7 +199,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     def _train(
         self,
         corpus: DocumentCorpus,
-        params: Dict[str, Union[int, float, str]],
+        params: Dict[str, Union[float, str]],
         jobs: int = 0,
     ) -> None:
         sources = annif.util.parse_sources(self.params["sources"])
@@ -286,7 +286,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     def _learn(
         self,
         corpus: DocumentCorpus,
-        params: Dict[str, Union[int, float, str]],
+        params: Dict[str, Union[float, str]],
     ) -> None:
         self.initialize()
         self._fit_model(

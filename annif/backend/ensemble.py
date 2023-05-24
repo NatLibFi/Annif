@@ -63,7 +63,7 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         )
 
     def _suggest_batch(
-        self, texts: List[str], params: Dict[str, Union[int, float, str]]
+        self, texts: List[str], params: Dict[str, Union[float, str]]
     ) -> SuggestionBatch:
         sources = annif.util.parse_sources(params["sources"])
         batch_by_source = self._suggest_with_sources(texts, sources)

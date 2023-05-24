@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import collections
 import itertools
-from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterator, List, Optional
 
 import numpy as np
 from scipy.sparse import csr_array
@@ -25,7 +25,7 @@ def vector_to_suggestions(vector: np.ndarray, limit: int) -> Iterator[Any]:
 def filter_suggestion(
     preds: csr_array,
     limit: Optional[int] = None,
-    threshold: Union[int, float] = 0.0,
+    threshold: float = 0.0,
 ) -> csr_array:
     """filter a 2D sparse suggestion array (csr_array), retaining only the
     top K suggestions with a score above or equal to the threshold for each
@@ -111,7 +111,7 @@ class SuggestionBatch:
 
     @classmethod
     def from_averaged(
-        cls, batches: List[SuggestionBatch], weights: List[Union[int, float]]
+        cls, batches: List[SuggestionBatch], weights: List[float]
     ) -> SuggestionBatch:
         """Create a new SuggestionBatch where the subject scores are the
         weighted average of scores in several SuggestionBatches"""

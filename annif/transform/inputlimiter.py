@@ -15,9 +15,7 @@ if TYPE_CHECKING:
 class InputLimiter(transform.BaseTransform):
     name = "limit"
 
-    def __init__(
-        self, project: Optional[AnnifProject], input_limit: str
-    ) -> None:
+    def __init__(self, project: Optional[AnnifProject], input_limit: str) -> None:
         super().__init__(project)
         self.input_limit = int(input_limit)
         self._validate_value(self.input_limit)

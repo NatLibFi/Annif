@@ -288,7 +288,7 @@ class EvaluationBatch:
         metrics: Union[Tuple[str, str], Tuple[()], List[str]] = [],
         results_file: Optional[Union[LazyFile, TextIOWrapper]] = None,
         language: Optional[str] = None,
-    ) -> Dict[str, Union[np.float64, float, int]]:
+    ) -> Dict[str, Union[np.float64, float]]:
         """evaluate a set of selected subjects against a gold standard using
         different metrics. If metrics is empty, use all available metrics.
         If results_file (file object) given, write results per subject to it

@@ -61,9 +61,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     def _get_backend_params(
         self,
-        params: Optional[
-            Union[Dict[str, str], Dict[str, int], Dict[str, Union[float, int]]]
-        ],
+        params: Optional[Union[Dict[str, str], Dict[str, int], Dict[str, float]]],
     ) -> Dict[str, Any]:
         backend_params = dict(self.params)
         if params is not None:
@@ -83,7 +81,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def train(
         self,
         corpus: DocumentCorpus,
-        params: Optional[Union[Dict[str, Union[float, int]], Dict[str, int]]] = None,
+        params: Optional[Union[Dict[str, float], Dict[str, int]]] = None,
         jobs: int = 0,
     ) -> None:
         """Train the model on the given document or subject corpus."""

@@ -127,7 +127,7 @@ def _is_error(
 
 
 def suggest(
-    project_id: str, body: Dict[str, Union[int, float, str]]
+    project_id: str, body: Dict[str, Union[float, str]]
 ) -> Union[
     Dict[str, List[Any]],
     Dict[str, List[Dict[str, Optional[Union[str, float]]]]],
@@ -174,7 +174,7 @@ def suggest_batch(
 def _suggest(
     project_id: str,
     documents: List[Union[Dict[str, str], Any]],
-    parameters: Dict[str, Union[int, float, str]],
+    parameters: Dict[str, Union[float, str]],
 ) -> Union[
     List[Dict[str, List[Any]]],
     List[Dict[str, List[Dict[str, Optional[Union[str, float]]]]]],

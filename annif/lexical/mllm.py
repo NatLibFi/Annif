@@ -174,7 +174,7 @@ class MLLMModel:
 
     @staticmethod
     def _get_label_props(
-        params: Dict[str, Union[int, float, bool, str]]
+        params: Dict[str, Union[float, bool, str]]
     ) -> Tuple[List[URIRef], List[URIRef]]:
         pref_label_props = [SKOS.prefLabel]
 
@@ -189,7 +189,7 @@ class MLLMModel:
         self,
         graph: Graph,
         vocab: AnnifVocabulary,
-        params: Dict[str, Union[int, float, bool, str]],
+        params: Dict[str, Union[float, bool, str]],
     ) -> Tuple[List[Term], List[int]]:
         pref_label_props, nonpref_label_props = self._get_label_props(params)
 
@@ -220,7 +220,7 @@ class MLLMModel:
         self,
         vocab: AnnifVocabulary,
         analyzer: Analyzer,
-        params: Dict[str, Union[int, float, bool, str]],
+        params: Dict[str, Union[float, bool, str]],
     ) -> List[int]:
         graph = vocab.as_graph()
         terms, subject_ids = self._prepare_terms(graph, vocab, params)
@@ -305,7 +305,7 @@ class MLLMModel:
         corpus: DocumentCorpus,
         vocab: AnnifVocabulary,
         analyzer: Analyzer,
-        params: Dict[str, Union[int, float, bool, str]],
+        params: Dict[str, Union[float, bool, str]],
         n_jobs: int,
     ) -> Tuple[np.ndarray, np.ndarray]:
         # create an index from the vocabulary terms
@@ -323,7 +323,7 @@ class MLLMModel:
         return (np.vstack(features), np.array(train_y))
 
     def _create_classifier(
-        self, params: Dict[str, Union[int, float, bool, str]]
+        self, params: Dict[str, Union[float, bool, str]]
     ) -> BaggingClassifier:
         return BaggingClassifier(
             DecisionTreeClassifier(
@@ -337,7 +337,7 @@ class MLLMModel:
         self,
         train_x: Union[np.ndarray, List[Tuple[int, int]]],
         train_y: Union[List[bool], np.ndarray],
-        params: Dict[str, Union[int, float, bool, str]],
+        params: Dict[str, Union[float, bool, str]],
     ) -> None:
         # fit the model on the training corpus
         self._classifier = self._create_classifier(params)
