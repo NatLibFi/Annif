@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Sequence, Union
 
 import numpy as np
 import scipy.sparse
@@ -90,46 +90,7 @@ class EvaluationBatch:
         suggestion_batch: Union[
             List[List[SubjectSuggestion]], SuggestionBatch, List[Iterator[Any]]
         ],
-        gold_subject_batch: Union[
-            Tuple[SubjectSet, SubjectSet, SubjectSet],
-            Tuple[SubjectSet, SubjectSet, SubjectSet, SubjectSet],
-            Tuple[SubjectSet, SubjectSet],
-            Tuple[
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-                SubjectSet,
-            ],
-            List[SubjectSet],
-        ],
+        gold_subject_batch: Sequence[SubjectSet],
     ) -> None:
         if not isinstance(suggestion_batch, SuggestionBatch):
             suggestion_batch = SuggestionBatch.from_sequence(
@@ -150,7 +111,7 @@ class EvaluationBatch:
         self,
         y_true: csr_array,
         y_pred: csr_array,
-        metrics: Union[Tuple[str, str], Tuple[()], List[str]] = [],
+        metrics: Sequence[str] = [],
     ) -> Dict[str, Union[np.float64, float, int]]:
         y_pred_binary = y_pred > 0.0
 
@@ -285,7 +246,7 @@ class EvaluationBatch:
 
     def results(
         self,
-        metrics: Union[Tuple[str, str], Tuple[()], List[str]] = [],
+        metrics: Sequence[str] = [],
         results_file: Optional[Union[LazyFile, TextIOWrapper]] = None,
         language: Optional[str] = None,
     ) -> Dict[str, Union[np.float64, float]]:

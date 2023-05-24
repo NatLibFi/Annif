@@ -11,8 +11,8 @@ from typing import (
     Dict,
     Iterator,
     List,
+    Sequence,
     Set,
-    Tuple,
     Union,
 )
 
@@ -118,7 +118,9 @@ class SubjectFileSKOS(SubjectCorpus):
             yield concept
 
     def get_concept_labels(
-        self, concept: URIRef, label_types: Union[Tuple[URIRef, URIRef], List[URIRef]]
+        self,
+        concept: URIRef,
+        label_types: Sequence[URIRef],
     ) -> Union[DefaultDict[str, List[str]], DefaultDict[None, List[str]]]:
         """return all the labels of the given concept with the given label
         properties as a dict-like object where the keys are language codes
