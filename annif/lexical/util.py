@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import collections
-from typing import TYPE_CHECKING, Any, List, Union
+from typing import TYPE_CHECKING, List
 
 from rdflib import URIRef
 from rdflib.namespace import SKOS
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 def get_subject_labels(
     graph: Graph, uri: str, properties: List[URIRef], language: str
-) -> List[Union[Any, str]]:
+) -> List[str]:
     return [
         str(label)
         for prop in properties

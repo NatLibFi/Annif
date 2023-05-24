@@ -56,7 +56,7 @@ Feature = IntEnum(
 
 
 def conflate_matches(
-    matches: List[Union[Any, Match]], doc_length: int
+    matches: List[Match], doc_length: int
 ) -> List[Union[Candidate, Any]]:
     subj_matches = collections.defaultdict(list)
     for match in matches:
@@ -359,7 +359,7 @@ class MLLMModel:
 
     def predict(
         self, candidates: List[Union[Candidate, Any]]
-    ) -> List[Union[Any, Tuple[np.float64, int]]]:
+    ) -> List[Tuple[np.float64, int]]:
         if not candidates:
             return []
         features = self._candidates_to_features(candidates)

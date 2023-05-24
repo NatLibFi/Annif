@@ -145,8 +145,8 @@ class YakeBackend(backend.AnnifBackend):
         return subject_suggestions
 
     def _keyphrases2suggestions(
-        self, keyphrases: List[Union[Any, Tuple[str, float64]]]
-    ) -> List[Union[Any, Tuple[str, float64]]]:
+        self, keyphrases: List[Tuple[str, float64]]
+    ) -> List[Tuple[str, float64]]:
         suggestions = []
         not_matched = []
         for kp, score in keyphrases:
@@ -178,8 +178,8 @@ class YakeBackend(backend.AnnifBackend):
         return 1.0 / (score + 1)
 
     def _combine_suggestions(
-        self, suggestions: List[Union[Any, Tuple[str, float], Tuple[str, float64]]]
-    ) -> List[Union[Any, Tuple[str, float], Tuple[str, float64]]]:
+        self, suggestions: List[Tuple[str, float], Tuple[str, float64]]
+    ) -> List[Tuple[str, float], Tuple[str, float64]]:
         combined_suggestions = {}
         for uri, score in suggestions:
             if uri not in combined_suggestions:

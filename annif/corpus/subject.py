@@ -169,7 +169,7 @@ class SubjectIndex:
             logger.warning('Unknown subject label "%s"@%s', label, language)
             return None
 
-    def deprecated_ids(self) -> List[Union[Any, int]]:
+    def deprecated_ids(self) -> List[int]:
         """return indices of deprecated subjects"""
 
         return [
