@@ -300,7 +300,7 @@ class AnnifProject(DatadirMixin):
             project_id=self.project_id,
         )
 
-    def dump(self) -> Dict[str, Optional[Union[str, Dict[str, str], bool, datetime]]]:
+    def dump(self) -> Dict[str, Optional[Union[str, Dict, bool, datetime]]]:
         """return this project as a dict"""
         return {
             "project_id": self.project_id,

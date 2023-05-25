@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 import annif
 from annif.exception import ConfigurationException
@@ -17,14 +17,7 @@ if TYPE_CHECKING:
 
 def parse_specs(
     transform_specs: str,
-) -> List[
-    Union[
-        Tuple[str, List, Dict[Any, Any]],
-        Tuple[str, List[str], Dict[str, str]],
-        Tuple[str, List[str], Dict[Any, Any]],
-        Tuple[str, List, Dict[str, str]],
-    ]
-]:
+) -> List[Tuple[str, List, Dict]]:
     """Parse a transformation specification into a list of tuples, e.g.
     'transf_1(x),transf_2(y=42),transf_3' is parsed to
     [(transf_1, [x], {}), (transf_2, [], {y: 42}), (transf_3, [], {})]."""

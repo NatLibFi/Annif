@@ -51,9 +51,7 @@ class TokenSetIndex:
         if tset.key is not None:
             self._index[tset.key].add(tset)
 
-    def _find_subj_tsets(
-        self, tset: TokenSet
-    ) -> Union[Dict[Optional[int], TokenSet], Dict[int, TokenSet]]:
+    def _find_subj_tsets(self, tset: TokenSet) -> Dict[Optional[int], TokenSet]:
         """return a dict (subject_id : TokenSet) of matches contained in the
         given TokenSet"""
 

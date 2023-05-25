@@ -3,7 +3,7 @@ methods defined in the OpenAPI specification."""
 from __future__ import annotations
 
 import importlib
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import connexion
 
@@ -60,7 +60,7 @@ def language_not_supported_error(lang: str) -> ConnexionResponse:
 
 
 def list_projects() -> (
-    Dict[str, List[Dict[str, Optional[Union[str, Dict[str, str], bool, datetime]]]]]
+    Dict[str, List[Dict[str, Optional[Union[str, Dict, bool, datetime]]]]]
 ):
     """return a dict with projects formatted according to OpenAPI spec"""
 
@@ -74,7 +74,7 @@ def list_projects() -> (
 
 def show_project(
     project_id: str,
-) -> Union[Dict[str, Optional[Union[str, Dict[str, str], bool]]], ConnexionResponse]:
+) -> Union[Dict, ConnexionResponse]:
     """return a single project formatted according to OpenAPI spec"""
 
     try:
@@ -98,13 +98,7 @@ def _suggestion_to_dict(
 
 def _hit_sets_to_list(
     hit_sets: SuggestionResults, subjects: SubjectIndex, lang: str
-) -> List[
-    Union[
-        Dict[str, List],
-        Dict[str, List[Dict[str, Union[str, float]]]],
-        Dict[str, List[Dict[str, Optional[Union[str, float]]]]],
-    ]
-]:
+) -> List[Dict[str, List]]:
     return [
         {"results": [_suggestion_to_dict(hit, subjects, lang) for hit in hits]}
         for hits in hit_sets
@@ -114,8 +108,6 @@ def _hit_sets_to_list(
 def _is_error(
     result: Union[
         List[Dict[str, List]],
-        List[Dict[str, List[Dict[str, Optional[Union[str, float]]]]]],
-        List[Dict[str, List[Dict[str, Union[str, float]]]]],
         ConnexionResponse,
     ]
 ) -> bool:
@@ -127,12 +119,7 @@ def _is_error(
 
 def suggest(
     project_id: str, body: Dict[str, Union[float, str]]
-) -> Union[
-    Dict[str, List],
-    Dict[str, List[Dict[str, Optional[Union[str, float]]]]],
-    ConnexionResponse,
-    Dict[str, List[Dict[str, Union[str, float]]]],
-]:
+) -> Union[Dict[str, List], ConnexionResponse]:
     """suggest subjects for the given text and return a dict with results
     formatted according to OpenAPI spec"""
 
@@ -149,14 +136,9 @@ def suggest(
 
 def suggest_batch(
     project_id: str,
-    body: Dict[str, Union[List, List[Dict[str, str]]]],
+    body: Dict[str, List],
     **query_parameters,
-) -> Union[
-    List[Dict[str, None]],
-    List[Dict[str, Optional[List[Dict[str, Optional[Union[str, float]]]]]]],
-    List[Dict[str, Union[List[Dict[str, Optional[Union[str, float]]]], str]]],
-    ConnexionResponse,
-]:
+) -> Union[List[Dict[str, Any]], ConnexionResponse]:
     """suggest subjects for the given documents and return a list of dicts with results
     formatted according to OpenAPI spec"""
 
@@ -174,12 +156,7 @@ def _suggest(
     project_id: str,
     documents: List[Dict[str, str]],
     parameters: Dict[str, Union[float, str]],
-) -> Union[
-    List[Dict[str, List]],
-    List[Dict[str, List[Dict[str, Optional[Union[str, float]]]]]],
-    List[Dict[str, List[Dict[str, Union[str, float]]]]],
-    ConnexionResponse,
-]:
+) -> Union[List[Dict[str, List]], ConnexionResponse]:
     corpus = _documents_to_corpus(documents, subject_index=None)
     try:
         project = annif.registry.get_project(project_id, min_access=Access.hidden)
@@ -206,7 +183,7 @@ def _suggest(
 
 
 def _documents_to_corpus(
-    documents: List[Union[Dict[str, str], Dict[str, Union[List[Dict[str, str]], str]]]],
+    documents: List[Dict[str, Any]],
     subject_index: Optional[SubjectIndex],
 ) -> annif.corpus.document.DocumentList:
     if subject_index is not None:
@@ -229,12 +206,7 @@ def _documents_to_corpus(
 
 def learn(
     project_id: str,
-    body: List[
-        Union[
-            Dict[str, Union[List[Dict[str, str]], str]],
-            Dict[str, Optional[List[bool]]],
-        ]
-    ],
+    body: List[Dict[str, Any]],
 ) -> Union[ConnexionResponse, Tuple[None, int]]:
     """learn from documents and return an empty 204 response if succesful"""
 

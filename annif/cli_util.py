@@ -128,7 +128,7 @@ def format_datetime(dt: Optional[datetime]) -> str:
 
 
 def open_documents(
-    paths: Union[Tuple[str], Tuple[str, str], Tuple[()]],
+    paths: Union[Tuple[str, ...], Tuple[()]],
     subject_index: SubjectIndex,
     vocab_lang: str,
     docs_limit: Optional[int],
@@ -161,7 +161,7 @@ def open_documents(
 
 
 def open_text_documents(
-    paths: Union[Tuple[str], Tuple[str, str]], docs_limit: Optional[int]
+    paths: Tuple[str, ...], docs_limit: Optional[int]
 ) -> DocumentList:
     """
     Helper function to read text documents from the given file paths. Returns a
@@ -205,7 +205,7 @@ def show_hits(
 
 
 def parse_backend_params(
-    backend_param: Union[Tuple[str], Tuple[()]], project: AnnifProject
+    backend_param: Union[Tuple[str, ...], Tuple[()]], project: AnnifProject
 ) -> DefaultDict[str, Dict[str, str]]:
     """Parse a list of backend parameters given with the --backend-param
     option into a nested dict structure"""

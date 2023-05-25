@@ -260,7 +260,7 @@ class SubjectSet:
     @staticmethod
     def _parse_line(
         line: str,
-    ) -> Union[Tuple[None, None], Tuple[str, str], Tuple[None, str]]:
+    ) -> Tuple[Optional[str], Optional[str]]:
         uri = label = None
         vals = line.split("\t")
         for val in vals:

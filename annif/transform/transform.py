@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import abc
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type
 
 from annif.corpus import TransformingDocumentCorpus
 from annif.exception import ConfigurationException
@@ -43,13 +43,7 @@ class TransformChain:
     def __init__(
         self,
         transform_classes: List[Type[BaseTransform]],
-        args: List[
-            Union[
-                Tuple[List, Dict[str, str]],
-                Tuple[List[str], Dict[Any, Any]],
-                Tuple[List, Dict[Any, Any]],
-            ]
-        ],
+        args: List[Tuple[List, Dict]],
         project: Optional[AnnifProject],
     ) -> None:
         self.project = project
@@ -58,13 +52,7 @@ class TransformChain:
     def _init_transforms(
         self,
         transform_classes: List[Type[BaseTransform]],
-        args: List[
-            Union[
-                Tuple[List, Dict[str, str]],
-                Tuple[List[str], Dict[Any, Any]],
-                Tuple[List, Dict[Any, Any]],
-            ]
-        ],
+        args: List[Tuple[List, Dict]],
     ) -> List[Type[BaseTransform]]:
         transforms = []
         for trans, (posargs, kwargs) in zip(transform_classes, args):
