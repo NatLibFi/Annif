@@ -29,7 +29,7 @@ class AnnifConfigCFG:
                 configparser.DuplicateOptionError,
                 configparser.DuplicateSectionError,
             ) as err:
-                raise ConfigurationException(err)
+                raise ConfigurationException(err.message)
 
     @property
     def project_ids(self) -> List[str]:

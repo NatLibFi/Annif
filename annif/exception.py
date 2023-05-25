@@ -1,12 +1,9 @@
 """Custom exceptions used by Annif"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import Optional
 
 from click import ClickException
-
-if TYPE_CHECKING:
-    from configparser import DuplicateSectionError
 
 
 class AnnifException(ClickException):
@@ -16,7 +13,7 @@ class AnnifException(ClickException):
 
     def __init__(
         self,
-        message: Union[DuplicateSectionError, str],
+        message: str,
         project_id: Optional[str] = None,
         backend_id: Optional[str] = None,
     ) -> None:
