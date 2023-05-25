@@ -5,7 +5,7 @@ individual backends into probabilities."""
 from __future__ import annotations
 
 import os.path
-from typing import TYPE_CHECKING, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
 import joblib
 import numpy as np
@@ -36,7 +36,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
 
     DEFAULT_PARAMETERS = {"min-docs": 10}
 
-    def default_params(self) -> Dict[str, int]:
+    def default_params(self) -> Dict[str, Any]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
         return params
@@ -67,7 +67,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         self,
         batch_by_source: Dict[str, SuggestionBatch],
         sources: List[Tuple[str, float]],
-        params: Dict[str, Union[int, str]],
+        params: Dict[str, Any],
     ) -> SuggestionBatch:
         reg_batch_by_source = {}
         for project_id, batch in batch_by_source.items():
@@ -156,7 +156,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
     def _train(
         self,
         corpus: DocumentCorpus,
-        params: Dict[str, Union[int, str]],
+        params: Dict[str, Any],
         jobs: int = 0,
     ) -> None:
         if corpus == "cached":

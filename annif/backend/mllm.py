@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os.path
-from typing import TYPE_CHECKING, Dict, Iterator, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Tuple
 
 import joblib
 import numpy as np
@@ -93,7 +93,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
     def get_hp_optimizer(self, corpus: DocumentCorpus, metric: str) -> MLLMOptimizer:
         return MLLMOptimizer(self, corpus, metric)
 
-    def default_params(self) -> Dict[str, Union[float, bool]]:
+    def default_params(self) -> Dict[str, Any]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
         return params
@@ -124,7 +124,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
     def _train(
         self,
         corpus: DocumentCorpus,
-        params: Dict[str, Union[float, bool, str]],
+        params: Dict[str, Any],
         jobs: int = 0,
     ) -> None:
         self.info("starting train")
@@ -158,16 +158,14 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
     def _prediction_to_result(
         self,
         prediction: List[Tuple[np.float64, int]],
-        params: Dict[str, Union[float, bool, str]],
+        params: Dict[str, Any],
     ) -> Iterator:
         vector = np.zeros(len(self.project.subjects), dtype=np.float32)
         for score, subject_id in prediction:
             vector[subject_id] = score
         return vector_to_suggestions(vector, int(params["limit"]))
 
-    def _suggest(
-        self, text: str, params: Dict[str, Union[float, bool, str]]
-    ) -> Iterator:
+    def _suggest(self, text: str, params: Dict[str, Any]) -> Iterator:
         candidates = self._generate_candidates(text)
         prediction = self._model.predict(candidates)
         return self._prediction_to_result(prediction, params)

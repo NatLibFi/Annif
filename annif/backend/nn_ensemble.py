@@ -5,7 +5,7 @@ from __future__ import annotations
 import os.path
 import shutil
 from io import BytesIO
-from typing import TYPE_CHECKING, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
 import joblib
 import lmdb
@@ -112,7 +112,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     # defaults for uninitialized instances
     _model = None
 
-    def default_params(self) -> Dict[str, Union[float, str]]:
+    def default_params(self) -> Dict[str, Any]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
         return params
@@ -140,7 +140,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         self,
         batch_by_source: Dict[str, SuggestionBatch],
         sources: List[Tuple[str, float]],
-        params: Dict[str, Union[float, str]],
+        params: Dict[str, Any],
     ) -> SuggestionBatch:
         src_weight = dict(sources)
         score_vectors = np.array(
@@ -199,7 +199,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     def _train(
         self,
         corpus: DocumentCorpus,
-        params: Dict[str, Union[float, str]],
+        params: Dict[str, Any],
         jobs: int = 0,
     ) -> None:
         sources = annif.util.parse_sources(self.params["sources"])
@@ -286,7 +286,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     def _learn(
         self,
         corpus: DocumentCorpus,
-        params: Dict[str, Union[float, str]],
+        params: Dict[str, Any],
     ) -> None:
         self.initialize()
         self._fit_model(

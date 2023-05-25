@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import collections
 import os.path
-from typing import TYPE_CHECKING, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
 import fasttext
 
@@ -56,7 +56,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     # defaults for uninitialized instances
     _model = None
 
-    def default_params(self) -> Dict[str, Union[float, str]]:
+    def default_params(self) -> Dict[str, Any]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(mixins.ChunkingBackend.DEFAULT_PARAMETERS)
         params.update(self.DEFAULT_PARAMETERS)
@@ -119,7 +119,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
             corpus, self.datadir, self.TRAIN_FILE, method=self._write_train_file
         )
 
-    def _create_model(self, params: Dict[str, Union[float, str]], jobs: int) -> None:
+    def _create_model(self, params: Dict[str, Any], jobs: int) -> None:
         self.info("creating fastText model")
         trainpath = os.path.join(self.datadir, self.TRAIN_FILE)
         modelpath = os.path.join(self.datadir, self.MODEL_FILE)
@@ -137,7 +137,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
     def _train(
         self,
         corpus: DocumentCorpus,
-        params: Dict[str, Union[float, str]],
+        params: Dict[str, Any],
         jobs: int = 0,
     ) -> None:
         if corpus != "cached":
@@ -163,7 +163,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         )
 
     def _suggest_chunks(
-        self, chunktexts: List[str], params: Dict[str, Union[float, str]]
+        self, chunktexts: List[str], params: Dict[str, Any]
     ) -> List[SubjectSuggestion]:
         limit = int(params["limit"])
         chunklabels, chunkscores = self._predict_chunks(chunktexts, limit)

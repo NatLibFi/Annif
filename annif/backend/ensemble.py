@@ -1,7 +1,7 @@
 """Ensemble backend that combines results from multiple projects"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import annif.eval
 import annif.parallel
@@ -49,7 +49,7 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         self,
         batch_by_source: Dict[str, SuggestionBatch],
         sources: List[Tuple[str, float]],
-        params: Dict[str, Union[int, str]],
+        params: Dict[str, Any],
     ) -> SuggestionBatch:
         """Merge the given SuggestionBatches from each source into a single
         SuggestionBatch. The default implementation computes a weighted
@@ -63,7 +63,7 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         )
 
     def _suggest_batch(
-        self, texts: List[str], params: Dict[str, Union[float, str]]
+        self, texts: List[str], params: Dict[str, Any]
     ) -> SuggestionBatch:
         sources = annif.util.parse_sources(params["sources"])
         batch_by_source = self._suggest_with_sources(texts, sources)
@@ -159,7 +159,5 @@ class EnsembleBackend(BaseEnsembleBackend, hyperopt.AnnifHyperoptBackend):
     ) -> EnsembleOptimizer:
         return EnsembleOptimizer(self, corpus, metric)
 
-    def _train(
-        self, corpus: DocumentCorpus, params: Dict[str, Union[int, str]], jobs: int = 0
-    ):
+    def _train(self, corpus: DocumentCorpus, params: Dict[str, Any], jobs: int = 0):
         raise NotSupportedException("Training ensemble backend is not possible.")

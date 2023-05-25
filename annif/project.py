@@ -134,7 +134,7 @@ class AnnifProject(DatadirMixin):
     def _suggest_with_backend(
         self,
         texts: List[str],
-        backend_params: Optional[DefaultDict[str, Dict[str, str]]],
+        backend_params: Optional[DefaultDict[str, Dict]],
     ) -> annif.suggestion.SuggestionBatch:
         if backend_params is None:
             backend_params = {}
@@ -226,7 +226,7 @@ class AnnifProject(DatadirMixin):
     def suggest_corpus(
         self,
         corpus: DocumentCorpus,
-        backend_params: Optional[DefaultDict[str, Dict[str, str]]] = None,
+        backend_params: Optional[DefaultDict[str, Dict]] = None,
     ) -> annif.suggestion.SuggestionResults:
         """Suggest subjects for the given documents corpus in batches of documents."""
         suggestions = (
@@ -239,7 +239,7 @@ class AnnifProject(DatadirMixin):
     def suggest(
         self,
         texts: List[str],
-        backend_params: Optional[DefaultDict[str, Dict[str, str]]] = None,
+        backend_params: Optional[DefaultDict[str, Dict]] = None,
     ) -> annif.suggestion.SuggestionBatch:
         """Suggest subjects for the given documents batch."""
         if not self.is_trained:
@@ -253,7 +253,7 @@ class AnnifProject(DatadirMixin):
     def train(
         self,
         corpus: DocumentCorpus,
-        backend_params: Optional[DefaultDict[str, Dict[str, str]]] = None,
+        backend_params: Optional[DefaultDict[str, Dict]] = None,
         jobs: int = 0,
     ) -> None:
         """train the project using documents from a metadata source"""
@@ -267,7 +267,7 @@ class AnnifProject(DatadirMixin):
     def learn(
         self,
         corpus: DocumentCorpus,
-        backend_params: Optional[DefaultDict[str, Dict[str, str]]] = None,
+        backend_params: Optional[DefaultDict[str, Dict]] = None,
     ) -> None:
         """further train the project using documents from a metadata source"""
         if backend_params is None:

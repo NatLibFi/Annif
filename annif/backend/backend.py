@@ -5,7 +5,7 @@ import abc
 import os.path
 from datetime import datetime, timezone
 from glob import glob
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from annif import logger
 from annif.suggestion import SuggestionBatch
@@ -24,7 +24,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     DEFAULT_PARAMETERS = {"limit": 100}
 
     def __init__(
-        self, backend_id: str, config_params: Any, project: AnnifProject
+        self, backend_id: str, config_params: Dict[str, Any], project: AnnifProject
     ) -> None:
         """Initialize backend with specific parameters. The
         parameters are a dict. Keys and values depend on the specific
@@ -34,7 +34,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         self.project = project
         self.datadir = project.datadir
 
-    def default_params(self) -> Dict[str, Union[str, bool, int]]:
+    def default_params(self) -> Dict[str, Any]:
         return self.DEFAULT_PARAMETERS
 
     @property
@@ -61,7 +61,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     def _get_backend_params(
         self,
-        params: Optional[Union[Dict[str, str], Dict[str, int], Dict[str, float]]],
+        params: Optional[Dict[str, Any]],
     ) -> Dict[str, Any]:
         backend_params = dict(self.params)
         if params is not None:
@@ -71,7 +71,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def _train(
         self,
         corpus: DocumentCorpus,
-        params: Dict[str, Union[int, str]],
+        params: Dict[str, Any],
         jobs: int = 0,
     ) -> None:
         """This method can be overridden by backends. It implements
@@ -81,7 +81,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def train(
         self,
         corpus: DocumentCorpus,
-        params: Optional[Union[Dict[str, float], Dict[str, int]]] = None,
+        params: Optional[Dict[str, Any]] = None,
         jobs: int = 0,
     ) -> None:
         """Train the model on the given document or subject corpus."""
@@ -116,7 +116,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def suggest(
         self,
         texts: List[str],
-        params: Optional[Union[Dict[str, str], Dict[str, int]]] = None,
+        params: Optional[Dict[str, Any]] = None,
     ) -> SuggestionBatch:
         """Suggest subjects for the input documents and return a list of subject sets
         represented as a list of SubjectSuggestion objects."""
@@ -149,7 +149,7 @@ class AnnifLearningBackend(AnnifBackend):
     def learn(
         self,
         corpus: DocumentCorpus,
-        params: Optional[Dict[str, int]] = None,
+        params: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Further train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)

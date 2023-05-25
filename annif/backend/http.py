@@ -3,7 +3,7 @@ and returns the results"""
 from __future__ import annotations
 
 import importlib
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import dateutil.parser
 import requests
@@ -63,9 +63,7 @@ class HTTPBackend(backend.AnnifBackend):
         else:
             return None
 
-    def _suggest(
-        self, text: str, params: Dict[str, Union[int, str]]
-    ) -> List[SubjectSuggestion]:
+    def _suggest(self, text: str, params: Dict[str, Any]) -> List[SubjectSuggestion]:
         data = {"text": text}
         if "project" in params:
             data["project"] = params["project"]

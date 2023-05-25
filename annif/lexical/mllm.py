@@ -5,7 +5,7 @@ import collections
 import math
 from enum import IntEnum
 from statistics import mean
-from typing import TYPE_CHECKING, DefaultDict, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Tuple, Union
 
 import joblib
 import numpy as np
@@ -169,9 +169,7 @@ class MLLMModel:
         return candidates_to_features(candidates, self._model_data)
 
     @staticmethod
-    def _get_label_props(
-        params: Dict[str, Union[float, bool, str]]
-    ) -> Tuple[List[URIRef], List[URIRef]]:
+    def _get_label_props(params: Dict[str, Any]) -> Tuple[List[URIRef], List[URIRef]]:
         pref_label_props = [SKOS.prefLabel]
 
         if annif.util.boolean(params["use_hidden_labels"]):
@@ -185,7 +183,7 @@ class MLLMModel:
         self,
         graph: Graph,
         vocab: AnnifVocabulary,
-        params: Dict[str, Union[float, bool, str]],
+        params: Dict[str, Any],
     ) -> Tuple[List[Term], List[int]]:
         pref_label_props, nonpref_label_props = self._get_label_props(params)
 
@@ -216,7 +214,7 @@ class MLLMModel:
         self,
         vocab: AnnifVocabulary,
         analyzer: Analyzer,
-        params: Dict[str, Union[float, bool, str]],
+        params: Dict[str, Any],
     ) -> List[int]:
         graph = vocab.as_graph()
         terms, subject_ids = self._prepare_terms(graph, vocab, params)
@@ -301,7 +299,7 @@ class MLLMModel:
         corpus: DocumentCorpus,
         vocab: AnnifVocabulary,
         analyzer: Analyzer,
-        params: Dict[str, Union[float, bool, str]],
+        params: Dict[str, Any],
         n_jobs: int,
     ) -> Tuple[np.ndarray, np.ndarray]:
         # create an index from the vocabulary terms
@@ -318,9 +316,7 @@ class MLLMModel:
 
         return (np.vstack(features), np.array(train_y))
 
-    def _create_classifier(
-        self, params: Dict[str, Union[float, bool, str]]
-    ) -> BaggingClassifier:
+    def _create_classifier(self, params: Dict[str, Any]) -> BaggingClassifier:
         return BaggingClassifier(
             DecisionTreeClassifier(
                 min_samples_leaf=int(params["min_samples_leaf"]),
@@ -333,7 +329,7 @@ class MLLMModel:
         self,
         train_x: Union[np.ndarray, List[Tuple[int, int]]],
         train_y: Union[List[bool], np.ndarray],
-        params: Dict[str, Union[float, bool, str]],
+        params: Dict[str, Any],
     ) -> None:
         # fit the model on the training corpus
         self._classifier = self._create_classifier(params)

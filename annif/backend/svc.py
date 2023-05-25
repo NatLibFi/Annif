@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os.path
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
 import joblib
 import numpy as np
@@ -33,7 +33,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
 
     DEFAULT_PARAMETERS = {"min_df": 1, "ngram": 1}
 
-    def default_params(self) -> Dict[str, int]:
+    def default_params(self) -> Dict[str, Any]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
         return params
@@ -79,7 +79,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         )
 
     def _train(
-        self, corpus: DocumentCorpus, params: Dict[str, int], jobs: int = 0
+        self, corpus: DocumentCorpus, params: Dict[str, Any], jobs: int = 0
     ) -> None:
         if corpus == "cached":
             raise NotSupportedException(
@@ -97,7 +97,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self._train_classifier(veccorpus, classes)
 
     def _scores_to_suggestions(
-        self, scores: np.ndarray, params: Dict[str, int]
+        self, scores: np.ndarray, params: Dict[str, Any]
     ) -> List[SubjectSuggestion]:
         results = []
         limit = int(params["limit"])
@@ -110,7 +110,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         return results
 
     def _suggest_batch(
-        self, texts: List[str], params: Dict[str, int]
+        self, texts: List[str], params: Dict[str, Any]
     ) -> SuggestionBatch:
         vector = self.vectorizer.transform(texts)
         confidences = self._model.decision_function(vector)
