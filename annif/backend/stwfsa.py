@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Tuple, Union
 
 from stwfsapy.predictor import StwfsapyPredictor
 
@@ -77,9 +77,7 @@ class StwfsaBackend(backend.AnnifBackend):
                     f"Model not found at {path}", backend_id=self.backend_id
                 )
 
-    def _load_data(
-        self, corpus: DocumentCorpus
-    ) -> Tuple[List[str], List[List[Union[str, Any]]]]:
+    def _load_data(self, corpus: DocumentCorpus) -> Tuple[List[str], List[List[str]]]:
         if corpus == "cached":
             raise NotSupportedException(
                 "Training stwfsa project from cached data not supported."
@@ -129,7 +127,7 @@ class StwfsaBackend(backend.AnnifBackend):
 
     def _suggest(
         self, text: str, params: Dict[str, Union[str, bool, int]]
-    ) -> List[Union[SubjectSuggestion, Any]]:
+    ) -> List[SubjectSuggestion]:
         self.debug(f'Suggesting subjects for text "{text[:20]}..." (len={len(text)})')
         result = self._model.suggest_proba([text])[0]
         suggestions = []

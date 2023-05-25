@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os.path
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Iterator, List, Tuple, Union
 
 import joblib
 import numpy as np
@@ -152,14 +152,14 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
         self.info("saving model")
         annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)
 
-    def _generate_candidates(self, text: str) -> List[Union[Candidate, Any]]:
+    def _generate_candidates(self, text: str) -> List[Candidate]:
         return self._model.generate_candidates(text, self.project.analyzer)
 
     def _prediction_to_result(
         self,
-        prediction: List[Union[Tuple[np.float64, int], Any]],
+        prediction: List[Tuple[np.float64, int]],
         params: Dict[str, Union[float, bool, str]],
-    ) -> Iterator[Any]:
+    ) -> Iterator:
         vector = np.zeros(len(self.project.subjects), dtype=np.float32)
         for score, subject_id in prediction:
             vector[subject_id] = score
@@ -167,7 +167,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
 
     def _suggest(
         self, text: str, params: Dict[str, Union[float, bool, str]]
-    ) -> Iterator[Any]:
+    ) -> Iterator:
         candidates = self._generate_candidates(text)
         prediction = self._model.predict(candidates)
         return self._prediction_to_result(prediction, params)

@@ -19,10 +19,10 @@ def parse_specs(
     transform_specs: str,
 ) -> List[
     Union[
-        Tuple[str, List[Any], Dict[Any, Any]],
+        Tuple[str, List, Dict[Any, Any]],
         Tuple[str, List[str], Dict[str, str]],
         Tuple[str, List[str], Dict[Any, Any]],
-        Tuple[str, List[Any], Dict[str, str]],
+        Tuple[str, List, Dict[str, str]],
     ]
 ]:
     """Parse a transformation specification into a list of tuples, e.g.

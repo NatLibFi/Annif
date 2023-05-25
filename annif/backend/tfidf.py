@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os.path
 import tempfile
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Union
+from typing import TYPE_CHECKING, Dict, Iterator, Union
 
 import gensim.similarities
 from gensim.matutils import Sparse2Corpus
@@ -126,7 +126,7 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         veccorpus = self.create_vectorizer(subjects)
         self._create_index(veccorpus)
 
-    def _suggest(self, text: str, params: Dict[str, int]) -> Iterator[Any]:
+    def _suggest(self, text: str, params: Dict[str, int]) -> Iterator:
         self.debug(
             'Suggesting subjects for text "{}..." (len={})'.format(text[:20], len(text))
         )

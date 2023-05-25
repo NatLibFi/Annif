@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import jsonschema
 from connexion import decorators
@@ -24,7 +24,7 @@ class CustomRequestBodyValidator(decorators.validation.RequestBodyValidator):
         data: Union[
             List[Dict[str, Union[List[Dict[str, str]], str]]],
             List[Dict[str, Optional[List[bool]]]],
-            Dict[str, List[Any]],
+            Dict[str, List],
             Dict[str, str],
             Dict[str, List[Dict[str, str]]],
         ],

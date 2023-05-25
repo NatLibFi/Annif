@@ -3,7 +3,7 @@ methods defined in the OpenAPI specification."""
 from __future__ import annotations
 
 import importlib
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import connexion
 
@@ -100,8 +100,7 @@ def _hit_sets_to_list(
     hit_sets: SuggestionResults, subjects: SubjectIndex, lang: str
 ) -> List[
     Union[
-        Dict[str, List[Any]],
-        Any,
+        Dict[str, List],
         Dict[str, List[Dict[str, Union[str, float]]]],
         Dict[str, List[Dict[str, Optional[Union[str, float]]]]],
     ]
@@ -114,7 +113,7 @@ def _hit_sets_to_list(
 
 def _is_error(
     result: Union[
-        List[Dict[str, List[Any]]],
+        List[Dict[str, List]],
         List[Dict[str, List[Dict[str, Optional[Union[str, float]]]]]],
         List[Dict[str, List[Dict[str, Union[str, float]]]]],
         ConnexionResponse,
@@ -129,7 +128,7 @@ def _is_error(
 def suggest(
     project_id: str, body: Dict[str, Union[float, str]]
 ) -> Union[
-    Dict[str, List[Any]],
+    Dict[str, List],
     Dict[str, List[Dict[str, Optional[Union[str, float]]]]],
     ConnexionResponse,
     Dict[str, List[Dict[str, Union[str, float]]]],
@@ -150,7 +149,7 @@ def suggest(
 
 def suggest_batch(
     project_id: str,
-    body: Dict[str, Union[List[Any], List[Dict[str, str]]]],
+    body: Dict[str, Union[List, List[Dict[str, str]]]],
     **query_parameters,
 ) -> Union[
     List[Dict[str, None]],
@@ -173,10 +172,10 @@ def suggest_batch(
 
 def _suggest(
     project_id: str,
-    documents: List[Union[Dict[str, str], Any]],
+    documents: List[Dict[str, str]],
     parameters: Dict[str, Union[float, str]],
 ) -> Union[
-    List[Dict[str, List[Any]]],
+    List[Dict[str, List]],
     List[Dict[str, List[Dict[str, Optional[Union[str, float]]]]]],
     List[Dict[str, List[Dict[str, Union[str, float]]]]],
     ConnexionResponse,
@@ -207,9 +206,7 @@ def _suggest(
 
 
 def _documents_to_corpus(
-    documents: List[
-        Union[Dict[str, str], Dict[str, Union[List[Dict[str, str]], str]], Any]
-    ],
+    documents: List[Union[Dict[str, str], Dict[str, Union[List[Dict[str, str]], str]]]],
     subject_index: Optional[SubjectIndex],
 ) -> annif.corpus.document.DocumentList:
     if subject_index is not None:
@@ -235,7 +232,6 @@ def learn(
     body: List[
         Union[
             Dict[str, Union[List[Dict[str, str]], str]],
-            Any,
             Dict[str, Optional[List[bool]]],
         ]
     ],

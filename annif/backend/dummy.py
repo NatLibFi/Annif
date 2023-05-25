@@ -1,7 +1,7 @@
 """Dummy backend for testing basic interaction of projects and backends"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List, Union
 
 from annif.suggestion import SubjectSuggestion
 
@@ -26,7 +26,7 @@ class DummyBackend(backend.AnnifLearningBackend):
 
     def _suggest(
         self, text: str, params: Dict[str, Union[int, str]]
-    ) -> List[Union[SubjectSuggestion, Any]]:
+    ) -> List[SubjectSuggestion]:
         score = float(params.get("score", 1.0))
 
         # Ensure tests fail if "text" with wrong type ends up here

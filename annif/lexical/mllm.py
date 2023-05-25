@@ -5,7 +5,7 @@ import collections
 import math
 from enum import IntEnum
 from statistics import mean
-from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, DefaultDict, Dict, List, Tuple, Union
 
 import joblib
 import numpy as np
@@ -55,9 +55,7 @@ Feature = IntEnum(
 )
 
 
-def conflate_matches(
-    matches: List[Match], doc_length: int
-) -> List[Union[Candidate, Any]]:
+def conflate_matches(matches: List[Match], doc_length: int) -> List[Candidate]:
     subj_matches = collections.defaultdict(list)
     for match in matches:
         subj_matches[match.subject_id].append(match)
@@ -82,7 +80,7 @@ def generate_candidates(
     analyzer: Analyzer,
     vectorizer: CountVectorizer,
     index: TokenSetIndex,
-) -> List[Union[Candidate, Any]]:
+) -> List[Candidate]:
     sentences = analyzer.tokenize_sentences(text)
     sent_tokens = vectorizer.transform(sentences)
     matches = []
@@ -152,9 +150,7 @@ class MLLMFeatureConverter(annif.parallel.BaseWorker):
 class MLLMModel:
     """Maui-like Lexical Matching model"""
 
-    def generate_candidates(
-        self, text: str, analyzer: Analyzer
-    ) -> List[Union[Candidate, Any]]:
+    def generate_candidates(self, text: str, analyzer: Analyzer) -> List[Candidate]:
         return generate_candidates(text, analyzer, self._vectorizer, self._index)
 
     @property
@@ -246,7 +242,7 @@ class MLLMModel:
 
     def _prepare_train_data(
         self, corpus: DocumentCorpus, analyzer: Analyzer, n_jobs: int
-    ) -> Tuple[List[List[Union[Candidate, Any]]], List[bool]]:
+    ) -> Tuple[List[List[Candidate]], List[bool]]:
         # frequency of subjects (by id) in the generated candidates
         self._doc_freq = collections.Counter()
         # frequency of manually assigned subjects ("domain keyphraseness")
@@ -286,7 +282,7 @@ class MLLMModel:
         return idf
 
     def _prepare_features(
-        self, train_x: List[List[Union[Candidate, Any]]], n_jobs: int
+        self, train_x: List[List[Candidate]], n_jobs: int
     ) -> List[np.ndarray]:
         fc_args = {"mdata": self._model_data}
         jobs, pool_class = annif.parallel.get_pool(n_jobs)
@@ -357,9 +353,7 @@ class MLLMModel:
         subj_scores = [(score[1], c.subject_id) for score, c in zip(scores, candidates)]
         return sorted(subj_scores, reverse=True)
 
-    def predict(
-        self, candidates: List[Union[Candidate, Any]]
-    ) -> List[Tuple[np.float64, int]]:
+    def predict(self, candidates: List[Candidate]) -> List[Tuple[np.float64, int]]:
         if not candidates:
             return []
         features = self._candidates_to_features(candidates)

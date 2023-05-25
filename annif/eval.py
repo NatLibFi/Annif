@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Sequence, Union
 
 import numpy as np
 import scipy.sparse
@@ -88,7 +88,7 @@ class EvaluationBatch:
     def evaluate_many(
         self,
         suggestion_batch: Union[
-            List[List[SubjectSuggestion]], SuggestionBatch, List[Iterator[Any]]
+            List[List[SubjectSuggestion]], SuggestionBatch, List[Iterator]
         ],
         gold_subject_batch: Sequence[SubjectSet],
     ) -> None:

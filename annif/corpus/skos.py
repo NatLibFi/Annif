@@ -6,7 +6,6 @@ import os.path
 import shutil
 from typing import (
     TYPE_CHECKING,
-    Any,
     DefaultDict,
     Dict,
     Iterator,
@@ -28,7 +27,7 @@ if TYPE_CHECKING:
     from rdflib.term import URIRef
 
 
-def serialize_subjects_to_skos(subjects: Iterator[Any], path: str) -> None:
+def serialize_subjects_to_skos(subjects: Iterator, path: str) -> None:
     """Create a SKOS representation of the given subjects and serialize it
     into a SKOS/Turtle file with the given path name."""
     import joblib

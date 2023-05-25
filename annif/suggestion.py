@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import collections
 import itertools
-from typing import TYPE_CHECKING, Any, Iterator, List, Optional
+from typing import TYPE_CHECKING, Iterator, List, Optional
 
 import numpy as np
 from scipy.sparse import csr_array
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 SubjectSuggestion = collections.namedtuple("SubjectSuggestion", "subject_id score")
 
 
-def vector_to_suggestions(vector: np.ndarray, limit: int) -> Iterator[Any]:
+def vector_to_suggestions(vector: np.ndarray, limit: int) -> Iterator:
     limit = min(len(vector), limit)
     topk_idx = np.argpartition(vector, -limit)[-limit:]
     return (

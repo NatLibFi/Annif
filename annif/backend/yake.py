@@ -6,7 +6,7 @@ from __future__ import annotations
 import os.path
 import re
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Dict, List, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Set, Tuple
 
 import joblib
 import yake
@@ -117,9 +117,7 @@ class YakeBackend(backend.AnnifBackend):
         words = phrase.split()
         return " ".join(sorted(words))
 
-    def _suggest(
-        self, text: str, params: Dict[str, Any]
-    ) -> List[Union[SubjectSuggestion, Any]]:
+    def _suggest(self, text: str, params: Dict[str, Any]) -> List[SubjectSuggestion]:
         self.debug(f'Suggesting subjects for text "{text[:20]}..." (len={len(text)})')
         limit = int(params["limit"])
 

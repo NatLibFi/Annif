@@ -1,7 +1,7 @@
 """Registry of backend types for Annif"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Type
+from typing import TYPE_CHECKING, Type
 
 if TYPE_CHECKING:
     from annif.backend.backend import AnnifBackend
@@ -114,7 +114,7 @@ _backend_fns = {
 }
 
 
-def get_backend(backend_id: str) -> Any:
+def get_backend(backend_id: str) -> Type[AnnifBackend]:
     if backend_id in _backend_fns:
         return _backend_fns[backend_id]()
     else:

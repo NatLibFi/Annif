@@ -45,9 +45,9 @@ class TransformChain:
         transform_classes: List[Type[BaseTransform]],
         args: List[
             Union[
-                Tuple[List[Any], Dict[str, str]],
+                Tuple[List, Dict[str, str]],
                 Tuple[List[str], Dict[Any, Any]],
-                Tuple[List[Any], Dict[Any, Any]],
+                Tuple[List, Dict[Any, Any]],
             ]
         ],
         project: Optional[AnnifProject],
@@ -60,9 +60,9 @@ class TransformChain:
         transform_classes: List[Type[BaseTransform]],
         args: List[
             Union[
-                Tuple[List[Any], Dict[str, str]],
+                Tuple[List, Dict[str, str]],
                 Tuple[List[str], Dict[Any, Any]],
-                Tuple[List[Any], Dict[Any, Any]],
+                Tuple[List, Dict[Any, Any]],
             ]
         ],
     ) -> List[Type[BaseTransform]]:
