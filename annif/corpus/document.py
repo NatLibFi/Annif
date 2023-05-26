@@ -1,15 +1,20 @@
 """Clases for supporting document corpora"""
+from __future__ import annotations
 
 import glob
 import gzip
 import os.path
 import re
 from itertools import islice
+from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 
 import annif.util
 
 from .subject import SubjectSet
 from .types import Document, DocumentCorpus
+
+if TYPE_CHECKING:
+    from annif.corpus.subject import SubjectIndex
 
 logger = annif.logger
 
@@ -17,13 +22,19 @@ logger = annif.logger
 class DocumentDirectory(DocumentCorpus):
     """A directory of files as a full text document corpus"""
 
-    def __init__(self, path, subject_index=None, language=None, require_subjects=False):
+    def __init__(
+        self,
+        path: str,
+        subject_index: Optional[SubjectIndex] = None,
+        language: Optional[str] = None,
+        require_subjects: bool = False,
+    ) -> None:
         self.path = path
         self.subject_index = subject_index
         self.language = language
         self.require_subjects = require_subjects
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Union[Tuple[str, str], Tuple[str, None]]]:
         """Iterate through the directory, yielding tuples of (docfile,
         subjectfile) containing file paths. If require_subjects is False, the
         subjectfile will be returned as None."""
@@ -42,7 +53,7 @@ class DocumentDirectory(DocumentCorpus):
                 yield (filename, None)
 
     @property
-    def documents(self):
+    def documents(self) -> Iterator[Document]:
         for docfilename, subjfilename in self:
             with open(docfilename, errors="replace", encoding="utf-8-sig") as docfile:
                 text = docfile.read()
@@ -59,12 +70,12 @@ class DocumentDirectory(DocumentCorpus):
 class DocumentFile(DocumentCorpus):
     """A TSV file as a corpus of documents with subjects"""
 
-    def __init__(self, path, subject_index):
+    def __init__(self, path: str, subject_index: SubjectIndex) -> None:
         self.path = path
         self.subject_index = subject_index
 
     @property
-    def documents(self):
+    def documents(self) -> Iterator[Document]:
         if self.path.endswith(".gz"):
             opener = gzip.open
         else:
@@ -73,7 +84,7 @@ class DocumentFile(DocumentCorpus):
             for line in tsvfile:
                 yield from self._parse_tsv_line(line)
 
-    def _parse_tsv_line(self, line):
+    def _parse_tsv_line(self, line: str) -> Iterator[Document]:
         if "\t" in line:
             text, uris = line.split("\t", maxsplit=1)
             subject_ids = {
