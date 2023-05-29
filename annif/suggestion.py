@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import collections
 import itertools
-from typing import TYPE_CHECKING, Iterator, List, Optional
+from collections.abc import Iterator
+from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy.sparse import csr_array
@@ -24,7 +25,7 @@ def vector_to_suggestions(vector: np.ndarray, limit: int) -> Iterator:
 
 def filter_suggestion(
     preds: csr_array,
-    limit: Optional[int] = None,
+    limit: int | None = None,
     threshold: float = 0.0,
 ) -> csr_array:
     """filter a 2D sparse suggestion array (csr_array), retaining only the
@@ -85,9 +86,9 @@ class SuggestionBatch:
     @classmethod
     def from_sequence(
         cls,
-        suggestion_results: List[List[SubjectSuggestion]],
+        suggestion_results: list[list[SubjectSuggestion]],
         subject_index: SubjectIndex,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> SuggestionBatch:
         """Create a new SuggestionBatch from a sequence where each item is
         a sequence of SubjectSuggestion objects."""
@@ -111,7 +112,7 @@ class SuggestionBatch:
 
     @classmethod
     def from_averaged(
-        cls, batches: List[SuggestionBatch], weights: List[float]
+        cls, batches: list[SuggestionBatch], weights: list[float]
     ) -> SuggestionBatch:
         """Create a new SuggestionBatch where the subject scores are the
         weighted average of scores in several SuggestionBatches"""
@@ -122,7 +123,7 @@ class SuggestionBatch:
         return SuggestionBatch(avg_array)
 
     def filter(
-        self, limit: Optional[int] = None, threshold: float = 0.0
+        self, limit: int | None = None, threshold: float = 0.0
     ) -> SuggestionBatch:
         """Return a subset of the hits, filtered by the given limit and
         score threshold, as another SuggestionBatch object."""
@@ -141,14 +142,14 @@ class SuggestionBatch:
 class SuggestionResults:
     """Subject suggestions for a potentially very large number of documents."""
 
-    def __init__(self, batches: List[SuggestionBatch]) -> None:
+    def __init__(self, batches: list[SuggestionBatch]) -> None:
         """Initialize a new SuggestionResults from an iterable that provides
         SuggestionBatch objects."""
 
         self.batches = batches
 
     def filter(
-        self, limit: Optional[int] = None, threshold: float = 0.0
+        self, limit: int | None = None, threshold: float = 0.0
     ) -> SuggestionResults:
         """Return a view of these suggestions, filtered by the given limit
         and/or threshold, as another SuggestionResults object."""

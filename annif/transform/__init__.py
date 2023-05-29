@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING
 
 import annif
 from annif.exception import ConfigurationException
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 def parse_specs(
     transform_specs: str,
-) -> List[Tuple[str, List, Dict]]:
+) -> list[tuple[str, list, dict]]:
     """Parse a transformation specification into a list of tuples, e.g.
     'transf_1(x),transf_2(y=42),transf_3' is parsed to
     [(transf_1, [x], {}), (transf_2, [], {y: 42}), (transf_3, [], {})]."""
@@ -35,9 +35,7 @@ def parse_specs(
     return parsed
 
 
-def get_transform(
-    transform_specs: str, project: Optional[AnnifProject]
-) -> TransformChain:
+def get_transform(transform_specs: str, project: AnnifProject | None) -> TransformChain:
     transform_defs = parse_specs(transform_specs)
     transform_classes = []
     args = []

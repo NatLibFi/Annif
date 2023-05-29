@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import abc
 import os.path
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List
+from collections.abc import Iterator
+from typing import TYPE_CHECKING, Any
 
 import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -22,19 +23,19 @@ class ChunkingBackend(metaclass=abc.ABCMeta):
 
     DEFAULT_PARAMETERS = {"chunksize": 1}
 
-    def default_params(self) -> Dict[str, Any]:
+    def default_params(self) -> dict[str, Any]:
         return self.DEFAULT_PARAMETERS
 
     @abc.abstractmethod
     def _suggest_chunks(
-        self, chunktexts: List[str], params: Dict[str, Any]
-    ) -> List[SubjectSuggestion]:
+        self, chunktexts: list[str], params: dict[str, Any]
+    ) -> list[SubjectSuggestion]:
         """Suggest subjects for the chunked text; should be implemented by
         the subclass inheriting this mixin"""
 
         pass  # pragma: no cover
 
-    def _suggest(self, text: str, params: Dict[str, Any]) -> List[SubjectSuggestion]:
+    def _suggest(self, text: str, params: dict[str, Any]) -> list[SubjectSuggestion]:
         self.debug(
             'Suggesting subjects for text "{}..." (len={})'.format(text[:20], len(text))
         )
@@ -70,7 +71,7 @@ class TfidfVectorizerMixin:
                 )
 
     def create_vectorizer(
-        self, input: Iterator[str], params: Dict[str, Any] = {}
+        self, input: Iterator[str], params: dict[str, Any] = {}
     ) -> csr_matrix:
         self.info("creating vectorizer")
         self.vectorizer = TfidfVectorizer(**params)

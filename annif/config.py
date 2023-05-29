@@ -4,7 +4,6 @@ from __future__ import annotations
 import configparser
 import os.path
 from glob import glob
-from typing import Dict, List, Optional, Union
 
 import tomli
 
@@ -32,7 +31,7 @@ class AnnifConfigCFG:
                 raise ConfigurationException(err.message)
 
     @property
-    def project_ids(self) -> List[str]:
+    def project_ids(self) -> list[str]:
         return self._config.sections()
 
     def __getitem__(self, key: str) -> configparser.SectionProxy:
@@ -56,7 +55,7 @@ class AnnifConfigTOML:
     def project_ids(self):
         return self._config.keys()
 
-    def __getitem__(self, key: str) -> Dict[str, str]:
+    def __getitem__(self, key: str) -> dict[str, str]:
         return self._config[key]
 
 
@@ -87,11 +86,11 @@ class AnnifConfigDirectory:
     def project_ids(self):
         return self._config.keys()
 
-    def __getitem__(self, key: str) -> Union[Dict[str, str], configparser.SectionProxy]:
+    def __getitem__(self, key: str) -> dict[str, str] | configparser.SectionProxy:
         return self._config[key]
 
 
-def check_config(projects_config_path: str) -> Optional[str]:
+def check_config(projects_config_path: str) -> str | None:
     if os.path.exists(projects_config_path):
         return projects_config_path
     else:
@@ -105,7 +104,7 @@ def check_config(projects_config_path: str) -> Optional[str]:
         return None
 
 
-def find_config() -> Optional[str]:
+def find_config() -> str | None:
     for path in ("projects.cfg", "projects.toml", "projects.d"):
         if os.path.exists(path):
             return path
@@ -122,7 +121,7 @@ def find_config() -> Optional[str]:
 
 def parse_config(
     projects_config_path: str,
-) -> Optional[Union[AnnifConfigDirectory, AnnifConfigCFG, AnnifConfigTOML]]:
+) -> AnnifConfigDirectory | AnnifConfigCFG | AnnifConfigTOML | None:
     if projects_config_path:
         projects_config_path = check_config(projects_config_path)
     else:

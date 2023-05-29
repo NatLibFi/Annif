@@ -5,7 +5,7 @@ from __future__ import annotations
 import os.path
 import shutil
 from io import BytesIO
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any
 
 import joblib
 import lmdb
@@ -35,7 +35,7 @@ def idx_to_key(idx: int) -> bytes:
     return b"%08d" % idx
 
 
-def key_to_idx(key: Union[memoryview, bytes]) -> int:
+def key_to_idx(key: memoryview | bytes) -> int:
     """convert a binary LMDB key to an integer index"""
     return int(key)
 
@@ -64,7 +64,7 @@ class LMDBSequence(Sequence):
         buf.seek(0)
         self._txn.put(key, buf.read())
 
-    def __getitem__(self, idx: int) -> Tuple[np.ndarray, np.ndarray]:
+    def __getitem__(self, idx: int) -> tuple[np.ndarray, np.ndarray]:
         """get a particular batch of samples"""
         cursor = self._txn.cursor()
         first_key = idx * self._batch_size
@@ -112,7 +112,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     # defaults for uninitialized instances
     _model = None
 
-    def default_params(self) -> Dict[str, Any]:
+    def default_params(self) -> dict[str, Any]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
         return params
@@ -138,9 +138,9 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
     def _merge_source_batches(
         self,
-        batch_by_source: Dict[str, SuggestionBatch],
-        sources: List[Tuple[str, float]],
-        params: Dict[str, Any],
+        batch_by_source: dict[str, SuggestionBatch],
+        sources: list[tuple[str, float]],
+        params: dict[str, Any],
     ) -> SuggestionBatch:
         src_weight = dict(sources)
         score_vectors = np.array(
@@ -164,7 +164,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             self.project.subjects,
         )
 
-    def _create_model(self, sources: List[Tuple[str, float]]) -> None:
+    def _create_model(self, sources: list[tuple[str, float]]) -> None:
         self.info("creating NN ensemble model")
 
         inputs = Input(shape=(len(self.project.subjects), len(sources)))
@@ -199,7 +199,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     def _train(
         self,
         corpus: DocumentCorpus,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         jobs: int = 0,
     ) -> None:
         sources = annif.util.parse_sources(self.params["sources"])
@@ -286,7 +286,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     def _learn(
         self,
         corpus: DocumentCorpus,
-        params: Dict[str, Any],
+        params: dict[str, Any],
     ) -> None:
         self.initialize()
         self._fit_model(

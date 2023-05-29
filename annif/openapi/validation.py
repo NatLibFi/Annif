@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Union
 
 import jsonschema
 from connexion import decorators
@@ -21,7 +20,7 @@ class CustomRequestBodyValidator(decorators.validation.RequestBodyValidator):
 
     def validate_schema(
         self,
-        data: Union[List, Dict],
+        data: list | dict,
         url: str,
     ) -> None:
         """Validate the request body against the schema."""

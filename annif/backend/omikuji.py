@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os.path
 import shutil
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 import omikuji
 
@@ -43,7 +43,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         "collapse_every_n_layers": 0,
     }
 
-    def default_params(self) -> Dict[str, Any]:
+    def default_params(self) -> dict[str, Any]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
         return params
@@ -96,7 +96,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             trainfile.seek(0)
             print("{:08d}".format(n_samples), end="", file=trainfile)
 
-    def _create_model(self, params: Dict[str, Any], jobs: int) -> None:
+    def _create_model(self, params: dict[str, Any], jobs: int) -> None:
         train_path = os.path.join(self.datadir, self.TRAIN_FILE)
         model_path = os.path.join(self.datadir, self.MODEL_FILE)
         hyper_param = omikuji.Model.default_hyper_param()
@@ -114,7 +114,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     def _train(
         self,
         corpus: DocumentCorpus,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         jobs: int = 0,
     ) -> None:
         if corpus != "cached":
@@ -135,7 +135,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self._create_model(params, jobs)
 
     def _suggest_batch(
-        self, texts: List[str], params: Dict[str, Any]
+        self, texts: list[str], params: dict[str, Any]
     ) -> SuggestionBatch:
         vector = self.vectorizer.transform(texts)
         limit = int(params["limit"])

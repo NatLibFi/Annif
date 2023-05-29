@@ -4,16 +4,9 @@ from __future__ import annotations
 import collections
 import os.path
 import shutil
-from typing import (
-    TYPE_CHECKING,
-    DefaultDict,
-    Dict,
-    Iterator,
-    List,
-    Sequence,
-    Set,
-    Union,
-)
+from collections import defaultdict
+from collections.abc import Iterator, Sequence
+from typing import TYPE_CHECKING
 
 import rdflib
 import rdflib.util
@@ -76,7 +69,7 @@ class SubjectFileSKOS(SubjectCorpus):
             self.graph.parse(self.path, format=rdflib.util.guess_format(self.path))
 
     @property
-    def languages(self) -> Set[str]:
+    def languages(self) -> set[str]:
         if self._languages is None:
             self._languages = {
                 label.language
@@ -87,7 +80,7 @@ class SubjectFileSKOS(SubjectCorpus):
             }
         return self._languages
 
-    def _concept_labels(self, concept: URIRef) -> Dict[str, str]:
+    def _concept_labels(self, concept: URIRef) -> dict[str, str]:
         by_lang = self.get_concept_labels(concept, self.PREF_LABEL_PROPERTIES)
         return {
             lang: by_lang[lang][0]
@@ -120,7 +113,7 @@ class SubjectFileSKOS(SubjectCorpus):
         self,
         concept: URIRef,
         label_types: Sequence[URIRef],
-    ) -> Union[DefaultDict[str, List[str]], DefaultDict[None, List[str]]]:
+    ) -> defaultdict[str, list[str]] | defaultdict[None, list[str]]:
         """return all the labels of the given concept with the given label
         properties as a dict-like object where the keys are language codes
         and the values are lists of labels in that language"""

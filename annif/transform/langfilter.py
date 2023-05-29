@@ -2,7 +2,7 @@
 different from the language of the project."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 from simplemma.langdetect import in_target_language
 
@@ -22,8 +22,8 @@ class LangFilter(transform.BaseTransform):
     def __init__(
         self,
         project: AnnifProject,
-        text_min_length: Union[int, str] = 500,
-        sentence_min_length: Union[int, str] = 50,
+        text_min_length: int | str = 500,
+        sentence_min_length: int | str = 50,
         min_ratio: float = 0.5,
     ) -> None:
         super().__init__(project)

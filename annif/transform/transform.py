@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import abc
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type
+from typing import TYPE_CHECKING, Type
 
 from annif.corpus import TransformingDocumentCorpus
 from annif.exception import ConfigurationException
@@ -18,7 +18,7 @@ class BaseTransform(metaclass=abc.ABCMeta):
 
     name = None
 
-    def __init__(self, project: Optional[AnnifProject]) -> None:
+    def __init__(self, project: AnnifProject | None) -> None:
         self.project = project
 
     @abc.abstractmethod
@@ -42,18 +42,18 @@ class TransformChain:
 
     def __init__(
         self,
-        transform_classes: List[Type[BaseTransform]],
-        args: List[Tuple[List, Dict]],
-        project: Optional[AnnifProject],
+        transform_classes: list[Type[BaseTransform]],
+        args: list[tuple[list, dict]],
+        project: AnnifProject | None,
     ) -> None:
         self.project = project
         self.transforms = self._init_transforms(transform_classes, args)
 
     def _init_transforms(
         self,
-        transform_classes: List[Type[BaseTransform]],
-        args: List[Tuple[List, Dict]],
-    ) -> List[Type[BaseTransform]]:
+        transform_classes: list[Type[BaseTransform]],
+        args: list[tuple[list, dict]],
+    ) -> list[Type[BaseTransform]]:
         transforms = []
         for trans, (posargs, kwargs) in zip(transform_classes, args):
             try:

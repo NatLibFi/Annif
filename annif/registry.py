@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 from flask import current_app
 
@@ -49,7 +49,7 @@ class AnnifRegistry:
             self._projects[self._rid] = self._create_projects()
             self._vocabs[self._rid] = {}
 
-    def _create_projects(self) -> Dict:
+    def _create_projects(self) -> dict:
         # parse the configuration
         config = parse_config(self._projects_config_path)
 
@@ -67,7 +67,7 @@ class AnnifRegistry:
 
     def get_projects(
         self, min_access: Access = Access.private
-    ) -> Dict[str, AnnifProject]:
+    ) -> dict[str, AnnifProject]:
         """Return the available projects as a dict of project_id ->
         AnnifProject. The min_access parameter may be used to set the minimum
         access level required for the returned projects."""
@@ -91,8 +91,8 @@ class AnnifRegistry:
             raise ValueError("No such project {}".format(project_id))
 
     def get_vocab(
-        self, vocab_spec: str, default_language: Optional[str]
-    ) -> Union[Tuple[AnnifVocabulary, None], Tuple[AnnifVocabulary, str]]:
+        self, vocab_spec: str, default_language: str | None
+    ) -> tuple[AnnifVocabulary, None] | tuple[AnnifVocabulary, str]:
         """Return an (AnnifVocabulary, language) pair corresponding to the
         vocab_spec. If no language information is specified, use the given
         default language."""
@@ -120,7 +120,7 @@ def initialize_projects(app: LocalProxy) -> None:
     app.annif_registry = AnnifRegistry(projects_config_path, datadir, init_projects)
 
 
-def get_projects(min_access: Access = Access.private) -> Dict[str, AnnifProject]:
+def get_projects(min_access: Access = Access.private) -> dict[str, AnnifProject]:
     """Return the available projects as a dict of project_id ->
     AnnifProject. The min_access parameter may be used to set the minimum
     access level required for the returned projects."""
@@ -140,7 +140,7 @@ def get_project(project_id: str, min_access: Access = Access.private) -> AnnifPr
         raise ValueError(f"No such project '{project_id}'")
 
 
-def get_vocabs(min_access: Access = Access.private) -> Dict[str, AnnifVocabulary]:
+def get_vocabs(min_access: Access = Access.private) -> dict[str, AnnifVocabulary]:
     """Return the available vocabularies as a dict of vocab_id ->
     AnnifVocabulary. The min_access parameter may be used to set the minimum
     access level required for the returned vocabularies."""

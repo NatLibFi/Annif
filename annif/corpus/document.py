@@ -5,8 +5,9 @@ import glob
 import gzip
 import os.path
 import re
+from collections.abc import Iterator
 from itertools import islice
-from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 import annif.util
 
@@ -25,8 +26,8 @@ class DocumentDirectory(DocumentCorpus):
     def __init__(
         self,
         path: str,
-        subject_index: Optional[SubjectIndex] = None,
-        language: Optional[str] = None,
+        subject_index: SubjectIndex | None = None,
+        language: str | None = None,
         require_subjects: bool = False,
     ) -> None:
         self.path = path
@@ -34,7 +35,7 @@ class DocumentDirectory(DocumentCorpus):
         self.language = language
         self.require_subjects = require_subjects
 
-    def __iter__(self) -> Iterator[Union[Tuple[str, str], Tuple[str, None]]]:
+    def __iter__(self) -> Iterator[tuple[str, str] | tuple[str, None]]:
         """Iterate through the directory, yielding tuples of (docfile,
         subjectfile) containing file paths. If require_subjects is False, the
         subjectfile will be returned as None."""

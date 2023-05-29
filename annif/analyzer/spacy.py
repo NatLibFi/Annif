@@ -1,8 +1,6 @@
 """spaCy analyzer for Annif which uses spaCy for lemmatization"""
 from __future__ import annotations
 
-from typing import List
-
 import annif.util
 from annif.exception import OperationFailedException
 
@@ -31,7 +29,7 @@ class SpacyAnalyzer(analyzer.Analyzer):
             self.lowercase = False
         super().__init__(**kwargs)
 
-    def tokenize_words(self, text: str, filter: bool = True) -> List[str]:
+    def tokenize_words(self, text: str, filter: bool = True) -> list[str]:
         lemmas = [
             lemma
             for lemma in (token.lemma_ for token in self.nlp(text.strip()))

@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Sequence, Union
+from collections.abc import Iterator, Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
 import scipy.sparse
@@ -40,7 +41,7 @@ def false_negatives(y_true: csr_array, y_pred: csr_array) -> int:
 
 
 def dcg_score(
-    y_true: csr_array, y_pred: csr_array, limit: Optional[int] = None
+    y_true: csr_array, y_pred: csr_array, limit: int | None = None
 ) -> np.float64:
     """return the discounted cumulative gain (DCG) score for the selected
     labels vs. relevant labels"""
@@ -56,9 +57,7 @@ def dcg_score(
     return (gain / discount).sum()
 
 
-def ndcg_score(
-    y_true: csr_array, y_pred: csr_array, limit: Optional[int] = None
-) -> float:
+def ndcg_score(y_true: csr_array, y_pred: csr_array, limit: int | None = None) -> float:
     """return the normalized discounted cumulative gain (nDCG) score for the
     selected labels vs. relevant labels"""
 
@@ -87,9 +86,9 @@ class EvaluationBatch:
 
     def evaluate_many(
         self,
-        suggestion_batch: Union[
-            List[List[SubjectSuggestion]], SuggestionBatch, List[Iterator]
-        ],
+        suggestion_batch: list[list[SubjectSuggestion]]
+        | SuggestionBatch
+        | list[Iterator],
         gold_subject_batch: Sequence[SubjectSet],
     ) -> None:
         if not isinstance(suggestion_batch, SuggestionBatch):
@@ -112,7 +111,7 @@ class EvaluationBatch:
         y_true: csr_array,
         y_pred: csr_array,
         metrics: Sequence[str] = [],
-    ) -> Dict[str, Union[np.float64, float, int]]:
+    ) -> dict[str, np.float64 | float | int]:
         y_pred_binary = y_pred > 0.0
 
         # define the available metrics as lazy lambda functions
@@ -183,7 +182,7 @@ class EvaluationBatch:
             return {metric: all_metrics[metric]() for metric in metrics}
 
     def _result_per_subject_header(
-        self, results_file: Union[LazyFile, TextIOWrapper]
+        self, results_file: LazyFile | TextIOWrapper
     ) -> None:
         print(
             "\t".join(
@@ -203,7 +202,7 @@ class EvaluationBatch:
         )
 
     def _result_per_subject_body(
-        self, zipped_results: zip, results_file: Union[LazyFile, TextIOWrapper]
+        self, zipped_results: zip, results_file: LazyFile | TextIOWrapper
     ) -> None:
         for row in zipped_results:
             print("\t".join((str(e) for e in row)), file=results_file)
@@ -212,7 +211,7 @@ class EvaluationBatch:
         self,
         y_true: csr_array,
         y_pred: csr_array,
-        results_file: Union[TextIOWrapper, LazyFile],
+        results_file: TextIOWrapper | LazyFile,
         language: str,
     ) -> None:
         """Write results per subject (non-aggregated)
@@ -247,9 +246,9 @@ class EvaluationBatch:
     def results(
         self,
         metrics: Sequence[str] = [],
-        results_file: Optional[Union[LazyFile, TextIOWrapper]] = None,
-        language: Optional[str] = None,
-    ) -> Dict[str, Union[np.float64, float]]:
+        results_file: LazyFile | TextIOWrapper | None = None,
+        language: str | None = None,
+    ) -> dict[str, np.float64 | float]:
         """evaluate a set of selected subjects against a gold standard using
         different metrics. If metrics is empty, use all available metrics.
         If results_file (file object) given, write results per subject to it

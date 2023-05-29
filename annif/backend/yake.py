@@ -6,7 +6,7 @@ from __future__ import annotations
 import os.path
 import re
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Dict, List, Set, Tuple
+from typing import TYPE_CHECKING, Any
 
 import joblib
 import yake
@@ -46,7 +46,7 @@ class YakeBackend(backend.AnnifBackend):
         "remove_parentheses": False,
     }
 
-    def default_params(self) -> Dict[str, Any]:
+    def default_params(self) -> dict[str, Any]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
         return params
@@ -56,7 +56,7 @@ class YakeBackend(backend.AnnifBackend):
         return True
 
     @property
-    def label_types(self) -> List[URIRef]:
+    def label_types(self) -> list[URIRef]:
         if type(self.params["label_types"]) == str:  # Label types set by user
             label_types = [lt.strip() for lt in self.params["label_types"].split(",")]
             self._validate_label_types(label_types)
@@ -64,7 +64,7 @@ class YakeBackend(backend.AnnifBackend):
             label_types = self.params["label_types"]  # The defaults
         return [getattr(SKOS, lt) for lt in label_types]
 
-    def _validate_label_types(self, label_types: List[str]) -> None:
+    def _validate_label_types(self, label_types: list[str]) -> None:
         for lt in label_types:
             if lt not in ("prefLabel", "altLabel", "hiddenLabel"):
                 raise ConfigurationException(
@@ -91,7 +91,7 @@ class YakeBackend(backend.AnnifBackend):
             self._index, self.datadir, self.INDEX_FILE, method=joblib.dump
         )
 
-    def _create_index(self) -> Dict[str, Set[str]]:
+    def _create_index(self) -> dict[str, set[str]]:
         index = defaultdict(set)
         skos_vocab = self.project.vocab.skos
         for concept in skos_vocab.concepts:
@@ -117,7 +117,7 @@ class YakeBackend(backend.AnnifBackend):
         words = phrase.split()
         return " ".join(sorted(words))
 
-    def _suggest(self, text: str, params: Dict[str, Any]) -> List[SubjectSuggestion]:
+    def _suggest(self, text: str, params: dict[str, Any]) -> list[SubjectSuggestion]:
         self.debug(f'Suggesting subjects for text "{text[:20]}..." (len={len(text)})')
         limit = int(params["limit"])
 
@@ -141,8 +141,8 @@ class YakeBackend(backend.AnnifBackend):
         return subject_suggestions
 
     def _keyphrases2suggestions(
-        self, keyphrases: List[Tuple[str, float64]]
-    ) -> List[Tuple[str, float64]]:
+        self, keyphrases: list[tuple[str, float64]]
+    ) -> list[tuple[str, float64]]:
         suggestions = []
         not_matched = []
         for kp, score in keyphrases:
@@ -164,7 +164,7 @@ class YakeBackend(backend.AnnifBackend):
         )
         return suggestions
 
-    def _keyphrase2uris(self, keyphrase: str) -> Set[str]:
+    def _keyphrase2uris(self, keyphrase: str) -> set[str]:
         keyphrase = self._normalize_phrase(keyphrase)
         keyphrase = self._sort_phrase(keyphrase)
         return self._index.get(keyphrase, [])
@@ -174,8 +174,8 @@ class YakeBackend(backend.AnnifBackend):
         return 1.0 / (score + 1)
 
     def _combine_suggestions(
-        self, suggestions: List[Tuple[str, float], Tuple[str, float64]]
-    ) -> List[Tuple[str, float], Tuple[str, float64]]:
+        self, suggestions: list[tuple[str, float], tuple[str, float64]]
+    ) -> list[tuple[str, float], tuple[str, float64]]:
         combined_suggestions = {}
         for uri, score in suggestions:
             if uri not in combined_suggestions:
@@ -192,5 +192,5 @@ class YakeBackend(backend.AnnifBackend):
         confl = score1 * score2 / (score1 * score2 + (1 - score1) * (1 - score2))
         return (confl - 0.5) * 2
 
-    def _train(self, corpus: DocumentCorpus, params: Dict[str, Any], jobs: int = 0):
+    def _train(self, corpus: DocumentCorpus, params: dict[str, Any], jobs: int = 0):
         raise NotSupportedException("Training yake backend is not possible.")

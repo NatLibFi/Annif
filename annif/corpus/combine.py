@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from .types import DocumentCorpus
 
@@ -14,7 +14,7 @@ class CombinedCorpus(DocumentCorpus):
     """Class for combining multiple corpora so they behave like a single
     corpus"""
 
-    def __init__(self, corpora: List[DocumentFile]) -> None:
+    def __init__(self, corpora: list[DocumentFile]) -> None:
         self._corpora = corpora
 
     @property

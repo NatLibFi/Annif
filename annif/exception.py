@@ -1,8 +1,6 @@
 """Custom exceptions used by Annif"""
 from __future__ import annotations
 
-from typing import Optional
-
 from click import ClickException
 
 
@@ -14,8 +12,8 @@ class AnnifException(ClickException):
     def __init__(
         self,
         message: str,
-        project_id: Optional[str] = None,
-        backend_id: Optional[str] = None,
+        project_id: str | None = None,
+        backend_id: str | None = None,
     ) -> None:
         super().__init__(message)
         self.project_id = project_id

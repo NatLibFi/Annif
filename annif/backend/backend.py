@@ -5,7 +5,7 @@ import abc
 import os.path
 from datetime import datetime, timezone
 from glob import glob
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from annif import logger
 from annif.suggestion import SuggestionBatch
@@ -24,7 +24,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     DEFAULT_PARAMETERS = {"limit": 100}
 
     def __init__(
-        self, backend_id: str, config_params: Dict[str, Any], project: AnnifProject
+        self, backend_id: str, config_params: dict[str, Any], project: AnnifProject
     ) -> None:
         """Initialize backend with specific parameters. The
         parameters are a dict. Keys and values depend on the specific
@@ -34,11 +34,11 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         self.project = project
         self.datadir = project.datadir
 
-    def default_params(self) -> Dict[str, Any]:
+    def default_params(self) -> dict[str, Any]:
         return self.DEFAULT_PARAMETERS
 
     @property
-    def params(self) -> Dict[str, Any]:
+    def params(self) -> dict[str, Any]:
         params = {}
         params.update(self.default_params())
         params.update(self.config_params)
@@ -49,7 +49,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         return bool(glob(os.path.join(self.datadir, "*")))
 
     @property
-    def modification_time(self) -> Optional[datetime.datetime]:
+    def modification_time(self) -> datetime.datetime | None:
         mtimes = [
             datetime.utcfromtimestamp(os.path.getmtime(p))
             for p in glob(os.path.join(self.datadir, "*"))
@@ -61,8 +61,8 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     def _get_backend_params(
         self,
-        params: Optional[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        params: dict[str, Any] | None,
+    ) -> dict[str, Any]:
         backend_params = dict(self.params)
         if params is not None:
             backend_params.update(params)
@@ -71,7 +71,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def _train(
         self,
         corpus: DocumentCorpus,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         jobs: int = 0,
     ) -> None:
         """This method can be overridden by backends. It implements
@@ -81,7 +81,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def train(
         self,
         corpus: DocumentCorpus,
-        params: Optional[Dict[str, Any]] = None,
+        params: dict[str, Any] | None = None,
         jobs: int = 0,
     ) -> None:
         """Train the model on the given document or subject corpus."""
@@ -102,7 +102,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         pass  # pragma: no cover
 
     def _suggest_batch(
-        self, texts: List[str], params: Dict[str, Any]
+        self, texts: list[str], params: dict[str, Any]
     ) -> SuggestionBatch:
         """This method can be implemented by backends to use batching of documents in
         their operations. This default implementation uses the regular suggest
@@ -115,8 +115,8 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     def suggest(
         self,
-        texts: List[str],
-        params: Optional[Dict[str, Any]] = None,
+        texts: list[str],
+        params: dict[str, Any] | None = None,
     ) -> SuggestionBatch:
         """Suggest subjects for the input documents and return a list of subject sets
         represented as a list of SubjectSuggestion objects."""
@@ -149,7 +149,7 @@ class AnnifLearningBackend(AnnifBackend):
     def learn(
         self,
         corpus: DocumentCorpus,
-        params: Optional[Dict[str, Any]] = None,
+        params: dict[str, Any] | None = None,
     ) -> None:
         """Further train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)

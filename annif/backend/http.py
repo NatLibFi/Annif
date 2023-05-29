@@ -3,7 +3,7 @@ and returns the results"""
 from __future__ import annotations
 
 import importlib
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 import dateutil.parser
 import requests
@@ -23,7 +23,7 @@ class HTTPBackend(backend.AnnifBackend):
     _headers = None
 
     @property
-    def headers(self) -> Dict[str, str]:
+    def headers(self) -> dict[str, str]:
         if self._headers is None:
             version = importlib.metadata.version("annif")
             self._headers = {
@@ -36,13 +36,13 @@ class HTTPBackend(backend.AnnifBackend):
         return self._get_project_info("is_trained")
 
     @property
-    def modification_time(self) -> Optional[datetime]:
+    def modification_time(self) -> datetime | None:
         mtime = self._get_project_info("modification_time")
         if mtime is None:
             return None
         return dateutil.parser.parse(mtime)
 
-    def _get_project_info(self, key: str) -> Optional[Union[bool, str]]:
+    def _get_project_info(self, key: str) -> bool | str | None:
         params = self._get_backend_params(None)
         try:
             req = requests.get(
@@ -63,7 +63,7 @@ class HTTPBackend(backend.AnnifBackend):
         else:
             return None
 
-    def _suggest(self, text: str, params: Dict[str, Any]) -> List[SubjectSuggestion]:
+    def _suggest(self, text: str, params: dict[str, Any]) -> list[SubjectSuggestion]:
         data = {"text": text}
         if "project" in params:
             data["project"] = params["project"]

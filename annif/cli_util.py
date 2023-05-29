@@ -5,7 +5,7 @@ import collections
 import itertools
 import os
 import sys
-from typing import TYPE_CHECKING, DefaultDict, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 import click
 import click_log
@@ -31,7 +31,7 @@ logger = annif.logger
 
 
 def _set_project_config_file_path(
-    ctx: Context, param: Option, value: Optional[str]
+    ctx: Context, param: Option, value: str | None
 ) -> None:
     """Override the default path or the path given in env by CLI option"""
     with ctx.obj.load_app().app_context():
@@ -120,7 +120,7 @@ def make_list_template(*rows) -> str:
     )
 
 
-def format_datetime(dt: Optional[datetime]) -> str:
+def format_datetime(dt: datetime | None) -> str:
     """Helper function to format a datetime object as a string in the local time."""
     if dt is None:
         return "-"
@@ -128,10 +128,10 @@ def format_datetime(dt: Optional[datetime]) -> str:
 
 
 def open_documents(
-    paths: Union[Tuple[str, ...], Tuple[()]],
+    paths: tuple[str, ...] | tuple[()],
     subject_index: SubjectIndex,
     vocab_lang: str,
-    docs_limit: Optional[int],
+    docs_limit: int | None,
 ) -> DocumentCorpus:
     """Helper function to open a document corpus from a list of pathnames,
     each of which is either a TSV file or a directory of TXT files. For
@@ -160,9 +160,7 @@ def open_documents(
     return docs
 
 
-def open_text_documents(
-    paths: Tuple[str, ...], docs_limit: Optional[int]
-) -> DocumentList:
+def open_text_documents(paths: tuple[str, ...], docs_limit: int | None) -> DocumentList:
     """
     Helper function to read text documents from the given file paths. Returns a
     DocumentList object with Documents having no subjects. If a path is "-", the
@@ -186,7 +184,7 @@ def show_hits(
     hits: SuggestionResult,
     project: AnnifProject,
     lang: str,
-    file: Optional[TextIOWrapper] = None,
+    file: TextIOWrapper | None = None,
 ) -> None:
     """
     Print subject suggestions to the console or a file. The suggestions are displayed as
@@ -205,8 +203,8 @@ def show_hits(
 
 
 def parse_backend_params(
-    backend_param: Union[Tuple[str, ...], Tuple[()]], project: AnnifProject
-) -> DefaultDict[str, Dict[str, str]]:
+    backend_param: tuple[str, ...] | tuple[()], project: AnnifProject
+) -> collections.defaultdict[str, dict[str, str]]:
     """Parse a list of backend parameters given with the --backend-param
     option into a nested dict structure"""
     backend_params = collections.defaultdict(dict)
@@ -226,7 +224,7 @@ def _validate_backend_params(backend: str, beparam: str, project: AnnifProject) 
         )
 
 
-def generate_filter_params(filter_batch_max_limit: int) -> List[Tuple[int, float]]:
+def generate_filter_params(filter_batch_max_limit: int) -> list[tuple[int, float]]:
     limits = range(1, filter_batch_max_limit + 1)
     thresholds = [i * 0.05 for i in range(20)]
     return list(itertools.product(limits, thresholds))
@@ -234,7 +232,7 @@ def generate_filter_params(filter_batch_max_limit: int) -> List[Tuple[int, float
 
 def _get_completion_choices(
     param: Argument,
-) -> Dict[str, Union[AnnifVocabulary, AnnifProject]]:
+) -> dict[str, AnnifVocabulary | AnnifProject]:
     if param.name == "project_id":
         return annif.registry.get_projects()
     elif param.name == "vocab_id":
@@ -243,7 +241,7 @@ def _get_completion_choices(
         return []
 
 
-def complete_param(ctx: Context, param: Argument, incomplete: str) -> List[str]:
+def complete_param(ctx: Context, param: Argument, incomplete: str) -> list[str]:
     with ctx.obj.load_app().app_context():
         return [
             choice

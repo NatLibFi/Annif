@@ -2,7 +2,7 @@
 given character length."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from annif.exception import ConfigurationException
 
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class InputLimiter(transform.BaseTransform):
     name = "limit"
 
-    def __init__(self, project: Optional[AnnifProject], input_limit: str) -> None:
+    def __init__(self, project: AnnifProject | None, input_limit: str) -> None:
         super().__init__(project)
         self.input_limit = int(input_limit)
         self._validate_value(self.input_limit)

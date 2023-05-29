@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import collections
 import math
+from collections import defaultdict
 from enum import IntEnum
 from statistics import mean
-from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any
 
 import joblib
 import numpy as np
@@ -55,7 +56,7 @@ Feature = IntEnum(
 )
 
 
-def conflate_matches(matches: List[Match], doc_length: int) -> List[Candidate]:
+def conflate_matches(matches: list[Match], doc_length: int) -> list[Candidate]:
     subj_matches = collections.defaultdict(list)
     for match in matches:
         subj_matches[match.subject_id].append(match)
@@ -80,7 +81,7 @@ def generate_candidates(
     analyzer: Analyzer,
     vectorizer: CountVectorizer,
     index: TokenSetIndex,
-) -> List[Candidate]:
+) -> list[Candidate]:
     sentences = analyzer.tokenize_sentences(text)
     sent_tokens = vectorizer.transform(sentences)
     matches = []
@@ -102,7 +103,7 @@ def generate_candidates(
 
 
 def candidates_to_features(
-    candidates: List[Candidate], mdata: "ModelData"
+    candidates: list[Candidate], mdata: "ModelData"
 ) -> np.ndarray:
     """Convert a list of Candidates to a NumPy feature matrix"""
 
@@ -150,7 +151,7 @@ class MLLMFeatureConverter(annif.parallel.BaseWorker):
 class MLLMModel:
     """Maui-like Lexical Matching model"""
 
-    def generate_candidates(self, text: str, analyzer: Analyzer) -> List[Candidate]:
+    def generate_candidates(self, text: str, analyzer: Analyzer) -> list[Candidate]:
         return generate_candidates(text, analyzer, self._vectorizer, self._index)
 
     @property
@@ -165,11 +166,11 @@ class MLLMModel:
             idf=self._idf,
         )
 
-    def _candidates_to_features(self, candidates: List[Candidate]) -> np.ndarray:
+    def _candidates_to_features(self, candidates: list[Candidate]) -> np.ndarray:
         return candidates_to_features(candidates, self._model_data)
 
     @staticmethod
-    def _get_label_props(params: Dict[str, Any]) -> Tuple[List[URIRef], List[URIRef]]:
+    def _get_label_props(params: dict[str, Any]) -> tuple[list[URIRef], list[URIRef]]:
         pref_label_props = [SKOS.prefLabel]
 
         if annif.util.boolean(params["use_hidden_labels"]):
@@ -183,8 +184,8 @@ class MLLMModel:
         self,
         graph: Graph,
         vocab: AnnifVocabulary,
-        params: Dict[str, Any],
-    ) -> Tuple[List[Term], List[int]]:
+        params: dict[str, Any],
+    ) -> tuple[list[Term], list[int]]:
         pref_label_props, nonpref_label_props = self._get_label_props(params)
 
         terms = []
@@ -214,8 +215,8 @@ class MLLMModel:
         self,
         vocab: AnnifVocabulary,
         analyzer: Analyzer,
-        params: Dict[str, Any],
-    ) -> List[int]:
+        params: dict[str, Any],
+    ) -> list[int]:
         graph = vocab.as_graph()
         terms, subject_ids = self._prepare_terms(graph, vocab, params)
         self._prepare_relations(graph, vocab)
@@ -240,7 +241,7 @@ class MLLMModel:
 
     def _prepare_train_data(
         self, corpus: DocumentCorpus, analyzer: Analyzer, n_jobs: int
-    ) -> Tuple[List[List[Candidate]], List[bool]]:
+    ) -> tuple[list[list[Candidate]], list[bool]]:
         # frequency of subjects (by id) in the generated candidates
         self._doc_freq = collections.Counter()
         # frequency of manually assigned subjects ("domain keyphraseness")
@@ -271,8 +272,8 @@ class MLLMModel:
         return (train_x, train_y)
 
     def _calculate_idf(
-        self, subject_ids: List[int], doc_count: int
-    ) -> DefaultDict[int, float]:
+        self, subject_ids: list[int], doc_count: int
+    ) -> defaultdict[int, float]:
         idf = collections.defaultdict(float)
         for subj_id in subject_ids:
             idf[subj_id] = math.log((doc_count + 1) / (self._doc_freq[subj_id] + 1)) + 1
@@ -280,8 +281,8 @@ class MLLMModel:
         return idf
 
     def _prepare_features(
-        self, train_x: List[List[Candidate]], n_jobs: int
-    ) -> List[np.ndarray]:
+        self, train_x: list[list[Candidate]], n_jobs: int
+    ) -> list[np.ndarray]:
         fc_args = {"mdata": self._model_data}
         jobs, pool_class = annif.parallel.get_pool(n_jobs)
 
@@ -299,9 +300,9 @@ class MLLMModel:
         corpus: DocumentCorpus,
         vocab: AnnifVocabulary,
         analyzer: Analyzer,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         n_jobs: int,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         # create an index from the vocabulary terms
         subject_ids = self._prepare_train_index(vocab, analyzer, params)
 
@@ -316,7 +317,7 @@ class MLLMModel:
 
         return (np.vstack(features), np.array(train_y))
 
-    def _create_classifier(self, params: Dict[str, Any]) -> BaggingClassifier:
+    def _create_classifier(self, params: dict[str, Any]) -> BaggingClassifier:
         return BaggingClassifier(
             DecisionTreeClassifier(
                 min_samples_leaf=int(params["min_samples_leaf"]),
@@ -327,9 +328,9 @@ class MLLMModel:
 
     def train(
         self,
-        train_x: Union[np.ndarray, List[Tuple[int, int]]],
-        train_y: Union[List[bool], np.ndarray],
-        params: Dict[str, Any],
+        train_x: np.ndarray | list[tuple[int, int]],
+        train_y: list[bool] | np.ndarray,
+        params: dict[str, Any],
     ) -> None:
         # fit the model on the training corpus
         self._classifier = self._create_classifier(params)
@@ -344,19 +345,19 @@ class MLLMModel:
             )
 
     def _prediction_to_list(
-        self, scores: np.ndarray, candidates: List[Candidate]
-    ) -> List[Tuple[np.float64, int]]:
+        self, scores: np.ndarray, candidates: list[Candidate]
+    ) -> list[tuple[np.float64, int]]:
         subj_scores = [(score[1], c.subject_id) for score, c in zip(scores, candidates)]
         return sorted(subj_scores, reverse=True)
 
-    def predict(self, candidates: List[Candidate]) -> List[Tuple[np.float64, int]]:
+    def predict(self, candidates: list[Candidate]) -> list[tuple[np.float64, int]]:
         if not candidates:
             return []
         features = self._candidates_to_features(candidates)
         scores = self._classifier.predict_proba(features)
         return self._prediction_to_list(scores, candidates)
 
-    def save(self, filename: str) -> List[str]:
+    def save(self, filename: str) -> list[str]:
         return joblib.dump(self, filename)
 
     @staticmethod

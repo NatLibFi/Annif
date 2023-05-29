@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import functools
-from typing import Dict, Optional
 
 import voikko.libvoikko
 
@@ -17,7 +16,7 @@ class VoikkoAnalyzer(analyzer.Analyzer):
         self.voikko = None
         super().__init__(**kwargs)
 
-    def __getstate__(self) -> Dict[str, Optional[str]]:
+    def __getstate__(self) -> dict[str, str | None]:
         """Return the state of the object for pickling purposes. The Voikko
         instance is set to None because as a ctypes object it cannot be
         pickled."""

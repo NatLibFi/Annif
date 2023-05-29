@@ -4,7 +4,7 @@ from __future__ import annotations
 import abc
 import collections
 import warnings
-from typing import TYPE_CHECKING, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Callable
 
 import optuna
 import optuna.exceptions
@@ -77,13 +77,13 @@ class HyperparameterOptimizer:
         """Convert the study results into hyperparameter recommendations"""
         pass  # pragma: no cover
 
-    def _normalize(self, hps: Dict[str, float]) -> Dict[str, float]:
+    def _normalize(self, hps: dict[str, float]) -> dict[str, float]:
         """Normalize the given raw hyperparameters. Intended to be overridden
         by subclasses when necessary. The default is to keep them as-is."""
         return hps
 
     def optimize(
-        self, n_trials: int, n_jobs: int, results_file: Optional[LazyFile]
+        self, n_trials: int, n_jobs: int, results_file: LazyFile | None
     ) -> HPRecommendation:
         """Find the optimal hyperparameters by testing up to the given number
         of hyperparameter combinations"""

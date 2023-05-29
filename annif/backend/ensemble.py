@@ -1,7 +1,7 @@
 """Ensemble backend that combines results from multiple projects"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 
 import annif.eval
 import annif.parallel
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 class BaseEnsembleBackend(backend.AnnifBackend):
     """Base class for ensemble backends"""
 
-    def _get_sources_attribute(self, attr: str) -> List[Optional[bool]]:
+    def _get_sources_attribute(self, attr: str) -> list[bool | None]:
         params = self._get_backend_params(None)
         sources = annif.util.parse_sources(params["sources"])
         return [
@@ -38,8 +38,8 @@ class BaseEnsembleBackend(backend.AnnifBackend):
             project.initialize(parallel)
 
     def _suggest_with_sources(
-        self, texts: List[str], sources: List[Tuple[str, float]]
-    ) -> Dict[str, SuggestionBatch]:
+        self, texts: list[str], sources: list[tuple[str, float]]
+    ) -> dict[str, SuggestionBatch]:
         return {
             project_id: self.project.registry.get_project(project_id).suggest(texts)
             for project_id, _ in sources
@@ -47,9 +47,9 @@ class BaseEnsembleBackend(backend.AnnifBackend):
 
     def _merge_source_batches(
         self,
-        batch_by_source: Dict[str, SuggestionBatch],
-        sources: List[Tuple[str, float]],
-        params: Dict[str, Any],
+        batch_by_source: dict[str, SuggestionBatch],
+        sources: list[tuple[str, float]],
+        params: dict[str, Any],
     ) -> SuggestionBatch:
         """Merge the given SuggestionBatches from each source into a single
         SuggestionBatch. The default implementation computes a weighted
@@ -63,7 +63,7 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         )
 
     def _suggest_batch(
-        self, texts: List[str], params: Dict[str, Any]
+        self, texts: list[str], params: dict[str, Any]
     ) -> SuggestionBatch:
         sources = annif.util.parse_sources(params["sources"])
         batch_by_source = self._suggest_with_sources(texts, sources)
@@ -109,11 +109,11 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                 self._source_batches.append(suggestions)
                 self._gold_batches.append(gold_batch)
 
-    def _normalize(self, hps: Dict[str, float]) -> Dict[str, float]:
+    def _normalize(self, hps: dict[str, float]) -> dict[str, float]:
         total = sum(hps.values())
         return {source: hps[source] / total for source in hps}
 
-    def _format_cfg_line(self, hps: Dict[str, float]) -> str:
+    def _format_cfg_line(self, hps: dict[str, float]) -> str:
         return "sources=" + ",".join(
             [f"{src}:{weight:.4f}" for src, weight in hps.items()]
         )
@@ -159,5 +159,5 @@ class EnsembleBackend(BaseEnsembleBackend, hyperopt.AnnifHyperoptBackend):
     ) -> EnsembleOptimizer:
         return EnsembleOptimizer(self, corpus, metric)
 
-    def _train(self, corpus: DocumentCorpus, params: Dict[str, Any], jobs: int = 0):
+    def _train(self, corpus: DocumentCorpus, params: dict[str, Any], jobs: int = 0):
         raise NotSupportedException("Training ensemble backend is not possible.")

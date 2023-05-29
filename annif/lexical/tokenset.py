@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import collections
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from numpy import int32, ndarray
@@ -15,8 +15,8 @@ class TokenSet:
 
     def __init__(
         self,
-        tokens: Union[List[int32], List[int], ndarray],
-        subject_id: Optional[int] = None,
+        tokens: list[int32] | list[int] | ndarray,
+        subject_id: int | None = None,
         is_pref: bool = False,
     ) -> None:
         self._tokens = set(tokens)
@@ -51,7 +51,7 @@ class TokenSetIndex:
         if tset.key is not None:
             self._index[tset.key].add(tset)
 
-    def _find_subj_tsets(self, tset: TokenSet) -> Dict[Optional[int], TokenSet]:
+    def _find_subj_tsets(self, tset: TokenSet) -> dict[int | None, TokenSet]:
         """return a dict (subject_id : TokenSet) of matches contained in the
         given TokenSet"""
 
@@ -85,7 +85,7 @@ class TokenSetIndex:
 
         return subj_ambiguity
 
-    def search(self, tset: TokenSet) -> List[Tuple[TokenSet, int]]:
+    def search(self, tset: TokenSet) -> list[tuple[TokenSet, int]]:
         """Return the TokenSets that are contained in the given TokenSet.
         The matches are returned as a list of (TokenSet, ambiguity) pairs
         where ambiguity is an integer indicating the number of other TokenSets

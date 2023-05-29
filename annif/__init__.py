@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import os.path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 logging.basicConfig()
 logger = logging.getLogger("annif")
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from flask.app import Flask
 
 
-def create_flask_app(config_name: Optional[str] = None) -> Flask:
+def create_flask_app(config_name: str | None = None) -> Flask:
     """Create a Flask app to be used by the CLI."""
     from flask import Flask
 
@@ -30,7 +30,7 @@ def create_flask_app(config_name: Optional[str] = None) -> Flask:
     return app
 
 
-def create_app(config_name: Optional[str] = None) -> Flask:
+def create_app(config_name: str | None = None) -> Flask:
     """Create a Connexion app to be used for the API."""
     # 'cxapp' here is the Connexion application that has a normal Flask app
     # as a property (cxapp.app)
@@ -67,7 +67,7 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     return cxapp.app
 
 
-def _get_config_name(config_name: Optional[str]) -> str:
+def _get_config_name(config_name: str | None) -> str:
     if config_name is None:
         config_name = os.environ.get("ANNIF_CONFIG")
     if config_name is None:

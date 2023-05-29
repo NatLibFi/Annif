@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import enum
 import os.path
+from collections import defaultdict
 from shutil import rmtree
-from typing import TYPE_CHECKING, DefaultDict, Dict, List, Optional, Union
+from typing import TYPE_CHECKING
 
 import annif
 import annif.analyzer
@@ -62,7 +63,7 @@ class AnnifProject(DatadirMixin):
     def __init__(
         self,
         project_id: str,
-        config: Union[Dict[str, str], SectionProxy],
+        config: dict[str, str] | SectionProxy,
         datadir: str,
         registry: AnnifRegistry,
     ) -> None:
@@ -133,8 +134,8 @@ class AnnifProject(DatadirMixin):
 
     def _suggest_with_backend(
         self,
-        texts: List[str],
-        backend_params: Optional[DefaultDict[str, Dict]],
+        texts: list[str],
+        backend_params: defaultdict[str, dict] | None,
     ) -> annif.suggestion.SuggestionBatch:
         if backend_params is None:
             backend_params = {}
@@ -206,7 +207,7 @@ class AnnifProject(DatadirMixin):
     def subjects(self) -> SubjectIndex:
         return self.vocab.subjects
 
-    def _get_info(self, key: str) -> Optional[Union[bool, datetime]]:
+    def _get_info(self, key: str) -> bool | datetime | None:
         try:
             be = self.backend
             if be is not None:
@@ -216,17 +217,17 @@ class AnnifProject(DatadirMixin):
             return None
 
     @property
-    def is_trained(self) -> Optional[bool]:
+    def is_trained(self) -> bool | None:
         return self._get_info("is_trained")
 
     @property
-    def modification_time(self) -> Optional[datetime]:
+    def modification_time(self) -> datetime | None:
         return self._get_info("modification_time")
 
     def suggest_corpus(
         self,
         corpus: DocumentCorpus,
-        backend_params: Optional[DefaultDict[str, Dict]] = None,
+        backend_params: defaultdict[str, dict] | None = None,
     ) -> annif.suggestion.SuggestionResults:
         """Suggest subjects for the given documents corpus in batches of documents."""
         suggestions = (
@@ -238,8 +239,8 @@ class AnnifProject(DatadirMixin):
 
     def suggest(
         self,
-        texts: List[str],
-        backend_params: Optional[DefaultDict[str, Dict]] = None,
+        texts: list[str],
+        backend_params: defaultdict[str, dict] | None = None,
     ) -> annif.suggestion.SuggestionBatch:
         """Suggest subjects for the given documents batch."""
         if not self.is_trained:
@@ -253,7 +254,7 @@ class AnnifProject(DatadirMixin):
     def train(
         self,
         corpus: DocumentCorpus,
-        backend_params: Optional[DefaultDict[str, Dict]] = None,
+        backend_params: defaultdict[str, dict] | None = None,
         jobs: int = 0,
     ) -> None:
         """train the project using documents from a metadata source"""
@@ -267,7 +268,7 @@ class AnnifProject(DatadirMixin):
     def learn(
         self,
         corpus: DocumentCorpus,
-        backend_params: Optional[DefaultDict[str, Dict]] = None,
+        backend_params: defaultdict[str, dict] | None = None,
     ) -> None:
         """further train the project using documents from a metadata source"""
         if backend_params is None:
@@ -287,7 +288,7 @@ class AnnifProject(DatadirMixin):
         trials: int,
         jobs: int,
         metric: str,
-        results_file: Optional[LazyFile],
+        results_file: LazyFile | None,
     ) -> HPRecommendation:
         """optimize the hyperparameters of the project using a validation
         corpus against a given metric"""
@@ -300,7 +301,7 @@ class AnnifProject(DatadirMixin):
             project_id=self.project_id,
         )
 
-    def dump(self) -> Dict[str, Optional[Union[str, Dict, bool, datetime]]]:
+    def dump(self) -> dict[str, str | dict | bool | datetime | None]:
         """return this project as a dict"""
         return {
             "project_id": self.project_id,

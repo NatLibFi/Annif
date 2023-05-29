@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import csv
 import os.path
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple, Union
+from collections.abc import Iterator
+from typing import TYPE_CHECKING, Any
 
 import annif
 import annif.util
@@ -37,7 +38,7 @@ class SubjectFileTSV(SubjectCorpus):
         yield Subject(uri=clean_uri, labels=labels, notation=notation)
 
     @property
-    def languages(self) -> List[str]:
+    def languages(self) -> list[str]:
         return [self.language]
 
     @property
@@ -59,7 +60,7 @@ class SubjectFileCSV(SubjectCorpus):
         """initialize the SubjectFileCSV given a path to a CSV file"""
         self.path = path
 
-    def _parse_row(self, row: Dict[str, str]) -> Iterator[Subject]:
+    def _parse_row(self, row: dict[str, str]) -> Iterator[Subject]:
         labels = {
             fname.replace("label_", ""): value or None
             for fname, value in row.items()
@@ -78,7 +79,7 @@ class SubjectFileCSV(SubjectCorpus):
         )
 
     @property
-    def languages(self) -> List[str]:
+    def languages(self) -> list[str]:
         # infer the supported languages from the CSV column names
         with open(self.path, encoding="utf-8-sig") as csvfile:
             reader = csv.reader(csvfile)
@@ -130,10 +131,10 @@ class SubjectIndex:
         return len(self._subjects)
 
     @property
-    def languages(self) -> List[str]:
+    def languages(self) -> list[str]:
         return self._languages
 
-    def __getitem__(self, subject_id: Union[int, np.int32]) -> Subject:
+    def __getitem__(self, subject_id: int | np.int32) -> Subject:
         return self._subjects[subject_id]
 
     def append(self, subject: Subject) -> None:
@@ -150,7 +151,7 @@ class SubjectIndex:
     def contains_uri(self, uri: str) -> bool:
         return uri in self._uri_idx
 
-    def by_uri(self, uri: str, warnings: bool = True) -> Optional[int]:
+    def by_uri(self, uri: str, warnings: bool = True) -> int | None:
         """return the subject ID of a subject by its URI, or None if not found.
         If warnings=True, log a warning message if the URI cannot be found."""
         try:
@@ -160,7 +161,7 @@ class SubjectIndex:
                 logger.warning("Unknown subject URI <%s>", uri)
             return None
 
-    def by_label(self, label: Optional[str], language: str) -> Optional[int]:
+    def by_label(self, label: str | None, language: str) -> int | None:
         """return the subject ID of a subject by its label in a given
         language"""
         try:
@@ -169,7 +170,7 @@ class SubjectIndex:
             logger.warning('Unknown subject label "%s"@%s', label, language)
             return None
 
-    def deprecated_ids(self) -> List[int]:
+    def deprecated_ids(self) -> list[int]:
         """return indices of deprecated subjects"""
 
         return [
@@ -179,7 +180,7 @@ class SubjectIndex:
         ]
 
     @property
-    def active(self) -> List[Tuple[int, Subject]]:
+    def active(self) -> list[tuple[int, Subject]]:
         """return a list of (subject_id, subject) tuples of all subjects that
         are not deprecated"""
 
@@ -217,7 +218,7 @@ class SubjectIndex:
 class SubjectSet:
     """Represents a set of subjects for a document."""
 
-    def __init__(self, subject_ids: Optional[Any] = None) -> None:
+    def __init__(self, subject_ids: Any | None = None) -> None:
         """Create a SubjectSet and optionally initialize it from an iterable
         of subject IDs"""
 
@@ -260,7 +261,7 @@ class SubjectSet:
     @staticmethod
     def _parse_line(
         line: str,
-    ) -> Tuple[Optional[str], Optional[str]]:
+    ) -> tuple[str | None, str | None]:
         uri = label = None
         vals = line.split("\t")
         for val in vals:
@@ -275,7 +276,7 @@ class SubjectSet:
         return uri, label
 
     def as_vector(
-        self, size: Optional[int] = None, destination: Optional[np.ndarray] = None
+        self, size: int | None = None, destination: np.ndarray | None = None
     ) -> np.ndarray:
         """Return the hits as a one-dimensional NumPy array in sklearn
         multilabel indicator format. Use destination array if given (not

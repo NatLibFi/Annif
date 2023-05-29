@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os.path
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 import annif
 import annif.corpus
@@ -107,7 +107,7 @@ class AnnifVocabulary(DatadirMixin):
         return len(self.subjects)
 
     @property
-    def languages(self) -> List[str]:
+    def languages(self) -> list[str]:
         return self.subjects.languages
 
     def load_vocabulary(

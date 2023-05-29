@@ -5,7 +5,7 @@ individual backends into probabilities."""
 from __future__ import annotations
 
 import os.path
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple
+from typing import TYPE_CHECKING, Any
 
 import joblib
 import numpy as np
@@ -36,7 +36,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
 
     DEFAULT_PARAMETERS = {"min-docs": 10}
 
-    def default_params(self) -> Dict[str, Any]:
+    def default_params(self) -> dict[str, Any]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
         return params
@@ -59,15 +59,15 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
                     backend_id=self.backend_id,
                 )
 
-    def _get_model(self, source_project_id: str) -> Dict[int, IsotonicRegression]:
+    def _get_model(self, source_project_id: str) -> dict[int, IsotonicRegression]:
         self.initialize()
         return self._models[source_project_id]
 
     def _merge_source_batches(
         self,
-        batch_by_source: Dict[str, SuggestionBatch],
-        sources: List[Tuple[str, float]],
-        params: Dict[str, Any],
+        batch_by_source: dict[str, SuggestionBatch],
+        sources: list[tuple[str, float]],
+        params: dict[str, Any],
     ) -> SuggestionBatch:
         reg_batch_by_source = {}
         for project_id, batch in batch_by_source.items():
@@ -95,7 +95,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
     @staticmethod
     def _suggest_train_corpus(
         source_project: AnnifProject, corpus: DocumentCorpus
-    ) -> Tuple[csc_matrix, csc_matrix]:
+    ) -> tuple[csc_matrix, csc_matrix]:
         # lists for constructing score matrix
         data, row, col = [], [], []
         # lists for constructing true label matrix
@@ -156,7 +156,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
     def _train(
         self,
         corpus: DocumentCorpus,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         jobs: int = 0,
     ) -> None:
         if corpus == "cached":

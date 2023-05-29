@@ -4,7 +4,6 @@ from __future__ import annotations
 import abc
 import functools
 import unicodedata
-from typing import List
 
 _KEY_TOKEN_MIN_LENGTH = "token_min_length"
 
@@ -21,7 +20,7 @@ class Analyzer(metaclass=abc.ABCMeta):
         if _KEY_TOKEN_MIN_LENGTH in kwargs:
             self.token_min_length = int(kwargs[_KEY_TOKEN_MIN_LENGTH])
 
-    def tokenize_sentences(self, text: str) -> List[str]:
+    def tokenize_sentences(self, text: str) -> list[str]:
         """Tokenize a piece of text (e.g. a document) into sentences."""
         import nltk.tokenize
 
@@ -38,7 +37,7 @@ class Analyzer(metaclass=abc.ABCMeta):
                 return True
         return False
 
-    def tokenize_words(self, text: str, filter: bool = True) -> List[str]:
+    def tokenize_words(self, text: str, filter: bool = True) -> list[str]:
         """Tokenize a piece of text (e.g. a sentence) into words. If
         filter=True (default), only return valid tokens (e.g. not
         punctuation, numbers or very short words)"""
