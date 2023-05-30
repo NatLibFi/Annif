@@ -40,7 +40,7 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
             self._candidates.append(candidates)
             self._gold_subjects.append(doc.subject_set)
 
-    def _objective(self, trial: Trial) -> np.float:
+    def _objective(self, trial: Trial) -> float:
         params = {
             "min_samples_leaf": trial.suggest_int("min_samples_leaf", 5, 30),
             "max_leaf_nodes": trial.suggest_int("max_leaf_nodes", 100, 2000),

@@ -11,6 +11,8 @@ from annif import logger
 from annif.suggestion import SuggestionBatch
 
 if TYPE_CHECKING:
+    from configparser import SectionProxy
+
     from annif.corpus.document import DocumentCorpus
     from annif.project import AnnifProject
 
@@ -24,7 +26,10 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     DEFAULT_PARAMETERS = {"limit": 100}
 
     def __init__(
-        self, backend_id: str, config_params: dict[str, Any], project: AnnifProject
+        self,
+        backend_id: str,
+        config_params: dict[str, Any] | SectionProxy,
+        project: AnnifProject,
     ) -> None:
         """Initialize backend with specific parameters. The
         parameters are a dict. Keys and values depend on the specific
@@ -49,7 +54,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         return bool(glob(os.path.join(self.datadir, "*")))
 
     @property
-    def modification_time(self) -> datetime.datetime | None:
+    def modification_time(self) -> datetime | None:
         mtimes = [
             datetime.utcfromtimestamp(os.path.getmtime(p))
             for p in glob(os.path.join(self.datadir, "*"))

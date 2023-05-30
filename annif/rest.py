@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from connexion.lifecycle import ConnexionResponse
 
     from annif.corpus.subject import SubjectIndex
-    from annif.exception import ConfigurationException, NotSupportedException
     from annif.suggestion import SubjectSuggestion, SuggestionResults
 
 
@@ -33,7 +32,7 @@ def project_not_found_error(project_id: str) -> ConnexionResponse:
 
 
 def server_error(
-    err: ConfigurationException | NotSupportedException,
+    err: AnnifException,
 ) -> ConnexionResponse:
     """return a Connexion error object when there is a server error (project
     or backend problem)"""
@@ -111,7 +110,7 @@ def _is_error(result: list[dict[str, list]] | ConnexionResponse) -> bool:
 
 
 def suggest(
-    project_id: str, body: dict[str, float | str]
+    project_id: str, body: dict[str, Any]
 ) -> dict[str, list] | ConnexionResponse:
     """suggest subjects for the given text and return a dict with results
     formatted according to OpenAPI spec"""
@@ -148,7 +147,7 @@ def suggest_batch(
 def _suggest(
     project_id: str,
     documents: list[dict[str, str]],
-    parameters: dict[str, float | str],
+    parameters: dict[str, Any],
 ) -> list[dict[str, list]] | ConnexionResponse:
     corpus = _documents_to_corpus(documents, subject_index=None)
     try:

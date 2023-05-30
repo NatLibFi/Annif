@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import abc
 import os.path
-from collections.abc import Iterator
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
 import joblib
@@ -71,7 +71,7 @@ class TfidfVectorizerMixin:
                 )
 
     def create_vectorizer(
-        self, input: Iterator[str], params: dict[str, Any] = {}
+        self, input: Iterable[str], params: dict[str, Any] = {}
     ) -> csr_matrix:
         self.info("creating vectorizer")
         self.vectorizer = TfidfVectorizer(**params)

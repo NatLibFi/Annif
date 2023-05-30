@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import warnings
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -110,8 +110,8 @@ class EvaluationBatch:
         self,
         y_true: csr_array,
         y_pred: csr_array,
-        metrics: Sequence[str] = [],
-    ) -> dict[str, np.float64 | float | int]:
+        metrics: Iterable[str] = [],
+    ) -> dict[str, float]:
         y_pred_binary = y_pred > 0.0
 
         # define the available metrics as lazy lambda functions
@@ -245,10 +245,10 @@ class EvaluationBatch:
 
     def results(
         self,
-        metrics: Sequence[str] = [],
+        metrics: Iterable[str] = [],
         results_file: LazyFile | TextIOWrapper | None = None,
         language: str | None = None,
-    ) -> dict[str, np.float64 | float]:
+    ) -> dict[str, float]:
         """evaluate a set of selected subjects against a gold standard using
         different metrics. If metrics is empty, use all available metrics.
         If results_file (file object) given, write results per subject to it

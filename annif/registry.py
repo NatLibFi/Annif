@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
 
-from flask import current_app
+from flask import Flask, current_app
 
 import annif
 from annif.config import parse_config
@@ -12,9 +11,6 @@ from annif.exception import ConfigurationException
 from annif.project import Access, AnnifProject
 from annif.util import parse_args
 from annif.vocab import AnnifVocabulary
-
-if TYPE_CHECKING:
-    from werkzeug.local import LocalProxy
 
 logger = annif.logger
 
@@ -113,7 +109,7 @@ class AnnifRegistry:
         return self._vocabs[self._rid][vocab_key], language
 
 
-def initialize_projects(app: LocalProxy) -> None:
+def initialize_projects(app: Flask) -> None:
     projects_config_path = app.config["PROJECTS_CONFIG_PATH"]
     datadir = app.config["DATADIR"]
     init_projects = app.config["INITIALIZE_PROJECTS"]

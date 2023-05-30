@@ -162,7 +162,7 @@ class AnnifProject(DatadirMixin):
         return self._transform
 
     @property
-    def backend(self) -> AnnifBackend:
+    def backend(self) -> AnnifBackend | None:
         if self._backend is None:
             if "backend" not in self.config:
                 raise ConfigurationException(

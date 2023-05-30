@@ -12,6 +12,8 @@ from annif.suggestion import SuggestionBatch
 from . import backend, hyperopt
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from optuna.study.study import Study
     from optuna.trial._trial import Trial
 
@@ -150,7 +152,7 @@ class EnsembleBackend(BaseEnsembleBackend, hyperopt.AnnifHyperoptBackend):
         return all(sources_trained)
 
     @property
-    def modification_time(self) -> None:
+    def modification_time(self) -> datetime | None:
         mtimes = self._get_sources_attribute("modification_time")
         return max(filter(None, mtimes), default=None)
 

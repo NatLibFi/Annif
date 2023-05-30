@@ -128,7 +128,7 @@ def format_datetime(dt: datetime | None) -> str:
 
 
 def open_documents(
-    paths: tuple[str, ...] | tuple[()],
+    paths: tuple[str, ...],
     subject_index: SubjectIndex,
     vocab_lang: str,
     docs_limit: int | None,
@@ -232,7 +232,7 @@ def generate_filter_params(filter_batch_max_limit: int) -> list[tuple[int, float
 
 def _get_completion_choices(
     param: Argument,
-) -> dict[str, AnnifVocabulary | AnnifProject]:
+) -> dict[str, AnnifVocabulary] | dict[str, AnnifProject] | list:
     if param.name == "project_id":
         return annif.registry.get_projects()
     elif param.name == "vocab_id":

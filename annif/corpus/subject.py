@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import csv
 import os.path
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from typing import TYPE_CHECKING, Any
 
 import annif
@@ -42,7 +42,7 @@ class SubjectFileTSV(SubjectCorpus):
         return [self.language]
 
     @property
-    def subjects(self) -> None:
+    def subjects(self) -> Generator:
         with open(self.path, encoding="utf-8-sig") as subjfile:
             for line in subjfile:
                 yield from self._parse_line(line)
@@ -92,7 +92,7 @@ class SubjectFileCSV(SubjectCorpus):
         ]
 
     @property
-    def subjects(self) -> None:
+    def subjects(self) -> Generator:
         with open(self.path, encoding="utf-8-sig") as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
@@ -131,7 +131,7 @@ class SubjectIndex:
         return len(self._subjects)
 
     @property
-    def languages(self) -> list[str]:
+    def languages(self) -> list[str] | None:
         return self._languages
 
     def __getitem__(self, subject_id: int | np.int32) -> Subject:
@@ -239,7 +239,7 @@ class SubjectSet:
     def __bool__(self) -> bool:
         return bool(self._subject_ids)
 
-    def __eq__(self, other: SubjectSet) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, SubjectSet):
             return self._subject_ids == other._subject_ids
 

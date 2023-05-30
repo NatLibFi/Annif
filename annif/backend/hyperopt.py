@@ -116,7 +116,7 @@ class AnnifHyperoptBackend(AnnifBackend):
     optimization"""
 
     @abc.abstractmethod
-    def get_hp_optimizer(self, corpus: DocumentCorpus):
+    def get_hp_optimizer(self, corpus: DocumentCorpus, metric: str):
         """Get a HyperparameterOptimizer object that can look for
         optimal hyperparameter combinations for the given corpus,
         measured using the given metric"""

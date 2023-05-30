@@ -40,7 +40,7 @@ class LangFilter(transform.BaseTransform):
             if len(sent) < self.sentence_min_length:
                 retained_sentences.append(sent)
                 continue
-            proportion = in_target_language(sent, lang=self.project.language)
+            proportion = in_target_language(sent, lang=(self.project.language,))
             if proportion >= self.min_ratio:
                 retained_sentences.append(sent)
         return " ".join(retained_sentences)

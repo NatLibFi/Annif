@@ -19,7 +19,6 @@ from annif.suggestion import SubjectSuggestion
 from . import backend
 
 if TYPE_CHECKING:
-    from numpy import float64
     from rdflib.term import URIRef
 
     from annif.corpus.document import DocumentCorpus
@@ -141,8 +140,8 @@ class YakeBackend(backend.AnnifBackend):
         return subject_suggestions
 
     def _keyphrases2suggestions(
-        self, keyphrases: list[tuple[str, float64]]
-    ) -> list[tuple[str, float64]]:
+        self, keyphrases: list[tuple[str, float]]
+    ) -> list[tuple[str, float]]:
         suggestions = []
         not_matched = []
         for kp, score in keyphrases:
@@ -169,13 +168,13 @@ class YakeBackend(backend.AnnifBackend):
         keyphrase = self._sort_phrase(keyphrase)
         return self._index.get(keyphrase, [])
 
-    def _transform_score(self, score: float64) -> float64:
+    def _transform_score(self, score: float) -> float:
         score = max(score, 0)
         return 1.0 / (score + 1)
 
     def _combine_suggestions(
-        self, suggestions: list[tuple[str, float], tuple[str, float64]]
-    ) -> list[tuple[str, float], tuple[str, float64]]:
+        self, suggestions: list[tuple[str, float]]
+    ) -> list[tuple[str, float]]:
         combined_suggestions = {}
         for uri, score in suggestions:
             if uri not in combined_suggestions:

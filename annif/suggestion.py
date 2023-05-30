@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import collections
 import itertools
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -86,7 +86,7 @@ class SuggestionBatch:
     @classmethod
     def from_sequence(
         cls,
-        suggestion_results: list[list[SubjectSuggestion]],
+        suggestion_results: Sequence[Iterable[SubjectSuggestion]],
         subject_index: SubjectIndex,
         limit: int | None = None,
     ) -> SuggestionBatch:
@@ -142,7 +142,7 @@ class SuggestionBatch:
 class SuggestionResults:
     """Subject suggestions for a potentially very large number of documents."""
 
-    def __init__(self, batches: list[SuggestionBatch]) -> None:
+    def __init__(self, batches: Iterable[SuggestionBatch]) -> None:
         """Initialize a new SuggestionResults from an iterable that provides
         SuggestionBatch objects."""
 

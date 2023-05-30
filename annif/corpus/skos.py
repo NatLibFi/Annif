@@ -113,7 +113,7 @@ class SubjectFileSKOS(SubjectCorpus):
         self,
         concept: URIRef,
         label_types: Sequence[URIRef],
-    ) -> defaultdict[str, list[str]] | defaultdict[None, list[str]]:
+    ) -> defaultdict[str | None, list[str]]:
         """return all the labels of the given concept with the given label
         properties as a dict-like object where the keys are language codes
         and the values are lists of labels in that language"""

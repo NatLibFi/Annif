@@ -53,7 +53,7 @@ class TransformChain:
         self,
         transform_classes: list[Type[BaseTransform]],
         args: list[tuple[list, dict]],
-    ) -> list[Type[BaseTransform]]:
+    ) -> list[BaseTransform]:
         transforms = []
         for trans, (posargs, kwargs) in zip(transform_classes, args):
             try:
