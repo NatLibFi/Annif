@@ -5,7 +5,7 @@ import collections
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from numpy import int32, ndarray
+    from numpy import ndarray
 
 
 class TokenSet:
@@ -15,7 +15,7 @@ class TokenSet:
 
     def __init__(
         self,
-        tokens: list[int32] | list[int] | ndarray,
+        tokens: ndarray,
         subject_id: int | None = None,
         is_pref: bool = False,
     ) -> None:
