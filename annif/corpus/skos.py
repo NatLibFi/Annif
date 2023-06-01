@@ -4,8 +4,6 @@ from __future__ import annotations
 import collections
 import os.path
 import shutil
-from collections import defaultdict
-from collections.abc import Iterator, Sequence
 from typing import TYPE_CHECKING
 
 import rdflib
@@ -17,6 +15,8 @@ import annif.util
 from .types import Subject, SubjectCorpus
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
+
     from rdflib.term import URIRef
 
 
@@ -113,7 +113,7 @@ class SubjectFileSKOS(SubjectCorpus):
         self,
         concept: URIRef,
         label_types: Sequence[URIRef],
-    ) -> defaultdict[str | None, list[str]]:
+    ) -> collections.defaultdict[str | None, list[str]]:
         """return all the labels of the given concept with the given label
         properties as a dict-like object where the keys are language codes
         and the values are lists of labels in that language"""

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import enum
 import os.path
-from collections import defaultdict
 from shutil import rmtree
 from typing import TYPE_CHECKING
 
@@ -21,6 +20,7 @@ from annif.exception import (
 )
 
 if TYPE_CHECKING:
+    from collections import defaultdict
     from configparser import SectionProxy
     from datetime import datetime
 

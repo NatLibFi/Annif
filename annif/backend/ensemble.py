@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from datetime import datetime
 
     from optuna.study.study import Study
-    from optuna.trial._trial import Trial
+    from optuna.trial import Trial
 
     from annif.backend.hyperopt import HPRecommendation
     from annif.corpus.document import DocumentCorpus

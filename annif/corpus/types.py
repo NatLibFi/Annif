@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import abc
 import collections
-from collections.abc import Iterator
 from itertools import islice
 
 Document = collections.namedtuple("Document", "text subject_set")
@@ -21,7 +20,7 @@ class DocumentCorpus(metaclass=abc.ABCMeta):
         pass  # pragma: no cover
 
     @property
-    def doc_batches(self) -> Iterator[list[Document]]:
+    def doc_batches(self) -> collections.abc.Iterator[list[Document]]:
         """Iterate through the document corpus in batches, yielding lists of Document
         objects."""
         it = iter(self.documents)

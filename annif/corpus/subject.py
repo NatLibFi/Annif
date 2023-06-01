@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import csv
 import os.path
-from collections.abc import Generator, Iterator
 from typing import TYPE_CHECKING, Any
 
 import annif
@@ -13,6 +12,8 @@ from .skos import serialize_subjects_to_skos
 from .types import Subject, SubjectCorpus
 
 if TYPE_CHECKING:
+    from collections.abc import Generator, Iterator
+
     import numpy as np
 
 logger = annif.logger.getChild("subject")

@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import collections
 import itertools
-from collections.abc import Iterable, Iterator, Sequence
 from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy.sparse import csr_array
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator, Sequence
+
     from annif.corpus.subject import SubjectIndex
 
 SubjectSuggestion = collections.namedtuple("SubjectSuggestion", "subject_id score")

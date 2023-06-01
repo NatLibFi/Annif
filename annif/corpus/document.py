@@ -5,7 +5,6 @@ import glob
 import gzip
 import os.path
 import re
-from collections.abc import Iterator
 from itertools import islice
 from typing import TYPE_CHECKING
 
@@ -15,6 +14,8 @@ from .subject import SubjectSet
 from .types import Document, DocumentCorpus
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from annif.corpus.subject import SubjectIndex
 
 logger = annif.logger

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import abc
 import os.path
-from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
 import joblib
@@ -13,6 +12,8 @@ import annif.util
 from annif.exception import NotInitializedException
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from scipy.sparse._csr import csr_matrix
 
     from annif.suggestion import SubjectSuggestion

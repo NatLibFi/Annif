@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os.path
 import tempfile
-from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any
 
 import gensim.similarities
@@ -17,6 +16,8 @@ from annif.suggestion import vector_to_suggestions
 from . import backend, mixins
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from scipy.sparse._csr import csr_matrix
 
     from annif.corpus.document import DocumentCorpus

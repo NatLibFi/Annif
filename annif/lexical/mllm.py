@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import collections
 import math
-from collections import defaultdict
 from enum import IntEnum
 from statistics import mean
 from typing import TYPE_CHECKING, Any
@@ -26,6 +25,8 @@ from annif.lexical.util import (
 )
 
 if TYPE_CHECKING:
+    from collections import defaultdict
+
     from rdflib.graph import Graph
     from rdflib.term import URIRef
 

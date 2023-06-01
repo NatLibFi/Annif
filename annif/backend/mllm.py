@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import os.path
-from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any
 
 import joblib
@@ -17,8 +16,10 @@ from annif.suggestion import vector_to_suggestions
 from . import backend, hyperopt
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from optuna.study.study import Study
-    from optuna.trial._trial import Trial
+    from optuna.trial import Trial
 
     from annif.backend.hyperopt import HPRecommendation
     from annif.corpus.document import DocumentCorpus

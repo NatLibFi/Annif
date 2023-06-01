@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import warnings
-from collections.abc import Iterable, Iterator, Sequence
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -13,6 +12,7 @@ from annif.exception import NotSupportedException
 from annif.suggestion import SuggestionBatch, filter_suggestion
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator, Sequence
     from io import TextIOWrapper
 
     from click.utils import LazyFile
