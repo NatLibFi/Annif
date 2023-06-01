@@ -134,7 +134,7 @@ class SubjectIndex:
     def languages(self) -> list[str] | None:
         return self._languages
 
-    def __getitem__(self, subject_id: int | np.int32) -> Subject:
+    def __getitem__(self, subject_id: int) -> Subject:
         return self._subjects[subject_id]
 
     def append(self, subject: Subject) -> None:
