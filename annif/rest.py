@@ -4,6 +4,7 @@ methods defined in the OpenAPI specification."""
 import importlib
 
 import connexion
+from simplemma.langdetect import lang_detector
 
 import annif.registry
 from annif.corpus import Document, DocumentList, SubjectSet
@@ -65,6 +66,36 @@ def show_project(project_id):
     except ValueError:
         return project_not_found_error(project_id)
     return project.dump()
+
+
+def detect_language(body):
+    """return scores for detected languages formatted according to Swagger spec"""
+
+    text = body.get("text")
+    candidates = body.get("candidates")
+
+    if not candidates:
+        return connexion.problem(
+            status=400,
+            title="Bad Request",
+            detail="no candidate languages given",
+        )
+
+    scores = lang_detector(text, tuple(candidates))
+
+    if not scores:
+        return connexion.problem(
+            status=400,
+            title="Bad Request",
+            detail="unsupported candidate languages",
+        )
+
+    return {
+        "results": [
+            {"language": lang if lang != "unk" else None, "score": score}
+            for lang, score in scores
+        ]
+    }
 
 
 def _suggestion_to_dict(suggestion, subject_index, language):
