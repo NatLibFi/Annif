@@ -32,7 +32,7 @@ class HTTPBackend(backend.AnnifBackend):
         return self._headers
 
     @property
-    def is_trained(self) -> bool:
+    def is_trained(self) -> bool | None:
         return self._get_project_info("is_trained")
 
     @property

@@ -11,7 +11,6 @@ logging.basicConfig()
 logger = logging.getLogger("annif")
 logger.setLevel(level=logging.INFO)
 
-
 import annif.backend  # noqa
 
 if TYPE_CHECKING:
