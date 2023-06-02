@@ -234,6 +234,7 @@ class AnnifProject(DatadirMixin):
             self.suggest([doc.text for doc in doc_batch], backend_params)
             for doc_batch in corpus.doc_batches
         )
+        import annif.suggestion
 
         return annif.suggestion.SuggestionResults(suggestions)
 
