@@ -1,4 +1,5 @@
 """spaCy analyzer for Annif which uses spaCy for lemmatization"""
+from __future__ import annotations
 
 import annif.util
 from annif.exception import OperationFailedException
@@ -11,7 +12,7 @@ _KEY_LOWERCASE = "lowercase"
 class SpacyAnalyzer(analyzer.Analyzer):
     name = "spacy"
 
-    def __init__(self, param, **kwargs):
+    def __init__(self, param: str, **kwargs) -> None:
         import spacy
 
         self.param = param
@@ -28,7 +29,7 @@ class SpacyAnalyzer(analyzer.Analyzer):
             self.lowercase = False
         super().__init__(**kwargs)
 
-    def tokenize_words(self, text, filter=True):
+    def tokenize_words(self, text: str, filter: bool = True) -> list[str]:
         lemmas = [
             lemma
             for lemma in (token.lemma_ for token in self.nlp(text.strip()))

@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING, Any
 
 from stwfsapy.predictor import StwfsapyPredictor
 
@@ -7,6 +10,9 @@ from annif.suggestion import SubjectSuggestion
 from annif.util import atomic_save, boolean
 
 from . import backend
+
+if TYPE_CHECKING:
+    from annif.corpus.document import DocumentCorpus
 
 _KEY_CONCEPT_TYPE_URI = "concept_type_uri"
 _KEY_SUBTHESAURUS_TYPE_URI = "sub_thesaurus_type_uri"
@@ -59,7 +65,7 @@ class StwfsaBackend(backend.AnnifBackend):
 
     _model = None
 
-    def initialize(self, parallel=False):
+    def initialize(self, parallel: bool = False) -> None:
         if self._model is None:
             path = os.path.join(self.datadir, self.MODEL_FILE)
             self.debug(f"Loading STWFSA model from {path}.")
@@ -71,7 +77,7 @@ class StwfsaBackend(backend.AnnifBackend):
                     f"Model not found at {path}", backend_id=self.backend_id
                 )
 
-    def _load_data(self, corpus):
+    def _load_data(self, corpus: DocumentCorpus) -> tuple[list[str], list[list[str]]]:
         if corpus == "cached":
             raise NotSupportedException(
                 "Training stwfsa project from cached data not supported."
@@ -93,7 +99,12 @@ class StwfsaBackend(backend.AnnifBackend):
             )
         return X, y
 
-    def _train(self, corpus, params, jobs=0):
+    def _train(
+        self,
+        corpus: DocumentCorpus,
+        params: dict[str, Any],
+        jobs: int = 0,
+    ) -> None:
         X, y = self._load_data(corpus)
         new_params = {
             key: self.STWFSA_PARAMETERS[key](val)
@@ -114,7 +125,7 @@ class StwfsaBackend(backend.AnnifBackend):
             lambda model, store_path: model.store(store_path),
         )
 
-    def _suggest(self, text, params):
+    def _suggest(self, text: str, params: dict[str, Any]) -> list[SubjectSuggestion]:
         self.debug(f'Suggesting subjects for text "{text[:20]}..." (len={len(text)})')
         result = self._model.suggest_proba([text])[0]
         suggestions = []

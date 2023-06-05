@@ -1,6 +1,8 @@
 """Annif backend using a SVM classifier"""
+from __future__ import annotations
 
 import os.path
+from typing import TYPE_CHECKING, Any
 
 import joblib
 import numpy as np
@@ -12,6 +14,11 @@ from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
 
 from . import backend, mixins
+
+if TYPE_CHECKING:
+    from scipy.sparse._csr import csr_matrix
+
+    from annif.corpus.document import DocumentCorpus
 
 
 class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
@@ -26,12 +33,12 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
 
     DEFAULT_PARAMETERS = {"min_df": 1, "ngram": 1}
 
-    def default_params(self):
+    def default_params(self) -> dict[str, Any]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
         return params
 
-    def _initialize_model(self):
+    def _initialize_model(self) -> None:
         if self._model is None:
             path = os.path.join(self.datadir, self.MODEL_FILE)
             self.debug("loading model from {}".format(path))
@@ -42,11 +49,13 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                     "model {} not found".format(path), backend_id=self.backend_id
                 )
 
-    def initialize(self, parallel=False):
+    def initialize(self, parallel: bool = False) -> None:
         self.initialize_vectorizer()
         self._initialize_model()
 
-    def _corpus_to_texts_and_classes(self, corpus):
+    def _corpus_to_texts_and_classes(
+        self, corpus: DocumentCorpus
+    ) -> tuple[list[str], list[int]]:
         texts = []
         classes = []
         for doc in corpus.documents:
@@ -61,7 +70,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             classes.append(doc.subject_set[0])
         return texts, classes
 
-    def _train_classifier(self, veccorpus, classes):
+    def _train_classifier(self, veccorpus: csr_matrix, classes: list[int]) -> None:
         self.info("creating classifier")
         self._model = LinearSVC()
         self._model.fit(veccorpus, classes)
@@ -69,7 +78,9 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             self._model, self.datadir, self.MODEL_FILE, method=joblib.dump
         )
 
-    def _train(self, corpus, params, jobs=0):
+    def _train(
+        self, corpus: DocumentCorpus, params: dict[str, Any], jobs: int = 0
+    ) -> None:
         if corpus == "cached":
             raise NotSupportedException(
                 "SVC backend does not support reuse of cached training data."
@@ -85,7 +96,9 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         veccorpus = self.create_vectorizer(texts, vecparams)
         self._train_classifier(veccorpus, classes)
 
-    def _scores_to_suggestions(self, scores, params):
+    def _scores_to_suggestions(
+        self, scores: np.ndarray, params: dict[str, Any]
+    ) -> list[SubjectSuggestion]:
         results = []
         limit = int(params["limit"])
         for class_id in np.argsort(scores)[::-1][:limit]:
@@ -96,7 +109,9 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                 )
         return results
 
-    def _suggest_batch(self, texts, params):
+    def _suggest_batch(
+        self, texts: list[str], params: dict[str, Any]
+    ) -> SuggestionBatch:
         vector = self.vectorizer.transform(texts)
         confidences = self._model.decision_function(vector)
         # convert to 0..1 score range using logistic function

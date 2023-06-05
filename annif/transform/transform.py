@@ -1,9 +1,15 @@
 """Common functionality for transforming text of input documents."""
+from __future__ import annotations
 
 import abc
+from typing import TYPE_CHECKING, Type
 
 from annif.corpus import TransformingDocumentCorpus
 from annif.exception import ConfigurationException
+
+if TYPE_CHECKING:
+    from annif.corpus.types import DocumentCorpus
+    from annif.project import AnnifProject
 
 
 class BaseTransform(metaclass=abc.ABCMeta):
@@ -12,7 +18,7 @@ class BaseTransform(metaclass=abc.ABCMeta):
 
     name = None
 
-    def __init__(self, project):
+    def __init__(self, project: AnnifProject | None) -> None:
         self.project = project
 
     @abc.abstractmethod
@@ -26,7 +32,7 @@ class IdentityTransform(BaseTransform):
 
     name = "pass"
 
-    def transform_fn(self, text):
+    def transform_fn(self, text: str) -> str:
         return text
 
 
@@ -34,11 +40,20 @@ class TransformChain:
     """Class instantiating and holding the transformation objects performing
     the actual text transformation."""
 
-    def __init__(self, transform_classes, args, project):
+    def __init__(
+        self,
+        transform_classes: list[Type[BaseTransform]],
+        args: list[tuple[list, dict]],
+        project: AnnifProject | None,
+    ) -> None:
         self.project = project
         self.transforms = self._init_transforms(transform_classes, args)
 
-    def _init_transforms(self, transform_classes, args):
+    def _init_transforms(
+        self,
+        transform_classes: list[Type[BaseTransform]],
+        args: list[tuple[list, dict]],
+    ) -> list[BaseTransform]:
         transforms = []
         for trans, (posargs, kwargs) in zip(transform_classes, args):
             try:
@@ -51,10 +66,10 @@ class TransformChain:
                 )
         return transforms
 
-    def transform_text(self, text):
+    def transform_text(self, text: str) -> str:
         for trans in self.transforms:
             text = trans.transform_fn(text)
         return text
 
-    def transform_corpus(self, corpus):
+    def transform_corpus(self, corpus: DocumentCorpus) -> TransformingDocumentCorpus:
         return TransformingDocumentCorpus(corpus, self.transform_text)

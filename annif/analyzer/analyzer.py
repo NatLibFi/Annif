@@ -1,4 +1,5 @@
 """Common functionality for analyzers."""
+from __future__ import annotations
 
 import abc
 import functools
@@ -15,18 +16,18 @@ class Analyzer(metaclass=abc.ABCMeta):
     name = None
     token_min_length = 3  # default value, can be overridden in instances
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         if _KEY_TOKEN_MIN_LENGTH in kwargs:
             self.token_min_length = int(kwargs[_KEY_TOKEN_MIN_LENGTH])
 
-    def tokenize_sentences(self, text):
+    def tokenize_sentences(self, text: str) -> list[str]:
         """Tokenize a piece of text (e.g. a document) into sentences."""
         import nltk.tokenize
 
         return nltk.tokenize.sent_tokenize(text)
 
     @functools.lru_cache(maxsize=50000)
-    def is_valid_token(self, word):
+    def is_valid_token(self, word: str) -> bool:
         """Return True if the word is an acceptable token."""
         if len(word) < self.token_min_length:
             return False
@@ -36,7 +37,7 @@ class Analyzer(metaclass=abc.ABCMeta):
                 return True
         return False
 
-    def tokenize_words(self, text, filter=True):
+    def tokenize_words(self, text: str, filter: bool = True) -> list[str]:
         """Tokenize a piece of text (e.g. a sentence) into words. If
         filter=True (default), only return valid tokens (e.g. not
         punctuation, numbers or very short words)"""

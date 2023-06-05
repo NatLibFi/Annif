@@ -1,10 +1,12 @@
 """Annif backend using Yake keyword extraction"""
 # For license remarks of this backend see README.md:
 # https://github.com/NatLibFi/Annif#license.
+from __future__ import annotations
 
 import os.path
 import re
 from collections import defaultdict
+from typing import TYPE_CHECKING, Any
 
 import joblib
 import yake
@@ -15,6 +17,11 @@ from annif.exception import ConfigurationException, NotSupportedException
 from annif.suggestion import SubjectSuggestion
 
 from . import backend
+
+if TYPE_CHECKING:
+    from rdflib.term import URIRef
+
+    from annif.corpus.document import DocumentCorpus
 
 
 class YakeBackend(backend.AnnifBackend):
@@ -38,7 +45,7 @@ class YakeBackend(backend.AnnifBackend):
         "remove_parentheses": False,
     }
 
-    def default_params(self):
+    def default_params(self) -> dict[str, Any]:
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
         return params
@@ -48,7 +55,7 @@ class YakeBackend(backend.AnnifBackend):
         return True
 
     @property
-    def label_types(self):
+    def label_types(self) -> list[URIRef]:
         if type(self.params["label_types"]) == str:  # Label types set by user
             label_types = [lt.strip() for lt in self.params["label_types"].split(",")]
             self._validate_label_types(label_types)
@@ -56,17 +63,17 @@ class YakeBackend(backend.AnnifBackend):
             label_types = self.params["label_types"]  # The defaults
         return [getattr(SKOS, lt) for lt in label_types]
 
-    def _validate_label_types(self, label_types):
+    def _validate_label_types(self, label_types: list[str]) -> None:
         for lt in label_types:
             if lt not in ("prefLabel", "altLabel", "hiddenLabel"):
                 raise ConfigurationException(
                     f"invalid label type {lt}", backend_id=self.backend_id
                 )
 
-    def initialize(self, parallel=False):
+    def initialize(self, parallel: bool = False) -> None:
         self._initialize_index()
 
-    def _initialize_index(self):
+    def _initialize_index(self) -> None:
         if self._index is None:
             path = os.path.join(self.datadir, self.INDEX_FILE)
             if os.path.exists(path):
@@ -78,12 +85,12 @@ class YakeBackend(backend.AnnifBackend):
                 self._save_index(path)
                 self.info(f"Created index with {len(self._index)} labels")
 
-    def _save_index(self, path):
+    def _save_index(self, path: str) -> None:
         annif.util.atomic_save(
             self._index, self.datadir, self.INDEX_FILE, method=joblib.dump
         )
 
-    def _create_index(self):
+    def _create_index(self) -> dict[str, set[str]]:
         index = defaultdict(set)
         skos_vocab = self.project.vocab.skos
         for concept in skos_vocab.concepts:
@@ -95,21 +102,21 @@ class YakeBackend(backend.AnnifBackend):
         index.pop("", None)  # Remove possible empty string entry
         return dict(index)
 
-    def _normalize_label(self, label):
+    def _normalize_label(self, label: str) -> str:
         label = str(label)
         if annif.util.boolean(self.params["remove_parentheses"]):
             label = re.sub(r" \(.*\)", "", label)
         normalized_label = self._normalize_phrase(label)
         return self._sort_phrase(normalized_label)
 
-    def _normalize_phrase(self, phrase):
+    def _normalize_phrase(self, phrase: str) -> str:
         return " ".join(self.project.analyzer.tokenize_words(phrase, filter=False))
 
-    def _sort_phrase(self, phrase):
+    def _sort_phrase(self, phrase: str) -> str:
         words = phrase.split()
         return " ".join(sorted(words))
 
-    def _suggest(self, text, params):
+    def _suggest(self, text: str, params: dict[str, Any]) -> list[SubjectSuggestion]:
         self.debug(f'Suggesting subjects for text "{text[:20]}..." (len={len(text)})')
         limit = int(params["limit"])
 
@@ -132,7 +139,9 @@ class YakeBackend(backend.AnnifBackend):
         ]
         return subject_suggestions
 
-    def _keyphrases2suggestions(self, keyphrases):
+    def _keyphrases2suggestions(
+        self, keyphrases: list[tuple[str, float]]
+    ) -> list[tuple[str, float]]:
         suggestions = []
         not_matched = []
         for kp, score in keyphrases:
@@ -154,16 +163,18 @@ class YakeBackend(backend.AnnifBackend):
         )
         return suggestions
 
-    def _keyphrase2uris(self, keyphrase):
+    def _keyphrase2uris(self, keyphrase: str) -> set[str]:
         keyphrase = self._normalize_phrase(keyphrase)
         keyphrase = self._sort_phrase(keyphrase)
         return self._index.get(keyphrase, [])
 
-    def _transform_score(self, score):
+    def _transform_score(self, score: float) -> float:
         score = max(score, 0)
         return 1.0 / (score + 1)
 
-    def _combine_suggestions(self, suggestions):
+    def _combine_suggestions(
+        self, suggestions: list[tuple[str, float]]
+    ) -> list[tuple[str, float]]:
         combined_suggestions = {}
         for uri, score in suggestions:
             if uri not in combined_suggestions:
@@ -173,12 +184,12 @@ class YakeBackend(backend.AnnifBackend):
                 combined_suggestions[uri] = self._combine_scores(score, old_score)
         return list(combined_suggestions.items())
 
-    def _combine_scores(self, score1, score2):
+    def _combine_scores(self, score1: float, score2: float) -> float:
         # The result is never smaller than the greater input
         score1 = score1 / 2 + 0.5
         score2 = score2 / 2 + 0.5
         confl = score1 * score2 / (score1 * score2 + (1 - score1) * (1 - score2))
         return (confl - 0.5) * 2
 
-    def _train(self, corpus, params, jobs=0):
+    def _train(self, corpus: DocumentCorpus, params: dict[str, Any], jobs: int = 0):
         raise NotSupportedException("Training yake backend is not possible.")

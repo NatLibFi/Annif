@@ -1,6 +1,11 @@
 """Index for fast matching of token sets."""
+from __future__ import annotations
 
 import collections
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from numpy import ndarray
 
 
 class TokenSet:
@@ -8,19 +13,24 @@ class TokenSet:
     be matched with another set of tokens. A TokenSet can optionally
     be associated with a subject from the vocabulary."""
 
-    def __init__(self, tokens, subject_id=None, is_pref=False):
+    def __init__(
+        self,
+        tokens: ndarray,
+        subject_id: int | None = None,
+        is_pref: bool = False,
+    ) -> None:
         self._tokens = set(tokens)
         self.key = tokens[0] if len(tokens) else None
         self.subject_id = subject_id
         self.is_pref = is_pref
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._tokens)
 
     def __iter__(self):
         return iter(self._tokens)
 
-    def contains(self, other):
+    def contains(self, other: TokenSet) -> bool:
         """Returns True iff the tokens in the other TokenSet are all
         included within this TokenSet."""
 
@@ -30,18 +40,18 @@ class TokenSet:
 class TokenSetIndex:
     """A searchable index of TokenSets (representing vocabulary terms)"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._index = collections.defaultdict(set)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._index)
 
-    def add(self, tset):
+    def add(self, tset: TokenSet) -> None:
         """Add a TokenSet into this index"""
         if tset.key is not None:
             self._index[tset.key].add(tset)
 
-    def _find_subj_tsets(self, tset):
+    def _find_subj_tsets(self, tset: TokenSet) -> dict[int | None, TokenSet]:
         """return a dict (subject_id : TokenSet) of matches contained in the
         given TokenSet"""
 
@@ -75,7 +85,7 @@ class TokenSetIndex:
 
         return subj_ambiguity
 
-    def search(self, tset):
+    def search(self, tset: TokenSet) -> list[tuple[TokenSet, int]]:
         """Return the TokenSets that are contained in the given TokenSet.
         The matches are returned as a list of (TokenSet, ambiguity) pairs
         where ambiguity is an integer indicating the number of other TokenSets
