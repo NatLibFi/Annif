@@ -123,7 +123,7 @@ jobs:
         tags: test-image
     - name: "Test with pytest"
       run: |
-        docker run --rm --workdir /Annif test-image pytest
+        docker run --rm --workdir /Annif test-image pytest -p no:cacheprovider
 
   publish-docker-latest:
     name: publish latest Docker image
