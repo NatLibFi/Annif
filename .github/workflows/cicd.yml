@@ -121,6 +121,7 @@ jobs:
       with:
         push: false
         tags: test-image
+        cache-to: type=gha,mode=max
     - name: "Test with pytest"
       run: |
         docker run --rm --workdir /Annif test-image pytest -p no:cacheprovider
@@ -151,6 +152,8 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
   publish-release:
     name: publish release
@@ -191,3 +194,4 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
