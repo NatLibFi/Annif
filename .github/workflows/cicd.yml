@@ -111,9 +111,23 @@ jobs:
         # A new key is created to update the cache if some dependency has been updated
         key:  poetry-installation-and-cache-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}
 
+  test-docker-image:
+    name: "test Docker image"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+    - name: "Build image for testing"
+      uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5  # v3.2.0
+      with:
+        push: false
+        tags: test-image
+    - name: "Test with pytest"
+      run: |
+        docker run --rm --workdir /Annif test-image pytest -p no:cacheprovider
+
   publish-docker-latest:
     name: publish latest Docker image
-    needs: [lint, test]
+    needs: [lint, test, test-docker-image]
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -140,7 +154,7 @@ jobs:
 
   publish-release:
     name: publish release
-    needs: [lint, test]
+    needs: [publish-docker-latest]
     runs-on: ubuntu-22.04
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
