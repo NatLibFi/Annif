@@ -1,8 +1,5 @@
 name: "Docker rebuild"
 on:
-  push:  # TODO Remove
-    branches:
-    - rebuild-docker-image
   workflow_dispatch:
 jobs:
   rebuild-docker-images:
