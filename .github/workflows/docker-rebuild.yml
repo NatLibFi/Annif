@@ -1,6 +1,5 @@
 name: "Docker rebuild"
-on:
-  workflow_dispatch:
+on: workflow_dispatch
 jobs:
   rebuild-docker-images:
     name: "Docker rebuild"
