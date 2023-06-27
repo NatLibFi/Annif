@@ -5,7 +5,10 @@ import configparser
 import os.path
 from glob import glob
 
-import tomli
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 
 import annif
 import annif.util
@@ -45,8 +48,8 @@ class AnnifConfigTOML:
         with open(filename, "rb") as projf:
             try:
                 logger.debug(f"Reading configuration file {filename} in TOML format")
-                self._config = tomli.load(projf)
-            except tomli.TOMLDecodeError as err:
+                self._config = tomllib.load(projf)
+            except tomllib.TOMLDecodeError as err:
                 raise ConfigurationException(
                     f"Parsing TOML file '{filename}' failed: {err}"
                 )

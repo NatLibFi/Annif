@@ -45,7 +45,7 @@ gunicorn = "20.1.*"
 numpy = "1.24.*"
 optuna = "2.10.*"
 python-dateutil = "2.8.*"
-tomli = "2.0.*"
+tomli = { version = "2.0.*", python = "<3.11" }
 simplemma = "0.9.*"
 jsonschema = "4.17.*"
 
