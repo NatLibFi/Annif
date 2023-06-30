@@ -29,4 +29,4 @@ runs:
     - name: Install Poetry
       shell: bash
       run: |
-        pipx install poetry==${{ inputs.poetry-version }} --python $(which python${{ inputs.python-version }})
+        pipx install poetry==${{ inputs.poetry-version }}
