@@ -30,3 +30,4 @@ runs:
       shell: bash
       run: |
         pipx install poetry==${{ inputs.poetry-version }}
+        poetry env use ${{ inputs.python-version }}
