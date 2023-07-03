@@ -14,6 +14,28 @@ jobs:
     - name: "Test with pytest"
       run: |
         docker run --rm --workdir /Annif test-image pytest -p no:cacheprovider
+    - name: "Train & evaluate models with previous build (semver)"
+      run: |
+        PREV=$(echo ${{ github.ref_name }} | sed 's/^v//')
+        # docker run -v annif-projects:/annif-projects quay.io/natlibfi/annif:$PREV bash -c "
+        docker run -v annif-projects:/annif-projects jinkinen/annif:$PREV bash -c "
+          export ANNIF_PROJECTS=/Annif/projects.cfg.dist &&
+          annif load-vocab yso /Annif/tests/corpora/archaeology/yso-archaeology.ttl &&
+          annif train omikuji-parabel-fi /Annif/tests/corpora/archaeology/fulltext/ &&
+          annif train tfidf-fi /Annif/tests/corpora/archaeology/fulltext &&
+          annif train fasttext-fi /Annif/tests/corpora/archaeology/fulltext &&
+          annif train mllm-fi /Annif/tests/corpora/archaeology/fulltext"
+        # docker run -v annif-projects:/annif-projects quay.io/natlibfi/annif:$PREV bash -c "
+        docker run -v annif-projects:/annif-projects jinkinen/annif:$PREV bash -c "
+          export ANNIF_PROJECTS=/Annif/projects.cfg.dist &&
+          annif eval ensemble-fi /Annif/tests/corpora/archaeology/fulltext" > eval.prev.out
+    - name: "Evaluate models with current build"
+      run: |
+        docker run -v annif-projects:/annif-projects test-image bash -c "
+          export ANNIF_PROJECTS=/Annif/projects.cfg.dist &&
+          annif eval ensemble-fi /Annif/tests/corpora/archaeology/fulltext" > eval.out
+    - name: "Diff evaluation results"
+      run: diff eval.prev.out eval.out
     - name: Login to Quay.io
       uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc  # v2.2.0
       with:
