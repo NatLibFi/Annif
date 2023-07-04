@@ -21,23 +21,42 @@ jobs:
     - name: "Test with pytest"
       run: |
         docker run --rm --workdir /Annif test-image pytest -p no:cacheprovider
-    - name: "Train & evaluate models with previous build (semver)"
+    - name: "Train & evaluate models with previous (semver) build"
       run: |
         PREV=$(echo ${{ github.ref_name }} | sed 's/^v//')
-        # docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist quay.io/natlibfi/annif:$PREV bash -c "
-        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist jinkinen/annif:$PREV bash -c "
+        # docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist -e CORPUS_PATH=/Annif/tests/corpora/archaeology/fulltext/ quay.io/natlibfi/annif:$PREV bash -c "
+        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist -e CORPUS_PATH=/Annif/tests/corpora/archaeology/fulltext/ jinkinen/annif:$PREV bash -c "
           annif load-vocab yso /Annif/tests/corpora/archaeology/yso-archaeology.ttl &&
-          annif train omikuji-parabel-fi /Annif/tests/corpora/archaeology/fulltext/ &&
-          annif train tfidf-fi /Annif/tests/corpora/archaeology/fulltext &&
-          annif train fasttext-fi /Annif/tests/corpora/archaeology/fulltext &&
-          annif train mllm-fi /Annif/tests/corpora/archaeology/fulltext"
-        # docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist quay.io/natlibfi/annif:$PREV bash -c "
-        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist jinkinen/annif:$PREV bash -c "
-          annif eval ensemble-fi /Annif/tests/corpora/archaeology/fulltext" > eval.prev.out
+          annif train tfidf-fi \$CORPUS_PATH &&
+          annif train fasttext-fi \$CORPUS_PATH &&
+          annif train omikuji-parabel-fi \$CORPUS_PATH &&
+          annif train mllm-fi \$CORPUS_PATH &&
+          annif train stwfsa-fi \$CORPUS_PATH &&
+          annif train svc-fi \$CORPUS_PATH &&
+          annif train nn-ensemble-fi \$CORPUS_PATH"
+        # docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist -e CORPUS_PATH=/Annif/tests/corpora/archaeology/fulltext/ quay.io/natlibfi/annif:$PREV bash -c "
+        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist -e CORPUS_PATH=/Annif/tests/corpora/archaeology/fulltext/ jinkinen/annif:$PREV bash -c "
+          annif eval tfidf-fi \$CORPUS_PATH &&
+          annif eval fasttext-fi \$CORPUS_PATH  &&
+          annif eval omikuji-parabel-fi \$CORPUS_PATH &&
+          annif eval mllm-fi \$CORPUS_PATH &&
+          annif eval stwfsa-fi \$CORPUS_PATH &&
+          annif eval yake-fi \$CORPUS_PATH &&
+          annif eval svc-fi \$CORPUS_PATH &&
+          annif eval nn-ensemble-fi \$CORPUS_PATH &&
+          annif eval ensemble-fi \$CORPUS_PATH" > eval.prev.out
     - name: "Evaluate models with current build"
       run: |
-        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist test-image bash -c "
-          annif eval ensemble-fi /Annif/tests/corpora/archaeology/fulltext" > eval.out
+        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist -e CORPUS_PATH=/Annif/tests/corpora/archaeology/fulltext/ test-image bash -c "
+          annif eval tfidf-fi \$CORPUS_PATH &&
+          annif eval fasttext-fi \$CORPUS_PATH &&
+          annif eval omikuji-parabel-fi \$CORPUS_PATH &&
+          annif eval mllm-fi \$CORPUS_PATH &&
+          annif eval stwfsa-fi \$CORPUS_PATH &&
+          annif eval yake-fi \$CORPUS_PATH &&
+          annif eval svc-fi \$CORPUS_PATH &&
+          annif eval nn-ensemble-fi \$CORPUS_PATH &&
+          annif eval ensemble-fi \$CORPUS_PATH" > eval.out
     - name: "Diff evaluation results"
       continue-on-error: ${{ inputs.allow_eval_diff }}
       run: diff eval.prev.out eval.out
