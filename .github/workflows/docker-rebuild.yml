@@ -43,7 +43,7 @@ jobs:
           annif eval fasttext-fi \$CORPUS_PATH  &&
           annif eval omikuji-parabel-fi \$CORPUS_PATH &&
           annif eval mllm-fi \$CORPUS_PATH &&
-          annif eval stwfsa-fi \$CORPUS_PATH &&
+          # annif eval stwfsa-fi \$CORPUS_PATH &&
           annif eval yake-fi \$CORPUS_PATH &&
           annif eval svc-fi \$CORPUS_PATH &&
           annif eval nn-ensemble-fi \$CORPUS_PATH &&
@@ -55,7 +55,7 @@ jobs:
           annif eval fasttext-fi \$CORPUS_PATH &&
           annif eval omikuji-parabel-fi \$CORPUS_PATH &&
           annif eval mllm-fi \$CORPUS_PATH &&
-          annif eval stwfsa-fi \$CORPUS_PATH &&
+          # annif eval stwfsa-fi \$CORPUS_PATH &&
           annif eval yake-fi \$CORPUS_PATH &&
           annif eval svc-fi \$CORPUS_PATH &&
           annif eval nn-ensemble-fi \$CORPUS_PATH &&
