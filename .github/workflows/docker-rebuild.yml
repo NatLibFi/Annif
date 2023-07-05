@@ -47,7 +47,7 @@ jobs:
           annif eval yake-fi \$CORPUS_PATH &&
           annif eval svc-fi \$CORPUS_PATH &&
           annif eval nn-ensemble-fi \$CORPUS_PATH &&
-          annif eval ensemble-fi \$CORPUS_PATH" > eval.prev.out
+          annif eval ensemble-fi \$CORPUS_PATH" | tee eval.prev.out
     - name: "Evaluate models with current build"
       run: |
         docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist -e CORPUS_PATH=/Annif/tests/corpora/archaeology/fulltext/ test-image bash -c "
@@ -59,7 +59,7 @@ jobs:
           annif eval yake-fi \$CORPUS_PATH &&
           annif eval svc-fi \$CORPUS_PATH &&
           annif eval nn-ensemble-fi \$CORPUS_PATH &&
-          annif eval ensemble-fi \$CORPUS_PATH" > eval.out
+          annif eval ensemble-fi \$CORPUS_PATH" | tee eval.out
     - name: "Diff evaluation results"
       continue-on-error: ${{ inputs.allow_eval_diff }}
       run: diff eval.prev.out eval.out --ignore-matching-lines='[omikuji::model]'
