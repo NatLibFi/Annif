@@ -12,6 +12,9 @@ jobs:
     name: "Docker rebuild"
     runs-on: ubuntu-22.04
     timeout-minutes: 15
+    env:
+      ANNIF_PROJECTS: "/Annif/projects.cfg.dist"
+      CORPUS_PATH: "/Annif/tests/corpora/archaeology/fulltext/"
     steps:
     - name: "Build for testing"
       uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5  # v3.2.0
@@ -24,8 +27,8 @@ jobs:
     - name: "Train models with previous build"
       run: |
         PREV=$(echo ${{ github.ref_name }} | sed 's/^v//')
-        # docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist -e CORPUS_PATH=/Annif/tests/corpora/archaeology/fulltext/ quay.io/natlibfi/annif:$PREV bash -c "
-        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist -e CORPUS_PATH=/Annif/tests/corpora/archaeology/fulltext/ jinkinen/annif:$PREV bash -c "
+        # docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH quay.io/natlibfi/annif:$PREV bash -c "
+        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH jinkinen/annif:$PREV bash -c "
           annif load-vocab yso /Annif/tests/corpora/archaeology/yso-archaeology.ttl &&
           annif train tfidf-fi \$CORPUS_PATH &&
           annif train fasttext-fi \$CORPUS_PATH &&
@@ -37,8 +40,8 @@ jobs:
     - name: "Evaluate models with previous build"
       run: |
         PREV=$(echo ${{ github.ref_name }} | sed 's/^v//')
-        # docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist -e CORPUS_PATH=/Annif/tests/corpora/archaeology/fulltext/ quay.io/natlibfi/annif:$PREV bash -c "
-        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist -e CORPUS_PATH=/Annif/tests/corpora/archaeology/fulltext/ jinkinen/annif:$PREV bash -c "
+        # docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH quay.io/natlibfi/annif:$PREV bash -c "
+        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH jinkinen/annif:$PREV bash -c "
           annif eval tfidf-fi \$CORPUS_PATH &&
           annif eval fasttext-fi \$CORPUS_PATH  &&
           annif eval omikuji-parabel-fi \$CORPUS_PATH &&
@@ -50,7 +53,7 @@ jobs:
           annif eval ensemble-fi \$CORPUS_PATH" | tee eval.prev.out
     - name: "Evaluate models with current build"
       run: |
-        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist -e CORPUS_PATH=/Annif/tests/corpora/archaeology/fulltext/ test-image bash -c "
+        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH test-image bash -c "
           annif eval tfidf-fi \$CORPUS_PATH &&
           annif eval fasttext-fi \$CORPUS_PATH &&
           annif eval omikuji-parabel-fi \$CORPUS_PATH &&
