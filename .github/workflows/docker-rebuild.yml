@@ -21,7 +21,7 @@ jobs:
     - name: "Test with pytest"
       run: |
         docker run --rm --workdir /Annif test-image pytest -p no:cacheprovider
-    - name: "Train & evaluate models with previous (semver) build"
+    - name: "Train models with previous build"
       run: |
         PREV=$(echo ${{ github.ref_name }} | sed 's/^v//')
         # docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist -e CORPUS_PATH=/Annif/tests/corpora/archaeology/fulltext/ quay.io/natlibfi/annif:$PREV bash -c "
@@ -34,6 +34,9 @@ jobs:
           annif train stwfsa-fi \$CORPUS_PATH &&
           annif train svc-fi \$CORPUS_PATH &&
           annif train nn-ensemble-fi \$CORPUS_PATH"
+    - name: "Evaluate models with previous build"
+      run: |
+        PREV=$(echo ${{ github.ref_name }} | sed 's/^v//')
         # docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist -e CORPUS_PATH=/Annif/tests/corpora/archaeology/fulltext/ quay.io/natlibfi/annif:$PREV bash -c "
         docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS=/Annif/projects.cfg.dist -e CORPUS_PATH=/Annif/tests/corpora/archaeology/fulltext/ jinkinen/annif:$PREV bash -c "
           annif eval tfidf-fi \$CORPUS_PATH &&
