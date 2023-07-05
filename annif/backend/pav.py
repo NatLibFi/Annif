@@ -17,7 +17,7 @@ import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
 
-from . import backend, ensemble
+from . import ensemble
 
 if TYPE_CHECKING:
     from annif.corpus.document import DocumentCorpus
@@ -35,11 +35,6 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
     _models = None
 
     DEFAULT_PARAMETERS = {"min-docs": 10}
-
-    def default_params(self) -> dict[str, Any]:
-        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
-        params.update(self.DEFAULT_PARAMETERS)
-        return params
 
     def initialize(self, parallel: bool = False) -> None:
         super().initialize(parallel)

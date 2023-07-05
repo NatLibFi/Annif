@@ -112,11 +112,6 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     # defaults for uninitialized instances
     _model = None
 
-    def default_params(self) -> dict[str, Any]:
-        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
-        params.update(self.DEFAULT_PARAMETERS)
-        return params
-
     def initialize(self, parallel: bool = False) -> None:
         super().initialize(parallel)
         if self._model is not None:

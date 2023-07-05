@@ -43,11 +43,6 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         "collapse_every_n_layers": 0,
     }
 
-    def default_params(self) -> dict[str, Any]:
-        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
-        params.update(self.DEFAULT_PARAMETERS)
-        return params
-
     def _initialize_model(self) -> None:
         if self._model is None:
             path = os.path.join(self.datadir, self.MODEL_FILE)
