@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     env:
-      ANNIF_PROJECTS: "/Annif/projects.cfg.dist"
+      ANNIF_PROJECTS: "/Annif/tests/compatibility/projects.cfg"
       CORPUS_PATH: "/Annif/tests/corpora/archaeology/fulltext/"
     steps:
     - name: "Build for testing"
@@ -31,41 +31,13 @@ jobs:
         echo "PREV=$PREV" >> "$GITHUB_ENV"
     - name: "Train models with previous build"
       run: |
-        # docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH quay.io/natlibfi/annif:$PREV bash -c "
-        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH jinkinen/annif:$PREV bash -c "
-          annif load-vocab yso /Annif/tests/corpora/archaeology/yso-archaeology.ttl &&
-          annif train tfidf-fi \$CORPUS_PATH &&
-          annif train fasttext-fi \$CORPUS_PATH &&
-          annif train omikuji-parabel-en \$CORPUS_PATH &&
-          annif train mllm-fi \$CORPUS_PATH &&
-          annif train stwfsa-sv \$CORPUS_PATH &&
-          annif train svc-en \$CORPUS_PATH &&
-          annif train nn-ensemble-fi \$CORPUS_PATH"
+        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH jinkinen/annif:$PREV /Annif/tests/compatibility/train.sh
     - name: "Evaluate models with previous build"
       run: |
-        # docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH quay.io/natlibfi/annif:$PREV bash -c "
-        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH jinkinen/annif:$PREV bash -c "
-          annif eval tfidf-fi \$CORPUS_PATH &&
-          annif eval fasttext-fi \$CORPUS_PATH  &&
-          annif eval omikuji-parabel-en \$CORPUS_PATH &&
-          annif eval mllm-fi \$CORPUS_PATH &&
-          # annif eval stwfsa-sv \$CORPUS_PATH &&  # Skip evaluating stwfsa until fix #718
-          annif eval yake-fi \$CORPUS_PATH &&
-          annif eval svc-en \$CORPUS_PATH &&
-          annif eval nn-ensemble-fi \$CORPUS_PATH &&
-          annif eval ensemble-fi \$CORPUS_PATH" | tee eval.prev.out
+        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH jinkinen/annif:$PREV /Annif/tests/compatibility/eval.sh | tee eval.prev.out
     - name: "Evaluate models with current build"
       run: |
-        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH test-image bash -c "
-          annif eval tfidf-fi \$CORPUS_PATH &&
-          annif eval fasttext-fi \$CORPUS_PATH &&
-          annif eval omikuji-parabel-fi \$CORPUS_PATH &&
-          annif eval mllm-fi \$CORPUS_PATH &&
-          # annif eval stwfsa-sv \$CORPUS_PATH &&  # Skip evaluating stwfsa until fix #718
-          annif eval yake-fi \$CORPUS_PATH &&
-          annif eval svc-en \$CORPUS_PATH &&
-          annif eval nn-ensemble-fi \$CORPUS_PATH &&
-          annif eval ensemble-fi \$CORPUS_PATH" | tee eval.out
+        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH test-image /Annif/tests/compatibility/eval.sh | tee eval.out
     - name: "Diff evaluation results"
       continue-on-error: ${{ inputs.allow_eval_diff }}
       run: diff eval.prev.out eval.out --ignore-matching-lines='[omikuji::model]'
