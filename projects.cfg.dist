@@ -106,24 +106,6 @@ backend=mllm
 analyzer=snowball(swedish)
 vocab=yso
 
-[stwfsa-fi]
-name=STWFSA YSO Finnish
-language=fi
-backend=stwfsa
-vocab=yso
-
-[stwfsa-sv]
-name=STWFSA YSO Swedish
-language=sv
-backend=stwfsa
-vocab=yso
-
-[stwfsa-en]
-name=STWFSA YSO English
-language=en
-backend=stwfsa
-vocab=yso
-
 [yake-fi]
 name=YAKE Finnish
 language=fi
@@ -131,30 +113,6 @@ backend=yake
 vocab=yso
 analyzer=voikko(fi)
 transform=limit(20000)
-
-[svc-fi]
-name=SVC Finnish
-language=fi
-backend=svc
-analyzer=voikko(fi)
-limit=100
-vocab=yso
-
-[svc-sv]
-name=SVC Swedish
-language=sv
-backend=svc
-analyzer=snowball(swedish)
-limit=100
-vocab=yso
-
-[svc-en]
-name=SVC English
-language=en
-backend=svc
-analyzer=snowball(english)
-limit=100
-vocab=yso
 
 [ensemble-fi]
 name=Ensemble Finnish
@@ -176,36 +134,3 @@ language=en
 vocab=yso
 backend=ensemble
 sources=tfidf-en,fasttext-en,mllm-en
-
-[nn-ensemble-fi]
-name=NN ensemble Finnish
-language=fi
-backend=nn_ensemble
-sources=tfidf-fi,mllm-fi
-limit=100
-vocab=yso
-nodes=100
-dropout_rate=0.2
-epochs=10
-
-[nn-ensemble-sv]
-name=NN ensemble Swedish
-language=sv
-backend=nn_ensemble
-sources=tfidf-sv,mllm-sv
-limit=100
-vocab=yso
-nodes=100
-dropout_rate=0.2
-epochs=10
-
-[nn-ensemble-en]
-name=NN ensemble English
-language=en
-backend=nn_ensemble
-sources=tfidf-en,mllm-en
-limit=100
-vocab=yso
-nodes=100
-dropout_rate=0.2
-epochs=10
