@@ -36,10 +36,10 @@ jobs:
           annif load-vocab yso /Annif/tests/corpora/archaeology/yso-archaeology.ttl &&
           annif train tfidf-fi \$CORPUS_PATH &&
           annif train fasttext-fi \$CORPUS_PATH &&
-          annif train omikuji-parabel-fi \$CORPUS_PATH &&
+          annif train omikuji-parabel-en \$CORPUS_PATH &&
           annif train mllm-fi \$CORPUS_PATH &&
-          annif train stwfsa-fi \$CORPUS_PATH &&
-          annif train svc-fi \$CORPUS_PATH &&
+          annif train stwfsa-sv \$CORPUS_PATH &&
+          annif train svc-en \$CORPUS_PATH &&
           annif train nn-ensemble-fi \$CORPUS_PATH"
     - name: "Evaluate models with previous build"
       run: |
@@ -47,11 +47,11 @@ jobs:
         docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH jinkinen/annif:$PREV bash -c "
           annif eval tfidf-fi \$CORPUS_PATH &&
           annif eval fasttext-fi \$CORPUS_PATH  &&
-          annif eval omikuji-parabel-fi \$CORPUS_PATH &&
+          annif eval omikuji-parabel-en \$CORPUS_PATH &&
           annif eval mllm-fi \$CORPUS_PATH &&
-          # annif eval stwfsa-fi \$CORPUS_PATH &&
+          # annif eval stwfsa-sv \$CORPUS_PATH &&  # Skip evaluating stwfsa until fix #718
           annif eval yake-fi \$CORPUS_PATH &&
-          annif eval svc-fi \$CORPUS_PATH &&
+          annif eval svc-en \$CORPUS_PATH &&
           annif eval nn-ensemble-fi \$CORPUS_PATH &&
           annif eval ensemble-fi \$CORPUS_PATH" | tee eval.prev.out
     - name: "Evaluate models with current build"
@@ -61,9 +61,9 @@ jobs:
           annif eval fasttext-fi \$CORPUS_PATH &&
           annif eval omikuji-parabel-fi \$CORPUS_PATH &&
           annif eval mllm-fi \$CORPUS_PATH &&
-          # annif eval stwfsa-fi \$CORPUS_PATH &&
+          # annif eval stwfsa-sv \$CORPUS_PATH &&  # Skip evaluating stwfsa until fix #718
           annif eval yake-fi \$CORPUS_PATH &&
-          annif eval svc-fi \$CORPUS_PATH &&
+          annif eval svc-en \$CORPUS_PATH &&
           annif eval nn-ensemble-fi \$CORPUS_PATH &&
           annif eval ensemble-fi \$CORPUS_PATH" | tee eval.out
     - name: "Diff evaluation results"
