@@ -13,7 +13,7 @@ from annif.exception import NotInitializedException, NotSupportedException
 from annif.lexical.mllm import MLLMModel
 from annif.suggestion import vector_to_suggestions
 
-from . import backend, hyperopt
+from . import hyperopt
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -94,11 +94,6 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
 
     def get_hp_optimizer(self, corpus: DocumentCorpus, metric: str) -> MLLMOptimizer:
         return MLLMOptimizer(self, corpus, metric)
-
-    def default_params(self) -> dict[str, Any]:
-        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
-        params.update(self.DEFAULT_PARAMETERS)
-        return params
 
     def _load_model(self) -> MLLMModel:
         path = os.path.join(self.datadir, self.MODEL_FILE)

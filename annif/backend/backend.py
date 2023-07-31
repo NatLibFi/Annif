@@ -40,7 +40,9 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         self.datadir = project.datadir
 
     def default_params(self) -> dict[str, Any]:
-        return self.DEFAULT_PARAMETERS
+        params = AnnifBackend.DEFAULT_PARAMETERS.copy()
+        params.update(self.DEFAULT_PARAMETERS)  # Optional backend specific parameters
+        return params
 
     @property
     def params(self) -> dict[str, Any]:

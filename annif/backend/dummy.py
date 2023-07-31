@@ -18,9 +18,6 @@ class DummyBackend(backend.AnnifLearningBackend):
     is_trained = True
     modification_time = None
 
-    def default_params(self) -> dict[str, int]:
-        return backend.AnnifBackend.DEFAULT_PARAMETERS
-
     def initialize(self, parallel: bool = False) -> None:
         self.initialized = True
 

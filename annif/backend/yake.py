@@ -45,11 +45,6 @@ class YakeBackend(backend.AnnifBackend):
         "remove_parentheses": False,
     }
 
-    def default_params(self) -> dict[str, Any]:
-        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
-        params.update(self.DEFAULT_PARAMETERS)
-        return params
-
     @property
     def is_trained(self):
         return True
