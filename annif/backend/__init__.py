@@ -44,11 +44,10 @@ def _mllm() -> Type[AnnifBackend]:
 
 def _nn_ensemble() -> Type[AnnifBackend]:
     try:
-        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
+        # Hide TF info messages by default
+        os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "1")
 
         from . import nn_ensemble
-
-        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "0"
 
         return nn_ensemble.NNEnsembleBackend
     except ImportError:
