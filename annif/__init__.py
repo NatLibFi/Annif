@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 logging.basicConfig()
 logger = logging.getLogger("annif")
 logger.setLevel(level=logging.INFO)
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "1")  # Hide TF info messages by default
 
 import annif.backend  # noqa
 

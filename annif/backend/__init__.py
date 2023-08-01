@@ -1,7 +1,6 @@
 """Registry of backend types for Annif"""
 from __future__ import annotations
 
-import os
 from typing import TYPE_CHECKING, Type
 
 if TYPE_CHECKING:
@@ -44,9 +43,6 @@ def _mllm() -> Type[AnnifBackend]:
 
 def _nn_ensemble() -> Type[AnnifBackend]:
     try:
-        # Hide TF info messages by default
-        os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "1")
-
         from . import nn_ensemble
 
         return nn_ensemble.NNEnsembleBackend
