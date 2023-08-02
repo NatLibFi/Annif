@@ -28,19 +28,19 @@ def test_tensorflow_loglevel():
     tf_env = "TF_CPP_MIN_LOG_LEVEL"
 
     runner.invoke(annif.cli.cli, ["list-projects", "-v", "DEBUG"])
-    assert os.environ[tf_env] == "0"
+    assert os.environ[tf_env] == "0"  # Show INFO, WARNING and ERROR messages by TF
     os.environ.pop(tf_env)
     runner.invoke(annif.cli.cli, ["list-projects"])  # INFO level by default
-    assert os.environ[tf_env] == "1"
+    assert os.environ[tf_env] == "1"  # Show WARNING and ERROR messages by TF
     os.environ.pop(tf_env)
     runner.invoke(annif.cli.cli, ["list-projects", "-v", "WARN"])
-    assert os.environ[tf_env] == "2"
+    assert os.environ[tf_env] == "1"  # Show WARNING and ERROR messages by TF
     os.environ.pop(tf_env)
     runner.invoke(annif.cli.cli, ["list-projects", "-v", "ERROR"])
-    assert os.environ[tf_env] == "3"
+    assert os.environ[tf_env] == "2"  # Show no messages by TF
     os.environ.pop(tf_env)
     runner.invoke(annif.cli.cli, ["list-projects", "-v", "CRITICAL"])
-    assert os.environ[tf_env] == "3"
+    assert os.environ[tf_env] == "3"  # Show no messages by TF
     os.environ.pop(tf_env)
 
 

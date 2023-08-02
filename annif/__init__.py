@@ -85,8 +85,8 @@ def _set_tensorflow_loglevel():
         0: "0",  # NOTSET
         10: "0",  # DEBUG
         20: "1",  # INFO
-        30: "2",  # WARNING
-        40: "3",  # ERROR
+        30: "1",  # WARNING
+        40: "2",  # ERROR
         50: "3",  # CRITICAL
     }
     tf_loglevel = tf_loglevel_mapping[annif_loglevel]
