@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING
 logging.basicConfig()
 logger = logging.getLogger("annif")
 logger.setLevel(level=logging.INFO)
-os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "1")  # Hide TF info messages by default
 
 import annif.backend  # noqa
 
@@ -21,6 +20,8 @@ if TYPE_CHECKING:
 def create_flask_app(config_name: str | None = None) -> Flask:
     """Create a Flask app to be used by the CLI."""
     from flask import Flask
+
+    _set_tensorflow_loglevel()
 
     app = Flask(__name__)
     config_name = _get_config_name(config_name)
@@ -76,3 +77,17 @@ def _get_config_name(config_name: str | None) -> str:
         else:
             config_name = "annif.default_config.ProductionConfig"  # pragma: no cover
     return config_name
+
+
+def _set_tensorflow_loglevel():
+    annif_loglevel = logger.getEffectiveLevel()
+    tf_loglevel_mapping = {
+        0: "0",  # NOTSET
+        10: "0",  # DEBUG
+        20: "1",  # INFO
+        30: "2",  # WARNING
+        40: "3",  # ERROR
+        50: "3",  # CRITICAL
+    }
+    tf_loglevel = tf_loglevel_mapping[annif_loglevel]
+    os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", tf_loglevel)
