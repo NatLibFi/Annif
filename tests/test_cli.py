@@ -23,6 +23,27 @@ TEMP_PROJECT = "".join(random.choice("abcdefghiklmnopqrstuvwxyz") for _ in range
 PROJECTS_CONFIG_PATH = "tests/projects_for_config_path_option.cfg"
 
 
+@mock.patch.dict(os.environ, clear=True)
+def test_tensorflow_loglevel():
+    tf_env = "TF_CPP_MIN_LOG_LEVEL"
+
+    runner.invoke(annif.cli.cli, ["list-projects", "-v", "DEBUG"])
+    assert os.environ[tf_env] == "0"
+    os.environ.pop(tf_env)
+    runner.invoke(annif.cli.cli, ["list-projects"])  # INFO level by default
+    assert os.environ[tf_env] == "1"
+    os.environ.pop(tf_env)
+    runner.invoke(annif.cli.cli, ["list-projects", "-v", "WARN"])
+    assert os.environ[tf_env] == "2"
+    os.environ.pop(tf_env)
+    runner.invoke(annif.cli.cli, ["list-projects", "-v", "ERROR"])
+    assert os.environ[tf_env] == "3"
+    os.environ.pop(tf_env)
+    runner.invoke(annif.cli.cli, ["list-projects", "-v", "CRITICAL"])
+    assert os.environ[tf_env] == "3"
+    os.environ.pop(tf_env)
+
+
 def test_list_projects():
     result = runner.invoke(annif.cli.cli, ["list-projects"])
     assert not result.exception
@@ -1122,24 +1143,3 @@ def test_completion_show_project_project_ids_dummy():
 def test_completion_load_vocab_vocab_ids_all():
     completions = get_completions(annif.cli.cli, ["load-vocab"], "")
     assert completions == ["dummy", "dummy-noname", "yso"]
-
-
-def test_tensorflow_loglevel():
-    tf_env = "TF_CPP_MIN_LOG_LEVEL"
-    assert tf_env not in os.environ.keys()
-
-    runner.invoke(annif.cli.cli, ["list-projects", "-v", "DEBUG"])
-    assert os.environ[tf_env] == "0"
-    os.environ.pop(tf_env)
-    runner.invoke(annif.cli.cli, ["list-projects"])  # INFO level by default
-    assert os.environ[tf_env] == "1"
-    os.environ.pop(tf_env)
-    runner.invoke(annif.cli.cli, ["list-projects", "-v", "WARN"])
-    assert os.environ[tf_env] == "2"
-    os.environ.pop(tf_env)
-    runner.invoke(annif.cli.cli, ["list-projects", "-v", "ERROR"])
-    assert os.environ[tf_env] == "3"
-    os.environ.pop(tf_env)
-    runner.invoke(annif.cli.cli, ["list-projects", "-v", "CRITICAL"])
-    assert os.environ[tf_env] == "3"
-    os.environ.pop(tf_env)
