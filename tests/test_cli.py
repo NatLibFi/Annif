@@ -37,7 +37,7 @@ def test_tensorflow_loglevel():
     assert os.environ[tf_env] == "1"  # Show WARNING and ERROR messages by TF
     os.environ.pop(tf_env)
     runner.invoke(annif.cli.cli, ["list-projects", "-v", "ERROR"])
-    assert os.environ[tf_env] == "2"  # Show no messages by TF
+    assert os.environ[tf_env] == "2"  # Show ERROR messages by TF
     os.environ.pop(tf_env)
     runner.invoke(annif.cli.cli, ["list-projects", "-v", "CRITICAL"])
     assert os.environ[tf_env] == "3"  # Show no messages by TF
