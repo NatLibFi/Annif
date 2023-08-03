@@ -80,6 +80,9 @@ def _get_config_name(config_name: str | None) -> str:
 
 
 def _set_tensorflow_loglevel():
+    """Set TensorFlow log level based on Annif log level (--verbosity/-v
+    option) using an environment variable. INFO messages by TF are shown only on
+    DEBUG (or NOTSET) level of Annif."""
     annif_loglevel = logger.getEffectiveLevel()
     tf_loglevel_mapping = {
         0: "0",  # NOTSET
