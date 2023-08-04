@@ -54,7 +54,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     @property
     def _model_file_paths(self) -> list:
         all_paths = glob(os.path.join(self.datadir, "*"))
-        ignore_patterns = ("*-train*", "vectorizer")
+        ignore_patterns = ("*-train*", "tmp-*", "vectorizer")
         ignore_paths = [
             path
             for igp in ignore_patterns
