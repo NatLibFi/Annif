@@ -13,6 +13,7 @@
 import os
 import re
 import sys
+from datetime import date
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -20,7 +21,11 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = "annif"
-copyright = "2017, University Of Helsinki (The National Library Of Finland)"
+copyright = (
+    f"2017-{date.today().year}, University Of Helsinki "
+    + "(The National Library Of Finland)"
+)
+
 author = "Osma Suominen"
 
 # Get version number from GitHub tag
