@@ -32,7 +32,7 @@ author = "Osma Suominen"
 release = re.sub("^v", "", os.popen("git describe --tags").read().strip())
 # The short X.Y version.
 version = release
-
+html_title = project + " " + release
 
 # -- General configuration ---------------------------------------------------
 
