@@ -27,6 +27,7 @@ python:
         - nn
         - omikuji
         - fasttext
+        - stwfsa
         - yake
         - pycld3
         - spacy
