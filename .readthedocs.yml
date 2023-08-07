@@ -29,7 +29,6 @@ python:
         - fasttext
         - stwfsa
         - yake
-        - pycld3
         - spacy
     - requirements: docs/requirements.txt
     - method: pip
