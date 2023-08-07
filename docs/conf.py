@@ -26,7 +26,7 @@ copyright = (
     + "(The National Library Of Finland)"
 )
 
-author = "Osma Suominen"
+author = "National Library Of Finland"
 
 # Get version number from GitHub tag
 release = re.sub("^v", "", os.popen("git describe --tags").read().strip())
