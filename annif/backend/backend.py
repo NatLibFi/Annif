@@ -52,14 +52,25 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         return params
 
     @property
+    def _model_file_paths(self) -> list:
+        all_paths = glob(os.path.join(self.datadir, "*"))
+        ignore_patterns = ("*-train*", "tmp-*", "vectorizer")
+        ignore_paths = [
+            path
+            for igp in ignore_patterns
+            for path in glob(os.path.join(self.datadir, igp))
+        ]
+        return list(set(all_paths) - set(ignore_paths))
+
+    @property
     def is_trained(self) -> bool:
-        return bool(glob(os.path.join(self.datadir, "*")))
+        return bool(self._model_file_paths)
 
     @property
     def modification_time(self) -> datetime | None:
         mtimes = [
             datetime.utcfromtimestamp(os.path.getmtime(p))
-            for p in glob(os.path.join(self.datadir, "*"))
+            for p in self._model_file_paths
         ]
         most_recent = max(mtimes, default=None)
         if most_recent is None:

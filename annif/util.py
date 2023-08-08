@@ -35,6 +35,7 @@ def atomic_save(
     final name."""
 
     prefix, suffix = os.path.splitext(filename)
+    prefix = "tmp-" + prefix
     tempfd, tempfilename = tempfile.mkstemp(prefix=prefix, suffix=suffix, dir=dirname)
     os.close(tempfd)
     logger.debug("saving %s to temporary file %s", str(obj)[:90], tempfilename)
