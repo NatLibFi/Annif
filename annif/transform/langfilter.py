@@ -5,9 +5,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from simplemma.langdetect import in_target_language
+from simplemma import LanguageDetector
 
 import annif
+import annif.langsupport
 
 from . import transform
 
@@ -31,6 +32,10 @@ class LangFilter(transform.BaseTransform):
         self.text_min_length = int(text_min_length)
         self.sentence_min_length = int(sentence_min_length)
         self.min_ratio = float(min_ratio)
+        self.language_detector = LanguageDetector(
+            self.project.language,
+            lemmatization_strategy=annif.langsupport.lemmatization_strategy,
+        )
 
     def transform_fn(self, text: str) -> str:
         if len(text) < self.text_min_length:
@@ -41,7 +46,7 @@ class LangFilter(transform.BaseTransform):
             if len(sent) < self.sentence_min_length:
                 retained_sentences.append(sent)
                 continue
-            proportion = in_target_language(sent, lang=(self.project.language,))
+            proportion = self.language_detector.proportion_in_target_languages(sent)
             if proportion >= self.min_ratio:
                 retained_sentences.append(sent)
         return " ".join(retained_sentences)
