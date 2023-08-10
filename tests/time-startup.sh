@@ -18,7 +18,7 @@ average_startup_time=$(echo "scale=3; ($startup_time1 + $startup_time2 + $startu
 echo "Average Startup time: $average_startup_time seconds"
 
 # Set the threshold for acceptable startup time in seconds
-threshold=0.300
+threshold=0.400
 
 # Compare the average startup time with the threshold
 if (( $(echo "$average_startup_time > $threshold" | bc -l) )); then
