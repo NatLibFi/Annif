@@ -24,6 +24,7 @@ def test_stwfsa_default_params(project):
         backend_id=stwfsa_backend_name, config_params={}, project=project
     )
     expected_default_params = {
+        "limit": 100,
         "concept_type_uri": "http://www.w3.org/2004/02/skos/core#Concept",
         "sub_thesaurus_type_uri": "http://www.w3.org/2004/02/skos/core#Collection",
         "thesaurus_relation_type_uri": "http://www.w3.org/2004/02/skos/core#member",
