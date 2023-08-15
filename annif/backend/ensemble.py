@@ -123,7 +123,7 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
     def _objective(self, trial: Trial) -> float:
         eval_batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
         proj_weights = {
-            project_id: trial.suggest_uniform(project_id, 0.0, 1.0)
+            project_id: trial.suggest_float(project_id, 0.0, 1.0)
             for project_id in self._sources
         }
         for gold_batch, src_batches in zip(self._gold_batches, self._source_batches):
