@@ -67,7 +67,7 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
 
     def _train_classifier(self, veccorpus: csr_matrix, classes: list[int]) -> None:
         self.info("creating classifier")
-        self._model = LinearSVC()
+        self._model = LinearSVC(dual="auto")
         self._model.fit(veccorpus, classes)
         annif.util.atomic_save(
             self._model, self.datadir, self.MODEL_FILE, method=joblib.dump
