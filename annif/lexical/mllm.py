@@ -223,7 +223,7 @@ class MLLMModel:
         self._prepare_relations(graph, vocab)
 
         self._vectorizer = CountVectorizer(
-            binary=True, tokenizer=analyzer.tokenize_words
+            binary=True, tokenizer=analyzer.tokenize_words, token_pattern=None
         )
         label_corpus = self._vectorizer.fit_transform((t.label for t in terms))
 
