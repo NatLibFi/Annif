@@ -75,6 +75,9 @@ class TfidfVectorizerMixin:
         self, input: Iterable[str], params: dict[str, Any] = {}
     ) -> csr_matrix:
         self.info("creating vectorizer")
+        # avoid UserWarning when overriding tokenizer
+        if "tokenizer" in params:
+            params["token_pattern"] = None
         self.vectorizer = TfidfVectorizer(**params)
         veccorpus = self.vectorizer.fit_transform(input)
         annif.util.atomic_save(
