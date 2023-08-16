@@ -98,7 +98,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
     name = "nn_ensemble"
 
-    MODEL_FILE = "nn-model.h5"
+    MODEL_FILE = "nn-model.keras"
     LMDB_FILE = "nn-train.mdb"
 
     DEFAULT_PARAMETERS = {
