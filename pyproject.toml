@@ -93,4 +93,7 @@ line_length = "88"
 skip_gitignore = true
 
 [tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
 addopts = "-m 'not slow'"
