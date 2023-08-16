@@ -8,13 +8,14 @@ from io import BytesIO
 from typing import TYPE_CHECKING, Any
 
 import joblib
+import keras.backend as K
 import lmdb
 import numpy as np
-import tensorflow.keras.backend as K
+from keras.layers import Add, Dense, Dropout, Flatten, Input, Layer
+from keras.models import Model
+from keras.saving import load_model
+from keras.utils import Sequence
 from scipy.sparse import csc_matrix, csr_matrix
-from tensorflow.keras.layers import Add, Dense, Dropout, Flatten, Input, Layer
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.utils import Sequence
 
 import annif.corpus
 import annif.parallel
@@ -97,7 +98,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
     name = "nn_ensemble"
 
-    MODEL_FILE = "nn-model.h5"
+    MODEL_FILE = "nn-model.keras"
     LMDB_FILE = "nn-train.mdb"
 
     DEFAULT_PARAMETERS = {
