@@ -72,9 +72,11 @@ class TfidfVectorizerMixin:
                 )
 
     def create_vectorizer(
-        self, input: Iterable[str], params: dict[str, Any] = {}
+        self, input: Iterable[str], params: dict[str, Any] = None
     ) -> csr_matrix:
         self.info("creating vectorizer")
+        if params is None:
+            params = {}
         # avoid UserWarning when overriding tokenizer
         if "tokenizer" in params:
             params["token_pattern"] = None
