@@ -57,14 +57,9 @@ jobs:
   test:
     runs-on: ubuntu-22.04
     timeout-minutes: 15
-    continue-on-error: ${{ matrix.experimental }}
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
-        experimental: [false]
-        include:
-        - python-version: "3.11"
-          experimental: true
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
     name: test on Python ${{ matrix.python-version }}
     steps:
     - uses: actions/checkout@v3
