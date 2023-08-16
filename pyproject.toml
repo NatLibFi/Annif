@@ -28,7 +28,7 @@ classifiers=[
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+python = ">=3.8,<3.12"
 
 connexion = {version = "2.14.2", extras = ["swagger-ui"]}
 flask = "2.2.*"
@@ -45,7 +45,7 @@ gunicorn = "21.2.*"
 numpy = "1.24.*"
 optuna = "3.3.*"
 python-dateutil = "2.8.*"
-tomli = "2.0.*"
+tomli = { version = "2.0.*", python = "<3.11" }
 simplemma = "0.9.*"
 jsonschema = "4.17.*"
 
