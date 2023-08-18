@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "annif"
-version = "1.0.0-dev"
+version = "1.0.0"
 description = "Automated subject indexing and classification tool"
 authors = ["National Library of Finland <finto-posti@helsinki.fi>"]
 maintainers = [
