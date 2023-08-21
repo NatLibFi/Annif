@@ -41,6 +41,7 @@
     a:visited { color: #536f9f }
     h1 { font-weight: 500; font-size: 2rem; padding: 0; margin: 0; }
     h2 { font-weight: 500; font-size: 1.5rem; padding: 0.5rem 0; }
+    h3 { font-weight: 500; font-size: 1.3rem; padding: 0; }
 
     #blurb { font-size: 2.0rem; font-weight: 500; line-height: 1; }
 
@@ -218,7 +219,7 @@
   <div class="row justify-content-center">
     <div class="col-md-6">
       <p id="blurb" class="text-center">
-        Choose a controlled subject vocabulary and train Annif on already indexed documents – it can then suggest subjects for new documents! 
+        Choose a controlled subject vocabulary and train Annif on already indexed documents – it can then suggest subjects for new documents!
       </p>
     </div>
   </div>
@@ -313,7 +314,7 @@
       </div>
 
     </div>
-    
+
   </div>
 </div>
 
@@ -332,11 +333,47 @@
         Annif is mainly being developed at the <a
         href="http://www.nationallibrary.fi">National Library of
         Finland</a>, but others are welcome to join in!</p>
-        
-      <p>We also provide a <a href="https://api.annif.org">demo API</a> for
-      accessing Annif as a REST API service.  If you need an API for
-      production systems, check out <a href="https://ai.finto.fi">Finto
-      AI</a>, which is based on Annif.</p>
+        <h3>Latest releases</h3>
+        <div id="latest-releases"></div>
+          <ul class="release-list"></ul>
+        <script>
+          $(document).ready(function() {
+              $.ajax({
+                  url: 'https://api.github.com/repos/NatLibFi/Annif/releases',
+                  headers: {
+                        'Accept': 'application/vnd.github.v3+json',
+                        'X-GitHub-Api-Version': '2022-11-28'
+                      },
+                      success: function(data) {
+                        var releasesToShow = 4; // Set the number of releases to show
+                        var releasesAppended = 0;
+                        const dateFormat = { year: 'numeric', month: 'long', day: 'numeric' };
+                        var $releaseList = $('.release-list');
+
+                        // Process the API response and display the release information
+                        data.forEach(function(release) {
+                          if (releasesAppended >= releasesToShow) {
+                            return;
+                          }
+
+                          var name = release.name;
+                          var published = new Date(release.published_at).toLocaleString('default', dateFormat);
+                          var url = release.html_url;
+
+                          var releaseHtml = '<li>';
+                          releaseHtml += '<a href="' + url + '">' + name + '</a> – ' + published;
+                          releaseHtml += '</li>';
+
+                        $releaseList.append(releaseHtml);
+                        releasesAppended++;
+                        });
+                  },
+                  error: function() {
+                      $('#latest-releases').text('Failed to fetch the releases.');
+                  }
+              });
+            });
+    </script>
     </div>
 
     <div class="col-md-4">
@@ -414,7 +451,7 @@
             <img id="kb" src="static/img/kb.png" class="img-fluid" alt="KB logo">
           </a>
           <p>
-            <a href="https://www.kb.se">National Library of Sweden</a> uses Annif for 
+            <a href="https://www.kb.se">National Library of Sweden</a> uses Annif for
             <a href="https://bibliometri.swepub.kb.se/classify">automated classification of scholarly publications</a>.
           </p>
         </div>
@@ -441,7 +478,7 @@
             <a href="https://taju.uniarts.fi">Taju</a>, <a href="https://lauda.ulapland.fi/">Lauda</a>)
             Annif assists the subject indexing of theses and dissertations.</p>
         </div>
-		
+
         <div class="annif-user">
           <a href="https://dissem.in">
             <img id="dissemin" src="static/img/dissemin.png" class="img-fluid" alt="Dissemin logo">
@@ -449,25 +486,25 @@
           <p><a href="https://dissem.in">Dissemin</a> uses Annif to categorize
             academic papers uploaded to open repositories.</p>
         </div>
-				
+
 	      <div class="annif-user">
 	        <a href="https://www.zbw.eu/en/home">
             <img id="zbw" src="static/img/logo-zbw.gif" class="img-fluid" alt="ZBW logo">
 		      </a>
           <p><a href="https://www.zbw.eu/en/home">ZBW</a> – The Leibniz Information Centre for Economics uses Annif as a part of their automated indexing service AutoSE (<a href="https://www.zbw.eu/en/about-us/key-activities/automated-subject-indexing">read more here</a>).</p>
         </div>
-		
+
         <div class="pt-3">
           <p><a href="https://www.kiwi.fi/x/gIB7Cg">More users</a> of Annif
           and/or Finto AI</p>
         </div>
 
       </div>
-      
+
     </div>
   </div>
 </div>
- 
+
 <div class="container py-4">
   <div class="row">
     <div class="col-md-6 pr-4">
