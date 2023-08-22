@@ -127,3 +127,14 @@ Subject index administration
 **REST equivalent**
 
    N/A
+
+*****
+Other
+*****
+
+.. click:: annif.cli:run_completion
+   :prog: annif completion
+
+**REST equivalent**
+
+   N/A
