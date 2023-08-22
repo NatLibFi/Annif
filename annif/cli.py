@@ -587,7 +587,7 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric, results_fi
 @click.option("--bash", "shell", flag_value="bash")
 @click.option("--zsh", "shell", flag_value="zsh")
 @click.option("--fish", "shell", flag_value="fish")
-def completion(shell):
+def run_completion(shell):
     """Generate the script for tab-key autocompletion for the given shell. To enable the
     completion support in your current bash terminal session run\n
         source <(annif completion --bash)
