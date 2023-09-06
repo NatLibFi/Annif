@@ -180,6 +180,93 @@ paths:
         "503":
           $ref: '#/components/responses/ServiceUnavailable'
       x-codegen-request-body-name: documents
+  /projects/{project_id}/reconcile:
+    get:
+      tags:
+      - Reconciliation
+      summary: reconcile against a project
+      operationId: annif.rest.reconcile_metadata
+      parameters:
+      - $ref: '#/components/parameters/project_id'
+      # queries parameter doesn't work for some reason
+      - in: query
+        name: queries
+        schema:
+          type: object
+          additionalProperties:
+            type: object
+            required:
+            - query
+            properties:
+              query:
+                type: string
+                description: query string
+          example: 
+            {"q0": {"query": "query"}}
+        required: false
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ReconcileMetadata'
+                  - $ref: '#/components/schemas/Reconcile'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+      - Reconciliation
+      summary: reconcole against a project
+      operationId: annif.rest.reconcile
+      parameters:
+      - $ref: '#components/parameters/project_id'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            encoding:
+              queries:
+                contentType: application/json
+            schema:
+              type: object
+              required:
+              - queries
+              properties:
+                queries:
+                  type: object
+                  additionalProperties:
+                    type: object
+                    required:
+                    - query
+                    properties:
+                      query:
+                        type: string
+                        description: query string
+                      limit:
+                        type: integer
+                        description: maximum number of results to return
+                  example:
+                    {
+                      "q0": {
+                        "query": "cat",
+                        "limit": 10
+                      },
+                      "q1": {
+                        "query": "dog",
+                        "limit": 10
+                      }
+                    }
+        required: true
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reconcile'
+        "404":
+          $ref: '#/components/responses/NotFound'
 components:
   schemas:
     ApiInfo:
@@ -354,6 +441,101 @@ components:
             An absolute URI that identifies the specific occurrence of the problem.
             It may or may not yield further information if dereferenced.
           format: uri
+    ReconcileMetadata:
+      required:
+      - name
+      - defaultTypes
+      - view
+      - identifierSpace
+      - schemaSpace
+      - versions
+      type: object
+      properties:
+        name:
+          type: string
+          example: Annif Reconciliation Service
+        identifierSpace:
+          type: string
+          example: ""
+        schemaSpace:
+          type: string
+          example: ""
+        defaultTypes:
+          type: array
+          items:
+            type: object
+            required:
+            - id
+            - name
+            properties:
+              id:
+                type: string
+                example: type_id
+              name:
+                type: string
+                example: type_name
+        view:
+          type: object
+          required:
+          - url
+          properties:
+            url:
+              type: string
+              example: '{{id}}'
+        versions:
+          type: array
+          items:
+            type: string
+            example: 0.2
+      description: Reconciliation service information
+    Reconcile:
+      type: object
+      additionalProperties:
+        type: object
+        required:
+        - result
+        properties:
+          result:
+            type: array
+            items:
+              type: object
+              required:
+              - id
+              - name
+              - score
+              - match
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                score:
+                  type: number
+                match:
+                  type: boolean
+      example:
+        {
+          "q0": {
+            "result": [
+              {
+                "id": "id0",
+                "name": "name0",
+                "score": 0.5,
+                "match": true
+              }
+            ]
+          },
+          "q1": {
+            "result": [
+              {
+                "id": "id1",
+                "name": "name1",
+                "score": 0.5,
+                "match": false
+              }
+            ]
+          }
+        }
   parameters:
     project_id:
       name: project_id

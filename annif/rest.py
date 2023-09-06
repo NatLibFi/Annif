@@ -214,3 +214,63 @@ def learn(
         return server_error(err)
 
     return None, 204
+
+
+def _reconcile(project_id: str, query: dict[str, Any]) -> dict[str, Any]:
+    document = [{"text": query["query"]}]
+    parameters = {"limit": query["limit"]} if "limit" in query else {}
+    result = _suggest(project_id, document, parameters)
+
+    if _is_error(result):
+        return result
+
+    results = [
+        {
+            "id": res["uri"],
+            "name": res["label"],
+            "score": res["score"],
+            "match": res["label"] == query["query"],
+        }
+        for res in result[0]["results"]
+    ]
+    return results
+
+
+def reconcile_metadata(
+    project_id: str, **query_parameters
+) -> ConnexionResponse | dict[str, Any]:
+    """return service manifest or reconcile against a project and return a dict
+    with results formatted according to OpenAPI spec"""
+
+    try:
+        project = annif.registry.get_project(project_id, min_access=Access.hidden)
+    except ValueError:
+        return project_not_found_error(project_id)
+
+    if not query_parameters:
+        return {
+            "versions": ["0.2"],
+            "name": "Annif Reconciliation Service for " + project.name,
+            "identifierSpace": "",
+            "schemaSpace": "",
+            "view": {"url": "{{id}}"},
+        }
+    else:
+        return {}
+
+
+def reconcile(
+    project_id: str, body: dict[str, Any]
+) -> ConnexionResponse | dict[str, Any]:
+    """reconcile against a project and return a dict with results
+    formatted according to OpenAPI spec"""
+
+    queries = body["queries"]
+    results = {}
+    for key, query in queries.items():
+        data = _reconcile(project_id, query)
+        if _is_error(data):
+            return data
+        results[key] = {"result": data}
+
+    return results
