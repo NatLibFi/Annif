@@ -3,6 +3,7 @@ methods defined in the OpenAPI specification."""
 from __future__ import annotations
 
 import importlib
+import json
 from typing import TYPE_CHECKING, Any
 
 import connexion
@@ -252,11 +253,20 @@ def reconcile_metadata(
             "versions": ["0.2"],
             "name": "Annif Reconciliation Service for " + project.name,
             "identifierSpace": "",
-            "schemaSpace": "",
+            "schemaSpace": "http://www.w3.org/2004/02/skos/core#Concept",
             "view": {"url": "{{id}}"},
+            "defaultTypes": [{"id": "default-type", "name": "Default type"}],
         }
     else:
-        return {}
+        queries = json.loads(query_parameters["queries"])
+        results = {}
+        for key, query in queries.items():
+            data = _reconcile(project_id, query)
+            if _is_error(data):
+                return data
+            results[key] = {"result": data}
+
+        return results
 
 
 def reconcile(

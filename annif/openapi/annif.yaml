@@ -184,26 +184,38 @@ paths:
     get:
       tags:
       - Reconciliation
-      summary: reconcile against a project
+      summary: get reconciliation service manifest or reconcile against a project
       operationId: annif.rest.reconcile_metadata
       parameters:
       - $ref: '#/components/parameters/project_id'
-      # queries parameter doesn't work for some reason
       - in: query
+        description: A call to the reconciliation service API
         name: queries
+        required: false
         schema:
-          type: object
+          type: string
           additionalProperties:
             type: object
             required:
-            - query
+              - query
             properties:
               query:
                 type: string
-                description: query string
-          example: 
-            {"q0": {"query": "query"}}
-        required: false
+                description: Query string to search for
+              limit:
+                type: integer
+                description: Maximum number of results to return
+        example:
+          '{
+            "q0": {
+              "query": "example query",
+              "limit": 10
+            },
+            "q1": {
+              "query": "another example",
+              "limit": 15
+            }
+          }'
       responses:
         "200":
           description: successful operation
@@ -212,7 +224,53 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/ReconcileMetadata'
-                  - $ref: '#/components/schemas/Reconcile'
+                  - $ref: '#/components/schemas/ReconciliationResult'
+              examples:
+                ReconcileMetadata:
+                  summary: Reconciliation service manifest
+                  value:
+                    {
+                      "defaultTypes": [
+                        {
+                          "id": "default-type",
+                          "name": "Default type"
+                        }
+                      ],
+                      "identifierSpace": "",
+                      "name": "Annif Reconciliation Service for Dummy Finnish",
+                      "schemaSpace": "http://www.w3.org/2004/02/skos/core#Concept",
+                      "versions": [
+                        "0.2"
+                      ],
+                      "view": {
+                        "url": "{{id}}"
+                      }
+                    }
+                ReconciliationResult:
+                  summary: Reconciliation result
+                  value:
+                    {
+                      "q0": {
+                        "result": [
+                          {
+                            "id": "example-id",
+                            "name": "example name",
+                            "score": 0.5,
+                            "match": true
+                          }
+                        ]
+                      },
+                      "q1": {
+                        "result": [
+                          {
+                            "id": "another-id",
+                            "name": "another name",
+                            "score": 0.5,
+                            "match": false
+                          }
+                        ]
+                      }
+                    }
         "404":
           $ref: '#/components/responses/NotFound'
     post:
@@ -235,6 +293,7 @@ paths:
               properties:
                 queries:
                   type: object
+                  description: A call to the reconciliation service API
                   additionalProperties:
                     type: object
                     required:
@@ -242,19 +301,19 @@ paths:
                     properties:
                       query:
                         type: string
-                        description: query string
+                        description: Query string to search for
                       limit:
                         type: integer
-                        description: maximum number of results to return
+                        description: Maximum number of results to return
                   example:
                     {
                       "q0": {
-                        "query": "cat",
+                        "query": "example query",
                         "limit": 10
                       },
                       "q1": {
-                        "query": "dog",
-                        "limit": 10
+                        "query": "another example",
+                        "limit": 15
                       }
                     }
         required: true
@@ -264,7 +323,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Reconcile'
+                $ref: '#/components/schemas/ReconciliationResult'
         "404":
           $ref: '#/components/responses/NotFound'
 components:
@@ -401,6 +460,105 @@ components:
                 type: string
                 example: Vulpes vulpes
       description: A document with attached, known good subjects
+    ReconcileMetadata:
+      required:
+      - name
+      - defaultTypes
+      - view
+      - identifierSpace
+      - schemaSpace
+      - versions
+      type: object
+      properties:
+        name:
+          type: string
+          example: Annif Reconciliation Service
+        identifierSpace:
+          type: string
+          example: ""
+        schemaSpace:
+          type: string
+          example: "http://www.w3.org/2004/02/skos/core#Concept"
+        defaultTypes:
+          type: array
+          items:
+            type: object
+            required:
+            - id
+            - name
+            properties:
+              id:
+                type: string
+                example: type-id
+              name:
+                type: string
+                example: type name
+        view:
+          type: object
+          required:
+          - url
+          properties:
+            url:
+              type: string
+              example: "{{id}}"
+        versions:
+          type: array
+          items:
+            type: string
+            example: 0.2
+      description: Reconciliation service information
+    ReconciliationResult:
+      type: object
+      additionalProperties:
+        type: object
+        required:
+        - result
+        properties:
+          result:
+            type: array
+            items:
+              type: object
+              required:
+              - id
+              - name
+              - score
+              - match
+              properties:
+                id:
+                  type: string
+                  example: example-id
+                name:
+                  type: string
+                  example: example name
+                score:
+                  type: number
+                  example: 0.5
+                match:
+                  type: boolean
+                  example: true
+      example:
+        {
+          "q0": {
+            "result": [
+              {
+                "id": "example-id",
+                "name": "example name",
+                "score": 0.5,
+                "match": true
+              }
+            ]
+          },
+          "q1": {
+            "result": [
+              {
+                "id": "another-id",
+                "name": "another name",
+                "score": 0.5,
+                "match": false
+              }
+            ]
+          }
+        }
     Problem:
       type: object
       properties:
@@ -441,101 +599,6 @@ components:
             An absolute URI that identifies the specific occurrence of the problem.
             It may or may not yield further information if dereferenced.
           format: uri
-    ReconcileMetadata:
-      required:
-      - name
-      - defaultTypes
-      - view
-      - identifierSpace
-      - schemaSpace
-      - versions
-      type: object
-      properties:
-        name:
-          type: string
-          example: Annif Reconciliation Service
-        identifierSpace:
-          type: string
-          example: ""
-        schemaSpace:
-          type: string
-          example: ""
-        defaultTypes:
-          type: array
-          items:
-            type: object
-            required:
-            - id
-            - name
-            properties:
-              id:
-                type: string
-                example: type_id
-              name:
-                type: string
-                example: type_name
-        view:
-          type: object
-          required:
-          - url
-          properties:
-            url:
-              type: string
-              example: '{{id}}'
-        versions:
-          type: array
-          items:
-            type: string
-            example: 0.2
-      description: Reconciliation service information
-    Reconcile:
-      type: object
-      additionalProperties:
-        type: object
-        required:
-        - result
-        properties:
-          result:
-            type: array
-            items:
-              type: object
-              required:
-              - id
-              - name
-              - score
-              - match
-              properties:
-                id:
-                  type: string
-                name:
-                  type: string
-                score:
-                  type: number
-                match:
-                  type: boolean
-      example:
-        {
-          "q0": {
-            "result": [
-              {
-                "id": "id0",
-                "name": "name0",
-                "score": 0.5,
-                "match": true
-              }
-            ]
-          },
-          "q1": {
-            "result": [
-              {
-                "id": "id1",
-                "name": "name1",
-                "score": 0.5,
-                "match": false
-              }
-            ]
-          }
-        }
   parameters:
     project_id:
       name: project_id
