@@ -99,14 +99,11 @@ class AnnifRegistry:
         vocab_id = match.group(1)
         posargs, kwargs = parse_args(match.group(3))
         language = posargs[0] if posargs else default_language
-        vocab_key = (vocab_id, language)
 
         self._init_vars()
-        if vocab_key not in self._vocabs[self._rid]:
-            self._vocabs[self._rid][vocab_key] = AnnifVocabulary(
-                vocab_id, self._datadir
-            )
-        return self._vocabs[self._rid][vocab_key], language
+        if vocab_id not in self._vocabs[self._rid]:
+            self._vocabs[self._rid][vocab_id] = AnnifVocabulary(vocab_id, self._datadir)
+        return self._vocabs[self._rid][vocab_id], language
 
 
 def initialize_projects(app: Flask) -> None:
