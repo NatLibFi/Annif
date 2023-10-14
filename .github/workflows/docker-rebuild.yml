@@ -1,10 +1,20 @@
 name: "Docker rebuild"
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      allow_eval_diff:
+        description: 'Allow differing evaluation results'
+        required: true
+        type: boolean
+        default: false
 jobs:
   rebuild-docker-images:
     name: "Docker rebuild"
     runs-on: ubuntu-22.04
     timeout-minutes: 15
+    env:
+      ANNIF_PROJECTS: "/Annif/tests/compatibility/projects.cfg"
+      CORPUS_PATH: "/Annif/tests/corpora/archaeology/fulltext/"
     steps:
     - name: "Build for testing"
       uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5  # v3.2.0
@@ -14,6 +24,23 @@ jobs:
     - name: "Test with pytest"
       run: |
         docker run --rm --workdir /Annif test-image pytest -p no:cacheprovider
+    - name: "Get semver tag of previous build"
+      run: |
+        PREV=$(echo ${{ github.ref_name }} | sed 's/^v//')
+        echo Docker tag of previous build is $PREV
+        echo "PREV=$PREV" >> "$GITHUB_ENV"
+    - name: "Train models with previous build"
+      run: |
+        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH jinkinen/annif:$PREV /Annif/tests/compatibility/train.sh
+    - name: "Evaluate models with previous build"
+      run: |
+        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH jinkinen/annif:$PREV /Annif/tests/compatibility/eval.sh | tee eval.prev.out
+    - name: "Evaluate models with current build"
+      run: |
+        docker run -v annif-projects:/annif-projects -e ANNIF_PROJECTS -e CORPUS_PATH test-image /Annif/tests/compatibility/eval.sh | tee eval.out
+    - name: "Diff evaluation results"
+      continue-on-error: ${{ inputs.allow_eval_diff }}
+      run: diff eval.prev.out eval.out --ignore-matching-lines='[omikuji::model]'
     - name: Login to Quay.io
       uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc  # v2.2.0
       with:
