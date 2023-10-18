@@ -223,10 +223,10 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/ReconcileMetadata'
+                  - $ref: '#/components/schemas/ReconcileServiceManifest'
                   - $ref: '#/components/schemas/ReconciliationResult'
               examples:
-                ReconcileMetadata:
+                ReconcileServiceManifest:
                   summary: Reconciliation service manifest
                   value:
                     {
@@ -460,7 +460,7 @@ components:
                 type: string
                 example: Vulpes vulpes
       description: A document with attached, known good subjects
-    ReconcileMetadata:
+    ReconcileServiceManifest:
       required:
       - name
       - defaultTypes
