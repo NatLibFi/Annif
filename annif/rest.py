@@ -217,7 +217,7 @@ def learn(
     return None, 204
 
 
-def _reconcile(project_id: str, query: dict[str, Any]) -> dict[str, Any]:
+def _reconcile(project_id: str, query: dict[str, Any]) -> list[dict[str, Any]]:
     document = [{"text": query["query"]}]
     parameters = {"limit": query["limit"]} if "limit" in query else {}
     result = _suggest(project_id, document, parameters)
