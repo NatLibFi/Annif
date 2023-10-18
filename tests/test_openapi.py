@@ -1,5 +1,7 @@
 """Unit tests for Annif REST API / OpenAPI spec"""
 
+import json
+
 import pytest
 import schemathesis
 from hypothesis import settings
@@ -113,3 +115,48 @@ def test_openapi_learn_novocab(app_client):
     data = []
     req = app_client.post("http://localhost:8000/v1/projects/novocab/learn", json=data)
     assert req.status_code == 503
+
+
+def test_openapi_reconcile_metadata(app_client):
+    req = app_client.get("http://localhost:8000/v1/projects/dummy-fi/reconcile")
+    assert req.status_code == 200
+    assert "name" in req.get_json()
+
+
+def test_openapi_reconcile_metadata_nonexistent(app_client):
+    req = app_client.get("http://localhost:8000/v1/projects/nonexistent/reconcile")
+    assert req.status_code == 404
+
+
+def test_openapi_reconcile_metadata_queries(app_client):
+    req = app_client.get(
+        'http://localhost:8000/v1/projects/dummy-fi/reconcile?queries=\
+         {"q0": {"query": "example text"}}'
+    )
+    assert req.status_code == 200
+    assert "result" in req.get_json()["q0"]
+
+
+def test_openapi_reconcile_metadata_queries_nonexistent(app_client):
+    req = app_client.get(
+        'http://localhost:8000/v1/projects/nonexistent/reconcile?queries=\
+         {"q0": {"query": "example text"}}'
+    )
+    assert req.status_code == 404
+
+
+def test_openapi_reconcile(app_client):
+    data = {"queries": json.dumps({"q0": {"query": "example text"}})}
+    req = app_client.post(
+        "http://localhost:8000/v1/projects/dummy-fi/reconcile", data=data
+    )
+    assert req.status_code == 200
+    assert "result" in req.get_json()["q0"]
+
+
+def test_openapi_reconcile_nonexistent(app_client):
+    data = {"queries": json.dumps({"q0": {"query": "example text"}})}
+    req = app_client.post(
+        "http://localhost:8000/v1/projects/nonexistent/reconcile", data=data
+    )
+    assert req.status_code == 404
