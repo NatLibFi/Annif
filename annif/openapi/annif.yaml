@@ -242,6 +242,12 @@ paths:
                       "versions": [
                         "0.2"
                       ],
+                      "suggest": {
+                        "entity": {
+                          "service_path": "/suggest/entity",
+                          "service_url": "/v1/projects/dummy-fi/reconcile"
+                        }
+                      },
                       "view": {
                         "url": "{{id}}"
                       }
@@ -276,7 +282,7 @@ paths:
     post:
       tags:
       - Reconciliation
-      summary: reconcole against a project
+      summary: reconcile against a project
       operationId: annif.rest.reconcile
       parameters:
       - $ref: '#components/parameters/project_id'
@@ -324,6 +330,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReconciliationResult'
+        "404":
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/reconcile/suggest/entity:
+    get:
+      tags:
+      - Reconciliation
+      summary: Entity auto-complete endpoint for the reconciliation service
+      operationId: annif.rest.reconcile_suggest
+      parameters:
+      - $ref: '#components/parameters/project_id'
+      - in: query
+        description: string to get suggestions for
+        name: prefix
+        required: true
+        schema:
+          type: string
+          example: example query
+      - in: query
+        description: number of suggestions to skip
+        name: cursor
+        required: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconcileSuggestResult'
         "404":
           $ref: '#/components/responses/NotFound'
 components:
@@ -559,6 +595,25 @@ components:
             ]
           }
         }
+    ReconcileSuggestResult:
+      type: object
+      required:
+        - result
+      properties:
+        result:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - id
+            properties:
+              name:
+                type: string
+                example: example name
+              id:
+                type: string
+                example: example-id
     Problem:
       type: object
       properties:

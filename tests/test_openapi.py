@@ -160,3 +160,18 @@ def test_openapi_reconcile_nonexistent(app_client):
         "http://localhost:8000/v1/projects/nonexistent/reconcile", data=data
     )
     assert req.status_code == 404
+
+
+def test_openapi_reconcile_suggest(app_client):
+    req = app_client.get(
+        "http://localhost:8000/v1/projects/dummy-fi/reconcile/suggest/entity?prefix=example"
+    )
+    assert req.status_code == 200
+    assert "result" in req.get_json()
+
+
+def test_openapi_reconcile_suggest_nonexistent(app_client):
+    req = app_client.get(
+        "http://localhost:8000/v1/projects/nonexistent/reconcile/suggest/entity?prefix=example"
+    )
+    assert req.status_code == 404

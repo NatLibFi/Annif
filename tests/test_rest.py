@@ -277,3 +277,15 @@ def test_rest_reconcile_nonexistent(app):
             "nonexistent", {"queries": {"q0": {"query": "example text"}}}
         )
         assert result.status_code == 404
+
+
+def test_rest_reconcile_suggest(app):
+    with app.app_context():
+        results = annif.rest.reconcile_suggest("dummy-fi", prefix="example text")
+        assert "result" in results
+
+
+def test_rest_reconcile_nonexistent(app):
+    with app.app_context():
+        result = annif.rest.reconcile_suggest("nonexistent", prefix="example text")
+        assert result.status_code == 404

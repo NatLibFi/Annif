@@ -256,6 +256,14 @@ def reconcile_metadata(
             "schemaSpace": "http://www.w3.org/2004/02/skos/core#Concept",
             "view": {"url": "{{id}}"},
             "defaultTypes": [{"id": "default-type", "name": "Default type"}],
+            "suggest": {
+                "entity": {
+                    "service_path": "/suggest/entity",
+                    "service_url": "http://localhost:5000/v1/projects/"
+                    + project_id
+                    + "/reconcile",  # change to actual host url (how?)
+                }
+            },
         }
     else:
         queries = json.loads(query_parameters["queries"])
@@ -284,3 +292,21 @@ def reconcile(
         results[key] = {"result": data}
 
     return results
+
+
+def reconcile_suggest(
+    project_id: str, **query_parameters
+) -> ConnexionResponse | dict[str, Any]:
+    """suggest results for the given search term and return a dict with results
+    formatted according to OpenAPI spec"""
+
+    prefix = query_parameters.get("prefix")
+    cursor = query_parameters.get("cursor") if query_parameters.get("cursor") else 0
+    limit = cursor + 10
+
+    result = _suggest(project_id, [{"text": prefix}], {"limit": limit})
+    if _is_error(result):
+        return result
+
+    results = [{"id": res["uri"], "name": res["label"]} for res in result[0]["results"]]
+    return {"result": results[cursor:]}
