@@ -5,6 +5,8 @@ import abc
 import functools
 import unicodedata
 
+from annif.exception import OperationFailedException
+
 _KEY_TOKEN_MIN_LENGTH = "token_min_length"
 
 
@@ -44,11 +46,16 @@ class Analyzer(metaclass=abc.ABCMeta):
 
         import nltk.tokenize
 
-        return [
-            self._normalize_word(word)
-            for word in nltk.tokenize.word_tokenize(text)
-            if (not filter or self.is_valid_token(word))
-        ]
+        try:
+            return [
+                self._normalize_word(word)
+                for word in nltk.tokenize.word_tokenize(text)
+                if (not filter or self.is_valid_token(word))
+            ]
+        except OperationFailedException as err:
+            raise OperationFailedException(
+                f"Error in tokenization of text '{text}'"
+            ) from err
 
     def _normalize_word(self, word):
         """Normalize (stem or lemmatize) a word form into a normal form."""
