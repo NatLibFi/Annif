@@ -2,8 +2,12 @@ import pytest
 
 import annif.corpus
 from annif.backend import get_backend
-from annif.backend.stwfsa import StwfsaBackend
 from annif.exception import NotInitializedException, NotSupportedException
+
+stwfsa = pytest.importorskip("annif.backend.stwfsa")
+
+stwfsa_backend_name = stwfsa.StwfsaBackend.name
+
 
 _backend_conf = {
     "language": "fi",
@@ -15,11 +19,12 @@ _backend_conf = {
 
 
 def test_stwfsa_default_params(project):
-    stwfsa_type = get_backend(StwfsaBackend.name)
+    stwfsa_type = get_backend(stwfsa_backend_name)
     stwfsa = stwfsa_type(
-        backend_id=StwfsaBackend.name, config_params={}, project=project
+        backend_id=stwfsa_backend_name, config_params={}, project=project
     )
     expected_default_params = {
+        "limit": 100,
         "concept_type_uri": "http://www.w3.org/2004/02/skos/core#Concept",
         "sub_thesaurus_type_uri": "http://www.w3.org/2004/02/skos/core#Collection",
         "thesaurus_relation_type_uri": "http://www.w3.org/2004/02/skos/core#member",
@@ -38,16 +43,16 @@ def test_stwfsa_default_params(project):
 
 
 def test_stwfsa_not_initialized(project):
-    stwfsa_type = get_backend(StwfsaBackend.name)
+    stwfsa_type = get_backend(stwfsa_backend_name)
     stwfsa = stwfsa_type(backend_id="stwfsa", config_params={}, project=project)
     with pytest.raises(NotInitializedException):
         stwfsa.suggest(["example text"])[0]
 
 
 def test_stwfsa_train(document_corpus, project, datadir):
-    stwfsa_type = get_backend(StwfsaBackend.name)
+    stwfsa_type = get_backend(stwfsa_backend_name)
     stwfsa = stwfsa_type(
-        backend_id=StwfsaBackend.name, config_params=_backend_conf, project=project
+        backend_id=stwfsa_backend_name, config_params=_backend_conf, project=project
     )
     stwfsa.train(document_corpus)
     assert stwfsa._model is not None
@@ -58,9 +63,9 @@ def test_stwfsa_train(document_corpus, project, datadir):
 
 def test_empty_corpus(project):
     corpus = annif.corpus.DocumentList([])
-    stwfsa_type = get_backend(StwfsaBackend.name)
+    stwfsa_type = get_backend(stwfsa_backend_name)
     stwfsa = stwfsa_type(
-        backend_id=StwfsaBackend.name, config_params={"limit": 10}, project=project
+        backend_id=stwfsa_backend_name, config_params={"limit": 10}, project=project
     )
     with pytest.raises(NotSupportedException):
         stwfsa.train(corpus)
@@ -68,27 +73,27 @@ def test_empty_corpus(project):
 
 def test_cached_corpus(project):
     corpus = "cached"
-    stwfsa_type = get_backend(StwfsaBackend.name)
+    stwfsa_type = get_backend(stwfsa_backend_name)
     stwfsa = stwfsa_type(
-        backend_id=StwfsaBackend.name, config_params={"limit": 10}, project=project
+        backend_id=stwfsa_backend_name, config_params={"limit": 10}, project=project
     )
     with pytest.raises(NotSupportedException):
         stwfsa.train(corpus)
 
 
 def test_stwfsa_suggest_unknown(project):
-    stwfsa_type = get_backend(StwfsaBackend.name)
+    stwfsa_type = get_backend(stwfsa_backend_name)
     stwfsa = stwfsa_type(
-        backend_id=StwfsaBackend.name, config_params={"limit": 10}, project=project
+        backend_id=stwfsa_backend_name, config_params={"limit": 10}, project=project
     )
     results = stwfsa.suggest(["1234"])[0]
     assert len(results) == 0
 
 
 def test_stwfsa_suggest(project, datadir):
-    stwfsa_type = get_backend(StwfsaBackend.name)
+    stwfsa_type = get_backend(stwfsa_backend_name)
     stwfsa = stwfsa_type(
-        backend_id=StwfsaBackend.name, config_params={"limit": 10}, project=project
+        backend_id=stwfsa_backend_name, config_params={"limit": 10}, project=project
     )
     # Just some randomly selected words, taken from YSO archaeology group.
     # And "random" words between them

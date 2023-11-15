@@ -51,16 +51,31 @@ def run_list_projects():
     for details.
     """
 
-    template = "{0: <25}{1: <45}{2: <10}{3: <7}"
-    header = template.format("Project ID", "Project Name", "Language", "Trained")
+    column_headings = (
+        "Project ID",
+        "Project Name",
+        "Vocabulary ID",
+        "Language",
+        "Trained",
+        "Modification time",
+    )
+    table = [
+        (
+            proj.project_id,
+            proj.name,
+            proj.vocab.vocab_id if proj.vocab_spec else "-",
+            proj.language,
+            str(proj.is_trained),
+            cli_util.format_datetime(proj.modification_time),
+        )
+        for proj in annif.registry.get_projects(min_access=Access.private).values()
+    ]
+    template = cli_util.make_list_template(column_headings, *table)
+    header = template.format(*column_headings)
     click.echo(header)
     click.echo("-" * len(header))
-    for proj in annif.registry.get_projects(min_access=Access.private).values():
-        click.echo(
-            template.format(
-                proj.project_id, proj.name, proj.language, str(proj.is_trained)
-            )
-        )
+    for row in table:
+        click.echo(template.format(*row))
 
 
 @cli.command("show-project")
@@ -78,8 +93,9 @@ def run_show_project(project_id):
     click.echo(f"Vocabulary:        {proj.vocab.vocab_id}")
     click.echo(f"Vocab language:    {proj.vocab_lang}")
     click.echo(f"Access:            {proj.access.name}")
+    click.echo(f"Backend:           {proj.backend.name}")
     click.echo(f"Trained:           {proj.is_trained}")
-    click.echo(f"Modification time: {proj.modification_time}")
+    click.echo(f"Modification time: {cli_util.format_datetime(proj.modification_time)}")
 
 
 @cli.command("clear")
@@ -101,10 +117,8 @@ def run_list_vocabs():
     List available vocabularies.
     """
 
-    template = "{0: <20}{1: <20}{2: >10}  {3: <6}"
-    header = template.format("Vocabulary ID", "Languages", "Size", "Loaded")
-    click.echo(header)
-    click.echo("-" * len(header))
+    column_headings = ("Vocabulary ID", "Languages", "Size", "Loaded")
+    table = []
     for vocab in annif.registry.get_vocabs(min_access=Access.private).values():
         try:
             languages = ",".join(sorted(vocab.languages))
@@ -114,7 +128,15 @@ def run_list_vocabs():
             languages = "-"
             size = "-"
             loaded = False
-        click.echo(template.format(vocab.vocab_id, languages, size, str(loaded)))
+        row = (vocab.vocab_id, languages, str(size), str(loaded))
+        table.append(row)
+
+    template = cli_util.make_list_template(column_headings, *table)
+    header = template.format(*column_headings)
+    click.echo(header)
+    click.echo("-" * len(header))
+    for row in table:
+        click.echo(template.format(*row))
 
 
 @cli.command("load-vocab")
@@ -296,9 +318,7 @@ def run_index(
         raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
     backend_params = cli_util.parse_backend_params(backend_param, project)
 
-    documents = annif.corpus.DocumentDirectory(
-        directory, None, None, require_subjects=False
-    )
+    documents = annif.corpus.DocumentDirectory(directory, require_subjects=False)
     results = project.suggest_corpus(documents, backend_params).filter(limit, threshold)
 
     for (docfilename, _), suggestions in zip(documents, results):
@@ -405,12 +425,16 @@ def run_eval(
         ):
             eval_batch.evaluate_many(hit_sets[project_id], subject_sets)
 
-    template = "{0:<30}\t{1}"
+    template = "{0:<30}\t{1:{fmt_spec}}"
     metrics = eval_batch.results(
         metrics=metric, results_file=results_file, language=project.vocab_lang
     )
     for metric, score in metrics.items():
-        click.echo(template.format(metric + ":", score))
+        if isinstance(score, int):
+            fmt_spec = "d"
+        elif isinstance(score, float):
+            fmt_spec = ".04f"
+        click.echo(template.format(metric + ":", score, fmt_spec=fmt_spec))
     if metrics_file:
         json.dump(
             {metric_code(mname): val for mname, val in metrics.items()},
@@ -563,7 +587,7 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric, results_fi
 @click.option("--bash", "shell", flag_value="bash")
 @click.option("--zsh", "shell", flag_value="zsh")
 @click.option("--fish", "shell", flag_value="fish")
-def completion(shell):
+def run_completion(shell):
     """Generate the script for tab-key autocompletion for the given shell. To enable the
     completion support in your current bash terminal session run\n
         source <(annif completion --bash)

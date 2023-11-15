@@ -13,6 +13,7 @@
 import os
 import re
 import sys
+from datetime import date
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -20,14 +21,18 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = "annif"
-copyright = "2017, University Of Helsinki (The National Library Of Finland)"
-author = "Osma Suominen"
+copyright = (
+    f"2017-{date.today().year}, University Of Helsinki "
+    + "(The National Library Of Finland)"
+)
+
+author = "National Library Of Finland"
 
 # Get version number from GitHub tag
 release = re.sub("^v", "", os.popen("git describe --tags").read().strip())
 # The short X.Y version.
 version = release
-
+html_title = project + " " + release
 
 # -- General configuration ---------------------------------------------------
 

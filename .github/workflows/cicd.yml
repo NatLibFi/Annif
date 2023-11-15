@@ -10,7 +10,7 @@ on:
 env:
   PIPX_HOME: "/home/runner/.cache/pipx"
   PIPX_BIN_DIR: "/home/runner/.local/bin"
-  POETRY_VERSION: "1.4.1"
+  POETRY_VERSION: "1.5.1"
 jobs:
 
   lint:
@@ -36,12 +36,30 @@ jobs:
       run: |
         poetry run flake8
 
+  time-startup:
+    runs-on: ubuntu-22.04
+    name: check CLI startup time
+    steps:
+    - uses: actions/checkout@v3
+    - name: "Prepare: restore caches, install Poetry, set up Python"
+      id: prepare
+      uses: ./.github/actions/prepare
+      with:
+        python-version: "3.9"
+        poetry-version: ${{ env.POETRY_VERSION }}
+    - name: Install Python dependencies
+      run: |
+        poetry install
+    - name: Check startup time
+      run: |
+        poetry run tests/time-startup.sh
+
   test:
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
     name: test on Python ${{ matrix.python-version }}
     steps:
     - uses: actions/checkout@v3
@@ -61,7 +79,7 @@ jobs:
         # Selectively install the optional dependencies for some Python versions
         # For Python 3.8:
         if [[ ${{ matrix.python-version }} == '3.8' ]]; then
-          poetry install -E "nn omikuji yake voikko";
+          poetry install -E "nn omikuji yake voikko stwfsa";
         fi
         # For Python 3.9:
         if [[ ${{ matrix.python-version }} == '3.9' ]]; then
@@ -71,7 +89,13 @@ jobs:
         fi
         # For Python 3.10:
         if [[ ${{ matrix.python-version }} == '3.10' ]]; then
-          poetry install -E "nn omikuji yake";
+          poetry install -E "nn omikuji yake stwfsa";
+        fi
+        # For Python 3.11:
+        if [[ ${{ matrix.python-version }} == '3.11' ]]; then
+          poetry install -E "nn fasttext yake stwfsa voikko spacy";
+          # download the small English pretrained spaCy model needed by spacy analyzer
+          poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
         poetry run python -m nltk.downloader punkt
     - name: Test with pytest
@@ -93,9 +117,23 @@ jobs:
         # A new key is created to update the cache if some dependency has been updated
         key:  poetry-installation-and-cache-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}
 
+  test-docker-image:
+    name: "test Docker image"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+    - name: "Build image for testing"
+      uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5  # v3.2.0
+      with:
+        push: false
+        tags: test-image
+    - name: "Test with pytest"
+      run: |
+        docker run --rm --workdir /Annif test-image pytest -p no:cacheprovider
+
   publish-docker-latest:
     name: publish latest Docker image
-    needs: [lint, test]
+    needs: [lint, test, test-docker-image]
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -122,7 +160,7 @@ jobs:
 
   publish-release:
     name: publish release
-    needs: [lint, test]
+    needs: [lint, test, test-docker-image]
     runs-on: ubuntu-22.04
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
@@ -151,6 +189,7 @@ jobs:
       with:
         images: quay.io/natlibfi/annif
         tags: |
+          type=semver,pattern={{version}},suffix=-{{date 'YYYYMMDD'}}
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
     - name: Build and push to Quay.io

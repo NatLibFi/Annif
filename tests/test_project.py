@@ -152,6 +152,20 @@ def test_project_tfidf_is_not_trained(registry):
     assert not project.is_trained
 
 
+def test_project_tfidf_is_not_trained_prepared_only(registry, testdatadir):
+    testdatadir.join("projects/tfidf-fi").ensure("vectorizer")
+    testdatadir.join("projects/tfidf-fi").ensure("dummy-tfidf-train.txt")
+    project = registry.get_project("tfidf-fi")
+    assert not project.is_trained
+
+
+def test_project_tfidf_modification_time_prepared_only(registry, testdatadir):
+    testdatadir.join("projects/tfidf-fi").ensure("vectorizer")
+    testdatadir.join("projects/tfidf-fi").ensure("dummy-tfidf-train.txt")
+    project = registry.get_project("tfidf-fi")
+    assert project.modification_time is None
+
+
 def test_project_train_tfidf(registry, document_corpus, testdatadir):
     project = registry.get_project("tfidf-fi")
     project.train(document_corpus)
@@ -183,7 +197,9 @@ def test_project_learn(registry, tmpdir):
     tmpdir.join("doc2.tsv").write("<http://example.org/dummy>\tdummy")
 
     project = registry.get_project("dummy-fi")
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), project.subjects, "en")
+    docdir = annif.corpus.DocumentDirectory(
+        str(tmpdir), project.subjects, "en", require_subjects=True
+    )
     project.learn(docdir)
     result = project.suggest(["this is some text"])[0]
     assert len(result) == 1

@@ -111,7 +111,9 @@ def fulltext_corpus(subject_index):
     ftdir = os.path.join(
         os.path.dirname(__file__), "corpora", "archaeology", "fulltext"
     )
-    ft_corpus = annif.corpus.DocumentDirectory(ftdir, subject_index, "fi")
+    ft_corpus = annif.corpus.DocumentDirectory(
+        ftdir, subject_index, "fi", require_subjects=True
+    )
     return ft_corpus
 
 

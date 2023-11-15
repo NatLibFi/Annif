@@ -7,6 +7,7 @@ import os.path
 import random
 import re
 import shutil
+from datetime import datetime, timedelta
 from unittest import mock
 
 from click.shell_completion import ShellComplete
@@ -20,6 +21,27 @@ runner = CliRunner(env={"ANNIF_CONFIG": "annif.default_config.TestingConfig"})
 # Generate a random project name to use in tests
 TEMP_PROJECT = "".join(random.choice("abcdefghiklmnopqrstuvwxyz") for _ in range(8))
 PROJECTS_CONFIG_PATH = "tests/projects_for_config_path_option.cfg"
+
+
+@mock.patch.dict(os.environ, clear=True)
+def test_tensorflow_loglevel():
+    tf_env = "TF_CPP_MIN_LOG_LEVEL"
+
+    runner.invoke(annif.cli.cli, ["list-projects", "-v", "DEBUG"])
+    assert os.environ[tf_env] == "0"  # Show INFO, WARNING and ERROR messages by TF
+    os.environ.pop(tf_env)
+    runner.invoke(annif.cli.cli, ["list-projects"])  # INFO level by default
+    assert os.environ[tf_env] == "1"  # Show WARNING and ERROR messages by TF
+    os.environ.pop(tf_env)
+    runner.invoke(annif.cli.cli, ["list-projects", "-v", "WARN"])
+    assert os.environ[tf_env] == "1"  # Show WARNING and ERROR messages by TF
+    os.environ.pop(tf_env)
+    runner.invoke(annif.cli.cli, ["list-projects", "-v", "ERROR"])
+    assert os.environ[tf_env] == "2"  # Show ERROR messages by TF
+    os.environ.pop(tf_env)
+    runner.invoke(annif.cli.cli, ["list-projects", "-v", "CRITICAL"])
+    assert os.environ[tf_env] == "3"  # Show no messages by TF
+    os.environ.pop(tf_env)
 
 
 def test_list_projects():
@@ -81,10 +103,27 @@ def test_show_project():
     assert project_lang.group(1) == "en"
     access = re.search(r"Access:\s+(.+)", result.output)
     assert access.group(1) == "hidden"
+    access = re.search(r"Backend:\s+(.+)", result.output)
+    assert access.group(1) == "dummy"
     is_trained = re.search(r"Trained:\s+(.+)", result.output)
     assert is_trained.group(1) == "True"
     modification_time = re.search(r"Modification time:\s+(.+)", result.output)
-    assert modification_time.group(1) == "None"
+    assert modification_time.group(1) == "-"
+
+
+def test_show_project_modification_time(testdatadir):
+    dirpath = os.path.join(str(testdatadir), "projects", "tfidf-fi")
+    fpath = os.path.join(str(dirpath), "test_show_project_datafile")
+    os.makedirs(dirpath)
+    open(fpath, "a").close()
+
+    result = runner.invoke(annif.cli.cli, ["show-project", "tfidf-fi"])
+    assert not result.exception
+    modification_time = re.search(r"Modification time:\s+(.+)", result.output)
+    modification_time_obj = datetime.strptime(
+        modification_time.group(1), "%Y-%m-%d %H:%M:%S"
+    )
+    assert datetime.now() - modification_time_obj < timedelta(1)
 
 
 def test_show_project_nonexistent():
@@ -380,7 +419,7 @@ def test_learn_nonexistent_path():
 def test_suggest():
     result = runner.invoke(annif.cli.cli, ["suggest", "dummy-fi"], input="kissa")
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0000\n"
     assert result.exit_code == 0
 
 
@@ -389,7 +428,7 @@ def test_suggest_with_language_override():
         annif.cli.cli, ["suggest", "--language", "en", "dummy-fi"], input="kissa"
     )
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy\t1.0\n"
+    assert result.output == "<http://example.org/dummy>\tdummy\t1.0000\n"
     assert result.exit_code == 0
 
 
@@ -409,7 +448,7 @@ def test_suggest_with_different_vocab_language():
         annif.cli.cli, ["suggest", "dummy-vocablang"], input="the cat sat on the mat"
     )
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0000\n"
     assert result.exit_code == 0
 
 
@@ -420,7 +459,7 @@ def test_suggest_with_notations():
         input="kissa",
     )
     assert not result.exception
-    assert result.output == "<http://example.org/none>\tnone-fi\t42.42\t1.0\n"
+    assert result.output == "<http://example.org/none>\tnone-fi\t42.42\t1.0000\n"
     assert result.exit_code == 0
 
 
@@ -463,7 +502,7 @@ def test_suggest_ensemble():
         annif.cli.cli, ["suggest", "ensemble"], input="the cat sat on the mat"
     )
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy\t1.0\n"
+    assert result.output == "<http://example.org/dummy>\tdummy\t1.0000\n"
     assert result.exit_code == 0
 
 
@@ -475,7 +514,7 @@ def test_suggest_file(tmpdir):
 
     assert not result.exception
     assert f"Suggestions for {docfile}" in result.output
-    assert "<http://example.org/dummy>\tdummy-fi\t1.0\n" in result.output
+    assert "<http://example.org/dummy>\tdummy-fi\t1.0000\n" in result.output
     assert result.exit_code == 0
 
 
@@ -492,7 +531,7 @@ def test_suggest_two_files(tmpdir):
     assert not result.exception
     assert f"Suggestions for {docfile1}" in result.output
     assert f"Suggestions for {docfile2}" in result.output
-    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0\n") == 2
+    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0000\n") == 2
     assert result.exit_code == 0
 
 
@@ -510,7 +549,7 @@ def test_suggest_two_files_docs_limit(tmpdir):
     assert not result.exception
     assert f"Suggestions for {docfile1}" in result.output
     assert f"Suggestions for {docfile2}" not in result.output
-    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0\n") == 1
+    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0000\n") == 1
     assert result.exit_code == 0
 
 
@@ -525,7 +564,7 @@ def test_suggest_file_and_stdin(tmpdir):
     assert not result.exception
     assert f"Suggestions for {docfile1}" in result.output
     assert "Suggestions for -" in result.output
-    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0\n") == 2
+    assert result.output.count("<http://example.org/dummy>\tdummy-fi\t1.0000\n") == 2
     assert result.exit_code == 0
 
 
@@ -546,12 +585,15 @@ def test_suggest_dash_path():
         annif.cli.cli, ["suggest", "dummy-fi", "-"], input="the cat sat on the mat"
     )
     assert not result.exception
-    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+    assert result.output == "<http://example.org/dummy>\tdummy-fi\t1.0000\n"
     assert result.exit_code == 0
 
 
 def test_index(tmpdir):
     tmpdir.join("doc1.txt").write("nothing special")
+    # Existing subject files should not have an effect
+    tmpdir.join("doc1.tsv").write("<http://example.org/dummy>\tdummy")
+    tmpdir.join("doc1.key").write("<http://example.org/dummy>\tdummy")
 
     result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(tmpdir)])
     assert not result.exception
@@ -560,7 +602,7 @@ def test_index(tmpdir):
     assert tmpdir.join("doc1.annif").exists()
     assert (
         tmpdir.join("doc1.annif").read_text("utf-8")
-        == "<http://example.org/dummy>\tdummy\t1.0\n"
+        == "<http://example.org/dummy>\tdummy\t1.0000\n"
     )
 
     # make sure that preexisting subject files are not overwritten
@@ -575,7 +617,7 @@ def test_index(tmpdir):
     assert "Not overwriting" not in result.output
     assert (
         tmpdir.join("doc1.annif").read_text("utf-8")
-        == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+        == "<http://example.org/dummy>\tdummy-fi\t1.0000\n"
     )
 
 
@@ -591,7 +633,7 @@ def test_index_with_language_override(tmpdir):
     assert tmpdir.join("doc1.annif").exists()
     assert (
         tmpdir.join("doc1.annif").read_text("utf-8")
-        == "<http://example.org/dummy>\tdummy-fi\t1.0\n"
+        == "<http://example.org/dummy>\tdummy-fi\t1.0000\n"
     )
 
 
@@ -809,7 +851,7 @@ def test_eval_resultsfile(tmpdir):
             denominator += 1
     assert precision_numerator / denominator == precision
     assert recall_numerator / denominator == recall
-    assert f_measure_numerator / denominator == f_measure
+    assert round(f_measure_numerator / denominator, 4) == f_measure
 
 
 def test_eval_badresultsfile(tmpdir):
@@ -1014,6 +1056,20 @@ def test_run():
     assert not result.exception
     assert result.exit_code == 0
     assert "Run a local development server." in result.output
+
+
+def test_routes_with_flask_app():
+    # When using plain Flask only the static endpoint exists
+    result = runner.invoke(annif.cli.cli, ["routes"])
+    assert re.search(r"static\s+GET\s+\/static\/\<path:filename\>", result.output)
+    assert not re.search(r"app.home\s+GET\s+\/", result.output)
+
+
+def test_routes_with_connexion_app():
+    # When using Connexion all endpoints exist
+    result = os.popen("python annif/cli.py routes").read()
+    assert re.search(r"static\s+GET\s+\/static\/<path:filename>", result)
+    assert re.search(r"app.home\s+GET\s+\/", result)
 
 
 def test_completion_script_generation():

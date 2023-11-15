@@ -80,38 +80,38 @@ def test_subjectset_as_vector_destination(subject_index):
     assert vector is destination
 
 
-def test_docdir_key(tmpdir, subject_index):
+def test_docdir_key(tmpdir):
     tmpdir.join("doc1.txt").write("doc1")
     tmpdir.join("doc1.key").write("key1")
     tmpdir.join("doc2.txt").write("doc2")
     tmpdir.join("doc2.key").write("key2")
     tmpdir.join("doc3.txt").write("doc3")
 
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index, "en")
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=False)
     files = sorted(list(docdir))
     assert len(files) == 3
     assert files[0][0] == str(tmpdir.join("doc1.txt"))
-    assert files[0][1] == str(tmpdir.join("doc1.key"))
+    assert files[0][1] is None
     assert files[1][0] == str(tmpdir.join("doc2.txt"))
-    assert files[1][1] == str(tmpdir.join("doc2.key"))
+    assert files[1][1] is None
     assert files[2][0] == str(tmpdir.join("doc3.txt"))
     assert files[2][1] is None
 
 
-def test_docdir_tsv(tmpdir, subject_index):
+def test_docdir_tsv(tmpdir):
     tmpdir.join("doc1.txt").write("doc1")
     tmpdir.join("doc1.tsv").write("<http://example.org/key1>\tkey1")
     tmpdir.join("doc2.txt").write("doc2")
     tmpdir.join("doc2.tsv").write("<http://example.org/key2>\tkey2")
     tmpdir.join("doc3.txt").write("doc3")
 
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index, "en")
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=False)
     files = sorted(list(docdir))
     assert len(files) == 3
     assert files[0][0] == str(tmpdir.join("doc1.txt"))
-    assert files[0][1] == str(tmpdir.join("doc1.tsv"))
+    assert files[0][1] is None
     assert files[1][0] == str(tmpdir.join("doc2.txt"))
-    assert files[1][1] == str(tmpdir.join("doc2.tsv"))
+    assert files[1][1] is None
     assert files[2][0] == str(tmpdir.join("doc3.txt"))
     assert files[2][1] is None
 
@@ -126,7 +126,9 @@ def test_docdir_tsv_bom(tmpdir, subject_index):
         "<http://www.yso.fi/onto/yso/p2558>\trautakausi".encode("utf-8-sig")
     )
 
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), subject_index, "fi")
+    docdir = annif.corpus.DocumentDirectory(
+        str(tmpdir), subject_index, "fi", require_subjects=True
+    )
     docs = list(docdir.documents)
     assert docs[0].text == "doc1"
     assert (

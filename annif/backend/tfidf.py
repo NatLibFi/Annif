@@ -1,8 +1,10 @@
 """Backend that returns most similar subjects based on similarity in sparse
 TF-IDF normalized bag-of-words vector space"""
+from __future__ import annotations
 
 import os.path
 import tempfile
+from typing import TYPE_CHECKING, Any
 
 import gensim.similarities
 from gensim.matutils import Sparse2Corpus
@@ -13,19 +15,26 @@ from annif.suggestion import vector_to_suggestions
 
 from . import backend, mixins
 
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from scipy.sparse._csr import csr_matrix
+
+    from annif.corpus.document import DocumentCorpus
+
 
 class SubjectBuffer:
     """A file-backed buffer to store and retrieve subject text."""
 
     BUFFER_SIZE = 100
 
-    def __init__(self, tempdir, subject_id):
+    def __init__(self, tempdir: str, subject_id: int) -> None:
         filename = "{:08d}.txt".format(subject_id)
         self._path = os.path.join(tempdir, filename)
         self._buffer = []
         self._created = False
 
-    def flush(self):
+    def flush(self) -> None:
         if self._created:
             mode = "a"
         else:
@@ -38,12 +47,12 @@ class SubjectBuffer:
         self._buffer = []
         self._created = True
 
-    def write(self, text):
+    def write(self, text: str) -> None:
         self._buffer.append(text)
         if len(self._buffer) >= self.BUFFER_SIZE:
             self.flush()
 
-    def read(self):
+    def read(self) -> str:
         if not self._created:
             # file was never created - we can simply return the buffer content
             return "\n".join(self._buffer)
@@ -62,7 +71,9 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
 
     INDEX_FILE = "tfidf-index"
 
-    def _generate_subjects_from_documents(self, corpus):
+    def _generate_subjects_from_documents(
+        self, corpus: DocumentCorpus
+    ) -> Iterator[str]:
         with tempfile.TemporaryDirectory() as tempdir:
             subject_buffer = {}
             for subject_id in range(len(self.project.subjects)):
@@ -76,7 +87,7 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             for sid in range(len(self.project.subjects)):
                 yield subject_buffer[sid].read()
 
-    def _initialize_index(self):
+    def _initialize_index(self) -> None:
         if self._index is None:
             path = os.path.join(self.datadir, self.INDEX_FILE)
             self.debug("loading similarity index from {}".format(path))
@@ -88,11 +99,11 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                     backend_id=self.backend_id,
                 )
 
-    def initialize(self, parallel=False):
+    def initialize(self, parallel: bool = False) -> None:
         self.initialize_vectorizer()
         self._initialize_index()
 
-    def _create_index(self, veccorpus):
+    def _create_index(self, veccorpus: csr_matrix) -> None:
         self.info("creating similarity index")
         gscorpus = Sparse2Corpus(veccorpus, documents_columns=False)
         self._index = gensim.similarities.SparseMatrixSimilarity(
@@ -100,7 +111,12 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         )
         annif.util.atomic_save(self._index, self.datadir, self.INDEX_FILE)
 
-    def _train(self, corpus, params, jobs=0):
+    def _train(
+        self,
+        corpus: DocumentCorpus,
+        params: dict[str, Any],
+        jobs: int = 0,
+    ) -> None:
         if corpus == "cached":
             raise NotSupportedException(
                 "Training tfidf project from cached data not supported."
@@ -112,7 +128,7 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         veccorpus = self.create_vectorizer(subjects)
         self._create_index(veccorpus)
 
-    def _suggest(self, text, params):
+    def _suggest(self, text: str, params: dict[str, Any]) -> Iterator:
         self.debug(
             'Suggesting subjects for text "{}..." (len={})'.format(text[:20], len(text))
         )

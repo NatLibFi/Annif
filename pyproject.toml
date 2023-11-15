@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "annif"
-version = "1.0.0-dev"
+version = "1.1.0-dev"
 description = "Automated subject indexing and classification tool"
 authors = ["National Library of Finland <finto-posti@helsinki.fi>"]
 maintainers = [
@@ -28,34 +28,34 @@ classifiers=[
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+python = ">=3.8,<3.12"
 
 connexion = {version = "3.0.*", extras = ["flask","uvicorn", "swagger-ui"]}
-flask-cors = "3.0.*"
+flask-cors = "4.0.*"
 click = "8.1.*"
 click-log = "0.4.*"
-joblib = "1.2.*"
+joblib = "1.3.*"
 nltk = "3.8.*"
 gensim = "4.3.*"
-scikit-learn = "1.2.2"
+scikit-learn = "1.3.*"
 scipy = "1.10.*"
-rdflib = ">=4.2,<7.0"
-gunicorn = "20.1.*"
+rdflib = "6.3.*"
+gunicorn = "21.2.*"
 numpy = "1.24.*"
-optuna = "2.10.*"
-stwfsapy = "0.3.*"
+optuna = "3.3.*"
 python-dateutil = "2.8.*"
-tomli = "2.0.*"
+tomli = { version = "2.0.*", python = "<3.11" }
 simplemma = "0.9.*"
 jsonschema = "4.17.*"
 
 fasttext-wheel = {version = "0.9.2", optional = true}
 voikko = {version = "0.5.*", optional = true}
-tensorflow-cpu = {version = "2.11.*", optional = true}
+tensorflow-cpu = {version = "2.13.*", optional = true}
 lmdb = {version = "1.4.1", optional = true}
 omikuji = {version = "0.5.*", optional = true}
 yake = {version = "0.4.5", optional = true}
-spacy = {version = "3.5.*", optional = true}
+spacy = {version = "3.6.*", optional = true}
+stwfsapy = {version="0.3.*", optional = true}
 
 [tool.poetry.dev-dependencies]
 py = "*"
@@ -77,6 +77,7 @@ nn = ["tensorflow-cpu", "lmdb"]
 omikuji = ["omikuji"]
 yake = ["yake"]
 spacy = ["spacy"]
+stwfsa = ["stwfsapy"]
 
 [tool.poetry.scripts]
 annif = "annif.cli:cli"
@@ -91,4 +92,7 @@ line_length = "88"
 skip_gitignore = true
 
 [tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
 addopts = "-m 'not slow'"

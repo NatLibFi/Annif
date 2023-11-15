@@ -1,12 +1,12 @@
-FROM python:3.10-slim-bullseye
+FROM python:3.10-slim-bookworm
 LABEL org.opencontainers.image.authors="grp-natlibfi-annif@helsinki.fi"
 SHELL ["/bin/bash", "-c"]
 
-ARG optional_dependencies="fasttext voikko fasttext nn omikuji yake spacy"
+ARG optional_dependencies="voikko fasttext nn omikuji yake spacy stwfsa"
 ARG POETRY_VIRTUALENVS_CREATE=false
 
 # Install system dependencies needed at runtime:
-RUN apt-get update && \
+RUN apt-get update && apt-get upgrade -y && \
 	if [[ $optional_dependencies =~ "voikko" ]]; then \
 		apt-get install -y --no-install-recommends \
 			libvoikko1 \

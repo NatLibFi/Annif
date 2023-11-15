@@ -1,0 +1,39 @@
+name: "Docker rebuild"
+on: workflow_dispatch
+jobs:
+  rebuild-docker-images:
+    name: "Docker rebuild"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+    - name: "Build for testing"
+      uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5  # v3.2.0
+      with:
+        push: false
+        tags: test-image
+    - name: "Test with pytest"
+      run: |
+        docker run --rm --workdir /Annif test-image pytest -p no:cacheprovider
+    - name: Login to Quay.io
+      uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc  # v2.2.0
+      with:
+        registry: quay.io
+        username: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_USERNAME }}
+        password: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_PASSWORD }}
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@2c0bd771b40637d97bf205cbccdd294a32112176  # v4.5.0
+      with:
+        images: quay.io/natlibfi/annif
+        flavor: |
+          latest=false
+        tags: |
+          type=semver,pattern={{version}},suffix=-{{date 'YYYYMMDD'}}
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+    - name: Build and push to Quay.io
+      uses: docker/build-push-action@44ea916f6c540f9302d50c2b1e5a8dc071f15cdf  # v4.1.0
+      with:
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}

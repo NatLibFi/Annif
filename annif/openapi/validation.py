@@ -1,4 +1,5 @@
 """Custom validator for the Annif API."""
+from __future__ import annotations
 
 import logging
 
@@ -14,10 +15,14 @@ class CustomRequestBodyValidator(decorators.validation.RequestBodyValidator):
     """Custom request body validator that overrides the default error message for the
     'maxItems' validator for the 'documents' property."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def validate_schema(self, data, url):
+    def validate_schema(
+        self,
+        data: list | dict,
+        url: str,
+    ) -> None:
         """Validate the request body against the schema."""
 
         if self.is_null_value_valid and is_null(data):
