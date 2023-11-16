@@ -1,5 +1,8 @@
 name: "Docker rebuild"
 on: workflow_dispatch
+permissions:
+  contents: read
+
 jobs:
   rebuild-docker-images:
     name: "Docker rebuild"

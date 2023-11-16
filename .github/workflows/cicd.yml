@@ -11,13 +11,15 @@ env:
   PIPX_HOME: "/home/runner/.cache/pipx"
   PIPX_BIN_DIR: "/home/runner/.local/bin"
   POETRY_VERSION: "1.5.1"
+permissions:
+  contents: read
 jobs:
 
   lint:
     runs-on: ubuntu-22.04
     name: lint with isort, Black & flake8
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
     - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
@@ -40,7 +42,7 @@ jobs:
     runs-on: ubuntu-22.04
     name: check CLI startup time
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
     - name: "Prepare: restore caches, install Poetry, set up Python"
       id: prepare
       uses: ./.github/actions/prepare
@@ -62,7 +64,7 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
     name: test on Python ${{ matrix.python-version }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
     - name: Install system packages
       run: |
         sudo apt-get install \
@@ -108,7 +110,7 @@ jobs:
       uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378  # v3.1.0
     - name: Save cache
       if: steps.prepare.outputs.cache-matched-key != format('poetry-installation-and-cache-{0}-{1}-{2}', matrix.python-version, env.POETRY_VERSION, hashFiles('**/poetry.lock'))
-      uses: actions/cache/save@v3
+      uses: actions/cache/save@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
       with:
         path: |
           ~/.cache/pipx/venvs
@@ -164,7 +166,7 @@ jobs:
     runs-on: ubuntu-22.04
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
     - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
