@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 15
     steps:
     - name: "Build for testing"
-      uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5  # v3.2.0
+      uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09  # v5.0.0
       with:
         push: false
         tags: test-image
@@ -35,7 +35,7 @@ jobs:
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
     - name: Build and push to Quay.io
-      uses: docker/build-push-action@44ea916f6c540f9302d50c2b1e5a8dc071f15cdf  # v4.1.0
+      uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09  # v5.0.0
       with:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
