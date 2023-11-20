@@ -31,6 +31,11 @@ h1 { font-size: 2rem; }
   border-radius: 0px;
   padding: 2px 7px;
 }
+#annif-version {
+  float: right;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+}
 label, #suggestions {
   border-top: 1px solid #343260;
   margin-bottom: 0.5rem;

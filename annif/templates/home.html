@@ -51,6 +51,7 @@
       <div class="row mb-5">
         <div class="col-md-8">
           <annif-textarea @text-changed="onTextChanged" @text-cleared="onTextCleared"></annif-textarea>
+          <span id="annif-version">v<% annif_version %></span>
         </div>
         <div class="col-md-4">
           <div id="project-selection-wrapper">
@@ -233,6 +234,7 @@ new Vue({
   el: '#app',
   data: {
     text: '',
+    annif_version: '',
     project: '',
     limit: 10,
     projects: [],
@@ -243,6 +245,7 @@ new Vue({
   mounted: function() {
     // TBD: we can add a button to reload the list of projects later
     this.loadProjects();
+    this.loadVersion();
   },
   methods: {
     clearResults: function() {
@@ -281,6 +284,13 @@ new Vue({
             this_.problems.push(new Problem(title, detail, true));
           }
         });
+    },
+    loadVersion: function() {
+      var this_ = this;
+      axios.get('/v1')
+        .then(res => {
+          this_.annif_version = res.data.version;
+        })
     },
     suggest: function(event) {
       this.problems = [];
