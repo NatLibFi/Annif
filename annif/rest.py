@@ -259,9 +259,7 @@ def reconcile_metadata(
             "suggest": {
                 "entity": {
                     "service_path": "/suggest/entity",
-                    "service_url": "http://localhost:5000/v1/projects/"
-                    + project_id
-                    + "/reconcile",  # change to actual host url (how?)
+                    "service_url": connexion.request.base_url
                 }
             },
         }
