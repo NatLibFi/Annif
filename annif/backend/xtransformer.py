@@ -7,7 +7,7 @@ from sys import stdout
 import numpy as np
 import scipy.sparse as sp
 from pecos.utils.featurization.text.preprocess import Preprocessor
-from pecos.xmc.xtransformer import matcher
+from pecos.xmc.xtransformer import matcher, model
 from pecos.xmc.xtransformer.model import XTransformer
 from pecos.xmc.xtransformer.module import MLProblemWithText
 
@@ -187,15 +187,17 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
 
         self.info("Start training")
         # enable progress
-        matcher.LOGGER.setLevel(logging.INFO)
+        matcher.LOGGER.setLevel(logging.DEBUG)
         matcher.LOGGER.addHandler(logging.StreamHandler(stream=stdout))
+        model.LOGGER.setLevel(logging.DEBUG)
+        model.LOGGER.addHandler(logging.StreamHandler(stream=stdout))
         self._model = XTransformer.train(
             MLProblemWithText(train_txts, train_y, X_feat=train_X),
             clustering=None,
             val_prob=None,
             train_params=train_params,
             pred_params=pred_params,
-            beam_size=params["beam_size"],
+            beam_size=int(params["beam_size"]),
             steps_scale=None,
             label_feat=None,
         )
@@ -227,7 +229,7 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             [text],
             X_feat=vector.sorted_indices(),
             batch_size=new_params["batch_size"],
-            use_gpu=False,
+            use_gpu=True,
             only_top_k=new_params["limit"],
             post_processor=new_params["post_processor"],
         )
