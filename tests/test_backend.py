@@ -19,7 +19,7 @@ def test_get_backend_dummy(project, dummy_subject_index):
     dummy = dummy_type(backend_id="dummy", config_params={}, project=project)
     result = dummy.suggest(["this is some text"])[0]
     assert len(result) == 1
-    hits = result.as_list()
+    hits = list(result)
     assert hits[0].subject_id == dummy_subject_index.by_uri("http://example.org/dummy")
     assert hits[0].score == 1.0
 
@@ -32,13 +32,15 @@ def test_learn_dummy(project, tmpdir):
     tmpdir.join("doc1.tsv").write("<http://www.yso.fi/onto/yso/p10849>\tarchaeologists")
     tmpdir.join("doc2.txt").write("doc2")
     tmpdir.join("doc2.tsv").write("<http://example.org/dummy>\tdummy")
-    docdir = annif.corpus.DocumentDirectory(str(tmpdir), project.subjects, "en")
+    docdir = annif.corpus.DocumentDirectory(
+        str(tmpdir), project.subjects, "en", require_subjects=True
+    )
 
     dummy.learn(docdir)
 
     result = dummy.suggest(["this is some text"])[0]
     assert len(result) == 1
-    hits = result.as_list()
+    hits = list(result)
     assert hits[0].subject_id is not None
     assert hits[0].subject_id == project.subjects.by_uri(
         "http://www.yso.fi/onto/yso/p10849"
@@ -101,3 +103,13 @@ def test_get_backend_xtransformer_not_installed():
     with pytest.raises(ValueError) as excinfo:
         annif.backend.get_backend("xtransformer")
     assert "XTransformer not available" in str(excinfo.value)
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("stwfsapy") is not None,
+    reason="test requires that STWFSA is NOT installed",
+)
+def test_get_backend_stwfsa_not_installed():
+    with pytest.raises(ValueError) as excinfo:
+        annif.backend.get_backend("stwfsa")
+    assert "STWFSA not available" in str(excinfo.value)

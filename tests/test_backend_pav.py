@@ -117,6 +117,7 @@ def test_pav_suggest(app_project):
 
     assert len(pav._models["dummy-fi"]) == 1
     assert len(results) > 0
+    assert list(results)[0].score == pytest.approx(2 / 3)  # PAV recalculated score
 
 
 def test_pav_train_params(tmpdir, app_project, caplog):
@@ -143,6 +144,32 @@ def test_pav_train_params(tmpdir, app_project, caplog):
         pav.train(document_corpus, params)
     parameters_spec = "creating PAV model for source dummy-fi, min_docs=5"
     assert parameters_spec in caplog.text
+
+
+def test_pav_suggest_after_min_docs(app_project):
+    pav_type = annif.backend.get_backend("pav")
+    pav = pav_type(
+        backend_id="pav",
+        config_params={"limit": 50, "min-docs": 2, "sources": "dummy-fi"},
+        project=app_project,
+    )
+
+    results = pav.suggest(
+        [
+            """Arkeologiaa sanotaan joskus myös
+        muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
+        tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
+        Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
+        joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
+        pohjaan."""
+        ]
+    )[0]
+
+    assert len(pav._models["dummy-fi"]) == 0
+    assert len(results) > 0
+    print(results)
+    print(list(results)[0])
+    assert list(results)[0].score == 1.0  # original score from dummy-fi project
 
 
 def test_pav_is_trained(app_project):

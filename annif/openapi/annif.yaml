@@ -12,7 +12,7 @@ paths:
       summary: get basic information about the API service
       operationId: annif.rest.show_info
       responses:
-        200:
+        "200":
           description: successful operation
           content:
             application/json:
@@ -25,7 +25,7 @@ paths:
       summary: get a list of projects
       operationId: annif.rest.list_projects
       responses:
-        200:
+        "200":
           description: successful operation
           content:
             application/json:
@@ -40,18 +40,14 @@ paths:
       parameters:
       - $ref: '#/components/parameters/project_id'
       responses:
-        200:
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Project'
-        404:
-          description: Project not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+        "404":
+          $ref: '#/components/responses/NotFound'
   /projects/{project_id}/suggest:
     post:
       tags:
@@ -89,30 +85,75 @@ paths:
                   description: language of subject labels
         required: true
       responses:
-        200:
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuggestionResultList'
-        400:
-          description: Bad Request
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "503":
+          $ref: '#/components/responses/ServiceUnavailable'
+  /projects/{project_id}/suggest-batch:
+    post:
+      tags:
+      - Automatic subject indexing
+      summary: suggest subjects for the given batch of up to 32 documents
+      operationId: annif.rest.suggest_batch
+      parameters:
+      - $ref: '#/components/parameters/project_id'
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          format: int32
+          default: 10
+          minimum: 0
+        description: maximum number of results to return
+      - in: query
+        name: threshold
+        schema:
+          type: number
+          default: 0.0
+          minimum: 0.0
+          maximum: 1.0
+        description: minimum score threshold, below which results will not be returned
+      - in: query
+        name: language
+        schema:
+          type: string
+        description: language of subject labels
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - documents
+              properties:
+                documents:
+                  type: array
+                  maxItems: 32
+                  items:
+                    $ref: '#/components/schemas/Document'
+        required: true
+      responses:
+        "200":
+          description: successful operation
           content:
-            application/problem+json:
+            application/json:
               schema:
-                $ref: '#/components/schemas/Problem'
-        404:
-          description: Project not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        503:
-          description: Service Unavailable
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: '#/components/schemas/BatchSuggestionResultList'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "503":
+          $ref: '#/components/responses/ServiceUnavailable'
+      x-codegen-request-body-name: documents
   /projects/{project_id}/learn:
     post:
       tags:
@@ -131,21 +172,13 @@ paths:
                 $ref: '#/components/schemas/IndexedDocument'
         required: true
       responses:
-        204:
+        "204":
           description: successful operation
           content: {}
-        404:
-          description: Project not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        503:
-          description: Service Unavailable
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "503":
+          $ref: '#/components/responses/ServiceUnavailable'
       x-codegen-request-body-name: documents
 components:
   schemas:
@@ -193,10 +226,12 @@ components:
         is_trained:
           type: boolean
           example: true
+          nullable: true
         modification_time:
           type: string
           format: date-time
           example: 2020-05-19T16:42:42Z
+          nullable: true
       description: A project definition
     ProjectList:
       type: object
@@ -222,6 +257,7 @@ components:
         notation:
           type: string
           example: "42.42"
+          nullable: true
         score:
           type: number
           example: 0.85
@@ -234,6 +270,30 @@ components:
           items:
             $ref: '#/components/schemas/SuggestionResult'
       description: A list of analysis results
+    BatchSuggestionResultList:
+      type: array
+      items:
+        allOf:
+        - $ref: '#/components/schemas/SuggestionResultList'
+        - type: object
+          properties:
+            document_id:
+              type: string
+              example: doc-1234
+              nullable: true
+      description: A list of batch analysis results
+    Document:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          example: A quick brown fox jumped over the lazy dog.
+        document_id:
+          type: string
+          example: doc-1234
+      description: A document with an optional identifier
     IndexedDocument:
       type: object
       properties:
@@ -244,6 +304,8 @@ components:
           type: array
           items:
             type: object
+            required:
+              - uri
             properties:
               uri:
                 type: string
@@ -301,3 +363,22 @@ components:
       schema:
         type: string
       example: dummy-fi
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Project not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: Service Unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'

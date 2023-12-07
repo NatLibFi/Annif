@@ -1,5 +1,5 @@
 """Custom exceptions used by Annif"""
-
+from __future__ import annotations
 
 from click import ClickException
 
@@ -9,7 +9,12 @@ class AnnifException(ClickException):
     that the CLI can automatically handle exceptions. This exception cannot be
     instantiated directly - subclasses should be used instead."""
 
-    def __init__(self, message, project_id=None, backend_id=None):
+    def __init__(
+        self,
+        message: str,
+        project_id: str | None = None,
+        backend_id: str | None = None,
+    ) -> None:
         super().__init__(message)
         self.project_id = project_id
         self.backend_id = backend_id
@@ -20,7 +25,7 @@ class AnnifException(ClickException):
     # subclasses should set this to a descriptive prefix
     prefix = None
 
-    def format_message(self):
+    def format_message(self) -> str:
         if self.project_id is not None:
             return "{} project '{}': {}".format(
                 self.prefix, self.project_id, self.message

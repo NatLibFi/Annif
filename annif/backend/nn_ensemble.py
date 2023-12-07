@@ -1,35 +1,42 @@
 """Neural network based ensemble backend that combines results from multiple
 projects."""
-
+from __future__ import annotations
 
 import os.path
 import shutil
 from io import BytesIO
+from typing import TYPE_CHECKING, Any
 
 import joblib
+import keras.backend as K
 import lmdb
 import numpy as np
-import tensorflow.keras.backend as K
+from keras.layers import Add, Dense, Dropout, Flatten, Input, Layer
+from keras.models import Model
+from keras.saving import load_model
+from keras.utils import Sequence
 from scipy.sparse import csc_matrix, csr_matrix
-from tensorflow.keras.layers import Add, Dense, Dropout, Flatten, Input, Layer
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.utils import Sequence
 
 import annif.corpus
 import annif.parallel
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
-from annif.suggestion import VectorSuggestionResult
+from annif.suggestion import SuggestionBatch, vector_to_suggestions
 
 from . import backend, ensemble
 
+if TYPE_CHECKING:
+    from tensorflow.python.framework.ops import EagerTensor
 
-def idx_to_key(idx):
+    from annif.corpus.document import DocumentCorpus
+
+
+def idx_to_key(idx: int) -> bytes:
     """convert an integer index to a binary key for use in LMDB"""
     return b"%08d" % idx
 
 
-def key_to_idx(key):
+def key_to_idx(key: memoryview | bytes) -> int:
     """convert a binary LMDB key to an integer index"""
     return int(key)
 
@@ -47,7 +54,7 @@ class LMDBSequence(Sequence):
             self._counter = 0
         self._batch_size = batch_size
 
-    def add_sample(self, inputs, targets):
+    def add_sample(self, inputs: np.ndarray, targets: np.ndarray) -> None:
         # use zero-padded 8-digit key
         key = idx_to_key(self._counter)
         self._counter += 1
@@ -58,7 +65,7 @@ class LMDBSequence(Sequence):
         buf.seek(0)
         self._txn.put(key, buf.read())
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> tuple[np.ndarray, np.ndarray]:
         """get a particular batch of samples"""
         cursor = self._txn.cursor()
         first_key = idx * self._batch_size
@@ -73,7 +80,7 @@ class LMDBSequence(Sequence):
             target_arrays.append(target_csr.toarray().flatten())
         return np.array(input_arrays), np.array(target_arrays)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """return the number of available batches"""
         return int(np.ceil(self._counter / self._batch_size))
 
@@ -81,7 +88,7 @@ class LMDBSequence(Sequence):
 class MeanLayer(Layer):
     """Custom Keras layer that calculates mean values along the 2nd axis."""
 
-    def call(self, inputs):
+    def call(self, inputs: EagerTensor) -> EagerTensor:
         return K.mean(inputs, axis=2)
 
 
@@ -91,7 +98,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
     name = "nn_ensemble"
 
-    MODEL_FILE = "nn-model.h5"
+    MODEL_FILE = "nn-model.keras"
     LMDB_FILE = "nn-train.mdb"
 
     DEFAULT_PARAMETERS = {
@@ -106,12 +113,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     # defaults for uninitialized instances
     _model = None
 
-    def default_params(self):
-        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
-        params.update(self.DEFAULT_PARAMETERS)
-        return params
-
-    def initialize(self, parallel=False):
+    def initialize(self, parallel: bool = False) -> None:
         super().initialize(parallel)
         if self._model is not None:
             return  # already initialized
@@ -130,23 +132,35 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             model_filename, custom_objects={"MeanLayer": MeanLayer}
         )
 
-    def _merge_hit_sets_from_sources(self, hit_sets_from_sources, params):
+    def _merge_source_batches(
+        self,
+        batch_by_source: dict[str, SuggestionBatch],
+        sources: list[tuple[str, float]],
+        params: dict[str, Any],
+    ) -> SuggestionBatch:
+        src_weight = dict(sources)
         score_vectors = np.array(
             [
                 [
-                    np.sqrt(hits.as_vector(len(subjects)))
-                    * weight
-                    * len(hit_sets_from_sources)
-                    for hits in proj_hit_set
+                    np.sqrt(suggestions.as_vector())
+                    * src_weight[project_id]
+                    * len(batch_by_source)
+                    for suggestions in batch
                 ]
-                for proj_hit_set, weight, subjects in hit_sets_from_sources
+                for project_id, batch in batch_by_source.items()
             ],
             dtype=np.float32,
         ).transpose(1, 2, 0)
-        results = self._model(score_vectors).numpy()
-        return [VectorSuggestionResult(res) for res in results]
+        prediction = self._model(score_vectors).numpy()
+        return SuggestionBatch.from_sequence(
+            [
+                vector_to_suggestions(row, limit=int(params["limit"]))
+                for row in prediction
+            ],
+            self.project.subjects,
+        )
 
-    def _create_model(self, sources):
+    def _create_model(self, sources: list[tuple[str, float]]) -> None:
         self.info("creating NN ensemble model")
 
         inputs = Input(shape=(len(self.project.subjects), len(sources)))
@@ -178,7 +192,12 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         self._model.summary(print_fn=summary.append)
         self.debug("Created model: \n" + "\n".join(summary))
 
-    def _train(self, corpus, params, jobs=0):
+    def _train(
+        self,
+        corpus: DocumentCorpus,
+        params: dict[str, Any],
+        jobs: int = 0,
+    ) -> None:
         sources = annif.util.parse_sources(self.params["sources"])
         self._create_model(sources)
         self._fit_model(
@@ -188,7 +207,12 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             n_jobs=jobs,
         )
 
-    def _corpus_to_vectors(self, corpus, seq, n_jobs):
+    def _corpus_to_vectors(
+        self,
+        corpus: DocumentCorpus,
+        seq: LMDBSequence,
+        n_jobs: int,
+    ) -> None:
         # pass corpus through all source projects
         sources = dict(annif.util.parse_sources(self.params["sources"]))
 
@@ -215,7 +239,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             ):
                 doc_scores = []
                 for project_id, p_hits in hits.items():
-                    vector = p_hits.as_vector(len(self.project.subjects))
+                    vector = p_hits.as_vector()
                     doc_scores.append(
                         np.sqrt(vector) * sources[project_id] * len(sources)
                     )
@@ -229,7 +253,13 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             shutil.rmtree(lmdb_path)
         return lmdb.open(lmdb_path, map_size=lmdb_map_size, writemap=True)
 
-    def _fit_model(self, corpus, epochs, lmdb_map_size, n_jobs=1):
+    def _fit_model(
+        self,
+        corpus: DocumentCorpus,
+        epochs: int,
+        lmdb_map_size: int,
+        n_jobs: int = 1,
+    ) -> None:
         env = self._open_lmdb(corpus == "cached", lmdb_map_size)
         if corpus != "cached":
             if corpus.is_empty():
@@ -249,7 +279,11 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
         annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)
 
-    def _learn(self, corpus, params):
+    def _learn(
+        self,
+        corpus: DocumentCorpus,
+        params: dict[str, Any],
+    ) -> None:
         self.initialize()
         self._fit_model(
             corpus, int(params["learn-epochs"]), int(params["lmdb_map_size"])

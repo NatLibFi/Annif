@@ -1,93 +1,76 @@
 """Evaluation metrics for Annif"""
+from __future__ import annotations
 
-import statistics
 import warnings
+from typing import TYPE_CHECKING
 
 import numpy as np
-from scipy.sparse import csr_matrix
-from sklearn.metrics import (
-    f1_score,
-    label_ranking_average_precision_score,
-    precision_score,
-    recall_score,
-)
+import scipy.sparse
+from sklearn.metrics import f1_score, precision_score, recall_score
 
 from annif.exception import NotSupportedException
+from annif.suggestion import SuggestionBatch, filter_suggestion
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator, Sequence
+    from io import TextIOWrapper
+
+    from click.utils import LazyFile
+    from scipy.sparse._arrays import csr_array
+
+    from annif.corpus.subject import SubjectIndex, SubjectSet
+    from annif.suggestion import SubjectSuggestion
 
 
-def filter_pred_top_k(preds, limit):
-    """filter a 2D prediction vector, retaining only the top K suggestions
-    for each individual prediction; the rest will be set to zeros"""
-
-    masks = []
-    for pred in preds:
-        mask = np.zeros_like(pred, dtype=bool)
-        top_k = np.argsort(pred)[::-1][:limit]
-        mask[top_k] = True
-        masks.append(mask)
-    return preds * np.array(masks)
-
-
-def true_positives(y_true, y_pred):
+def true_positives(y_true: csr_array, y_pred: csr_array) -> int:
     """calculate the number of true positives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
-    return int((y_true & y_pred).sum())
+    return int((y_true.multiply(y_pred)).sum())
 
 
-def false_positives(y_true, y_pred):
+def false_positives(y_true: csr_array, y_pred: csr_array) -> int:
     """calculate the number of false positives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
-    return int((~y_true & y_pred).sum())
+    return int((y_true < y_pred).sum())
 
 
-def false_negatives(y_true, y_pred):
+def false_negatives(y_true: csr_array, y_pred: csr_array) -> int:
     """calculate the number of false negatives using bitwise operations,
     emulating the way sklearn evaluation metric functions work"""
-    return int((y_true & ~y_pred).sum())
+    return int((y_true > y_pred).sum())
 
 
-def precision_at_k_score(y_true, y_pred, limit):
-    """calculate the precision at K, i.e. the number of relevant items
-    among the top K predicted ones"""
-    scores = []
-    for true, pred in zip(y_true, y_pred):
-        order = pred.argsort()[::-1]
-        orderlimit = min(limit, np.count_nonzero(pred))
-        order = order[:orderlimit]
-        gain = true[order]
-        if orderlimit > 0:
-            scores.append(gain.sum() / orderlimit)
-        else:
-            scores.append(0.0)
-    return statistics.mean(scores)
-
-
-def dcg_score(y_true, y_pred, limit=None):
+def dcg_score(
+    y_true: csr_array, y_pred: csr_array, limit: int | None = None
+) -> np.float64:
     """return the discounted cumulative gain (DCG) score for the selected
     labels vs. relevant labels"""
-    order = y_pred.argsort()[::-1]
-    n_pred = np.count_nonzero(y_pred)
+
+    n_pred = y_pred.count_nonzero()
     if limit is not None:
         n_pred = min(limit, n_pred)
-    order = order[:n_pred]
-    gain = y_true[order]
-    discount = np.log2(np.arange(order.size) + 2)
 
+    top_k = y_pred.data.argsort()[-n_pred:][::-1]
+    order = y_pred.indices[top_k]
+    gain = y_true[:, order]
+    discount = np.log2(np.arange(1, n_pred + 1) + 1)
     return (gain / discount).sum()
 
 
-def ndcg_score(y_true, y_pred, limit=None):
+def ndcg_score(y_true: csr_array, y_pred: csr_array, limit: int | None = None) -> float:
     """return the normalized discounted cumulative gain (nDCG) score for the
     selected labels vs. relevant labels"""
-    scores = []
-    for true, pred in zip(y_true, y_pred):
+
+    scores = np.ones(y_true.shape[0], dtype=np.float32)
+    for i in range(y_true.shape[0]):
+        true = y_true.getrow(i)
         idcg = dcg_score(true, true, limit)
-        dcg = dcg_score(true, pred, limit)
         if idcg > 0:
-            scores.append(dcg / idcg)
-        else:
-            scores.append(1.0)  # perfect score for no relevant hits case
-    return statistics.mean(scores)
+            pred = y_pred.getrow(i)
+            dcg = dcg_score(true, pred, limit)
+            scores[i] = dcg / idcg
+
+    return float(scores.mean())
 
 
 class EvaluationBatch:
@@ -96,70 +79,95 @@ class EvaluationBatch:
     for a list of documents of the batch. Final results can be queried using the
     results() method."""
 
-    def __init__(self, subject_index):
+    def __init__(self, subject_index: SubjectIndex) -> None:
         self._subject_index = subject_index
-        self._samples = []
+        self._suggestion_arrays = []
+        self._gold_subject_arrays = []
 
-    def evaluate(self, hits, gold_subjects):
-        self._samples.append((hits, gold_subjects))
+    def evaluate_many(
+        self,
+        suggestion_batch: list[list[SubjectSuggestion]]
+        | SuggestionBatch
+        | list[Iterator],
+        gold_subject_batch: Sequence[SubjectSet],
+    ) -> None:
+        if not isinstance(suggestion_batch, SuggestionBatch):
+            suggestion_batch = SuggestionBatch.from_sequence(
+                suggestion_batch, self._subject_index
+            )
+        self._suggestion_arrays.append(suggestion_batch.array)
 
-    def evaluate_many(self, hit_sets, gold_subject_sets):
-        for hits, gold_subjects in zip(hit_sets, gold_subject_sets):
-            self._samples.append((hits, gold_subjects))
+        # convert gold_subject_batch to sparse matrix
+        ar = scipy.sparse.dok_array(
+            (len(gold_subject_batch), len(self._subject_index)), dtype=bool
+        )
+        for idx, subject_set in enumerate(gold_subject_batch):
+            for subject_id in subject_set:
+                ar[idx, subject_id] = True
+        self._gold_subject_arrays.append(ar.tocsr())
 
-    def _evaluate_samples(self, y_true, y_pred, metrics=[]):
+    def _evaluate_samples(
+        self,
+        y_true: csr_array,
+        y_pred: csr_array,
+        metrics: Iterable[str] = [],
+    ) -> dict[str, float]:
         y_pred_binary = y_pred > 0.0
-        y_true_sparse = csr_matrix(y_true)
 
         # define the available metrics as lazy lambda functions
         # so we can execute only the ones actually requested
         all_metrics = {
             "Precision (doc avg)": lambda: precision_score(
-                y_true_sparse, y_pred_binary, average="samples"
+                y_true, y_pred_binary, average="samples"
             ),
             "Recall (doc avg)": lambda: recall_score(
-                y_true_sparse, y_pred_binary, average="samples"
+                y_true, y_pred_binary, average="samples"
             ),
             "F1 score (doc avg)": lambda: f1_score(
-                y_true_sparse, y_pred_binary, average="samples"
+                y_true, y_pred_binary, average="samples"
             ),
             "Precision (subj avg)": lambda: precision_score(
-                y_true_sparse, y_pred_binary, average="macro"
+                y_true, y_pred_binary, average="macro"
             ),
             "Recall (subj avg)": lambda: recall_score(
-                y_true_sparse, y_pred_binary, average="macro"
+                y_true, y_pred_binary, average="macro"
             ),
             "F1 score (subj avg)": lambda: f1_score(
-                y_true_sparse, y_pred_binary, average="macro"
+                y_true, y_pred_binary, average="macro"
             ),
             "Precision (weighted subj avg)": lambda: precision_score(
-                y_true_sparse, y_pred_binary, average="weighted"
+                y_true, y_pred_binary, average="weighted"
             ),
             "Recall (weighted subj avg)": lambda: recall_score(
-                y_true_sparse, y_pred_binary, average="weighted"
+                y_true, y_pred_binary, average="weighted"
             ),
             "F1 score (weighted subj avg)": lambda: f1_score(
-                y_true_sparse, y_pred_binary, average="weighted"
+                y_true, y_pred_binary, average="weighted"
             ),
             "Precision (microavg)": lambda: precision_score(
-                y_true_sparse, y_pred_binary, average="micro"
+                y_true, y_pred_binary, average="micro"
             ),
             "Recall (microavg)": lambda: recall_score(
-                y_true_sparse, y_pred_binary, average="micro"
+                y_true, y_pred_binary, average="micro"
             ),
             "F1 score (microavg)": lambda: f1_score(
-                y_true_sparse, y_pred_binary, average="micro"
+                y_true, y_pred_binary, average="micro"
             ),
             "F1@5": lambda: f1_score(
-                y_true_sparse, filter_pred_top_k(y_pred, 5) > 0.0, average="samples"
+                y_true, filter_suggestion(y_pred, 5) > 0.0, average="samples"
             ),
             "NDCG": lambda: ndcg_score(y_true, y_pred),
             "NDCG@5": lambda: ndcg_score(y_true, y_pred, limit=5),
             "NDCG@10": lambda: ndcg_score(y_true, y_pred, limit=10),
-            "Precision@1": lambda: precision_at_k_score(y_true, y_pred, limit=1),
-            "Precision@3": lambda: precision_at_k_score(y_true, y_pred, limit=3),
-            "Precision@5": lambda: precision_at_k_score(y_true, y_pred, limit=5),
-            "LRAP": lambda: label_ranking_average_precision_score(y_true, y_pred),
+            "Precision@1": lambda: precision_score(
+                y_true, filter_suggestion(y_pred, 1) > 0.0, average="samples"
+            ),
+            "Precision@3": lambda: precision_score(
+                y_true, filter_suggestion(y_pred, 3) > 0.0, average="samples"
+            ),
+            "Precision@5": lambda: precision_score(
+                y_true, filter_suggestion(y_pred, 5) > 0.0, average="samples"
+            ),
             "True positives": lambda: true_positives(y_true, y_pred_binary),
             "False positives": lambda: false_positives(y_true, y_pred_binary),
             "False negatives": lambda: false_negatives(y_true, y_pred_binary),
@@ -173,7 +181,9 @@ class EvaluationBatch:
 
             return {metric: all_metrics[metric]() for metric in metrics}
 
-    def _result_per_subject_header(self, results_file):
+    def _result_per_subject_header(
+        self, results_file: LazyFile | TextIOWrapper
+    ) -> None:
         print(
             "\t".join(
                 [
@@ -191,57 +201,64 @@ class EvaluationBatch:
             file=results_file,
         )
 
-    def _result_per_subject_body(self, zipped_results, results_file):
+    def _result_per_subject_body(
+        self, zipped_results: zip, results_file: LazyFile | TextIOWrapper
+    ) -> None:
         for row in zipped_results:
             print("\t".join((str(e) for e in row)), file=results_file)
 
-    def output_result_per_subject(self, y_true, y_pred, results_file, language):
+    def output_result_per_subject(
+        self,
+        y_true: csr_array,
+        y_pred: csr_array,
+        results_file: TextIOWrapper | LazyFile,
+        language: str,
+    ) -> None:
         """Write results per subject (non-aggregated)
         to outputfile results_file, using labels in the given language"""
 
         y_pred = y_pred.T > 0.0
-        y_true = y_true.T > 0.0
+        y_true = y_true.T
 
-        true_pos = y_true & y_pred
-        false_pos = ~y_true & y_pred
-        false_neg = y_true & ~y_pred
+        true_pos = y_true.multiply(y_pred).sum(axis=1)
+        false_pos = (y_true < y_pred).sum(axis=1)
+        false_neg = (y_true > y_pred).sum(axis=1)
 
-        r = len(y_true)
+        with np.errstate(invalid="ignore"):
+            precision = np.nan_to_num(true_pos / (true_pos + false_pos))
+            recall = np.nan_to_num(true_pos / (true_pos + false_neg))
+            f1_score = np.nan_to_num(2 * (precision * recall) / (precision + recall))
 
         zipped = zip(
             [subj.uri for subj in self._subject_index],  # URI
             [subj.labels[language] for subj in self._subject_index],  # Label
-            np.sum((true_pos + false_neg), axis=1),  # Support
-            np.sum(true_pos, axis=1),  # True_positives
-            np.sum(false_pos, axis=1),  # False_positives
-            np.sum(false_neg, axis=1),  # False_negatives
-            [
-                precision_score(y_true[i], y_pred[i], zero_division=0) for i in range(r)
-            ],  # Precision
-            [
-                recall_score(y_true[i], y_pred[i], zero_division=0) for i in range(r)
-            ],  # Recall
-            [f1_score(y_true[i], y_pred[i], zero_division=0) for i in range(r)],
-        )  # F1
+            y_true.sum(axis=1),  # Support
+            true_pos,  # True positives
+            false_pos,  # False positives
+            false_neg,  # False negatives
+            precision,  # Precision
+            recall,  # Recall
+            f1_score,  # F1 score
+        )
         self._result_per_subject_header(results_file)
         self._result_per_subject_body(zipped, results_file)
 
-    def results(self, metrics=[], results_file=None, language=None):
+    def results(
+        self,
+        metrics: Iterable[str] = [],
+        results_file: LazyFile | TextIOWrapper | None = None,
+        language: str | None = None,
+    ) -> dict[str, float]:
         """evaluate a set of selected subjects against a gold standard using
         different metrics. If metrics is empty, use all available metrics.
         If results_file (file object) given, write results per subject to it
         with labels expressed in the given language."""
 
-        if not self._samples:
+        if not self._suggestion_arrays:
             raise NotSupportedException("cannot evaluate empty corpus")
 
-        shape = (len(self._samples), len(self._subject_index))
-        y_true = np.zeros(shape, dtype=bool)
-        y_pred = np.zeros(shape, dtype=np.float32)
-
-        for idx, (hits, gold_subjects) in enumerate(self._samples):
-            gold_subjects.as_vector(destination=y_true[idx])
-            hits.as_vector(len(self._subject_index), destination=y_pred[idx])
+        y_pred = scipy.sparse.csr_array(scipy.sparse.vstack(self._suggestion_arrays))
+        y_true = scipy.sparse.csr_array(scipy.sparse.vstack(self._gold_subject_arrays))
 
         results = self._evaluate_samples(y_true, y_pred, metrics)
         results["Documents evaluated"] = int(y_true.shape[0])

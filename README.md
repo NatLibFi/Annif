@@ -3,10 +3,10 @@
 [![DOI](https://zenodo.org/badge/100936800.svg)](https://zenodo.org/badge/latestdoi/100936800)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI/CD](https://github.com/NatLibFi/Annif/actions/workflows/cicd.yml/badge.svg)](https://github.com/NatLibFi/Annif/actions/workflows/cicd.yml)
-[![codecov](https://codecov.io/gh/NatLibFi/Annif/branch/master/graph/badge.svg)](https://codecov.io/gh/NatLibFi/Annif)
+[![codecov](https://codecov.io/gh/NatLibFi/Annif/branch/main/graph/badge.svg)](https://codecov.io/gh/NatLibFi/Annif)
 [![Code Climate](https://codeclimate.com/github/NatLibFi/Annif/badges/gpa.svg)](https://codeclimate.com/github/NatLibFi/Annif)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/NatLibFi/Annif/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/NatLibFi/Annif/?branch=master)
-[![codebeat badge](https://codebeat.co/badges/e496f151-93db-4f0e-9e30-bc3339e58ca4)](https://codebeat.co/projects/github-com-natlibfi-annif-master)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/NatLibFi/Annif/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/NatLibFi/Annif/?branch=main)
+[![codebeat badge](https://codebeat.co/badges/7a8ef539-0094-48b8-84c2-c413b4a50d57)](https://codebeat.co/projects/github-com-natlibfi-annif-main)
 [![CodeQL](https://github.com/NatLibFi/Annif/actions/workflows/codeql.yml/badge.svg)](https://github.com/NatLibFi/Annif/actions/workflows/codeql.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=NatLibFi_Annif&metric=alert_status)](https://sonarcloud.io/dashboard?id=NatLibFi_Annif)
 [![docs](https://readthedocs.org/projects/annif/badge/?version=latest)](https://annif.readthedocs.io/en/latest/index.html)
@@ -46,9 +46,32 @@ Start up the application:
 See [Getting Started](https://github.com/NatLibFi/Annif/wiki/Getting-started)
 in the wiki for more details.
 
+## Shell compeletions
+Annif supports tab-key completion in bash, zsh and fish shells for commands and options
+and project id, vocabulary id and path parameters.
+
+To enable the completion support in your current terminal session use `annif completion`
+command with the option according to your shell to produce the completion script and
+source it. For example, run
+
+    source <(annif completion --bash)
+
+To enable the completion support in all new sessions first add the completion script in
+your home directory:
+
+    annif completion --bash > ~/.annif-complete.bash
+
+Then make the script to be automatically sourced for new terminal sessions by adding the
+following to your `~/.bashrc` file (or in some [alternative startup
+file](https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html)):
+
+    source ~/.annif-complete.bash
+
+For details and usage for other shells see
+[Click documentation](https://click.palletsprojects.com/en/8.1.x/shell-completion/).
 # Docker install
 
-You can use Annif as a pre-built Docker container. Please see the 
+You can use Annif as a pre-built Docker container. Please see the
 [wiki documentation](https://github.com/NatLibFi/Annif/wiki/Usage-with-Docker)
 for details.
 
@@ -71,11 +94,11 @@ Install [pipx](https://pypa.github.io/pipx/) and Poetry if you don't have them. 
     python3 -m pip install --user pipx
     python3 -m pipx ensurepath
 
-Open a new shell, and then install Poetry: 
+Open a new shell, and then install Poetry:
 
     pipx install poetry
 
-Poetry can be installed also without pipx: check the [Poetry documentation](https://python-poetry.org/docs/master/#installation). 
+Poetry can be installed also without pipx: check the [Poetry documentation](https://python-poetry.org/docs/master/#installation).
 
 Create a virtual environment and install dependencies:
 
@@ -117,14 +140,14 @@ See "Cite this repository" in the details of the repository.
 
 ## Annif articles
 <ul>
-<li> 
-Suominen, O.; Inkinen, J.; Lehtinen, M., 2022. 
+<li>
+Suominen, O.; Inkinen, J.; Lehtinen, M., 2022.
 Annif and Finto AI: Developing and Implementing Automated Subject Indexing.
 JLIS.It, 13(1), pp. 265–282. URL:
 https://www.jlis.it/index.php/jlis/article/view/437
 <details>
 <summary>See BibTex</summary>
-    
+
     @article{suominen2022annif,
       title={Annif and Finto AI: Developing and Implementing Automated Subject Indexing},
       author={Suominen, Osma and Inkinen, Juho and Lehtinen, Mona},
@@ -137,8 +160,8 @@ https://www.jlis.it/index.php/jlis/article/view/437
       url={https://www.jlis.it/index.php/jlis/article/view/437},
     }
 </details>
-</li> 
-<li> 
+</li>
+<li>
 Suominen, O.; Koskenniemi, I, 2022.
 Annif Analyzer Shootout: Comparing text lemmatization methods for automated subject indexing.
 Code4Lib Journal, (54). URL:
@@ -155,8 +178,8 @@ https://journal.code4lib.org/articles/16719
       url={https://journal.code4lib.org/articles/16719},
     }
 </details>
-</li> 
-<li> 
+</li>
+<li>
 Suominen, O., 2019. Annif: DIY automated subject indexing using multiple
 algorithms. LIBER Quarterly, 29(1), pp.1–25. DOI:
 https://doi.org/10.18352/lq.10285

@@ -3,6 +3,7 @@
 import logging
 import os.path as osp
 from sys import stdout
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import scipy.sparse as sp
@@ -12,7 +13,7 @@ from pecos.xmc.xtransformer.model import XTransformer
 from pecos.xmc.xtransformer.module import MLProblemWithText
 
 from annif.exception import NotInitializedException, NotSupportedException
-from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+from annif.suggestion import SuggestionBatch, SubjectSuggestion, vector_to_suggestions
 from annif.util import (
     apply_param_parse_config,
     atomic_save,
@@ -22,6 +23,13 @@ from annif.util import (
 
 from . import backend, mixins
 
+
+# if TYPE_CHECKING:
+from collections.abc import Iterator
+
+from scipy.sparse._csr import csr_matrix
+
+from annif.corpus.document import DocumentCorpus
 
 class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     """XTransformer based backend for Annif"""
@@ -123,7 +131,7 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                     "model {} not found".format(path), backend_id=self.backend_id
                 )
 
-    def initialize(self, parallel=False):
+    def initialize(self, parallel: bool = False) -> None:
         self.initialize_vectorizer()
         self._initialize_model()
 
@@ -203,7 +211,12 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         )
         atomic_save_folder(self._model, model_path)
 
-    def _train(self, corpus, params, jobs=0):
+    def _train(
+        self,
+        corpus: DocumentCorpus,
+        params: dict[str, Any],
+        jobs: int = 0,
+    ) -> None:
         if corpus == "cached":
             self.info("Reusing cached training data from previous run.")
         else:
@@ -219,21 +232,28 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             self._create_train_files(veccorpus, corpus)
         self._create_model(params, jobs)
 
-    def _suggest(self, text, params):
-        text = " ".join(text.split())
-        vector = self.vectorizer.transform([text])
+    def _suggest_batch(
+        self, texts: list[str], params: dict[str, Any]
+    ) -> SuggestionBatch:
+        vector = self.vectorizer.transform(texts)
+        
         if vector.nnz == 0:  # All zero vector, empty result
-            return ListSuggestionResult([])
+            return list()
         new_params = apply_param_parse_config(self.PARAM_CONFIG, params)
         prediction = self._model.predict(
-            [text],
+            texts,
             X_feat=vector.sorted_indices(),
             batch_size=new_params["batch_size"],
             use_gpu=True,
             only_top_k=new_params["limit"],
             post_processor=new_params["post_processor"],
         )
-        results = []
-        for idx, score in zip(prediction.indices, prediction.data):
-            results.append(SubjectSuggestion(subject_id=idx, score=score))
-        return ListSuggestionResult(results)
+        current_batchsize = prediction.get_shape()[0]
+        batch_result = []
+        for i in range(current_batchsize):
+            results = []
+            row = prediction.getrow(i)
+            for idx, score in zip(row.indices, row.data):
+                results.append(SubjectSuggestion(subject_id=idx, score=score))
+            batch_result.append(results)
+        return SuggestionBatch.from_sequence(batch_result, self.project.subjects)

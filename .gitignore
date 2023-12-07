@@ -12,3 +12,4 @@ docs/_build/
 poetry.lock
 projects.cfg
 venv/
+.hypothesis/

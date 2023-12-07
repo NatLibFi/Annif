@@ -1,9 +1,9 @@
 """Registry that keeps track of Annif projects"""
+from __future__ import annotations
 
-import collections
 import re
 
-from flask import current_app
+from flask import Flask, current_app
 
 import annif
 from annif.config import parse_config
@@ -28,7 +28,9 @@ class AnnifRegistry:
     _projects = {}
     _vocabs = {}
 
-    def __init__(self, projects_config_path, datadir, init_projects):
+    def __init__(
+        self, projects_config_path: str, datadir: str, init_projects: bool
+    ) -> None:
         self._rid = id(self)
         self._projects_config_path = projects_config_path
         self._datadir = datadir
@@ -37,13 +39,13 @@ class AnnifRegistry:
             for project in self._projects[self._rid].values():
                 project.initialize()
 
-    def _init_vars(self):
+    def _init_vars(self) -> None:
         # initialize the static variables, if necessary
         if self._rid not in self._projects:
             self._projects[self._rid] = self._create_projects()
             self._vocabs[self._rid] = {}
 
-    def _create_projects(self):
+    def _create_projects(self) -> dict:
         # parse the configuration
         config = parse_config(self._projects_config_path)
 
@@ -52,14 +54,16 @@ class AnnifRegistry:
             return {}
 
         # create AnnifProject objects from the configuration file
-        projects = collections.OrderedDict()
+        projects = dict()
         for project_id in config.project_ids:
             projects[project_id] = AnnifProject(
                 project_id, config[project_id], self._datadir, self
             )
         return projects
 
-    def get_projects(self, min_access=Access.private):
+    def get_projects(
+        self, min_access: Access = Access.private
+    ) -> dict[str, AnnifProject]:
         """Return the available projects as a dict of project_id ->
         AnnifProject. The min_access parameter may be used to set the minimum
         access level required for the returned projects."""
@@ -71,7 +75,9 @@ class AnnifRegistry:
             if project.access >= min_access
         }
 
-    def get_project(self, project_id, min_access=Access.private):
+    def get_project(
+        self, project_id: str, min_access: Access = Access.private
+    ) -> AnnifProject:
         """return the definition of a single Project by project_id"""
 
         projects = self.get_projects(min_access)
@@ -80,7 +86,9 @@ class AnnifRegistry:
         except KeyError:
             raise ValueError("No such project {}".format(project_id))
 
-    def get_vocab(self, vocab_spec, default_language):
+    def get_vocab(
+        self, vocab_spec: str, default_language: str | None
+    ) -> tuple[AnnifVocabulary, None] | tuple[AnnifVocabulary, str]:
         """Return an (AnnifVocabulary, language) pair corresponding to the
         vocab_spec. If no language information is specified, use the given
         default language."""
@@ -91,24 +99,21 @@ class AnnifRegistry:
         vocab_id = match.group(1)
         posargs, kwargs = parse_args(match.group(3))
         language = posargs[0] if posargs else default_language
-        vocab_key = (vocab_id, language)
 
         self._init_vars()
-        if vocab_key not in self._vocabs[self._rid]:
-            self._vocabs[self._rid][vocab_key] = AnnifVocabulary(
-                vocab_id, self._datadir
-            )
-        return self._vocabs[self._rid][vocab_key], language
+        if vocab_id not in self._vocabs[self._rid]:
+            self._vocabs[self._rid][vocab_id] = AnnifVocabulary(vocab_id, self._datadir)
+        return self._vocabs[self._rid][vocab_id], language
 
 
-def initialize_projects(app):
+def initialize_projects(app: Flask) -> None:
     projects_config_path = app.config["PROJECTS_CONFIG_PATH"]
     datadir = app.config["DATADIR"]
     init_projects = app.config["INITIALIZE_PROJECTS"]
     app.annif_registry = AnnifRegistry(projects_config_path, datadir, init_projects)
 
 
-def get_projects(min_access=Access.private):
+def get_projects(min_access: Access = Access.private) -> dict[str, AnnifProject]:
     """Return the available projects as a dict of project_id ->
     AnnifProject. The min_access parameter may be used to set the minimum
     access level required for the returned projects."""
@@ -118,7 +123,7 @@ def get_projects(min_access=Access.private):
     return current_app.annif_registry.get_projects(min_access)
 
 
-def get_project(project_id, min_access=Access.private):
+def get_project(project_id: str, min_access: Access = Access.private) -> AnnifProject:
     """return the definition of a single Project by project_id"""
 
     projects = get_projects(min_access)
@@ -128,7 +133,7 @@ def get_project(project_id, min_access=Access.private):
         raise ValueError(f"No such project '{project_id}'")
 
 
-def get_vocabs(min_access=Access.private):
+def get_vocabs(min_access: Access = Access.private) -> dict[str, AnnifVocabulary]:
     """Return the available vocabularies as a dict of vocab_id ->
     AnnifVocabulary. The min_access parameter may be used to set the minimum
     access level required for the returned vocabularies."""
@@ -143,7 +148,7 @@ def get_vocabs(min_access=Access.private):
     return vocabs
 
 
-def get_vocab(vocab_id, min_access=Access.private):
+def get_vocab(vocab_id: str, min_access: Access = Access.private) -> AnnifVocabulary:
     """return a single AnnifVocabulary by vocabulary id"""
 
     vocabs = get_vocabs(min_access)

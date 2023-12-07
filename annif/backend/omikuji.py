@@ -1,6 +1,9 @@
 """Annif backend using the Omikuji classifier"""
+from __future__ import annotations
 
 import os.path
+import shutil
+from typing import TYPE_CHECKING, Any
 
 import omikuji
 
@@ -10,9 +13,14 @@ from annif.exception import (
     NotSupportedException,
     OperationFailedException,
 )
-from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+from annif.suggestion import SubjectSuggestion, SuggestionBatch
 
 from . import backend, mixins
+
+if TYPE_CHECKING:
+    from scipy.sparse._csr import csr_matrix
+
+    from annif.corpus.document import DocumentCorpus
 
 
 class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
@@ -35,12 +43,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         "collapse_every_n_layers": 0,
     }
 
-    def default_params(self):
-        params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
-        params.update(self.DEFAULT_PARAMETERS)
-        return params
-
-    def _initialize_model(self):
+    def _initialize_model(self) -> None:
         if self._model is None:
             path = os.path.join(self.datadir, self.MODEL_FILE)
             self.debug("loading model from {}".format(path))
@@ -57,11 +60,11 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                     "model {} not found".format(path), backend_id=self.backend_id
                 )
 
-    def initialize(self, parallel=False):
+    def initialize(self, parallel: bool = False) -> None:
         self.initialize_vectorizer()
         self._initialize_model()
 
-    def _create_train_file(self, veccorpus, corpus):
+    def _create_train_file(self, veccorpus: csr_matrix, corpus: DocumentCorpus) -> None:
         self.info("creating train file")
         path = os.path.join(self.datadir, self.TRAIN_FILE)
         with open(path, "w", encoding="utf-8") as trainfile:
@@ -88,7 +91,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             trainfile.seek(0)
             print("{:08d}".format(n_samples), end="", file=trainfile)
 
-    def _create_model(self, params, jobs):
+    def _create_model(self, params: dict[str, Any], jobs: int) -> None:
         train_path = os.path.join(self.datadir, self.TRAIN_FILE)
         model_path = os.path.join(self.datadir, self.MODEL_FILE)
         hyper_param = omikuji.Model.default_hyper_param()
@@ -101,7 +104,12 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self._model = omikuji.Model.train_on_data(train_path, hyper_param, jobs or None)
         annif.util.atomic_save_folder(self._model, model_path)
 
-    def _train(self, corpus, params, jobs=0):
+    def _train(
+        self,
+        corpus: DocumentCorpus,
+        params: dict[str, Any],
+        jobs: int = 0,
+    ) -> None:
         if corpus != "cached":
             if corpus.is_empty():
                 raise NotSupportedException(
@@ -119,18 +127,20 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             self.info("Reusing cached training data from previous run.")
         self._create_model(params, jobs)
 
-    def _suggest_batch(self, texts, params):
+    def _suggest_batch(
+        self, texts: list[str], params: dict[str, Any]
+    ) -> SuggestionBatch:
         vector = self.vectorizer.transform(texts)
         limit = int(params["limit"])
 
         batch_results = []
         for row in vector:
             if row.nnz == 0:  # All zero vector, empty result
-                batch_results.append(ListSuggestionResult([]))
+                batch_results.append([])
                 continue
             feature_values = [(col, row[0, col]) for col in row.nonzero()[1]]
             results = []
             for subj_id, score in self._model.predict(feature_values, top_k=limit):
                 results.append(SubjectSuggestion(subject_id=subj_id, score=score))
-            batch_results.append(ListSuggestionResult(results))
-        return batch_results
+            batch_results.append(results)
+        return SuggestionBatch.from_sequence(batch_results, self.project.subjects)

@@ -1,10 +1,11 @@
 """Support for subjects loaded from a SKOS/RDF file"""
+from __future__ import annotations
 
 import collections
 import os.path
 import shutil
+from typing import TYPE_CHECKING
 
-import joblib
 import rdflib
 import rdflib.util
 from rdflib.namespace import OWL, RDF, RDFS, SKOS
@@ -13,10 +14,16 @@ import annif.util
 
 from .types import Subject, SubjectCorpus
 
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
 
-def serialize_subjects_to_skos(subjects, path):
+    from rdflib.term import URIRef
+
+
+def serialize_subjects_to_skos(subjects: Iterator, path: str) -> None:
     """Create a SKOS representation of the given subjects and serialize it
     into a SKOS/Turtle file with the given path name."""
+    import joblib
 
     graph = rdflib.Graph()
     graph.namespace_manager.bind("skos", SKOS)
@@ -51,16 +58,18 @@ class SubjectFileSKOS(SubjectCorpus):
 
     _languages = None
 
-    def __init__(self, path):
+    def __init__(self, path: str) -> None:
         self.path = path
         if path.endswith(".dump.gz"):
+            import joblib
+
             self.graph = joblib.load(path)
         else:
             self.graph = rdflib.Graph()
             self.graph.parse(self.path, format=rdflib.util.guess_format(self.path))
 
     @property
-    def languages(self):
+    def languages(self) -> set[str]:
         if self._languages is None:
             self._languages = {
                 label.language
@@ -71,7 +80,7 @@ class SubjectFileSKOS(SubjectCorpus):
             }
         return self._languages
 
-    def _concept_labels(self, concept):
+    def _concept_labels(self, concept: URIRef) -> dict[str, str]:
         by_lang = self.get_concept_labels(concept, self.PREF_LABEL_PROPERTIES)
         return {
             lang: by_lang[lang][0]
@@ -83,7 +92,7 @@ class SubjectFileSKOS(SubjectCorpus):
         }
 
     @property
-    def subjects(self):
+    def subjects(self) -> Iterator[Subject]:
         for concept in self.concepts:
             labels = self._concept_labels(concept)
 
@@ -94,13 +103,17 @@ class SubjectFileSKOS(SubjectCorpus):
             yield Subject(uri=str(concept), labels=labels, notation=notation)
 
     @property
-    def concepts(self):
+    def concepts(self) -> Iterator[URIRef]:
         for concept in self.graph.subjects(RDF.type, SKOS.Concept):
             if (concept, OWL.deprecated, rdflib.Literal(True)) in self.graph:
                 continue
             yield concept
 
-    def get_concept_labels(self, concept, label_types):
+    def get_concept_labels(
+        self,
+        concept: URIRef,
+        label_types: Sequence[URIRef],
+    ) -> collections.defaultdict[str | None, list[str]]:
         """return all the labels of the given concept with the given label
         properties as a dict-like object where the keys are language codes
         and the values are lists of labels in that language"""
@@ -113,14 +126,14 @@ class SubjectFileSKOS(SubjectCorpus):
         return labels_by_lang
 
     @staticmethod
-    def is_rdf_file(path):
+    def is_rdf_file(path: str) -> bool:
         """return True if the path looks like an RDF file that can be loaded
         as SKOS"""
 
         fmt = rdflib.util.guess_format(path)
         return fmt is not None
 
-    def save_skos(self, path):
+    def save_skos(self, path: str) -> None:
         """Save the contents of the subject vocabulary into a SKOS/Turtle
         file with the given path name."""
 
@@ -132,8 +145,10 @@ class SubjectFileSKOS(SubjectCorpus):
             # need to serialize into Turtle
             self.graph.serialize(destination=path, format="turtle")
         # also dump the graph in joblib format which is faster to load
+        import joblib
+
         annif.util.atomic_save(
             self.graph,
             *os.path.split(path.replace(".ttl", ".dump.gz")),
-            method=joblib.dump
+            method=joblib.dump,
         )

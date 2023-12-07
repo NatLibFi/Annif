@@ -12,6 +12,11 @@ setting a (non-default) path to a `project configuration file
 <https://github.com/NatLibFi/Annif/wiki/Project-configuration>`_ and
 ``--verbosity`` for selecting logging level.
 
+Annif supports tab-key completion in bash, zsh and fish shells for commands and options
+and project id, vocabulary id and path parameters. See `README.md
+<https://github.com/NatLibFi/Annif#shell-completions>`_ for instructions on how to
+enable the support.
+
 .. contents::
    :local:
    :backlinks: none
@@ -118,6 +123,17 @@ Subject index administration
 
 .. click:: flask.cli:run_command
    :prog: annif run
+
+**REST equivalent**
+
+   N/A
+
+*****
+Other
+*****
+
+.. click:: annif.cli:run_completion
+   :prog: annif completion
 
 **REST equivalent**
 

@@ -105,11 +105,11 @@ def test_nn_ensemble_train_and_learn(registry, tmpdir):
     assert nn_ensemble._model.optimizer.learning_rate.value() == 0.001
 
     datadir = py.path.local(project.datadir)
-    assert datadir.join("nn-model.h5").exists()
-    assert datadir.join("nn-model.h5").size() > 0
+    assert datadir.join("nn-model.keras").exists()
+    assert datadir.join("nn-model.keras").size() > 0
 
     # test online learning
-    modelfile = datadir.join("nn-model.h5")
+    modelfile = datadir.join("nn-model.keras")
 
     old_size = modelfile.size()
     old_mtime = modelfile.mtime()
@@ -129,7 +129,7 @@ def test_nn_ensemble_train_cached(registry):
     datadir = py.path.local(project.datadir)
     assert datadir.join("nn-train.mdb").exists()
 
-    datadir.join("nn-model.h5").remove()
+    datadir.join("nn-model.keras").remove()
 
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
@@ -140,8 +140,8 @@ def test_nn_ensemble_train_cached(registry):
 
     nn_ensemble.train("cached")
 
-    assert datadir.join("nn-model.h5").exists()
-    assert datadir.join("nn-model.h5").size() > 0
+    assert datadir.join("nn-model.keras").exists()
+    assert datadir.join("nn-model.keras").size() > 0
 
 
 def test_nn_ensemble_train_and_learn_params(registry, tmpdir, capfd):

@@ -1,17 +1,21 @@
 """HTTP/REST client backend that makes calls to a web service
 and returns the results"""
-
+from __future__ import annotations
 
 import importlib
+from typing import TYPE_CHECKING, Any
 
 import dateutil.parser
 import requests
 import requests.exceptions
 
 from annif.exception import OperationFailedException
-from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+from annif.suggestion import SubjectSuggestion
 
 from . import backend
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 class HTTPBackend(backend.AnnifBackend):
@@ -19,7 +23,7 @@ class HTTPBackend(backend.AnnifBackend):
     _headers = None
 
     @property
-    def headers(self):
+    def headers(self) -> dict[str, str]:
         if self._headers is None:
             version = importlib.metadata.version("annif")
             self._headers = {
@@ -28,17 +32,17 @@ class HTTPBackend(backend.AnnifBackend):
         return self._headers
 
     @property
-    def is_trained(self):
+    def is_trained(self) -> bool | None:
         return self._get_project_info("is_trained")
 
     @property
-    def modification_time(self):
+    def modification_time(self) -> datetime | None:
         mtime = self._get_project_info("modification_time")
         if mtime is None:
             return None
         return dateutil.parser.parse(mtime)
 
-    def _get_project_info(self, key):
+    def _get_project_info(self, key: str) -> bool | str | None:
         params = self._get_backend_params(None)
         try:
             req = requests.get(
@@ -59,7 +63,7 @@ class HTTPBackend(backend.AnnifBackend):
         else:
             return None
 
-    def _suggest(self, text, params):
+    def _suggest(self, text: str, params: dict[str, Any]) -> list[SubjectSuggestion]:
         data = {"text": text}
         if "project" in params:
             data["project"] = params["project"]
@@ -69,13 +73,13 @@ class HTTPBackend(backend.AnnifBackend):
             req.raise_for_status()
         except requests.exceptions.RequestException as err:
             self.warning("HTTP request failed: {}".format(err))
-            return ListSuggestionResult([])
+            return []
 
         try:
             response = req.json()
         except ValueError as err:
             self.warning("JSON decode failed: {}".format(err))
-            return ListSuggestionResult([])
+            return []
 
         if "results" in response:
             results = response["results"]
@@ -93,6 +97,6 @@ class HTTPBackend(backend.AnnifBackend):
             ]
         except (TypeError, ValueError) as err:
             self.warning("Problem interpreting JSON data: {}".format(err))
-            return ListSuggestionResult([])
+            return []
 
-        return ListSuggestionResult(subject_suggestions)
+        return subject_suggestions
