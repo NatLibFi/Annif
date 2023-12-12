@@ -2,14 +2,18 @@
 
 ## Supported Versions
 
-We aim to update all Annif dependencies to their latest versions
-on each Annif minor version release, but this can be restricted by the
-[backward compatibility policy](https://github.com/NatLibFi/Annif/wiki/Backward-compatibility-between-Annif-releases).
+The [most recent Annif (major/minor) release](https://github.com/NatLibFi/Annif/releases)
+is considered supported,
+in the sense that if a serious bug or vulnerability is encountered in it,
+a patch release is made to fix the issue.
 
-However, the [dependencies of a given Annif release](https://github.com/NatLibFi/Annif/blob/main/pyproject.toml)
+Generally, we aim to update all dependencies to their latest versions
+on each Annif major/minor release, but this can be restricted by the
+[backward compatibility policy](https://github.com/NatLibFi/Annif/wiki/Backward-compatibility-between-Annif-releases).
+However, note that the [dependencies of a given Annif release](https://github.com/NatLibFi/Annif/blob/main/pyproject.toml)
 are pinned only on minor version level, so all patch level fixes of dependencies
-can be applied to an Annif installation just by running
-`pip install annif --upgrade`.
+can be applied to an Annif installation
+(either manually updating the outdated packages or recreating the virtual environment and reinstalling Annif).
 
 ### Docker image
 The Docker image of the latest Annif release in the
@@ -38,11 +42,10 @@ Each security concern will be assigned to a handler from our team,
 who will contact you if there's a need for additional information.
 We confirm the problem and keep you informed of the fix.
 
-Please include the following information along with your report:
+Make sure to add the following details when submitting your report:
 
-- A descriptive title, clearly stating the nature and object software (Annif) of the report.
-- Your name and affiliation (if any).
-- A description of the technical details of the vulnerabilities.
-- A minimal example of the vulnerability.
-- An explanation of who can exploit this vulnerability, and what they gain when doing so.
-- Whether this vulnerability is public or known to third parties. If it is, please provide details.
+- A clear and descriptive title that outlines the report's subject and the software it pertains to (Annif).
+- Break down the technical aspects of the vulnerability in your description.
+- A minimal example showcasing the vulnerability.
+- An explanation who has the potential to exploit this vulnerability and the benefits they would derive from doing so.
+- Whether the vulnerability is public knowledge or known to third parties, and if so, share relevant details.
