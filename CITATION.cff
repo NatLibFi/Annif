@@ -37,7 +37,7 @@ version: 1.0.0
 license: 
   - Apache-2.0
   - GPL-3.0
-date-released: 2023-08-18
+date-released: 2023-12-13
 doi: 10.5281/zenodo.2578948
 repository-code: "https://github.com/NatLibFi/Annif"
 contact:
