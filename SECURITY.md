@@ -2,18 +2,15 @@
 
 ## Supported Versions
 
-The [most recent Annif (major/minor) release](https://github.com/NatLibFi/Annif/releases)
+The [most recent Annif major/minor release](https://github.com/NatLibFi/Annif/releases)
 is considered supported,
 in the sense that if a serious bug or vulnerability is encountered in it,
 a patch release is made to fix the issue.
 
-Generally, we aim to update all dependencies to their latest versions
-on each Annif major/minor release, but this can be restricted by the
-[backward compatibility policy](https://github.com/NatLibFi/Annif/wiki/Backward-compatibility-between-Annif-releases).
+Generally, we aim to update all dependencies to their latest versions on each Annif major/minor release.
 However, note that the [dependencies of a given Annif release](https://github.com/NatLibFi/Annif/blob/main/pyproject.toml)
-are pinned only on minor version level, so all patch level fixes of dependencies
-can be applied to an Annif installation
-(either manually updating the outdated packages or recreating the virtual environment and reinstalling Annif).
+are pinned only on minor version level, so all patch level fixes of dependencies can be applied to an Annif installation,
+by either manually updating the outdated packages or recreating the virtual environment from scratch and reinstalling Annif.
 
 ### Docker image
 The Docker image of the latest Annif release in the
@@ -39,7 +36,7 @@ If the security vulnerability is in a third-party software library,
 please report it also to the team maintaining it.
 
 Each security concern will be assigned to a handler from our team,
-who will contact you if there's a need for additional information.
+who will contact you if there is a need for additional information.
 We confirm the problem and keep you informed of the fix.
 
 Make sure to add the following details when submitting your report:
