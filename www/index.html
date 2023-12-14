@@ -187,6 +187,10 @@
     #get-annif { background-image: url('static/img/get-annif.svg'); }
     #learn-annif { background-image: url('static/img/learn-annif.svg'); }
     #discuss-annif { background-image: url('static/img/discuss-annif.svg'); }
+    .version-name {
+      min-width: 90px;
+      display: inline-block;
+    }
     .annif-user { border-bottom: 1px dotted #343260; }
     #finto-ai { max-width: 20%; margin: 0.75rem 0rem 0.75rem 0rem; }
     #yle { max-width: 25%; margin: 0rem 0rem 0rem -1rem; }
@@ -345,7 +349,7 @@
                         'X-GitHub-Api-Version': '2022-11-28'
                       },
                       success: function(data) {
-                        var releasesToShow = 4; // Set the number of releases to show
+                        var releasesToShow = 5; // Set the number of releases to show
                         var releasesAppended = 0;
                         const dateFormat = { year: 'numeric', month: 'long', day: 'numeric' };
                         var $releaseList = $('.release-list');
@@ -361,7 +365,7 @@
                           var url = release.html_url;
 
                           var releaseHtml = '<li>';
-                          releaseHtml += '<a href="' + url + '">' + name + '</a> – ' + published;
+                          releaseHtml += '<a href="' + url + '" class="version-name">' + name + '</a> – ' + published;
                           releaseHtml += '</li>';
 
                         $releaseList.append(releaseHtml);
