@@ -52,6 +52,7 @@ jsonschema = "4.17.*"
 fasttext-wheel = {version = "0.9.2", optional = true}
 voikko = {version = "0.5.*", optional = true}
 tensorflow-cpu = {version = "2.13.*", optional = true}
+tensorflow-io-gcs-filesystem = {version = "<=0.34.*", optional = true, python = "3.8"}
 lmdb = {version = "1.4.1", optional = true}
 omikuji = {version = "0.5.*", optional = true}
 yake = {version = "0.4.5", optional = true}
@@ -74,7 +75,7 @@ schemathesis = "3.*.*"
 [tool.poetry.extras]
 fasttext = ["fasttext-wheel"]
 voikko = ["voikko"]
-nn = ["tensorflow-cpu", "lmdb"]
+nn = ["tensorflow-cpu", "tensorflow-io-gcs-filesystem", "lmdb"]
 omikuji = ["omikuji"]
 yake = ["yake"]
 spacy = ["spacy"]
