@@ -34,6 +34,7 @@ do not apply to Annif use.
 
 We value your findings, and we would be grateful if you report
 any concerns or vulnerabilities by email to **`finto-posti@helsinki.fi`**.
+_Do not create a GitHub issue for security vulnerabilities_.
 Note that Annif team is a part of the larger Finto team,
 which has resources for the contact service throughout the year.
 
@@ -47,8 +48,9 @@ We confirm the problem and keep you informed of the fix.
 To facilitate a quick and accurate response make sure to include the following details when submitting your report:
 
 - A clear and descriptive title that outlines the report's subject and the software it pertains to (Annif).
-- The versions of Annif, its dependencies and the (possible) other related software that give rise to the vulnerability.
+- The version(s) of Annif, its dependencies and the (possible) other related software that contribute to the vulnerability.
 - Break down the technical aspects of the vulnerability in your description.
 - A minimal example showcasing the vulnerability.
 - An explanation who has the potential to exploit this vulnerability and the benefits they would derive from doing so.
 - Whether the vulnerability is public knowledge or known to third parties, and if so, share relevant details.
+- (A remediation suggestion if you have have one.)
