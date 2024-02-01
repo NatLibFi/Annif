@@ -8,6 +8,7 @@ import json
 import os.path
 import re
 import sys
+from fnmatch import fnmatch
 
 import click
 import click_log
@@ -581,6 +582,53 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric, results_fi
     for line in rec.lines:
         click.echo(line)
     click.echo("---")
+
+
+@cli.command("upload-projects")
+@click.argument("project_ids_pattern")
+@click.argument("repo_id")
+@click.option(
+    "--token",
+    help="""Authentication token, obtained from the Hugging Face Hub.
+    Will default to the stored token.""",
+)
+@click.option(
+    "--commit-message",
+    help="""The summary / title / first line of the generated commit.""",
+)
+@cli_util.common_options
+def run_upload_projects(project_ids_pattern, repo_id, token, commit_message):
+    """
+    Upload selected projects to a Hugging Face Hub repository
+    \f
+    This command zips the project directories and vocabularies of the projects
+    that match the given `project_ids_pattern`, and uploads the archives along
+    with the projects configuration to the specified Hugging Face Hub repository.
+    An authentication token and commit message can be given with options.
+    """
+    projects = [
+        proj
+        for proj in annif.registry.get_projects(min_access=Access.private).values()
+        if fnmatch(proj.project_id, project_ids_pattern)
+    ]
+    click.echo(f"Uploading project(s): {', '.join([p.project_id for p in projects])}")
+    project_dirs = {p.datadir for p in projects}
+    vocab_dirs = {p.vocab.datadir for p in projects}
+
+    projects_zip_fname = "projects.zip"
+    vocabs_zip_fname = "vocabs.zip"
+    projects_conf_fname = "projects.cfg"
+
+    cli_util.archive_dirs(project_dirs, projects_zip_fname)
+    cli_util.archive_dirs(vocab_dirs, vocabs_zip_fname)
+    cli_util.write_tmp_project_configs_file(projects, projects_conf_fname)
+
+    try:
+        cli_util.upload_to_hf_hub(projects_zip_fname, repo_id, token, commit_message)
+        cli_util.upload_to_hf_hub(vocabs_zip_fname, repo_id, token, commit_message)
+        cli_util.upload_to_hf_hub(projects_conf_fname, repo_id, token, commit_message)
+    finally:
+        cli_util.remove_tmp_files()
 
 
 @cli.command("completion")

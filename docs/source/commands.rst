@@ -66,6 +66,13 @@ Project administration
 
    N/A
 
+.. click:: annif.cli:run_upload_projects
+   :prog: annif upload-projects
+
+**REST equivalent**
+
+   N/A
+
 ****************************
 Subject index administration
 ****************************

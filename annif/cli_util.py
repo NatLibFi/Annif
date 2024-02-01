@@ -2,17 +2,22 @@
 from __future__ import annotations
 
 import collections
+import configparser
 import itertools
 import os
+import pathlib
 import sys
+import zipfile
 from typing import TYPE_CHECKING
 
 import click
 import click_log
 from flask import current_app
+from huggingface_hub import HfApi
+from huggingface_hub.utils import HfHubHTTPError
 
 import annif
-from annif.exception import ConfigurationException
+from annif.exception import ConfigurationException, OperationFailedException
 from annif.project import Access
 
 if TYPE_CHECKING:
@@ -228,6 +233,60 @@ def generate_filter_params(filter_batch_max_limit: int) -> list[tuple[int, float
     limits = range(1, filter_batch_max_limit + 1)
     thresholds = [i * 0.05 for i in range(20)]
     return list(itertools.product(limits, thresholds))
+
+
+def is_train_file(fname):
+    train_file_patterns = ("-train", "tmp-")
+    for pat in train_file_patterns:
+        if pat in fname:
+            return True
+    return False
+
+
+TMPF_PREFIX = "tmp-upload-"
+
+
+def archive_dirs(dirs, zip_fname):
+    logger.debug(f"Creating archive {zip_fname}")
+    with zipfile.ZipFile(TMPF_PREFIX + zip_fname, mode="w") as zfile:
+        for pdir in dirs:
+            directory = pathlib.Path(pdir)
+            fpaths = [
+                fpath for fpath in directory.iterdir() if not is_train_file(fpath.name)
+            ]
+            for fpath in fpaths:
+                logger.debug(f"Adding {fpath}")
+                zfile.write(fpath, arcname=fpath)
+
+
+def upload_to_hf_hub(fname, repo_id, token, commit_message):
+    commit_message = (
+        commit_message if commit_message is not None else f"Upload {fname} with Annif"
+    )
+    api = HfApi()
+    try:
+        api.upload_file(
+            path_or_fileobj=TMPF_PREFIX + fname,
+            path_in_repo=fname,
+            repo_id=repo_id,
+            token=token,
+            commit_message=commit_message,
+        )
+    except HfHubHTTPError as err:
+        raise OperationFailedException(str(err))
+
+
+def write_tmp_project_configs_file(projects, projects_conf_fname):
+    config = configparser.ConfigParser()
+    for proj in projects:
+        config[proj.project_id] = proj.config
+    with open(TMPF_PREFIX + projects_conf_fname, "w") as tmp_projects_file:
+        config.write(tmp_projects_file)
+
+
+def remove_tmp_files():
+    for tmp_file_path in pathlib.Path(".").glob(TMPF_PREFIX + "*"):
+        tmp_file_path.unlink()
 
 
 def _get_completion_choices(
