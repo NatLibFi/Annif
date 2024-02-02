@@ -60,7 +60,7 @@ stwfsapy = {version="0.3.*", optional = true}
 
 [tool.poetry.dev-dependencies]
 py = "*"
-pytest = "*"
+pytest = "7.*"
 requests = "*"
 pytest-cov = "*"
 pytest-watch = "*"
