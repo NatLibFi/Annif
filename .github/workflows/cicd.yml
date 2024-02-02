@@ -112,7 +112,7 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     - name: Save cache
       if: steps.prepare.outputs.cache-matched-key != format('poetry-installation-and-cache-{0}-{1}-{2}', matrix.python-version, env.POETRY_VERSION, hashFiles('**/poetry.lock'))
-      uses: actions/cache/save@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
       with:
         path: |
           ~/.cache/pipx/venvs
