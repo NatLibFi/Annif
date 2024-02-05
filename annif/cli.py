@@ -612,23 +612,33 @@ def run_upload_projects(project_ids_pattern, repo_id, token, commit_message):
         if fnmatch(proj.project_id, project_ids_pattern)
     ]
     click.echo(f"Uploading project(s): {', '.join([p.project_id for p in projects])}")
+
+    commit_message = (
+        commit_message
+        if commit_message is not None
+        else f"Upload project(s) {project_ids_pattern} with Annif"
+    )
+
     project_dirs = {p.datadir for p in projects}
     vocab_dirs = {p.vocab.datadir for p in projects}
 
     projects_zip_fname = "projects.zip"
     vocabs_zip_fname = "vocabs.zip"
-    projects_conf_fname = "projects.cfg"
+    configs_fname = "projects.cfg"
 
-    cli_util.archive_dirs(project_dirs, projects_zip_fname)
-    cli_util.archive_dirs(vocab_dirs, vocabs_zip_fname)
-    cli_util.write_tmp_project_configs_file(projects, projects_conf_fname)
+    projects_fobj = cli_util.archive_dirs(project_dirs)
+    vocabs_fobj = cli_util.archive_dirs(vocab_dirs)
+    configs_fobj = cli_util.write_configs(projects)
 
-    try:
-        cli_util.upload_to_hf_hub(projects_zip_fname, repo_id, token, commit_message)
-        cli_util.upload_to_hf_hub(vocabs_zip_fname, repo_id, token, commit_message)
-        cli_util.upload_to_hf_hub(projects_conf_fname, repo_id, token, commit_message)
-    finally:
-        cli_util.remove_tmp_files()
+    cli_util.upload_to_hf_hub(
+        projects_fobj, projects_zip_fname, repo_id, token, commit_message
+    )
+    cli_util.upload_to_hf_hub(
+        vocabs_fobj, vocabs_zip_fname, repo_id, token, commit_message
+    )
+    cli_util.upload_to_hf_hub(
+        configs_fobj, configs_fname, repo_id, token, commit_message
+    )
 
 
 @cli.command("completion")
