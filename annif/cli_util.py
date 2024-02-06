@@ -245,26 +245,22 @@ def _is_train_file(fname):
     return False
 
 
-def archive_dirs(dirs):
+def archive_dir(data_dir):
     fp = tempfile.TemporaryFile()
+    path = pathlib.Path(data_dir)
+    fpaths = [fpath for fpath in path.glob("**/*") if not _is_train_file(fpath.name)]
     with zipfile.ZipFile(fp, mode="w") as zfile:
-        for pdir in dirs:
-            directory = pathlib.Path(pdir)
-            fpaths = [
-                fpath for fpath in directory.iterdir() if not _is_train_file(fpath.name)
-            ]
-            for fpath in fpaths:
-                logger.debug(f"Adding {fpath}")
-                zfile.write(fpath, arcname=fpath)
+        for fpath in fpaths:
+            logger.debug(f"Adding {fpath}")
+            zfile.write(fpath)
     fp.seek(0)
     return fp
 
 
-def write_configs(projects):
+def write_config(project):
     fp = tempfile.TemporaryFile(mode="w+t")
     config = configparser.ConfigParser()
-    for proj in projects:
-        config[proj.project_id] = proj.config
+    config[project.project_id] = project.config
     config.write(fp)  # This needs tempfile in text mode
     fp.seek(0)
     # But for upload fobj needs to be in binary mode

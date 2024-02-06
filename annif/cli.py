@@ -621,24 +621,19 @@ def run_upload_projects(project_ids_pattern, repo_id, token, commit_message):
 
     project_dirs = {p.datadir for p in projects}
     vocab_dirs = {p.vocab.datadir for p in projects}
+    data_dirs = project_dirs.union(vocab_dirs)
 
-    projects_zip_fname = "projects.zip"
-    vocabs_zip_fname = "vocabs.zip"
-    configs_fname = "projects.cfg"
+    for data_dir in data_dirs:
+        zip_path = data_dir.split(os.path.sep, 1)[1] + ".zip"  # TODO Check this
+        fobj = cli_util.archive_dir(data_dir)
+        cli_util.upload_to_hf_hub(fobj, zip_path, repo_id, token, commit_message)
+        fobj.close()
 
-    projects_fobj = cli_util.archive_dirs(project_dirs)
-    vocabs_fobj = cli_util.archive_dirs(vocab_dirs)
-    configs_fobj = cli_util.write_configs(projects)
-
-    cli_util.upload_to_hf_hub(
-        projects_fobj, projects_zip_fname, repo_id, token, commit_message
-    )
-    cli_util.upload_to_hf_hub(
-        vocabs_fobj, vocabs_zip_fname, repo_id, token, commit_message
-    )
-    cli_util.upload_to_hf_hub(
-        configs_fobj, configs_fname, repo_id, token, commit_message
-    )
+    for project in projects:
+        config_path = project.project_id + ".cfg"
+        fobj = cli_util.write_config(project)
+        cli_util.upload_to_hf_hub(fobj, config_path, repo_id, token, commit_message)
+        fobj.close()
 
 
 @cli.command("completion")
