@@ -16,7 +16,7 @@ import click
 import click_log
 from flask import current_app
 from huggingface_hub import HfApi
-from huggingface_hub.utils import HfHubHTTPError
+from huggingface_hub.utils import HfHubHTTPError, HFValidationError
 
 import annif
 from annif.exception import ConfigurationException, OperationFailedException
@@ -277,7 +277,7 @@ def upload_to_hf_hub(fileobj, filename, repo_id, token, commit_message):
             token=token,
             commit_message=commit_message,
         )
-    except HfHubHTTPError as err:
+    except (HfHubHTTPError, HFValidationError) as err:
         raise OperationFailedException(str(err))
 
 
