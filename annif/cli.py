@@ -1,12 +1,12 @@
 """Definitions for command-line (Click) commands for invoking Annif
 operations and printing the results to console."""
 
-
 import collections
 import importlib
 import json
 import os.path
 import re
+import shutil
 import sys
 from fnmatch import fnmatch
 
@@ -634,6 +634,60 @@ def run_upload_projects(project_ids_pattern, repo_id, token, commit_message):
         fobj = cli_util.write_config(project)
         cli_util.upload_to_hf_hub(fobj, config_path, repo_id, token, commit_message)
         fobj.close()
+
+
+@cli.command("download-projects")
+@click.argument("project_ids_pattern")
+@click.argument("repo_id")
+@click.option(
+    "--token",
+    help="""Authentication token, obtained from the Hugging Face Hub.
+    Will default to the stored token.""",
+)
+@click.option(
+    "--revision",
+    help="""
+    An optional Git revision id which can be a branch name, a tag, or a commit
+    hash.
+    """,
+)
+@cli_util.common_options
+def run_download_projects(project_ids_pattern, repo_id, token, revision):
+    """
+    Download selected projects from a Hugging Face Hub repository
+    \f
+    This command downloads the project and vocabulary archives and the
+    configuration files of the projects that match the given
+    `project_ids_pattern` from the specified Hugging Face Hub repository and
+    unzips the archives to `data/` directory and places the configuration files
+    to `projects.d/` directory. An authentication token and revision can
+    be given with options.
+    """
+
+    project_ids = cli_util.get_selected_project_ids_from_hf_hub(
+        project_ids_pattern, repo_id, token, revision
+    )
+    click.echo(f"Downding project(s): {', '.join(project_ids)}")
+
+    if not os.path.isdir("projects.d"):
+        os.mkdir("projects.d")
+    vocab_ids = set()
+    for project_id in project_ids:
+        project_zip_local_cache_path = cli_util.download_from_hf_hub(
+            f"projects/{project_id}.zip", repo_id, token, revision
+        )
+        cli_util.unzip(project_zip_local_cache_path)
+        local_config_cache_path = cli_util.download_from_hf_hub(
+            f"{project_id}.cfg", repo_id, token, revision
+        )
+        vocab_ids.add(cli_util.get_vocab_id(local_config_cache_path))
+        shutil.copy(local_config_cache_path, "projects.d")  # TODO Disallow overwrite
+
+    for vocab_id in vocab_ids:
+        vocab_zip_local_cache_path = cli_util.download_from_hf_hub(
+            f"vocabs/{vocab_id}.zip", repo_id, token, revision
+        )
+        cli_util.unzip(vocab_zip_local_cache_path)
 
 
 @cli.command("completion")

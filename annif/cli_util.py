@@ -1,4 +1,5 @@
 """Utility functions for Annif CLI commands"""
+
 from __future__ import annotations
 
 import collections
@@ -10,12 +11,13 @@ import pathlib
 import sys
 import tempfile
 import zipfile
+from fnmatch import fnmatch
 from typing import TYPE_CHECKING
 
 import click
 import click_log
 from flask import current_app
-from huggingface_hub import HfApi
+from huggingface_hub import HfApi, hf_hub_download, list_repo_files
 from huggingface_hub.utils import HfHubHTTPError, HFValidationError
 
 import annif
@@ -279,6 +281,46 @@ def upload_to_hf_hub(fileobj, filename, repo_id, token, commit_message):
         )
     except (HfHubHTTPError, HFValidationError) as err:
         raise OperationFailedException(str(err))
+
+
+def get_selected_project_ids_from_hf_hub(project_ids_pattern, repo_id, token, revision):
+    all_repo_file_paths = _list_files_in_hf_hub(repo_id, token, revision)
+    return [
+        path.rsplit(".zip")[0].split("projects/")[1]  # TODO Try-catch this
+        for path in all_repo_file_paths
+        if fnmatch(path, f"projects/{project_ids_pattern}.zip")
+    ]
+
+
+def _list_files_in_hf_hub(repo_id, token, revision):
+    return [
+        repofile
+        for repofile in list_repo_files(repo_id=repo_id, token=token, revision=revision)
+    ]
+
+
+def download_from_hf_hub(filename, repo_id, token, revision):
+    try:
+        return hf_hub_download(
+            repo_id=repo_id,
+            filename=filename,
+            token=token,
+            revision=revision,
+        )
+    except (HfHubHTTPError, HFValidationError) as err:
+        raise OperationFailedException(str(err))
+
+
+def unzip(source_path):
+    with zipfile.ZipFile(source_path, "r") as zfile:
+        zfile.extractall()  # TODO Disallow overwrite
+
+
+def get_vocab_id(config_path):
+    config = configparser.ConfigParser()
+    config.read(config_path)
+    section = config.sections()[0]
+    return config[section]["vocab"]
 
 
 def _get_completion_choices(
