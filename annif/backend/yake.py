@@ -51,7 +51,7 @@ class YakeBackend(backend.AnnifBackend):
 
     @property
     def label_types(self) -> list[URIRef]:
-        if type(self.params["label_types"]) == str:  # Label types set by user
+        if isinstance(self.params["label_types"], str):  # Label types set by user
             label_types = [lt.strip() for lt in self.params["label_types"].split(",")]
             self._validate_label_types(label_types)
         else:
