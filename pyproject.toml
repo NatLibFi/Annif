@@ -74,7 +74,7 @@ schemathesis = "3.*.*"
 [tool.poetry.extras]
 fasttext = ["fasttext-wheel"]
 voikko = ["voikko"]
-nn = ["tensorflow-cpu", "tensorflow-io-gcs-filesystem", "lmdb"]
+nn = ["tensorflow-cpu", "lmdb"]
 omikuji = ["omikuji"]
 yake = ["yake"]
 spacy = ["spacy"]
