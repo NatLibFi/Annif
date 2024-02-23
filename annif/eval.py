@@ -63,10 +63,10 @@ def ndcg_score(y_true: csr_array, y_pred: csr_array, limit: int | None = None) -
 
     scores = np.ones(y_true.shape[0], dtype=np.float32)
     for i in range(y_true.shape[0]):
-        true = y_true.getrow(i)
+        true = y_true[[i]]
         idcg = dcg_score(true, true, limit)
         if idcg > 0:
-            pred = y_pred.getrow(i)
+            pred = y_pred[[i]]
             dcg = dcg_score(true, pred, limit)
             scores[i] = dcg / idcg
 
