@@ -28,7 +28,7 @@ classifiers=[
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.12"
+python = ">=3.9,<3.12"
 
 connexion = {version = "2.14.2", extras = ["swagger-ui"]}
 flask = "2.2.*"
@@ -52,7 +52,6 @@ jsonschema = "4.17.*"
 fasttext-wheel = {version = "0.9.2", optional = true}
 voikko = {version = "0.5.*", optional = true}
 tensorflow-cpu = {version = "2.13.*", optional = true}
-tensorflow-io-gcs-filesystem = {version = "<=0.34.*", optional = true, python = "3.8"}
 lmdb = {version = "1.4.1", optional = true}
 omikuji = {version = "0.5.*", optional = true}
 yake = {version = "0.4.5", optional = true}
