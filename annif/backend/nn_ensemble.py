@@ -1,5 +1,6 @@
 """Neural network based ensemble backend that combines results from multiple
 projects."""
+
 from __future__ import annotations
 
 import os.path

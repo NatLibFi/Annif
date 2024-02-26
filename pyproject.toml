@@ -18,19 +18,19 @@ keywords = [
     "text-classification",
     "rest-api",
     "code4lib",
-    "subject-indexing"
+    "subject-indexing",
 ]
 
-classifiers=[
+classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: Apache Software License",
-    "Operating System :: OS Independent"
+    "Operating System :: OS Independent",
 ]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
 
-connexion = {version = "2.14.2", extras = ["swagger-ui"]}
+connexion = { version = "2.14.2", extras = ["swagger-ui"] }
 flask = "2.2.*"
 flask-cors = "4.0.*"
 click = "8.1.*"
@@ -49,14 +49,14 @@ tomli = { version = "2.0.*", python = "<3.11" }
 simplemma = "0.9.*"
 jsonschema = "4.21.*"
 
-fasttext-wheel = {version = "0.9.2", optional = true}
-voikko = {version = "0.5.*", optional = true}
-tensorflow-cpu = {version = "2.15.*", optional = true}
-lmdb = {version = "1.4.1", optional = true}
-omikuji = {version = "0.5.*", optional = true}
-yake = {version = "0.4.8", optional = true}
-spacy = {version = "3.7.*", optional = true}
-stwfsapy = {version="0.3.*", optional = true}
+fasttext-wheel = { version = "0.9.2", optional = true }
+voikko = { version = "0.5.*", optional = true }
+tensorflow-cpu = { version = "2.15.*", optional = true }
+lmdb = { version = "1.4.1", optional = true }
+omikuji = { version = "0.5.*", optional = true }
+yake = { version = "0.4.8", optional = true }
+spacy = { version = "3.7.*", optional = true }
+stwfsapy = { version = "0.3.*", optional = true }
 
 [tool.poetry.dev-dependencies]
 py = "*"
@@ -93,7 +93,5 @@ line_length = "88"
 skip_gitignore = true
 
 [tool.pytest.ini_options]
-markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-]
+markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
 addopts = "-m 'not slow'"

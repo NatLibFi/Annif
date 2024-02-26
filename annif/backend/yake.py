@@ -1,4 +1,5 @@
 """Annif backend using Yake keyword extraction"""
+
 # For license remarks of this backend see README.md:
 # https://github.com/NatLibFi/Annif#license.
 from __future__ import annotations

@@ -1,4 +1,5 @@
 """Common functionality for analyzers."""
+
 from __future__ import annotations
 
 import abc

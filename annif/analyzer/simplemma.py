@@ -1,4 +1,5 @@
 """Simplemma analyzer for Annif, based on simplemma lemmatizer."""
+
 from __future__ import annotations
 
 import simplemma

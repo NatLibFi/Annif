@@ -1,4 +1,5 @@
 """Evaluation metrics for Annif"""
+
 from __future__ import annotations
 
 import warnings
@@ -86,9 +87,9 @@ class EvaluationBatch:
 
     def evaluate_many(
         self,
-        suggestion_batch: list[list[SubjectSuggestion]]
-        | SuggestionBatch
-        | list[Iterator],
+        suggestion_batch: (
+            list[list[SubjectSuggestion]] | SuggestionBatch | list[Iterator]
+        ),
         gold_subject_batch: Sequence[SubjectSet],
     ) -> None:
         if not isinstance(suggestion_batch, SuggestionBatch):

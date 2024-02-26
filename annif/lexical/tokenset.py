@@ -1,4 +1,5 @@
 """Index for fast matching of token sets."""
+
 from __future__ import annotations
 
 import collections
