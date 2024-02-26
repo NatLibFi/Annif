@@ -67,7 +67,7 @@ pytest-watch = "*"
 pytest-flask = "*"
 flake8 = "*"
 bumpversion = "*"
-black = "23.*"
+black = "24.*"
 isort = "*"
 schemathesis = "3.*.*"
 
