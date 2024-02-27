@@ -287,7 +287,7 @@ new Vue({
     },
     loadVersion: function() {
       var this_ = this;
-      axios.get('/v1')
+      axios.get('/v1/')
         .then(res => {
           this_.annif_version = res.data.version;
         })
