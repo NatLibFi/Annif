@@ -17,8 +17,6 @@ from typing import TYPE_CHECKING
 import click
 import click_log
 from flask import current_app
-from huggingface_hub import HfApi, hf_hub_download, list_repo_files
-from huggingface_hub.utils import HfHubHTTPError, HFValidationError
 
 import annif
 from annif.exception import ConfigurationException, OperationFailedException
@@ -270,6 +268,9 @@ def write_config(project):
 
 
 def upload_to_hf_hub(fileobj, filename, repo_id, token, commit_message):
+    from huggingface_hub import HfApi
+    from huggingface_hub.utils import HfHubHTTPError, HFValidationError
+
     api = HfApi()
     try:
         api.upload_file(
@@ -293,6 +294,8 @@ def get_selected_project_ids_from_hf_hub(project_ids_pattern, repo_id, token, re
 
 
 def _list_files_in_hf_hub(repo_id, token, revision):
+    from huggingface_hub import list_repo_files
+
     return [
         repofile
         for repofile in list_repo_files(repo_id=repo_id, token=token, revision=revision)
@@ -300,6 +303,9 @@ def _list_files_in_hf_hub(repo_id, token, revision):
 
 
 def download_from_hf_hub(filename, repo_id, token, revision):
+    from huggingface_hub import hf_hub_download
+    from huggingface_hub.utils import HfHubHTTPError, HFValidationError
+
     try:
         return hf_hub_download(
             repo_id=repo_id,
