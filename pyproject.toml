@@ -48,7 +48,7 @@ python-dateutil = "2.8.*"
 tomli = { version = "2.0.*", python = "<3.11" }
 simplemma = "0.9.*"
 jsonschema = "4.17.*"
-huggingface-hub = "0.20.*"
+huggingface-hub = "0.21.*"
 
 fasttext-wheel = {version = "0.9.2", optional = true}
 voikko = {version = "0.5.*", optional = true}
