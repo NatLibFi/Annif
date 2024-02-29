@@ -584,7 +584,7 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric, results_fi
     click.echo("---")
 
 
-@cli.command("upload-projects")
+@cli.command("upload")
 @click.argument("project_ids_pattern")
 @click.argument("repo_id")
 @click.option(
@@ -597,9 +597,9 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric, results_fi
     help="""The summary / title / first line of the generated commit.""",
 )
 @cli_util.common_options
-def run_upload_projects(project_ids_pattern, repo_id, token, commit_message):
+def run_upload(project_ids_pattern, repo_id, token, commit_message):
     """
-    Upload selected projects to a Hugging Face Hub repository
+    Upload selected projects and their vocabularies to a Hugging Face Hub repository
     \f
     This command zips the project directories and vocabularies of the projects
     that match the given `project_ids_pattern`, and uploads the archives along
@@ -636,7 +636,7 @@ def run_upload_projects(project_ids_pattern, repo_id, token, commit_message):
         fobj.close()
 
 
-@cli.command("download-projects")
+@cli.command("download")
 @click.argument("project_ids_pattern")
 @click.argument("repo_id")
 @click.option(
@@ -652,9 +652,9 @@ def run_upload_projects(project_ids_pattern, repo_id, token, commit_message):
     """,
 )
 @cli_util.common_options
-def run_download_projects(project_ids_pattern, repo_id, token, revision):
+def run_download(project_ids_pattern, repo_id, token, revision):
     """
-    Download selected projects from a Hugging Face Hub repository
+    Download selected projects and their vocabularies from a Hugging Face Hub repository
     \f
     This command downloads the project and vocabulary archives and the
     configuration files of the projects that match the given
@@ -667,7 +667,7 @@ def run_download_projects(project_ids_pattern, repo_id, token, revision):
     project_ids = cli_util.get_selected_project_ids_from_hf_hub(
         project_ids_pattern, repo_id, token, revision
     )
-    click.echo(f"Downding project(s): {', '.join(project_ids)}")
+    click.echo(f"Downloading project(s): {', '.join(project_ids)}")
 
     if not os.path.isdir("projects.d"):
         os.mkdir("projects.d")
