@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import binascii
 import collections
 import configparser
 import io
 import itertools
 import os
 import pathlib
+import shutil
 import sys
 import tempfile
 import zipfile
@@ -317,9 +319,51 @@ def download_from_hf_hub(filename, repo_id, token, revision):
         raise OperationFailedException(str(err))
 
 
-def unzip(source_path):
-    with zipfile.ZipFile(source_path, "r") as zfile:
-        zfile.extractall()  # TODO Disallow overwrite
+def unzip(src_path, force):
+    with zipfile.ZipFile(src_path, "r") as zfile:
+        for member in zfile.infolist():
+            if os.path.exists(member.filename) and not force:
+                if _is_existing_identical(member):
+                    logger.debug(
+                        f"Skipping unzip of {member.filename}; already in place"
+                    )
+                else:
+                    click.echo(
+                        f"Not overwriting {member.filename} (use --force to override)"
+                    )
+            else:
+                logger.debug(f"Unzipping {member.filename}")
+                zfile.extract(member)
+
+
+def move_project_config(src_path, force):
+    dst_path = os.path.join("projects.d", os.path.basename(src_path))
+    if os.path.exists(dst_path) and not force:
+        if _compute_crc32(dst_path) == _compute_crc32(src_path):
+            logger.debug(
+                f"Skipping move of {os.path.basename(src_path)}; already in place"
+            )
+        else:
+            click.echo(f"Not overwriting {dst_path} (use --force to override)")
+    else:
+        shutil.copy(src_path, dst_path)
+
+
+def _is_existing_identical(member):
+    file_crc = _compute_crc32(member.filename)
+    return file_crc == member.CRC
+
+
+def _compute_crc32(path):
+    if os.path.isdir(path):
+        return 0
+
+    size = 1024 * 1024 * 10  # 10 MiB chunks
+    with open(path, "rb") as fp:
+        crcval = 0
+        while chunk := fp.read(size):
+            crcval = binascii.crc32(chunk, crcval)
+    return crcval
 
 
 def get_vocab_id(config_path):
