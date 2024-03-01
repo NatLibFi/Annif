@@ -26,7 +26,6 @@ from annif.project import Access
 
 if TYPE_CHECKING:
     from datetime import datetime
-    from io import TextIOWrapper
 
     from click.core import Argument, Context, Option
 
@@ -193,7 +192,7 @@ def show_hits(
     hits: SuggestionResult,
     project: AnnifProject,
     lang: str,
-    file: TextIOWrapper | None = None,
+    file: io.TextIOWrapper | None = None,
 ) -> None:
     """
     Print subject suggestions to the console or a file. The suggestions are displayed as
