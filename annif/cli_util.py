@@ -5,6 +5,7 @@ from __future__ import annotations
 import binascii
 import collections
 import configparser
+import importlib
 import io
 import itertools
 import os
@@ -252,6 +253,10 @@ def archive_dir(data_dir):
     path = pathlib.Path(data_dir)
     fpaths = [fpath for fpath in path.glob("**/*") if not _is_train_file(fpath.name)]
     with zipfile.ZipFile(fp, mode="w") as zfile:
+        zfile.comment = bytes(
+            f"Archived by Annif {importlib.metadata.version('annif')}",
+            encoding="utf-8",
+        )
         for fpath in fpaths:
             logger.debug(f"Adding {fpath}")
             zfile.write(fpath)
@@ -321,6 +326,10 @@ def download_from_hf_hub(filename, repo_id, token, revision):
 
 def unzip(src_path, force):
     with zipfile.ZipFile(src_path, "r") as zfile:
+        logger.debug(
+            f"Extracting archive {src_path}; archive comment: "
+            f"\"{str(zfile.comment, encoding='utf-8')}\""
+        )
         for member in zfile.infolist():
             if os.path.exists(member.filename) and not force:
                 if _is_existing_identical(member):
