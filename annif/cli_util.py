@@ -302,11 +302,17 @@ def get_selected_project_ids_from_hf_hub(project_ids_pattern, repo_id, token, re
 
 def _list_files_in_hf_hub(repo_id, token, revision):
     from huggingface_hub import list_repo_files
+    from huggingface_hub.utils import HfHubHTTPError, HFValidationError
 
-    return [
-        repofile
-        for repofile in list_repo_files(repo_id=repo_id, token=token, revision=revision)
-    ]
+    try:
+        return [
+            repofile
+            for repofile in list_repo_files(
+                repo_id=repo_id, token=token, revision=revision
+            )
+        ]
+    except (HfHubHTTPError, HFValidationError) as err:
+        raise OperationFailedException(str(err))
 
 
 def download_from_hf_hub(filename, repo_id, token, revision):
