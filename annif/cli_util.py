@@ -12,6 +12,7 @@ import pathlib
 import shutil
 import sys
 import tempfile
+import time
 import zipfile
 from fnmatch import fnmatch
 from typing import TYPE_CHECKING
@@ -333,6 +334,8 @@ def unzip(src_path, force):
             else:
                 logger.debug(f"Unzipping {member.filename}")
                 zfile.extract(member)
+                date_time = time.mktime(member.date_time + (0, 0, -1))
+                os.utime(member.filename, (date_time, date_time))
 
 
 def move_project_config(src_path, force):
