@@ -259,7 +259,8 @@ def archive_dir(data_dir):
         )
         for fpath in fpaths:
             logger.debug(f"Adding {fpath}")
-            zfile.write(fpath)
+            arcname = os.path.join(*fpath.parts[1:])
+            zfile.write(fpath, arcname=arcname)
     fp.seek(0)
     return fp
 
@@ -331,44 +332,43 @@ def download_from_hf_hub(filename, repo_id, token, revision):
 
 
 def unzip(src_path, force):
+    datadir = current_app.config["DATADIR"]
     with zipfile.ZipFile(src_path, "r") as zfile:
         logger.debug(
             f"Extracting archive {src_path}; archive comment: "
             f"\"{str(zfile.comment, encoding='utf-8')}\""
         )
         for member in zfile.infolist():
-            if os.path.exists(member.filename) and not force:
-                if _is_existing_identical(member):
-                    logger.debug(
-                        f"Skipping unzip of {member.filename}; already in place"
-                    )
+            dest_path = os.path.join(datadir, member.filename)
+            if os.path.exists(dest_path) and not force:
+                if _are_identical(member, dest_path):
+                    logger.debug(f"Skipping unzip to {dest_path}; already in place")
                 else:
-                    click.echo(
-                        f"Not overwriting {member.filename} (use --force to override)"
-                    )
+                    click.echo(f"Not overwriting {dest_path} (use --force to override)")
             else:
-                logger.debug(f"Unzipping {member.filename}")
-                zfile.extract(member)
+                logger.debug(f"Unzipping to {dest_path}")
+                zfile.extract(member, path=datadir)
                 date_time = time.mktime(member.date_time + (0, 0, -1))
-                os.utime(member.filename, (date_time, date_time))
+                os.utime(dest_path, (date_time, date_time))
 
 
 def move_project_config(src_path, force):
-    dst_path = os.path.join("projects.d", os.path.basename(src_path))
-    if os.path.exists(dst_path) and not force:
-        if _compute_crc32(dst_path) == _compute_crc32(src_path):
+    dest_path = os.path.join("projects.d", os.path.basename(src_path))
+    if os.path.exists(dest_path) and not force:
+        if _compute_crc32(dest_path) == _compute_crc32(src_path):
             logger.debug(
                 f"Skipping move of {os.path.basename(src_path)}; already in place"
             )
         else:
-            click.echo(f"Not overwriting {dst_path} (use --force to override)")
+            click.echo(f"Not overwriting {dest_path} (use --force to override)")
     else:
-        shutil.copy(src_path, dst_path)
+        logger.debug(f"Moving to {dest_path}")
+        shutil.copy(src_path, dest_path)
 
 
-def _is_existing_identical(member):
-    file_crc = _compute_crc32(member.filename)
-    return file_crc == member.CRC
+def _are_identical(member, dest_path):
+    path_crc = _compute_crc32(dest_path)
+    return path_crc == member.CRC
 
 
 def _compute_crc32(path):
