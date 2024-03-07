@@ -233,3 +233,59 @@ def test_rest_learn_not_supported(app):
     with app.app_context():
         result = annif.rest.learn("tfidf-fi", [])
         assert result.status_code == 503
+
+
+def test_rest_reconcile_metadata(app):
+    with app.app_context():
+        results = annif.rest.reconcile_metadata("dummy-fi")
+        assert results["name"] == "Annif Reconciliation Service for Dummy Finnish"
+
+
+def test_rest_reocncile_metadata_nonexistent(app):
+    with app.app_context():
+        result = annif.rest.reconcile_metadata("nonexistent")
+        assert result.status_code == 404
+
+
+def test_rest_reconcile_metadata_queries(app):
+    with app.app_context():
+        results = annif.rest.reconcile_metadata(
+            "dummy-fi", queries='{"q0": {"query": "example text"}}'
+        )
+        assert "result" in results["q0"]
+
+
+def test_rest_reconcile_metadata_queries_nonexistent(app):
+    with app.app_context():
+        result = annif.rest.reconcile_metadata(
+            "nonexistent", queries='{"q0": {"query": "example text"}}'
+        )
+        assert result.status_code == 404
+
+
+def test_rest_reconcile(app):
+    with app.app_context():
+        results = annif.rest.reconcile(
+            "dummy-fi", {"queries": {"q0": {"query": "example text"}}}
+        )
+        assert "result" in results["q0"]
+
+
+def test_rest_reconcile_nonexistent(app):
+    with app.app_context():
+        result = annif.rest.reconcile(
+            "nonexistent", {"queries": {"q0": {"query": "example text"}}}
+        )
+        assert result.status_code == 404
+
+
+def test_rest_reconcile_suggest(app):
+    with app.app_context():
+        results = annif.rest.reconcile_suggest("dummy-fi", prefix="example text")
+        assert "result" in results
+
+
+def test_rest_reconcile_nonexistent(app):
+    with app.app_context():
+        result = annif.rest.reconcile_suggest("nonexistent", prefix="example text")
+        assert result.status_code == 404

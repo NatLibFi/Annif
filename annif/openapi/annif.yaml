@@ -180,6 +180,188 @@ paths:
         "503":
           $ref: '#/components/responses/ServiceUnavailable'
       x-codegen-request-body-name: documents
+  /projects/{project_id}/reconcile:
+    get:
+      tags:
+      - Reconciliation
+      summary: get reconciliation service manifest or reconcile against a project
+      operationId: annif.rest.reconcile_metadata
+      parameters:
+      - $ref: '#/components/parameters/project_id'
+      - in: query
+        description: A call to the reconciliation service API
+        name: queries
+        required: false
+        schema:
+          type: string
+          additionalProperties:
+            type: object
+            required:
+              - query
+            properties:
+              query:
+                type: string
+                description: Query string to search for
+              limit:
+                type: integer
+                description: Maximum number of results to return
+        example:
+          '{
+            "q0": {
+              "query": "example query",
+              "limit": 10
+            },
+            "q1": {
+              "query": "another example",
+              "limit": 15
+            }
+          }'
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ReconcileServiceManifest'
+                  - $ref: '#/components/schemas/ReconciliationResult'
+              examples:
+                ReconcileServiceManifest:
+                  summary: Reconciliation service manifest
+                  value:
+                    {
+                      "defaultTypes": [
+                        {
+                          "id": "default-type",
+                          "name": "Default type"
+                        }
+                      ],
+                      "identifierSpace": "",
+                      "name": "Annif Reconciliation Service for Dummy Finnish",
+                      "schemaSpace": "http://www.w3.org/2004/02/skos/core#Concept",
+                      "versions": [
+                        "0.2"
+                      ],
+                      "suggest": {
+                        "entity": {
+                          "service_path": "/suggest/entity",
+                          "service_url": "/v1/projects/dummy-fi/reconcile"
+                        }
+                      },
+                      "view": {
+                        "url": "{{id}}"
+                      }
+                    }
+                ReconciliationResult:
+                  summary: Reconciliation result
+                  value:
+                    {
+                      "q0": {
+                        "result": [
+                          {
+                            "id": "example-id",
+                            "name": "example name",
+                            "score": 0.5,
+                            "match": true
+                          }
+                        ]
+                      },
+                      "q1": {
+                        "result": [
+                          {
+                            "id": "another-id",
+                            "name": "another name",
+                            "score": 0.5,
+                            "match": false
+                          }
+                        ]
+                      }
+                    }
+        "404":
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+      - Reconciliation
+      summary: reconcile against a project
+      operationId: annif.rest.reconcile
+      parameters:
+      - $ref: '#components/parameters/project_id'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            encoding:
+              queries:
+                contentType: application/json
+            schema:
+              type: object
+              required:
+              - queries
+              properties:
+                queries:
+                  type: object
+                  description: A call to the reconciliation service API
+                  additionalProperties:
+                    type: object
+                    required:
+                    - query
+                    properties:
+                      query:
+                        type: string
+                        description: Query string to search for
+                      limit:
+                        type: integer
+                        description: Maximum number of results to return
+                  example:
+                    {
+                      "q0": {
+                        "query": "example query",
+                        "limit": 10
+                      },
+                      "q1": {
+                        "query": "another example",
+                        "limit": 15
+                      }
+                    }
+        required: true
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconciliationResult'
+        "404":
+          $ref: '#/components/responses/NotFound'
+  /projects/{project_id}/reconcile/suggest/entity:
+    get:
+      tags:
+      - Reconciliation
+      summary: Entity auto-complete endpoint for the reconciliation service
+      operationId: annif.rest.reconcile_suggest
+      parameters:
+      - $ref: '#components/parameters/project_id'
+      - in: query
+        description: string to get suggestions for
+        name: prefix
+        required: true
+        schema:
+          type: string
+          example: example query
+      - in: query
+        description: number of suggestions to skip
+        name: cursor
+        required: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconcileSuggestResult'
+        "404":
+          $ref: '#/components/responses/NotFound'
 components:
   schemas:
     ApiInfo:
@@ -314,6 +496,124 @@ components:
                 type: string
                 example: Vulpes vulpes
       description: A document with attached, known good subjects
+    ReconcileServiceManifest:
+      required:
+      - name
+      - defaultTypes
+      - view
+      - identifierSpace
+      - schemaSpace
+      - versions
+      type: object
+      properties:
+        name:
+          type: string
+          example: Annif Reconciliation Service
+        identifierSpace:
+          type: string
+          example: ""
+        schemaSpace:
+          type: string
+          example: "http://www.w3.org/2004/02/skos/core#Concept"
+        defaultTypes:
+          type: array
+          items:
+            type: object
+            required:
+            - id
+            - name
+            properties:
+              id:
+                type: string
+                example: type-id
+              name:
+                type: string
+                example: type name
+        view:
+          type: object
+          required:
+          - url
+          properties:
+            url:
+              type: string
+              example: "{{id}}"
+        versions:
+          type: array
+          items:
+            type: string
+            example: 0.2
+      description: Reconciliation service information
+    ReconciliationResult:
+      type: object
+      additionalProperties:
+        type: object
+        required:
+        - result
+        properties:
+          result:
+            type: array
+            items:
+              type: object
+              required:
+              - id
+              - name
+              - score
+              - match
+              properties:
+                id:
+                  type: string
+                  example: example-id
+                name:
+                  type: string
+                  example: example name
+                score:
+                  type: number
+                  example: 0.5
+                match:
+                  type: boolean
+                  example: true
+      example:
+        {
+          "q0": {
+            "result": [
+              {
+                "id": "example-id",
+                "name": "example name",
+                "score": 0.5,
+                "match": true
+              }
+            ]
+          },
+          "q1": {
+            "result": [
+              {
+                "id": "another-id",
+                "name": "another name",
+                "score": 0.5,
+                "match": false
+              }
+            ]
+          }
+        }
+    ReconcileSuggestResult:
+      type: object
+      required:
+        - result
+      properties:
+        result:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - id
+            properties:
+              name:
+                type: string
+                example: example name
+              id:
+                type: string
+                example: example-id
     Problem:
       type: object
       properties:

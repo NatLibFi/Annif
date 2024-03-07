@@ -3,6 +3,7 @@ methods defined in the OpenAPI specification."""
 from __future__ import annotations
 
 import importlib
+import json
 from typing import TYPE_CHECKING, Any
 
 import connexion
@@ -214,3 +215,96 @@ def learn(
         return server_error(err)
 
     return None, 204
+
+
+def _reconcile(project_id: str, query: dict[str, Any]) -> list[dict[str, Any]]:
+    document = [{"text": query["query"]}]
+    parameters = {"limit": query["limit"]} if "limit" in query else {}
+    result = _suggest(project_id, document, parameters)
+
+    if _is_error(result):
+        return result
+
+    results = [
+        {
+            "id": res["uri"],
+            "name": res["label"],
+            "score": res["score"],
+            "match": res["label"] == query["query"],
+        }
+        for res in result[0]["results"]
+    ]
+    return results
+
+
+def reconcile_metadata(
+    project_id: str, **query_parameters
+) -> ConnexionResponse | dict[str, Any]:
+    """return service manifest or reconcile against a project and return a dict
+    with results formatted according to OpenAPI spec"""
+
+    try:
+        project = annif.registry.get_project(project_id, min_access=Access.hidden)
+    except ValueError:
+        return project_not_found_error(project_id)
+
+    if not query_parameters:
+        return {
+            "versions": ["0.2"],
+            "name": "Annif Reconciliation Service for " + project.name,
+            "identifierSpace": "",
+            "schemaSpace": "http://www.w3.org/2004/02/skos/core#Concept",
+            "view": {"url": "{{id}}"},
+            "defaultTypes": [{"id": "default-type", "name": "Default type"}],
+            "suggest": {
+                "entity": {
+                    "service_path": "/suggest/entity",
+                    "service_url": connexion.request.base_url
+                }
+            },
+        }
+    else:
+        queries = json.loads(query_parameters["queries"])
+        results = {}
+        for key, query in queries.items():
+            data = _reconcile(project_id, query)
+            if _is_error(data):
+                return data
+            results[key] = {"result": data}
+
+        return results
+
+
+def reconcile(
+    project_id: str, body: dict[str, Any]
+) -> ConnexionResponse | dict[str, Any]:
+    """reconcile against a project and return a dict with results
+    formatted according to OpenAPI spec"""
+
+    queries = body["queries"]
+    results = {}
+    for key, query in queries.items():
+        data = _reconcile(project_id, query)
+        if _is_error(data):
+            return data
+        results[key] = {"result": data}
+
+    return results
+
+
+def reconcile_suggest(
+    project_id: str, **query_parameters
+) -> ConnexionResponse | dict[str, Any]:
+    """suggest results for the given search term and return a dict with results
+    formatted according to OpenAPI spec"""
+
+    prefix = query_parameters.get("prefix")
+    cursor = query_parameters.get("cursor") if query_parameters.get("cursor") else 0
+    limit = cursor + 10
+
+    result = _suggest(project_id, [{"text": prefix}], {"limit": limit})
+    if _is_error(result):
+        return result
+
+    results = [{"id": res["uri"], "name": res["label"]} for res in result[0]["results"]]
+    return {"result": results[cursor:]}
