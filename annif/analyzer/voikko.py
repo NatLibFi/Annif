@@ -5,6 +5,8 @@ import functools
 
 import voikko.libvoikko
 
+from annif.exception import OperationFailedException
+
 from . import analyzer
 
 
@@ -27,7 +29,13 @@ class VoikkoAnalyzer(analyzer.Analyzer):
     def _normalize_word(self, word: str) -> str:
         if self.voikko is None:
             self.voikko = voikko.libvoikko.Voikko(self.param)
-        result = self.voikko.analyze(word)
+        try:
+            result = self.voikko.analyze(word)
+        except ValueError as err:
+            raise OperationFailedException(
+                f"Voikko error in analysis of word '{word}'"
+            ) from err
+
         if len(result) > 0 and "BASEFORM" in result[0]:
             return result[0]["BASEFORM"]
         return word
