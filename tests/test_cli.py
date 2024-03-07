@@ -2,18 +2,22 @@
 
 import contextlib
 import importlib
+import io
 import json
 import os.path
 import random
 import re
 import shutil
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
+import huggingface_hub
 from click.shell_completion import ShellComplete
 from click.testing import CliRunner
+from huggingface_hub.utils import HFValidationError
 
 import annif.cli
+import annif.cli_util
 import annif.parallel
 
 runner = CliRunner(env={"ANNIF_CONFIG": "annif.default_config.TestingConfig"})
@@ -1070,6 +1074,303 @@ def test_routes_with_connexion_app():
     result = os.popen("python annif/cli.py routes").read()
     assert re.search(r"static\s+GET\s+\/static\/<path:filename>", result)
     assert re.search(r"app.home\s+GET\s+\/", result)
+
+
+@mock.patch("huggingface_hub.HfApi.upload_file")
+def test_upload(upload_file):
+    result = runner.invoke(annif.cli.cli, ["upload", "dummy-fi", "dummy-repo"])
+    assert not result.exception
+    assert huggingface_hub.HfApi.upload_file.call_count == 3
+    assert (
+        mock.call(
+            path_or_fileobj=mock.ANY,  # io.BufferedRandom object
+            path_in_repo="data/vocabs/dummy.zip",
+            repo_id="dummy-repo",
+            token=None,
+            commit_message="Upload project(s) dummy-fi with Annif",
+        )
+        in huggingface_hub.HfApi.upload_file.call_args_list
+    )
+    assert (
+        mock.call(
+            path_or_fileobj=mock.ANY,  # io.BufferedRandom object
+            path_in_repo="data/projects/dummy-fi.zip",
+            repo_id="dummy-repo",
+            token=None,
+            commit_message="Upload project(s) dummy-fi with Annif",
+        )
+        in huggingface_hub.HfApi.upload_file.call_args_list
+    )
+    assert (
+        mock.call(
+            path_or_fileobj=mock.ANY,  # io.BytesIO object
+            path_in_repo="dummy-fi.cfg",
+            repo_id="dummy-repo",
+            token=None,
+            commit_message="Upload project(s) dummy-fi with Annif",
+        )
+        in huggingface_hub.HfApi.upload_file.call_args_list
+    )
+
+
+@mock.patch("huggingface_hub.HfApi.upload_file")
+def test_upload_many(upload_file):
+    result = runner.invoke(annif.cli.cli, ["upload", "dummy-*", "dummy-repo"])
+    assert not result.exception
+    assert huggingface_hub.HfApi.upload_file.call_count == 11
+
+
+def test_upload_nonexistent_repo():
+    failed_result = runner.invoke(annif.cli.cli, ["upload", "dummy-fi", "nonexistent"])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "Repository Not Found for url:" in failed_result.output
+
+
+def test_write_config(app_project):
+    result = annif.cli_util.write_config(app_project)
+    assert isinstance(result, io.BytesIO)
+    string_result = result.read().decode("UTF-8")
+    assert "[dummy-en]" in string_result
+
+
+def hf_hub_download_mock_side_effect(filename, repo_id, token, revision):
+    return "tests/huggingface-cache/" + filename  # Mocks the downloaded file paths
+
+
+@mock.patch(
+    "huggingface_hub.list_repo_files",
+    return_value=[  # Mocks the filenames in repo
+        "projects/dummy-fi.zip",
+        "vocabs/dummy.zip",
+        "dummy-fi.cfg",
+        "projects/dummy-en.zip",
+        "vocabs/dummy.zip",
+        "dummy-.cfg",
+    ],
+)
+@mock.patch(
+    "huggingface_hub.hf_hub_download",
+    side_effect=hf_hub_download_mock_side_effect,
+)
+@mock.patch("shutil.copy")  # Avoid overwrite files in projects.d/
+def test_download_dummy_fi(copy, hf_hub_download, list_repo_files, testdatadir):
+    result = runner.invoke(
+        annif.cli.cli,
+        [
+            "download",
+            "dummy-fi",
+            "mock-repo",
+        ],
+    )
+    assert not result.exception
+    assert list_repo_files.called
+    assert hf_hub_download.called
+    assert hf_hub_download.call_args_list == [
+        mock.call(
+            repo_id="mock-repo",
+            filename="projects/dummy-fi.zip",
+            token=None,
+            revision=None,
+        ),
+        mock.call(
+            repo_id="mock-repo",
+            filename="dummy-fi.cfg",
+            token=None,
+            revision=None,
+        ),
+        mock.call(
+            repo_id="mock-repo",
+            filename="vocabs/dummy.zip",
+            token=None,
+            revision=None,
+        ),
+    ]
+    assert shutil.copy.call_args_list == [
+        mock.call("tests/huggingface-cache/dummy-fi.cfg", "projects.d/dummy-fi.cfg")
+    ]
+    dirpath = os.path.join(str(testdatadir), "projects", "dummy-fi")
+    fpath = os.path.join(str(dirpath), "file.txt")
+    assert os.path.exists(fpath)
+
+
+@mock.patch(
+    "huggingface_hub.list_repo_files",
+    return_value=[  # Mock filenames in repo
+        "projects/dummy-fi.zip",
+        "vocabs/dummy.zip",
+        "dummy-fi.cfg",
+        "projects/dummy-en.zip",
+        "vocabs/dummy.zip",
+        "dummy-.cfg",
+    ],
+)
+@mock.patch(
+    "huggingface_hub.hf_hub_download",
+    side_effect=hf_hub_download_mock_side_effect,
+)
+@mock.patch("shutil.copy")  # Avoid overwrite files in projects.d/
+def test_download_dummy_fi_and_en(copy, hf_hub_download, list_repo_files, testdatadir):
+    result = runner.invoke(
+        annif.cli.cli,
+        [
+            "download",
+            "dummy-??",
+            "mock-repo",
+        ],
+    )
+    assert not result.exception
+    assert list_repo_files.called
+    assert hf_hub_download.called
+    assert hf_hub_download.call_args_list == [
+        mock.call(
+            repo_id="mock-repo",
+            filename="projects/dummy-fi.zip",
+            token=None,
+            revision=None,
+        ),
+        mock.call(
+            repo_id="mock-repo",
+            filename="dummy-fi.cfg",
+            token=None,
+            revision=None,
+        ),
+        mock.call(
+            repo_id="mock-repo",
+            filename="projects/dummy-en.zip",
+            token=None,
+            revision=None,
+        ),
+        mock.call(
+            repo_id="mock-repo",
+            filename="dummy-en.cfg",
+            token=None,
+            revision=None,
+        ),
+        mock.call(
+            repo_id="mock-repo",
+            filename="vocabs/dummy.zip",
+            token=None,
+            revision=None,
+        ),
+    ]
+    assert shutil.copy.call_args_list == [
+        mock.call("tests/huggingface-cache/dummy-fi.cfg", "projects.d/dummy-fi.cfg"),
+        mock.call("tests/huggingface-cache/dummy-en.cfg", "projects.d/dummy-en.cfg"),
+    ]
+    dirpath_fi = os.path.join(str(testdatadir), "projects", "dummy-fi")
+    fpath_fi = os.path.join(str(dirpath_fi), "file.txt")
+    assert os.path.exists(fpath_fi)
+    dirpath_en = os.path.join(str(testdatadir), "projects", "dummy-en")
+    fpath_en = os.path.join(str(dirpath_en), "file.txt")
+    assert os.path.exists(fpath_en)
+
+
+@mock.patch(
+    "huggingface_hub.list_repo_files",
+    side_effect=HFValidationError,
+)
+@mock.patch(
+    "huggingface_hub.hf_hub_download",
+)
+def test_download_list_repo_files_failed(
+    hf_hub_download,
+    list_repo_files,
+):
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        [
+            "download",
+            "dummy-fi",
+            "mock-repo",
+        ],
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "Error: Operation failed:" in failed_result.output
+    assert list_repo_files.called
+    assert not hf_hub_download.called
+
+
+@mock.patch(
+    "huggingface_hub.list_repo_files",
+    return_value=[  # Mock filenames in repo
+        "projects/dummy-fi.zip",
+        "vocabs/dummy.zip",
+        "dummy-fi.cfg",
+    ],
+)
+@mock.patch(
+    "huggingface_hub.hf_hub_download",
+    side_effect=HFValidationError,
+)
+def test_download_hf_hub_download_failed(
+    hf_hub_download,
+    list_repo_files,
+):
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        [
+            "download",
+            "dummy-fi",
+            "mock-repo",
+        ],
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "Error: Operation failed:" in failed_result.output
+    assert list_repo_files.called
+    assert hf_hub_download.called
+
+
+def test_unzip_initial(testdatadir):
+    dirpath = os.path.join(str(testdatadir), "projects", "dummy-fi")
+    fpath = os.path.join(str(dirpath), "file.txt")
+    annif.cli_util.unzip(
+        os.path.join("tests", "huggingface-cache", "projects", "dummy-fi.zip"),
+        force=False,
+    )
+    assert os.path.exists(fpath)
+    assert os.path.getsize(fpath) == 0  # Zero content from zip
+    ts = os.path.getmtime(fpath)
+    assert datetime.fromtimestamp(ts).astimezone(tz=timezone.utc) == datetime(
+        1980, 1, 1, 0, 0
+    ).astimezone(tz=timezone.utc)
+
+
+def test_unzip_no_overwrite(testdatadir):
+    dirpath = os.path.join(str(testdatadir), "projects", "dummy-fi")
+    fpath = os.path.join(str(dirpath), "file.txt")
+    os.makedirs(dirpath, exist_ok=True)
+    with open(fpath, "wt") as pf:
+        print("Existing content", file=pf)
+
+    annif.cli_util.unzip(
+        os.path.join("tests", "huggingface-cache", "projects", "dummy-fi.zip"),
+        force=False,
+    )
+    assert os.path.exists(fpath)
+    assert os.path.getsize(fpath) == 17  # Existing content
+    assert abs(os.path.getmtime(fpath) - datetime.now().timestamp()) < 1
+
+
+def test_unzip_overwrite(testdatadir):
+    dirpath = os.path.join(str(testdatadir), "projects", "dummy-fi")
+    fpath = os.path.join(str(dirpath), "file.txt")
+    os.makedirs(dirpath, exist_ok=True)
+    with open(fpath, "wt") as pf:
+        print("Existing content", file=pf)
+
+    annif.cli_util.unzip(
+        os.path.join("tests", "huggingface-cache", "projects", "dummy-fi.zip"),
+        force=True,
+    )
+    assert os.path.exists(fpath)
+    assert os.path.getsize(fpath) == 0  # Zero content from zip
+    ts = os.path.getmtime(fpath)
+    assert datetime.fromtimestamp(ts).astimezone(tz=timezone.utc) == datetime(
+        1980, 1, 1, 0, 0
+    ).astimezone(tz=timezone.utc)
 
 
 def test_completion_script_generation():
