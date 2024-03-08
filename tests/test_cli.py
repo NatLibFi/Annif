@@ -8,6 +8,7 @@ import os.path
 import random
 import re
 import shutil
+import zipfile
 from datetime import datetime, timedelta, timezone
 from unittest import mock
 
@@ -1127,6 +1128,21 @@ def test_upload_nonexistent_repo():
     assert "Repository Not Found for url:" in failed_result.output
 
 
+def test_archive_dir(testdatadir):
+    dirpath = os.path.join(str(testdatadir), "projects", "dummy-fi")
+    os.makedirs(dirpath, exist_ok=True)
+    open(os.path.join(str(dirpath), "foo.txt"), "a").close()
+    open(os.path.join(str(dirpath), "-train.txt"), "a").close()
+
+    fobj = annif.cli_util.archive_dir(dirpath)
+    assert isinstance(fobj, io.BufferedRandom)
+
+    with zipfile.ZipFile(fobj, mode="r") as zfile:
+        archived_files = zfile.namelist()
+    assert len(archived_files) == 1
+    assert os.path.split(archived_files[0])[1] == "foo.txt"
+
+
 def test_write_config(app_project):
     result = annif.cli_util.write_config(app_project)
     assert isinstance(result, io.BytesIO)
@@ -1153,8 +1169,10 @@ def hf_hub_download_mock_side_effect(filename, repo_id, token, revision):
     "huggingface_hub.hf_hub_download",
     side_effect=hf_hub_download_mock_side_effect,
 )
-@mock.patch("shutil.copy")  # Avoid overwrite files in projects.d/
-def test_download_dummy_fi(copy, hf_hub_download, list_repo_files, testdatadir):
+@mock.patch("annif.cli_util.move_project_config")
+def test_download_dummy_fi(
+    move_project_config, hf_hub_download, list_repo_files, testdatadir
+):
     result = runner.invoke(
         annif.cli.cli,
         [
@@ -1186,12 +1204,12 @@ def test_download_dummy_fi(copy, hf_hub_download, list_repo_files, testdatadir):
             revision=None,
         ),
     ]
-    assert shutil.copy.call_args_list == [
-        mock.call("tests/huggingface-cache/dummy-fi.cfg", "projects.d/dummy-fi.cfg")
-    ]
     dirpath = os.path.join(str(testdatadir), "projects", "dummy-fi")
     fpath = os.path.join(str(dirpath), "file.txt")
     assert os.path.exists(fpath)
+    assert move_project_config.call_args_list == [
+        mock.call("tests/huggingface-cache/dummy-fi.cfg", False)
+    ]
 
 
 @mock.patch(
@@ -1209,8 +1227,10 @@ def test_download_dummy_fi(copy, hf_hub_download, list_repo_files, testdatadir):
     "huggingface_hub.hf_hub_download",
     side_effect=hf_hub_download_mock_side_effect,
 )
-@mock.patch("shutil.copy")  # Avoid overwrite files in projects.d/
-def test_download_dummy_fi_and_en(copy, hf_hub_download, list_repo_files, testdatadir):
+@mock.patch("annif.cli_util.move_project_config")
+def test_download_dummy_fi_and_en(
+    move_project_config, hf_hub_download, list_repo_files, testdatadir
+):
     result = runner.invoke(
         annif.cli.cli,
         [
@@ -1254,16 +1274,16 @@ def test_download_dummy_fi_and_en(copy, hf_hub_download, list_repo_files, testda
             revision=None,
         ),
     ]
-    assert shutil.copy.call_args_list == [
-        mock.call("tests/huggingface-cache/dummy-fi.cfg", "projects.d/dummy-fi.cfg"),
-        mock.call("tests/huggingface-cache/dummy-en.cfg", "projects.d/dummy-en.cfg"),
-    ]
     dirpath_fi = os.path.join(str(testdatadir), "projects", "dummy-fi")
     fpath_fi = os.path.join(str(dirpath_fi), "file.txt")
     assert os.path.exists(fpath_fi)
     dirpath_en = os.path.join(str(testdatadir), "projects", "dummy-en")
     fpath_en = os.path.join(str(dirpath_en), "file.txt")
     assert os.path.exists(fpath_en)
+    assert move_project_config.call_args_list == [
+        mock.call("tests/huggingface-cache/dummy-fi.cfg", False),
+        mock.call("tests/huggingface-cache/dummy-en.cfg", False),
+    ]
 
 
 @mock.patch(
@@ -1351,7 +1371,7 @@ def test_unzip_no_overwrite(testdatadir):
     )
     assert os.path.exists(fpath)
     assert os.path.getsize(fpath) == 17  # Existing content
-    assert abs(os.path.getmtime(fpath) - datetime.now().timestamp()) < 1
+    assert datetime.now().timestamp() - os.path.getmtime(fpath) < 1
 
 
 def test_unzip_overwrite(testdatadir):
@@ -1371,6 +1391,28 @@ def test_unzip_overwrite(testdatadir):
     assert datetime.fromtimestamp(ts).astimezone(tz=timezone.utc) == datetime(
         1980, 1, 1, 0, 0
     ).astimezone(tz=timezone.utc)
+
+
+@mock.patch("os.path.exists", return_value=True)
+@mock.patch("annif.cli_util._compute_crc32", return_value=0)
+@mock.patch("shutil.copy")
+def test_move_project_config_no_overwrite(copy, _compute_crc32, exists):
+    annif.cli_util.move_project_config(
+        os.path.join("tests", "huggingface-cache", "dummy-fi.cfg"), force=False
+    )
+    assert not copy.called
+
+
+@mock.patch("os.path.exists", return_value=True)
+@mock.patch("shutil.copy")
+def test_move_project_config_overwrite(copy, exists):
+    annif.cli_util.move_project_config(
+        os.path.join("tests", "huggingface-cache", "dummy-fi.cfg"), force=True
+    )
+    assert copy.called
+    assert copy.call_args == mock.call(
+        "tests/huggingface-cache/dummy-fi.cfg", "projects.d/dummy-fi.cfg"
+    )
 
 
 def test_completion_script_generation():
