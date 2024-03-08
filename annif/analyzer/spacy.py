@@ -1,4 +1,5 @@
 """spaCy analyzer for Annif which uses spaCy for lemmatization"""
+
 from __future__ import annotations
 
 import annif.util

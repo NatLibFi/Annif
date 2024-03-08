@@ -1,4 +1,5 @@
 """Clases for supporting document corpora"""
+
 from __future__ import annotations
 
 import glob

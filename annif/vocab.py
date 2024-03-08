@@ -1,4 +1,5 @@
 """Vocabulary management functionality for Annif"""
+
 from __future__ import annotations
 
 import os.path

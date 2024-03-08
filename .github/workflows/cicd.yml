@@ -10,7 +10,7 @@ on:
 env:
   PIPX_HOME: "/home/runner/.cache/pipx"
   PIPX_BIN_DIR: "/home/runner/.local/bin"
-  POETRY_VERSION: "1.5.1"
+  POETRY_VERSION: "1.8.0"
 permissions:
   contents: read
 jobs:
@@ -23,7 +23,7 @@ jobs:
     - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
-        python-version: "3.10"
+        python-version: "3.11"
         poetry-version: ${{ env.POETRY_VERSION }}
     - name: Install Python dev dependencies
       run: |
@@ -47,7 +47,7 @@ jobs:
       id: prepare
       uses: ./.github/actions/prepare
       with:
-        python-version: "3.9"
+        python-version: "3.10"
         poetry-version: ${{ env.POETRY_VERSION }}
     - name: Install Python dependencies
       run: |
@@ -61,7 +61,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10", "3.11"]
     name: test on Python ${{ matrix.python-version }}
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -79,19 +79,15 @@ jobs:
     - name: Install Python dependencies
       run: |
         # Selectively install the optional dependencies for some Python versions
-        # For Python 3.8:
-        if [[ ${{ matrix.python-version }} == '3.8' ]]; then
-          poetry install -E "nn omikuji yake voikko stwfsa";
-        fi
         # For Python 3.9:
         if [[ ${{ matrix.python-version }} == '3.9' ]]; then
-          poetry install -E "fasttext spacy";
-          # download the small English pretrained spaCy model needed by spacy analyzer
-          poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+          poetry install -E "nn omikuji yake voikko stwfsa";
         fi
         # For Python 3.10:
         if [[ ${{ matrix.python-version }} == '3.10' ]]; then
-          poetry install -E "nn omikuji yake stwfsa";
+          poetry install -E "fasttext spacy";
+          # download the small English pretrained spaCy model needed by spacy analyzer
+          poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
         # For Python 3.11:
         if [[ ${{ matrix.python-version }} == '3.11' ]]; then
@@ -103,14 +99,16 @@ jobs:
     - name: Test with pytest
       run: |
         poetry run pytest --cov=./ --cov-report xml
-        if [[ ${{ matrix.python-version }} == '3.9' ]]; then
+        if [[ ${{ matrix.python-version }} == '3.10' ]]; then
           poetry run pytest --cov=./ --cov-report xml --cov-append -m slow
         fi
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d  # v3.1.4
+      uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044  # v4.0.1
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     - name: Save cache
       if: steps.prepare.outputs.cache-matched-key != format('poetry-installation-and-cache-{0}-{1}-{2}', matrix.python-version, env.POETRY_VERSION, hashFiles('**/poetry.lock'))
-      uses: actions/cache/save@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
       with:
         path: |
           ~/.cache/pipx/venvs
@@ -148,7 +146,7 @@ jobs:
         password: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_PASSWORD }}
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@9dc751fe249ad99385a2583ee0d084c400eee04e  # v5.4.0
+      uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81  # v5.5.1
       with:
         images: quay.io/natlibfi/annif
         tags: |
@@ -187,7 +185,7 @@ jobs:
         password: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_PASSWORD }}
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@9dc751fe249ad99385a2583ee0d084c400eee04e  # v5.4.0
+      uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81  # v5.5.1
       with:
         images: quay.io/natlibfi/annif
         tags: |

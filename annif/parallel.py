@@ -1,4 +1,5 @@
 """Parallel processing functionality for Annif"""
+
 from __future__ import annotations
 
 import multiprocessing
