@@ -623,7 +623,7 @@ def run_upload(project_ids_pattern, repo_id, token, commit_message):
     data_dirs = project_dirs.union(vocab_dirs)
 
     for data_dir in data_dirs:
-        zip_path = data_dir.split(os.path.sep, 1)[1] + ".zip"  # TODO Check this
+        zip_path = data_dir.split(os.path.sep, 1)[1] + ".zip"
         fobj = cli_util.archive_dir(data_dir)
         cli_util.upload_to_hf_hub(fobj, zip_path, repo_id, token, commit_message)
         fobj.close()

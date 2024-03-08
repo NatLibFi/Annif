@@ -295,7 +295,7 @@ def upload_to_hf_hub(fileobj, filename, repo_id, token, commit_message):
 def get_selected_project_ids_from_hf_hub(project_ids_pattern, repo_id, token, revision):
     all_repo_file_paths = _list_files_in_hf_hub(repo_id, token, revision)
     return [
-        path.rsplit(".zip")[0].split("projects/")[1]  # TODO Try-catch this
+        path.rsplit(".zip")[0].split("projects/")[1]
         for path in all_repo_file_paths
         if fnmatch(path, f"projects/{project_ids_pattern}.zip")
     ]
