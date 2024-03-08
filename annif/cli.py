@@ -7,7 +7,6 @@ import json
 import os.path
 import re
 import sys
-from fnmatch import fnmatch
 
 import click
 import click_log
@@ -605,11 +604,7 @@ def run_upload(project_ids_pattern, repo_id, token, commit_message):
     with the projects configuration to the specified Hugging Face Hub repository.
     An authentication token and commit message can be given with options.
     """
-    projects = [
-        proj
-        for proj in annif.registry.get_projects(min_access=Access.private).values()
-        if fnmatch(proj.project_id, project_ids_pattern)
-    ]
+    projects = cli_util.get_matching_projects(project_ids_pattern)
     click.echo(f"Uploading project(s): {', '.join([p.project_id for p in projects])}")
 
     commit_message = (
@@ -623,16 +618,10 @@ def run_upload(project_ids_pattern, repo_id, token, commit_message):
     data_dirs = project_dirs.union(vocab_dirs)
 
     for data_dir in data_dirs:
-        zip_path = data_dir.split(os.path.sep, 1)[1] + ".zip"
-        fobj = cli_util.archive_dir(data_dir)
-        cli_util.upload_to_hf_hub(fobj, zip_path, repo_id, token, commit_message)
-        fobj.close()
+        cli_util.upload_datadir(data_dir, repo_id, token, commit_message)
 
     for project in projects:
-        config_path = project.project_id + ".cfg"
-        fobj = cli_util.write_config(project)
-        cli_util.upload_to_hf_hub(fobj, config_path, repo_id, token, commit_message)
-        fobj.close()
+        cli_util.upload_config(project, repo_id, token, commit_message)
 
 
 @cli.command("download")
@@ -670,30 +659,28 @@ def run_download(project_ids_pattern, repo_id, token, revision, force):
     be given with options.
     """
 
-    project_ids = cli_util.get_selected_project_ids_from_hf_hub(
+    project_ids = cli_util.get_matching_project_ids_from_hf_hub(
         project_ids_pattern, repo_id, token, revision
     )
     click.echo(f"Downloading project(s): {', '.join(project_ids)}")
 
-    if not os.path.isdir("projects.d"):
-        os.mkdir("projects.d")
     vocab_ids = set()
     for project_id in project_ids:
-        project_zip_local_cache_path = cli_util.download_from_hf_hub(
+        project_zip_cache_path = cli_util.download_from_hf_hub(
             f"projects/{project_id}.zip", repo_id, token, revision
         )
-        cli_util.unzip(project_zip_local_cache_path, force)
-        local_config_cache_path = cli_util.download_from_hf_hub(
+        cli_util.unzip_archive(project_zip_cache_path, force)
+        config_file_cache_path = cli_util.download_from_hf_hub(
             f"{project_id}.cfg", repo_id, token, revision
         )
-        vocab_ids.add(cli_util.get_vocab_id(local_config_cache_path))
-        cli_util.move_project_config(local_config_cache_path, force)
+        vocab_ids.add(cli_util.get_vocab_id_from_config(config_file_cache_path))
+        cli_util.copy_project_config(config_file_cache_path, force)
 
     for vocab_id in vocab_ids:
-        vocab_zip_local_cache_path = cli_util.download_from_hf_hub(
+        vocab_zip_cache_path = cli_util.download_from_hf_hub(
             f"vocabs/{vocab_id}.zip", repo_id, token, revision
         )
-        cli_util.unzip(vocab_zip_local_cache_path, force)
+        cli_util.unzip_archive(vocab_zip_cache_path, force)
 
 
 @cli.command("completion")

@@ -1134,7 +1134,7 @@ def test_archive_dir(testdatadir):
     open(os.path.join(str(dirpath), "foo.txt"), "a").close()
     open(os.path.join(str(dirpath), "-train.txt"), "a").close()
 
-    fobj = annif.cli_util.archive_dir(dirpath)
+    fobj = annif.cli_util._archive_dir(dirpath)
     assert isinstance(fobj, io.BufferedRandom)
 
     with zipfile.ZipFile(fobj, mode="r") as zfile:
@@ -1143,8 +1143,8 @@ def test_archive_dir(testdatadir):
     assert os.path.split(archived_files[0])[1] == "foo.txt"
 
 
-def test_write_config(app_project):
-    result = annif.cli_util.write_config(app_project)
+def test_get_project_config(app_project):
+    result = annif.cli_util._get_project_config(app_project)
     assert isinstance(result, io.BytesIO)
     string_result = result.read().decode("UTF-8")
     assert "[dummy-en]" in string_result
@@ -1169,9 +1169,9 @@ def hf_hub_download_mock_side_effect(filename, repo_id, token, revision):
     "huggingface_hub.hf_hub_download",
     side_effect=hf_hub_download_mock_side_effect,
 )
-@mock.patch("annif.cli_util.move_project_config")
+@mock.patch("annif.cli_util.copy_project_config")
 def test_download_dummy_fi(
-    move_project_config, hf_hub_download, list_repo_files, testdatadir
+    copy_project_config, hf_hub_download, list_repo_files, testdatadir
 ):
     result = runner.invoke(
         annif.cli.cli,
@@ -1207,7 +1207,7 @@ def test_download_dummy_fi(
     dirpath = os.path.join(str(testdatadir), "projects", "dummy-fi")
     fpath = os.path.join(str(dirpath), "file.txt")
     assert os.path.exists(fpath)
-    assert move_project_config.call_args_list == [
+    assert copy_project_config.call_args_list == [
         mock.call("tests/huggingface-cache/dummy-fi.cfg", False)
     ]
 
@@ -1227,9 +1227,9 @@ def test_download_dummy_fi(
     "huggingface_hub.hf_hub_download",
     side_effect=hf_hub_download_mock_side_effect,
 )
-@mock.patch("annif.cli_util.move_project_config")
+@mock.patch("annif.cli_util.copy_project_config")
 def test_download_dummy_fi_and_en(
-    move_project_config, hf_hub_download, list_repo_files, testdatadir
+    copy_project_config, hf_hub_download, list_repo_files, testdatadir
 ):
     result = runner.invoke(
         annif.cli.cli,
@@ -1280,7 +1280,7 @@ def test_download_dummy_fi_and_en(
     dirpath_en = os.path.join(str(testdatadir), "projects", "dummy-en")
     fpath_en = os.path.join(str(dirpath_en), "file.txt")
     assert os.path.exists(fpath_en)
-    assert move_project_config.call_args_list == [
+    assert copy_project_config.call_args_list == [
         mock.call("tests/huggingface-cache/dummy-fi.cfg", False),
         mock.call("tests/huggingface-cache/dummy-en.cfg", False),
     ]
@@ -1343,10 +1343,10 @@ def test_download_hf_hub_download_failed(
     assert hf_hub_download.called
 
 
-def test_unzip_initial(testdatadir):
+def test_unzip_archive_initial(testdatadir):
     dirpath = os.path.join(str(testdatadir), "projects", "dummy-fi")
     fpath = os.path.join(str(dirpath), "file.txt")
-    annif.cli_util.unzip(
+    annif.cli_util.unzip_archive(
         os.path.join("tests", "huggingface-cache", "projects", "dummy-fi.zip"),
         force=False,
     )
@@ -1358,14 +1358,14 @@ def test_unzip_initial(testdatadir):
     ).astimezone(tz=timezone.utc)
 
 
-def test_unzip_no_overwrite(testdatadir):
+def test_unzip_archive_no_overwrite(testdatadir):
     dirpath = os.path.join(str(testdatadir), "projects", "dummy-fi")
     fpath = os.path.join(str(dirpath), "file.txt")
     os.makedirs(dirpath, exist_ok=True)
     with open(fpath, "wt") as pf:
         print("Existing content", file=pf)
 
-    annif.cli_util.unzip(
+    annif.cli_util.unzip_archive(
         os.path.join("tests", "huggingface-cache", "projects", "dummy-fi.zip"),
         force=False,
     )
@@ -1374,14 +1374,14 @@ def test_unzip_no_overwrite(testdatadir):
     assert datetime.now().timestamp() - os.path.getmtime(fpath) < 1
 
 
-def test_unzip_overwrite(testdatadir):
+def test_unzip_archive_overwrite(testdatadir):
     dirpath = os.path.join(str(testdatadir), "projects", "dummy-fi")
     fpath = os.path.join(str(dirpath), "file.txt")
     os.makedirs(dirpath, exist_ok=True)
     with open(fpath, "wt") as pf:
         print("Existing content", file=pf)
 
-    annif.cli_util.unzip(
+    annif.cli_util.unzip_archive(
         os.path.join("tests", "huggingface-cache", "projects", "dummy-fi.zip"),
         force=True,
     )
@@ -1396,8 +1396,8 @@ def test_unzip_overwrite(testdatadir):
 @mock.patch("os.path.exists", return_value=True)
 @mock.patch("annif.cli_util._compute_crc32", return_value=0)
 @mock.patch("shutil.copy")
-def test_move_project_config_no_overwrite(copy, _compute_crc32, exists):
-    annif.cli_util.move_project_config(
+def test_copy_project_config_no_overwrite(copy, _compute_crc32, exists):
+    annif.cli_util.copy_project_config(
         os.path.join("tests", "huggingface-cache", "dummy-fi.cfg"), force=False
     )
     assert not copy.called
@@ -1405,8 +1405,8 @@ def test_move_project_config_no_overwrite(copy, _compute_crc32, exists):
 
 @mock.patch("os.path.exists", return_value=True)
 @mock.patch("shutil.copy")
-def test_move_project_config_overwrite(copy, exists):
-    annif.cli_util.move_project_config(
+def test_copy_project_config_overwrite(copy, exists):
+    annif.cli_util.copy_project_config(
         os.path.join("tests", "huggingface-cache", "dummy-fi.cfg"), force=True
     )
     assert copy.called
