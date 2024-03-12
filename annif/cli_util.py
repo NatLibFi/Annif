@@ -253,7 +253,7 @@ def get_matching_projects(pattern):
 
 def upload_datadir(data_dir, repo_id, token, commit_message):
     """
-    Upload a data directory to HuggingFace Hub.
+    Upload a data directory to a Hugging Face Hub repository.
     """
     zip_repo_path = data_dir.split(os.path.sep, 1)[1] + ".zip"
     with _archive_dir(data_dir) as fobj:
@@ -262,7 +262,7 @@ def upload_datadir(data_dir, repo_id, token, commit_message):
 
 def upload_config(project, repo_id, token, commit_message):
     """
-    Upload a project configuration to HuggingFace Hub.
+    Upload a project configuration to a Hugging Face Hub repository.
     """
     config_repo_path = project.project_id + ".cfg"
     with _get_project_config(project) as fobj:
@@ -322,6 +322,8 @@ def _upload_to_hf_hub(fileobj, path_in_repo, repo_id, token, commit_message):
 
 
 def get_matching_project_ids_from_hf_hub(project_ids_pattern, repo_id, token, revision):
+    """Get project IDs of the projects in a Hugging Face Model Hub repository that match
+    the given pattern."""
     all_repo_file_paths = _list_files_in_hf_hub(repo_id, token, revision)
     return [
         path.rsplit(".zip")[0].split("projects/")[1]
@@ -361,6 +363,8 @@ def download_from_hf_hub(filename, repo_id, token, revision):
 
 
 def unzip_archive(src_path, force):
+    """Unzip a zip archive of projects and vocabularies to a directory, by
+    default data/ under current directory."""
     datadir = current_app.config["DATADIR"]
     with zipfile.ZipFile(src_path, "r") as zfile:
         archive_comment = str(zfile.comment, encoding="utf-8")
@@ -395,6 +399,7 @@ def _restore_timestamps(member, dest_path):
 
 
 def copy_project_config(src_path, force):
+    """Copy a given project configuration file to projects.d/ directory."""
     project_configs_dest_dir = "projects.d"
     if not os.path.isdir(project_configs_dest_dir):
         os.mkdir(project_configs_dest_dir)
@@ -429,6 +434,7 @@ def _compute_crc32(path):
 
 
 def get_vocab_id_from_config(config_path):
+    """Get the vocabulary ID from a configuration file."""
     config = configparser.ConfigParser()
     config.read(config_path)
     section = config.sections()[0]
