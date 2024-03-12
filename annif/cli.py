@@ -597,12 +597,13 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric, results_fi
 @cli_util.common_options
 def run_upload(project_ids_pattern, repo_id, token, commit_message):
     """
-    Upload selected projects and their vocabularies to a Hugging Face Hub repository
+    Upload selected projects and their vocabularies to a Hugging Face Hub repository.
     \f
     This command zips the project directories and vocabularies of the projects
-    that match the given `project_ids_pattern`, and uploads the archives along
-    with the projects configuration to the specified Hugging Face Hub repository.
-    An authentication token and commit message can be given with options.
+    that match the given `project_ids_pattern` to archive files, and uploads the
+    archives along with the project configurations to the specified Hugging Face
+    Hub repository. An authentication token and commit message can be given with
+    options.
     """
     projects = cli_util.get_matching_projects(project_ids_pattern)
     click.echo(f"Uploading project(s): {', '.join([p.project_id for p in projects])}")
@@ -649,7 +650,8 @@ def run_upload(project_ids_pattern, repo_id, token, commit_message):
 @cli_util.common_options
 def run_download(project_ids_pattern, repo_id, token, revision, force):
     """
-    Download selected projects and their vocabularies from a Hugging Face Hub repository
+    Download selected projects and their vocabularies from a Hugging Face Hub
+    repository.
     \f
     This command downloads the project and vocabulary archives and the
     configuration files of the projects that match the given
