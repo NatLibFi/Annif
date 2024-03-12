@@ -240,7 +240,7 @@ def generate_filter_params(filter_batch_max_limit: int) -> list[tuple[int, float
     return list(itertools.product(limits, thresholds))
 
 
-def get_matching_projects(pattern):
+def get_matching_projects(pattern: str) -> list[AnnifProject]:
     """
     Get projects that match the given pattern.
     """
@@ -251,7 +251,9 @@ def get_matching_projects(pattern):
     ]
 
 
-def upload_datadir(data_dir, repo_id, token, commit_message):
+def upload_datadir(
+    data_dir: str, repo_id: str, token: str, commit_message: str
+) -> None:
     """
     Upload a data directory to a Hugging Face Hub repository.
     """
@@ -260,7 +262,9 @@ def upload_datadir(data_dir, repo_id, token, commit_message):
         _upload_to_hf_hub(fobj, zip_repo_path, repo_id, token, commit_message)
 
 
-def upload_config(project, repo_id, token, commit_message):
+def upload_config(
+    project: AnnifProject, repo_id: str, token: str, commit_message: str
+) -> None:
     """
     Upload a project configuration to a Hugging Face Hub repository.
     """
@@ -269,7 +273,7 @@ def upload_config(project, repo_id, token, commit_message):
         _upload_to_hf_hub(fobj, config_repo_path, repo_id, token, commit_message)
 
 
-def _is_train_file(fname):
+def _is_train_file(fname: str) -> bool:
     train_file_patterns = ("-train", "tmp-")
     for pat in train_file_patterns:
         if pat in fname:
@@ -277,7 +281,7 @@ def _is_train_file(fname):
     return False
 
 
-def _archive_dir(data_dir):
+def _archive_dir(data_dir: str) -> io.BufferedRandom:
     fp = tempfile.TemporaryFile()
     path = pathlib.Path(data_dir)
     fpaths = [fpath for fpath in path.glob("**/*") if not _is_train_file(fpath.name)]
@@ -294,7 +298,7 @@ def _archive_dir(data_dir):
     return fp
 
 
-def _get_project_config(project):
+def _get_project_config(project: AnnifProject) -> io.BytesIO:
     fp = tempfile.TemporaryFile(mode="w+t")
     config = configparser.ConfigParser()
     config[project.project_id] = project.config
@@ -304,7 +308,13 @@ def _get_project_config(project):
     return io.BytesIO(fp.read().encode("utf8"))
 
 
-def _upload_to_hf_hub(fileobj, path_in_repo, repo_id, token, commit_message):
+def _upload_to_hf_hub(
+    fileobj: io.BytesIO | io.BufferedRandom,
+    path_in_repo: str,
+    repo_id: str,
+    token: str,
+    commit_message: str,
+) -> None:
     from huggingface_hub import HfApi
     from huggingface_hub.utils import HfHubHTTPError, HFValidationError
 
@@ -321,7 +331,9 @@ def _upload_to_hf_hub(fileobj, path_in_repo, repo_id, token, commit_message):
         raise OperationFailedException(str(err))
 
 
-def get_matching_project_ids_from_hf_hub(project_ids_pattern, repo_id, token, revision):
+def get_matching_project_ids_from_hf_hub(
+    project_ids_pattern: str, repo_id: str, token, revision: str
+) -> list[str]:
     """Get project IDs of the projects in a Hugging Face Model Hub repository that match
     the given pattern."""
     all_repo_file_paths = _list_files_in_hf_hub(repo_id, token, revision)
@@ -332,7 +344,7 @@ def get_matching_project_ids_from_hf_hub(project_ids_pattern, repo_id, token, re
     ]
 
 
-def _list_files_in_hf_hub(repo_id, token, revision):
+def _list_files_in_hf_hub(repo_id: str, token: str, revision: str) -> list[str]:
     from huggingface_hub import list_repo_files
     from huggingface_hub.utils import HfHubHTTPError, HFValidationError
 
@@ -347,7 +359,9 @@ def _list_files_in_hf_hub(repo_id, token, revision):
         raise OperationFailedException(str(err))
 
 
-def download_from_hf_hub(filename, repo_id, token, revision):
+def download_from_hf_hub(
+    filename: str, repo_id: str, token: str, revision: str
+) -> list[str]:
     from huggingface_hub import hf_hub_download
     from huggingface_hub.utils import HfHubHTTPError, HFValidationError
 
@@ -362,7 +376,7 @@ def download_from_hf_hub(filename, repo_id, token, revision):
         raise OperationFailedException(str(err))
 
 
-def unzip_archive(src_path, force):
+def unzip_archive(src_path: str, force: bool) -> None:
     """Unzip a zip archive of projects and vocabularies to a directory, by
     default data/ under current directory."""
     datadir = current_app.config["DATADIR"]
@@ -375,7 +389,9 @@ def unzip_archive(src_path, force):
             _unzip_member(zfile, member, datadir, force)
 
 
-def _unzip_member(zfile, member, datadir, force):
+def _unzip_member(
+    zfile: zipfile.ZipFile, member: zipfile.ZipInfo, datadir: str, force: bool
+) -> None:
     dest_path = os.path.join(datadir, member.filename)
     if os.path.exists(dest_path) and not force:
         if _are_identical_member_and_file(member, dest_path):
@@ -388,17 +404,17 @@ def _unzip_member(zfile, member, datadir, force):
         _restore_timestamps(member, dest_path)
 
 
-def _are_identical_member_and_file(member, dest_path):
+def _are_identical_member_and_file(member: zipfile.ZipInfo, dest_path: str) -> bool:
     path_crc = _compute_crc32(dest_path)
     return path_crc == member.CRC
 
 
-def _restore_timestamps(member, dest_path):
+def _restore_timestamps(member: zipfile.ZipInfo, dest_path: str) -> None:
     date_time = time.mktime(member.date_time + (0, 0, -1))
     os.utime(dest_path, (date_time, date_time))
 
 
-def copy_project_config(src_path, force):
+def copy_project_config(src_path: str, force: bool) -> None:
     """Copy a given project configuration file to projects.d/ directory."""
     project_configs_dest_dir = "projects.d"
     if not os.path.isdir(project_configs_dest_dir):
@@ -415,13 +431,13 @@ def copy_project_config(src_path, force):
         shutil.copy(src_path, dest_path)
 
 
-def _are_identical_files(src_path, dest_path):
+def _are_identical_files(src_path: str, dest_path: str) -> bool:
     src_crc32 = _compute_crc32(src_path)
     dest_crc32 = _compute_crc32(dest_path)
     return src_crc32 == dest_crc32
 
 
-def _compute_crc32(path):
+def _compute_crc32(path: str) -> int:
     if os.path.isdir(path):
         return 0
 
@@ -433,7 +449,7 @@ def _compute_crc32(path):
     return crcval
 
 
-def get_vocab_id_from_config(config_path):
+def get_vocab_id_from_config(config_path: str) -> str:
     """Get the vocabulary ID from a configuration file."""
     config = configparser.ConfigParser()
     config.read(config_path)
