@@ -1150,7 +1150,7 @@ def test_get_project_config(app_project):
     assert "[dummy-en]" in string_result
 
 
-def hf_hub_download_mock_side_effect(filename, repo_id, token, revision):
+def hf_hub_download_mock_side_effect(filename, repo_id, token):
     return "tests/huggingface-cache/" + filename  # Mocks the downloaded file paths
 
 
@@ -1189,19 +1189,16 @@ def test_download_dummy_fi(
             repo_id="mock-repo",
             filename="projects/dummy-fi.zip",
             token=None,
-            revision=None,
         ),
         mock.call(
             repo_id="mock-repo",
             filename="dummy-fi.cfg",
             token=None,
-            revision=None,
         ),
         mock.call(
             repo_id="mock-repo",
             filename="vocabs/dummy.zip",
             token=None,
-            revision=None,
         ),
     ]
     dirpath = os.path.join(str(testdatadir), "projects", "dummy-fi")
@@ -1247,31 +1244,26 @@ def test_download_dummy_fi_and_en(
             repo_id="mock-repo",
             filename="projects/dummy-fi.zip",
             token=None,
-            revision=None,
         ),
         mock.call(
             repo_id="mock-repo",
             filename="dummy-fi.cfg",
             token=None,
-            revision=None,
         ),
         mock.call(
             repo_id="mock-repo",
             filename="projects/dummy-en.zip",
             token=None,
-            revision=None,
         ),
         mock.call(
             repo_id="mock-repo",
             filename="dummy-en.cfg",
             token=None,
-            revision=None,
         ),
         mock.call(
             repo_id="mock-repo",
             filename="vocabs/dummy.zip",
             token=None,
-            revision=None,
         ),
     ]
     dirpath_fi = os.path.join(str(testdatadir), "projects", "dummy-fi")

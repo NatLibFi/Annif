@@ -634,13 +634,6 @@ def run_upload(project_ids_pattern, repo_id, token, commit_message):
     Will default to the stored token.""",
 )
 @click.option(
-    "--revision",
-    help="""
-    An optional Git revision id which can be a branch name, a tag, or a commit
-    hash.
-    """,
-)
-@click.option(
     "--force",
     "-f",
     default=False,
@@ -648,7 +641,7 @@ def run_upload(project_ids_pattern, repo_id, token, commit_message):
     help="Replace an existing project/vocabulary/config with the downloaded one",
 )
 @cli_util.common_options
-def run_download(project_ids_pattern, repo_id, token, revision, force):
+def run_download(project_ids_pattern, repo_id, token, force):
     """
     Download selected projects and their vocabularies from a Hugging Face Hub
     repository.
@@ -657,30 +650,32 @@ def run_download(project_ids_pattern, repo_id, token, revision, force):
     configuration files of the projects that match the given
     `project_ids_pattern` from the specified Hugging Face Hub repository and
     unzips the archives to `data/` directory and places the configuration files
-    to `projects.d/` directory. An authentication token and revision can
-    be given with options.
+    to `projects.d/` directory. An authentication token can be given with
+    `--token` option.
     """
 
     project_ids = cli_util.get_matching_project_ids_from_hf_hub(
-        project_ids_pattern, repo_id, token, revision
+        project_ids_pattern,
+        repo_id,
+        token,
     )
     click.echo(f"Downloading project(s): {', '.join(project_ids)}")
 
     vocab_ids = set()
     for project_id in project_ids:
         project_zip_cache_path = cli_util.download_from_hf_hub(
-            f"projects/{project_id}.zip", repo_id, token, revision
+            f"projects/{project_id}.zip", repo_id, token
         )
         cli_util.unzip_archive(project_zip_cache_path, force)
         config_file_cache_path = cli_util.download_from_hf_hub(
-            f"{project_id}.cfg", repo_id, token, revision
+            f"{project_id}.cfg", repo_id, token
         )
         vocab_ids.add(cli_util.get_vocab_id_from_config(config_file_cache_path))
         cli_util.copy_project_config(config_file_cache_path, force)
 
     for vocab_id in vocab_ids:
         vocab_zip_cache_path = cli_util.download_from_hf_hub(
-            f"vocabs/{vocab_id}.zip", repo_id, token, revision
+            f"vocabs/{vocab_id}.zip", repo_id, token
         )
         cli_util.unzip_archive(vocab_zip_cache_path, force)
 
