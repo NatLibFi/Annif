@@ -53,14 +53,15 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 
     @property
     def _model_file_paths(self) -> list:
-        all_paths = glob(os.path.join(self.datadir, "*"))
+        all_paths = glob(os.path.join(self.datadir, "**"), recursive=True)
+        file_paths = [p for p in all_paths if os.path.isfile(p)]
         ignore_patterns = ("*-train*", "tmp-*", "vectorizer")
         ignore_paths = [
             path
             for igp in ignore_patterns
             for path in glob(os.path.join(self.datadir, igp))
         ]
-        return list(set(all_paths) - set(ignore_paths))
+        return list(set(file_paths) - set(ignore_paths))
 
     @property
     def is_trained(self) -> bool:
