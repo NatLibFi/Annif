@@ -121,7 +121,7 @@ Subject index administration
 
    N/A
 
-.. click:: flask.cli:run_command
+.. click:: annif.cli:run_app
    :prog: annif run
 
 **REST equivalent**
