@@ -28,7 +28,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = ">=3.9,<3.13"
 
 connexion = { version = "2.14.2", extras = ["swagger-ui"] }
 flask = "2.2.*"
