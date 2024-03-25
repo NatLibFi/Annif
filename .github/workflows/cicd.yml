@@ -61,7 +61,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
     name: test on Python ${{ matrix.python-version }}
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -92,6 +92,12 @@ jobs:
         # For Python 3.11:
         if [[ ${{ matrix.python-version }} == '3.11' ]]; then
           poetry install -E "nn fasttext yake stwfsa voikko spacy";
+          # download the small English pretrained spaCy model needed by spacy analyzer
+          poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+        fi
+        # For Python 3.12:
+        if [[ ${{ matrix.python-version }} == '3.12' ]]; then
+          poetry install -E "fasttext yake voikko spacy";
           # download the small English pretrained spaCy model needed by spacy analyzer
           poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
