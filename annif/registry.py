@@ -1,4 +1,5 @@
 """Registry that keeps track of Annif projects"""
+
 from __future__ import annotations
 
 import re

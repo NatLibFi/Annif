@@ -1,4 +1,5 @@
 """Functionality for obtaining text transformation from string specification"""
+
 from __future__ import annotations
 
 import re

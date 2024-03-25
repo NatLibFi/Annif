@@ -1,4 +1,5 @@
 """Annif backend mixins that can be used to implement features"""
+
 from __future__ import annotations
 
 import abc

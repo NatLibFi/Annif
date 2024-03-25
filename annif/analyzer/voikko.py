@@ -1,4 +1,5 @@
 """Voikko analyzer for Annif, based on libvoikko library."""
+
 from __future__ import annotations
 
 import functools
