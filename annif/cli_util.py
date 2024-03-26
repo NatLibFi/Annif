@@ -332,11 +332,11 @@ def _upload_to_hf_hub(
 
 
 def get_matching_project_ids_from_hf_hub(
-    project_ids_pattern: str, repo_id: str, token
+    project_ids_pattern: str, repo_id: str, token, revision: str
 ) -> list[str]:
     """Get project IDs of the projects in a Hugging Face Model Hub repository that match
     the given pattern."""
-    all_repo_file_paths = _list_files_in_hf_hub(repo_id, token)
+    all_repo_file_paths = _list_files_in_hf_hub(repo_id, token, revision)
     return [
         path.rsplit(".zip")[0].split("projects/")[1]
         for path in all_repo_file_paths
@@ -344,17 +344,24 @@ def get_matching_project_ids_from_hf_hub(
     ]
 
 
-def _list_files_in_hf_hub(repo_id: str, token: str) -> list[str]:
+def _list_files_in_hf_hub(repo_id: str, token: str, revision: str) -> list[str]:
     from huggingface_hub import list_repo_files
     from huggingface_hub.utils import HfHubHTTPError, HFValidationError
 
     try:
-        return [repofile for repofile in list_repo_files(repo_id=repo_id, token=token)]
+        return [
+            repofile
+            for repofile in list_repo_files(
+                repo_id=repo_id, token=token, revision=revision
+            )
+        ]
     except (HfHubHTTPError, HFValidationError) as err:
         raise OperationFailedException(str(err))
 
 
-def download_from_hf_hub(filename: str, repo_id: str, token: str) -> list[str]:
+def download_from_hf_hub(
+    filename: str, repo_id: str, token: str, revision: str
+) -> list[str]:
     from huggingface_hub import hf_hub_download
     from huggingface_hub.utils import HfHubHTTPError, HFValidationError
 
@@ -363,6 +370,7 @@ def download_from_hf_hub(filename: str, repo_id: str, token: str) -> list[str]:
             repo_id=repo_id,
             filename=filename,
             token=token,
+            revision=revision,
         )
     except (HfHubHTTPError, HFValidationError) as err:
         raise OperationFailedException(str(err))
