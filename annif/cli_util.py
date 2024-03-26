@@ -28,6 +28,7 @@ from annif.project import Access
 
 if TYPE_CHECKING:
     from datetime import datetime
+    from typing import Any
 
     from click.core import Argument, Context, Option
 
@@ -251,26 +252,22 @@ def get_matching_projects(pattern: str) -> list[AnnifProject]:
     ]
 
 
-def upload_datadir(
-    data_dir: str, repo_id: str, token: str, commit_message: str
-) -> None:
-    """
-    Upload a data directory to a Hugging Face Hub repository.
-    """
+def prepare_datadir_commit(data_dir: str) -> tuple[io.BufferedRandom, Any]:
+    from huggingface_hub import CommitOperationAdd
+
     zip_repo_path = data_dir.split(os.path.sep, 1)[1] + ".zip"
-    with _archive_dir(data_dir) as fobj:
-        _upload_to_hf_hub(fobj, zip_repo_path, repo_id, token, commit_message)
+    fobj = _archive_dir(data_dir)
+    operation = CommitOperationAdd(path_in_repo=zip_repo_path, path_or_fileobj=fobj)
+    return fobj, operation
 
 
-def upload_config(
-    project: AnnifProject, repo_id: str, token: str, commit_message: str
-) -> None:
-    """
-    Upload a project configuration to a Hugging Face Hub repository.
-    """
+def prepare_config_commit(project: AnnifProject) -> tuple[io.BytesIO, Any]:
+    from huggingface_hub import CommitOperationAdd
+
     config_repo_path = project.project_id + ".cfg"
-    with _get_project_config(project) as fobj:
-        _upload_to_hf_hub(fobj, config_repo_path, repo_id, token, commit_message)
+    fobj = _get_project_config(project)
+    operation = CommitOperationAdd(path_in_repo=config_repo_path, path_or_fileobj=fobj)
+    return fobj, operation
 
 
 def _is_train_file(fname: str) -> bool:
@@ -306,29 +303,6 @@ def _get_project_config(project: AnnifProject) -> io.BytesIO:
     fp.seek(0)
     # But for upload fobj needs to be in binary mode
     return io.BytesIO(fp.read().encode("utf8"))
-
-
-def _upload_to_hf_hub(
-    fileobj: io.BytesIO | io.BufferedRandom,
-    path_in_repo: str,
-    repo_id: str,
-    token: str,
-    commit_message: str,
-) -> None:
-    from huggingface_hub import HfApi
-    from huggingface_hub.utils import HfHubHTTPError, HFValidationError
-
-    api = HfApi()
-    try:
-        api.upload_file(
-            path_or_fileobj=fileobj,
-            path_in_repo=path_in_repo,
-            repo_id=repo_id,
-            token=token,
-            commit_message=commit_message,
-        )
-    except (HfHubHTTPError, HFValidationError) as err:
-        raise OperationFailedException(str(err))
 
 
 def get_matching_project_ids_from_hf_hub(

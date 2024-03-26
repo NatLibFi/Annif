@@ -18,7 +18,11 @@ import annif.parallel
 import annif.project
 import annif.registry
 from annif import cli_util
-from annif.exception import NotInitializedException, NotSupportedException
+from annif.exception import (
+    NotInitializedException,
+    NotSupportedException,
+    OperationFailedException,
+)
 from annif.project import Access
 from annif.util import metric_code
 
@@ -605,6 +609,9 @@ def run_upload(project_ids_pattern, repo_id, token, commit_message):
     Hub repository. An authentication token and commit message can be given with
     options.
     """
+    from huggingface_hub import HfApi, preupload_lfs_files
+    from huggingface_hub.utils import HfHubHTTPError, HFValidationError
+
     projects = cli_util.get_matching_projects(project_ids_pattern)
     click.echo(f"Uploading project(s): {', '.join([p.project_id for p in projects])}")
 
@@ -618,11 +625,32 @@ def run_upload(project_ids_pattern, repo_id, token, commit_message):
     vocab_dirs = {p.vocab.datadir for p in projects}
     data_dirs = project_dirs.union(vocab_dirs)
 
-    for data_dir in data_dirs:
-        cli_util.upload_datadir(data_dir, repo_id, token, commit_message)
+    fobjs, operations = [], []
+    try:
+        for data_dir in data_dirs:
+            logger.debug(f"Archiving directory {data_dir}")
+            fobj, operation = cli_util.prepare_datadir_commit(data_dir)
+            logger.debug(f"Preuploading to {operation.path_in_repo}")
+            preupload_lfs_files(repo_id, additions=[operation])
+            fobjs.append(fobj)
+            operations.append(operation)
+        for project in projects:
+            fobj, operation = cli_util.prepare_config_commit(project)
+            fobjs.append(fobj)
+            operations.append(operation)
 
-    for project in projects:
-        cli_util.upload_config(project, repo_id, token, commit_message)
+        api = HfApi()
+        api.create_commit(
+            repo_id=repo_id,
+            operations=operations,
+            commit_message=commit_message,
+            token=token,
+        )
+    except (HfHubHTTPError, HFValidationError) as err:
+        raise OperationFailedException(str(err))
+    finally:
+        for fobj in fobjs:
+            fobj.close()
 
 
 @cli.command("download")

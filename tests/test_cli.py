@@ -12,7 +12,6 @@ import zipfile
 from datetime import datetime, timedelta, timezone
 from unittest import mock
 
-import huggingface_hub
 from click.shell_completion import ShellComplete
 from click.testing import CliRunner
 from huggingface_hub.utils import HFValidationError
@@ -1077,48 +1076,54 @@ def test_routes_with_connexion_app():
     assert re.search(r"app.home\s+GET\s+\/", result)
 
 
-@mock.patch("huggingface_hub.HfApi.upload_file")
-def test_upload(upload_file):
+@mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
+@mock.patch("huggingface_hub.CommitOperationAdd")
+@mock.patch("huggingface_hub.HfApi.create_commit")
+def test_upload(create_commit, CommitOperationAdd, preupload_lfs_files):
     result = runner.invoke(annif.cli.cli, ["upload", "dummy-fi", "dummy-repo"])
     assert not result.exception
-    assert huggingface_hub.HfApi.upload_file.call_count == 3
+    assert create_commit.call_count == 1
+    assert CommitOperationAdd.call_count == 3  # projects, vocab, config
     assert (
         mock.call(
             path_or_fileobj=mock.ANY,  # io.BufferedRandom object
             path_in_repo="data/vocabs/dummy.zip",
-            repo_id="dummy-repo",
-            token=None,
-            commit_message="Upload project(s) dummy-fi with Annif",
         )
-        in huggingface_hub.HfApi.upload_file.call_args_list
+        in CommitOperationAdd.call_args_list
     )
     assert (
         mock.call(
             path_or_fileobj=mock.ANY,  # io.BufferedRandom object
             path_in_repo="data/projects/dummy-fi.zip",
-            repo_id="dummy-repo",
-            token=None,
-            commit_message="Upload project(s) dummy-fi with Annif",
         )
-        in huggingface_hub.HfApi.upload_file.call_args_list
+        in CommitOperationAdd.call_args_list
     )
     assert (
         mock.call(
             path_or_fileobj=mock.ANY,  # io.BytesIO object
             path_in_repo="dummy-fi.cfg",
-            repo_id="dummy-repo",
-            token=None,
-            commit_message="Upload project(s) dummy-fi with Annif",
         )
-        in huggingface_hub.HfApi.upload_file.call_args_list
+        in CommitOperationAdd.call_args_list
+    )
+    assert (
+        mock.call(
+            repo_id="dummy-repo",
+            operations=mock.ANY,
+            commit_message="Upload project(s) dummy-fi with Annif",
+            token=None,
+        )
+        in create_commit.call_args_list
     )
 
 
-@mock.patch("huggingface_hub.HfApi.upload_file")
-def test_upload_many(upload_file):
+@mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
+@mock.patch("huggingface_hub.CommitOperationAdd")
+@mock.patch("huggingface_hub.HfApi.create_commit")
+def test_upload_many(create_commit, CommitOperationAdd, preupload_lfs_files):
     result = runner.invoke(annif.cli.cli, ["upload", "dummy-*", "dummy-repo"])
     assert not result.exception
-    assert huggingface_hub.HfApi.upload_file.call_count == 11
+    assert create_commit.call_count == 1
+    assert CommitOperationAdd.call_count == 11
 
 
 def test_upload_nonexistent_repo():
