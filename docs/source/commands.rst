@@ -66,6 +66,20 @@ Project administration
 
    N/A
 
+.. click:: annif.cli:run_upload
+   :prog: annif upload
+
+**REST equivalent**
+
+   N/A
+
+.. click:: annif.cli:run_download
+   :prog: annif download
+
+**REST equivalent**
+
+   N/A
+
 ****************************
 Subject index administration
 ****************************
