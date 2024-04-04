@@ -7,16 +7,11 @@ from hypothesis import settings
 schema = schemathesis.from_path("annif/openapi/annif.yaml")
 
 
-@schemathesis.check
-def check_cors(response, case):
-    assert response.headers["access-control-allow-origin"] == "*"
-
-
 @schema.parametrize()
 @settings(max_examples=10)
 def test_openapi_fuzzy(case, cxapp):
     response = case.call_asgi(cxapp)
-    case.validate_response(response, additional_checks=(check_cors,))
+    case.validate_response(response)
 
 
 @pytest.mark.slow
@@ -26,6 +21,15 @@ def test_openapi_fuzzy_target_dummy_fi(case, app):
     case.path_parameters = {"project_id": "dummy-fi"}
     response = case.call_wsgi(app)
     case.validate_response(response)
+
+
+def test_openapi_cors(app_client):
+    # test that the service supports CORS by simulating a cross-origin request
+    app_client.headers = {"Origin": "http://somedomain.com"}
+    req = app_client.get(
+        "http://localhost:8000/v1/projects",
+    )
+    assert req.headers["access-control-allow-origin"] == "*"
 
 
 def test_openapi_list_projects(app_client):

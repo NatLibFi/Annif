@@ -35,6 +35,8 @@ def create_flask_app(config_name: str | None = None) -> Flask:
 def create_cx_app(config_name: str | None = None) -> FlaskApp:
     """Create a Connexion app to be used for the API."""
     import connexion
+    from connexion.middleware import MiddlewarePosition
+    from starlette.middleware.cors import CORSMiddleware
 
     # from flask_cors import CORS  # TODO Use CORSMiddleware
     import annif.registry
@@ -54,7 +56,11 @@ def create_cx_app(config_name: str | None = None) -> FlaskApp:
     cxapp.add_api("annif.yaml")  # validator_map=validator_map)
 
     # add CORS support
-    # CORS(cxapp.app)
+    cxapp.add_middleware(
+        CORSMiddleware,
+        position=MiddlewarePosition.BEFORE_EXCEPTION,
+        allow_origins=["*"],
+    )
 
     if cxapp.app.config["INITIALIZE_PROJECTS"]:
         annif.registry.initialize_projects(cxapp.app)
