@@ -1,6 +1,5 @@
 """Unit tests for SKOS vocabulary functionality in Annif"""
 
-
 import os.path
 
 from annif.corpus.skos import SubjectFileSKOS

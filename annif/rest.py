@@ -1,5 +1,6 @@
 """Definitions for REST API operations. These are wired via Connexion to
 methods defined in the OpenAPI specification."""
+
 from __future__ import annotations
 
 import importlib

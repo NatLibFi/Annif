@@ -1,4 +1,5 @@
 """Support for subjects loaded from a SKOS/RDF file"""
+
 from __future__ import annotations
 
 import collections
@@ -83,11 +84,15 @@ class SubjectFileSKOS(SubjectCorpus):
     def _concept_labels(self, concept: URIRef) -> dict[str, str]:
         by_lang = self.get_concept_labels(concept, self.PREF_LABEL_PROPERTIES)
         return {
-            lang: by_lang[lang][0]
-            if by_lang[lang]  # correct lang
-            else by_lang[None][0]
-            if by_lang[None]  # no language
-            else self.graph.namespace_manager.qname(concept)
+            lang: (
+                by_lang[lang][0]
+                if by_lang[lang]  # correct lang
+                else (
+                    by_lang[None][0]
+                    if by_lang[None]  # no language
+                    else self.graph.namespace_manager.qname(concept)
+                )
+            )
             for lang in self.languages
         }
 

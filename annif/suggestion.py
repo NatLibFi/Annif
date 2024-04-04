@@ -1,4 +1,5 @@
 """Representing suggested subjects."""
+
 from __future__ import annotations
 
 import collections
@@ -38,7 +39,7 @@ def filter_suggestion(
 
     data, rows, cols = [], [], []
     for row in range(preds.shape[0]):
-        arow = preds.getrow(row)
+        arow = preds[[row]]
         if limit is not None and limit < len(arow.data):
             topk_idx = arow.data.argpartition(-limit)[-limit:]
         else:

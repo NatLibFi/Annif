@@ -1,5 +1,6 @@
 """A simple transformation that truncates the text of input documents to a
 given character length."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

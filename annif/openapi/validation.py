@@ -1,4 +1,5 @@
 """Custom validator for the Annif API."""
+
 from __future__ import annotations
 
 import logging

@@ -1,7 +1,6 @@
 """Definitions for command-line (Click) commands for invoking Annif
 operations and printing the results to console."""
 
-
 import collections
 import importlib
 import json

@@ -1,4 +1,5 @@
 """Classes for supporting subject corpora expressed as directories or files"""
+
 from __future__ import annotations
 
 import csv

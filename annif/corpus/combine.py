@@ -1,4 +1,5 @@
 """Class for combining multiple corpora so they behave like a single corpus"""
+
 from __future__ import annotations
 
 import itertools
