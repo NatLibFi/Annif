@@ -1051,7 +1051,15 @@ def test_version_option():
     assert result.output.strip() == version.strip()
 
 
-def test_run():
+@mock.patch("connexion.FlaskApp.run")
+def test_run(run):
+    result = runner.invoke(annif.cli.cli, ["run"])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert run.called
+
+
+def test_run_help():
     result = runner.invoke(annif.cli.cli, ["run", "--help"])
     assert not result.exception
     assert result.exit_code == 0
