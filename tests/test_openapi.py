@@ -26,9 +26,9 @@ def test_openapi_fuzzy(case, cxapp):
 @pytest.mark.slow
 @schema.parametrize(endpoint="/v1/projects/{project_id}")
 @settings(max_examples=50)
-def test_openapi_fuzzy_target_dummy_fi(case, app):
+def test_openapi_fuzzy_target_dummy_fi(case, cxapp):
     case.path_parameters = {"project_id": "dummy-fi"}
-    response = case.call_wsgi(app)
+    response = case.call_asgi(cxapp)
     case.validate_response(response)
 
 
