@@ -7,6 +7,15 @@ from hypothesis import settings
 schema = schemathesis.from_path("annif/openapi/annif.yaml")
 
 
+@schemathesis.hook("filter_path_parameters")
+def filter_path_parameters(context, path_parameters):
+    # Exclude path parameters containing newline which crashes application
+    # https://github.com/spec-first/connexion/issues/1908
+    if path_parameters is not None and "project_id" in path_parameters:
+        return "%0A" not in path_parameters["project_id"]
+    return True
+
+
 @schema.parametrize()
 @settings(max_examples=10)
 def test_openapi_fuzzy(case, cxapp):
