@@ -94,13 +94,13 @@ def test_openapi_suggest_batch(app_client):
     assert body[0]["results"][0]["label"] == "dummy-fi"
 
 
-# def test_openapi_suggest_batch_too_many_documents(app_client):
-#     data = {"documents": [{"text": "A quick brown fox jumped over the lazy dog."}]*33}
-#     req = app_client.post(
-#         "http://localhost:8000/v1/projects/dummy-fi/suggest-batch", json=data
-#     )
-#     assert req.status_code == 400
-#     assert req.json()["detail"] == "too many items - 'documents'"
+def test_openapi_suggest_batch_too_many_documents(app_client):
+    data = {"documents": [{"text": "A quick brown fox jumped over the lazy dog."}] * 33}
+    req = app_client.post(
+        "http://localhost:8000/v1/projects/dummy-fi/suggest-batch", json=data
+    )
+    assert req.status_code == 400
+    assert req.json()["detail"] == "too many items - 'documents'"
 
 
 def test_openapi_learn(app_client):

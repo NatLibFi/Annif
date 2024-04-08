@@ -3,48 +3,39 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-import jsonschema
-from connexion import decorators
 from connexion.exceptions import BadRequestProblem
-from connexion.utils import is_null
+from connexion.json_schema import format_error_with_path
+from connexion.validators import JSONRequestBodyValidator
+from jsonschema.exceptions import ValidationError
 
 logger = logging.getLogger("openapi.validation")
 
 
-class CustomRequestBodyValidator(decorators.validation.RequestBodyValidator):
+class CustomRequestBodyValidator(JSONRequestBodyValidator):
     """Custom request body validator that overrides the default error message for the
     'maxItems' validator for the 'documents' property."""
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def validate_schema(
-        self,
-        data: list | dict,
-        url: str,
-    ) -> None:
-        """Validate the request body against the schema."""
-
-        if self.is_null_value_valid and is_null(data):
-            return None  # pragma: no cover
-
+    def _validate(self, body: Any) -> dict | None:
+        if not self._nullable and body is None:
+            raise BadRequestProblem("Request body must not be empty")
         try:
-            self.validator.validate(data)
-        except jsonschema.ValidationError as exception:
+            return self._validator.validate(body)
+        except ValidationError as exception:
+            # Prevent logging request body with contents of all documents
             if exception.validator == "maxItems" and list(exception.schema_path) == [
                 "properties",
                 "documents",
                 "maxItems",
             ]:
                 exception.message = "too many items"
-
-            error_path_msg = self._error_path_message(exception=exception)
+            error_path_msg = format_error_with_path(exception=exception)
             logger.error(
-                "{url} validation error: {error}{error_path_msg}".format(
-                    url=url, error=exception.message, error_path_msg=error_path_msg
-                ),
+                f"Validation error: {exception.message}{error_path_msg}",
                 extra={"validator": "body"},
             )
             raise BadRequestProblem(detail=f"{exception.message}{error_path_msg}")
-        return None

@@ -35,13 +35,13 @@ def create_flask_app(config_name: str | None = None) -> Flask:
 def create_cx_app(config_name: str | None = None) -> FlaskApp:
     """Create a Connexion app to be used for the API."""
     import connexion
+    from connexion.datastructures import MediaTypeDict
     from connexion.middleware import MiddlewarePosition
+    from connexion.validators import FormDataValidator, MultiPartFormDataValidator
     from starlette.middleware.cors import CORSMiddleware
 
-    # from flask_cors import CORS  # TODO Use CORSMiddleware
     import annif.registry
-
-    # from annif.openapi.validation import CustomRequestBodyValidator  # TODO Re-enable
+    from annif.openapi.validation import CustomRequestBodyValidator
 
     specdir = os.path.join(os.path.dirname(__file__), "openapi")
     cxapp = connexion.FlaskApp(__name__, specification_dir=specdir)
@@ -50,10 +50,16 @@ def create_cx_app(config_name: str | None = None) -> FlaskApp:
     cxapp.app.config.from_object(config_name)
     cxapp.app.config.from_envvar("ANNIF_SETTINGS", silent=True)
 
-    # validator_map = {
-    #     "body": CustomRequestBodyValidator,
-    # }
-    cxapp.add_api("annif.yaml")  # validator_map=validator_map)
+    validator_map = {
+        "body": MediaTypeDict(
+            {
+                "*/*json": CustomRequestBodyValidator,
+                "application/x-www-form-urlencoded": FormDataValidator,
+                "multipart/form-data": MultiPartFormDataValidator,
+            }
+        ),
+    }
+    cxapp.add_api("annif.yaml", validator_map=validator_map)
 
     # add CORS support
     cxapp.add_middleware(
