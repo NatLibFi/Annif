@@ -21,7 +21,11 @@ from scipy.sparse import csc_matrix, csr_matrix
 import annif.corpus
 import annif.parallel
 import annif.util
-from annif.exception import NotInitializedException, NotSupportedException
+from annif.exception import (
+    NotInitializedException,
+    NotSupportedException,
+    OperationFailedException,
+)
 from annif.suggestion import SuggestionBatch, vector_to_suggestions
 
 from . import backend, ensemble
@@ -129,9 +133,14 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 backend_id=self.backend_id,
             )
         self.debug("loading Keras model from {}".format(model_filename))
-        self._model = load_model(
-            model_filename, custom_objects={"MeanLayer": MeanLayer}
-        )
+        try:
+            self._model = load_model(
+                model_filename, custom_objects={"MeanLayer": MeanLayer}
+            )
+        except ValueError:
+            md = annif.util.get_keras_model_metadata(model_filename)
+            message = f"loading model from {model_filename}; model metadata: {md}"
+            raise OperationFailedException(message, backend_id=self.backend_id)
 
     def _merge_source_batches(
         self,
