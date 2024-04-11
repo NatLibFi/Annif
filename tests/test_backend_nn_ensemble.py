@@ -2,13 +2,18 @@
 
 import time
 from datetime import datetime, timedelta, timezone
+from unittest import mock
 
 import py.path
 import pytest
 
 import annif.backend
 import annif.corpus
-from annif.exception import NotInitializedException, NotSupportedException
+from annif.exception import (
+    NotInitializedException,
+    NotSupportedException,
+    OperationFailedException,
+)
 
 pytest.importorskip("annif.backend.nn_ensemble")
 lmdb = pytest.importorskip("lmdb")
@@ -190,6 +195,22 @@ def test_nn_ensemble_modification_time(app_project):
         project=app_project,
     )
     assert datetime.now(timezone.utc) - nn_ensemble.modification_time < timedelta(1)
+
+
+@mock.patch("annif.backend.nn_ensemble.load_model", side_effect=ValueError)
+def test_nn_ensemble_initialize_error(load_model, app_project):
+    nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
+    nn_ensemble = nn_ensemble_type(
+        backend_id="nn_ensemble",
+        config_params={"sources": "dummy-en"},
+        project=app_project,
+    )
+    assert nn_ensemble._model is None
+    with pytest.raises(
+        OperationFailedException, match=r"loading model from .*; model metadata: .*"
+    ):
+        nn_ensemble.initialize()
+    assert load_model.called
 
 
 def test_nn_ensemble_initialize(app_project):
