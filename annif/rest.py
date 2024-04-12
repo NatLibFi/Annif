@@ -14,8 +14,6 @@ from annif.exception import AnnifException
 from annif.project import Access
 
 if TYPE_CHECKING:
-    from datetime import datetime
-
     from connexion.lifecycle import ConnexionResponse
 
     from annif.corpus.subject import SubjectIndex
@@ -43,7 +41,7 @@ def server_error(
     )
 
 
-def show_info() -> dict[str, str]:
+def show_info() -> tuple:
     """return version of annif and a title for the api according to OpenAPI spec"""
 
     result = {"title": "Annif REST API", "version": importlib.metadata.version("annif")}
@@ -60,7 +58,7 @@ def language_not_supported_error(lang: str) -> ConnexionResponse:
     )
 
 
-def list_projects() -> dict[str, list[dict[str, str | dict | bool | datetime | None]]]:
+def list_projects() -> tuple:
     """return a dict with projects formatted according to OpenAPI spec"""
 
     result = {
