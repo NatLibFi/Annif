@@ -609,7 +609,7 @@ def run_upload(project_ids_pattern, repo_id, token, commit_message):
     Hub repository. An authentication token and commit message can be given with
     options.
     """
-    from huggingface_hub import HfApi, preupload_lfs_files
+    from huggingface_hub import HfApi
     from huggingface_hub.utils import HfHubHTTPError, HFValidationError
 
     projects = cli_util.get_matching_projects(project_ids_pattern)
@@ -621,24 +621,9 @@ def run_upload(project_ids_pattern, repo_id, token, commit_message):
         else f"Upload project(s) {project_ids_pattern} with Annif"
     )
 
-    project_dirs = {p.datadir for p in projects}
-    vocab_dirs = {p.vocab.datadir for p in projects}
-    data_dirs = project_dirs.union(vocab_dirs)
-
     fobjs, operations = [], []
     try:
-        for data_dir in data_dirs:
-            logger.debug(f"Archiving directory {data_dir}")
-            fobj, operation = cli_util.prepare_datadir_commit(data_dir)
-            logger.debug(f"Preuploading to {operation.path_in_repo}")
-            preupload_lfs_files(repo_id, additions=[operation])
-            fobjs.append(fobj)
-            operations.append(operation)
-        for project in projects:
-            fobj, operation = cli_util.prepare_config_commit(project)
-            fobjs.append(fobj)
-            operations.append(operation)
-
+        fobjs, operations = cli_util.prepare_commits(projects, repo_id)
         api = HfApi()
         api.create_commit(
             repo_id=repo_id,

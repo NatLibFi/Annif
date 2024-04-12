@@ -252,7 +252,31 @@ def get_matching_projects(pattern: str) -> list[AnnifProject]:
     ]
 
 
-def prepare_datadir_commit(data_dir: str) -> tuple[io.BufferedRandom, Any]:
+def prepare_commits(projects: list[AnnifProject], repo_id: str) -> tuple[list, list]:
+    """Prepare and pre-upload data and config commit operations for projects to a
+    Hugging Face Hub repository."""
+    from huggingface_hub import preupload_lfs_files
+
+    fobjs, operations = [], []
+    data_dirs = {p.datadir for p in projects}
+    vocab_dirs = {p.vocab.datadir for p in projects}
+    all_dirs = data_dirs.union(vocab_dirs)
+
+    for data_dir in all_dirs:
+        fobj, operation = _prepare_datadir_commit(data_dir)
+        preupload_lfs_files(repo_id, additions=[operation])
+        fobjs.append(fobj)
+        operations.append(operation)
+
+    for project in projects:
+        fobj, operation = _prepare_config_commit(project)
+        fobjs.append(fobj)
+        operations.append(operation)
+
+    return fobjs, operations
+
+
+def _prepare_datadir_commit(data_dir: str) -> tuple[io.BufferedRandom, Any]:
     from huggingface_hub import CommitOperationAdd
 
     zip_repo_path = data_dir.split(os.path.sep, 1)[1] + ".zip"
@@ -261,7 +285,7 @@ def prepare_datadir_commit(data_dir: str) -> tuple[io.BufferedRandom, Any]:
     return fobj, operation
 
 
-def prepare_config_commit(project: AnnifProject) -> tuple[io.BytesIO, Any]:
+def _prepare_config_commit(project: AnnifProject) -> tuple[io.BytesIO, Any]:
     from huggingface_hub import CommitOperationAdd
 
     config_repo_path = project.project_id + ".cfg"
