@@ -392,14 +392,18 @@ def _unzip_member(
 ) -> None:
     dest_path = os.path.join(datadir, member.filename)
     if os.path.exists(dest_path) and not force:
-        if _are_identical_member_and_file(member, dest_path):
-            logger.debug(f"Skipping unzip to {dest_path}; already in place")
-        else:
-            click.echo(f"Not overwriting {dest_path} (use --force to override)")
+        _handle_existing_file(member, dest_path)
+        return
+    logger.debug(f"Unzipping to {dest_path}")
+    zfile.extract(member, path=datadir)
+    _restore_timestamps(member, dest_path)
+
+
+def _handle_existing_file(member: zipfile.ZipInfo, dest_path: str) -> None:
+    if _are_identical_member_and_file(member, dest_path):
+        logger.debug(f"Skipping unzip to {dest_path}; already in place")
     else:
-        logger.debug(f"Unzipping to {dest_path}")
-        zfile.extract(member, path=datadir)
-        _restore_timestamps(member, dest_path)
+        click.echo(f"Not overwriting {dest_path} (use --force to override)")
 
 
 def _are_identical_member_and_file(member: zipfile.ZipInfo, dest_path: str) -> bool:
@@ -415,8 +419,7 @@ def _restore_timestamps(member: zipfile.ZipInfo, dest_path: str) -> None:
 def copy_project_config(src_path: str, force: bool) -> None:
     """Copy a given project configuration file to projects.d/ directory."""
     project_configs_dest_dir = "projects.d"
-    if not os.path.isdir(project_configs_dest_dir):
-        os.mkdir(project_configs_dest_dir)
+    os.makedirs(project_configs_dest_dir, exist_ok=True)
 
     dest_path = os.path.join(project_configs_dest_dir, os.path.basename(src_path))
     if os.path.exists(dest_path) and not force:
