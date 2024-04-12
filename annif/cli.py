@@ -30,6 +30,7 @@ cli = FlaskGroup(
     create_app=create_app, add_default_commands=False, add_version_option=False
 )
 cli = click.version_option(message="%(version)s")(cli)
+cli.params = [opt for opt in cli.params if opt.name not in ("env_file", "app")]
 
 
 @cli.command("list-projects")
