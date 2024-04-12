@@ -22,7 +22,9 @@ class CustomRequestBodyValidator(JSONRequestBodyValidator):
 
     def _validate(self, body: Any) -> dict | None:
         if not self._nullable and body is None:
-            raise BadRequestProblem("Request body must not be empty")  # noqa
+            raise BadRequestProblem(
+                "Request body must not be empty"
+            )  # pragma: no cover
         try:
             return self._validator.validate(body)
         except ValidationError as exception:
