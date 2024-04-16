@@ -3,13 +3,13 @@ projects."""
 
 from __future__ import annotations
 
+import importlib
 import json
 import os.path
 import shutil
 import zipfile
 from io import BytesIO
 from typing import TYPE_CHECKING, Any
-import importlib
 
 import joblib
 import keras.backend as K
@@ -144,12 +144,12 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             )
         except ValueError as err:
             metadata = self.get_model_metadata(model_filename)
-            keras_version = importlib.metadata.version('keras')
+            keras_version = importlib.metadata.version("keras")
             message = (
                 f"loading Keras model from {model_filename}; "
                 f"model metadata: {metadata}; "
                 f"you have Keras version {keras_version}. "
-                f"Original error message: \"{err}\""
+                f'Original error message: "{err}"'
             )
             raise OperationFailedException(message, backend_id=self.backend_id)
 
