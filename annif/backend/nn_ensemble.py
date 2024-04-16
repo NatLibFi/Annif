@@ -38,6 +38,8 @@ if TYPE_CHECKING:
 
     from annif.corpus.document import DocumentCorpus
 
+logger = annif.logger
+
 
 def idx_to_key(idx: int) -> bytes:
     """convert an integer index to a binary key for use in LMDB"""
@@ -308,7 +310,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             corpus, int(params["learn-epochs"]), int(params["lmdb_map_size"])
         )
 
-    def get_model_metadata(self, model_filename: str) -> dict:
+    def get_model_metadata(self, model_filename: str) -> dict | None:
         """Read metadata from Keras model files."""
 
         try:
@@ -318,4 +320,5 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                     metadata = json.loads(metadata_str)
                     return metadata
         except Exception:
-            return dict()
+            logger.warn(f"Failed to read metadata from {model_filename}")
+            return None
