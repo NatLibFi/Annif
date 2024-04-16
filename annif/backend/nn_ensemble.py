@@ -9,6 +9,7 @@ import shutil
 import zipfile
 from io import BytesIO
 from typing import TYPE_CHECKING, Any
+import importlib
 
 import joblib
 import keras.backend as K
@@ -139,9 +140,15 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             self._model = load_model(
                 model_filename, custom_objects={"MeanLayer": MeanLayer}
             )
-        except ValueError:
+        except ValueError as err:
             metadata = self.get_model_metadata(model_filename)
-            message = f"loading Keras model from {model_filename}; model metadata: {metadata}"
+            keras_version = importlib.metadata.version('keras')
+            message = (
+                f"loading Keras model from {model_filename}; "
+                f"model metadata: {metadata}; "
+                f"you have Keras version {keras_version}. "
+                f"Original error message: \"{err}\""
+            )
             raise OperationFailedException(message, backend_id=self.backend_id)
 
     def _merge_source_batches(

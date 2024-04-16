@@ -230,7 +230,8 @@ def test_nn_ensemble_initialize_error(load_model, app_project):
     )
     assert nn_ensemble._model is None
     with pytest.raises(
-        OperationFailedException, match=r"loading Keras model from .*; model metadata: .*"
+        OperationFailedException,
+        match=r"loading Keras model from .*; model metadata: .*",
     ):
         nn_ensemble.initialize()
     assert load_model.called
