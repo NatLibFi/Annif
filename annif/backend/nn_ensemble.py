@@ -3,8 +3,10 @@ projects."""
 
 from __future__ import annotations
 
+import json
 import os.path
 import shutil
+import zipfile
 from io import BytesIO
 from typing import TYPE_CHECKING, Any
 
@@ -138,8 +140,8 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 model_filename, custom_objects={"MeanLayer": MeanLayer}
             )
         except ValueError:
-            md = annif.util.get_keras_model_metadata(model_filename)
-            message = f"loading model from {model_filename}; model metadata: {md}"
+            metadata = self.get_model_metadata(model_filename)
+            message = f"loading Keras model from {model_filename}; model metadata: {metadata}"
             raise OperationFailedException(message, backend_id=self.backend_id)
 
     def _merge_source_batches(
@@ -298,3 +300,15 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         self._fit_model(
             corpus, int(params["learn-epochs"]), int(params["lmdb_map_size"])
         )
+
+    def get_model_metadata(self, model_filename: str) -> dict:
+        """Read metadata from Keras model files."""
+
+        try:
+            with zipfile.ZipFile(model_filename, "r") as zip:
+                with zip.open("metadata.json") as metadata_file:
+                    metadata_str = metadata_file.read().decode("utf-8")
+                    metadata = json.loads(metadata_str)
+                    return metadata
+        except Exception:
+            return dict()

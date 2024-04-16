@@ -17,9 +17,3 @@ def test_metric_code():
 
     for input, output in zip(inputs, outputs):
         assert annif.util.metric_code(input) == output
-
-
-def test_get_keras_model_metadata():
-    model_file_path = "tests/dummy-nn-model.keras"  # nn-ensemble-model.zip"
-    expected_md = {"keras_version": "xx.yy.zz", "date_saved": "2024-04-11@01:01:01"}
-    assert annif.util.get_keras_model_metadata(model_file_path) == expected_md

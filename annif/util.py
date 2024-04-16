@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import glob
-import json
 import logging
 import os
 import os.path
@@ -50,18 +49,6 @@ def atomic_save(
         newname = fn.replace(tempfilename, os.path.join(dirname, filename))
         logger.debug("renaming temporary file %s to %s", fn, newname)
         os.rename(fn, newname)
-
-
-def get_keras_model_metadata(model_file_path: str) -> dict:
-    """Read metadata from Keras model files."""
-    try:
-        with zipfile.ZipFile(model_file_path, "r") as zip:
-            with zip.open("metadata.json") as metadata_file:
-                metadata_str = metadata_file.read().decode("utf-8")
-                metadata = json.loads(metadata_str)
-                return metadata
-    except Exception:
-        return dict()
 
 
 def cleanup_uri(uri: str) -> str:
