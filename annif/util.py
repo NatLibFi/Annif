@@ -7,7 +7,6 @@ import logging
 import os
 import os.path
 import tempfile
-import zipfile
 from typing import Any, Callable
 
 from annif import logger
