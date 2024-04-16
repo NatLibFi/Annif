@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 
 from flask import Flask, current_app
@@ -36,9 +37,11 @@ class AnnifRegistry:
         self._projects_config_path = projects_config_path
         self._datadir = datadir
         self._init_vars()
+        projects_pattern = os.getenv("ANNIF_PROJECTS_INIT", ".*")
         if init_projects:
             for project in self._projects[self._rid].values():
-                project.initialize()
+                if re.search(projects_pattern, project.project_id) is not None:
+                    project.initialize()
 
     def _init_vars(self) -> None:
         # initialize the static variables, if necessary
