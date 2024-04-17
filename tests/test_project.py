@@ -300,6 +300,20 @@ def test_project_initialized(app_with_initialize):
     assert project.backend.initialized
 
 
+def test_project_not_initialized_with_selection(app_with_initialize_fi_projects):
+    with app_with_initialize_fi_projects.app_context():
+        project = annif.registry.get_project("dummy-en")
+    assert not project.initialized
+    assert not project.backend.initialized
+
+
+def test_project_initialized_with_selection(app_with_initialize_fi_projects):
+    with app_with_initialize_fi_projects.app_context():
+        project = annif.registry.get_project("dummy-fi")
+    assert project.initialized
+    assert project.backend.initialized
+
+
 def test_project_file_not_found():
     cxapp = annif.create_app(config_name="annif.default_config.TestingNoProjectsConfig")
     with cxapp.app.app_context():
