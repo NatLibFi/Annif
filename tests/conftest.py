@@ -41,8 +41,8 @@ def app_with_initialize():
 @pytest.fixture(scope="module")
 @unittest.mock.patch.dict(os.environ, {"ANNIF_PROJECTS_INIT": ".*-fi"})
 def app_with_initialize_fi_projects():
-    app = annif.create_app(config_name="annif.default_config.TestingInitializeConfig")
-    return app
+    cxapp = annif.create_app(config_name="annif.default_config.TestingInitializeConfig")
+    return cxapp.app
 
 
 @pytest.fixture
