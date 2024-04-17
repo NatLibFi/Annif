@@ -66,7 +66,7 @@ def test_nn_ensemble_can_set_lr(registry):
         project=project,
     )
     nn_ensemble._create_model(["dummy-en"])
-    assert nn_ensemble._model.optimizer.learning_rate.value() == 0.002
+    assert nn_ensemble._model.optimizer.learning_rate.value == 0.002
 
 
 def test_set_lmdb_map_size(registry, tmpdir):
@@ -109,7 +109,7 @@ def test_nn_ensemble_train_and_learn(registry, tmpdir):
     nn_ensemble.train(document_corpus)
 
     # check adam default learning_rate:
-    assert nn_ensemble._model.optimizer.learning_rate.value() == 0.001
+    assert nn_ensemble._model.optimizer.learning_rate.value == 0.001
 
     datadir = py.path.local(project.datadir)
     assert datadir.join("nn-model.keras").exists()

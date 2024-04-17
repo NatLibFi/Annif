@@ -12,7 +12,7 @@ from io import BytesIO
 from typing import TYPE_CHECKING, Any
 
 import joblib
-import keras.backend as K
+import keras
 import lmdb
 import numpy as np
 from keras.layers import Add, Dense, Dropout, Flatten, Input, Layer
@@ -99,7 +99,7 @@ class MeanLayer(Layer):
     """Custom Keras layer that calculates mean values along the 2nd axis."""
 
     def call(self, inputs: EagerTensor) -> EagerTensor:
-        return K.mean(inputs, axis=2)
+        return keras.ops.mean(inputs, axis=2)
 
 
 class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBackend):
