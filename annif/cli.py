@@ -595,11 +595,16 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric, results_fi
     Will default to the stored token.""",
 )
 @click.option(
+    "--revision",
+    help="""An optional git revision to commit from. Defaults to the head of the "main"
+    branch.""",
+)
+@click.option(
     "--commit-message",
     help="""The summary / title / first line of the generated commit.""",
 )
 @cli_util.common_options
-def run_upload(project_ids_pattern, repo_id, token, commit_message):
+def run_upload(project_ids_pattern, repo_id, token, revision, commit_message):
     """
     Upload selected projects and their vocabularies to a Hugging Face Hub repository.
     \f
@@ -629,6 +634,7 @@ def run_upload(project_ids_pattern, repo_id, token, commit_message):
             repo_id=repo_id,
             operations=operations,
             commit_message=commit_message,
+            revision=revision,
             token=token,
         )
     except (HfHubHTTPError, HFValidationError) as err:
