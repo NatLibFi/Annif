@@ -1111,6 +1111,7 @@ def test_upload(create_commit, CommitOperationAdd, preupload_lfs_files):
             operations=mock.ANY,
             commit_message="Upload project(s) dummy-fi with Annif",
             token=None,
+            revision=None,
         )
         in create_commit.call_args_list
     )
