@@ -336,9 +336,9 @@ def get_matching_project_ids_from_hf_hub(
     the given pattern."""
     all_repo_file_paths = _list_files_in_hf_hub(repo_id, token, revision)
     return [
-        path.rsplit(".zip")[0].split("projects/")[1]
+        path.rsplit(".cfg")[0]
         for path in all_repo_file_paths
-        if fnmatch(path, f"projects/{project_ids_pattern}.zip")
+        if fnmatch(path, f"{project_ids_pattern}.cfg")
     ]
 
 
