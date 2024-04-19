@@ -174,7 +174,9 @@ paths:
       responses:
         "204":
           description: successful operation
-          content: {}
+          content:
+            application/json:
+              {}
         "404":
           $ref: '#/components/responses/NotFound'
         "503":

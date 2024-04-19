@@ -25,15 +25,12 @@ from annif.util import metric_code
 logger = annif.logger
 click_log.basic_config(logger)
 
-
-if len(sys.argv) > 1 and sys.argv[1] in ("run", "routes"):
-    create_app = annif.create_app  # Use Flask with Connexion
-else:
-    # Connexion is not needed for most CLI commands, use plain Flask
-    create_app = annif.create_flask_app
-
-cli = FlaskGroup(create_app=create_app, add_version_option=False)
+create_app = annif.create_flask_app
+cli = FlaskGroup(
+    create_app=create_app, add_default_commands=False, add_version_option=False
+)
 cli = click.version_option(message="%(version)s")(cli)
+cli.params = [opt for opt in cli.params if opt.name not in ("env_file", "app")]
 
 
 @cli.command("list-projects")
@@ -440,6 +437,21 @@ def run_eval(
             metrics_file,
             indent=2,
         )
+
+
+@cli.command("run")
+@click.option("--port", type=int, default=5000)
+@click.option("--log-level")
+@click_log.simple_verbosity_option(logger, default="ERROR")
+def run_app(**kwargs):
+    """
+    Run Annif in server mode for development.
+    \f
+    The server is for development purposes only.
+    """
+    kwargs = {k: v for k, v in kwargs.items() if v is not None}
+    cxapp = annif.create_cx_app()
+    cxapp.run(**kwargs)
 
 
 FILTER_BATCH_MAX_LIMIT = 15

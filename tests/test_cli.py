@@ -1051,25 +1051,19 @@ def test_version_option():
     assert result.output.strip() == version.strip()
 
 
-def test_run():
+@mock.patch("connexion.FlaskApp.run")
+def test_run(run):
+    result = runner.invoke(annif.cli.cli, ["run"])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert run.called
+
+
+def test_run_help():
     result = runner.invoke(annif.cli.cli, ["run", "--help"])
     assert not result.exception
     assert result.exit_code == 0
-    assert "Run a local development server." in result.output
-
-
-def test_routes_with_flask_app():
-    # When using plain Flask only the static endpoint exists
-    result = runner.invoke(annif.cli.cli, ["routes"])
-    assert re.search(r"static\s+GET\s+\/static\/\<path:filename\>", result.output)
-    assert not re.search(r"app.home\s+GET\s+\/", result.output)
-
-
-def test_routes_with_connexion_app():
-    # When using Connexion all endpoints exist
-    result = os.popen("python annif/cli.py routes").read()
-    assert re.search(r"static\s+GET\s+\/static\/<path:filename>", result)
-    assert re.search(r"app.home\s+GET\s+\/", result)
+    assert "Run Annif in server mode for development." in result.output
 
 
 def test_completion_script_generation():

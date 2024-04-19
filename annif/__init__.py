@@ -7,6 +7,8 @@ import os
 import os.path
 from typing import TYPE_CHECKING
 
+from flask import Flask
+
 logging.basicConfig()
 logger = logging.getLogger("annif")
 logger.setLevel(level=logging.INFO)
@@ -14,12 +16,11 @@ logger.setLevel(level=logging.INFO)
 import annif.backend  # noqa
 
 if TYPE_CHECKING:
-    from flask.app import Flask
+    from connexion.apps.flask import FlaskApp
 
 
 def create_flask_app(config_name: str | None = None) -> Flask:
     """Create a Flask app to be used by the CLI."""
-    from flask import Flask
 
     _set_tensorflow_loglevel()
 
@@ -31,29 +32,41 @@ def create_flask_app(config_name: str | None = None) -> Flask:
     return app
 
 
-def create_app(config_name: str | None = None) -> Flask:
+def create_cx_app(config_name: str | None = None) -> FlaskApp:
     """Create a Connexion app to be used for the API."""
-    # 'cxapp' here is the Connexion application that has a normal Flask app
-    # as a property (cxapp.app)
     import connexion
-    from flask_cors import CORS
+    from connexion.datastructures import MediaTypeDict
+    from connexion.middleware import MiddlewarePosition
+    from connexion.validators import FormDataValidator, MultiPartFormDataValidator
+    from starlette.middleware.cors import CORSMiddleware
 
+    import annif.registry
     from annif.openapi.validation import CustomRequestBodyValidator
 
     specdir = os.path.join(os.path.dirname(__file__), "openapi")
-    cxapp = connexion.App(__name__, specification_dir=specdir)
+    cxapp = connexion.FlaskApp(__name__, specification_dir=specdir)
     config_name = _get_config_name(config_name)
     logger.debug(f"creating connexion app with configuration {config_name}")
     cxapp.app.config.from_object(config_name)
     cxapp.app.config.from_envvar("ANNIF_SETTINGS", silent=True)
 
     validator_map = {
-        "body": CustomRequestBodyValidator,
+        "body": MediaTypeDict(
+            {
+                "*/*json": CustomRequestBodyValidator,
+                "application/x-www-form-urlencoded": FormDataValidator,
+                "multipart/form-data": MultiPartFormDataValidator,
+            }
+        ),
     }
     cxapp.add_api("annif.yaml", validator_map=validator_map)
 
     # add CORS support
-    CORS(cxapp.app)
+    cxapp.add_middleware(
+        CORSMiddleware,
+        position=MiddlewarePosition.BEFORE_EXCEPTION,
+        allow_origins=["*"],
+    )
 
     if cxapp.app.config["INITIALIZE_PROJECTS"]:
         annif.registry.initialize_projects(cxapp.app)
@@ -64,8 +77,11 @@ def create_app(config_name: str | None = None) -> Flask:
 
     cxapp.app.register_blueprint(bp)
 
-    # return the Flask app
-    return cxapp.app
+    # return the Connexion app
+    return cxapp
+
+
+create_app = create_cx_app  # Alias to allow starting directly with uvicorn run
 
 
 def _get_config_name(config_name: str | None) -> str:

@@ -54,4 +54,6 @@ RUN groupadd -g 998 annif_user && \
     chown -R annif_user:annif_user /annif-projects /Annif/tests/data
 USER annif_user
 
+ENV GUNICORN_CMD_ARGS="--worker-class uvicorn.workers.UvicornWorker"
+
 CMD annif

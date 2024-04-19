@@ -30,9 +30,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
 
-connexion = { version = "2.14.2", extras = ["swagger-ui"] }
-flask = "2.2.*"
-flask-cors = "4.0.*"
+connexion = { version = "~3.0.5", extras = ["flask", "uvicorn", "swagger-ui"] }
 click = "8.1.*"
 click-log = "0.4.*"
 joblib = "1.3.*"

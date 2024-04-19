@@ -7,7 +7,7 @@ import annif.rest
 
 def test_rest_list_projects(app):
     with app.app_context():
-        result = annif.rest.list_projects()
+        result = annif.rest.list_projects()[0]
         project_ids = [proj["project_id"] for proj in result["projects"]]
         # public project should be returned
         assert "dummy-fi" in project_ids
@@ -21,7 +21,7 @@ def test_rest_list_projects(app):
 
 def test_rest_show_info(app):
     with app.app_context():
-        result = annif.rest.show_info()
+        result = annif.rest.show_info()[0]
         version = importlib.metadata.version("annif")
         assert result == {"title": "Annif REST API", "version": version}
 
@@ -29,14 +29,14 @@ def test_rest_show_info(app):
 def test_rest_show_project_public(app):
     # public projects should be accessible via REST
     with app.app_context():
-        result = annif.rest.show_project("dummy-fi")
+        result = annif.rest.show_project("dummy-fi")[0]
         assert result["project_id"] == "dummy-fi"
 
 
 def test_rest_show_project_hidden(app):
     # hidden projects should be accessible if you know the project id
     with app.app_context():
-        result = annif.rest.show_project("dummy-en")
+        result = annif.rest.show_project("dummy-en")[0]
         assert result["project_id"] == "dummy-en"
 
 
@@ -58,7 +58,7 @@ def test_rest_suggest_public(app):
     with app.app_context():
         result = annif.rest.suggest(
             "dummy-fi", {"text": "example text", "limit": 10, "threshold": 0.0}
-        )
+        )[0]
         assert "results" in result
 
 
@@ -67,7 +67,7 @@ def test_rest_suggest_hidden(app):
     with app.app_context():
         result = annif.rest.suggest(
             "dummy-en", {"text": "example text", "limit": 10, "threshold": 0.0}
-        )
+        )[0]
         assert "results" in result
 
 
@@ -101,7 +101,7 @@ def test_rest_suggest_with_language_override(app):
         result = annif.rest.suggest(
             "dummy-vocablang",
             {"text": "example text", "limit": 10, "threshold": 0.0, "language": "en"},
-        )
+        )[0]
         assert result["results"][0]["label"] == "dummy"
 
 
@@ -120,7 +120,7 @@ def test_rest_suggest_with_different_vocab_language(app):
     with app.app_context():
         result = annif.rest.suggest(
             "dummy-vocablang", {"text": "example text", "limit": 10, "threshold": 0.0}
-        )
+        )[0]
         assert result["results"][0]["label"] == "dummy-fi"
 
 
@@ -128,7 +128,7 @@ def test_rest_suggest_with_notations(app):
     with app.app_context():
         result = annif.rest.suggest(
             "dummy-fi", {"text": "example text", "limit": 10, "threshold": 0.0}
-        )
+        )[0]
         assert result["results"][0]["notation"] is None
 
 
@@ -136,7 +136,7 @@ def test_rest_suggest_batch_one_doc(app):
     with app.app_context():
         result = annif.rest.suggest_batch(
             "dummy-fi", {"documents": [{"text": "example text"}]}
-        )
+        )[0]
         assert len(result) == 1
         assert result[0]["results"][0]["label"] == "dummy-fi"
         assert result[0]["document_id"] is None
@@ -147,7 +147,7 @@ def test_rest_suggest_batch_one_doc_with_id(app):
         result = annif.rest.suggest_batch(
             "dummy-fi",
             {"documents": [{"text": "example text", "document_id": "doc-0"}]},
-        )
+        )[0]
         assert len(result) == 1
         assert result[0]["results"][0]["label"] == "dummy-fi"
         assert result[0]["document_id"] == "doc-0"
@@ -163,7 +163,7 @@ def test_rest_suggest_batch_two_docs(app):
                     {"text": "another example text"},
                 ]
             },
-        )
+        )[0]
         assert len(result) == 2
         assert result[1]["results"][0]["label"] == "dummy-fi"
 
@@ -176,7 +176,7 @@ def test_rest_suggest_batch_with_language_override(app):
                 "documents": [{"text": "example text"}],
             },
             language="en",
-        )
+        )[0]
         assert result[0]["results"][0]["label"] == "dummy"
 
 
@@ -188,14 +188,18 @@ def test_rest_suggest_batch_with_limit_override(app):
                 "documents": [{"text": "example text"}],
             },
             limit=0,
-        )
+        )[0]
         assert len(result[0]["results"]) == 0
 
 
 def test_rest_learn_empty(app):
     with app.app_context():
         response = annif.rest.learn("dummy-en", [])
-        assert response == (None, 204)  # success, no output
+        assert response == (
+            None,
+            204,
+            {"Content-Type": "application/json"},
+        )  # success, no output
 
 
 def test_rest_learn(app):
@@ -207,11 +211,15 @@ def test_rest_learn(app):
     ]
     with app.app_context():
         response = annif.rest.learn("dummy-en", documents)
-        assert response == (None, 204)  # success, no output
+        assert response == (
+            None,
+            204,
+            {"Content-Type": "application/json"},
+        )  # success, no output
 
         result = annif.rest.suggest(
             "dummy-en", {"text": "example text", "limit": 10, "threshold": 0.0}
-        )
+        )[0]
         assert "results" in result
         assert result["results"][0]["uri"] == "http://example.org/none"
         assert result["results"][0]["label"] == "none"

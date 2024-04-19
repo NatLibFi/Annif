@@ -132,10 +132,10 @@ def test_get_project_default_params_fasttext(registry):
 
 
 def test_get_project_invalid_config_file():
-    app = annif.create_app(
+    cxapp = annif.create_app(
         config_name="annif.default_config.TestingInvalidProjectsConfig"
     )
-    with app.app_context():
+    with cxapp.app.app_context():
         with pytest.raises(ConfigurationException):
             annif.registry.get_project("duplicatedvocab")
 
@@ -315,23 +315,23 @@ def test_project_initialized_with_selection(app_with_initialize_fi_projects):
 
 
 def test_project_file_not_found():
-    app = annif.create_app(config_name="annif.default_config.TestingNoProjectsConfig")
-    with app.app_context():
+    cxapp = annif.create_app(config_name="annif.default_config.TestingNoProjectsConfig")
+    with cxapp.app.app_context():
         with pytest.raises(ValueError):
             annif.registry.get_project("dummy-en")
 
 
 def test_project_file_toml():
-    app = annif.create_app(config_name="annif.default_config.TestingTOMLConfig")
-    with app.app_context():
+    cxapp = annif.create_app(config_name="annif.default_config.TestingTOMLConfig")
+    with cxapp.app.app_context():
         assert len(annif.registry.get_projects()) == 2
         assert annif.registry.get_project("dummy-fi-toml").project_id == "dummy-fi-toml"
         assert annif.registry.get_project("dummy-en-toml").project_id == "dummy-en-toml"
 
 
 def test_project_directory():
-    app = annif.create_app(config_name="annif.default_config.TestingDirectoryConfig")
-    with app.app_context():
+    cxapp = annif.create_app(config_name="annif.default_config.TestingDirectoryConfig")
+    with cxapp.app.app_context():
         assert len(annif.registry.get_projects()) == 18 + 2
         assert annif.registry.get_project("dummy-fi").project_id == "dummy-fi"
         assert annif.registry.get_project("dummy-fi-toml").project_id == "dummy-fi-toml"
