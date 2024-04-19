@@ -15,20 +15,16 @@ logger = logging.getLogger("openapi.validation")
 
 class CustomRequestBodyValidator(JSONRequestBodyValidator):
     """Custom request body validator that overrides the default error message for the
-    'maxItems' validator for the 'documents' property."""
+    'maxItems' validator for the 'documents' property to prevent logging request body
+    with the contents of all documents."""
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     def _validate(self, body: Any) -> dict | None:
-        if not self._nullable and body is None:
-            raise BadRequestProblem(
-                "Request body must not be empty"
-            )  # pragma: no cover
         try:
             return self._validator.validate(body)
         except ValidationError as exception:
-            # Prevent logging request body with contents of all documents
             if exception.validator == "maxItems" and list(exception.schema_path) == [
                 "properties",
                 "documents",

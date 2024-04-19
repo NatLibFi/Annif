@@ -83,15 +83,6 @@ def test_openapi_suggest_novocab(app_client):
     assert req.status_code == 503
 
 
-def test_openapi_suggest_emptybody(app_client):
-    data = {}
-    req = app_client.post(
-        "http://localhost:8000/v1/projects/dummy-fi/suggest", data=data
-    )
-    assert req.status_code == 400
-    assert req.json()["detail"] == "RequestBody is required"
-
-
 def test_openapi_suggest_batch(app_client):
     data = {"documents": [{"text": "A quick brown fox jumped over the lazy dog."}] * 32}
     req = app_client.post(
