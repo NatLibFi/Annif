@@ -587,7 +587,7 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric, results_fi
 
 
 @cli.command("upload")
-@click.argument("project_ids_pattern")
+@click.argument("project_ids_pattern", shell_complete=cli_util.complete_param)
 @click.argument("repo_id")
 @click.option(
     "--token",

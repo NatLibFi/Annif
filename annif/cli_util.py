@@ -461,7 +461,7 @@ def get_vocab_id_from_config(config_path: str) -> str:
 def _get_completion_choices(
     param: Argument,
 ) -> dict[str, AnnifVocabulary] | dict[str, AnnifProject] | list:
-    if param.name == "project_id":
+    if param.name in ("project_id", "project_ids_pattern"):
         return annif.registry.get_projects()
     elif param.name == "vocab_id":
         return annif.registry.get_vocabs()
