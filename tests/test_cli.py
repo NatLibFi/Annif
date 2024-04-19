@@ -1167,7 +1167,7 @@ def hf_hub_download_mock_side_effect(filename, repo_id, token, revision):
         "dummy-fi.cfg",
         "projects/dummy-en.zip",
         "vocabs/dummy.zip",
-        "dummy-.cfg",
+        "dummy-en.cfg",
     ],
 )
 @mock.patch(
@@ -1225,7 +1225,7 @@ def test_download_dummy_fi(
         "dummy-fi.cfg",
         "projects/dummy-en.zip",
         "vocabs/dummy.zip",
-        "dummy-.cfg",
+        "dummy-en.cfg",
     ],
 )
 @mock.patch(
