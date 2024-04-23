@@ -320,5 +320,5 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                     metadata = json.loads(metadata_str)
                     return metadata
         except Exception:
-            logger.warn(f"Failed to read metadata from {model_filename}")
+            logger.warning(f"Failed to read metadata from {model_filename}")
             return None
