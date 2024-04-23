@@ -220,7 +220,7 @@ def test_nn_ensemble_get_model_metadata(app_project):
     ) < timedelta(1)
 
 
-def test_nn_ensemble_get_model_metadata_error(app_project, caplog):
+def test_nn_ensemble_get_model_metadata_nonexistent_file(app_project):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id="nn_ensemble",
@@ -231,7 +231,6 @@ def test_nn_ensemble_get_model_metadata_error(app_project, caplog):
     model_filename = os.path.join(nn_ensemble.datadir, nonexistent_model_file)
 
     actual_metadata = nn_ensemble.get_model_metadata(model_filename)
-
     assert actual_metadata is None
 
 
