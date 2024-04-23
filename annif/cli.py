@@ -17,7 +17,7 @@ import annif.corpus
 import annif.parallel
 import annif.project
 import annif.registry
-from annif import cli_util
+from annif import cli_util, hfh_util
 from annif.exception import (
     NotInitializedException,
     NotSupportedException,
@@ -617,7 +617,7 @@ def run_upload(project_ids_pattern, repo_id, token, revision, commit_message):
     from huggingface_hub import HfApi
     from huggingface_hub.utils import HfHubHTTPError, HFValidationError
 
-    projects = cli_util.get_matching_projects(project_ids_pattern)
+    projects = hfh_util.get_matching_projects(project_ids_pattern)
     click.echo(f"Uploading project(s): {', '.join([p.project_id for p in projects])}")
 
     commit_message = (
@@ -628,7 +628,7 @@ def run_upload(project_ids_pattern, repo_id, token, revision, commit_message):
 
     fobjs, operations = [], []
     try:
-        fobjs, operations = cli_util.prepare_commits(projects, repo_id)
+        fobjs, operations = hfh_util.prepare_commits(projects, repo_id)
         api = HfApi()
         api.create_commit(
             repo_id=repo_id,
@@ -680,28 +680,28 @@ def run_download(project_ids_pattern, repo_id, token, revision, force):
     be given with options.
     """
 
-    project_ids = cli_util.get_matching_project_ids_from_hf_hub(
+    project_ids = hfh_util.get_matching_project_ids_from_hf_hub(
         project_ids_pattern, repo_id, token, revision
     )
     click.echo(f"Downloading project(s): {', '.join(project_ids)}")
 
     vocab_ids = set()
     for project_id in project_ids:
-        project_zip_cache_path = cli_util.download_from_hf_hub(
+        project_zip_cache_path = hfh_util.download_from_hf_hub(
             f"projects/{project_id}.zip", repo_id, token, revision
         )
-        cli_util.unzip_archive(project_zip_cache_path, force)
-        config_file_cache_path = cli_util.download_from_hf_hub(
+        hfh_util.unzip_archive(project_zip_cache_path, force)
+        config_file_cache_path = hfh_util.download_from_hf_hub(
             f"{project_id}.cfg", repo_id, token, revision
         )
-        vocab_ids.add(cli_util.get_vocab_id_from_config(config_file_cache_path))
-        cli_util.copy_project_config(config_file_cache_path, force)
+        vocab_ids.add(hfh_util.get_vocab_id_from_config(config_file_cache_path))
+        hfh_util.copy_project_config(config_file_cache_path, force)
 
     for vocab_id in vocab_ids:
-        vocab_zip_cache_path = cli_util.download_from_hf_hub(
+        vocab_zip_cache_path = hfh_util.download_from_hf_hub(
             f"vocabs/{vocab_id}.zip", repo_id, token, revision
         )
-        cli_util.unzip_archive(vocab_zip_cache_path, force)
+        hfh_util.unzip_archive(vocab_zip_cache_path, force)
 
 
 @cli.command("completion")
