@@ -220,7 +220,24 @@ def test_nn_ensemble_get_model_metadata(app_project):
     ) < timedelta(1)
 
 
-@mock.patch("annif.backend.nn_ensemble.load_model", side_effect=ValueError)
+def test_nn_ensemble_get_model_metadata_error(app_project, caplog):
+    nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
+    nn_ensemble = nn_ensemble_type(
+        backend_id="nn_ensemble",
+        config_params={"sources": "dummy-en"},
+        project=app_project,
+    )
+    nonexistent_model_file = "nonexistent.zip"
+    model_filename = os.path.join(nn_ensemble.datadir, nonexistent_model_file)
+
+    actual_metadata = nn_ensemble.get_model_metadata(model_filename)
+
+    assert actual_metadata is None
+    assert "Failed to read metadata from " in caplog.text
+    assert nonexistent_model_file in caplog.text
+
+
+@mock.patch("annif.backend.nn_ensemble.load_model", side_effect=Exception)
 def test_nn_ensemble_initialize_error(load_model, app_project):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
