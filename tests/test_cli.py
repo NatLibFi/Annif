@@ -12,8 +12,11 @@ from unittest import mock
 
 from click.shell_completion import ShellComplete
 from click.testing import CliRunner
+from huggingface_hub.utils import HFValidationError
 
 import annif.cli
+import annif.cli_util
+import annif.hfh_util
 import annif.parallel
 
 runner = CliRunner(env={"ANNIF_CONFIG": "annif.default_config.TestingConfig"})
@@ -1064,6 +1067,257 @@ def test_run_help():
     assert not result.exception
     assert result.exit_code == 0
     assert "Run Annif in server mode for development." in result.output
+
+
+@mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
+@mock.patch("huggingface_hub.CommitOperationAdd")
+@mock.patch("huggingface_hub.HfApi.create_commit")
+def test_upload(create_commit, CommitOperationAdd, preupload_lfs_files):
+    result = runner.invoke(annif.cli.cli, ["upload", "dummy-fi", "dummy-repo"])
+    assert not result.exception
+    assert create_commit.call_count == 1
+    assert CommitOperationAdd.call_count == 3  # projects, vocab, config
+    assert (
+        mock.call(
+            path_or_fileobj=mock.ANY,  # io.BufferedRandom object
+            path_in_repo="data/vocabs/dummy.zip",
+        )
+        in CommitOperationAdd.call_args_list
+    )
+    assert (
+        mock.call(
+            path_or_fileobj=mock.ANY,  # io.BufferedRandom object
+            path_in_repo="data/projects/dummy-fi.zip",
+        )
+        in CommitOperationAdd.call_args_list
+    )
+    assert (
+        mock.call(
+            path_or_fileobj=mock.ANY,  # io.BytesIO object
+            path_in_repo="dummy-fi.cfg",
+        )
+        in CommitOperationAdd.call_args_list
+    )
+    assert (
+        mock.call(
+            repo_id="dummy-repo",
+            operations=mock.ANY,
+            commit_message="Upload project(s) dummy-fi with Annif",
+            token=None,
+            revision=None,
+        )
+        in create_commit.call_args_list
+    )
+
+
+@mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
+@mock.patch("huggingface_hub.CommitOperationAdd")
+@mock.patch("huggingface_hub.HfApi.create_commit")
+def test_upload_many(create_commit, CommitOperationAdd, preupload_lfs_files):
+    result = runner.invoke(annif.cli.cli, ["upload", "dummy-*", "dummy-repo"])
+    assert not result.exception
+    assert create_commit.call_count == 1
+    assert CommitOperationAdd.call_count == 11
+
+
+def test_upload_nonexistent_repo():
+    failed_result = runner.invoke(annif.cli.cli, ["upload", "dummy-fi", "nonexistent"])
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "Repository Not Found for url:" in failed_result.output
+
+
+def hf_hub_download_mock_side_effect(filename, repo_id, token, revision):
+    return "tests/huggingface-cache/" + filename  # Mocks the downloaded file paths
+
+
+@mock.patch(
+    "huggingface_hub.list_repo_files",
+    return_value=[  # Mocks the filenames in repo
+        "projects/dummy-fi.zip",
+        "vocabs/dummy.zip",
+        "dummy-fi.cfg",
+        "projects/dummy-en.zip",
+        "vocabs/dummy.zip",
+        "dummy-en.cfg",
+    ],
+)
+@mock.patch(
+    "huggingface_hub.hf_hub_download",
+    side_effect=hf_hub_download_mock_side_effect,
+)
+@mock.patch("annif.hfh_util.copy_project_config")
+def test_download_dummy_fi(
+    copy_project_config, hf_hub_download, list_repo_files, testdatadir
+):
+    result = runner.invoke(
+        annif.cli.cli,
+        [
+            "download",
+            "dummy-fi",
+            "mock-repo",
+        ],
+    )
+    assert not result.exception
+    assert list_repo_files.called
+    assert hf_hub_download.called
+    assert hf_hub_download.call_args_list == [
+        mock.call(
+            repo_id="mock-repo",
+            filename="projects/dummy-fi.zip",
+            token=None,
+            revision=None,
+        ),
+        mock.call(
+            repo_id="mock-repo",
+            filename="dummy-fi.cfg",
+            token=None,
+            revision=None,
+        ),
+        mock.call(
+            repo_id="mock-repo",
+            filename="vocabs/dummy.zip",
+            token=None,
+            revision=None,
+        ),
+    ]
+    dirpath = os.path.join(str(testdatadir), "projects", "dummy-fi")
+    fpath = os.path.join(str(dirpath), "file.txt")
+    assert os.path.exists(fpath)
+    assert copy_project_config.call_args_list == [
+        mock.call("tests/huggingface-cache/dummy-fi.cfg", False)
+    ]
+
+
+@mock.patch(
+    "huggingface_hub.list_repo_files",
+    return_value=[  # Mock filenames in repo
+        "projects/dummy-fi.zip",
+        "vocabs/dummy.zip",
+        "dummy-fi.cfg",
+        "projects/dummy-en.zip",
+        "vocabs/dummy.zip",
+        "dummy-en.cfg",
+    ],
+)
+@mock.patch(
+    "huggingface_hub.hf_hub_download",
+    side_effect=hf_hub_download_mock_side_effect,
+)
+@mock.patch("annif.hfh_util.copy_project_config")
+def test_download_dummy_fi_and_en(
+    copy_project_config, hf_hub_download, list_repo_files, testdatadir
+):
+    result = runner.invoke(
+        annif.cli.cli,
+        [
+            "download",
+            "dummy-??",
+            "mock-repo",
+        ],
+    )
+    assert not result.exception
+    assert list_repo_files.called
+    assert hf_hub_download.called
+    assert hf_hub_download.call_args_list == [
+        mock.call(
+            repo_id="mock-repo",
+            filename="projects/dummy-fi.zip",
+            token=None,
+            revision=None,
+        ),
+        mock.call(
+            repo_id="mock-repo",
+            filename="dummy-fi.cfg",
+            token=None,
+            revision=None,
+        ),
+        mock.call(
+            repo_id="mock-repo",
+            filename="projects/dummy-en.zip",
+            token=None,
+            revision=None,
+        ),
+        mock.call(
+            repo_id="mock-repo",
+            filename="dummy-en.cfg",
+            token=None,
+            revision=None,
+        ),
+        mock.call(
+            repo_id="mock-repo",
+            filename="vocabs/dummy.zip",
+            token=None,
+            revision=None,
+        ),
+    ]
+    dirpath_fi = os.path.join(str(testdatadir), "projects", "dummy-fi")
+    fpath_fi = os.path.join(str(dirpath_fi), "file.txt")
+    assert os.path.exists(fpath_fi)
+    dirpath_en = os.path.join(str(testdatadir), "projects", "dummy-en")
+    fpath_en = os.path.join(str(dirpath_en), "file.txt")
+    assert os.path.exists(fpath_en)
+    assert copy_project_config.call_args_list == [
+        mock.call("tests/huggingface-cache/dummy-fi.cfg", False),
+        mock.call("tests/huggingface-cache/dummy-en.cfg", False),
+    ]
+
+
+@mock.patch(
+    "huggingface_hub.list_repo_files",
+    side_effect=HFValidationError,
+)
+@mock.patch(
+    "huggingface_hub.hf_hub_download",
+)
+def test_download_list_repo_files_failed(
+    hf_hub_download,
+    list_repo_files,
+):
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        [
+            "download",
+            "dummy-fi",
+            "mock-repo",
+        ],
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "Error: Operation failed:" in failed_result.output
+    assert list_repo_files.called
+    assert not hf_hub_download.called
+
+
+@mock.patch(
+    "huggingface_hub.list_repo_files",
+    return_value=[  # Mock filenames in repo
+        "projects/dummy-fi.zip",
+        "vocabs/dummy.zip",
+        "dummy-fi.cfg",
+    ],
+)
+@mock.patch(
+    "huggingface_hub.hf_hub_download",
+    side_effect=HFValidationError,
+)
+def test_download_hf_hub_download_failed(
+    hf_hub_download,
+    list_repo_files,
+):
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        [
+            "download",
+            "dummy-fi",
+            "mock-repo",
+        ],
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "Error: Operation failed:" in failed_result.output
+    assert list_repo_files.called
+    assert hf_hub_download.called
 
 
 def test_completion_script_generation():
