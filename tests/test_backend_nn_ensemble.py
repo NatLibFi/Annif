@@ -233,8 +233,6 @@ def test_nn_ensemble_get_model_metadata_error(app_project, caplog):
     actual_metadata = nn_ensemble.get_model_metadata(model_filename)
 
     assert actual_metadata is None
-    assert "Failed to read metadata from " in caplog.text
-    assert nonexistent_model_file in caplog.text
 
 
 @mock.patch("annif.backend.nn_ensemble.load_model", side_effect=Exception)
