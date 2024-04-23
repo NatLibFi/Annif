@@ -142,7 +142,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             self._model = load_model(
                 model_filename, custom_objects={"MeanLayer": MeanLayer}
             )
-        except ValueError as err:
+        except Exception as err:
             metadata = self.get_model_metadata(model_filename)
             keras_version = importlib.metadata.version("keras")
             message = (
