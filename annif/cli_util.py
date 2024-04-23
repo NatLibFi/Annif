@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import collections
-import io
 import itertools
 import os
 import sys
@@ -18,6 +17,7 @@ from annif.exception import ConfigurationException
 from annif.project import Access
 
 if TYPE_CHECKING:
+    import io
     from datetime import datetime
 
     from click.core import Argument, Context, Option
