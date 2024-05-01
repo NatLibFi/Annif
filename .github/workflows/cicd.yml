@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-22.04
     name: lint with isort, Black & flake8
     steps:
-    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+    - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
     - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-22.04
     name: check CLI startup time
     steps:
-    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+    - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
     - name: "Prepare: restore caches, install Poetry, set up Python"
       id: prepare
       uses: ./.github/actions/prepare
@@ -64,7 +64,7 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
     name: test on Python ${{ matrix.python-version }}
     steps:
-    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+    - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
     - name: Install system packages
       run: |
         sudo apt-get install \
@@ -109,7 +109,7 @@ jobs:
           poetry run pytest --cov=./ --cov-report xml --cov-append -m slow
         fi
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@c16abc29c95fcf9174b58eb7e1abf4c866893bc8  # v4.1.1
+      uses: codecov/codecov-action@5ecb98a3c6b747ed38dc09f787459979aebb39be  # v4.3.1
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     - name: Save cache
@@ -170,7 +170,7 @@ jobs:
     runs-on: ubuntu-22.04
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
-    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+    - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
     - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
