@@ -143,6 +143,24 @@ See "Cite this repository" in the details of the repository.
 ## Annif articles
 <ul>
 <li>
+Golub, K.; Suominen, O.; Mohammed, A.; Aagaard, H.; Osterman, O, 2024.
+Automated Dewey Decimal Classification of Swedish library metadata using Annif software.
+Journal of Documentation, in press.
+https://doi.org/10.1108/JD-01-2022-0026
+<details>
+<summary>See BibTex</summary>
+
+    @article{golub2024annif,
+      title={Automated Dewey Decimal Classification of Swedish library metadata using Annif software},
+      author={Golub, Koraljka and Suominen, Osma and Mohammed, Ahmed Taiye and Aagaard, Harriet and Osterman, Olof},
+      journal={J. Doc.},
+      year={in press},
+      doi = {10.1108/JD-01-2022-0026},
+      url={https://www.emerald.com/insight/content/doi/10.1108/JD-01-2022-0026},
+    }
+</details>
+</li>
+<li>
 Suominen, O.; Inkinen, J.; Lehtinen, M., 2022.
 Annif and Finto AI: Developing and Implementing Automated Subject Indexing.
 JLIS.It, 13(1), pp. 265–282. URL:
