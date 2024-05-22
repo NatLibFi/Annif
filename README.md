@@ -19,10 +19,10 @@ a statistical automated indexing tool that used metadata from the
 [Finna.fi](https://finna.fi) discovery interface as a training corpus.
 
 This repo contains a rewritten production version of Annif based on the
-[prototype](https://github.com/osma/annif). It is a work in progress, but
-already functional for many common tasks.
+[prototype](https://github.com/osma/annif).
 
-[Finto AI](https://ai.finto.fi/) is a service based on Annif; see the [source code for Finto AI](https://github.com/NatLibFi/FintoAI).
+[Finto AI](https://ai.finto.fi/) is a service based on Annif; see the [source code of Finto AI](https://github.com/NatLibFi/FintoAI)
+and the [🤗 Hugging Face Hub collection](https://huggingface.co/collections/NatLibFi/annif-models-65b35fb98b7c508c8e8a1570) containing the models Finto AI uses.
 
 # Basic install
 
@@ -73,7 +73,7 @@ For details and usage for other shells see
 [Click documentation](https://click.palletsprojects.com/en/8.1.x/shell-completion/).
 # Docker install
 
-You can use Annif as a pre-built Docker container. Please see the
+You can use Annif as a pre-built Docker container image from [quay.io/natlibfi/annif](https://quay.io/repository/natlibfi/annif) repository. Please see the
 [wiki documentation](https://github.com/NatLibFi/Annif/wiki/Usage-with-Docker)
 for details.
 
@@ -132,7 +132,7 @@ Many resources are available:
 
 # Publications / How to cite
 
-Two articles about Annif have been published in peer-reviewed Open Access
+See below for some articles about Annif in peer-reviewed Open Access
 journals. The software itself is also archived on Zenodo and
 has a [citable DOI](https://doi.org/10.5281/zenodo.5654173).
 
