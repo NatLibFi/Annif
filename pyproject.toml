@@ -54,6 +54,8 @@ voikko = { version = "0.5.*", optional = true }
 tensorflow-cpu = { version = "2.15.*", optional = true, python = "<3.12" }
 lmdb = { version = "1.4.1", optional = true }
 omikuji = { version = "0.5.*", optional = true }
+openai = { version = "1.61.*", optional = true }
+tiktoken = { version = "*", optional = true }
 yake = { version = "0.4.8", optional = true }
 spacy = { version = "3.7.*", optional = true }
 stwfsapy = { version = "0.4.*", optional = true, python = "<3.12" }
@@ -75,6 +77,7 @@ fasttext = ["fasttext-wheel"]
 voikko = ["voikko"]
 nn = ["tensorflow-cpu", "lmdb"]
 omikuji = ["omikuji"]
+llm = ["openai", "tiktoken"]
 yake = ["yake"]
 spacy = ["spacy"]
 stwfsa = ["stwfsapy"]
