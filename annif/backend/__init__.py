@@ -36,6 +36,12 @@ def _http() -> Type[AnnifBackend]:
     return http.HTTPBackend
 
 
+def _llm() -> Type[AnnifBackend]:
+    from . import llm
+
+    return llm.LLMBackend
+
+
 def _mllm() -> Type[AnnifBackend]:
     from . import mllm
 
@@ -104,6 +110,7 @@ _backend_fns = {
     "ensemble": _ensemble,
     "fasttext": _fasttext,
     "http": _http,
+    "llm": _llm,
     "mllm": _mllm,
     "nn_ensemble": _nn_ensemble,
     "omikuji": _omikuji,
