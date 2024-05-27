@@ -55,6 +55,8 @@ estnltk = { version = "1.7.4", optional = true }
 tensorflow-cpu = { version = "~2.18.0", optional = true }
 lmdb = { version = "~1.6.2", optional = true }
 omikuji = { version = "0.5.*", optional = true }
+openai = { version = "1.75.*", optional = true }
+tiktoken = { version = "*", optional = true }
 yake = { version = "0.4.8", optional = true }
 spacy = { version = "~3.8.4", optional = true }
 stwfsapy = { version = "~0.5.0", optional = true }
@@ -77,6 +79,7 @@ voikko = ["voikko"]
 estnltk = ["estnltk"]
 nn = ["tensorflow-cpu", "lmdb"]
 omikuji = ["omikuji"]
+llm = ["openai", "tiktoken"]
 yake = ["yake"]
 spacy = ["spacy"]
 stwfsa = ["stwfsapy"]
