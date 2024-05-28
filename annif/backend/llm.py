@@ -43,6 +43,13 @@ class BaseLLMBackend(backend.AnnifBackend):
             project = self.project.registry.get_project(project_id)
             project.initialize(parallel)
 
+        # self.client = AsyncAzureOpenAI(
+        self.client = AzureOpenAI(
+            azure_endpoint=params["endpoint"],
+            api_key=os.getenv("AZURE_OPENAI_KEY"),
+            api_version="2024-02-15-preview",
+        )
+
     def _suggest_with_sources(
         self, texts: list[str], sources: list[tuple[str, float]]
     ) -> dict[str, SuggestionBatch]:
@@ -50,13 +57,6 @@ class BaseLLMBackend(backend.AnnifBackend):
             project_id: self.project.registry.get_project(project_id).suggest(texts)
             for project_id, _ in sources
         }
-
-    def _suggest_batch(
-        self, texts: list[str], params: dict[str, Any]
-    ) -> SuggestionBatch:
-        sources = annif.util.parse_sources(params["sources"])
-        return self._suggest_with_sources(texts, sources)[sources[0][0]]
-        # return self._merge_source_batches(batch_by_source, sources, params)
 
 
 class LLMBackend(BaseLLMBackend):
@@ -92,7 +92,6 @@ class LLMBackend(BaseLLMBackend):
         self, texts: list[str], params: dict[str, Any]
     ) -> SuggestionBatch:
         sources = annif.util.parse_sources(params["sources"])
-        endpoint = params["endpoint"]
         model = params["model"]
         chars_max = 40000
 
@@ -109,7 +108,7 @@ class LLMBackend(BaseLLMBackend):
                 for s in base_suggestions
             ]
             prompt += "And here are the keywords:\n" + "\n".join(base_labels)
-            answer = self._call_llm(prompt, endpoint, model)
+            answer = self._call_llm(prompt, model)
             try:
                 llm_result = json.loads(answer)
             except TypeError as err:
@@ -136,22 +135,15 @@ class LLMBackend(BaseLLMBackend):
             suggestions.append(SubjectSuggestion(subject_id=subj_id, score=mean_score))
         return suggestions
 
-    # async def _call_llm(self, prompt: str, endpoint: str, model: str):
-    def _call_llm(self, prompt: str, endpoint: str, model: str):
-        # client = AsyncAzureOpenAI(
-        client = AzureOpenAI(
-            azure_endpoint=endpoint,
-            api_key=os.getenv("AZURE_OPENAI_KEY"),
-            api_version="2024-02-15-preview",
-        )
-
+    # async def _call_llm(self, prompt: str, model: str):
+    def _call_llm(self, prompt: str, model: str):
         messages = [
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": prompt},
         ]
         try:
             # completion = await client.chat.completions.create(
-            completion = client.chat.completions.create(
+            completion = self.client.chat.completions.create(
                 model=model,
                 messages=messages,
                 temperature=0.0,
