@@ -6,7 +6,7 @@ import json
 import os
 from typing import TYPE_CHECKING, Any
 
-from openai import AzureOpenAI
+from openai import AzureOpenAI, BadRequestError
 
 import annif.eval
 import annif.parallel
@@ -71,7 +71,8 @@ class LLMBackend(BaseLLMBackend):
         keyword should have score 1.0 and completely unrelated keyword score
         0.0. You must output JSON with keywords as field names and add their scores
         as field values.
-        There must be at most 50 items in the JSON.
+        There must be the same number of items in the JSON as there are in the
+        intput keyword list.
     """
 
     @property
@@ -93,6 +94,7 @@ class LLMBackend(BaseLLMBackend):
         sources = annif.util.parse_sources(params["sources"])
         endpoint = params["endpoint"]
         model = params["model"]
+        chars_max = 40000
 
         batch_results = []
         base_suggestion_batch = self._suggest_with_sources(texts, sources)[
@@ -100,7 +102,7 @@ class LLMBackend(BaseLLMBackend):
         ]
 
         for text, base_suggestions in zip(texts, base_suggestion_batch):
-            prompt = "Here is the text:\n" + text[:50000] + "\n"
+            prompt = "Here is the text:\n" + text[:chars_max] + "\n"
 
             base_labels = [
                 self.project.subjects[s.subject_id].labels["en"]
@@ -108,7 +110,11 @@ class LLMBackend(BaseLLMBackend):
             ]
             prompt += "And here are the keywords:\n" + "\n".join(base_labels)
             answer = self._call_llm(prompt, endpoint, model)
-            llm_result = json.loads(answer)
+            try:
+                llm_result = json.loads(answer)
+            except TypeError as err:
+                print(err)
+                llm_result = dict()
             results = self._get_llm_suggestions(
                 llm_result, base_labels, base_suggestions
             )
@@ -126,7 +132,7 @@ class LLMBackend(BaseLLMBackend):
                 print(f"Base label {blabel} not found in LLM labels")
                 score = 0  # bsuggestion.score
             subj_id = bsuggestion.subject_id
-            mean_score = (bsuggestion.score + score) / 2  #
+            mean_score = (bsuggestion.score + score) / 2  # Mean of LLM and base scores!
             suggestions.append(SubjectSuggestion(subject_id=subj_id, score=mean_score))
         return suggestions
 
@@ -143,17 +149,21 @@ class LLMBackend(BaseLLMBackend):
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": prompt},
         ]
-        # completion = await client.chat.completions.create(
-        completion = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=0.0,
-            seed=0,
-            max_tokens=1800,
-            top_p=0.95,
-            frequency_penalty=0,
-            presence_penalty=0,
-            stop=None,
-            response_format={"type": "json_object"},
-        )
-        return completion.choices[0].message.content
+        try:
+            # completion = await client.chat.completions.create(
+            completion = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=0.0,
+                seed=0,
+                max_tokens=1800,
+                top_p=0.95,
+                frequency_penalty=0,
+                presence_penalty=0,
+                stop=None,
+                response_format={"type": "json_object"},
+            )
+            return completion.choices[0].message.content
+        except BadRequestError as err:
+            print(err)
+            return "{}"
