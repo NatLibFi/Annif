@@ -108,30 +108,37 @@ class LLMBackend(BaseLLMBackend):
                 for s in base_suggestions
             ]
             prompt += "And here are the keywords:\n" + "\n".join(base_labels)
-            answer = self._call_llm(prompt, model)
+            answer, weights = self._call_llm(prompt, model)
+            print(answer)
+            print(weights)
             try:
                 llm_result = json.loads(answer)
             except TypeError as err:
                 print(err)
                 llm_result = dict()
             results = self._get_llm_suggestions(
-                llm_result, base_labels, base_suggestions
+                llm_result, base_labels, base_suggestions, weights
             )
             batch_results.append(results)
         return SuggestionBatch.from_sequence(batch_results, self.project.subjects)
 
-    def _get_llm_suggestions(self, llm_result, base_labels, base_suggestions):
+    def _get_llm_suggestions(self, llm_result, base_labels, base_suggestions, weights):
         suggestions = []
-        print(f"LLM result: {llm_result}")
+        # print(f"LLM result: {llm_result}")
         for blabel, bsuggestion in zip(base_labels, base_suggestions):
             # score = llm_result.get(blabel, 0)
             try:
                 score = llm_result[blabel]
+                weight = weights[blabel]
             except KeyError:
                 print(f"Base label {blabel} not found in LLM labels")
-                score = 0  # bsuggestion.score
+                score = 0.0  # bsuggestion.score
+                weight = 0.0
             subj_id = bsuggestion.subject_id
-            mean_score = (bsuggestion.score + score) / 2  # Mean of LLM and base scores!
+            # mean_score = (bsuggestion.score + score) / 2  # Mean of scores
+            mean_score = (bsuggestion.score + weight * score) / (
+                1 + weight
+            )  # weighted mean of LLM and base scores!
             suggestions.append(SubjectSuggestion(subject_id=subj_id, score=mean_score))
         return suggestions
 
@@ -154,8 +161,57 @@ class LLMBackend(BaseLLMBackend):
                 presence_penalty=0,
                 stop=None,
                 response_format={"type": "json_object"},
+                logprobs=True,
             )
-            return completion.choices[0].message.content
+            # return completion.choices[0].message.content
+
+            lines = self._get_logprobs(completion.choices[0].logprobs.content)
+            answer = completion.choices[0].message.content
+            probs = self._get_probs(lines)
+            return answer, probs
         except BadRequestError as err:
             print(err)
             return "{}"
+
+    def _get_logprobs(self, content):
+        import numpy as np
+
+        lines = []
+        joint_logprob = 0.0
+        line = ""
+        line_joint_logprob = 0.0
+        for token in content:
+            # print("Token:", token.token)
+            # print("Log prob:", token.logprob)
+            # print("Linear prob:", np.round(np.exp(token.logprob) * 100, 2), "%")
+            # print("Bytes:", token.bytes, "\n")
+            # aggregated_bytes += token.bytes
+            joint_logprob += token.logprob
+
+            line += token.token
+            line_joint_logprob += token.logprob
+            if "\n" in token.token:
+                # print("Line is: "+ line)
+                line_prob = np.exp(line_joint_logprob)
+                # print("Line's linear prob:",  np.round(line_prob * 100, 2), "%")
+
+                lines.append((line, line_prob))
+                line = ""
+                line_joint_logprob = 0.0
+        #         print()
+        # print()
+        # print("Joint log prob:", joint_logprob)
+        # print("Joint prob:", np.round(np.exp(joint_logprob) * 100, 2), "%")
+        return lines
+
+    def _get_probs(self, lines):
+        probs = dict()
+        for line, prob in lines:
+            try:
+                label = line.split('"')[1]
+            except IndexError:
+                print("Failed parsing line: " + line)
+                continue  # Not a line with label
+            # probs[label] = 1.0
+            probs[label] = prob
+        return probs
