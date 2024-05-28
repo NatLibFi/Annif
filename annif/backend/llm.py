@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import os
 from typing import TYPE_CHECKING, Any
 
 from openai import AzureOpenAI
-# from openai import AsyncAzureOpenAI
 
 import annif.eval
 import annif.parallel
@@ -15,6 +15,9 @@ from annif.exception import NotSupportedException
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
 
 from . import backend
+
+# from openai import AsyncAzureOpenAI
+
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -61,21 +64,14 @@ class LLMBackend(BaseLLMBackend):
 
     name = "llm"
 
-    # client = AzureOpenAI(
-    #     azure_endpoint="",
-    #     api_key=os.getenv("AZURE_OPENAI_KEY"),
-    #     api_version="2024-02-15-preview",
-    # )
-
-    prompt_base = """
-        I will give you text and a list of keywords to describe it. Your task is to
+    system_prompt = """
+        You will be given text and a list of keywords to describe it. Your task is to
         score the keywords with a value between 0.0 and 1.0. The score value
         should depend on how well the keyword represents the text: a perfect
         keyword should have score 1.0 and completely unrelated keyword score
-        0.0. You must output a list of keywords and add their scores separeted by
-        colon, the list must have one keyword and its score per line.
-        There must be 50 lines in the list.
-        Give no other output or explanations.
+        0.0. You must output JSON with keywords as field names and add their scores
+        as field values.
+        There must be at most 50 items in the JSON.
     """
 
     @property
@@ -104,75 +100,34 @@ class LLMBackend(BaseLLMBackend):
         ]
 
         for text, base_suggestions in zip(texts, base_suggestion_batch):
-            prompt = self.prompt_base + "\n" + "Here is the text:\n" + text[:50000] + "\n"
+            prompt = "Here is the text:\n" + text[:50000] + "\n"
 
             base_labels = [
                 self.project.subjects[s.subject_id].labels["en"]
                 for s in base_suggestions
             ]
             prompt += "And here are the keywords:\n" + "\n".join(base_labels)
-            # print(prompt)
             answer = self._call_llm(prompt, endpoint, model)
-            llm_result = self._parse_llm_answer(answer)
+            llm_result = json.loads(answer)
             results = self._get_llm_suggestions(
                 llm_result, base_labels, base_suggestions
             )
             batch_results.append(results)
         return SuggestionBatch.from_sequence(batch_results, self.project.subjects)
 
-    def _parse_llm_answer(self, answer):
-        if not answer:
-            return [], []
-        labels, scores = [], []
-        lines = answer.splitlines()
-        for line in lines:
-            parts = line.split(":")
-            if len(parts) == 2:
-                labels.append(parts[0])
-                scores.append(float(parts[1]))
-            else:
-                print(f"Failed parsing line: {line.strip()}")
-        return (labels, scores)
-
-    # def _get_llm_suggestions(self, llm_result, base_labels, base_suggestions):
-    #     suggestions = []
-    #     # print(f"base labels {base_labels}")
-    #     for blabel, bsuggestion in zip(base_labels, base_suggestions):
-    #         print("-"*3)
-    #         print(blabel)
-    #         for label, score in zip(*llm_result):
-    #             print(label)
-    #             if blabel == label:
-    #                 print("match")
-    #                 subj_id = bsuggestion.subject_id
-    #                 mean_score = (bsuggestion.score + score) / 2  #
-    #                 suggestions.append(
-    #                     SubjectSuggestion(subject_id=subj_id, score=mean_score)
-    #                 )
-    #                 continue
-    #             print(f"LLM label {label} not in base labels")
-    #     return suggestions
-
     def _get_llm_suggestions(self, llm_result, base_labels, base_suggestions):
         suggestions = []
         print(f"LLM result: {llm_result}")
-        labels, scores = llm_result[0], llm_result[1]
-        # print(f"base labels {base_labels}")
         for blabel, bsuggestion in zip(base_labels, base_suggestions):
+            # score = llm_result.get(blabel, 0)
             try:
-                ind = labels.index(blabel)
-                score = scores[ind]
-            except ValueError as err:
-                # print(err)
-                print(f"base label {blabel} not in LLM labels")
-                score = 0
-
+                score = llm_result[blabel]
+            except KeyError:
+                print(f"Base label {blabel} not found in LLM labels")
+                score = 0  # bsuggestion.score
             subj_id = bsuggestion.subject_id
             mean_score = (bsuggestion.score + score) / 2  #
-            suggestions.append(
-                SubjectSuggestion(subject_id=subj_id, score=mean_score)
-            )
-
+            suggestions.append(SubjectSuggestion(subject_id=subj_id, score=mean_score))
         return suggestions
 
     # async def _call_llm(self, prompt: str, endpoint: str, model: str):
@@ -185,7 +140,7 @@ class LLMBackend(BaseLLMBackend):
         )
 
         messages = [
-            # {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": prompt},
         ]
         # completion = await client.chat.completions.create(
@@ -193,10 +148,12 @@ class LLMBackend(BaseLLMBackend):
             model=model,
             messages=messages,
             temperature=0.0,
+            seed=0,
             max_tokens=1800,
             top_p=0.95,
             frequency_penalty=0,
             presence_penalty=0,
             stop=None,
+            response_format={"type": "json_object"},
         )
         return completion.choices[0].message.content
