@@ -113,7 +113,7 @@ class LLMBackend(BaseLLMBackend):
             print(weights)
             try:
                 llm_result = json.loads(answer)
-            except TypeError as err:
+            except (TypeError, json.decoder.JSONDecodeError) as err:
                 print(err)
                 llm_result = dict()
             results = self._get_llm_suggestions(
@@ -136,8 +136,11 @@ class LLMBackend(BaseLLMBackend):
                 weight = 0.0
             subj_id = bsuggestion.subject_id
             # mean_score = (bsuggestion.score + score) / 2  # Mean of scores
-            mean_score = (bsuggestion.score + weight * score) / (
-                1 + weight
+            rel_weights = [2.0, 1.0]
+            mean_score = (
+                rel_weights[0] * bsuggestion.score + rel_weights[1] * weight * score
+            ) / (
+                rel_weights[0] * 1 + rel_weights[1] * weight
             )  # weighted mean of LLM and base scores!
             suggestions.append(SubjectSuggestion(subject_id=subj_id, score=mean_score))
         return suggestions
@@ -171,7 +174,7 @@ class LLMBackend(BaseLLMBackend):
             return answer, probs
         except BadRequestError as err:
             print(err)
-            return "{}"
+            return "{}", dict()
 
     def _get_logprobs(self, content):
         import numpy as np
