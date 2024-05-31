@@ -6,6 +6,7 @@ import json
 import os
 from typing import TYPE_CHECKING, Any
 
+import tiktoken
 from openai import AzureOpenAI, BadRequestError
 
 import annif.eval
@@ -27,6 +28,7 @@ if TYPE_CHECKING:
 
 class BaseLLMBackend(backend.AnnifBackend):
     # """Base class for TODO backends"""
+
 
     def _get_sources_attribute(self, attr: str) -> list[bool | None]:
         params = self._get_backend_params(None)
@@ -95,9 +97,7 @@ class LLMBackend(BaseLLMBackend):
         model = params["model"]
         llm_scores_weight = float(params["llm_scores_weight"])
         # llm_probs_weight = float(params["llm_probs_weight"])
-        assert llm_scores_weight <= 1.0
-        assert llm_scores_weight >= 0.0
-        chars_max = 40000
+        encoding = tiktoken.encoding_for_model(model.rsplit("-", 1)[0])
 
         batch_results = []
         base_suggestion_batch = self._suggest_with_sources(texts, sources)[
@@ -105,7 +105,8 @@ class LLMBackend(BaseLLMBackend):
         ]
 
         for text, base_suggestions in zip(texts, base_suggestion_batch):
-            prompt = "Here is the text:\n" + text[:chars_max] + "\n"
+            text = self._truncate_text(text, encoding)
+            prompt = "Here is the text:\n" + text + "\n"
 
             base_labels = [
                 self.project.subjects[s.subject_id].labels["en"]
@@ -131,6 +132,14 @@ class LLMBackend(BaseLLMBackend):
             batch_results.append(results)
         return SuggestionBatch.from_sequence(batch_results, self.project.subjects)
 
+    def _truncate_text(self, text, encoding):
+        """truncate text so it contains at most MAX_PROMPT_TOKENS according to the
+        OpenAI tokenizer"""
+
+        MAX_PROMPT_TOKENS = 14000
+        tokens = encoding.encode(text)
+        return encoding.decode(tokens[:MAX_PROMPT_TOKENS])
+
     def _get_llm_suggestions(
         self,
         llm_result,
@@ -149,7 +158,7 @@ class LLMBackend(BaseLLMBackend):
                 # probability = probabilities[blabel]
             except KeyError:
                 print(f"Base label {blabel} not found in LLM labels")
-                score = 0.0  # bsuggestion.score
+                score = bsuggestion.score  # use only base suggestion score
                 # probability = 0.0
             subj_id = bsuggestion.subject_id
 
@@ -191,7 +200,7 @@ class LLMBackend(BaseLLMBackend):
             # probs = self._get_probs(lines)
             # return answer, probs
             return answer, dict()
-        except BadRequestError as err:
+        except BadRequestError as err:  # openai.RateLimitError
             print(err)
             return "{}", dict()
 
