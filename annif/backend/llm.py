@@ -93,6 +93,9 @@ class LLMBackend(BaseLLMBackend):
     ) -> SuggestionBatch:
         sources = annif.util.parse_sources(params["sources"])
         model = params["model"]
+        llm_scores_weight = float(params["llm_scores_weight"])
+        assert llm_scores_weight <= 1.0
+        assert llm_scores_weight >= 0.0
         chars_max = 40000
 
         batch_results = []
@@ -108,39 +111,40 @@ class LLMBackend(BaseLLMBackend):
                 for s in base_suggestions
             ]
             prompt += "And here are the keywords:\n" + "\n".join(base_labels)
-            answer, weights = self._call_llm(prompt, model)
+            answer, prob_weights = self._call_llm(prompt, model)
             print(answer)
-            print(weights)
+            print(prob_weights)
             try:
                 llm_result = json.loads(answer)
             except (TypeError, json.decoder.JSONDecodeError) as err:
                 print(err)
                 llm_result = dict()
             results = self._get_llm_suggestions(
-                llm_result, base_labels, base_suggestions, weights
+                llm_result, base_labels, base_suggestions, llm_scores_weight, prob_weights
             )
             batch_results.append(results)
         return SuggestionBatch.from_sequence(batch_results, self.project.subjects)
 
-    def _get_llm_suggestions(self, llm_result, base_labels, base_suggestions, weights):
+    def _get_llm_suggestions(self, llm_result, base_labels, base_suggestions, llm_scores_weight, prob_weights
+    ):
         suggestions = []
         # print(f"LLM result: {llm_result}")
         for blabel, bsuggestion in zip(base_labels, base_suggestions):
             # score = llm_result.get(blabel, 0)
             try:
                 score = llm_result[blabel]
-                weight = weights[blabel]
+                weight = prob_weights[blabel]
             except KeyError:
                 print(f"Base label {blabel} not found in LLM labels")
                 score = 0.0  # bsuggestion.score
                 weight = 0.0
             subj_id = bsuggestion.subject_id
-            # mean_score = (bsuggestion.score + score) / 2  # Mean of scores
-            rel_weights = [2.0, 1.0]
+
+            base_scores_weight = 1.0 - llm_scores_weight
             mean_score = (
-                rel_weights[0] * bsuggestion.score + rel_weights[1] * weight * score
+                base_scores_weight * bsuggestion.score + llm_scores_weight * weight * score
             ) / (
-                rel_weights[0] * 1 + rel_weights[1] * weight
+                base_scores_weight * 1 + llm_scores_weight * weight
             )  # weighted mean of LLM and base scores!
             suggestions.append(SubjectSuggestion(subject_id=subj_id, score=mean_score))
         return suggestions
