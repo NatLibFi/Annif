@@ -94,6 +94,7 @@ class LLMBackend(BaseLLMBackend):
         sources = annif.util.parse_sources(params["sources"])
         model = params["model"]
         llm_scores_weight = float(params["llm_scores_weight"])
+        # llm_probs_weight = float(params["llm_probs_weight"])
         assert llm_scores_weight <= 1.0
         assert llm_scores_weight >= 0.0
         chars_max = 40000
@@ -111,21 +112,33 @@ class LLMBackend(BaseLLMBackend):
                 for s in base_suggestions
             ]
             prompt += "And here are the keywords:\n" + "\n".join(base_labels)
-            answer, prob_weights = self._call_llm(prompt, model)
+            answer, probabilities = self._call_llm(prompt, model)
             print(answer)
-            print(prob_weights)
+            print(probabilities)
             try:
                 llm_result = json.loads(answer)
             except (TypeError, json.decoder.JSONDecodeError) as err:
                 print(err)
                 llm_result = dict()
             results = self._get_llm_suggestions(
-                llm_result, base_labels, base_suggestions, llm_scores_weight, prob_weights
+                llm_result,
+                base_labels,
+                base_suggestions,
+                llm_scores_weight,
+                # probabilities,
+                # llm_probs_weight,
             )
             batch_results.append(results)
         return SuggestionBatch.from_sequence(batch_results, self.project.subjects)
 
-    def _get_llm_suggestions(self, llm_result, base_labels, base_suggestions, llm_scores_weight, prob_weights
+    def _get_llm_suggestions(
+        self,
+        llm_result,
+        base_labels,
+        base_suggestions,
+        llm_scores_weight,
+        # probabilities,
+        # llm_probs_weight,
     ):
         suggestions = []
         # print(f"LLM result: {llm_result}")
@@ -133,18 +146,19 @@ class LLMBackend(BaseLLMBackend):
             # score = llm_result.get(blabel, 0)
             try:
                 score = llm_result[blabel]
-                weight = prob_weights[blabel]
+                # probability = probabilities[blabel]
             except KeyError:
                 print(f"Base label {blabel} not found in LLM labels")
                 score = 0.0  # bsuggestion.score
-                weight = 0.0
+                # probability = 0.0
             subj_id = bsuggestion.subject_id
 
             base_scores_weight = 1.0 - llm_scores_weight
             mean_score = (
-                base_scores_weight * bsuggestion.score + llm_scores_weight * weight * score
+                base_scores_weight * bsuggestion.score
+                + llm_scores_weight * score  # * probability * llm_probs_weight
             ) / (
-                base_scores_weight * 1 + llm_scores_weight * weight
+                base_scores_weight + llm_scores_weight  # * probability * llm_probs_weight
             )  # weighted mean of LLM and base scores!
             suggestions.append(SubjectSuggestion(subject_id=subj_id, score=mean_score))
         return suggestions
@@ -168,14 +182,15 @@ class LLMBackend(BaseLLMBackend):
                 presence_penalty=0,
                 stop=None,
                 response_format={"type": "json_object"},
-                logprobs=True,
+                # logprobs=True,
             )
             # return completion.choices[0].message.content
 
-            lines = self._get_logprobs(completion.choices[0].logprobs.content)
             answer = completion.choices[0].message.content
-            probs = self._get_probs(lines)
-            return answer, probs
+            # lines = self._get_logprobs(completion.choices[0].logprobs.content)
+            # probs = self._get_probs(lines)
+            # return answer, probs
+            return answer, dict()
         except BadRequestError as err:
             print(err)
             return "{}", dict()
@@ -211,14 +226,14 @@ class LLMBackend(BaseLLMBackend):
         # print("Joint prob:", np.round(np.exp(joint_logprob) * 100, 2), "%")
         return lines
 
-    def _get_probs(self, lines):
-        probs = dict()
-        for line, prob in lines:
-            try:
-                label = line.split('"')[1]
-            except IndexError:
-                print("Failed parsing line: " + line)
-                continue  # Not a line with label
-            # probs[label] = 1.0
-            probs[label] = prob
+    # def _get_probs(self, lines):
+    #     probs = dict()
+    #     for line, prob in lines:
+    #         try:
+    #             label = line.split('"')[1]
+    #         except IndexError:
+    #             print("Failed parsing line: " + line)
+    #             continue  # Not a line with label
+    #         # probs[label] = 1.0
+    #         probs[label] = prob
         return probs
