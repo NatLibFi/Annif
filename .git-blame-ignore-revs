@@ -2,3 +2,5 @@
 3bc18907354a40f1d89dca1833a2719ba7fb0933
 # Reorder import statements with isort
 68a72c5a603283f70abce2651dcde9c6f0177c41
+# Migrate code style to Black 24
+d4dbd73fe6a91964af82fbf6e6cb8d70b77569a3

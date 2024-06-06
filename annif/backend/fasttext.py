@@ -1,4 +1,5 @@
 """Annif backend using the fastText classifier"""
+
 from __future__ import annotations
 
 import collections

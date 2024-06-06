@@ -1,6 +1,8 @@
 """Registry that keeps track of Annif projects"""
+
 from __future__ import annotations
 
+import os
 import re
 
 from flask import Flask, current_app
@@ -35,9 +37,11 @@ class AnnifRegistry:
         self._projects_config_path = projects_config_path
         self._datadir = datadir
         self._init_vars()
+        projects_pattern = os.getenv("ANNIF_PROJECTS_INIT", ".*")
         if init_projects:
             for project in self._projects[self._rid].values():
-                project.initialize()
+                if re.search(projects_pattern, project.project_id) is not None:
+                    project.initialize()
 
     def _init_vars(self) -> None:
         # initialize the static variables, if necessary
@@ -99,14 +103,11 @@ class AnnifRegistry:
         vocab_id = match.group(1)
         posargs, kwargs = parse_args(match.group(3))
         language = posargs[0] if posargs else default_language
-        vocab_key = (vocab_id, language)
 
         self._init_vars()
-        if vocab_key not in self._vocabs[self._rid]:
-            self._vocabs[self._rid][vocab_key] = AnnifVocabulary(
-                vocab_id, self._datadir
-            )
-        return self._vocabs[self._rid][vocab_key], language
+        if vocab_id not in self._vocabs[self._rid]:
+            self._vocabs[self._rid][vocab_id] = AnnifVocabulary(vocab_id, self._datadir)
+        return self._vocabs[self._rid][vocab_id], language
 
 
 def initialize_projects(app: Flask) -> None:

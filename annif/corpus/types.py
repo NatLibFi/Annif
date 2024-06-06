@@ -1,4 +1,5 @@
 """Basic types for document and subject corpora"""
+
 from __future__ import annotations
 
 import abc

@@ -1,4 +1,5 @@
 """Annif backend mixins that can be used to implement features"""
+
 from __future__ import annotations
 
 import abc
@@ -72,9 +73,14 @@ class TfidfVectorizerMixin:
                 )
 
     def create_vectorizer(
-        self, input: Iterable[str], params: dict[str, Any] = {}
+        self, input: Iterable[str], params: dict[str, Any] = None
     ) -> csr_matrix:
         self.info("creating vectorizer")
+        if params is None:
+            params = {}
+        # avoid UserWarning when overriding tokenizer
+        if "tokenizer" in params:
+            params["token_pattern"] = None
         self.vectorizer = TfidfVectorizer(**params)
         veccorpus = self.vectorizer.fit_transform(input)
         annif.util.atomic_save(

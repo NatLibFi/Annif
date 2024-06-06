@@ -1,5 +1,6 @@
 """Backend that returns most similar subjects based on similarity in sparse
 TF-IDF normalized bag-of-words vector space"""
+
 from __future__ import annotations
 
 import os.path

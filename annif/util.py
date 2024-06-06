@@ -1,4 +1,5 @@
 """Utility functions for Annif"""
+
 from __future__ import annotations
 
 import glob

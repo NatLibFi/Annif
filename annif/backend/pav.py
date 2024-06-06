@@ -2,6 +2,7 @@
 learns which concept suggestions from each backend are trustworthy using the
 PAV algorithm, a.k.a. isotonic regression, to turn raw scores returned by
 individual backends into probabilities."""
+
 from __future__ import annotations
 
 import os.path
@@ -69,13 +70,15 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
             reg_models = self._get_model(project_id)
             pav_batch = [
                 [
-                    SubjectSuggestion(
-                        subject_id=sugg.subject_id,
-                        score=reg_models[sugg.subject_id].predict([sugg.score])[0],
-                    )
-                    if sugg.subject_id in reg_models
-                    else SubjectSuggestion(
-                        subject_id=sugg.subject_id, score=sugg.score
+                    (
+                        SubjectSuggestion(
+                            subject_id=sugg.subject_id,
+                            score=reg_models[sugg.subject_id].predict([sugg.score])[0],
+                        )
+                        if sugg.subject_id in reg_models
+                        else SubjectSuggestion(
+                            subject_id=sugg.subject_id, score=sugg.score
+                        )
                     )  # default to raw score
                     for sugg in result
                 ]

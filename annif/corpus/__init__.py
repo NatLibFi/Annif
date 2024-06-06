@@ -1,6 +1,5 @@
 """Annif corpus operations"""
 
-
 from .combine import CombinedCorpus
 from .document import (
     DocumentDirectory,

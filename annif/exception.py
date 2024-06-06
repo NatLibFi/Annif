@@ -1,4 +1,5 @@
 """Custom exceptions used by Annif"""
+
 from __future__ import annotations
 
 from click import ClickException

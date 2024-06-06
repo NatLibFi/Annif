@@ -1,5 +1,6 @@
 """HTTP/REST client backend that makes calls to a web service
 and returns the results"""
+
 from __future__ import annotations
 
 import importlib

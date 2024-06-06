@@ -1,25 +1,34 @@
 """Neural network based ensemble backend that combines results from multiple
 projects."""
+
 from __future__ import annotations
 
+import importlib
+import json
 import os.path
 import shutil
+import zipfile
 from io import BytesIO
 from typing import TYPE_CHECKING, Any
 
 import joblib
+import keras.backend as K
 import lmdb
 import numpy as np
-import tensorflow.keras.backend as K
+from keras.layers import Add, Dense, Dropout, Flatten, Input, Layer
+from keras.models import Model
+from keras.saving import load_model
+from keras.utils import Sequence
 from scipy.sparse import csc_matrix, csr_matrix
-from tensorflow.keras.layers import Add, Dense, Dropout, Flatten, Input, Layer
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.utils import Sequence
 
 import annif.corpus
 import annif.parallel
 import annif.util
-from annif.exception import NotInitializedException, NotSupportedException
+from annif.exception import (
+    NotInitializedException,
+    NotSupportedException,
+    OperationFailedException,
+)
 from annif.suggestion import SuggestionBatch, vector_to_suggestions
 
 from . import backend, ensemble
@@ -28,6 +37,8 @@ if TYPE_CHECKING:
     from tensorflow.python.framework.ops import EagerTensor
 
     from annif.corpus.document import DocumentCorpus
+
+logger = annif.logger
 
 
 def idx_to_key(idx: int) -> bytes:
@@ -97,7 +108,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
     name = "nn_ensemble"
 
-    MODEL_FILE = "nn-model.h5"
+    MODEL_FILE = "nn-model.keras"
     LMDB_FILE = "nn-train.mdb"
 
     DEFAULT_PARAMETERS = {
@@ -127,9 +138,20 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 backend_id=self.backend_id,
             )
         self.debug("loading Keras model from {}".format(model_filename))
-        self._model = load_model(
-            model_filename, custom_objects={"MeanLayer": MeanLayer}
-        )
+        try:
+            self._model = load_model(
+                model_filename, custom_objects={"MeanLayer": MeanLayer}
+            )
+        except Exception as err:
+            metadata = self.get_model_metadata(model_filename)
+            keras_version = importlib.metadata.version("keras")
+            message = (
+                f"loading Keras model from {model_filename}; "
+                f"model metadata: {metadata}; "
+                f"you have Keras version {keras_version}. "
+                f'Original error message: "{err}"'
+            )
+            raise OperationFailedException(message, backend_id=self.backend_id)
 
     def _merge_source_batches(
         self,
@@ -287,3 +309,16 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         self._fit_model(
             corpus, int(params["learn-epochs"]), int(params["lmdb_map_size"])
         )
+
+    def get_model_metadata(self, model_filename: str) -> dict | None:
+        """Read metadata from Keras model files."""
+
+        try:
+            with zipfile.ZipFile(model_filename, "r") as zip:
+                with zip.open("metadata.json") as metadata_file:
+                    metadata_str = metadata_file.read().decode("utf-8")
+                    metadata = json.loads(metadata_str)
+                    return metadata
+        except Exception:
+            self.warning(f"Failed to read metadata from {model_filename}")
+            return None

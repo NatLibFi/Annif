@@ -1,4 +1,5 @@
 """Dummy backend for testing basic interaction of projects and backends"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

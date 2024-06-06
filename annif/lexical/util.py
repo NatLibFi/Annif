@@ -1,4 +1,5 @@
 """Utility methods for lexical algorithms"""
+
 from __future__ import annotations
 
 import collections

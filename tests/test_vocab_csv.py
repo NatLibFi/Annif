@@ -1,6 +1,5 @@
 """Unit tests for CSV vocabulary functionality in Annif"""
 
-
 from annif.corpus import SubjectFileCSV, SubjectIndex
 
 

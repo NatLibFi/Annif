@@ -1,4 +1,5 @@
 """Common functionality for transforming text of input documents."""
+
 from __future__ import annotations
 
 import abc

@@ -66,6 +66,20 @@ Project administration
 
    N/A
 
+.. click:: annif.cli:run_upload
+   :prog: annif upload
+
+**REST equivalent**
+
+   N/A
+
+.. click:: annif.cli:run_download
+   :prog: annif download
+
+**REST equivalent**
+
+   N/A
+
 ****************************
 Subject index administration
 ****************************
@@ -121,8 +135,19 @@ Subject index administration
 
    N/A
 
-.. click:: flask.cli:run_command
+.. click:: annif.cli:run_app
    :prog: annif run
+
+**REST equivalent**
+
+   N/A
+
+*****
+Other
+*****
+
+.. click:: annif.cli:run_completion
+   :prog: annif completion
 
 **REST equivalent**
 

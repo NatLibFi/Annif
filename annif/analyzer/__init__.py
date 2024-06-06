@@ -1,4 +1,5 @@
 """Collection of language-specific analyzers and analyzer registry for Annif"""
+
 from __future__ import annotations
 
 import re

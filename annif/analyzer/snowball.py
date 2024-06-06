@@ -1,4 +1,5 @@
 """Snowball analyzer for Annif, based on nltk Snowball stemmer."""
+
 from __future__ import annotations
 
 import functools
