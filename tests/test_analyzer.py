@@ -1,8 +1,11 @@
 """Unit tests for analyzers in Annif"""
+import importlib.util
+from unittest import mock
 
 import pytest
 
 import annif.analyzer
+from annif.exception import OperationFailedException
 
 
 def test_get_analyzer_nonexistent():
@@ -58,6 +61,24 @@ def test_english_tokenize_words_no_filter():
     laborious physical exercise, except to obtain some advantage from it?"""
     words = analyzer.tokenize_words(text, filter=False)
     assert len(words) == 23
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("voikko") is None,
+    reason="test requires that Voikko is installed",
+)
+def test_tokenize_words_operationfailed():
+    analyzer = annif.analyzer.get_analyzer("voikko(fi)")
+    text = "An error producing sentence."
+    with mock.patch(
+        "voikko.libvoikko.Voikko.analyze",
+        side_effect=ValueError,
+    ):
+        with pytest.raises(
+            OperationFailedException,
+            match="Error in tokenization of text 'An error producing sentence.'",
+        ):
+            analyzer.tokenize_words(text)
 
 
 def test_english_filter_words_min_token():
