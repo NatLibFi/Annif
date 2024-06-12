@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import json
 import os
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
 import tiktoken
 from openai import AzureOpenAI, BadRequestError
 
@@ -28,7 +28,6 @@ if TYPE_CHECKING:
 
 class BaseLLMBackend(backend.AnnifBackend):
     # """Base class for TODO backends"""
-
 
     def _get_sources_attribute(self, attr: str) -> list[bool | None]:
         params = self._get_backend_params(None)
@@ -68,13 +67,12 @@ class LLMBackend(BaseLLMBackend):
 
     system_prompt = """
         You will be given text and a list of keywords to describe it. Your task is to
-        score the keywords with a value between 0.0 and 1.0. The score value
-        should depend on how well the keyword represents the text: a perfect
-        keyword should have score 1.0 and completely unrelated keyword score
-        0.0. You must output JSON with keywords as field names and add their scores
-        as field values.
+        decide whether a keyword is suitable for the text and describes it well:
+        give output as a binary value; 1 for good keywords and 0 for keywords that do
+        not describe the text. You must output JSON with keywords as field names and
+        the binary scores as field values.
         There must be the same number of items in the JSON as there are in the
-        intput keyword list.
+        intput keyword list, so give either 0 or 1 to every input keyword.
     """
 
     @property
@@ -113,21 +111,18 @@ class LLMBackend(BaseLLMBackend):
                 for s in base_suggestions
             ]
             prompt += "And here are the keywords:\n" + "\n".join(base_labels)
-            answer, probabilities = self._call_llm(prompt, model)
-            print(answer)
-            print(probabilities)
-            try:
-                llm_result = json.loads(answer)
-            except (TypeError, json.decoder.JSONDecodeError) as err:
-                print(err)
-                llm_result = dict()
-            results = self._get_llm_suggestions(
+            llm_result = self._call_llm(prompt, model)
+            print(llm_result)
+            # try:
+            #     llm_result = json.loads(llm_labels)
+            # except (TypeError, json.decoder.JSONDecodeError) as err:
+            #     print(err)
+            #     llm_result = dict()
+            results = self._map_llm_suggestions(
                 llm_result,
                 base_labels,
                 base_suggestions,
                 llm_scores_weight,
-                # probabilities,
-                # llm_probs_weight,
             )
             batch_results.append(results)
         return SuggestionBatch.from_sequence(batch_results, self.project.subjects)
@@ -140,46 +135,37 @@ class LLMBackend(BaseLLMBackend):
         tokens = encoding.encode(text)
         return encoding.decode(tokens[:MAX_PROMPT_TOKENS])
 
-    def _get_llm_suggestions(
+    def _map_llm_suggestions(
         self,
         llm_result,
         base_labels,
         base_suggestions,
         llm_scores_weight,
-        # probabilities,
-        # llm_probs_weight,
     ):
         suggestions = []
-        # print(f"LLM result: {llm_result}")
         for blabel, bsuggestion in zip(base_labels, base_suggestions):
-            # score = llm_result.get(blabel, 0)
             try:
                 score = llm_result[blabel]
-                # probability = probabilities[blabel]
             except KeyError:
                 print(f"Base label {blabel} not found in LLM labels")
                 score = bsuggestion.score  # use only base suggestion score
-                # probability = 0.0
             subj_id = bsuggestion.subject_id
 
             base_scores_weight = 1.0 - llm_scores_weight
             mean_score = (
-                base_scores_weight * bsuggestion.score
-                + llm_scores_weight * score  # * probability * llm_probs_weight
+                base_scores_weight * bsuggestion.score + llm_scores_weight * score
             ) / (
-                base_scores_weight + llm_scores_weight  # * probability * llm_probs_weight
+                base_scores_weight + llm_scores_weight
             )  # weighted mean of LLM and base scores!
             suggestions.append(SubjectSuggestion(subject_id=subj_id, score=mean_score))
         return suggestions
 
-    # async def _call_llm(self, prompt: str, model: str):
     def _call_llm(self, prompt: str, model: str):
         messages = [
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": prompt},
         ]
         try:
-            # completion = await client.chat.completions.create(
             completion = self.client.chat.completions.create(
                 model=model,
                 messages=messages,
@@ -191,58 +177,50 @@ class LLMBackend(BaseLLMBackend):
                 presence_penalty=0,
                 stop=None,
                 response_format={"type": "json_object"},
-                # logprobs=True,
+                logprobs=True,
+                # top_logprobs=2,
             )
-            # return completion.choices[0].message.content
-
-            answer = completion.choices[0].message.content
-            # lines = self._get_logprobs(completion.choices[0].logprobs.content)
-            # probs = self._get_probs(lines)
-            # return answer, probs
-            return answer, dict()
+            logprobs_completion = completion.choices[0].logprobs.content
+            return self._get_results(logprobs_completion)
         except BadRequestError as err:  # openai.RateLimitError
             print(err)
-            return "{}", dict()
+            return dict()
 
-    def _get_logprobs(self, content):
-        import numpy as np
-
-        lines = []
-        joint_logprob = 0.0
+    def _get_results(self, logprobs_completion):
+        # labels, probs = [], []
+        results = dict()
         line = ""
-        line_joint_logprob = 0.0
-        for token in content:
+        for token in logprobs_completion:
             # print("Token:", token.token)
-            # print("Log prob:", token.logprob)
             # print("Linear prob:", np.round(np.exp(token.logprob) * 100, 2), "%")
-            # print("Bytes:", token.bytes, "\n")
-            # aggregated_bytes += token.bytes
-            joint_logprob += token.logprob
+            # prev_linear_prob = np.exp(token.logprob)
+            prev_token = token
 
             line += token.token
-            line_joint_logprob += token.logprob
             if "\n" in token.token:
-                # print("Line is: "+ line)
-                line_prob = np.exp(line_joint_logprob)
-                # print("Line's linear prob:",  np.round(line_prob * 100, 2), "%")
-
-                lines.append((line, line_prob))
+                print("Line is: " + line)
+                label, boolean_score = self._parse_line(line)
+                if not label == "<failed>":
+                    # results[label] = prev_linear_prob
+                    results[label] = self._get_score(prev_token)
                 line = ""
-                line_joint_logprob = 0.0
-        #         print()
-        # print()
-        # print("Joint log prob:", joint_logprob)
-        # print("Joint prob:", np.round(np.exp(joint_logprob) * 100, 2), "%")
-        return lines
+        return results
 
-    # def _get_probs(self, lines):
-    #     probs = dict()
-    #     for line, prob in lines:
-    #         try:
-    #             label = line.split('"')[1]
-    #         except IndexError:
-    #             print("Failed parsing line: " + line)
-    #             continue  # Not a line with label
-    #         # probs[label] = 1.0
-    #         probs[label] = prob
-        return probs
+    def _parse_line(self, line):
+        try:
+            label = line.split('"')[1]
+            boolean_score = line.split(":")[1].strip().replace(",", "")
+        except IndexError:
+            print(f"Failed parsing line: '{line}'")
+            return "<failed>"
+        return label, boolean_score
+
+    def _get_score(self, token):
+        linear_prob = np.exp(token.logprob)
+        if token.token == "1":
+            return linear_prob
+        elif token.token == "0":
+            return 1.0 - linear_prob
+        else:
+            print(token)
+            return None
