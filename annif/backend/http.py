@@ -68,6 +68,8 @@ class HTTPBackend(backend.AnnifBackend):
         data = {"text": text}
         if "project" in params:
             data["project"] = params["project"]
+        if "limit" in params:
+            data["limit"] = params["limit"]
 
         try:
             req = requests.post(params["endpoint"], data=data, headers=self.headers)
