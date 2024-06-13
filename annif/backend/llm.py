@@ -29,7 +29,6 @@ if TYPE_CHECKING:
 class BaseLLMBackend(backend.AnnifBackend):
     # """Base class for TODO backends"""
 
-
     def _get_sources_attribute(self, attr: str) -> list[bool | None]:
         params = self._get_backend_params(None)
         sources = annif.util.parse_sources(params["sources"])
@@ -73,9 +72,10 @@ class LLMBackend(BaseLLMBackend):
         keyword should have score 1.0 and completely unrelated keyword score
         0.0. You must output JSON with keywords as field names and add their scores
         as field values.
-        There must be the same number of items in the JSON as there are in the
-        intput keyword list.
+        There must be the same number of objects in the JSON as there are lines in the
+        intput keyword list; do not skip scoring any keywords.
     """
+    # Give zero or very low score to the keywords that do not describe the text.
 
     @property
     def is_trained(self) -> bool:
@@ -105,17 +105,17 @@ class LLMBackend(BaseLLMBackend):
         ]
 
         for text, base_suggestions in zip(texts, base_suggestion_batch):
-            text = self._truncate_text(text, encoding)
-            prompt = "Here is the text:\n" + text + "\n"
-
             base_labels = [
                 self.project.subjects[s.subject_id].labels["en"]
                 for s in base_suggestions
             ]
-            prompt += "And here are the keywords:\n" + "\n".join(base_labels)
-            answer, probabilities = self._call_llm(prompt, model)
+            prompt = "Here are the keywords:\n" + "\n".join(base_labels) + "\n" * 3
+
+            text = self._truncate_text(text, encoding)
+            prompt += "Here is the text:\n" + text + "\n"
+
+            answer = self._call_llm(prompt, model)
             print(answer)
-            print(probabilities)
             try:
                 llm_result = json.loads(answer)
             except (TypeError, json.decoder.JSONDecodeError) as err:
@@ -126,8 +126,6 @@ class LLMBackend(BaseLLMBackend):
                 base_labels,
                 base_suggestions,
                 llm_scores_weight,
-                # probabilities,
-                # llm_probs_weight,
             )
             batch_results.append(results)
         return SuggestionBatch.from_sequence(batch_results, self.project.subjects)
@@ -146,20 +144,14 @@ class LLMBackend(BaseLLMBackend):
         base_labels,
         base_suggestions,
         llm_scores_weight,
-        # probabilities,
-        # llm_probs_weight,
     ):
         suggestions = []
-        # print(f"LLM result: {llm_result}")
         for blabel, bsuggestion in zip(base_labels, base_suggestions):
-            # score = llm_result.get(blabel, 0)
             try:
                 score = llm_result[blabel]
-                # probability = probabilities[blabel]
             except KeyError:
                 print(f"Base label {blabel} not found in LLM labels")
                 score = bsuggestion.score  # use only base suggestion score
-                # probability = 0.0
             subj_id = bsuggestion.subject_id
 
             base_scores_weight = 1.0 - llm_scores_weight
@@ -167,19 +159,19 @@ class LLMBackend(BaseLLMBackend):
                 base_scores_weight * bsuggestion.score
                 + llm_scores_weight * score  # * probability * llm_probs_weight
             ) / (
-                base_scores_weight + llm_scores_weight  # * probability * llm_probs_weight
+                base_scores_weight
+                + llm_scores_weight  # * probability * llm_probs_weight
             )  # weighted mean of LLM and base scores!
             suggestions.append(SubjectSuggestion(subject_id=subj_id, score=mean_score))
         return suggestions
 
-    # async def _call_llm(self, prompt: str, model: str):
     def _call_llm(self, prompt: str, model: str):
         messages = [
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": prompt},
         ]
+        # print(prompt) #[-10000:])
         try:
-            # completion = await client.chat.completions.create(
             completion = self.client.chat.completions.create(
                 model=model,
                 messages=messages,
@@ -191,58 +183,10 @@ class LLMBackend(BaseLLMBackend):
                 presence_penalty=0,
                 stop=None,
                 response_format={"type": "json_object"},
-                # logprobs=True,
             )
-            # return completion.choices[0].message.content
 
-            answer = completion.choices[0].message.content
-            # lines = self._get_logprobs(completion.choices[0].logprobs.content)
-            # probs = self._get_probs(lines)
-            # return answer, probs
-            return answer, dict()
+            completion = completion.choices[0].message.content
+            return completion
         except BadRequestError as err:  # openai.RateLimitError
             print(err)
-            return "{}", dict()
-
-    def _get_logprobs(self, content):
-        import numpy as np
-
-        lines = []
-        joint_logprob = 0.0
-        line = ""
-        line_joint_logprob = 0.0
-        for token in content:
-            # print("Token:", token.token)
-            # print("Log prob:", token.logprob)
-            # print("Linear prob:", np.round(np.exp(token.logprob) * 100, 2), "%")
-            # print("Bytes:", token.bytes, "\n")
-            # aggregated_bytes += token.bytes
-            joint_logprob += token.logprob
-
-            line += token.token
-            line_joint_logprob += token.logprob
-            if "\n" in token.token:
-                # print("Line is: "+ line)
-                line_prob = np.exp(line_joint_logprob)
-                # print("Line's linear prob:",  np.round(line_prob * 100, 2), "%")
-
-                lines.append((line, line_prob))
-                line = ""
-                line_joint_logprob = 0.0
-        #         print()
-        # print()
-        # print("Joint log prob:", joint_logprob)
-        # print("Joint prob:", np.round(np.exp(joint_logprob) * 100, 2), "%")
-        return lines
-
-    # def _get_probs(self, lines):
-    #     probs = dict()
-    #     for line, prob in lines:
-    #         try:
-    #             label = line.split('"')[1]
-    #         except IndexError:
-    #             print("Failed parsing line: " + line)
-    #             continue  # Not a line with label
-    #         # probs[label] = 1.0
-    #         probs[label] = prob
-        return probs
+            return "{}"
