@@ -84,16 +84,8 @@ def test_http_suggest_with_results(app_project):
         assert hits[0].score == 1.0
 
 
-def test_http_suggest_limit(app_project):
-    with unittest.mock.patch("requests.post") as mock_request:
-        # create a mock response whose .json() method returns the list that we
-        # define here
-        mock_response = unittest.mock.Mock()
-        mock_response.json.return_value = [
-            {"uri": "http://example.org/dummy", "label": "dummy", "score": 1.0}
-        ]
-        mock_request.return_value = mock_response
-
+def test_http_suggest_post_args(app_project):
+    with unittest.mock.patch("requests.post"):
         http_type = annif.backend.get_backend("http")
         http = http_type(
             backend_id="http",
@@ -104,14 +96,13 @@ def test_http_suggest_limit(app_project):
             },
             project=app_project,
         )
-        result = http.suggest(["this is some text"])[0]
-        assert len(result) == 1
-        hits = list(result)
-        assert hits[0].subject_id is not None
-        assert hits[0].subject_id == app_project.subjects.by_uri(
-            "http://example.org/dummy"
-        )
-        assert hits[0].score == 1.0
+        http.suggest(["this is some text"])
+
+        assert requests.post.call_args.args == ("http://api.example.org/analyze",)
+        assert "text" in requests.post.call_args.kwargs["data"]
+        assert requests.post.call_args.kwargs["data"]["text"] == "this is some text"
+        assert "project" in requests.post.call_args.kwargs["data"]
+        assert requests.post.call_args.kwargs["data"]["project"] == "dummy"
         assert "limit" in requests.post.call_args.kwargs["data"]
         assert requests.post.call_args.kwargs["data"]["limit"] == "42"
 
