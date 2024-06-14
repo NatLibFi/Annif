@@ -101,3 +101,64 @@ def test_copy_project_config_overwrite(copy, exists):
     assert copy.call_args == mock.call(
         "tests/huggingface-cache/dummy-fi.cfg", "projects.d/dummy-fi.cfg"
     )
+
+
+@mock.patch("annif.hfh_util._list_files_in_hf_hub", return_value=["README.md"])
+@mock.patch(
+    "huggingface_hub.ModelCard.load",
+)
+@mock.patch(
+    "huggingface_hub.ModelCard",
+)
+def test_upsert_modelcard_existing_card(
+    modelcard, load, _list_files_in_hf_hub, project
+):
+    repo_id = "user/repo"
+    projects = [project]
+    token = "mytoken"
+    revision = "main"
+
+    annif.hfh_util.upsert_modelcard(repo_id, projects, token, revision)
+
+    assert not modelcard.called  # Do not create new card
+    assert load.called_once_with(repo_id)
+    assert load.return_value.push_to_hub.called_once_with(
+        repo_id=repo_id,
+        token=token,
+        revision=revision,
+        commit_message="Update README.md with Annif",
+    )
+
+
+@mock.patch("annif.hfh_util._list_files_in_hf_hub", return_value=[])
+@mock.patch(
+    "huggingface_hub.ModelCard",
+)
+def test_upsert_modelcard_new_card(modelcard, _list_files_in_hf_hub, project):
+    repo_id = "annif-user/annif-hfh-repo"
+    projects = [project]
+    token = "mytoken"
+    revision = "main"
+
+    annif.hfh_util.upsert_modelcard(repo_id, projects, token, revision)
+
+    assert modelcard.called_once()
+    assert "# annif-hfh-repo" in modelcard.call_args[0][0]  # README heading
+    assert modelcard.return_value.push_to_hub.called_once_with(
+        repo_id=repo_id,
+        token=token,
+        revision=revision,
+        commit_message="Create README.md with Annif",
+    )
+
+
+@mock.patch(
+    "huggingface_hub.ModelCard",
+)
+def test_create_modelcard(modelcard):
+    repo_id = "user/repo"
+
+    result = annif.hfh_util._create_modelcard(repo_id)
+
+    assert result.data.pipeline_tag == "text-classification"
+    assert result.data.tags == ["annif"]
