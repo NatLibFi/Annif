@@ -105,60 +105,63 @@ def test_copy_project_config_overwrite(copy, exists):
 
 @mock.patch("annif.hfh_util._list_files_in_hf_hub", return_value=["README.md"])
 @mock.patch(
-    "huggingface_hub.ModelCard.load",
-)
-@mock.patch(
     "huggingface_hub.ModelCard",
 )
-def test_upsert_modelcard_existing_card(
-    modelcard, load, _list_files_in_hf_hub, project
-):
-    repo_id = "user/repo"
+def test_upsert_modelcard_existing_card(ModelCard, _list_files_in_hf_hub, project):
+    repo_id = "annif-user/Annif-HFH-repo"
+    project.vocab_lang = "fi"
     projects = [project]
     token = "mytoken"
     revision = "main"
+    ModelCard.load.return_value.data.language = ["en"]  # Mock language in card
 
     annif.hfh_util.upsert_modelcard(repo_id, projects, token, revision)
 
-    assert not modelcard.called  # Do not create new card
-    assert load.called_once_with(repo_id)
-    assert load.return_value.push_to_hub.called_once_with(
+    ModelCard.assert_not_called()  # Do not create a new card
+
+    ModelCard.load.assert_called_once_with(repo_id)
+    card = ModelCard.load.return_value
+    card.push_to_hub.assert_called_once_with(
         repo_id=repo_id,
         token=token,
         revision=revision,
         commit_message="Update README.md with Annif",
     )
+    assert sorted(card.data.language) == ["en", "fi"]
 
 
 @mock.patch("annif.hfh_util._list_files_in_hf_hub", return_value=[])
 @mock.patch(
     "huggingface_hub.ModelCard",
 )
-def test_upsert_modelcard_new_card(modelcard, _list_files_in_hf_hub, project):
-    repo_id = "annif-user/annif-hfh-repo"
+def test_upsert_modelcard_new_card(ModelCard, _list_files_in_hf_hub, project):
+    repo_id = "annif-user/Annif-HFH-repo"
+    project.vocab_lang = "fi"
     projects = [project]
     token = "mytoken"
     revision = "main"
 
     annif.hfh_util.upsert_modelcard(repo_id, projects, token, revision)
 
-    assert modelcard.called_once()
-    assert "# annif-hfh-repo" in modelcard.call_args[0][0]  # README heading
-    assert modelcard.return_value.push_to_hub.called_once_with(
+    ModelCard.assert_called_once()
+    card = ModelCard.return_value
+    card.push_to_hub.assert_called_once_with(
         repo_id=repo_id,
         token=token,
         revision=revision,
         commit_message="Create README.md with Annif",
     )
+    assert card.data.language == ["fi"]
 
 
 @mock.patch(
     "huggingface_hub.ModelCard",
 )
-def test_create_modelcard(modelcard):
-    repo_id = "user/repo"
+def test_create_modelcard(ModelCard):
+    repo_id = "annif-user/Annif-HFH-repo"
 
-    result = annif.hfh_util._create_modelcard(repo_id)
+    card = annif.hfh_util._create_modelcard(repo_id)
 
-    assert result.data.pipeline_tag == "text-classification"
-    assert result.data.tags == ["annif"]
+    assert "# Annif-HFH-repo" in ModelCard.call_args[0][0]  # README heading
+    assert card.data.pipeline_tag == "text-classification"
+    assert card.data.tags == ["annif"]
