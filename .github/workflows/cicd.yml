@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-22.04
     name: lint with isort, Black & flake8
     steps:
-    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
     - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-22.04
     name: check CLI startup time
     steps:
-    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
     - name: "Prepare: restore caches, install Poetry, set up Python"
       id: prepare
       uses: ./.github/actions/prepare
@@ -64,7 +64,7 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
     name: test on Python ${{ matrix.python-version }}
     steps:
-    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
     - name: Install system packages
       run: |
         sudo apt-get install \
@@ -109,7 +109,7 @@ jobs:
           poetry run pytest --cov=./ --cov-report xml --cov-append -m slow
         fi
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@c16abc29c95fcf9174b58eb7e1abf4c866893bc8  # v4.1.1
+      uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673  # v4.5.0
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     - name: Save cache
@@ -129,7 +129,7 @@ jobs:
     timeout-minutes: 15
     steps:
     - name: "Build image for testing"
-      uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0  # v5.3.0
+      uses: docker/build-push-action@15560696de535e4014efeff63c48f16952e52dd1  # v6.2.0
       with:
         push: false
         tags: test-image
@@ -145,7 +145,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
     - name: Login to Quay.io
-      uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20  # v3.1.0
+      uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446  # v3.2.0
       with:
         registry: quay.io
         username: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_USERNAME }}
@@ -158,7 +158,7 @@ jobs:
         tags: |
           latest
     - name: Build and push to Quay.io
-      uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0  # v5.3.0
+      uses: docker/build-push-action@15560696de535e4014efeff63c48f16952e52dd1  # v6.2.0
       with:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
@@ -170,7 +170,7 @@ jobs:
     runs-on: ubuntu-22.04
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
-    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
     - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
@@ -184,7 +184,7 @@ jobs:
         poetry publish --build
 
     - name: Login to Quay.io
-      uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20  # v3.1.0
+      uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446  # v3.2.0
       with:
         registry: quay.io
         username: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_USERNAME }}
@@ -199,7 +199,7 @@ jobs:
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
     - name: Build and push to Quay.io
-      uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0  # v5.3.0
+      uses: docker/build-push-action@15560696de535e4014efeff63c48f16952e52dd1  # v6.2.0
       with:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
