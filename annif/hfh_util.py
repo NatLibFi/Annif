@@ -238,3 +238,49 @@ def get_vocab_id_from_config(config_path: str) -> str:
     config.read(config_path)
     section = config.sections()[0]
     return config[section]["vocab"]
+
+
+def upsert_modelcard(repo_id, projects, token, revision):
+    """This function creates or updates a Model Card in a Hugging Face Hub repository
+    with some metadata in it."""
+    from huggingface_hub import ModelCard
+
+    card_exists = "README.md" in _list_files_in_hf_hub(repo_id, token, revision)
+    if card_exists:
+        card = ModelCard.load(repo_id)
+        commit_message = "Update README.md with Annif"
+    else:
+        card = _create_modelcard(repo_id)
+        commit_message = "Create README.md with Annif"
+
+    langs_existing = set(card.data.language) if card.data.language else set()
+    langs_to_add = {proj.vocab_lang for proj in projects}
+    card.data.language = list(langs_existing.union(langs_to_add))
+
+    card.push_to_hub(
+        repo_id=repo_id, token=token, revision=revision, commit_message=commit_message
+    )
+
+
+def _create_modelcard(repo_id):
+    from huggingface_hub import ModelCard
+
+    content = f"""
+---
+
+---
+
+# {repo_id.split("/")[1]}
+
+## Usage
+
+Use the `annif download` command to download selected projects with Annif;
+for example, to download all projects in this repository run
+
+    annif download "*" {repo_id}
+
+"""
+    card = ModelCard(content)
+    card.data.pipeline_tag = "text-classification"
+    card.data.tags = ["annif"]
+    return card

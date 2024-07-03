@@ -1069,10 +1069,13 @@ def test_run_help():
     assert "Run Annif in server mode for development." in result.output
 
 
+@mock.patch("annif.hfh_util.upsert_modelcard")
 @mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
 @mock.patch("huggingface_hub.CommitOperationAdd")
 @mock.patch("huggingface_hub.HfApi.create_commit")
-def test_upload(create_commit, CommitOperationAdd, preupload_lfs_files):
+def test_upload(
+    create_commit, CommitOperationAdd, preupload_lfs_files, upsert_modelcard
+):
     result = runner.invoke(annif.cli.cli, ["upload", "dummy-fi", "dummy-repo"])
     assert not result.exception
     assert create_commit.call_count == 1
@@ -1108,16 +1111,35 @@ def test_upload(create_commit, CommitOperationAdd, preupload_lfs_files):
         )
         in create_commit.call_args_list
     )
+    assert upsert_modelcard.call_count == 1
+
+
+@mock.patch("annif.hfh_util.upsert_modelcard")
+@mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
+@mock.patch("huggingface_hub.CommitOperationAdd")
+@mock.patch("huggingface_hub.HfApi.create_commit")
+def test_upload_many(
+    create_commit, CommitOperationAdd, preupload_lfs_files, upsert_modelcard
+):
+    result = runner.invoke(annif.cli.cli, ["upload", "dummy-*", "dummy-repo"])
+    assert not result.exception
+    assert create_commit.call_count == 1
+    assert CommitOperationAdd.call_count == 11
+    assert upsert_modelcard.call_count == 1
 
 
 @mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
 @mock.patch("huggingface_hub.CommitOperationAdd")
 @mock.patch("huggingface_hub.HfApi.create_commit")
-def test_upload_many(create_commit, CommitOperationAdd, preupload_lfs_files):
-    result = runner.invoke(annif.cli.cli, ["upload", "dummy-*", "dummy-repo"])
+@mock.patch("annif.hfh_util.upsert_modelcard")
+def test_upload_no_modelcard_upsert(
+    upsert_modelcard, create_commit, CommitOperationAdd, preupload_lfs_files
+):
+    result = runner.invoke(
+        annif.cli.cli, ["upload", "dummy-fi", "dummy-repo", "--no-modelcard"]
+    )
     assert not result.exception
-    assert create_commit.call_count == 1
-    assert CommitOperationAdd.call_count == 11
+    assert upsert_modelcard.call_count == 0
 
 
 def test_upload_nonexistent_repo():

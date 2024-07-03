@@ -101,3 +101,67 @@ def test_copy_project_config_overwrite(copy, exists):
     assert copy.call_args == mock.call(
         "tests/huggingface-cache/dummy-fi.cfg", "projects.d/dummy-fi.cfg"
     )
+
+
+@mock.patch("annif.hfh_util._list_files_in_hf_hub", return_value=["README.md"])
+@mock.patch(
+    "huggingface_hub.ModelCard",
+)
+def test_upsert_modelcard_existing_card(ModelCard, _list_files_in_hf_hub, project):
+    repo_id = "annif-user/Annif-HFH-repo"
+    project.vocab_lang = "fi"
+    projects = [project]
+    token = "mytoken"
+    revision = "main"
+    ModelCard.load.return_value.data.language = ["en"]  # Mock language in card
+
+    annif.hfh_util.upsert_modelcard(repo_id, projects, token, revision)
+
+    ModelCard.assert_not_called()  # Do not create a new card
+
+    ModelCard.load.assert_called_once_with(repo_id)
+    card = ModelCard.load.return_value
+    card.push_to_hub.assert_called_once_with(
+        repo_id=repo_id,
+        token=token,
+        revision=revision,
+        commit_message="Update README.md with Annif",
+    )
+    assert sorted(card.data.language) == ["en", "fi"]
+
+
+@mock.patch("annif.hfh_util._list_files_in_hf_hub", return_value=[])
+@mock.patch(
+    "huggingface_hub.ModelCard",
+)
+def test_upsert_modelcard_new_card(ModelCard, _list_files_in_hf_hub, project):
+    repo_id = "annif-user/Annif-HFH-repo"
+    project.vocab_lang = "fi"
+    projects = [project]
+    token = "mytoken"
+    revision = "main"
+
+    annif.hfh_util.upsert_modelcard(repo_id, projects, token, revision)
+
+    ModelCard.assert_called_once()
+    card = ModelCard.return_value
+    card.push_to_hub.assert_called_once_with(
+        repo_id=repo_id,
+        token=token,
+        revision=revision,
+        commit_message="Create README.md with Annif",
+    )
+    assert card.data.language == ["fi"]
+
+
+@mock.patch(
+    "huggingface_hub.ModelCard",
+)
+def test_create_modelcard(ModelCard):
+    repo_id = "annif-user/Annif-HFH-repo"
+
+    card = annif.hfh_util._create_modelcard(repo_id)
+
+    assert "# Annif-HFH-repo" in ModelCard.call_args[0][0]  # README heading
+    assert card.data.pipeline_tag == "text-classification"
+    assert card.data.tags == ["annif"]
