@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from simplemma.langdetect import in_target_language
+from simplemma.language_detector import in_target_language
 
 import annif
 
