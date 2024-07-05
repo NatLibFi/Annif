@@ -6,7 +6,7 @@ import collections
 import os.path
 from typing import TYPE_CHECKING, Any
 
-import fasttext
+import floret
 
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
@@ -65,14 +65,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
 
     @staticmethod
     def _load_model(path: str) -> _FastText:
-        # monkey patch fasttext.FastText.eprint to avoid spurious warning
-        # see https://github.com/facebookresearch/fastText/issues/1067
-        orig_eprint = fasttext.FastText.eprint
-        fasttext.FastText.eprint = lambda x: None
-        model = fasttext.load_model(path)
-        # restore the original eprint
-        fasttext.FastText.eprint = orig_eprint
-        return model
+        return floret.load_model(path)
 
     def initialize(self, parallel: bool = False) -> None:
         if self._model is None:
@@ -132,7 +125,7 @@ class FastTextBackend(mixins.ChunkingBackend, backend.AnnifBackend):
         if jobs != 0:  # jobs set by user to non-default value
             params["thread"] = jobs
         self.debug("Model parameters: {}".format(params))
-        self._model = fasttext.train_supervised(trainpath, **params)
+        self._model = floret.train_supervised(trainpath, **params)
         self._model.save_model(modelpath)
 
     def _train(

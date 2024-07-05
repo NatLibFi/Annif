@@ -56,8 +56,8 @@ def test_fill_params_with_defaults(project):
 
 
 @pytest.mark.skipif(
-    importlib.util.find_spec("fasttext") is not None,
-    reason="test requires that fastText is NOT installed",
+    importlib.util.find_spec("floret") is not None,
+    reason="test requires that floret is NOT installed",
 )
 def test_get_backend_fasttext_not_installed():
     with pytest.raises(ValueError) as excinfo:
