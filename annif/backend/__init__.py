@@ -15,6 +15,12 @@ def _dummy() -> Type[AnnifBackend]:
     return dummy.DummyBackend
 
 
+def _embeddings() -> Type[AnnifBackend]:
+    from . import embeddings
+
+    return embeddings.EmbeddingsBackend
+
+
 def _ensemble() -> Type[AnnifBackend]:
     from . import ensemble
 
@@ -101,6 +107,7 @@ def _yake() -> Type[AnnifBackend]:
 # registry of the above functions
 _backend_fns = {
     "dummy": _dummy,
+    "embeddings": _embeddings,
     "ensemble": _ensemble,
     "fasttext": _fasttext,
     "http": _http,
