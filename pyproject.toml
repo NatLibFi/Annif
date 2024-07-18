@@ -59,6 +59,7 @@ yake = { version = "0.4.8", optional = true }
 spacy = { version = "3.7.*", optional = true }
 stwfsapy = { version = "0.4.*", optional = true, python = "<3.12" }
 qdrant-client = { version = "~1.10.1", optional = true }
+tiktoken = { version = "~0.7.0", optional = true }
 
 [tool.poetry.dev-dependencies]
 py = "*"
@@ -73,7 +74,7 @@ isort = "*"
 schemathesis = "3.*.*"
 
 [tool.poetry.extras]
-embeddings = ["openai", "qdrant-client"]
+embeddings = ["openai", "qdrant-client", "tiktoken"]
 fasttext = ["fasttext-wheel"]
 voikko = ["voikko"]
 nn = ["tensorflow-cpu", "lmdb"]

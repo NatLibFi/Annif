@@ -6,6 +6,7 @@ import os.path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+import tiktoken
 from openai import AzureOpenAI  # Try using huggingface client
 from qdrant_client import QdrantClient, models
 
@@ -48,8 +49,12 @@ class EmbeddingsBackend(backend.AnnifBackend):
     _index = None
 
     DB_FILE = "qdrant-db"
-    VECTOR_DIMENSIONS = 3072  # For text-embedding-3-large
     COLLECTION_NAME = "index-collection"
+    BASE_MODEL = "text-embedding-3-large"
+    VECTOR_DIMENSIONS = 3072  # For text-embedding-3-large
+    MAX_TOKENS = 8192  # For text-embedding-3-large
+
+    encoding = tiktoken.encoding_for_model(BASE_MODEL)
 
     def _initialize_index(self) -> None:
         if self._index is None:
@@ -73,6 +78,7 @@ class EmbeddingsBackend(backend.AnnifBackend):
         self.vectorizer = Vectorizer(self.params["endpoint"], self.params["model"])
         self.info("creating similarity index")
         path = os.path.join(self.datadir, self.DB_FILE)
+
         self.qdclient = QdrantClient(path=path)
         self.qdclient.recreate_collection(
             collection_name=self.COLLECTION_NAME,
@@ -83,7 +89,10 @@ class EmbeddingsBackend(backend.AnnifBackend):
         )
 
         veccorpus = (
-            (doc.subject_set, self.vectorizer.transform(doc.text))
+            (
+                doc.subject_set,
+                self.vectorizer.transform(self._truncate_text(" ".join(doc.text))),
+            )
             for doc in corpus.documents
         )
 
@@ -99,6 +108,12 @@ class EmbeddingsBackend(backend.AnnifBackend):
             ),
         )
         print(self.qdclient.get_collection(collection_name=self.COLLECTION_NAME))
+
+    def _truncate_text(self, text):
+        """truncate text so it contains at most MAX_TOKENS according to the OpenAI
+        tokenizer"""
+        tokens = self.encoding.encode(text)
+        return self.encoding.decode(tokens[: self.MAX_TOKENS])
 
     def _train(
         self,
@@ -121,7 +136,8 @@ class EmbeddingsBackend(backend.AnnifBackend):
         self.debug(
             'Suggesting subjects for text "{}..." (len={})'.format(text[:20], len(text))
         )
-        vector = self.vectorizer.transform([" ".join(text)])
+        truncated_text = self._truncate_text(" ".join(text))
+        vector = self.vectorizer.transform(truncated_text)
         # print(vector[:5])
         info = self.qdclient.get_collection(collection_name=self.COLLECTION_NAME)
         self.debug(f"Collection info: {info}")
