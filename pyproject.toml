@@ -46,7 +46,7 @@ optuna = "3.6.*"
 python-dateutil = "2.9.*"
 tomli = { version = "2.0.*", python = "<3.11" }
 simplemma = "~1.1.0"
-jsonschema = "4.21.*"
+jsonschema = "~4.23.0"
 huggingface-hub = "~0.24.5"
 
 fasttext-wheel = { version = "0.9.2", optional = true }
