@@ -1,14 +1,21 @@
 """Unit tests for the nn_ensemble backend in Annif"""
 
+import importlib
+import os.path
 import time
 from datetime import datetime, timedelta, timezone
+from unittest import mock
 
 import py.path
 import pytest
 
 import annif.backend
 import annif.corpus
-from annif.exception import NotInitializedException, NotSupportedException
+from annif.exception import (
+    NotInitializedException,
+    NotSupportedException,
+    OperationFailedException,
+)
 
 pytest.importorskip("annif.backend.nn_ensemble")
 lmdb = pytest.importorskip("lmdb")
@@ -190,6 +197,58 @@ def test_nn_ensemble_modification_time(app_project):
         project=app_project,
     )
     assert datetime.now(timezone.utc) - nn_ensemble.modification_time < timedelta(1)
+
+
+def test_nn_ensemble_get_model_metadata(app_project):
+    nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
+    nn_ensemble = nn_ensemble_type(
+        backend_id="nn_ensemble",
+        config_params={"sources": "dummy-en"},
+        project=app_project,
+    )
+    model_filename = os.path.join(nn_ensemble.datadir, nn_ensemble.MODEL_FILE)
+
+    expected_version = importlib.metadata.version("keras")
+    expected_date_saved = datetime.now(timezone.utc)
+    actual_metadata = nn_ensemble.get_model_metadata(model_filename)
+
+    assert actual_metadata["keras_version"] == expected_version
+    datetime_format = "%Y-%m-%d@%H:%M:%S"
+    actual_datetime = datetime.strptime(actual_metadata["date_saved"], datetime_format)
+    assert expected_date_saved - actual_datetime.astimezone(
+        tz=timezone.utc
+    ) < timedelta(1)
+
+
+def test_nn_ensemble_get_model_metadata_nonexistent_file(app_project):
+    nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
+    nn_ensemble = nn_ensemble_type(
+        backend_id="nn_ensemble",
+        config_params={"sources": "dummy-en"},
+        project=app_project,
+    )
+    nonexistent_model_file = "nonexistent.zip"
+    model_filename = os.path.join(nn_ensemble.datadir, nonexistent_model_file)
+
+    actual_metadata = nn_ensemble.get_model_metadata(model_filename)
+    assert actual_metadata is None
+
+
+@mock.patch("annif.backend.nn_ensemble.load_model", side_effect=Exception)
+def test_nn_ensemble_initialize_error(load_model, app_project):
+    nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
+    nn_ensemble = nn_ensemble_type(
+        backend_id="nn_ensemble",
+        config_params={"sources": "dummy-en"},
+        project=app_project,
+    )
+    assert nn_ensemble._model is None
+    with pytest.raises(
+        OperationFailedException,
+        match=r"loading Keras model from .*; model metadata: .*",
+    ):
+        nn_ensemble.initialize()
+    assert load_model.called
 
 
 def test_nn_ensemble_initialize(app_project):

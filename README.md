@@ -2,31 +2,34 @@
 
 [![DOI](https://zenodo.org/badge/100936800.svg)](https://zenodo.org/badge/latestdoi/100936800)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Container image](https://img.shields.io/badge/container_image-quay.io-blue.svg)](https://quay.io/repository/natlibfi/annif)
 [![CI/CD](https://github.com/NatLibFi/Annif/actions/workflows/cicd.yml/badge.svg)](https://github.com/NatLibFi/Annif/actions/workflows/cicd.yml)
 [![codecov](https://codecov.io/gh/NatLibFi/Annif/branch/main/graph/badge.svg)](https://codecov.io/gh/NatLibFi/Annif)
-[![Code Climate](https://codeclimate.com/github/NatLibFi/Annif/badges/gpa.svg)](https://codeclimate.com/github/NatLibFi/Annif)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/NatLibFi/Annif/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/NatLibFi/Annif/?branch=main)
+[![Code Climate](https://codeclimate.com/github/NatLibFi/Annif/badges/gpa.svg)](https://codeclimate.com/github/NatLibFi/Annif)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/NatLibFi/Annif/badge)](https://securityscorecards.dev/viewer/?uri=github.com/NatLibFi/Annif)
 [![codebeat badge](https://codebeat.co/badges/7a8ef539-0094-48b8-84c2-c413b4a50d57)](https://codebeat.co/projects/github-com-natlibfi-annif-main)
 [![CodeQL](https://github.com/NatLibFi/Annif/actions/workflows/codeql.yml/badge.svg)](https://github.com/NatLibFi/Annif/actions/workflows/codeql.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=NatLibFi_Annif&metric=alert_status)](https://sonarcloud.io/dashboard?id=NatLibFi_Annif)
 [![docs](https://readthedocs.org/projects/annif/badge/?version=latest)](https://annif.readthedocs.io/en/latest/index.html)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Open in GitHub Codespaces](https://img.shields.io/static/v1?&label=Tutorial+in+Codespaces&message=Open&color=brightgreen&logo=github)](https://codespaces.new/NatLibFi/Annif-tutorial/tree/codespaces)
 
 Annif is an automated subject indexing toolkit. It was originally created as
 a statistical automated indexing tool that used metadata from the
 [Finna.fi](https://finna.fi) discovery interface as a training corpus.
 
 This repo contains a rewritten production version of Annif based on the
-[prototype](https://github.com/osma/annif). It is a work in progress, but
-already functional for many common tasks.
+[prototype](https://github.com/osma/annif).
 
-[Finto AI](https://ai.finto.fi/) is a service based on Annif; see the [source code for Finto AI](https://github.com/NatLibFi/FintoAI).
+[Finto AI](https://ai.finto.fi/) is a service based on Annif; see the [source code of Finto AI](https://github.com/NatLibFi/FintoAI)
+and the [🤗 Hugging Face Hub collection](https://huggingface.co/collections/NatLibFi/annif-models-65b35fb98b7c508c8e8a1570) containing the models Finto AI uses.
 
 # Basic install
 
 Annif is developed and tested on Linux. If you want to run Annif on Windows or Mac OS, the recommended way is to use Docker (see below) or a Linux virtual machine.
 
-You will need Python 3.8+ to install Annif.
+You will need Python 3.9-3.12 to install Annif.
 
 The recommended way is to install Annif from
 [PyPI](https://pypi.org/project/annif/) into a virtual environment.
@@ -71,7 +74,7 @@ For details and usage for other shells see
 [Click documentation](https://click.palletsprojects.com/en/8.1.x/shell-completion/).
 # Docker install
 
-You can use Annif as a pre-built Docker container. Please see the
+You can use Annif as a pre-built Docker container image from [quay.io/natlibfi/annif](https://quay.io/repository/natlibfi/annif) repository. Please see the
 [wiki documentation](https://github.com/NatLibFi/Annif/wiki/Usage-with-Docker)
 for details.
 
@@ -118,6 +121,11 @@ Start up the application:
 
     annif
 
+# Demo install in Codespaces
+Annif can be tried out in the [GitHub Codespaces](https://docs.github.com/en/codespaces). Just open a page for configuring a new codespace via the badge below, start the codespace from the green "Create codespace" button, and a terminal session will start in your browser with the contents of the [Annif-tutorial](https://github.com/NatLibFi/Annif-tutorial) repository:
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/NatLibFi/Annif-tutorial/tree/codespaces)
+
 # Getting help
 
 Many resources are available:
@@ -130,7 +138,7 @@ Many resources are available:
 
 # Publications / How to cite
 
-Two articles about Annif have been published in peer-reviewed Open Access
+See below for some articles about Annif in peer-reviewed Open Access
 journals. The software itself is also archived on Zenodo and
 has a [citable DOI](https://doi.org/10.5281/zenodo.5654173).
 
@@ -140,6 +148,24 @@ See "Cite this repository" in the details of the repository.
 
 ## Annif articles
 <ul>
+<li>
+Golub, K.; Suominen, O.; Mohammed, A.; Aagaard, H.; Osterman, O, 2024.
+Automated Dewey Decimal Classification of Swedish library metadata using Annif software.
+Journal of Documentation, in press.
+https://doi.org/10.1108/JD-01-2022-0026
+<details>
+<summary>See BibTex</summary>
+
+    @article{golub2024annif,
+      title={Automated Dewey Decimal Classification of Swedish library metadata using Annif software},
+      author={Golub, Koraljka and Suominen, Osma and Mohammed, Ahmed Taiye and Aagaard, Harriet and Osterman, Olof},
+      journal={J. Doc.},
+      year={in press},
+      doi = {10.1108/JD-01-2022-0026},
+      url={https://www.emerald.com/insight/content/doi/10.1108/JD-01-2022-0026},
+    }
+</details>
+</li>
 <li>
 Suominen, O.; Inkinen, J.; Lehtinen, M., 2022.
 Annif and Finto AI: Developing and Implementing Automated Subject Indexing.

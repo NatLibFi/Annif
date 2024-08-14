@@ -1,4 +1,5 @@
 """Utility functions for Annif CLI commands"""
+
 from __future__ import annotations
 
 import collections
@@ -16,8 +17,8 @@ from annif.exception import ConfigurationException
 from annif.project import Access
 
 if TYPE_CHECKING:
+    import io
     from datetime import datetime
-    from io import TextIOWrapper
 
     from click.core import Argument, Context, Option
 
@@ -184,7 +185,7 @@ def show_hits(
     hits: SuggestionResult,
     project: AnnifProject,
     lang: str,
-    file: TextIOWrapper | None = None,
+    file: io.TextIOWrapper | None = None,
 ) -> None:
     """
     Print subject suggestions to the console or a file. The suggestions are displayed as
@@ -233,7 +234,7 @@ def generate_filter_params(filter_batch_max_limit: int) -> list[tuple[int, float
 def _get_completion_choices(
     param: Argument,
 ) -> dict[str, AnnifVocabulary] | dict[str, AnnifProject] | list:
-    if param.name == "project_id":
+    if param.name in ("project_id", "project_ids_pattern"):
         return annif.registry.get_projects()
     elif param.name == "vocab_id":
         return annif.registry.get_vocabs()

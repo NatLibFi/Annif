@@ -1,4 +1,5 @@
 """MLLM (Maui-like Lexical Matchin) model for Annif"""
+
 from __future__ import annotations
 
 import collections

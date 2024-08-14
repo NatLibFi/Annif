@@ -1,4 +1,5 @@
 """Ensemble backend that combines results from multiple projects"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

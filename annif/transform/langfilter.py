@@ -1,5 +1,6 @@
 """Transformation filtering out parts of a text that are in a language
 different from the language of the project."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

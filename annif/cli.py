@@ -1,7 +1,6 @@
 """Definitions for command-line (Click) commands for invoking Annif
 operations and printing the results to console."""
 
-
 import collections
 import importlib
 import json
@@ -18,23 +17,24 @@ import annif.corpus
 import annif.parallel
 import annif.project
 import annif.registry
-from annif import cli_util
-from annif.exception import NotInitializedException, NotSupportedException
+from annif import cli_util, hfh_util
+from annif.exception import (
+    NotInitializedException,
+    NotSupportedException,
+    OperationFailedException,
+)
 from annif.project import Access
 from annif.util import metric_code
 
 logger = annif.logger
 click_log.basic_config(logger)
 
-
-if len(sys.argv) > 1 and sys.argv[1] in ("run", "routes"):
-    create_app = annif.create_app  # Use Flask with Connexion
-else:
-    # Connexion is not needed for most CLI commands, use plain Flask
-    create_app = annif.create_flask_app
-
-cli = FlaskGroup(create_app=create_app, add_version_option=False)
+create_app = annif.create_flask_app
+cli = FlaskGroup(
+    create_app=create_app, add_default_commands=False, add_version_option=False
+)
 cli = click.version_option(message="%(version)s")(cli)
+cli.params = [opt for opt in cli.params if opt.name not in ("env_file", "app")]
 
 
 @cli.command("list-projects")
@@ -443,6 +443,22 @@ def run_eval(
         )
 
 
+@cli.command("run")
+@click.option("--host", type=str, default="127.0.0.1")
+@click.option("--port", type=int, default=5000)
+@click.option("--log-level")
+@click_log.simple_verbosity_option(logger, default="ERROR")
+def run_app(**kwargs):
+    """
+    Run Annif in server mode for development.
+    \f
+    The server is for development purposes only.
+    """
+    kwargs = {k: v for k, v in kwargs.items() if v is not None}
+    cxapp = annif.create_cx_app()
+    cxapp.run(**kwargs)
+
+
 FILTER_BATCH_MAX_LIMIT = 15
 OPTIMIZE_METRICS = ["Precision (doc avg)", "Recall (doc avg)", "F1 score (doc avg)"]
 
@@ -581,6 +597,124 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric, results_fi
     for line in rec.lines:
         click.echo(line)
     click.echo("---")
+
+
+@cli.command("upload")
+@click.argument("project_ids_pattern", shell_complete=cli_util.complete_param)
+@click.argument("repo_id")
+@click.option(
+    "--token",
+    help="""Authentication token, obtained from the Hugging Face Hub.
+    Will default to the stored token.""",
+)
+@click.option(
+    "--revision",
+    help="""An optional git revision to commit from. Defaults to the head of the "main"
+    branch.""",
+)
+@click.option(
+    "--commit-message",
+    help="""The summary / title / first line of the generated commit.""",
+)
+@cli_util.common_options
+def run_upload(project_ids_pattern, repo_id, token, revision, commit_message):
+    """
+    Upload selected projects and their vocabularies to a Hugging Face Hub repository.
+    \f
+    This command zips the project directories and vocabularies of the projects
+    that match the given `project_ids_pattern` to archive files, and uploads the
+    archives along with the project configurations to the specified Hugging Face
+    Hub repository. An authentication token and commit message can be given with
+    options.
+    """
+    from huggingface_hub import HfApi
+    from huggingface_hub.utils import HfHubHTTPError, HFValidationError
+
+    projects = hfh_util.get_matching_projects(project_ids_pattern)
+    click.echo(f"Uploading project(s): {', '.join([p.project_id for p in projects])}")
+
+    commit_message = (
+        commit_message
+        if commit_message is not None
+        else f"Upload project(s) {project_ids_pattern} with Annif"
+    )
+
+    fobjs, operations = [], []
+    try:
+        fobjs, operations = hfh_util.prepare_commits(projects, repo_id)
+        api = HfApi()
+        api.create_commit(
+            repo_id=repo_id,
+            operations=operations,
+            commit_message=commit_message,
+            revision=revision,
+            token=token,
+        )
+    except (HfHubHTTPError, HFValidationError) as err:
+        raise OperationFailedException(str(err))
+    finally:
+        for fobj in fobjs:
+            fobj.close()
+
+
+@cli.command("download")
+@click.argument("project_ids_pattern")
+@click.argument("repo_id")
+@click.option(
+    "--token",
+    help="""Authentication token, obtained from the Hugging Face Hub.
+    Will default to the stored token.""",
+)
+@click.option(
+    "--revision",
+    help="""
+    An optional Git revision id which can be a branch name, a tag, or a commit
+    hash.
+    """,
+)
+@click.option(
+    "--force",
+    "-f",
+    default=False,
+    is_flag=True,
+    help="Replace an existing project/vocabulary/config with the downloaded one",
+)
+@cli_util.common_options
+def run_download(project_ids_pattern, repo_id, token, revision, force):
+    """
+    Download selected projects and their vocabularies from a Hugging Face Hub
+    repository.
+    \f
+    This command downloads the project and vocabulary archives and the
+    configuration files of the projects that match the given
+    `project_ids_pattern` from the specified Hugging Face Hub repository and
+    unzips the archives to `data/` directory and places the configuration files
+    to `projects.d/` directory. An authentication token and revision can
+    be given with options.
+    """
+
+    project_ids = hfh_util.get_matching_project_ids_from_hf_hub(
+        project_ids_pattern, repo_id, token, revision
+    )
+    click.echo(f"Downloading project(s): {', '.join(project_ids)}")
+
+    vocab_ids = set()
+    for project_id in project_ids:
+        project_zip_cache_path = hfh_util.download_from_hf_hub(
+            f"projects/{project_id}.zip", repo_id, token, revision
+        )
+        hfh_util.unzip_archive(project_zip_cache_path, force)
+        config_file_cache_path = hfh_util.download_from_hf_hub(
+            f"{project_id}.cfg", repo_id, token, revision
+        )
+        vocab_ids.add(hfh_util.get_vocab_id_from_config(config_file_cache_path))
+        hfh_util.copy_project_config(config_file_cache_path, force)
+
+    for vocab_id in vocab_ids:
+        vocab_zip_cache_path = hfh_util.download_from_hf_hub(
+            f"vocabs/{vocab_id}.zip", repo_id, token, revision
+        )
+        hfh_util.unzip_archive(vocab_zip_cache_path, force)
 
 
 @cli.command("completion")
