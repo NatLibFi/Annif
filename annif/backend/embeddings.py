@@ -46,7 +46,7 @@ class EmbeddingsBackend(backend.AnnifBackend):
     is_trained = True
 
     # defaults for uninitialized instances
-    _index = None
+    qdclient = None
 
     DB_FILE = "qdrant-db"
     COLLECTION_NAME = "index-collection"
@@ -57,7 +57,7 @@ class EmbeddingsBackend(backend.AnnifBackend):
     encoding = tiktoken.encoding_for_model(BASE_MODEL)
 
     def _initialize_index(self) -> None:
-        if self._index is None:
+        if self.qdclient is None:
             path = os.path.join(self.datadir, self.DB_FILE)
             self.debug("loading similarity index from {}".format(path))
             if os.path.exists(path):
@@ -70,6 +70,7 @@ class EmbeddingsBackend(backend.AnnifBackend):
 
     def initialize(
         self,
+        parallel: bool = False,
     ) -> None:
         self.vectorizer = Vectorizer(self.params["endpoint"], self.params["model"])
         self._initialize_index()
