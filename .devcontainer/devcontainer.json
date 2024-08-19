@@ -4,15 +4,11 @@
       "ghcr.io/devcontainers-contrib/features/poetry:2": {}
   },
   "postCreateCommand": "poetry install",
-  "postStartCommand": ["source", "$(poetry env info --path)/bin/activate"],
   "customizations": {
-    "vscode": {
-      "settings": {
-        "python.terminal.activateEnvInCurrentTerminal": true,
-        "python.venvPath": [
-          "~/.cache/pypoetry/virtualenvs"
-        ]
-      }
-    }
-  }
+		"vscode": {
+			"settings": {
+				"python.defaultInterpreterPath": "~/.cache/pypoetry/virtualenvs/annif-tkTcfYhq-py3.11/bin/python",
+			}
+		}
+	}
 }
