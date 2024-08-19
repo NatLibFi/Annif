@@ -4,5 +4,5 @@
       "ghcr.io/devcontainers-contrib/features/poetry:2": {}
   },
   "postCreateCommand": "poetry install",
-  "postStartCommand": "./activate_env.sh",
+  "postStartCommand": "/workspaces/Annif/.devcontainer/activate_env.sh",
 }
