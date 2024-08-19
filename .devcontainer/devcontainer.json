@@ -4,6 +4,7 @@
       "ghcr.io/devcontainers-contrib/features/poetry:2": {}
   },
   "postCreateCommand": "poetry install",
+  "postStartCommand": [". $(poetry env info --path)/bin/activate"],
   "customizations": {
     "vscode": {
       "settings": {
