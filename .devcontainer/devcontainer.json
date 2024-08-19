@@ -4,13 +4,14 @@
       "ghcr.io/devcontainers-contrib/features/poetry:2": {}
   },
   "postCreateCommand": "poetry install",
-  "postStartCommand": "/workspaces/Annif/.devcontainer/activate_env.sh",
   "customizations": {
     "vscode": {
-      "python.terminal.activateEnvInCurrentTerminal": true,
-      "python.venvFolders": [
-        "~/.cache/pypoetry/virtualenvs"
-      ]
+      "settings": {
+        "python.terminal.activateEnvInCurrentTerminal": true,
+        "python.venvFolders": [
+          "~/.cache/pypoetry/virtualenvs"
+        ]
+      }
     }
   }
 }
