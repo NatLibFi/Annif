@@ -7,7 +7,10 @@
   "postStartCommand": "/workspaces/Annif/.devcontainer/activate_env.sh",
   "customizations": {
     "vscode": {
-      "python.terminal.activateEnvInCurrentTerminal": true
+      "python.terminal.activateEnvInCurrentTerminal": true,
+      "python.venvFolders": [
+        "~/.cache/pypoetry/virtualenvs"
+      ]
     }
   }
 }
