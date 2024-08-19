@@ -3,5 +3,5 @@
   "features": {
       "ghcr.io/devcontainers-contrib/features/poetry:2": {}
   },
-  "postStartCommand": "poetry shell",
+  "postStartCommand": "source $(poetry env info --path)/bin/activate"
 }
