@@ -8,7 +8,7 @@
     "vscode": {
       "settings": {
         "python.terminal.activateEnvInCurrentTerminal": true,
-        "python.venvFolders": [
+        "python.venvPath": [
           "~/.cache/pypoetry/virtualenvs"
         ]
       }
