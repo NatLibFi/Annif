@@ -5,4 +5,9 @@
   },
   "postCreateCommand": "poetry install",
   "postStartCommand": "/workspaces/Annif/.devcontainer/activate_env.sh",
+  "customizations": {
+    "vscode": {
+      "python.terminal.activateEnvInCurrentTerminal": true
+    }
+  }
 }
