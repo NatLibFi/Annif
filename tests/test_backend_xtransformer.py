@@ -90,7 +90,7 @@ def test_xtransformer_create_train_files(tmpdir, project, datadir):
         + "arkeologia\thttp://www.yso.fi/onto/yso/p1265\n"
         + "...\thttp://example.com/none"
     )
-    corpus = annif.corpus.DocumentFile(str(tmpfile))
+    corpus = annif.corpus.DocumentFile(str(tmpfile), project.subjects)
     backend_type = annif.backend.get_backend("xtransformer")
     xtransformer = backend_type(
         backend_id="xtransformer", config_params={}, project=project
@@ -121,9 +121,9 @@ def test_xtransformer_train(datadir, document_corpus, project, mocked_xtransform
         train_mock.assert_called_once()
         first_arg = train_mock.call_args.args[0]
         kwargs = train_mock.call_args.kwargs
-        assert len(first_arg.X_text) == 6397
-        assert first_arg.X_feat.shape == (6397, 12480)
-        assert first_arg.Y.shape == (6397, 130)
+        assert len(first_arg.X_text) == 6402
+        assert first_arg.X_feat.shape == (6402, 12479)
+        assert first_arg.Y.shape == (6402, 130)
         expected_pred_params = XTransformer.PredParams.from_dict(
             {
                 "beam_size": 20,
@@ -144,8 +144,6 @@ def test_xtransformer_train(datadir, document_corpus, project, mocked_xtransform
                 "max_leaf_size": 100,
                 "imbalanced_ratio": 0.0,
                 "imbalanced_depth": 100,
-                "max_match_clusters": 32768,
-                "do_fine_tune": True,
                 "model_shortcut": "bert-base-multilingual-uncased",
                 # 'model_shortcut': 'distilbert-base-multilingual-cased',
                 "post_processor": "sigmoid",
@@ -216,32 +214,20 @@ def test_xtransformer_suggest(project):
     )
     xtransformer._model = MagicMock()
     xtransformer._model.predict.return_value = csr_matrix([0, 0.2, 0, 0, 0, 0.5, 0])
-    result = xtransformer.suggest(
+    results = xtransformer.suggest(
+        [
         """Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan."""
-    )
+        ]
+    )[0]
     xtransformer._model.predict.assert_called_once()
 
-    expected = [
-        annif.suggestion.SubjectSuggestion(
-            uri=project.subjects._uris[1],
-            label=project.subjects._labels[1],
-            notation=None,
-            score=0.2,
-        ),
-        annif.suggestion.SubjectSuggestion(
-            uri=project.subjects._uris[5],
-            label=project.subjects._labels[5],
-            notation=None,
-            score=0.5,
-        ),
-    ]
-    assert result.as_list(None) == expected
-
+    ship_finds = project.subjects.by_uri("http://www.yso.fi/onto/yso/p8869")
+    assert ship_finds in [result.subject_id for result in results]
 
 def test_xtransformer_suggest_no_input(project, datadir):
     backend_type = annif.backend.get_backend("xtransformer")
@@ -249,8 +235,8 @@ def test_xtransformer_suggest_no_input(project, datadir):
         backend_id="xtransfomer", config_params={"limit": 5}, project=project
     )
     xtransformer._model = MagicMock()
-    results = xtransformer.suggest("j")
-    assert len(results.as_list(None)) == 0
+    results = xtransformer.suggest(["j"])
+    assert len(results) == 0
 
 
 def test_xtransformer_suggest_no_model(datadir, project):

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 from stwfsapy.predictor import StwfsapyPredictor
 
 from annif.exception import NotInitializedException, NotSupportedException
-from annif.suggestion import ListSuggestionResult, SubjectSuggestion
+from annif.suggestion import SubjectSuggestion
 from annif.util import apply_param_parse_config, atomic_save, boolean
 
 from . import backend

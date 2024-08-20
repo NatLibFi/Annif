@@ -93,7 +93,7 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         "imbalanced_depth": 100,
         "max_match_clusters": 32768,
         "do_fine_tune": True,
-        "model_shortcut": "distilbert-base-multilingual-cased",
+        "model_shortcut": "bert-base-multilingual-uncased",
         "beam_size": 20,
         "limit": 100,
         "post_processor": "sigmoid",
