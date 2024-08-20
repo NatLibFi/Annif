@@ -34,7 +34,7 @@ connexion = { version = "~3.1.0", extras = ["flask", "uvicorn", "swagger-ui"] }
 click = "8.1.*"
 click-log = "0.4.*"
 joblib = "1.4.*"
-nltk = "3.8.*"
+nltk = "~3.9.1"
 gensim = "4.3.*"
 scikit-learn = "~1.5.1"
 scipy = "1.12.*"
