@@ -40,7 +40,7 @@ The recommended way is to install Annif from
 
 You will also need NLTK data files:
 
-    python -m nltk.downloader punkt
+    python -m nltk.downloader punkt_tab
 
 Start up the application:
 
@@ -115,7 +115,7 @@ Enter the virtual environment:
 
 You will also need NLTK data files:
 
-    python -m nltk.downloader punkt
+    python -m nltk.downloader punkt_tab
 
 Start up the application:
 
