@@ -1,6 +1,4 @@
 {
   "name": "Annif",
-  "build": {
-    "dockerfile": "../Dockerfile"
-  }
+  "image": "quay.io/natlibfi/annif"
 }
