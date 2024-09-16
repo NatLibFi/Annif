@@ -87,16 +87,9 @@ def detect_language(body: dict[str, Any]):
     """return scores for detected languages formatted according to Swagger spec"""
 
     text = body.get("text")
-    candidates = body.get("candidates")
+    languages = body.get("languages")
 
-    if not candidates:
-        return connexion.problem(
-            status=400,
-            title="Bad Request",
-            detail="no candidate languages given",
-        )
-
-    detector = get_language_detector(tuple(candidates))
+    detector = get_language_detector(tuple(languages))
     try:
         proportions = detector.proportion_in_each_language(text)
     except ValueError:
