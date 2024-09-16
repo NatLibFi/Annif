@@ -1,5 +1,7 @@
 """Wrapper code for using Simplemma functionality in Annif"""
 
+from typing import Tuple, Union
+
 from simplemma import LanguageDetector, Lemmatizer
 from simplemma.strategies import DefaultStrategy
 from simplemma.strategies.dictionaries import DefaultDictionaryFactory
@@ -11,5 +13,5 @@ _lemmatization_strategy = DefaultStrategy(dictionary_factory=_dictionary_factory
 lemmatizer = Lemmatizer(lemmatization_strategy=_lemmatization_strategy)
 
 
-def get_language_detector(lang: str) -> LanguageDetector:
+def get_language_detector(lang: Union[str, Tuple[str, ...]]) -> LanguageDetector:
     return LanguageDetector(lang, lemmatization_strategy=_lemmatization_strategy)
