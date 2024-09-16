@@ -58,7 +58,7 @@ def test_rest_detect_language_english(app):
     with app.app_context():
         result = annif.rest.detect_language(
             {"text": "example text", "candidates": ["en", "fi", "sv"]}
-        )
+        )[0]
         assert {"language": "en", "score": 1} in result["results"]
 
 
@@ -66,14 +66,14 @@ def test_rest_detect_language_unknown(app):
     # an unknown language should return None
     with app.app_context():
         result = annif.rest.detect_language(
-            {"text": "example text", "candidates": ["fi", "sv"]}
-        )
+            {"text": "exampley texty", "candidates": ["fi", "sv"]}
+        )[0]
         assert {"language": None, "score": 1} in result["results"]
 
 
 def test_rest_detect_language_no_text(app):
     with app.app_context():
-        result = annif.rest.detect_language({"text": "", "candidates": ["en"]})
+        result = annif.rest.detect_language({"text": "", "candidates": ["en"]})[0]
         assert {"language": None, "score": 1} in result["results"]
 
 

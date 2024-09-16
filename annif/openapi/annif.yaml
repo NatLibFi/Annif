@@ -368,6 +368,7 @@ components:
               language:
                 type: string
                 example: en
+                nullable: true
               score:
                 type: number
                 example: 0.85
