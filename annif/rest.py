@@ -9,10 +9,10 @@ from typing import TYPE_CHECKING, Any
 import connexion
 
 import annif.registry
+import annif.simplemma_util
 from annif.corpus import Document, DocumentList, SubjectSet
 from annif.exception import AnnifException
 from annif.project import Access
-from annif.simplemma_util import get_language_detector
 
 if TYPE_CHECKING:
     from connexion.lifecycle import ConnexionResponse
@@ -89,9 +89,8 @@ def detect_language(body: dict[str, Any]):
     text = body.get("text")
     languages = body.get("languages")
 
-    detector = get_language_detector(tuple(languages))
     try:
-        proportions = detector.proportion_in_each_language(text)
+        proportions = annif.simplemma_util.detect_language(text, tuple(languages))
     except ValueError:
         return connexion.problem(
             status=400,
@@ -100,14 +99,10 @@ def detect_language(body: dict[str, Any]):
         )
 
     result = {
-        "results": sorted(
-            [
-                {"language": lang if lang != "unk" else None, "score": score}
-                for lang, score in proportions.items()
-            ],
-            key=lambda x: x["score"],
-            reverse=True,
-        )
+        "results": [
+            {"language": lang if lang != "unk" else None, "score": score}
+            for lang, score in proportions.items()
+        ]
     }
     return result, 200, {"Content-Type": "application/json"}
 

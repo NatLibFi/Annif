@@ -24,7 +24,7 @@ from annif.exception import (
     OperationFailedException,
 )
 from annif.project import Access
-from annif.simplemma_util import get_language_detector
+from annif.simplemma_util import detect_language
 from annif.util import metric_code
 
 logger = annif.logger
@@ -745,13 +745,12 @@ def run_detect_language(languages):
         raise click.UsageError("At least one language is required as an argument")
 
     text = sys.stdin.read()
-    detector = get_language_detector(tuple(languages))
     try:
-        proportions = detector.proportion_in_each_language(text)
+        proportions = detect_language(text, languages)
     except ValueError as e:
         raise click.UsageError(e)
 
-    for lang, score in sorted(proportions.items(), key=lambda x: x[1], reverse=True):
+    for lang, score in proportions.items():
         if lang == "unk":
             lang = "?"
         click.echo(f"{lang}\t{score:.04f}")
