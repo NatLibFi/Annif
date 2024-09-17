@@ -126,3 +126,15 @@ def test_openapi_learn_novocab(app_client):
     data = []
     req = app_client.post("http://localhost:8000/v1/projects/novocab/learn", json=data)
     assert req.status_code == 503
+
+
+def test_rest_detect_language_no_candidates(app_client):
+    data = {"text": "example text", "languages": []}
+    req = app_client.post("http://localhost:8000/v1/detect-language", json=data)
+    assert req.status_code == 400
+
+
+def test_rest_detect_language_too_many_candidates(app_client):
+    data = {"text": "example text", "languages": ["en", "fr", "de", "it", "es", "nl"]}
+    req = app_client.post("http://localhost:8000/v1/detect-language", json=data)
+    assert req.status_code == 400
