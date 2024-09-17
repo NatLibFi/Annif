@@ -659,11 +659,12 @@ def run_upload(
         )
     except (HfHubHTTPError, HFValidationError) as err:
         raise OperationFailedException(str(err))
+    else:
+        if modelcard:
+            hfh_util.upsert_modelcard(repo_id, projects, token, revision)
     finally:
         for fobj in fobjs:
             fobj.close()
-    if modelcard:
-        hfh_util.upsert_modelcard(repo_id, projects, token, revision)
 
 
 @cli.command("download")
