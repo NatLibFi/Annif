@@ -100,10 +100,14 @@ def detect_language(body: dict[str, Any]):
         )
 
     result = {
-        "results": [
-            {"language": lang if lang != "unk" else None, "score": score}
-            for lang, score in proportions.items()
-        ]
+        "results": sorted(
+            [
+                {"language": lang if lang != "unk" else None, "score": score}
+                for lang, score in proportions.items()
+            ],
+            key=lambda x: x["score"],
+            reverse=True,
+        )
     }
     return result, 200, {"Content-Type": "application/json"}
 
