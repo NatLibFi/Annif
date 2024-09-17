@@ -737,23 +737,36 @@ def run_completion(shell):
 
 
 @cli.command("detect-language")
-@click.argument("languages", nargs=-1)
-def run_detect_language(languages):
-    """Detect the language of a text given a list of candidate languages."""
+@click.argument("languages")
+@click.argument(
+    "paths", type=click.Path(dir_okay=False, exists=True, allow_dash=True), nargs=-1
+)
+def run_detect_language(languages, paths):
+    """
+    Detect the language of a single text document from standard input or for one or more
+    document file(s) given its/their path(s).
+    """
 
-    if not languages:
-        raise click.UsageError("At least one language is required as an argument")
+    langs = tuple(languages.split(","))
 
-    text = sys.stdin.read()
-    try:
-        proportions = detect_language(text, languages)
-    except ValueError as e:
-        raise click.UsageError(e)
+    def detect_language_and_show(text, languages):
+        try:
+            proportions = detect_language(text, languages)
+        except ValueError as e:
+            raise click.UsageError(e)
+        for lang, score in proportions.items():
+            if lang == "unk":
+                lang = "?"
+            click.echo(f"{lang}\t{score:.04f}")
 
-    for lang, score in proportions.items():
-        if lang == "unk":
-            lang = "?"
-        click.echo(f"{lang}\t{score:.04f}")
+    if paths and not (len(paths) == 1 and paths[0] == "-"):
+        doclist = cli_util.open_text_documents(paths, docs_limit=None)
+        for doc, path in zip(doclist.documents, paths):
+            click.echo(f"Detected languages for {path}")
+            detect_language_and_show(doc.text, langs)
+    else:
+        text = sys.stdin.read()
+        detect_language_and_show(text, langs)
 
 
 if __name__ == "__main__":
