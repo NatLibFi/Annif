@@ -1391,3 +1391,39 @@ def test_completion_show_project_project_ids_dummy():
 def test_completion_load_vocab_vocab_ids_all():
     completions = get_completions(annif.cli.cli, ["load-vocab"], "")
     assert completions == ["dummy", "dummy-noname", "yso"]
+
+
+def test_detect_language_stdin():
+    result = runner.invoke(
+        annif.cli.cli,
+        ["detect-language", "fi,sv,en"],
+        input="This is some example text",
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+    assert result.output.split("\n")[0] == "en\t1.0000"
+    assert result.output.split("\n")[-2] == "?\t0.0000"
+
+
+def test_detect_language_unknown_language():
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        ["detect-language", "xxx"],
+        input="This is some example text",
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "Error: Unsupported language: xxx" in failed_result.output
+
+
+def test_detect_language_file_and_stdin(tmpdir):
+    docfile1 = tmpdir.join("doc-1.txt")
+    docfile1.write("nothing special")
+
+    result = runner.invoke(
+        annif.cli.cli, ["detect-language", "fi,en", str(docfile1), "-"], input="kissa"
+    )
+
+    assert not result.exception
+    assert f"Detected languages for {docfile1}" in result.output
+    assert "Detected languages for -" in result.output
