@@ -59,7 +59,7 @@ def test_rest_detect_language_english(app):
         result = annif.rest.detect_language(
             {"text": "example text", "languages": ["en", "fi", "sv"]}
         )[0]
-        assert {"language": "en", "score": 1} in result["results"]
+        assert result["results"][0] == {"language": "en", "score": 1}
 
 
 def test_rest_detect_language_unknown(app):
@@ -68,13 +68,13 @@ def test_rest_detect_language_unknown(app):
         result = annif.rest.detect_language(
             {"text": "exampley texty", "languages": ["fi", "sv"]}
         )[0]
-        assert {"language": None, "score": 1} in result["results"]
+        assert result["results"][0] == {"language": None, "score": 1}
 
 
 def test_rest_detect_language_no_text(app):
     with app.app_context():
         result = annif.rest.detect_language({"text": "", "languages": ["en"]})[0]
-        assert {"language": None, "score": 1} in result["results"]
+        assert result["results"][0] == {"language": None, "score": 1}
 
 
 def test_rest_detect_language_unsupported_candidates(app):
