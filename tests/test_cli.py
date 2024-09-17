@@ -1391,3 +1391,37 @@ def test_completion_show_project_project_ids_dummy():
 def test_completion_load_vocab_vocab_ids_all():
     completions = get_completions(annif.cli.cli, ["load-vocab"], "")
     assert completions == ["dummy", "dummy-noname", "yso"]
+
+
+def test_detect_language():
+    result = runner.invoke(
+        annif.cli.cli,
+        ["detect-language", "fi", "sv", "en"],
+        input="This is some example text",
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+    assert result.output.split("\n")[0] == "en\t1.0000"
+    assert result.output.split("\n")[-2] == "?\t0.0000"
+
+
+def test_detect_language_no_candidates():
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        ["detect-language"],
+        input="This is some example text",
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "At least one language is required as an argument" in failed_result.output
+
+
+def test_detect_language_unknown_language():
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        ["detect-language", "xxx"],
+        input="This is some example text",
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "Error: Unsupported language: xxx" in failed_result.output
