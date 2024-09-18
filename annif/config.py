@@ -35,8 +35,9 @@ class AnnifConfigCFG:
         self._read_config(read_method, source)
 
     def _read_config(self, read_method, source):
+        encoding = "utf-8-sig"
         try:
-            read_method(source)
+            read_method(source, encoding)
         except (
             configparser.DuplicateOptionError,
             configparser.DuplicateSectionError,
