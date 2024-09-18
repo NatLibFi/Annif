@@ -259,12 +259,23 @@ def upsert_modelcard(repo_id, projects, token, revision):
     card.data.language = list(langs_existing.union(langs_to_add))
 
     configs = _get_existing_configs(repo_id, token, revision)
-    card.text = _update_modelcard_projects(card.text, configs)
-    print(card.text)
+    card.text = _update_projects_section(card.text, configs)
 
     card.push_to_hub(
         repo_id=repo_id, token=token, revision=revision, commit_message=commit_message
     )
+
+
+def _get_existing_configs(repo_id, token, revision):
+    from huggingface_hub import HfFileSystem
+
+    fs = HfFileSystem()
+    cfg_locations = fs.glob(f"{repo_id}/*.cfg")
+
+    projstr = ""
+    for cfg_file in cfg_locations:
+        projstr += fs.read_text(cfg_file, token=token, revision=revision)
+    return AnnifConfigCFG(projstr=projstr)
 
 
 def _create_modelcard(repo_id):
@@ -284,10 +295,6 @@ for example, to download all projects in this repository run
 
     annif download "*" {repo_id}
 
-## Projects
-
-    Project ID          Project Name             Vocabulary ID  Language
-    --------------------------------------------------------------------
 """
     card = ModelCard(content)
     card.data.pipeline_tag = "text-classification"
@@ -295,29 +302,28 @@ for example, to download all projects in this repository run
     return card
 
 
-def _update_modelcard_projects(text, configs):
-    table = [
-        (
+def _update_projects_section(text, configs):
+    section_startind = text.find("## Projects\n")
+    section_endind = text.rfind("```") + 3  # end of code formatted block
+
+    projects_section = _create_projects_section(configs)
+    if section_startind == -1:  # no existing projects section, append it now
+        return text + projects_section
+    else:
+        return text[:section_startind] + projects_section + text[section_endind:]
+
+
+def _create_projects_section(configs):
+    content = "## Projects\n"
+    template = "{0:<19} {1:<23} {2:<15} {3:<11}\n"
+    header = template.format("Project ID", "Project Name", "Vocabulary ID", "Language")
+    content += "```\n" + header + "-" * len(header.strip()) + "\n"
+
+    for proj_id in configs.project_ids:
+        content += template.format(
             proj_id,
             configs[proj_id]["name"],
             configs[proj_id]["vocab"],
             configs[proj_id]["language"],
         )
-        for proj_id in configs.project_ids
-    ]
-    template = "    {0: <18}  {1: <23}  {2: <13}  {3: <8}\n"
-    for row in table:
-        text += template.format(*row)
-    return text
-
-
-def _get_existing_configs(repo_id, token, revision):
-    from huggingface_hub import HfFileSystem
-
-    fs = HfFileSystem()
-    cfg_locations = fs.glob(f"{repo_id}/*.cfg")
-
-    projstr = ""
-    for cfg_file in cfg_locations:
-        projstr += fs.read_text(cfg_file, token=token, revision=revision)
-    return AnnifConfigCFG(projstr=projstr)
+    return content + "```"
