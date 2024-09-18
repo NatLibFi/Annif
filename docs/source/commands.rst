@@ -146,6 +146,14 @@ Subject index administration
 Other
 *****
 
+.. click:: annif.cli:run_detect_language
+   :prog: annif detect-language
+
+**REST equivalent**
+::
+
+   /detect-language
+
 .. click:: annif.cli:run_completion
    :prog: annif completion
 
