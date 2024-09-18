@@ -107,7 +107,10 @@ def test_copy_project_config_overwrite(copy, exists):
 @mock.patch(
     "huggingface_hub.ModelCard",
 )
-def test_upsert_modelcard_existing_card(ModelCard, _list_files_in_hf_hub, project):
+@mock.patch("huggingface_hub.HfFileSystem.glob", return_value=[])
+def test_upsert_modelcard_existing_card(
+    glob, ModelCard, _list_files_in_hf_hub, project
+):
     repo_id = "annif-user/Annif-HFH-repo"
     project.vocab_lang = "fi"
     projects = [project]
@@ -134,7 +137,8 @@ def test_upsert_modelcard_existing_card(ModelCard, _list_files_in_hf_hub, projec
 @mock.patch(
     "huggingface_hub.ModelCard",
 )
-def test_upsert_modelcard_new_card(ModelCard, _list_files_in_hf_hub, project):
+@mock.patch("huggingface_hub.HfFileSystem.glob", return_value=[])
+def test_upsert_modelcard_new_card(glob, ModelCard, _list_files_in_hf_hub, project):
     repo_id = "annif-user/Annif-HFH-repo"
     project.vocab_lang = "fi"
     projects = [project]
