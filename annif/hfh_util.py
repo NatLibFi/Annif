@@ -269,8 +269,8 @@ def upsert_modelcard(repo_id, projects, token, revision):
 def _get_existing_configs(repo_id, token, revision):
     from huggingface_hub import HfFileSystem
 
-    fs = HfFileSystem()
-    cfg_locations = fs.glob(f"{repo_id}/*.cfg")
+    fs = HfFileSystem(token=token)
+    cfg_locations = fs.glob(f"{repo_id}/*.cfg", revision=revision)
 
     projstr = ""
     for cfg_file in cfg_locations:
