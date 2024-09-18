@@ -21,18 +21,27 @@ logger = annif.logger
 class AnnifConfigCFG:
     """Class for reading configuration in CFG/INI format"""
 
-    def __init__(self, filename: str) -> None:
+    def __init__(self, filename: str = None, projstr: str = None) -> None:
         self._config = configparser.ConfigParser()
         self._config.optionxform = annif.util.identity
-        with open(filename, encoding="utf-8-sig") as projf:
-            try:
-                logger.debug(f"Reading configuration file {filename} in CFG format")
-                self._config.read_file(projf)
-            except (
-                configparser.DuplicateOptionError,
-                configparser.DuplicateSectionError,
-            ) as err:
-                raise ConfigurationException(err.message)
+        if filename is not None:
+            logger.debug(f"Reading configuration file {filename} in CFG format")
+            read_method = self._config.read
+            source = filename
+        elif projstr is not None:
+            logger.debug("Reading configuration from a string in CFG format")
+            read_method = self._config.read_string
+            source = projstr
+        self._read_config(read_method, source)
+
+    def _read_config(self, read_method, source):
+        try:
+            read_method(source)
+        except (
+            configparser.DuplicateOptionError,
+            configparser.DuplicateSectionError,
+        ) as err:
+            raise ConfigurationException(err.message)
 
     @property
     def project_ids(self) -> list[str]:

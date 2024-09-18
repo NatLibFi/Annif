@@ -17,6 +17,7 @@ import click
 from flask import current_app
 
 import annif
+from annif.config import AnnifConfigCFG
 from annif.exception import OperationFailedException
 from annif.project import Access, AnnifProject
 
@@ -257,6 +258,10 @@ def upsert_modelcard(repo_id, projects, token, revision):
     langs_to_add = {proj.vocab_lang for proj in projects}
     card.data.language = list(langs_existing.union(langs_to_add))
 
+    configs = _get_existing_configs(repo_id, token, revision)
+    card.text = _update_modelcard_projects(card.text, configs)
+    print(card.text)
+
     card.push_to_hub(
         repo_id=repo_id, token=token, revision=revision, commit_message=commit_message
     )
@@ -279,8 +284,40 @@ for example, to download all projects in this repository run
 
     annif download "*" {repo_id}
 
+## Projects
+
+    Project ID          Project Name             Vocabulary ID  Language
+    --------------------------------------------------------------------
 """
     card = ModelCard(content)
     card.data.pipeline_tag = "text-classification"
     card.data.tags = ["annif"]
     return card
+
+
+def _update_modelcard_projects(text, configs):
+    table = [
+        (
+            proj_id,
+            configs[proj_id]["name"],
+            configs[proj_id]["vocab"],
+            configs[proj_id]["language"],
+        )
+        for proj_id in configs.project_ids
+    ]
+    template = "    {0: <18}  {1: <23}  {2: <13}  {3: <8}\n"
+    for row in table:
+        text += template.format(*row)
+    return text
+
+
+def _get_existing_configs(repo_id, token, revision):
+    from huggingface_hub import HfFileSystem
+
+    fs = HfFileSystem()
+    cfg_locations = fs.glob(f"{repo_id}/*.cfg")
+
+    projstr = ""
+    for cfg_file in cfg_locations:
+        projstr += fs.read_text(cfg_file, token=token, revision=revision)
+    return AnnifConfigCFG(projstr=projstr)
