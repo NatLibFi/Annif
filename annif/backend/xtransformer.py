@@ -3,7 +3,7 @@
 import logging
 import os.path as osp
 from sys import stdout
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import numpy as np
 import scipy.sparse as sp
@@ -12,8 +12,9 @@ from pecos.xmc.xtransformer import matcher, model
 from pecos.xmc.xtransformer.model import XTransformer
 from pecos.xmc.xtransformer.module import MLProblemWithText
 
+from annif.corpus.document import DocumentCorpus
 from annif.exception import NotInitializedException, NotSupportedException
-from annif.suggestion import SuggestionBatch, SubjectSuggestion, vector_to_suggestions
+from annif.suggestion import SubjectSuggestion, SuggestionBatch
 from annif.util import (
     apply_param_parse_config,
     atomic_save,
@@ -23,13 +24,6 @@ from annif.util import (
 
 from . import backend, mixins
 
-
-# if TYPE_CHECKING:
-from collections.abc import Iterator
-
-from scipy.sparse._csr import csr_matrix
-
-from annif.corpus.document import DocumentCorpus
 
 class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     """XTransformer based backend for Annif"""

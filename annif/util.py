@@ -9,7 +9,6 @@ import os.path
 import tempfile
 from shutil import rmtree
 from typing import Any, Callable
-import numpy as np
 
 from annif import logger
 
