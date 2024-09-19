@@ -38,10 +38,6 @@ The recommended way is to install Annif from
     source annif-venv/bin/activate
     pip install annif
 
-You will also need NLTK data files:
-
-    python -m nltk.downloader punkt_tab
-
 Start up the application:
 
     annif
@@ -112,10 +108,6 @@ By default development dependencies are included. Use option `-E` to install dep
 Enter the virtual environment:
 
     poetry shell
-
-You will also need NLTK data files:
-
-    python -m nltk.downloader punkt_tab
 
 Start up the application:
 
