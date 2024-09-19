@@ -11,6 +11,7 @@ import annif
 logger = annif.logger
 
 _KEY_TOKEN_MIN_LENGTH = "token_min_length"
+_NLTK_TOKENIZER_DATA = "punkt_tab"
 
 
 class Analyzer(metaclass=abc.ABCMeta):
@@ -28,14 +29,15 @@ class Analyzer(metaclass=abc.ABCMeta):
         import nltk.data
 
         try:
-            nltk.data.find("tokenizers/punkt_tab")
+            nltk.data.find("tokenizers/" + _NLTK_TOKENIZER_DATA)
         except LookupError as err:
             logger.debug(str(err))
-            if "punkt_tab" in str(err):  # "punkt_tab" is surrounded by color code tags
+            if _NLTK_TOKENIZER_DATA in str(err):
                 logger.warning(
-                    'NLTK datapackage "punkt_tab" not found, downloading it now.'
+                    f'NLTK datapackage "{_NLTK_TOKENIZER_DATA}" not found, '
+                    "downloading it now."
                 )
-                nltk.download("punkt_tab")
+                nltk.download(_NLTK_TOKENIZER_DATA)
 
     def tokenize_sentences(self, text: str) -> list[str]:
         """Tokenize a piece of text (e.g. a document) into sentences."""
