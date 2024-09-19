@@ -1,5 +1,7 @@
 """Unit tests for analyzers in Annif"""
 
+from unittest import mock
+
 import pytest
 
 import annif.analyzer
@@ -13,6 +15,15 @@ def test_get_analyzer_nonexistent():
 def test_get_analyzer_badspec():
     with pytest.raises(ValueError):
         annif.analyzer.get_analyzer("()")
+
+
+@mock.patch("nltk.data.find", side_effect=LookupError("Resource punkt_tab not found"))
+@mock.patch("nltk.download")
+def test_nltk_data_missing(download, find):
+    annif.analyzer.get_analyzer("snowball(english)")
+    assert find.called
+    assert download.called
+    assert download.call_args == mock.call("punkt_tab")
 
 
 def test_english_analyzer_normalize_word():

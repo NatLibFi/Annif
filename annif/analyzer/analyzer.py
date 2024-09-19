@@ -6,6 +6,10 @@ import abc
 import functools
 import unicodedata
 
+import annif
+
+logger = annif.logger
+
 _KEY_TOKEN_MIN_LENGTH = "token_min_length"
 
 
@@ -20,6 +24,18 @@ class Analyzer(metaclass=abc.ABCMeta):
     def __init__(self, **kwargs) -> None:
         if _KEY_TOKEN_MIN_LENGTH in kwargs:
             self.token_min_length = int(kwargs[_KEY_TOKEN_MIN_LENGTH])
+
+        import nltk.data
+
+        try:
+            nltk.data.find("tokenizers/punkt_tab")
+        except LookupError as err:
+            logger.debug(str(err))
+            if "punkt_tab" in str(err):  # "punkt_tab" is surrounded by color code tags
+                logger.warning(
+                    'NLTK datapackage "punkt_tab" not found, downloading it now.'
+                )
+                nltk.download("punkt_tab")
 
     def tokenize_sentences(self, text: str) -> list[str]:
         """Tokenize a piece of text (e.g. a document) into sentences."""
