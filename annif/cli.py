@@ -633,7 +633,9 @@ def run_upload(
     that match the given `project_ids_pattern` to archive files, and uploads the
     archives along with the project configurations to the specified Hugging Face
     Hub repository. An authentication token and commit message can be given with
-    options.
+    options. If the README.md does not exist in the repository it is
+    created with default contents and metadata of the uploaded projects, if it exists,
+    its metadata are updated as necessary.
     """
     from huggingface_hub import HfApi
     from huggingface_hub.utils import HfHubHTTPError, HFValidationError
@@ -690,8 +692,14 @@ def run_upload(
     is_flag=True,
     help="Replace an existing project/vocabulary/config with the downloaded one",
 )
+@click.option(
+    "--trust-repo",
+    default=False,
+    is_flag=True,
+    help="Allow download from the repository even when it has no entries in the cache",
+)
 @cli_util.common_options
-def run_download(project_ids_pattern, repo_id, token, revision, force):
+def run_download(project_ids_pattern, repo_id, token, revision, force, trust_repo):
     """
     Download selected projects and their vocabularies from a Hugging Face Hub
     repository.
@@ -700,11 +708,13 @@ def run_download(project_ids_pattern, repo_id, token, revision, force):
     configuration files of the projects that match the given
     `project_ids_pattern` from the specified Hugging Face Hub repository and
     unzips the archives to `data/` directory and places the configuration files
-    to `projects.d/` directory. An authentication token and revision can
-    be given with options. If the README.md does not exist in the repository it is
-    created with default contents and metadata of the uploaded projects, if it exists,
-    its metadata are updated as necessary.
+    to `projects.d/` directory. An authentication token and revision can be given with
+    options. If the repository hasn’t been used for downloads previously
+    (i.e., it doesn’t appear in the Hugging Face Hub cache on local system), the
+    `--trust-repo` option needs to be used.
     """
+
+    hfh_util.check_is_download_allowed(trust_repo, repo_id, token)
 
     project_ids = hfh_util.get_matching_project_ids_from_hf_hub(
         project_ids_pattern, repo_id, token, revision
