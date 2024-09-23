@@ -97,7 +97,7 @@ Subject index administration
 **REST equivalent**
 ::
 
-   /projects/<PROJECT_ID>/learn
+   POST /projects/<PROJECT_ID>/learn
 
 .. click:: annif.cli:run_suggest
    :prog: annif suggest
@@ -145,6 +145,14 @@ Subject index administration
 *****
 Other
 *****
+
+.. click:: annif.cli:run_detect_language
+   :prog: annif detect-language
+
+**REST equivalent**
+::
+
+   POST /detect-language
 
 .. click:: annif.cli:run_completion
    :prog: annif completion
