@@ -245,12 +245,12 @@ def upsert_modelcard(repo_id, projects, token, revision):
     """This function creates or updates a Model Card in a Hugging Face Hub repository
     with some metadata in it."""
     from huggingface_hub import ModelCard
+    from huggingface_hub.utils import EntryNotFoundError
 
-    card_exists = "README.md" in _list_files_in_hf_hub(repo_id, token, revision)
-    if card_exists:
+    try:
         card = ModelCard.load(repo_id)
         commit_message = "Update README.md with Annif"
-    else:
+    except EntryNotFoundError:
         card = _create_modelcard(repo_id)
         commit_message = "Create README.md with Annif"
 

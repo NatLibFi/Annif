@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from unittest import mock
 
 import huggingface_hub
+from huggingface_hub.utils import EntryNotFoundError
 
 import annif.hfh_util
 from annif.config import AnnifConfigCFG
@@ -106,12 +107,15 @@ def test_copy_project_config_overwrite(copy, exists):
     )
 
 
-@mock.patch("annif.hfh_util._list_files_in_hf_hub", return_value=[])
+@mock.patch(
+    "huggingface_hub.ModelCard.load",
+    side_effect=EntryNotFoundError("dummymessage"),
+)
+@mock.patch("huggingface_hub.HfFileSystem.glob", return_value=[])
 @mock.patch(
     "huggingface_hub.ModelCard",
 )
-@mock.patch("huggingface_hub.HfFileSystem.glob", return_value=[])
-def test_upsert_modelcard_insert_new(glob, ModelCard, _list_files_in_hf_hub, project):
+def test_upsert_modelcard_insert_new(ModelCard, glob, load, project):
     repo_id = "annif-user/annif-repo"
     project.vocab_lang = "fi"
     projects = [project]
@@ -136,7 +140,6 @@ def test_upsert_modelcard_insert_new(glob, ModelCard, _list_files_in_hf_hub, pro
 
 
 @mock.patch("huggingface_hub.ModelCard.push_to_hub")
-@mock.patch("annif.hfh_util._list_files_in_hf_hub", return_value=["README.md"])
 @mock.patch(
     "huggingface_hub.ModelCard.load", return_value=huggingface_hub.ModelCard("foobar")
 )
@@ -150,9 +153,7 @@ def test_upsert_modelcard_insert_new(glob, ModelCard, _list_files_in_hf_hub, pro
         vocab=dummy
 """,
 )
-def test_upsert_modelcard_update_existing(
-    read_text, glob, load, _list_files_in_hf_hub, push_to_hub, project
-):
+def test_upsert_modelcard_update_existing(read_text, glob, load, push_to_hub, project):
     repo_id = "annif-user/annif-repo"
     project.vocab_lang = "fi"
     projects = [project]
