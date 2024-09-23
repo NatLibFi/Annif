@@ -6,7 +6,10 @@ import zipfile
 from datetime import datetime, timezone
 from unittest import mock
 
+import huggingface_hub
+
 import annif.hfh_util
+from annif.config import AnnifConfigCFG
 
 
 def test_archive_dir(testdatadir):
@@ -109,7 +112,7 @@ def test_copy_project_config_overwrite(copy, exists):
 )
 @mock.patch("huggingface_hub.HfFileSystem.glob", return_value=[])
 def test_upsert_modelcard_insert_new(glob, ModelCard, _list_files_in_hf_hub, project):
-    repo_id = "annif-user/Annif-HFH-repo"
+    repo_id = "annif-user/annif-repo"
     project.vocab_lang = "fi"
     projects = [project]
     token = "mytoken"
@@ -118,88 +121,113 @@ def test_upsert_modelcard_insert_new(glob, ModelCard, _list_files_in_hf_hub, pro
     annif.hfh_util.upsert_modelcard(repo_id, projects, token, revision)
 
     ModelCard.assert_called_once()
+
     card = ModelCard.return_value
+    assert "# annif-repo" in ModelCard.call_args[0][0]  # README heading
+    assert card.data.language == ["fi"]
+    assert card.data.pipeline_tag == "text-classification"
+    assert card.data.tags == ["annif"]
     card.push_to_hub.assert_called_once_with(
         repo_id=repo_id,
         token=token,
         revision=revision,
         commit_message="Create README.md with Annif",
     )
-    assert card.data.language == ["fi"]
 
 
+@mock.patch("huggingface_hub.ModelCard.push_to_hub")
 @mock.patch("annif.hfh_util._list_files_in_hf_hub", return_value=["README.md"])
 @mock.patch(
-    "huggingface_hub.ModelCard",
+    "huggingface_hub.ModelCard.load", return_value=huggingface_hub.ModelCard("foobar")
 )
-@mock.patch("huggingface_hub.HfFileSystem.glob", return_value=[])
+@mock.patch("huggingface_hub.HfFileSystem.glob", return_value=["dummy.cfg"])
+@mock.patch(
+    "huggingface_hub.HfFileSystem.read_text",
+    return_value="""
+        [dummy-fi]
+        name=Dummy Finnish
+        language=fi
+        vocab=dummy
+""",
+)
 def test_upsert_modelcard_update_existing(
-    glob, ModelCard, _list_files_in_hf_hub, project
+    read_text, glob, load, _list_files_in_hf_hub, push_to_hub, project
 ):
-    repo_id = "annif-user/Annif-HFH-repo"
+    repo_id = "annif-user/annif-repo"
     project.vocab_lang = "fi"
     projects = [project]
     token = "mytoken"
     revision = "main"
-    ModelCard.load.return_value.data.language = ["en"]  # Mock language in card
+    load.return_value.data.language = ["en"]  # Mock language in existing card
 
     annif.hfh_util.upsert_modelcard(repo_id, projects, token, revision)
 
-    ModelCard.assert_not_called()  # Do not create a new card
+    load.assert_called_once_with(repo_id)
 
-    ModelCard.load.assert_called_once_with(repo_id)
-    card = ModelCard.load.return_value
+    card = load.return_value
+
+    expected_project_list_content = (
+        "dummy-fi            Dummy Finnish           dummy           fi"
+    )
+    assert expected_project_list_content in card.text
+    assert sorted(card.data.language) == ["en", "fi"]
     card.push_to_hub.assert_called_once_with(
         repo_id=repo_id,
         token=token,
         revision=revision,
         commit_message="Update README.md with Annif",
     )
-    assert sorted(card.data.language) == ["en", "fi"]
 
 
-@mock.patch(
-    "huggingface_hub.ModelCard",
-)
-def test_create_modelcard(ModelCard):
-    repo_id = "annif-user/Annif-HFH-repo"
+def test_update_modelcard_projects_section_append_new():
+    empty_cfg = AnnifConfigCFG(projstr="")
 
-    card = annif.hfh_util._create_modelcard(repo_id)
+    text = """This is some existing text in the card."""
+    updated_text = annif.hfh_util._update_projects_section(text, empty_cfg)
 
-    assert "# Annif-HFH-repo" in ModelCard.call_args[0][0]  # README heading
-    assert card.data.pipeline_tag == "text-classification"
-    assert card.data.tags == ["annif"]
-
-
-def test_update_modelcard_projects_section():
-    text_head = """
----
-language:
-- en
----
-# annif-user/Annif-HFH-repo
-This is some text before Projects section.
-## Usage
-    annif download "*" annif-user/Annif-HFH-repo
+    expected_tail = """\
 <!--- start-of-autoupdating-part --->
 ## Projects
 ```
 Project ID          Project Name            Vocabulary ID   Language
 --------------------------------------------------------------------
-"""
-
-    text_tail = """
 ```
-<!--- end-of-autoupdating-part --->
-This is some text after Projects section, which should remain in place after updates.
-"""
+<!--- end-of-autoupdating-part --->"""
+    assert updated_text == text + expected_tail
 
-    text = text_head + text_tail
-    cfg = annif.config.parse_config("tests/projects.toml")
 
-    updated_text = annif.hfh_util._update_projects_section(text, cfg)
-    expected_inserted_projects = (
-        "dummy-fi-toml       Dummy Finnish           dummy           fi      \n"
-        "dummy-en-toml       Dummy English           dummy           en      "
+def test_update_modelcard_projects_section_update_existing():
+    cfg = AnnifConfigCFG(
+        projstr="""\
+        [dummy-fi]
+        name=Dummy Finnish
+        language=fi
+        vocab=dummy"""
     )
-    assert updated_text == text_head + expected_inserted_projects + text_tail
+
+    text_head = """This is some existing text in the card.\n"""
+    text_initial_projects = """\
+<!--- start-of-autoupdating-part --->
+## Projects
+```
+Project ID          Project Name            Vocabulary ID   Language
+--------------------------------------------------------------------
+```
+<!--- end-of-autoupdating-part --->\n"""
+    text_tail = (
+        "This is text after the Projects section; it should remain in after updates."
+    )
+
+    text = text_head + text_initial_projects + text_tail
+    updated_text = annif.hfh_util._update_projects_section(text, cfg)
+
+    expected_updated_projects = """\
+<!--- start-of-autoupdating-part --->
+## Projects
+```
+Project ID          Project Name            Vocabulary ID   Language
+--------------------------------------------------------------------
+dummy-fi            Dummy Finnish           dummy           fi      \n```
+<!--- end-of-autoupdating-part --->
+"""
+    assert updated_text == text_head + expected_updated_projects + text_tail
