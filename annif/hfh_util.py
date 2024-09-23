@@ -311,7 +311,6 @@ def _update_projects_section(text, configs):
     section_end_ind = text.rfind(AUTOUPDATING_END) + len(AUTOUPDATING_END)
 
     projects_section = _create_projects_section(configs)
-
     if section_start_ind == -1:  # no existing projects section, append it now
         return text + projects_section
     else:
@@ -321,7 +320,7 @@ def _update_projects_section(text, configs):
 def _create_projects_section(configs):
     content = f"{AUTOUPDATING_START}\n## Projects\n"
 
-    template = "{0:<19} {1:<23} {2:<15} {3:<11}\n"
+    template = "{0:<19} {1:<23} {2:<15} {3:<8}\n"
     header = template.format("Project ID", "Project Name", "Vocabulary ID", "Language")
     content += "```\n" + header + "-" * len(header.strip()) + "\n"
 
