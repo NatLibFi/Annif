@@ -139,6 +139,7 @@ def project(subject_index, datadir, registry, vocabulary):
     proj.analyzer = annif.analyzer.get_analyzer("snowball(finnish)")
     proj.language = "fi"
     proj.vocab = vocabulary
+    proj.vocab_lang = "fi"
     proj.subjects = subject_index
     proj.datadir = str(datadir)
     proj.registry = registry

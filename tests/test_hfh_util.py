@@ -109,25 +109,21 @@ def test_copy_project_config_overwrite(copy, exists):
 
 @mock.patch(
     "huggingface_hub.ModelCard.load",
-    side_effect=EntryNotFoundError("dummymessage"),
+    side_effect=EntryNotFoundError("mymessage"),
 )
 @mock.patch("huggingface_hub.HfFileSystem.glob", return_value=[])
-@mock.patch(
-    "huggingface_hub.ModelCard",
-)
+@mock.patch("huggingface_hub.ModelCard")
 def test_upsert_modelcard_insert_new(ModelCard, glob, load, project):
     repo_id = "annif-user/annif-repo"
-    project.vocab_lang = "fi"
-    projects = [project]
     token = "mytoken"
-    revision = "main"
+    revision = "mybranch"
 
-    annif.hfh_util.upsert_modelcard(repo_id, projects, token, revision)
+    annif.hfh_util.upsert_modelcard(repo_id, [project], token, revision)
 
     ModelCard.assert_called_once()
+    assert "# annif-repo" in ModelCard.call_args[0][0]  # README heading
 
     card = ModelCard.return_value
-    assert "# annif-repo" in ModelCard.call_args[0][0]  # README heading
     assert card.data.language == ["fi"]
     assert card.data.pipeline_tag == "text-classification"
     assert card.data.tags == ["annif"]
@@ -141,36 +137,20 @@ def test_upsert_modelcard_insert_new(ModelCard, glob, load, project):
 
 @mock.patch("huggingface_hub.ModelCard.push_to_hub")
 @mock.patch(
-    "huggingface_hub.ModelCard.load", return_value=huggingface_hub.ModelCard("foobar")
+    "huggingface_hub.ModelCard.load",  # Mock language in existing card
+    return_value=huggingface_hub.ModelCard("---\nlanguage:\n- en\n---"),
 )
-@mock.patch("huggingface_hub.HfFileSystem.glob", return_value=["dummy.cfg"])
-@mock.patch(
-    "huggingface_hub.HfFileSystem.read_text",
-    return_value="""
-        [dummy-fi]
-        name=Dummy Finnish
-        language=fi
-        vocab=dummy
-""",
-)
-def test_upsert_modelcard_update_existing(read_text, glob, load, push_to_hub, project):
+@mock.patch("huggingface_hub.HfFileSystem")
+def test_upsert_modelcard_update_existing(HfFileSystem, load, push_to_hub, project):
     repo_id = "annif-user/annif-repo"
-    project.vocab_lang = "fi"
-    projects = [project]
     token = "mytoken"
-    revision = "main"
-    load.return_value.data.language = ["en"]  # Mock language in existing card
+    revision = "mybranch"
 
-    annif.hfh_util.upsert_modelcard(repo_id, projects, token, revision)
+    annif.hfh_util.upsert_modelcard(repo_id, [project], token, revision)
 
     load.assert_called_once_with(repo_id)
 
     card = load.return_value
-
-    expected_project_list_content = (
-        "dummy-fi            Dummy Finnish           dummy           fi"
-    )
-    assert expected_project_list_content in card.text
     assert sorted(card.data.language) == ["en", "fi"]
     card.push_to_hub.assert_called_once_with(
         repo_id=repo_id,
@@ -194,6 +174,7 @@ Project ID          Project Name            Vocabulary ID   Language
 --------------------------------------------------------------------
 ```
 <!--- end-of-autoupdating-part --->"""
+
     assert updated_text == text + expected_tail
 
 
@@ -207,6 +188,7 @@ def test_update_modelcard_projects_section_update_existing():
     )
 
     text_head = """This is some existing text in the card.\n"""
+
     text_initial_projects = """\
 <!--- start-of-autoupdating-part --->
 ## Projects
@@ -215,8 +197,9 @@ Project ID          Project Name            Vocabulary ID   Language
 --------------------------------------------------------------------
 ```
 <!--- end-of-autoupdating-part --->\n"""
+
     text_tail = (
-        "This is text after the Projects section; it should remain in after updates."
+        "This is text after the Projects section; it should remain after updates."
     )
 
     text = text_head + text_initial_projects + text_tail
@@ -231,4 +214,5 @@ Project ID          Project Name            Vocabulary ID   Language
 dummy-fi            Dummy Finnish           dummy           fi      \n```
 <!--- end-of-autoupdating-part --->
 """
+
     assert updated_text == text_head + expected_updated_projects + text_tail
