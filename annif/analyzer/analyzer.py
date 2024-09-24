@@ -38,6 +38,8 @@ class Analyzer(metaclass=abc.ABCMeta):
                     "downloading it now."
                 )
                 nltk.download(_NLTK_TOKENIZER_DATA)
+            else:
+                raise
 
     def tokenize_sentences(self, text: str) -> list[str]:
         """Tokenize a piece of text (e.g. a document) into sentences."""
