@@ -26,13 +26,10 @@ class AnnifConfigCFG:
         self._config.optionxform = annif.util.identity
         if filename is not None:
             logger.debug(f"Reading configuration file {filename} in CFG format")
-            read_method = self._config.read
-            source = filename
+            self._read_config(self._config.read, filename)
         elif projstr is not None:
             logger.debug("Reading configuration from a string in CFG format")
-            read_method = self._config.read_string
-            source = projstr
-        self._read_config(read_method, source)
+            self._read_config(self._config.read_string, projstr)
 
     def _read_config(self, read_method, source):
         encoding = "utf-8-sig"
