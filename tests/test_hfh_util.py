@@ -140,8 +140,17 @@ def test_upsert_modelcard_insert_new(ModelCard, glob, load, project):
     "huggingface_hub.ModelCard.load",  # Mock language in existing card
     return_value=huggingface_hub.ModelCard("---\nlanguage:\n- en\n---"),
 )
-@mock.patch("huggingface_hub.HfFileSystem")
-def test_upsert_modelcard_update_existing(HfFileSystem, load, push_to_hub, project):
+@mock.patch("huggingface_hub.HfFileSystem.glob", return_value=["dummy-en.cfg"])
+@mock.patch(
+    "huggingface_hub.HfFileSystem.read_text",
+    return_value="""
+        [dummy-en]
+        name=Dummy English
+        language=en
+        vocab=dummy
+""",
+)
+def test_upsert_modelcard_update_existing(read_text, glob, load, push_to_hub, project):
     repo_id = "annif-user/annif-repo"
     token = "mytoken"
     revision = "mybranch"
@@ -151,6 +160,10 @@ def test_upsert_modelcard_update_existing(HfFileSystem, load, push_to_hub, proje
     load.assert_called_once_with(repo_id)
 
     card = load.return_value
+    retained_project_list_content = (
+        "dummy-en            Dummy English           dummy           en"
+    )
+    assert retained_project_list_content in card.text
     assert sorted(card.data.language) == ["en", "fi"]
     card.push_to_hub.assert_called_once_with(
         repo_id=repo_id,
