@@ -41,7 +41,7 @@ def test_xtransformer_default_params(project):
         "imbalanced_depth": 100,
         "max_match_clusters": 32768,
         "do_fine_tune": True,
-        'model_shortcut': 'distilbert-base-multilingual-uncased',
+        "model_shortcut": "distilbert-base-multilingual-uncased",
         # "model_shortcut": "bert-base-multilingual-uncased",
         "beam_size": 20,
         "limit": 100,
@@ -145,7 +145,7 @@ def test_xtransformer_train(datadir, document_corpus, project, mocked_xtransform
                 "imbalanced_ratio": 0.0,
                 "imbalanced_depth": 100,
                 # "model_shortcut": "bert-base-multilingual-uncased",
-                'model_shortcut': 'distilbert-base-multilingual-uncased',
+                "model_shortcut": "distilbert-base-multilingual-uncased",
                 "post_processor": "sigmoid",
                 "negative_sampling": "tfn",
                 "ensemble_method": "transformer-only",
@@ -216,7 +216,7 @@ def test_xtransformer_suggest(project):
     xtransformer._model.predict.return_value = csr_matrix([0, 0.2, 0, 0, 0, 0.5, 0])
     results = xtransformer.suggest(
         [
-        """Arkeologiaa sanotaan joskus myös
+            """Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
@@ -228,6 +228,7 @@ def test_xtransformer_suggest(project):
 
     ship_finds = project.subjects.by_uri("https://www.yso.fi/onto/yso/p8869")
     assert ship_finds in [result.subject_id for result in results]
+
 
 def test_xtransformer_suggest_no_input(project, datadir):
     backend_type = annif.backend.get_backend("xtransformer")

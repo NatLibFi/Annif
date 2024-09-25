@@ -129,7 +129,6 @@ def apply_param_parse_config(configs, params):
     }
 
 
-
 def boolean(val: Any) -> bool:
     """Convert the given value to a boolean True/False value, if it isn't already.
     True values are '1', 'yes', 'true', and 'on' (case insensitive), everything

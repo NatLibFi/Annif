@@ -230,7 +230,6 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self, texts: list[str], params: dict[str, Any]
     ) -> SuggestionBatch:
         vector = self.vectorizer.transform(texts)
-        
         if vector.nnz == 0:  # All zero vector, empty result
             return list()
         new_params = apply_param_parse_config(self.PARAM_CONFIG, params)
