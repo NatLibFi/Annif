@@ -97,7 +97,7 @@ def test_get_backend_yake_not_installed():
 
 @pytest.mark.skipif(
     importlib.util.find_spec("pecos") is not None,
-    reason="test requires that YAKE is NOT installed",
+    reason="test requires that PECOS is NOT installed",
 )
 def test_get_backend_xtransformer_not_installed():
     with pytest.raises(ValueError) as excinfo:
