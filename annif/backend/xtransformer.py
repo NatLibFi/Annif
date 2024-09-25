@@ -2,7 +2,7 @@
 
 import logging
 import os.path as osp
-from sys import stdout
+import sys
 from typing import Any
 
 import numpy as np
@@ -190,9 +190,9 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self.info("Start training")
         # enable progress
         matcher.LOGGER.setLevel(logging.DEBUG)
-        matcher.LOGGER.addHandler(logging.StreamHandler(stream=stdout))
+        matcher.LOGGER.addHandler(logging.StreamHandler(stream=sys.stdout))
         model.LOGGER.setLevel(logging.DEBUG)
-        model.LOGGER.addHandler(logging.StreamHandler(stream=stdout))
+        model.LOGGER.addHandler(logging.StreamHandler(stream=sys.stdout))
         self._model = XTransformer.train(
             MLProblemWithText(train_txts, train_y, X_feat=train_X),
             clustering=None,
