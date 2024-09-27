@@ -96,6 +96,16 @@ def test_get_backend_yake_not_installed():
 
 
 @pytest.mark.skipif(
+    importlib.util.find_spec("pecos") is not None,
+    reason="test requires that PECOS is NOT installed",
+)
+def test_get_backend_xtransformer_not_installed():
+    with pytest.raises(ValueError) as excinfo:
+        annif.backend.get_backend("xtransformer")
+    assert "XTransformer not available" in str(excinfo.value)
+
+
+@pytest.mark.skipif(
     importlib.util.find_spec("stwfsapy") is not None,
     reason="test requires that STWFSA is NOT installed",
 )
