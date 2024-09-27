@@ -619,7 +619,7 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric, results_fi
 @click.option(
     "--modelcard/--no-modelcard",
     default=True,
-    help="Update or create a ModelCard with upload.",
+    help="Update or create a Model Card with upload.",
 )
 @cli_util.common_options
 def run_upload(
@@ -701,7 +701,7 @@ def run_download(project_ids_pattern, repo_id, token, revision, force):
     unzips the archives to `data/` directory and places the configuration files
     to `projects.d/` directory. An authentication token and revision can
     be given with options. If the README.md does not exist in the repository it is
-    created with default contents and metadata of the uploaded projects, if it exisits,
+    created with default contents and metadata of the uploaded projects, if it exists,
     its metadata are updated as necessary.
     """
 
