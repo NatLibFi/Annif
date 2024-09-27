@@ -17,6 +17,7 @@ import click
 from flask import current_app
 
 import annif
+from annif.config import AnnifConfigCFG
 from annif.exception import OperationFailedException
 from annif.project import Access, AnnifProject
 
@@ -238,3 +239,97 @@ def get_vocab_id_from_config(config_path: str) -> str:
     config.read(config_path)
     section = config.sections()[0]
     return config[section]["vocab"]
+
+
+def upsert_modelcard(repo_id, projects, token, revision):
+    """This function creates or updates a Model Card in a Hugging Face Hub repository
+    with some metadata in it."""
+    from huggingface_hub import ModelCard
+    from huggingface_hub.utils import EntryNotFoundError
+
+    try:
+        card = ModelCard.load(repo_id)
+        commit_message = "Update README.md with Annif"
+    except EntryNotFoundError:
+        card = _create_modelcard(repo_id)
+        commit_message = "Create README.md with Annif"
+
+    langs_existing = set(card.data.language) if card.data.language else set()
+    langs_to_add = {proj.vocab_lang for proj in projects}
+    card.data.language = list(langs_existing.union(langs_to_add))
+
+    configs = _get_existing_configs(repo_id, token, revision)
+    card.text = _update_projects_section(card.text, configs)
+
+    card.push_to_hub(
+        repo_id=repo_id, token=token, revision=revision, commit_message=commit_message
+    )
+
+
+def _get_existing_configs(repo_id, token, revision):
+    from huggingface_hub import HfFileSystem
+
+    fs = HfFileSystem(token=token)
+    cfg_locations = fs.glob(f"{repo_id}/*.cfg", revision=revision)
+
+    projstr = ""
+    for cfg_file in cfg_locations:
+        projstr += fs.read_text(cfg_file, token=token, revision=revision)
+    return AnnifConfigCFG(projstr=projstr)
+
+
+def _create_modelcard(repo_id):
+    from huggingface_hub import ModelCard
+
+    content = f"""
+---
+
+---
+
+# {repo_id.split("/")[1]}
+
+## Usage
+
+Use the `annif download` command to download selected projects with Annif;
+for example, to download all projects in this repository run
+
+    annif download "*" {repo_id}
+
+"""
+    card = ModelCard(content)
+    card.data.pipeline_tag = "text-classification"
+    card.data.tags = ["annif"]
+    return card
+
+
+AUTOUPDATING_START = "<!--- start-of-autoupdating-part --->"
+AUTOUPDATING_END = "<!--- end-of-autoupdating-part --->"
+
+
+def _update_projects_section(text, configs):
+    section_start_ind = text.find(AUTOUPDATING_START)
+    section_end_ind = text.rfind(AUTOUPDATING_END) + len(AUTOUPDATING_END)
+
+    projects_section = _create_projects_section(configs)
+    if section_start_ind == -1:  # no existing projects section, append it now
+        return text + projects_section
+    else:
+        return text[:section_start_ind] + projects_section + text[section_end_ind:]
+
+
+def _create_projects_section(configs):
+    content = f"{AUTOUPDATING_START}\n## Projects\n"
+
+    template = "{0:<19} {1:<23} {2:<15} {3:<8}\n"
+    header = template.format("Project ID", "Project Name", "Vocabulary ID", "Language")
+    content += "```\n" + header + "-" * len(header.strip()) + "\n"
+
+    for proj_id in configs.project_ids:
+        project = configs[proj_id]
+        content += template.format(
+            proj_id,
+            project["name"],
+            project["vocab"],
+            project["language"],
+        )
+    return content + "```\n" + AUTOUPDATING_END

@@ -617,8 +617,15 @@ def run_hyperopt(project_id, paths, docs_limit, trials, jobs, metric, results_fi
     "--commit-message",
     help="""The summary / title / first line of the generated commit.""",
 )
+@click.option(
+    "--modelcard/--no-modelcard",
+    default=True,
+    help="Update or create a Model Card with upload.",
+)
 @cli_util.common_options
-def run_upload(project_ids_pattern, repo_id, token, revision, commit_message):
+def run_upload(
+    project_ids_pattern, repo_id, token, revision, commit_message, modelcard
+):
     """
     Upload selected projects and their vocabularies to a Hugging Face Hub repository.
     \f
@@ -653,6 +660,9 @@ def run_upload(project_ids_pattern, repo_id, token, revision, commit_message):
         )
     except (HfHubHTTPError, HFValidationError) as err:
         raise OperationFailedException(str(err))
+    else:
+        if modelcard:
+            hfh_util.upsert_modelcard(repo_id, projects, token, revision)
     finally:
         for fobj in fobjs:
             fobj.close()
@@ -691,7 +701,9 @@ def run_download(project_ids_pattern, repo_id, token, revision, force):
     `project_ids_pattern` from the specified Hugging Face Hub repository and
     unzips the archives to `data/` directory and places the configuration files
     to `projects.d/` directory. An authentication token and revision can
-    be given with options.
+    be given with options. If the README.md does not exist in the repository it is
+    created with default contents and metadata of the uploaded projects, if it exists,
+    its metadata are updated as necessary.
     """
 
     project_ids = hfh_util.get_matching_project_ids_from_hf_hub(
