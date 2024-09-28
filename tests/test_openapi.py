@@ -26,7 +26,7 @@ def test_openapi_fuzzy(case):
 
 
 @pytest.mark.slow
-@schema.parametrize(endpoint="/v1/projects/{project_id}")
+@schema.include(path_regex="/v1/projects/{project_id}").parametrize()
 @settings(max_examples=50)
 def test_openapi_fuzzy_target_dummy_fi(case):
     case.path_parameters = {"project_id": "dummy-fi"}
