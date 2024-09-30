@@ -24,7 +24,7 @@ from annif.project import Access, AnnifProject
 logger = annif.logger
 
 
-def check_is_download_allowed(trust_repo, repo_id, token):
+def check_is_download_allowed(trust_repo, repo_id):
     """Check if downloading from the specified repository is allowed based on the trust
     option and cache status."""
     if trust_repo:

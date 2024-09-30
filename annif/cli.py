@@ -714,7 +714,7 @@ def run_download(project_ids_pattern, repo_id, token, revision, force, trust_rep
     `--trust-repo` option needs to be used.
     """
 
-    hfh_util.check_is_download_allowed(trust_repo, repo_id, token)
+    hfh_util.check_is_download_allowed(trust_repo, repo_id)
 
     project_ids = hfh_util.get_matching_project_ids_from_hf_hub(
         project_ids_pattern, repo_id, token, revision

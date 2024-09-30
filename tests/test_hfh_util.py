@@ -20,10 +20,9 @@ from annif.exception import OperationFailedException
 def test_download_allowed_trust_repo(mock_is_repo_in_cache, caplog):
     trust_repo = True
     repo_id = "dummy-repo"
-    token = "dummy-token"
 
     with caplog.at_level(logging.WARNING, logger="annif"):
-        annif.hfh_util.check_is_download_allowed(trust_repo, repo_id, token)
+        annif.hfh_util.check_is_download_allowed(trust_repo, repo_id)
     assert (
         'Download allowed from "dummy-repo" because "--trust-repo" flag is used.'
         in caplog.text
@@ -34,10 +33,9 @@ def test_download_allowed_trust_repo(mock_is_repo_in_cache, caplog):
 def test_download_allowed_repo_in_cache(mock_is_repo_in_cache, caplog):
     trust_repo = False
     repo_id = "dummy-repo"
-    token = "dummy-token"
 
     with caplog.at_level(logging.DEBUG, logger="annif"):
-        annif.hfh_util.check_is_download_allowed(trust_repo, repo_id, token)
+        annif.hfh_util.check_is_download_allowed(trust_repo, repo_id)
     assert (
         'Download allowed from "dummy-repo" because repo is already in cache.'
         in caplog.text
@@ -48,10 +46,9 @@ def test_download_allowed_repo_in_cache(mock_is_repo_in_cache, caplog):
 def test_download_not_allowed(mock_is_repo_in_cache):
     trust_repo = False
     repo_id = "dummy-repo"
-    token = "dummy-token"
 
     with pytest.raises(OperationFailedException) as excinfo:
-        annif.hfh_util.check_is_download_allowed(trust_repo, repo_id, token)
+        annif.hfh_util.check_is_download_allowed(trust_repo, repo_id)
     assert (
         str(excinfo.value)
         == 'Cannot download projects from untrusted repo "dummy-repo"'
