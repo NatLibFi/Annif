@@ -6,7 +6,12 @@ import abc
 import functools
 import unicodedata
 
+import annif
+
+logger = annif.logger
+
 _KEY_TOKEN_MIN_LENGTH = "token_min_length"
+_NLTK_TOKENIZER_DATA = "punkt_tab"
 
 
 class Analyzer(metaclass=abc.ABCMeta):
@@ -20,6 +25,21 @@ class Analyzer(metaclass=abc.ABCMeta):
     def __init__(self, **kwargs) -> None:
         if _KEY_TOKEN_MIN_LENGTH in kwargs:
             self.token_min_length = int(kwargs[_KEY_TOKEN_MIN_LENGTH])
+
+        import nltk.data
+
+        try:
+            nltk.data.find("tokenizers/" + _NLTK_TOKENIZER_DATA)
+        except LookupError as err:
+            logger.debug(str(err))
+            if _NLTK_TOKENIZER_DATA in str(err):
+                logger.warning(
+                    f'NLTK datapackage "{_NLTK_TOKENIZER_DATA}" not found, '
+                    "downloading it now."
+                )
+                nltk.download(_NLTK_TOKENIZER_DATA)
+            else:
+                raise
 
     def tokenize_sentences(self, text: str) -> list[str]:
         """Tokenize a piece of text (e.g. a document) into sentences."""
