@@ -28,7 +28,7 @@ RUN echo "Installing dependencies for optional features: $optional_dependencies"
 	&& rm -rf /root/.cache/pypoetry  # No need for cache because of poetry.lock
 
 # Download nltk data
-RUN python -m nltk.downloader punkt -d /usr/share/nltk_data
+RUN python -m nltk.downloader punkt_tab -d /usr/share/nltk_data
 
 # Download spaCy models, if the optional feature was selected
 ARG spacy_models=en_core_web_sm

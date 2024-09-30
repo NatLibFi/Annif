@@ -101,7 +101,7 @@ jobs:
           # download the small English pretrained spaCy model needed by spacy analyzer
           poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
-        poetry run python -m nltk.downloader punkt
+        poetry run python -m nltk.downloader punkt_tab
     - name: Test with pytest
       run: |
         poetry run pytest --cov=./ --cov-report xml
