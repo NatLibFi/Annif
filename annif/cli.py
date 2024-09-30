@@ -633,7 +633,9 @@ def run_upload(
     that match the given `project_ids_pattern` to archive files, and uploads the
     archives along with the project configurations to the specified Hugging Face
     Hub repository. An authentication token and commit message can be given with
-    options.
+    options. If the README.md does not exist in the repository it is created with
+    default contents and metadata of the uploaded projects, if it exists, its
+    metadata are updated as necessary.
     """
     from huggingface_hub import HfApi
     from huggingface_hub.utils import HfHubHTTPError, HFValidationError
@@ -701,9 +703,7 @@ def run_download(project_ids_pattern, repo_id, token, revision, force):
     `project_ids_pattern` from the specified Hugging Face Hub repository and
     unzips the archives to `data/` directory and places the configuration files
     to `projects.d/` directory. An authentication token and revision can
-    be given with options. If the README.md does not exist in the repository it is
-    created with default contents and metadata of the uploaded projects, if it exists,
-    its metadata are updated as necessary.
+    be given with options.
     """
 
     project_ids = hfh_util.get_matching_project_ids_from_hf_hub(
