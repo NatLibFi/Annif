@@ -32,7 +32,7 @@ def check_is_download_allowed(trust_repo, repo_id, token):
             f'Download allowed from "{repo_id}" because "--trust-repo" flag is used.'
         )
         return
-    if _is_repo_in_cache(repo_id, token):
+    if _is_repo_in_cache(repo_id):
         logger.debug(
             f'Download allowed from "{repo_id}" because repo is already in cache.'
         )
@@ -42,7 +42,7 @@ def check_is_download_allowed(trust_repo, repo_id, token):
     )
 
 
-def _is_repo_in_cache(repo_id, token):
+def _is_repo_in_cache(repo_id):
     from huggingface_hub import CacheNotFound, scan_cache_dir
 
     try:
