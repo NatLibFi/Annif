@@ -64,7 +64,9 @@ def get_matching_projects(pattern: str) -> list[AnnifProject]:
     ]
 
 
-def prepare_commits(projects: list[AnnifProject], repo_id: str) -> tuple[list, list]:
+def prepare_commits(
+    projects: list[AnnifProject], repo_id: str, token: str
+) -> tuple[list, list]:
     """Prepare and pre-upload data and config commit operations for projects to a
     Hugging Face Hub repository."""
     from huggingface_hub import preupload_lfs_files
@@ -76,7 +78,7 @@ def prepare_commits(projects: list[AnnifProject], repo_id: str) -> tuple[list, l
 
     for data_dir in all_dirs:
         fobj, operation = _prepare_datadir_commit(data_dir)
-        preupload_lfs_files(repo_id, additions=[operation])
+        preupload_lfs_files(repo_id, additions=[operation], token=token)
         fobjs.append(fobj)
         operations.append(operation)
 

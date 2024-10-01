@@ -651,7 +651,7 @@ def run_upload(
 
     fobjs, operations = [], []
     try:
-        fobjs, operations = hfh_util.prepare_commits(projects, repo_id)
+        fobjs, operations = hfh_util.prepare_commits(projects, repo_id, token)
         api = HfApi()
         api.create_commit(
             repo_id=repo_id,
