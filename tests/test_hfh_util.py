@@ -43,7 +43,8 @@ def test_download_allowed_repo_in_cache(mock_is_repo_in_cache, caplog):
 
 
 @mock.patch("huggingface_hub.utils._cache_manager.HFCacheInfo")
-def test_download_not_allowed(mock_HFCacheInfo):
+@mock.patch("huggingface_hub.scan_cache_dir")  # Bypass CacheNotFound on CI/CD
+def test_download_not_allowed(mock_scan_cache_dir, mock_HFCacheInfo):
     trust_repo = False
     repo_id = "dummy-repo"
     mock_HFCacheInfo.return_value.repos = frozenset()
