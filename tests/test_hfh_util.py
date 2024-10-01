@@ -204,9 +204,8 @@ def test_upsert_modelcard_update_existing(read_text, glob, load, push_to_hub, pr
     load.assert_called_once_with(repo_id)
 
     card = load.return_value
-    retained_project_list_content = (
-        "dummy-en            Dummy English           dummy           en"
-    )
+    retained_project_list_content = "dummy-en    Dummy English  dummy          en      "
+
     assert retained_project_list_content in card.text
     assert sorted(card.data.language) == ["en", "fi"]
     card.push_to_hub.assert_called_once_with(
@@ -227,8 +226,8 @@ def test_update_modelcard_projects_section_append_new():
 <!--- start-of-autoupdating-part --->
 ## Projects
 ```
-Project ID          Project Name            Vocabulary ID   Language
---------------------------------------------------------------------
+Project ID  Project Name  Vocabulary ID  Language
+-------------------------------------------------
 ```
 <!--- end-of-autoupdating-part --->"""
 
@@ -250,8 +249,8 @@ def test_update_modelcard_projects_section_update_existing():
 <!--- start-of-autoupdating-part --->
 ## Projects
 ```
-Project ID          Project Name            Vocabulary ID   Language
---------------------------------------------------------------------
+Project ID  Project Name  Vocabulary ID  Language
+-------------------------------------------------
 ```
 <!--- end-of-autoupdating-part --->\n"""
 
@@ -266,9 +265,9 @@ Project ID          Project Name            Vocabulary ID   Language
 <!--- start-of-autoupdating-part --->
 ## Projects
 ```
-Project ID          Project Name            Vocabulary ID   Language
---------------------------------------------------------------------
-dummy-fi            Dummy Finnish           dummy           fi      \n```
+Project ID  Project Name   Vocabulary ID  Language
+--------------------------------------------------
+dummy-fi    Dummy Finnish  dummy          fi      \n```
 <!--- end-of-autoupdating-part --->
 """
 
