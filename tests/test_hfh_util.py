@@ -42,10 +42,11 @@ def test_download_allowed_repo_in_cache(mock_is_repo_in_cache, caplog):
     )
 
 
-@mock.patch("annif.hfh_util._is_repo_in_cache", return_value=False)
-def test_download_not_allowed(mock_is_repo_in_cache):
+@mock.patch("huggingface_hub.utils._cache_manager.HFCacheInfo")
+def test_download_not_allowed(mock_HFCacheInfo):
     trust_repo = False
     repo_id = "dummy-repo"
+    mock_HFCacheInfo.return_value.repos = frozenset()
 
     with pytest.raises(OperationFailedException) as excinfo:
         annif.hfh_util.check_is_download_allowed(trust_repo, repo_id)
