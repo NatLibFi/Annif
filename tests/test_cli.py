@@ -1149,10 +1149,30 @@ def test_upload_nonexistent_repo():
     assert "Repository Not Found for url:" in failed_result.output
 
 
+@mock.patch("annif.hfh_util._is_repo_in_cache", return_value=False)
+def test_download_not_allowed_default(mock_is_repo_in_cache):
+    # Default of --trust-repo is False
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        [
+            "download",
+            "dummy-fi",
+            "dummy-repo",
+        ],
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert (
+        'Cannot download projects from untrusted repo "dummy-repo"'
+        in failed_result.output
+    )
+
+
 def hf_hub_download_mock_side_effect(filename, repo_id, token, revision):
     return "tests/huggingface-cache/" + filename  # Mocks the downloaded file paths
 
 
+@mock.patch("annif.hfh_util.check_is_download_allowed", return_value=True)
 @mock.patch(
     "huggingface_hub.list_repo_files",
     return_value=[  # Mocks the filenames in repo
@@ -1170,7 +1190,11 @@ def hf_hub_download_mock_side_effect(filename, repo_id, token, revision):
 )
 @mock.patch("annif.hfh_util.copy_project_config")
 def test_download_dummy_fi(
-    copy_project_config, hf_hub_download, list_repo_files, testdatadir
+    copy_project_config,
+    hf_hub_download,
+    list_repo_files,
+    check_is_download_allowed,
+    testdatadir,
 ):
     result = runner.invoke(
         annif.cli.cli,
@@ -1211,6 +1235,7 @@ def test_download_dummy_fi(
     ]
 
 
+@mock.patch("annif.hfh_util.check_is_download_allowed", return_value=True)
 @mock.patch(
     "huggingface_hub.list_repo_files",
     return_value=[  # Mock filenames in repo
@@ -1228,7 +1253,11 @@ def test_download_dummy_fi(
 )
 @mock.patch("annif.hfh_util.copy_project_config")
 def test_download_dummy_fi_and_en(
-    copy_project_config, hf_hub_download, list_repo_files, testdatadir
+    copy_project_config,
+    hf_hub_download,
+    list_repo_files,
+    check_is_download_allowed,
+    testdatadir,
 ):
     result = runner.invoke(
         annif.cli.cli,
@@ -1285,6 +1314,7 @@ def test_download_dummy_fi_and_en(
     ]
 
 
+@mock.patch("annif.hfh_util.check_is_download_allowed", return_value=True)
 @mock.patch(
     "huggingface_hub.list_repo_files",
     side_effect=HFValidationError,
@@ -1293,8 +1323,7 @@ def test_download_dummy_fi_and_en(
     "huggingface_hub.hf_hub_download",
 )
 def test_download_list_repo_files_failed(
-    hf_hub_download,
-    list_repo_files,
+    hf_hub_download, list_repo_files, check_is_download_allowed
 ):
     failed_result = runner.invoke(
         annif.cli.cli,
@@ -1311,6 +1340,7 @@ def test_download_list_repo_files_failed(
     assert not hf_hub_download.called
 
 
+@mock.patch("annif.hfh_util.check_is_download_allowed", return_value=True)
 @mock.patch(
     "huggingface_hub.list_repo_files",
     return_value=[  # Mock filenames in repo
@@ -1326,6 +1356,7 @@ def test_download_list_repo_files_failed(
 def test_download_hf_hub_download_failed(
     hf_hub_download,
     list_repo_files,
+    check_is_download_allowed,
 ):
     failed_result = runner.invoke(
         annif.cli.cli,

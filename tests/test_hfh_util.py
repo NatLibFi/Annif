@@ -1,16 +1,60 @@
 """Unit test module for Hugging Face Hub utilities."""
 
 import io
+import logging
 import os.path
 import zipfile
 from datetime import datetime, timezone
 from unittest import mock
 
 import huggingface_hub
+import pytest
 from huggingface_hub.utils import EntryNotFoundError
 
 import annif.hfh_util
 from annif.config import AnnifConfigCFG
+from annif.exception import OperationFailedException
+
+
+@mock.patch("annif.hfh_util._is_repo_in_cache", return_value=False)
+def test_download_allowed_trust_repo(mock_is_repo_in_cache, caplog):
+    trust_repo = True
+    repo_id = "dummy-repo"
+
+    with caplog.at_level(logging.WARNING, logger="annif"):
+        annif.hfh_util.check_is_download_allowed(trust_repo, repo_id)
+    assert (
+        'Download allowed from "dummy-repo" because "--trust-repo" flag is used.'
+        in caplog.text
+    )
+
+
+@mock.patch("annif.hfh_util._is_repo_in_cache", return_value=True)
+def test_download_allowed_repo_in_cache(mock_is_repo_in_cache, caplog):
+    trust_repo = False
+    repo_id = "dummy-repo"
+
+    with caplog.at_level(logging.DEBUG, logger="annif"):
+        annif.hfh_util.check_is_download_allowed(trust_repo, repo_id)
+    assert (
+        'Download allowed from "dummy-repo" because repo is already in cache.'
+        in caplog.text
+    )
+
+
+@mock.patch("huggingface_hub.utils._cache_manager.HFCacheInfo")
+@mock.patch("huggingface_hub.scan_cache_dir")  # Bypass CacheNotFound on CI/CD
+def test_download_not_allowed(mock_scan_cache_dir, mock_HFCacheInfo):
+    trust_repo = False
+    repo_id = "dummy-repo"
+    mock_HFCacheInfo.return_value.repos = frozenset()
+
+    with pytest.raises(OperationFailedException) as excinfo:
+        annif.hfh_util.check_is_download_allowed(trust_repo, repo_id)
+    assert (
+        str(excinfo.value)
+        == 'Cannot download projects from untrusted repo "dummy-repo"'
+    )
 
 
 def test_archive_dir(testdatadir):

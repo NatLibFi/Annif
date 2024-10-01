@@ -24,6 +24,35 @@ from annif.project import Access, AnnifProject
 logger = annif.logger
 
 
+def check_is_download_allowed(trust_repo, repo_id):
+    """Check if downloading from the specified repository is allowed based on the trust
+    option and cache status."""
+    if trust_repo:
+        logger.warning(
+            f'Download allowed from "{repo_id}" because "--trust-repo" flag is used.'
+        )
+        return
+    if _is_repo_in_cache(repo_id):
+        logger.debug(
+            f'Download allowed from "{repo_id}" because repo is already in cache.'
+        )
+        return
+    raise OperationFailedException(
+        f'Cannot download projects from untrusted repo "{repo_id}"'
+    )
+
+
+def _is_repo_in_cache(repo_id):
+    from huggingface_hub import CacheNotFound, scan_cache_dir
+
+    try:
+        cache = scan_cache_dir()
+    except CacheNotFound as err:
+        logger.debug(str(err) + "\nNo HFH cache found.")
+        return False
+    return repo_id in [info.repo_id for info in cache.repos]
+
+
 def get_matching_projects(pattern: str) -> list[AnnifProject]:
     """
     Get projects that match the given pattern.
