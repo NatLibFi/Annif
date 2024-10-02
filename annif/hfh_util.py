@@ -17,6 +17,7 @@ import click
 from flask import current_app
 
 import annif
+from annif import cli_util
 from annif.config import AnnifConfigCFG
 from annif.exception import OperationFailedException
 from annif.project import Access, AnnifProject
@@ -349,18 +350,27 @@ def _update_projects_section(text, configs):
 
 
 def _create_projects_section(configs):
-    content = f"{AUTOUPDATING_START}\n## Projects\n"
-
-    template = "{0:<19} {1:<23} {2:<15} {3:<8}\n"
-    header = template.format("Project ID", "Project Name", "Vocabulary ID", "Language")
-    content += "```\n" + header + "-" * len(header.strip()) + "\n"
-
-    for proj_id in configs.project_ids:
-        project = configs[proj_id]
-        content += template.format(
+    column_headings = (
+        "Project ID",
+        "Project Name",
+        "Vocabulary ID",
+        "Language",
+    )
+    table = [
+        (
             proj_id,
-            project["name"],
-            project["vocab"],
-            project["language"],
+            configs[proj_id]["name"],
+            configs[proj_id]["vocab"],
+            configs[proj_id]["language"],
         )
+        for proj_id in configs.project_ids
+    ]
+    template = cli_util.make_list_template(column_headings, *table) + "\n"
+
+    header = template.format(*column_headings)
+
+    content = f"{AUTOUPDATING_START}\n## Projects\n"
+    content += "```\n" + header + "-" * len(header.strip()) + "\n"
+    for row in table:
+        content += template.format(*row)
     return content + "```\n" + AUTOUPDATING_END
