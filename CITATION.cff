@@ -4,7 +4,7 @@ authors:
   - family-names: Suominen
     given-names: Osma
     affiliation: "National Library of Finland"
-  - family-names: Inkinen 
+  - family-names: Inkinen
     given-names: Juho
     affiliation: "National Library of Finland"
   - family-names: Virolainen
@@ -34,10 +34,10 @@ authors:
 title: "Annif"
 abstract: "Annif is an automatic indexing software."
 version: 1.2.0-dev
-license: 
+license:
   - Apache-2.0
   - GPL-3.0
-date-released: 2024-04-25
+date-released: 2024-10-02
 doi: 10.5281/zenodo.2578948
 repository-code: "https://github.com/NatLibFi/Annif"
 contact:
