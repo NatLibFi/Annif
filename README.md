@@ -19,11 +19,11 @@ Annif is an automated subject indexing toolkit. It was originally created as
 a statistical automated indexing tool that used metadata from the
 [Finna.fi](https://finna.fi) discovery interface as a training corpus.
 
-This repo contains a rewritten production version of Annif based on the
+This repository contains a rewritten production version of Annif based on the
 [prototype](https://github.com/osma/annif).
 
-[Finto AI](https://ai.finto.fi/) is a service based on Annif; see the [source code of Finto AI](https://github.com/NatLibFi/FintoAI)
-and the [🤗 Hugging Face Hub collection](https://huggingface.co/collections/NatLibFi/annif-models-65b35fb98b7c508c8e8a1570) containing the models Finto AI uses.
+[Finto AI](https://ai.finto.fi/) is a service based on Annif;
+see a [🤗 Hugging Face Hub collection](https://huggingface.co/collections/NatLibFi/annif-models-65b35fb98b7c508c8e8a1570) of the models that Finto AI uses.
 
 # Basic install
 
@@ -43,7 +43,9 @@ Start up the application:
     annif
 
 See [Getting Started](https://github.com/NatLibFi/Annif/wiki/Getting-started)
-in the wiki for more details.
+for basic usage instructions and
+[Optional features and dependencies](https://github.com/NatLibFi/Annif/wiki/Optional-features-and-dependencies)
+for installation instructions for e.g. fastText and Omikuji backends and for Voikko and spaCy analyzers.
 
 ## Shell compeletions
 Annif supports tab-key completion in bash, zsh and fish shells for commands and options
