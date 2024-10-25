@@ -60,7 +60,7 @@ Project administration
    GET /projects/<PROJECT_ID>
 
 .. click:: annif.cli:run_clear_project
-   :prog: annif clear-project
+   :prog: annif clear
 
 **REST equivalent**
 
