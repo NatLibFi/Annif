@@ -126,7 +126,7 @@ Many resources are available:
 
  * [Usage documentation in the wiki](https://github.com/NatLibFi/Annif/wiki)
  * [Annif tutorial](https://github.com/NatLibFi/Annif-tutorial) for learning to use Annif
- * [annif-users](https://groups.google.com/forum/#!forum/annif-users) discussion forum
+ * [annif-users](https://groups.google.com/forum/#!forum/annif-users) discussion forum; please use this as a channel for questions instead of personal e-mails to developers
  * [Internal API documentation](https://annif.readthedocs.io) on ReadTheDocs
  * [annif.org](https://annif.org) project web site
 
