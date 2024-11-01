@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-22.04
     name: lint with isort, Black & flake8
     steps:
-    - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-22.04
     name: check CLI startup time
     steps:
-    - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: "Prepare: restore caches, install Poetry, set up Python"
       id: prepare
       uses: ./.github/actions/prepare
@@ -64,7 +64,7 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
     name: test on Python ${{ matrix.python-version }}
     steps:
-    - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: Install system packages
       run: |
         sudo apt-get install \
@@ -114,7 +114,7 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     - name: Save cache
       if: steps.prepare.outputs.cache-matched-key != format('poetry-installation-and-cache-{0}-{1}-{2}', matrix.python-version, env.POETRY_VERSION, hashFiles('**/poetry.lock'))
-      uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+      uses: actions/cache/save@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
       with:
         path: |
           ~/.cache/pipx/venvs
@@ -170,7 +170,7 @@ jobs:
     runs-on: ubuntu-22.04
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
-    - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
