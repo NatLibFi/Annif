@@ -33,6 +33,33 @@
         background: linear-gradient(to bottom, #ffffff 92%, #d9dfe3 92%, #ffffff 100%);
         padding-bottom: 5px;
     }
+
+    .survey-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #17a2b8;
+      color: white;
+      padding: 0.5rem 0;
+      margin-bottom: 1rem;
+      text-align: center;
+      font-size: 1.2rem;
+    }
+    .survey-banner img {
+      margin: 0.5rem;
+      height: 5rem;
+    }
+    .survey-banner > :not(img) {
+      margin: 0 0 0 0.5rem;
+    }
+    .survey-banner a {
+        color: white;
+        text-decoration: underline;
+    }
+    .survey-banner a:hover {
+        color: #ffba85;
+    }
+
     a { color: #343260; text-decoration: underline; }
     a:hover, a:active { color: #6280dc; }
     a:visited { color: #536f9f }
@@ -202,7 +229,7 @@
 </head>
 <body>
 
-<header class="mb-4 mt-0">
+<header class="mb-1 mt-0">
   <div class="container">
     <div class="row justify-content-between">
       <div class="col-2">
@@ -214,6 +241,14 @@
     </div>
   </div>
 </header>
+
+<div class="survey-banner">
+  <img src="static/img/feedback-annif.svg" alt="Feedback icon">
+  <p>
+    Annif user survey is open! Please provide feedback about Annif by <a href="#">filling this form</a>.
+  </p>
+  <img src="static/img/feedback-annif.svg" alt="Feedback icon">
+</div>
 
 <div class="container">
 
