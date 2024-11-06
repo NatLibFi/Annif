@@ -25,6 +25,14 @@ This repository contains a rewritten production version of Annif based on the
 [Finto AI](https://ai.finto.fi/) is a service based on Annif;
 see a [🤗 Hugging Face Hub collection](https://huggingface.co/collections/NatLibFi/annif-models-65b35fb98b7c508c8e8a1570) of the models that Finto AI uses.
 
+---
+
+<h1><img src="https://github.com/user-attachments/assets/cef6326c-48af-417d-a085-4b7a7f319a0c" width="60">  Users survey is open!</h1>
+
+Please provide feedback about Annif by filling [this form](https://forms.gle/P7jGoPMbEAJnD9zw9).
+
+---
+
 # Basic install
 
 Annif is developed and tested on Linux. If you want to run Annif on Windows or Mac OS, the recommended way is to use Docker (see below) or a Linux virtual machine.
