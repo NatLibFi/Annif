@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import annif.util
-from annif.exception import OperationFailedException
-
 from . import analyzer
 
 
