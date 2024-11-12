@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+import importlib
+
 from . import analyzer
 
 
 class EstNLTKAnalyzer(analyzer.Analyzer):
     name = "estnltk"
+
+    @staticmethod
+    def is_available() -> bool:
+        # return True iff EstNLTK is installed
+        return importlib.util.find_spec("estnltk") is not None
 
     def __init__(self, param: str, **kwargs) -> None:
         self.param = param
@@ -17,9 +24,8 @@ class EstNLTKAnalyzer(analyzer.Analyzer):
 
         txt = estnltk.Text(text.strip())
         txt.tag_layer()
-        lemmas = [
+        return [
             lemma
-            for lemma in [l[0] for l in txt.lemma]
+            for lemma in [lemmas[0] for lemmas in txt.lemma]
             if (not filter or self.is_valid_token(lemma))
         ]
-        return lemmas

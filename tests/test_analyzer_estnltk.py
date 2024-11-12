@@ -3,8 +3,12 @@
 import pytest
 
 import annif.analyzer
+import annif.analyzer.estnltk
 
-estnltk = pytest.importorskip("estnltk")
+pytestmark = pytest.mark.skipif(
+    not annif.analyzer.estnltk.EstNLTKAnalyzer.is_available(),
+    reason="EstNLTK is required",
+)
 
 
 def test_estnltk_tokenize_words():
