@@ -4,7 +4,7 @@ import pytest
 
 import annif.analyzer
 
-estnltk = pytest.importorskip("annif.analyzer.estnltk")
+estnltk = pytest.importorskip("estnltk")
 
 
 def test_estnltk_tokenize_words():
