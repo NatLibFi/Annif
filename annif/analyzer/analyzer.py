@@ -22,6 +22,11 @@ class Analyzer(metaclass=abc.ABCMeta):
     name = None
     token_min_length = 3  # default value, can be overridden in instances
 
+    @staticmethod
+    def is_available() -> bool:
+        """Return True if the analyzer is available for use, False if not."""
+        return True  # can be overridden in implementations if necessary
+
     def __init__(self, **kwargs) -> None:
         if _KEY_TOKEN_MIN_LENGTH in kwargs:
             self.token_min_length = int(kwargs[_KEY_TOKEN_MIN_LENGTH])

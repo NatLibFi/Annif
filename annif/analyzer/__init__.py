@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import annif
 from annif.util import parse_args
 
-from . import simple, simplemma, snowball
+from . import simple, simplemma, snowball, spacy, voikko
 
 if TYPE_CHECKING:
     from annif.analyzer.analyzer import Analyzer
@@ -17,7 +17,10 @@ _analyzers = {}
 
 
 def register_analyzer(analyzer):
-    _analyzers[analyzer.name] = analyzer
+    if analyzer.is_available():
+        _analyzers[analyzer.name] = analyzer
+    else:
+        annif.logger.debug(f"{analyzer.name} analyzer not available, not enabling it")
 
 
 def get_analyzer(analyzerspec: str) -> Analyzer:
@@ -37,18 +40,5 @@ def get_analyzer(analyzerspec: str) -> Analyzer:
 register_analyzer(simple.SimpleAnalyzer)
 register_analyzer(snowball.SnowballAnalyzer)
 register_analyzer(simplemma.SimplemmaAnalyzer)
-
-# Optional analyzers
-try:
-    from . import voikko
-
-    register_analyzer(voikko.VoikkoAnalyzer)
-except ImportError:
-    annif.logger.debug("voikko not available, not enabling voikko analyzer")
-
-try:
-    from . import spacy
-
-    register_analyzer(spacy.SpacyAnalyzer)
-except ImportError:
-    annif.logger.debug("spaCy not available, not enabling spacy analyzer")
+register_analyzer(voikko.VoikkoAnalyzer)
+register_analyzer(spacy.SpacyAnalyzer)

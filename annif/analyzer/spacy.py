@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import importlib
+
 import annif.util
 from annif.exception import OperationFailedException
 
@@ -12,6 +14,11 @@ _KEY_LOWERCASE = "lowercase"
 
 class SpacyAnalyzer(analyzer.Analyzer):
     name = "spacy"
+
+    @staticmethod
+    def is_available() -> bool:
+        # return True iff spaCy is installed
+        return importlib.util.find_spec("spacy") is not None
 
     def __init__(self, param: str, **kwargs) -> None:
         import spacy
