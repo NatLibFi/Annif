@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 import functools
-
-import voikko.libvoikko
+import importlib
 
 from . import analyzer
 
 
 class VoikkoAnalyzer(analyzer.Analyzer):
     name = "voikko"
+
+    @staticmethod
+    def is_available() -> bool:
+        # return True iff Voikko is installed
+        return importlib.util.find_spec("voikko") is not None
 
     def __init__(self, param: str, **kwargs) -> None:
         self.param = param
@@ -26,6 +30,8 @@ class VoikkoAnalyzer(analyzer.Analyzer):
 
     @functools.lru_cache(maxsize=500000)
     def _normalize_word(self, word: str) -> str:
+        import voikko.libvoikko
+
         if self.voikko is None:
             self.voikko = voikko.libvoikko.Voikko(self.param)
         result = self.voikko.analyze(word)

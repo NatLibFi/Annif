@@ -3,8 +3,11 @@
 import pytest
 
 import annif.analyzer
+import annif.analyzer.voikko
 
-voikko = pytest.importorskip("annif.analyzer.voikko")
+pytestmark = pytest.mark.skipif(
+    not annif.analyzer.voikko.VoikkoAnalyzer.is_available(), reason="voikko is required"
+)
 
 
 def test_voikko_getstate():
