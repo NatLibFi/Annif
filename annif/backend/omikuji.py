@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os.path
-import shutil
 from typing import TYPE_CHECKING, Any
 
 import omikuji

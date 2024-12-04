@@ -182,6 +182,49 @@ paths:
         "503":
           $ref: '#/components/responses/ServiceUnavailable'
       x-codegen-request-body-name: documents
+  /detect-language:
+    post:
+      tags:
+      - Language detection
+      summary: detect the language of a text given a list of candidate languages
+      operationId: annif.rest.detect_language
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - text
+              - languages
+              properties:
+                text:
+                  type: string
+                  description: input text
+                  example: A quick brown fox jumped over the lazy dog.
+                languages:
+                  type: array
+                  description: candidate languages as IETF BCP 47 codes
+                  items:
+                    type: string
+                    maxLength: 3
+                    minLength: 2
+                    example: en
+                  minItems: 1
+                  maxItems: 5
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetectedLanguages'
+        400:
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   schemas:
     ApiInfo:
@@ -316,6 +359,22 @@ components:
                 type: string
                 example: Vulpes vulpes
       description: A document with attached, known good subjects
+    DetectedLanguages:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              language:
+                type: string
+                example: en
+                nullable: true
+              score:
+                type: number
+                example: 0.85
+      description: Candidate languages with their associated scores
     Problem:
       type: object
       properties:

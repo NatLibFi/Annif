@@ -45,8 +45,8 @@ def test_false_negatives():
 
 # DCG@6 example from https://en.wikipedia.org/wiki/Discounted_cumulative_gain
 def test_dcg():
-    y_true = csr_array([3, 2, 3, 0, 1, 2])
-    y_pred = csr_array([6, 5, 4, 3, 2, 1])
+    y_true = csr_array([[3, 2, 3, 0, 1, 2]])
+    y_pred = csr_array([[6, 5, 4, 3, 2, 1]])
     dcg = annif.eval.dcg_score(y_true, y_pred, 6)
     assert dcg > 6.86
     assert dcg < 6.87
@@ -54,8 +54,8 @@ def test_dcg():
 
 # iDCG@6 example from https://en.wikipedia.org/wiki/Discounted_cumulative_gain
 def test_dcg_ideal():
-    y_true = csr_array([3, 3, 3, 2, 2, 2, 1, 0])
-    y_pred = csr_array([8, 7, 6, 5, 4, 3, 2, 1])
+    y_true = csr_array([[3, 3, 3, 2, 2, 2, 1, 0]])
+    y_pred = csr_array([[8, 7, 6, 5, 4, 3, 2, 1]])
     dcg = annif.eval.dcg_score(y_true, y_pred, 6)
     assert dcg > 8.74
     assert dcg < 8.75

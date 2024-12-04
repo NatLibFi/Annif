@@ -4,7 +4,10 @@ import pytest
 import schemathesis
 from hypothesis import settings
 
-schema = schemathesis.from_path("annif/openapi/annif.yaml")
+import annif
+
+cxapp = annif.create_app(config_name="annif.default_config.TestingConfig")
+schema = schemathesis.from_path("annif/openapi/annif.yaml", app=cxapp)
 
 
 @schemathesis.hook("filter_path_parameters")
@@ -18,18 +21,16 @@ def filter_path_parameters(context, path_parameters):
 
 @schema.parametrize()
 @settings(max_examples=10)
-def test_openapi_fuzzy(case, cxapp):
-    response = case.call_asgi(cxapp)
-    case.validate_response(response)
+def test_openapi_fuzzy(case):
+    case.call_and_validate()
 
 
 @pytest.mark.slow
-@schema.parametrize(endpoint="/v1/projects/{project_id}")
+@schema.include(path_regex="/v1/projects/{project_id}").parametrize()
 @settings(max_examples=50)
-def test_openapi_fuzzy_target_dummy_fi(case, cxapp):
+def test_openapi_fuzzy_target_dummy_fi(case):
     case.path_parameters = {"project_id": "dummy-fi"}
-    response = case.call_asgi(cxapp)
-    case.validate_response(response)
+    case.call_and_validate()
 
 
 def test_openapi_cors(app_client):
@@ -126,3 +127,15 @@ def test_openapi_learn_novocab(app_client):
     data = []
     req = app_client.post("http://localhost:8000/v1/projects/novocab/learn", json=data)
     assert req.status_code == 503
+
+
+def test_rest_detect_language_no_candidates(app_client):
+    data = {"text": "example text", "languages": []}
+    req = app_client.post("http://localhost:8000/v1/detect-language", json=data)
+    assert req.status_code == 400
+
+
+def test_rest_detect_language_too_many_candidates(app_client):
+    data = {"text": "example text", "languages": ["en", "fr", "de", "it", "es", "nl"]}
+    req = app_client.post("http://localhost:8000/v1/detect-language", json=data)
+    assert req.status_code == 400
