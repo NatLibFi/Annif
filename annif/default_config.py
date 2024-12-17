@@ -14,7 +14,7 @@ class Config(object):
     PROJECTS_CONFIG_PATH = os.environ.get("ANNIF_PROJECTS", default="")
     DATADIR = os.environ.get("ANNIF_DATADIR", default="data")
     INITIALIZE_PROJECTS = False
-    MAX_FORM_MEMORY_SIZE = None  # Disable Flask's limit
+    MAX_FORM_MEMORY_SIZE = 20_000_000  # Increase from Flask's default limit
 
 
 class ProductionConfig(Config):
