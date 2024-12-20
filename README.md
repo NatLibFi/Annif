@@ -223,13 +223,24 @@ https://doi.org/10.18352/lq.10285
 
 # License
 
-The code in this repository is licensed under Apache License 2.0, except for the
-dependencies included under `annif/static/css` and `annif/static/js`,
-which have their own licenses, see the file headers for details.
-Please note that the [YAKE](https://github.com/LIAAD/yake) library is licended
-under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.txt), while Annif is
-licensed under the Apache License 2.0. The licenses are compatible, but
-depending on legal interpretation, the terms of the GPLv3 (for example the
-requirement to publish corresponding source code when publishing an executable
-application) may be considered to apply to the whole of Annif+Yake if you
-decide to install the optional Yake dependency.
+The code in this repository is licensed under Apache License 2.0, except for
+the dependencies included under `annif/static/css` and `annif/static/js`,
+which have their own licenses; see the file headers for details.
+
+Please note that the [YAKE](https://github.com/LIAAD/yake) library is
+licensed under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.txt) and the
+[EstNLTK-core](https://github.com/estnltk/estnltk/tree/main/estnltk_core)
+library is licensed under
+[GPLv2](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html), while Annif
+itself is licensed under the Apache License 2.0. It is commonly accepted
+that the GPLv3 and Apache 2.0 licenses are compatible at least in one
+direction (GPLv3 is more restrictive than the Apache License), while the
+compatibility between GPLv2 and Apache 2.0 licenses is a more difficult
+question with arguments made both for and against license compatibility;
+obviously it also depends on the legal environment. The Annif developers
+make no legal claims; we simply provide the software and allow the user to
+install these optional extensions if they consider it appropriate. Depending
+on legal interpretation, the terms of the GPL (for example the requirement
+to publish corresponding source code when publishing an executable
+application) may be considered to apply to the whole of Annif+extensions if
+you decide to install the optional Yake and/or EstNLTK dependencies.

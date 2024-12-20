@@ -85,7 +85,7 @@ jobs:
         fi
         # For Python 3.10:
         if [[ ${{ matrix.python-version }} == '3.10' ]]; then
-          poetry install -E "fasttext spacy";
+          poetry install -E "fasttext spacy estnltk";
           # download the small English pretrained spaCy model needed by spacy analyzer
           poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
