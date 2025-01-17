@@ -17,8 +17,7 @@ RUN apt-get update && apt-get upgrade -y && \
 	rm -rf /var/lib/apt/lists/* /usr/include/*
 
 WORKDIR /Annif
-RUN pip install --upgrade pip poetry --no-cache-dir && \
-	pip install poetry
+RUN pip install --upgrade pip "poetry~=1.8" --no-cache-dir
 
 COPY pyproject.toml setup.cfg README.md LICENSE.txt CITATION.cff projects.cfg.dist /Annif/
 
