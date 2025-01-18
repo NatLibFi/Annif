@@ -231,7 +231,7 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     ) -> SuggestionBatch:
         vector = self.vectorizer.transform(texts)
         if vector.nnz == 0:  # All zero vector, empty result
-            return list()
+            return SuggestionBatch.from_sequence([[]], self.project.subjects)
         new_params = apply_param_parse_config(self.PARAM_CONFIG, params)
         prediction = self._model.predict(
             texts,
