@@ -17,14 +17,13 @@ RUN apt-get update && apt-get upgrade -y && \
 	rm -rf /var/lib/apt/lists/* /usr/include/*
 
 WORKDIR /Annif
-RUN pip install --upgrade pip poetry --no-cache-dir && \
-	pip install poetry
+RUN pip install --upgrade pip "poetry~=2.0" --no-cache-dir
 
 COPY pyproject.toml setup.cfg README.md LICENSE.txt CITATION.cff projects.cfg.dist /Annif/
 
 # First round of installation for Docker layer caching:
 RUN echo "Installing dependencies for optional features: $optional_dependencies" \
-	&& poetry install -E "$optional_dependencies" \
+	&& poetry install -E "$optional_dependencies" --no-root \
 	&& rm -rf /root/.cache/pypoetry  # No need for cache because of poetry.lock
 
 # Download nltk data
