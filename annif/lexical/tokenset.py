@@ -20,7 +20,7 @@ class TokenSet:
         subject_id: int | None = None,
         is_pref: bool = False,
     ) -> None:
-        self._tokens = set(tokens)
+        self._tokens = frozenset(tokens)
         self.key = tokens[0] if len(tokens) else None
         self.subject_id = subject_id
         self.is_pref = is_pref
@@ -30,6 +30,10 @@ class TokenSet:
 
     def __iter__(self):
         return iter(self._tokens)
+
+    @property
+    def tokens(self) -> frozenset:
+        return self._tokens
 
     def contains(self, other: TokenSet) -> bool:
         """Returns True iff the tokens in the other TokenSet are all
@@ -68,21 +72,25 @@ class TokenSetIndex:
 
         return subj_tsets
 
-    def _find_subj_ambiguity(self, tsets):
+    def _find_subj_ambiguity(self, tsets: list[TokenSet]):
         """calculate the ambiguity values (the number of other TokenSets
         that also match the same tokens) for the given TokenSets and return
         them as a dict-like object (subject_id : ambiguity_value)"""
 
+        # group the TokenSets by their tokens, so that TokenSets with
+        # identical tokens can be considered together all in one go
+        elim_tsets = collections.defaultdict(set)
+        for ts in tsets:
+            elim_tsets[ts.tokens].add(ts.subject_id)
+
         subj_ambiguity = collections.Counter()
 
-        subj_ambiguity.update(
-            [
-                ts.subject_id
-                for ts in tsets
-                for other in tsets
-                if ts != other and other.contains(ts)
-            ]
-        )
+        for tokens1, subjs1 in elim_tsets.items():
+            for tokens2, subjs2 in elim_tsets.items():
+                if not tokens2.issuperset(tokens1):
+                    continue
+                for subj in subjs1:
+                    subj_ambiguity[subj] += len(subjs2) - int(subj in subjs2)
 
         return subj_ambiguity
 
