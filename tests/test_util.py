@@ -11,7 +11,7 @@ import annif.util
 @contextmanager
 def umask_context(mask):
     """Context manager to temporarily set umask"""
-    original_umask = os.umask(0)  # Get current umask
+    original_umask = os.umask(0o777)  # Get current umask
     os.umask(mask)  # Set new umask
     try:
         yield
