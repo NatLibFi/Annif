@@ -25,7 +25,8 @@ class MockSaveable:
             f.write("data")
 
 
-# parametrize to verify that file permissions are set correctly using commonly used umask values
+# parametrize test to verify that file permissions are set correctly
+# using commonly used umask values
 @pytest.mark.parametrize(
     "umask,mode", [(0o002, 0o664), (0o022, 0o644), (0o027, 0o640), (0o077, 0o600)]
 )
