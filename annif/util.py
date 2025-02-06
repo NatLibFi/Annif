@@ -48,6 +48,9 @@ def atomic_save(
         newname = fn.replace(tempfilename, os.path.join(dirname, filename))
         logger.debug("renaming temporary file %s to %s", fn, newname)
         os.rename(fn, newname)
+        umask = os.umask(0o777)
+        os.umask(umask)
+        os.chmod(newname, 0o666 & ~umask)
 
 
 def cleanup_uri(uri: str) -> str:

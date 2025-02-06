@@ -272,7 +272,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         lmdb_path = os.path.join(self.datadir, self.LMDB_FILE)
         if not cached and os.path.exists(lmdb_path):
             shutil.rmtree(lmdb_path)
-        return lmdb.open(lmdb_path, map_size=lmdb_map_size, writemap=True)
+        return lmdb.open(lmdb_path, map_size=lmdb_map_size, writemap=True, mode=0o775)
 
     def _fit_model(
         self,
