@@ -114,10 +114,8 @@ def test_nn_ensemble_train_and_learn(registry, tmpdir):
         # verify LMDB database creation and expected permissions when using umask 0007
         assert datadir.join("nn-train.mdb").exists()
         assert datadir.join("nn-train.mdb").stat().mode & 0o777 == 0o770
-        assert datadir.join("nn-train.mdb").join("data.mdb").exists()
-        assert (
-            datadir.join("nn-train.mdb").join("data.mdb").stat().mode & 0o777 == 0o660
-        )
+        assert datadir.join("nn-train.mdb/data.mdb").exists()
+        assert datadir.join("nn-train.mdb/data.mdb").stat().mode & 0o777 == 0o660
 
     # check adam default learning_rate:
     assert nn_ensemble._model.optimizer.learning_rate.value == 0.001
