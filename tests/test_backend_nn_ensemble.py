@@ -17,6 +17,8 @@ from annif.exception import (
     OperationFailedException,
 )
 
+from .util import umask_context
+
 pytest.importorskip("annif.backend.nn_ensemble")
 lmdb = pytest.importorskip("lmdb")
 
@@ -105,13 +107,21 @@ def test_nn_ensemble_train_and_learn(registry, tmpdir):
         + "none\thttp://example.org/none\n" * 40
     )
     document_corpus = annif.corpus.DocumentFile(str(tmpfile), project.subjects)
+    datadir = py.path.local(project.datadir)
 
-    nn_ensemble.train(document_corpus)
+    with umask_context(0o007):
+        nn_ensemble.train(document_corpus)
+        # verify LMDB database creation and expected permissions when using umask 0007
+        assert datadir.join("nn-train.mdb").exists()
+        assert datadir.join("nn-train.mdb").stat().mode & 0o777 == 0o770
+        assert datadir.join("nn-train.mdb").join("data.mdb").exists()
+        assert (
+            datadir.join("nn-train.mdb").join("data.mdb").stat().mode & 0o777 == 0o660
+        )
 
     # check adam default learning_rate:
     assert nn_ensemble._model.optimizer.learning_rate.value == 0.001
 
-    datadir = py.path.local(project.datadir)
     assert datadir.join("nn-model.keras").exists()
     assert datadir.join("nn-model.keras").size() > 0
 

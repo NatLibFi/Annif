@@ -1,22 +1,10 @@
 """Unit tests for Annif utility functions"""
 
-import os
-from contextlib import contextmanager
-
 import pytest
 
 import annif.util
 
-
-@contextmanager
-def umask_context(mask):
-    """Context manager to temporarily set umask"""
-    original_umask = os.umask(0o777)  # Get current umask
-    os.umask(mask)  # Set new umask
-    try:
-        yield
-    finally:
-        os.umask(original_umask)  # Restore original umask
+from .util import umask_context
 
 
 class MockSaveable:
