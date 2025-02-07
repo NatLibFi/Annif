@@ -41,6 +41,13 @@ class TokenSet:
 
         return other._tokens.issubset(self._tokens)
 
+    def __setstate__(self, state):
+        # Convert _tokens to a frozenset if it's a set.
+        # Might happen when using models saved using Annif 1.2 or older.
+        self.__dict__ = state
+        if isinstance(self._tokens, set):
+            self._tokens = frozenset(self._tokens)
+
 
 class TokenSetIndex:
     """A searchable index of TokenSets (representing vocabulary terms)"""
