@@ -46,7 +46,7 @@ class TokenSet:
         # Might happen when using models saved using Annif 1.2 or older.
         self.__dict__ = state
         if isinstance(self._tokens, set):
-            self._tokens = frozenset(self._tokens)
+            self._tokens = frozenset(self._tokens)  # pragma: no cover
 
 
 class TokenSetIndex:
