@@ -13,17 +13,17 @@ outputs:
 runs:
   using: "composite"
   steps:
-    # - name: Restore cached Poetry installation and its cache
-    #   id: restore-cache
-    #   uses: actions/cache/restore@v4
-    #   with:
-    #     path: |
-    #       ~/.cache/pipx/venvs
-    #       ~/.local/bin
-    #       ~/.cache/pypoetry/
-    #     key: ignore-me
-    #     restore-keys: |
-    #       poetry-installation-and-cache-${{ inputs.os }}-${{ inputs.python-version }}-${{ inputs.poetry-version }}-
+    - name: Restore cached Poetry installation and its cache
+      id: restore-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.cache/pipx/venvs
+          ~/.local/bin
+          ~/.cache/pypoetry/
+        key: ignore-me
+        restore-keys: |
+          poetry-installation-and-cache-${{ inputs.os }}-${{ inputs.python-version }}-${{ inputs.poetry-version }}-
     - name: Set up Python ${{ inputs.python-version }}
       uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b  # v5.3.0
       with:
