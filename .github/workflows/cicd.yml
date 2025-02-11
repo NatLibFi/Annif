@@ -67,16 +67,19 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
         experimental: [false]
         include:  # Add given combinations to the matrix allowing jobs to fail
-        - os: macos-12
-          python-version: "3.9"
-          experimental: true
-        - os: macos-11
+        - os: macos-13
           python-version: "3.10"
           experimental: true
-        - os: windows-2022
+        - os: macos-14
           python-version: "3.11"
           experimental: true
-        - os: windows-2019
+        - os: macos-15
+          python-version: "3.12"
+          experimental: true
+        - os: windows-2025
+          python-version: "3.11"
+          experimental: true
+        - os: windows-2022
           python-version: "3.12"
           experimental: true
     name: test on ${{ matrix.os }}, Python ${{ matrix.python-version }}
