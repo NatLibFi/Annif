@@ -42,7 +42,5 @@ runs:
 
     - name: Install Poetry
       shell: bash
-      env:
-        PIPX_DEFAULT_PYTHON: ${{ steps.setup-python.outputs.python-path }}
       run: |
-        pipx install poetry==${{ inputs.poetry-version }} --python $(which python${{ inputs.python-version }})
+        ${{ steps.setup-python.outputs.python-path }} -m pipx install poetry==${{ inputs.poetry-version }} --python $(which python${{ inputs.python-version }})
