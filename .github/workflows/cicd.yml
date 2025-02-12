@@ -3,7 +3,6 @@ on:
   push:
     branches:
     - main
-    - testing-on-windows-and-macos
     tags:
     - '*'
   pull_request:
