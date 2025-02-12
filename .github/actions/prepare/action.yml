@@ -25,7 +25,6 @@ runs:
         restore-keys: |
           poetry-installation-and-cache-${{ inputs.os }}-${{ inputs.python-version }}-${{ inputs.poetry-version }}-
     - name: Set up Python ${{ inputs.python-version }}
-      id: setup-python
       uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b  # v5.3.0
       with:
         python-version: ${{ inputs.python-version }}
@@ -42,7 +41,5 @@ runs:
 
     - name: Install Poetry
       shell: bash
-      env:
-        PIPX_DEFAULT_PYTHON: ${{ steps.setup-python.outputs.python-path }}
       run: |
         pipx install poetry==${{ inputs.poetry-version }} --python $(which python${{ inputs.python-version }})
