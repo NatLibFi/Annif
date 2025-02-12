@@ -34,6 +34,7 @@ runs:
       run: |
         echo "PIPX_HOME=/tmp/.cache/pipx" >> "$GITHUB_ENV"
         echo "PIPX_BIN_DIR=/tmp/.local/bin" >> "$GITHUB_ENV"
+        echo "/tmp/.local/bin" >> $GITHUB_PATH
     - name: Install Poetry
       shell: bash
       run: |
