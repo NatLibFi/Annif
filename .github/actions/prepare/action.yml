@@ -28,17 +28,11 @@ runs:
       uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b  # v5.3.0
       with:
         python-version: ${{ inputs.python-version }}
-    - name: show environment
-      shell: bash
-      continue-on-error: true
+    - name: fix installation on macos using /tmp dir
+      if: runner.os == 'macOS'
       run: |
-        echo ${{ inputs.python-version }}
-        echo $(python --version)
-        echo $(ls -l /System/Volumes/Data/home/runner/.cache/)
-        echo $(ls -l /System/Volumes/Data/home/runner/)
-        echo $(ls -l /System/Volumes/Data/home/)
-        echo $(ls -l /System/Volumes/Data/)
-
+        echo "PIPX_HOME=/tmp/.cache/pipx" >> "$GITHUB_ENV"
+        echo "PIPX_BIN_DIR=/tmp/.local/bin" >> "$GITHUB_ENV"
     - name: Install Poetry
       shell: bash
       run: |
