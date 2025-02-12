@@ -30,6 +30,7 @@ runs:
         python-version: ${{ inputs.python-version }}
     - name: fix installation on macos using /tmp dir
       if: runner.os == 'macOS'
+      shell: bash
       run: |
         echo "PIPX_HOME=/tmp/.cache/pipx" >> "$GITHUB_ENV"
         echo "PIPX_BIN_DIR=/tmp/.local/bin" >> "$GITHUB_ENV"
