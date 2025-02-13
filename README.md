@@ -109,7 +109,7 @@ By default development dependencies are included. Use option `-E` to install dep
 
 Enter the virtual environment:
 
-    poetry shell
+    eval $(poetry env activate)
 
 Start up the application:
 
