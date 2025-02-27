@@ -19,11 +19,13 @@ Annif is an automated subject indexing toolkit. It was originally created as
 a statistical automated indexing tool that used metadata from the
 [Finna.fi](https://finna.fi) discovery interface as a training corpus.
 
-This repository contains a rewritten production version of Annif based on the
-[prototype](https://github.com/osma/annif).
+Annif provides [CLI commands](https://annif.readthedocs.io/en/stable/source/commands.html) for administration, and a [REST API](https://api.annif.org/v1/ui/) and web UI for end-users.
 
 [Finto AI](https://ai.finto.fi/) is a service based on Annif;
 see a [🤗 Hugging Face Hub collection](https://huggingface.co/collections/NatLibFi/annif-models-65b35fb98b7c508c8e8a1570) of the models that Finto AI uses.
+
+This repository contains a rewritten production version of Annif based on the
+[prototype](https://github.com/osma/annif).
 
 # Basic install
 
