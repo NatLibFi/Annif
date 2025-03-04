@@ -1069,10 +1069,13 @@ def test_run_help():
     assert "Run Annif in server mode for development." in result.output
 
 
+@mock.patch("annif.hfh_util.upsert_modelcard")
 @mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
 @mock.patch("huggingface_hub.CommitOperationAdd")
 @mock.patch("huggingface_hub.HfApi.create_commit")
-def test_upload(create_commit, CommitOperationAdd, preupload_lfs_files):
+def test_upload(
+    create_commit, CommitOperationAdd, preupload_lfs_files, upsert_modelcard
+):
     result = runner.invoke(annif.cli.cli, ["upload", "dummy-fi", "dummy-repo"])
     assert not result.exception
     assert create_commit.call_count == 1
@@ -1108,16 +1111,35 @@ def test_upload(create_commit, CommitOperationAdd, preupload_lfs_files):
         )
         in create_commit.call_args_list
     )
+    assert upsert_modelcard.call_count == 1
+
+
+@mock.patch("annif.hfh_util.upsert_modelcard")
+@mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
+@mock.patch("huggingface_hub.CommitOperationAdd")
+@mock.patch("huggingface_hub.HfApi.create_commit")
+def test_upload_many(
+    create_commit, CommitOperationAdd, preupload_lfs_files, upsert_modelcard
+):
+    result = runner.invoke(annif.cli.cli, ["upload", "dummy-*", "dummy-repo"])
+    assert not result.exception
+    assert create_commit.call_count == 1
+    assert CommitOperationAdd.call_count == 11
+    assert upsert_modelcard.call_count == 1
 
 
 @mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
 @mock.patch("huggingface_hub.CommitOperationAdd")
 @mock.patch("huggingface_hub.HfApi.create_commit")
-def test_upload_many(create_commit, CommitOperationAdd, preupload_lfs_files):
-    result = runner.invoke(annif.cli.cli, ["upload", "dummy-*", "dummy-repo"])
+@mock.patch("annif.hfh_util.upsert_modelcard")
+def test_upload_no_modelcard_upsert(
+    upsert_modelcard, create_commit, CommitOperationAdd, preupload_lfs_files
+):
+    result = runner.invoke(
+        annif.cli.cli, ["upload", "dummy-fi", "dummy-repo", "--no-modelcard"]
+    )
     assert not result.exception
-    assert create_commit.call_count == 1
-    assert CommitOperationAdd.call_count == 11
+    assert upsert_modelcard.call_count == 0
 
 
 def test_upload_nonexistent_repo():
@@ -1127,10 +1149,30 @@ def test_upload_nonexistent_repo():
     assert "Repository Not Found for url:" in failed_result.output
 
 
+@mock.patch("annif.hfh_util._is_repo_in_cache", return_value=False)
+def test_download_not_allowed_default(mock_is_repo_in_cache):
+    # Default of --trust-repo is False
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        [
+            "download",
+            "dummy-fi",
+            "dummy-repo",
+        ],
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert (
+        'Cannot download projects from untrusted repo "dummy-repo"'
+        in failed_result.output
+    )
+
+
 def hf_hub_download_mock_side_effect(filename, repo_id, token, revision):
     return "tests/huggingface-cache/" + filename  # Mocks the downloaded file paths
 
 
+@mock.patch("annif.hfh_util.check_is_download_allowed", return_value=True)
 @mock.patch(
     "huggingface_hub.list_repo_files",
     return_value=[  # Mocks the filenames in repo
@@ -1148,7 +1190,11 @@ def hf_hub_download_mock_side_effect(filename, repo_id, token, revision):
 )
 @mock.patch("annif.hfh_util.copy_project_config")
 def test_download_dummy_fi(
-    copy_project_config, hf_hub_download, list_repo_files, testdatadir
+    copy_project_config,
+    hf_hub_download,
+    list_repo_files,
+    check_is_download_allowed,
+    testdatadir,
 ):
     result = runner.invoke(
         annif.cli.cli,
@@ -1189,6 +1235,7 @@ def test_download_dummy_fi(
     ]
 
 
+@mock.patch("annif.hfh_util.check_is_download_allowed", return_value=True)
 @mock.patch(
     "huggingface_hub.list_repo_files",
     return_value=[  # Mock filenames in repo
@@ -1206,7 +1253,11 @@ def test_download_dummy_fi(
 )
 @mock.patch("annif.hfh_util.copy_project_config")
 def test_download_dummy_fi_and_en(
-    copy_project_config, hf_hub_download, list_repo_files, testdatadir
+    copy_project_config,
+    hf_hub_download,
+    list_repo_files,
+    check_is_download_allowed,
+    testdatadir,
 ):
     result = runner.invoke(
         annif.cli.cli,
@@ -1263,6 +1314,7 @@ def test_download_dummy_fi_and_en(
     ]
 
 
+@mock.patch("annif.hfh_util.check_is_download_allowed", return_value=True)
 @mock.patch(
     "huggingface_hub.list_repo_files",
     side_effect=HFValidationError,
@@ -1271,8 +1323,7 @@ def test_download_dummy_fi_and_en(
     "huggingface_hub.hf_hub_download",
 )
 def test_download_list_repo_files_failed(
-    hf_hub_download,
-    list_repo_files,
+    hf_hub_download, list_repo_files, check_is_download_allowed
 ):
     failed_result = runner.invoke(
         annif.cli.cli,
@@ -1289,6 +1340,7 @@ def test_download_list_repo_files_failed(
     assert not hf_hub_download.called
 
 
+@mock.patch("annif.hfh_util.check_is_download_allowed", return_value=True)
 @mock.patch(
     "huggingface_hub.list_repo_files",
     return_value=[  # Mock filenames in repo
@@ -1304,6 +1356,7 @@ def test_download_list_repo_files_failed(
 def test_download_hf_hub_download_failed(
     hf_hub_download,
     list_repo_files,
+    check_is_download_allowed,
 ):
     failed_result = runner.invoke(
         annif.cli.cli,
@@ -1391,3 +1444,39 @@ def test_completion_show_project_project_ids_dummy():
 def test_completion_load_vocab_vocab_ids_all():
     completions = get_completions(annif.cli.cli, ["load-vocab"], "")
     assert completions == ["dummy", "dummy-noname", "yso"]
+
+
+def test_detect_language_stdin():
+    result = runner.invoke(
+        annif.cli.cli,
+        ["detect-language", "fi,sv,en"],
+        input="This is some example text",
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+    assert result.output.split("\n")[0] == "en\t1.0000"
+    assert result.output.split("\n")[-2] == "?\t0.0000"
+
+
+def test_detect_language_unknown_language():
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        ["detect-language", "xxx"],
+        input="This is some example text",
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "Error: Unsupported language: xxx" in failed_result.output
+
+
+def test_detect_language_file_and_stdin(tmpdir):
+    docfile1 = tmpdir.join("doc-1.txt")
+    docfile1.write("nothing special")
+
+    result = runner.invoke(
+        annif.cli.cli, ["detect-language", "fi,en", str(docfile1), "-"], input="kissa"
+    )
+
+    assert not result.exception
+    assert f"Detected languages for {docfile1}" in result.output
+    assert "Detected languages for -" in result.output

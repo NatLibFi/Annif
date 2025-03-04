@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 import connexion
 
 import annif.registry
+import annif.simplemma_util
 from annif.corpus import Document, DocumentList, SubjectSet
 from annif.exception import AnnifException
 from annif.project import Access
@@ -80,6 +81,30 @@ def show_project(
     except ValueError:
         return project_not_found_error(project_id)
     return project.dump(), 200, {"Content-Type": "application/json"}
+
+
+def detect_language(body: dict[str, Any]):
+    """return scores for detected languages formatted according to Swagger spec"""
+
+    text = body.get("text")
+    languages = body.get("languages")
+
+    try:
+        proportions = annif.simplemma_util.detect_language(text, tuple(languages))
+    except ValueError:
+        return connexion.problem(
+            status=400,
+            title="Bad Request",
+            detail="unsupported candidate languages",
+        )
+
+    result = {
+        "results": [
+            {"language": lang if lang != "unk" else None, "score": score}
+            for lang, score in proportions.items()
+        ]
+    }
+    return result, 200, {"Content-Type": "application/json"}
 
 
 def _suggestion_to_dict(

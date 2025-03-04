@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import simplemma
+import annif.simplemma_util
 
 from . import analyzer
 
@@ -15,4 +15,4 @@ class SimplemmaAnalyzer(analyzer.Analyzer):
         super().__init__(**kwargs)
 
     def _normalize_word(self, word: str) -> str:
-        return simplemma.lemmatize(word, lang=self.lang)
+        return annif.simplemma_util.lemmatizer.lemmatize(word, lang=self.lang)

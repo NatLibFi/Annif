@@ -17,10 +17,41 @@ import click
 from flask import current_app
 
 import annif
+from annif import cli_util
+from annif.config import AnnifConfigCFG
 from annif.exception import OperationFailedException
 from annif.project import Access, AnnifProject
 
 logger = annif.logger
+
+
+def check_is_download_allowed(trust_repo, repo_id):
+    """Check if downloading from the specified repository is allowed based on the trust
+    option and cache status."""
+    if trust_repo:
+        logger.warning(
+            f'Download allowed from "{repo_id}" because "--trust-repo" flag is used.'
+        )
+        return
+    if _is_repo_in_cache(repo_id):
+        logger.debug(
+            f'Download allowed from "{repo_id}" because repo is already in cache.'
+        )
+        return
+    raise OperationFailedException(
+        f'Cannot download projects from untrusted repo "{repo_id}"'
+    )
+
+
+def _is_repo_in_cache(repo_id):
+    from huggingface_hub import CacheNotFound, scan_cache_dir
+
+    try:
+        cache = scan_cache_dir()
+    except CacheNotFound as err:
+        logger.debug(str(err) + "\nNo HFH cache found.")
+        return False
+    return repo_id in [info.repo_id for info in cache.repos]
 
 
 def get_matching_projects(pattern: str) -> list[AnnifProject]:
@@ -34,7 +65,9 @@ def get_matching_projects(pattern: str) -> list[AnnifProject]:
     ]
 
 
-def prepare_commits(projects: list[AnnifProject], repo_id: str) -> tuple[list, list]:
+def prepare_commits(
+    projects: list[AnnifProject], repo_id: str, token: str
+) -> tuple[list, list]:
     """Prepare and pre-upload data and config commit operations for projects to a
     Hugging Face Hub repository."""
     from huggingface_hub import preupload_lfs_files
@@ -46,7 +79,7 @@ def prepare_commits(projects: list[AnnifProject], repo_id: str) -> tuple[list, l
 
     for data_dir in all_dirs:
         fobj, operation = _prepare_datadir_commit(data_dir)
-        preupload_lfs_files(repo_id, additions=[operation])
+        preupload_lfs_files(repo_id, additions=[operation], token=token)
         fobjs.append(fobj)
         operations.append(operation)
 
@@ -238,3 +271,106 @@ def get_vocab_id_from_config(config_path: str) -> str:
     config.read(config_path)
     section = config.sections()[0]
     return config[section]["vocab"]
+
+
+def upsert_modelcard(repo_id, projects, token, revision):
+    """This function creates or updates a Model Card in a Hugging Face Hub repository
+    with some metadata in it."""
+    from huggingface_hub import ModelCard
+    from huggingface_hub.utils import EntryNotFoundError
+
+    try:
+        card = ModelCard.load(repo_id)
+        commit_message = "Update README.md with Annif"
+    except EntryNotFoundError:
+        card = _create_modelcard(repo_id)
+        commit_message = "Create README.md with Annif"
+
+    langs_existing = set(card.data.language) if card.data.language else set()
+    langs_to_add = {proj.vocab_lang for proj in projects}
+    card.data.language = list(langs_existing.union(langs_to_add))
+
+    configs = _get_existing_configs(repo_id, token, revision)
+    card.text = _update_projects_section(card.text, configs)
+
+    card.push_to_hub(
+        repo_id=repo_id, token=token, revision=revision, commit_message=commit_message
+    )
+
+
+def _get_existing_configs(repo_id, token, revision):
+    from huggingface_hub import HfFileSystem
+
+    fs = HfFileSystem(token=token)
+    cfg_locations = fs.glob(f"{repo_id}/*.cfg", revision=revision)
+
+    projstr = ""
+    for cfg_file in cfg_locations:
+        projstr += fs.read_text(cfg_file, token=token, revision=revision)
+    return AnnifConfigCFG(projstr=projstr)
+
+
+def _create_modelcard(repo_id):
+    from huggingface_hub import ModelCard
+
+    content = f"""
+---
+
+---
+
+# {repo_id.split("/")[1]}
+
+## Usage
+
+Use the `annif download` command to download selected projects with Annif;
+for example, to download all projects in this repository run
+
+    annif download "*" {repo_id}
+
+"""
+    card = ModelCard(content)
+    card.data.pipeline_tag = "text-classification"
+    card.data.tags = ["annif"]
+    return card
+
+
+AUTOUPDATING_START = "<!--- start-of-autoupdating-part --->"
+AUTOUPDATING_END = "<!--- end-of-autoupdating-part --->"
+
+
+def _update_projects_section(text, configs):
+    section_start_ind = text.find(AUTOUPDATING_START)
+    section_end_ind = text.rfind(AUTOUPDATING_END) + len(AUTOUPDATING_END)
+
+    projects_section = _create_projects_section(configs)
+    if section_start_ind == -1:  # no existing projects section, append it now
+        return text + projects_section
+    else:
+        return text[:section_start_ind] + projects_section + text[section_end_ind:]
+
+
+def _create_projects_section(configs):
+    column_headings = (
+        "Project ID",
+        "Project Name",
+        "Vocabulary ID",
+        "Language",
+    )
+    table = [
+        (
+            proj_id,
+            configs[proj_id]["name"],
+            configs[proj_id]["vocab"],
+            configs[proj_id]["language"],
+        )
+        for proj_id in configs.project_ids
+    ]
+    template = cli_util.make_list_template(column_headings, *table) + "\n"
+
+    header = template.format(*column_headings)
+
+    content = f"{AUTOUPDATING_START}\n## Projects\n"
+    content += "```\n" + header + "-" * len(header.strip()) + "\n"
+    for row in table:
+        content += template.format(*row)
+    return content + "```\n" + AUTOUPDATING_END

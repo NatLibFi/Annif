@@ -19,11 +19,13 @@ Annif is an automated subject indexing toolkit. It was originally created as
 a statistical automated indexing tool that used metadata from the
 [Finna.fi](https://finna.fi) discovery interface as a training corpus.
 
-This repo contains a rewritten production version of Annif based on the
-[prototype](https://github.com/osma/annif).
+Annif provides [CLI commands](https://annif.readthedocs.io/en/stable/source/commands.html) for administration, and a [REST API](https://api.annif.org/v1/ui/) and web UI for end-users.
 
-[Finto AI](https://ai.finto.fi/) is a service based on Annif; see the [source code of Finto AI](https://github.com/NatLibFi/FintoAI)
-and the [🤗 Hugging Face Hub collection](https://huggingface.co/collections/NatLibFi/annif-models-65b35fb98b7c508c8e8a1570) containing the models Finto AI uses.
+[Finto AI](https://ai.finto.fi/) is a service based on Annif;
+see a [🤗 Hugging Face Hub collection](https://huggingface.co/collections/NatLibFi/annif-models-65b35fb98b7c508c8e8a1570) of the models that Finto AI uses.
+
+This repository contains a rewritten production version of Annif based on the
+[prototype](https://github.com/osma/annif).
 
 # Basic install
 
@@ -38,16 +40,14 @@ The recommended way is to install Annif from
     source annif-venv/bin/activate
     pip install annif
 
-You will also need NLTK data files:
-
-    python -m nltk.downloader punkt
-
 Start up the application:
 
     annif
 
 See [Getting Started](https://github.com/NatLibFi/Annif/wiki/Getting-started)
-in the wiki for more details.
+for basic usage instructions and
+[Optional features and dependencies](https://github.com/NatLibFi/Annif/wiki/Optional-features-and-dependencies)
+for installation instructions for e.g. fastText and Omikuji backends and for Voikko and spaCy analyzers.
 
 ## Shell compeletions
 Annif supports tab-key completion in bash, zsh and fish shells for commands and options
@@ -111,11 +111,7 @@ By default development dependencies are included. Use option `-E` to install dep
 
 Enter the virtual environment:
 
-    poetry shell
-
-You will also need NLTK data files:
-
-    python -m nltk.downloader punkt
+    eval $(poetry env activate)
 
 Start up the application:
 
@@ -132,7 +128,7 @@ Many resources are available:
 
  * [Usage documentation in the wiki](https://github.com/NatLibFi/Annif/wiki)
  * [Annif tutorial](https://github.com/NatLibFi/Annif-tutorial) for learning to use Annif
- * [annif-users](https://groups.google.com/forum/#!forum/annif-users) discussion forum
+ * [annif-users](https://groups.google.com/forum/#!forum/annif-users) discussion forum; please use this as a channel for questions instead of personal e-mails to developers
  * [Internal API documentation](https://annif.readthedocs.io) on ReadTheDocs
  * [annif.org](https://annif.org) project web site
 
@@ -229,13 +225,19 @@ https://doi.org/10.18352/lq.10285
 
 # License
 
-The code in this repository is licensed under Apache License 2.0, except for the
-dependencies included under `annif/static/css` and `annif/static/js`,
-which have their own licenses, see the file headers for details.
-Please note that the [YAKE](https://github.com/LIAAD/yake) library is licended
-under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.txt), while Annif is
-licensed under the Apache License 2.0. The licenses are compatible, but
-depending on legal interpretation, the terms of the GPLv3 (for example the
-requirement to publish corresponding source code when publishing an executable
-application) may be considered to apply to the whole of Annif+Yake if you
-decide to install the optional Yake dependency.
+The code in this repository is licensed under Apache License 2.0, except for
+the dependencies included under `annif/static/css` and `annif/static/js`,
+which have their own licenses; see the file headers for details.
+
+Please note that the [YAKE](https://github.com/LIAAD/yake) library is
+licensed under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.txt), while
+Annif itself is licensed under the Apache License 2.0. It is commonly
+accepted that the GPLv3 and Apache 2.0 licenses are compatible at least in
+one direction (GPLv3 is more restrictive than the Apache License); obviously
+it also depends on the legal environment. The Annif developers make no legal
+claims - we simply provide the software and allow the user to install
+optional extensions if they consider it appropriate. Depending on legal
+interpretation, the terms of the GPL (for example the requirement to publish
+corresponding source code when publishing an executable application) may be
+considered to apply to the whole of Annif+extensions if you decide to
+install the optional YAKE dependency.

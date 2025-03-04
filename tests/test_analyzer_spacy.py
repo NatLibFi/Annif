@@ -3,9 +3,12 @@
 import pytest
 
 import annif.analyzer
+import annif.analyzer.spacy
 from annif.exception import OperationFailedException
 
-spacy = pytest.importorskip("spacy")
+pytestmark = pytest.mark.skipif(
+    not annif.analyzer.spacy.SpacyAnalyzer.is_available(), reason="spaCy is required"
+)
 
 
 def test_spacy_model_not_found():

@@ -1,12 +1,60 @@
 """Unit test module for Hugging Face Hub utilities."""
 
 import io
+import logging
 import os.path
 import zipfile
 from datetime import datetime, timezone
 from unittest import mock
 
+import huggingface_hub
+import pytest
+from huggingface_hub.utils import EntryNotFoundError
+
 import annif.hfh_util
+from annif.config import AnnifConfigCFG
+from annif.exception import OperationFailedException
+
+
+@mock.patch("annif.hfh_util._is_repo_in_cache", return_value=False)
+def test_download_allowed_trust_repo(mock_is_repo_in_cache, caplog):
+    trust_repo = True
+    repo_id = "dummy-repo"
+
+    with caplog.at_level(logging.WARNING, logger="annif"):
+        annif.hfh_util.check_is_download_allowed(trust_repo, repo_id)
+    assert (
+        'Download allowed from "dummy-repo" because "--trust-repo" flag is used.'
+        in caplog.text
+    )
+
+
+@mock.patch("annif.hfh_util._is_repo_in_cache", return_value=True)
+def test_download_allowed_repo_in_cache(mock_is_repo_in_cache, caplog):
+    trust_repo = False
+    repo_id = "dummy-repo"
+
+    with caplog.at_level(logging.DEBUG, logger="annif"):
+        annif.hfh_util.check_is_download_allowed(trust_repo, repo_id)
+    assert (
+        'Download allowed from "dummy-repo" because repo is already in cache.'
+        in caplog.text
+    )
+
+
+@mock.patch("huggingface_hub.utils._cache_manager.HFCacheInfo")
+@mock.patch("huggingface_hub.scan_cache_dir")  # Bypass CacheNotFound on CI/CD
+def test_download_not_allowed(mock_scan_cache_dir, mock_HFCacheInfo):
+    trust_repo = False
+    repo_id = "dummy-repo"
+    mock_HFCacheInfo.return_value.repos = frozenset()
+
+    with pytest.raises(OperationFailedException) as excinfo:
+        annif.hfh_util.check_is_download_allowed(trust_repo, repo_id)
+    assert (
+        str(excinfo.value)
+        == 'Cannot download projects from untrusted repo "dummy-repo"'
+    )
 
 
 def test_archive_dir(testdatadir):
@@ -101,3 +149,126 @@ def test_copy_project_config_overwrite(copy, exists):
     assert copy.call_args == mock.call(
         "tests/huggingface-cache/dummy-fi.cfg", "projects.d/dummy-fi.cfg"
     )
+
+
+@mock.patch(
+    "huggingface_hub.ModelCard.load",
+    side_effect=EntryNotFoundError("mymessage"),
+)
+@mock.patch("huggingface_hub.HfFileSystem.glob", return_value=[])
+@mock.patch("huggingface_hub.ModelCard")
+def test_upsert_modelcard_insert_new(ModelCard, glob, load, project):
+    repo_id = "annif-user/annif-repo"
+    token = "mytoken"
+    revision = "mybranch"
+
+    annif.hfh_util.upsert_modelcard(repo_id, [project], token, revision)
+
+    ModelCard.assert_called_once()
+    assert "# annif-repo" in ModelCard.call_args[0][0]  # README heading
+
+    card = ModelCard.return_value
+    assert card.data.language == ["fi"]
+    assert card.data.pipeline_tag == "text-classification"
+    assert card.data.tags == ["annif"]
+    card.push_to_hub.assert_called_once_with(
+        repo_id=repo_id,
+        token=token,
+        revision=revision,
+        commit_message="Create README.md with Annif",
+    )
+
+
+@mock.patch("huggingface_hub.ModelCard.push_to_hub")
+@mock.patch(
+    "huggingface_hub.ModelCard.load",  # Mock language in existing card
+    return_value=huggingface_hub.ModelCard("---\nlanguage:\n- en\n---"),
+)
+@mock.patch("huggingface_hub.HfFileSystem.glob", return_value=["dummy-en.cfg"])
+@mock.patch(
+    "huggingface_hub.HfFileSystem.read_text",
+    return_value="""
+        [dummy-en]
+        name=Dummy English
+        language=en
+        vocab=dummy
+""",
+)
+def test_upsert_modelcard_update_existing(read_text, glob, load, push_to_hub, project):
+    repo_id = "annif-user/annif-repo"
+    token = "mytoken"
+    revision = "mybranch"
+
+    annif.hfh_util.upsert_modelcard(repo_id, [project], token, revision)
+
+    load.assert_called_once_with(repo_id)
+
+    card = load.return_value
+    retained_project_list_content = "dummy-en    Dummy English  dummy          en      "
+
+    assert retained_project_list_content in card.text
+    assert sorted(card.data.language) == ["en", "fi"]
+    card.push_to_hub.assert_called_once_with(
+        repo_id=repo_id,
+        token=token,
+        revision=revision,
+        commit_message="Update README.md with Annif",
+    )
+
+
+def test_update_modelcard_projects_section_append_new():
+    empty_cfg = AnnifConfigCFG(projstr="")
+
+    text = """This is some existing text in the card."""
+    updated_text = annif.hfh_util._update_projects_section(text, empty_cfg)
+
+    expected_tail = """\
+<!--- start-of-autoupdating-part --->
+## Projects
+```
+Project ID  Project Name  Vocabulary ID  Language
+-------------------------------------------------
+```
+<!--- end-of-autoupdating-part --->"""
+
+    assert updated_text == text + expected_tail
+
+
+def test_update_modelcard_projects_section_update_existing():
+    cfg = AnnifConfigCFG(
+        projstr="""\
+        [dummy-fi]
+        name=Dummy Finnish
+        language=fi
+        vocab=dummy"""
+    )
+
+    text_head = """This is some existing text in the card.\n"""
+
+    text_initial_projects = """\
+<!--- start-of-autoupdating-part --->
+## Projects
+```
+Project ID  Project Name  Vocabulary ID  Language
+-------------------------------------------------
+```
+<!--- end-of-autoupdating-part --->\n"""
+
+    text_tail = (
+        "This is text after the Projects section; it should remain after updates."
+    )
+
+    text = text_head + text_initial_projects + text_tail
+    updated_text = annif.hfh_util._update_projects_section(text, cfg)
+
+    expected_updated_projects = """\
+<!--- start-of-autoupdating-part --->
+## Projects
+```
+Project ID  Project Name   Vocabulary ID  Language
+--------------------------------------------------
+dummy-fi    Dummy Finnish  dummy          fi      \n```
+<!--- end-of-autoupdating-part --->
+"""
+
+    assert updated_text == text_head + expected_updated_projects + text_tail
