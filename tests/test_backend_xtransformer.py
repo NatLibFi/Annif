@@ -226,7 +226,7 @@ def test_xtransformer_suggest(project):
     )[0]
     xtransformer._model.predict.assert_called_once()
 
-    ship_finds = project.subjects.by_uri("https://www.yso.fi/onto/yso/p8869")
+    ship_finds = project.subjects.by_uri("http://www.yso.fi/onto/yso/p8869")
     assert ship_finds in [result.subject_id for result in results]
 
 
