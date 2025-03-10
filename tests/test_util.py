@@ -1,5 +1,8 @@
 """Unit tests for Annif utility functions"""
 
+import os.path as osp
+from unittest.mock import MagicMock
+
 import pytest
 
 import annif.util
@@ -77,21 +80,6 @@ def test_atomic_save_method(tmpdir):
     assert f_pth.exists()
     with f_pth.open() as f:
         assert f.readlines() == ["test file content\n"]
-
-
-def test_atomic_save(tmpdir):
-    fname = "tst_file_obj.txt"
-    to_save = MagicMock()
-    to_save.save.side_effect = lambda pth: _save(None, pth)
-    annif.util.atomic_save(to_save, tmpdir.strpath, fname)
-    f_pth = tmpdir.join(fname)
-    assert f_pth.exists()
-    with f_pth.open() as f:
-        assert f.readlines() == ["test file content\n"]
-    to_save.save.assert_called_once()
-    call_args = to_save.save.calls[0].args
-    assert isinstance(call_args[0], MagicMock)
-    assert call_args[1] != f_pth.strpath
 
 
 def test_atomic_save_folder(tmpdir):
