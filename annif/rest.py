@@ -60,7 +60,7 @@ def language_not_supported_error(lang: str) -> ConnexionResponse:
 
 
 def list_vocabs() -> tuple:
-    """return a dict with vocabulariess formatted according to OpenAPI spec"""
+    """return a dict with vocabularies formatted according to OpenAPI spec"""
 
     result = {
         "vocabs": [
