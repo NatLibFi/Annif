@@ -75,6 +75,11 @@ def test_get_project_fi_dump(registry):
         "backend": {
             "backend_id": "dummy",
         },
+        "vocab": {
+            "vocab_id": "dummy",
+            "languages": ["en", "fi"],
+        },
+        "vocab_language": "fi",
         "is_trained": True,
         "modification_time": None,
     }

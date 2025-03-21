@@ -18,6 +18,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiInfo'
+  /vocabs:
+    get:
+      tags:
+      - Vocabulary information
+      summary: get a list of vocabularies
+      operationId: annif.rest.list_vocabs
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VocabularyList'
   /projects:
     get:
       tags:
@@ -249,6 +262,35 @@ components:
           type: string
           example: my-backend
       description: A backend of a project
+    Vocabulary:
+      required:
+      - vocab_id
+      type: object
+      properties:
+        vocab_id:
+          type: string
+          example: yso
+        languages:
+          type: array
+          items:
+            type: string
+            example: en
+        size:
+          type: integer
+          example: 1000
+          nullable: true
+        loaded:
+          type: boolean
+          example: true
+      description: A subject vocabulary
+    VocabularyList:
+      type: object
+      properties:
+        vocabs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vocabulary'
+      description: A list of subject vocabularies
     Project:
       required:
       - backend
@@ -268,6 +310,13 @@ components:
           example: en
         backend:
           $ref: '#/components/schemas/ProjectBackend'
+        vocab:
+          $ref: '#/components/schemas/Vocabulary'
+          nullable: true
+        vocab_language:
+          type: string
+          example: en
+          nullable: true
         is_trained:
           type: boolean
           example: true

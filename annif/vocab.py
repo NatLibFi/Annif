@@ -109,7 +109,10 @@ class AnnifVocabulary(DatadirMixin):
 
     @property
     def languages(self) -> list[str]:
-        return self.subjects.languages
+        try:
+            return self.subjects.languages
+        except NotInitializedException:
+            return []
 
     def load_vocabulary(
         self,
@@ -136,3 +139,22 @@ class AnnifVocabulary(DatadirMixin):
     def as_graph(self) -> Graph:
         """return the vocabulary as an rdflib graph"""
         return self.skos.graph
+
+    def dump(self) -> dict[str, str | list | int | bool]:
+        """return this vocabulary as a dict"""
+
+        try:
+            languages = list(sorted(self.languages))
+            size = len(self)
+            loaded = True
+        except NotInitializedException:
+            languages = []
+            size = None
+            loaded = False
+
+        return {
+            "vocab_id": self.vocab_id,
+            "languages": languages,
+            "size": size,
+            "loaded": loaded,
+        }

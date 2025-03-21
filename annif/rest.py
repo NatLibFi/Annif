@@ -59,6 +59,18 @@ def language_not_supported_error(lang: str) -> ConnexionResponse:
     )
 
 
+def list_vocabs() -> tuple:
+    """return a dict with vocabulariess formatted according to OpenAPI spec"""
+
+    result = {
+        "vocabs": [
+            vocab.dump()
+            for vocab in annif.registry.get_vocabs(min_access=Access.public).values()
+        ]
+    }
+    return result, 200, {"Content-Type": "application/json"}
+
+
 def list_projects() -> tuple:
     """return a dict with projects formatted according to OpenAPI spec"""
 
