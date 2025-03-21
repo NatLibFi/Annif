@@ -305,11 +305,24 @@ class AnnifProject(DatadirMixin):
 
     def dump(self) -> dict[str, str | dict | bool | datetime | None]:
         """return this project as a dict"""
+
+        try:
+            vocab = {
+                "vocab_id": self.vocab.vocab_id,
+                "languages": sorted(self.vocab.languages),
+            }
+            vocab_lang = self.vocab_lang
+        except ConfigurationException:
+            vocab = None
+            vocab_lang = None
+
         return {
             "project_id": self.project_id,
             "name": self.name,
             "language": self.language,
             "backend": {"backend_id": self.config.get("backend")},
+            "vocab": vocab,
+            "vocab_language": vocab_lang,
             "is_trained": self.is_trained,
             "modification_time": self.modification_time,
         }
