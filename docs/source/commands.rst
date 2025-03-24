@@ -36,8 +36,9 @@ Vocabulary administration
    :prog: annif list-vocabs
 
 **REST equivalent**
+::
 
-   N/A
+   GET /vocabs/
 
 **********************
 Project administration
