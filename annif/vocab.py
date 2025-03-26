@@ -256,15 +256,6 @@ class SubjectIndexFile(SubjectIndex):
             logger.warning('Unknown subject label "%s"@%s', label, language)
             return None
 
-    def deprecated_ids(self) -> list[int]:
-        """return indices of deprecated subjects"""
-
-        return [
-            subject_id
-            for subject_id, subject in enumerate(self._subjects)
-            if subject.labels is None
-        ]
-
     @property
     def active(self) -> list[tuple[int, Subject]]:
         return [

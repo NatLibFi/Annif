@@ -95,11 +95,13 @@ class SuggestionBatch:
         """Create a new SuggestionBatch from a sequence where each item is
         a sequence of SubjectSuggestion objects."""
 
-        deprecated = set(subject_index.deprecated_ids())
         data, rows, cols = [], [], []
         for idx, result in enumerate(suggestion_results):
             for suggestion in itertools.islice(result, limit):
-                if suggestion.subject_id in deprecated or suggestion.score <= 0.0:
+                if (
+                    subject_index[suggestion.subject_id].labels is None
+                    or suggestion.score <= 0.0
+                ):
                     continue
                 data.append(min(suggestion.score, 1.0))
                 rows.append(idx)
