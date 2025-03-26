@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import abc
 import csv
 import os.path
 from typing import TYPE_CHECKING
@@ -41,16 +42,16 @@ class AnnifVocabulary(DatadirMixin):
         self._skos_vocab = None
 
     def _create_subject_index(self, subject_corpus: SubjectCorpus) -> SubjectIndex:
-        subjects = SubjectIndex()
+        subjects = SubjectIndexFile()
         subjects.load_subjects(subject_corpus)
         annif.util.atomic_save(subjects, self.datadir, self.INDEX_FILENAME_CSV)
         return subjects
 
     def _update_subject_index(self, subject_corpus: SubjectCorpus) -> SubjectIndex:
         old_subjects = self.subjects
-        new_subjects = SubjectIndex()
+        new_subjects = SubjectIndexFile()
         new_subjects.load_subjects(subject_corpus)
-        updated_subjects = SubjectIndex()
+        updated_subjects = SubjectIndexFile()
 
         for old_subject in old_subjects:
             if new_subjects.contains_uri(old_subject.uri):
@@ -72,7 +73,7 @@ class AnnifVocabulary(DatadirMixin):
             path = os.path.join(self.datadir, self.INDEX_FILENAME_CSV)
             if os.path.exists(path):
                 logger.debug("loading subjects from %s", path)
-                self._subjects = SubjectIndex.load(path)
+                self._subjects = SubjectIndexFile.load(path)
             else:
                 raise NotInitializedException("subject file {} not found".format(path))
         return self._subjects
@@ -162,10 +163,47 @@ class AnnifVocabulary(DatadirMixin):
         }
 
 
-class SubjectIndex:
-    """An index that remembers the associations between integers subject IDs
-    and their URIs and labels."""
+class SubjectIndex(metaclass=abc.ABCMeta):
+    """Base class for an index that remembers the associations between
+    integer subject IDs and their URIs and labels."""
 
+    @abc.abstractmethod
+    def __len__(self) -> int:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def languages(self) -> list[str] | None:
+        pass
+
+    @abc.abstractmethod
+    def __getitem__(self, subject_id: int) -> Subject:
+        pass
+
+    @abc.abstractmethod
+    def contains_uri(self, uri: str) -> bool:
+        pass
+
+    @abc.abstractmethod
+    def by_uri(self, uri: str, warnings: bool = True) -> int | None:
+        """return the subject ID of a subject by its URI, or None if not found.
+        If warnings=True, log a warning message if the URI cannot be found."""
+        pass
+
+    @abc.abstractmethod
+    def by_label(self, label: str | None, language: str) -> int | None:
+        """return the subject ID of a subject by its label in a given
+        language"""
+        pass
+
+    @abc.abstractmethod
+    def active(self) -> list[tuple[int, Subject]]:
+        """return a list of (subject_id, subject) tuples of all subjects that
+        are not deprecated"""
+        pass
+
+
+class SubjectIndexFile(SubjectIndex):
     def __init__(self) -> None:
         self._subjects = []
         self._uri_idx = {}
@@ -204,8 +242,6 @@ class SubjectIndex:
         return uri in self._uri_idx
 
     def by_uri(self, uri: str, warnings: bool = True) -> int | None:
-        """return the subject ID of a subject by its URI, or None if not found.
-        If warnings=True, log a warning message if the URI cannot be found."""
         try:
             return self._uri_idx[uri]
         except KeyError:
@@ -214,8 +250,6 @@ class SubjectIndex:
             return None
 
     def by_label(self, label: str | None, language: str) -> int | None:
-        """return the subject ID of a subject by its label in a given
-        language"""
         try:
             return self._label_idx[(label, language)]
         except KeyError:
@@ -233,9 +267,6 @@ class SubjectIndex:
 
     @property
     def active(self) -> list[tuple[int, Subject]]:
-        """return a list of (subject_id, subject) tuples of all subjects that
-        are not deprecated"""
-
         return [
             (subj_id, subject)
             for subj_id, subject in enumerate(self._subjects)

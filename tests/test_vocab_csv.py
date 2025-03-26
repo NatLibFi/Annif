@@ -1,7 +1,7 @@
 """Unit tests for CSV vocabulary functionality in Annif"""
 
 from annif.corpus import SubjectFileCSV
-from annif.vocab import SubjectIndex
+from annif.vocab import SubjectIndexFile
 
 
 def test_recognize_csv_lowercase():
@@ -91,7 +91,7 @@ def test_load_tsv_with_deprecated(tmpdir):
     assert len(list(corpus.subjects)) == 3
     assert subjects[1].labels is None
 
-    index = SubjectIndex()
+    index = SubjectIndexFile()
     index.load_subjects(corpus)
 
     active = list(index.active)
