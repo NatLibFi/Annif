@@ -1,6 +1,7 @@
 """Unit tests for TSV vocabulary functionality in Annif"""
 
-from annif.corpus import SubjectFileTSV, SubjectIndex
+from annif.corpus import SubjectFileTSV
+from annif.vocab import SubjectIndex
 
 
 def test_load_tsv_uri_brackets(tmpdir):

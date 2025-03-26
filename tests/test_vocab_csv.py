@@ -1,6 +1,7 @@
 """Unit tests for CSV vocabulary functionality in Annif"""
 
-from annif.corpus import SubjectFileCSV, SubjectIndex
+from annif.corpus import SubjectFileCSV
+from annif.vocab import SubjectIndex
 
 
 def test_recognize_csv_lowercase():

@@ -9,7 +9,7 @@ from .document import (
     TransformingDocumentCorpus,
 )
 from .skos import SubjectFileSKOS
-from .subject import Subject, SubjectFileCSV, SubjectFileTSV, SubjectIndex, SubjectSet
+from .subject import Subject, SubjectFileCSV, SubjectFileTSV, SubjectSet
 from .types import Document
 
 __all__ = [
@@ -19,7 +19,6 @@ __all__ = [
     "Subject",
     "SubjectFileTSV",
     "SubjectFileCSV",
-    "SubjectIndex",
     "SubjectSet",
     "SubjectFileSKOS",
     "Document",

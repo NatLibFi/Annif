@@ -180,3 +180,23 @@ def test_as_graph(tmpdir):
     assert len(concepts) == 2
     assert "http://example.org/dummy" in concepts
     assert "http://example.org/none" in concepts
+
+
+def test_subject_by_uri(subject_index):
+    subj_id = subject_index.by_uri("http://www.yso.fi/onto/yso/p7141")
+    assert subject_index[subj_id].labels["fi"] == "sinetit"
+
+
+def test_subject_by_uri_missing(subject_index):
+    subj_id = subject_index.by_uri("http://nonexistent")
+    assert subj_id is None
+
+
+def test_subject_by_label(subject_index):
+    subj_id = subject_index.by_label("sinetit", "fi")
+    assert subject_index[subj_id].uri == "http://www.yso.fi/onto/yso/p7141"
+
+
+def test_subject_by_label_missing(subject_index):
+    subj_id = subject_index.by_label("nonexistent", "fi")
+    assert subj_id is None
