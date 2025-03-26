@@ -20,12 +20,12 @@ def load_dummy_vocab(tmpdir):
 
 def test_get_vocab_invalid(registry):
     with pytest.raises(ValueError) as excinfo:
-        registry.get_vocab("", None)
-    assert "Invalid vocabulary specification" in str(excinfo.value)
+        registry.get_vocab("")
+    assert "Invalid vocabulary ID" in str(excinfo.value)
 
 
 def test_get_vocab_hyphen(registry):
-    vocab, lang = registry.get_vocab("dummy-noname", None)
+    vocab = registry.get_vocab("dummy-noname")
     assert vocab.vocab_id == "dummy-noname"
     assert vocab is not None
 
@@ -200,3 +200,24 @@ def test_subject_by_label(subject_index):
 def test_subject_by_label_missing(subject_index):
     subj_id = subject_index.by_label("nonexistent", "fi")
     assert subj_id is None
+
+
+def test_subject_index_filter(subject_index):
+    filter = annif.vocab.SubjectIndexFilter(
+        subject_index, exclude=["http://www.yso.fi/onto/yso/p7141"]
+    )
+
+    assert len(subject_index) == len(filter)
+
+    assert subject_index.languages == filter.languages
+
+    subj_id = subject_index.by_uri("http://www.yso.fi/onto/yso/p7141")
+    assert filter[subj_id] is None
+
+    assert not filter.contains_uri("http://www.yso.fi/onto/yso/p7141")
+
+    assert filter.by_uri("http://www.yso.fi/onto/yso/p7141") is None
+
+    assert filter.by_label("sinetit", "fi") is None
+
+    assert len(filter.active) == len(subject_index.active) - 1

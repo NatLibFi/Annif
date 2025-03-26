@@ -455,6 +455,15 @@ def test_suggest_with_different_vocab_language():
     assert result.exit_code == 0
 
 
+def test_suggest_with_exclude():
+    result = runner.invoke(
+        annif.cli.cli, ["suggest", "dummy-exclude"], input="the cat sat on the mat"
+    )
+    assert not result.exception
+    assert result.output == ""  # nothing returned, the concept was excluded
+    assert result.exit_code == 0
+
+
 def test_suggest_with_notations():
     result = runner.invoke(
         annif.cli.cli,
@@ -1124,7 +1133,7 @@ def test_upload_many(
     result = runner.invoke(annif.cli.cli, ["upload", "dummy-*", "dummy-repo"])
     assert not result.exception
     assert create_commit.call_count == 1
-    assert CommitOperationAdd.call_count == 11
+    assert CommitOperationAdd.call_count == 13
     assert upsert_modelcard.call_count == 1
 
 
@@ -1411,6 +1420,7 @@ def test_completion_show_project_project_ids_all():
         "dummy-en",
         "dummy-private",
         "dummy-vocablang",
+        "dummy-exclude",
         "dummy-transform",
         "limit-transform",
         "ensemble",
@@ -1436,6 +1446,7 @@ def test_completion_show_project_project_ids_dummy():
         "dummy-en",
         "dummy-private",
         "dummy-vocablang",
+        "dummy-exclude",
         "dummy-transform",
     ]
 

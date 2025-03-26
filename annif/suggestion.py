@@ -98,10 +98,8 @@ class SuggestionBatch:
         data, rows, cols = [], [], []
         for idx, result in enumerate(suggestion_results):
             for suggestion in itertools.islice(result, limit):
-                if (
-                    subject_index[suggestion.subject_id].labels is None
-                    or suggestion.score <= 0.0
-                ):
+                subject = subject_index[suggestion.subject_id]
+                if subject is None or subject.labels is None or suggestion.score <= 0.0:
                     continue
                 data.append(min(suggestion.score, 1.0))
                 rows.append(idx)

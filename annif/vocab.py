@@ -198,12 +198,14 @@ class SubjectIndex(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def active(self) -> list[tuple[int, Subject]]:
-        """return a list of (subject_id, subject) tuples of all subjects that
-        are not deprecated"""
+        """return a list of (subject_id, Subject) tuples of all subjects that
+        are available for use"""
         pass
 
 
 class SubjectIndexFile(SubjectIndex):
+    """SubjectIndex implementation backed by a file."""
+
     def __init__(self) -> None:
         self._subjects = []
         self._uri_idx = {}
@@ -287,3 +289,59 @@ class SubjectIndexFile(SubjectIndex):
         subject_index = cls()
         subject_index.load_subjects(corpus)
         return subject_index
+
+
+class SubjectIndexFilter(SubjectIndex):
+    """SubjectIndex implementation that filters another SubjectIndex based
+    on a list of subject URIs to exclude."""
+
+    def __init__(self, subject_index: SubjectIndex, exclude: list[str]):
+        self._subject_index = subject_index
+        self._exclude = set(exclude)
+
+    def __len__(self) -> int:
+        return len(self._subject_index)
+
+    @property
+    def languages(self) -> list[str] | None:
+        return self._subject_index.languages
+
+    def __getitem__(self, subject_id: int) -> Subject:
+        subject = self._subject_index[subject_id]
+        if subject and subject.uri not in self._exclude:
+            return subject
+        return None
+
+    def contains_uri(self, uri: str) -> bool:
+        if uri in self._exclude:
+            return False
+        return self._subject_index.contains_uri(uri)
+
+    def by_uri(self, uri: str, warnings: bool = True) -> int | None:
+        """return the subject ID of a subject by its URI, or None if not found.
+        If warnings=True, log a warning message if the URI cannot be found."""
+
+        if uri in self._exclude:
+            return None
+        return self._subject_index.by_uri(uri, warnings)
+
+    def by_label(self, label: str | None, language: str) -> int | None:
+        """return the subject ID of a subject by its label in a given
+        language"""
+
+        subject_id = self._subject_index.by_label(label, language)
+        subject = self._subject_index[subject_id]
+        if subject is not None and subject.uri not in self._exclude:
+            return subject_id
+        return None
+
+    @property
+    def active(self) -> list[tuple[int, Subject]]:
+        """return a list of (subject_id, Subject) tuples of all subjects that
+        are available for use"""
+
+        return [
+            (subject_id, subject)
+            for subject_id, subject in self._subject_index.active
+            if subject.uri not in self._exclude
+        ]
