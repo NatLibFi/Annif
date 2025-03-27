@@ -10,3 +10,12 @@ updates:
       github-actions:
         patterns:
           - "*"
+  - package-ecosystem: "pip"
+    directories:
+      - "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      pip:
+        patterns:
+          - "*"
