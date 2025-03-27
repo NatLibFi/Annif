@@ -203,21 +203,21 @@ def test_subject_by_label_missing(subject_index):
 
 
 def test_subject_index_filter(subject_index):
-    filter = annif.vocab.SubjectIndexFilter(
+    subject_filter = annif.vocab.SubjectIndexFilter(
         subject_index, exclude=["http://www.yso.fi/onto/yso/p7141"]
     )
 
-    assert len(subject_index) == len(filter)
+    assert len(subject_index) == len(subject_filter)
 
-    assert subject_index.languages == filter.languages
+    assert subject_index.languages == subject_filter.languages
 
     subj_id = subject_index.by_uri("http://www.yso.fi/onto/yso/p7141")
-    assert filter[subj_id] is None
+    assert subject_filter[subj_id] is None
 
-    assert not filter.contains_uri("http://www.yso.fi/onto/yso/p7141")
+    assert not subject_filter.contains_uri("http://www.yso.fi/onto/yso/p7141")
 
-    assert filter.by_uri("http://www.yso.fi/onto/yso/p7141") is None
+    assert subject_filter.by_uri("http://www.yso.fi/onto/yso/p7141") is None
 
-    assert filter.by_label("sinetit", "fi") is None
+    assert subject_filter.by_label("sinetit", "fi") is None
 
-    assert len(filter.active) == len(subject_index.active) - 1
+    assert len(subject_filter.active) == len(subject_index.active) - 1
