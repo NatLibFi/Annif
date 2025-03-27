@@ -17,7 +17,7 @@ from .types import SubjectIndex
 if TYPE_CHECKING:
     from rdflib.graph import Graph
 
-    from annif.corpus.skos import SubjectFileSKOS
+    from annif.corpus.skos import VocabFileSKOS
     from annif.corpus.subject import SubjectCorpus
 
 
@@ -80,7 +80,7 @@ class AnnifVocabulary(DatadirMixin):
         return self._subjects
 
     @property
-    def skos(self) -> SubjectFileSKOS:
+    def skos(self) -> VocabFileSKOS:
         """return the subject vocabulary from SKOS file"""
         if self._skos_vocab is not None:
             return self._skos_vocab
@@ -90,7 +90,7 @@ class AnnifVocabulary(DatadirMixin):
         if os.path.exists(dumppath):
             logger.debug(f"loading graph dump from {dumppath}")
             try:
-                self._skos_vocab = annif.vocab.SubjectFileSKOS(dumppath)
+                self._skos_vocab = annif.vocab.VocabFileSKOS(dumppath)
             except ModuleNotFoundError:
                 # Probably dump has been saved using a different rdflib version
                 logger.debug("could not load graph dump, using turtle file")
@@ -101,7 +101,7 @@ class AnnifVocabulary(DatadirMixin):
         path = os.path.join(self.datadir, self.INDEX_FILENAME_TTL)
         if os.path.exists(path):
             logger.debug(f"loading graph from {path}")
-            self._skos_vocab = annif.vocab.SubjectFileSKOS(path)
+            self._skos_vocab = annif.vocab.VocabFileSKOS(path)
             # store the dump file so we can use it next time
             self._skos_vocab.save_skos(path)
             return self._skos_vocab

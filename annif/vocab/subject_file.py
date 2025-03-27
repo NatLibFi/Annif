@@ -10,17 +10,17 @@ import annif
 import annif.util
 
 from .skos import serialize_subjects_to_skos
-from .types import Subject, SubjectCorpus
+from .types import Subject, VocabSource
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterator
 
 
-class SubjectFileTSV(SubjectCorpus):
+class VocabFileTSV(VocabSource):
     """A monolingual subject vocabulary stored in a TSV file."""
 
     def __init__(self, path: str, language: str) -> None:
-        """initialize the SubjectFileTSV given a path to a TSV file and the
+        """initialize the VocabFileTSV given a path to a TSV file and the
         language of the vocabulary"""
 
         self.path = path
@@ -50,11 +50,11 @@ class SubjectFileTSV(SubjectCorpus):
         serialize_subjects_to_skos(self.subjects, path)
 
 
-class SubjectFileCSV(SubjectCorpus):
+class VocabFileCSV(VocabSource):
     """A multilingual subject vocabulary stored in a CSV file."""
 
     def __init__(self, path: str) -> None:
-        """initialize the SubjectFileCSV given a path to a CSV file"""
+        """initialize the VocabFileCSV given a path to a CSV file"""
         self.path = path
 
     def _parse_row(self, row: dict[str, str]) -> Iterator[Subject]:

@@ -1,6 +1,6 @@
 """Unit tests for TSV vocabulary functionality in Annif"""
 
-from annif.vocab import SubjectFileTSV, SubjectIndexFile
+from annif.vocab import SubjectIndexFile, VocabFileTSV
 
 
 def test_load_tsv_uri_brackets(tmpdir):
@@ -10,7 +10,7 @@ def test_load_tsv_uri_brackets(tmpdir):
         + "<http://www.yso.fi/onto/yso/p9285>\tneoliittinen kausi"
     )
 
-    corpus = SubjectFileTSV(str(tmpfile), "fi")
+    corpus = VocabFileTSV(str(tmpfile), "fi")
     subjects = list(corpus.subjects)
     assert len(subjects) == 2
     assert subjects[0].uri == "http://www.yso.fi/onto/yso/p8993"
@@ -28,7 +28,7 @@ def test_load_tsv_uri_nobrackets(tmpdir):
         + "http://www.yso.fi/onto/yso/p9285\tneoliittinen kausi"
     )
 
-    corpus = SubjectFileTSV(str(tmpfile), "fi")
+    corpus = VocabFileTSV(str(tmpfile), "fi")
     subjects = list(corpus.subjects)
     assert len(subjects) == 2
     assert subjects[0].uri == "http://www.yso.fi/onto/yso/p8993"
@@ -46,7 +46,7 @@ def test_load_tsv_with_notations(tmpdir):
         + "http://www.yso.fi/onto/yso/p9285\tneoliittinen kausi\t42.0"
     )
 
-    corpus = SubjectFileTSV(str(tmpfile), "fi")
+    corpus = VocabFileTSV(str(tmpfile), "fi")
     subjects = list(corpus.subjects)
     assert len(subjects) == 2
     assert subjects[0].uri == "http://www.yso.fi/onto/yso/p8993"
@@ -65,7 +65,7 @@ def test_load_tsv_with_deprecated(tmpdir):
         + "<http://www.yso.fi/onto/yso/p9285>\tneoliittinen kausi"
     )
 
-    corpus = SubjectFileTSV(str(tmpfile), "fi")
+    corpus = VocabFileTSV(str(tmpfile), "fi")
     subjects = list(corpus.subjects)
     assert len(list(corpus.subjects)) == 3
     assert subjects[1].labels is None

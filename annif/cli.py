@@ -157,13 +157,13 @@ def run_load_vocab(vocab_id, language, force, subjectfile):
     Load a vocabulary from a subject file.
     """
     vocab = cli_util.get_vocab(vocab_id)
-    if annif.vocab.SubjectFileSKOS.is_rdf_file(subjectfile):
+    if annif.vocab.VocabFileSKOS.is_rdf_file(subjectfile):
         # SKOS/RDF file supported by rdflib
-        subjects = annif.vocab.SubjectFileSKOS(subjectfile)
+        vocab_file = annif.vocab.VocabFileSKOS(subjectfile)
         click.echo(f"Loading vocabulary from SKOS file {subjectfile}...")
-    elif annif.vocab.SubjectFileCSV.is_csv_file(subjectfile):
+    elif annif.vocab.VocabFileCSV.is_csv_file(subjectfile):
         # CSV file
-        subjects = annif.vocab.SubjectFileCSV(subjectfile)
+        vocab_file = annif.vocab.VocabFileCSV(subjectfile)
         click.echo(f"Loading vocabulary from CSV file {subjectfile}...")
     else:
         # probably a TSV file - we need to know its language
@@ -174,8 +174,8 @@ def run_load_vocab(vocab_id, language, force, subjectfile):
             )
             sys.exit(1)
         click.echo(f"Loading vocabulary from TSV file {subjectfile}...")
-        subjects = annif.vocab.SubjectFileTSV(subjectfile, language)
-    vocab.load_vocabulary(subjects, force=force)
+        vocab_file = annif.vocab.VocabFileTSV(subjectfile, language)
+    vocab.load_vocabulary(vocab_file, force=force)
 
 
 @cli.command("train")

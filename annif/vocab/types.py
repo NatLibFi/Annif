@@ -8,25 +8,24 @@ import collections
 Subject = collections.namedtuple("Subject", "uri labels notation")
 
 
-class SubjectCorpus(metaclass=abc.ABCMeta):
-    """Abstract base class for subject corpora"""
+class VocabSource(metaclass=abc.ABCMeta):
+    """Abstract base class for vocabulary sources"""
 
     @property
     @abc.abstractmethod
     def subjects(self):
-        """Iterate through the subject corpus, yielding Subject objects."""
+        """Iterate through the vocabulary, yielding Subject objects."""
         pass  # pragma: no cover
 
     @property
     @abc.abstractmethod
     def languages(self):
-        """Provide a list of language codes supported by this subject
-        corpus."""
+        """Provide a list of language codes supported by this vocabulary source."""
         pass  # pragma: no cover
 
     @abc.abstractmethod
     def save_skos(self, path):
-        """Save the contents of the subject corpus into a SKOS/Turtle
+        """Save the contents of the vocabulary source into a SKOS/Turtle
         file with the given path name."""
         pass  # pragma: no cover
 

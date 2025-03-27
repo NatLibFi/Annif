@@ -102,9 +102,9 @@ class SubjectIndexFile(SubjectIndex):
     def load(cls, path: str) -> SubjectIndex:
         """Load a subject index from a CSV file and return it."""
 
-        corpus = annif.vocab.SubjectFileCSV(path)
+        vocab_file = annif.vocab.VocabFileCSV(path)
         subject_index = cls()
-        subject_index.load_subjects(corpus)
+        subject_index.load_subjects(vocab_file)
         return subject_index
 
 

@@ -13,7 +13,7 @@ from rdflib.namespace import OWL, RDF, RDFS, SKOS
 
 import annif.util
 
-from .types import Subject, SubjectCorpus
+from .types import Subject, VocabSource
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -52,7 +52,7 @@ def serialize_subjects_to_skos(subjects: Iterator, path: str) -> None:
     )
 
 
-class SubjectFileSKOS(SubjectCorpus):
+class VocabFileSKOS(VocabSource):
     """A subject corpus that uses SKOS files"""
 
     PREF_LABEL_PROPERTIES = (SKOS.prefLabel, RDFS.label)
