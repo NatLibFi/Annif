@@ -101,7 +101,7 @@ class SuggestionBatch:
                 if suggestion.score <= 0.0:
                     continue
                 try:  # check for deprecated subjects
-                    subject_index[suggestion.subject_id]
+                    _ = subject_index[suggestion.subject_id]
                 except IndexError:
                     continue
                 data.append(min(suggestion.score, 1.0))

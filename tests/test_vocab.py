@@ -210,7 +210,7 @@ def test_subject_index_filter(subject_index):
 
     subj_id = subject_index.by_uri("http://www.yso.fi/onto/yso/p7141")
     with pytest.raises(IndexError):
-        subject_filter[subj_id]
+        _ = subject_filter[subj_id]
 
     assert not subject_filter.contains_uri("http://www.yso.fi/onto/yso/p7141")
 
