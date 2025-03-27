@@ -200,22 +200,30 @@ def test_subject_by_label_missing(subject_index):
 
 
 def test_subject_index_filter(subject_index):
+    excluded_uri = "http://www.yso.fi/onto/yso/p7141"  # sinetit@fi
+    included_uri = "http://www.yso.fi/onto/yso/p1265"  # arkeologia@fi
+
     subject_filter = annif.vocab.SubjectIndexFilter(
-        subject_index, exclude=["http://www.yso.fi/onto/yso/p7141"]
+        subject_index, exclude=[excluded_uri]
     )
 
     assert len(subject_index) == len(subject_filter)
 
     assert subject_index.languages == subject_filter.languages
 
-    subj_id = subject_index.by_uri("http://www.yso.fi/onto/yso/p7141")
+    subj_id_exc = subject_index.by_uri(excluded_uri)
     with pytest.raises(IndexError):
-        _ = subject_filter[subj_id]
+        _ = subject_filter[subj_id_exc]
+    subj_id_inc = subject_index.by_uri(included_uri)
+    assert subject_filter[subj_id_inc] is not None
 
-    assert not subject_filter.contains_uri("http://www.yso.fi/onto/yso/p7141")
+    assert subject_filter.by_uri(excluded_uri) is None
+    assert subject_filter.by_uri(included_uri) is not None
 
-    assert subject_filter.by_uri("http://www.yso.fi/onto/yso/p7141") is None
+    assert not subject_filter.contains_uri(excluded_uri)
+    assert subject_filter.contains_uri(included_uri)
 
     assert subject_filter.by_label("sinetit", "fi") is None
+    assert subject_filter.by_label("arkeologia", "fi") is not None
 
     assert len(subject_filter.active) == len(subject_index.active) - 1
