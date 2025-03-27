@@ -58,7 +58,7 @@ class AnnifVocabulary(DatadirMixin):
             if new_subjects.contains_uri(old_subject.uri):
                 new_subject = new_subjects[new_subjects.by_uri(old_subject.uri)]
             else:  # subject removed from new corpus
-                new_subject = annif.corpus.Subject(
+                new_subject = annif.vocab.Subject(
                     uri=old_subject.uri, labels=None, notation=None
                 )
             updated_subjects.append(new_subject)
@@ -90,7 +90,7 @@ class AnnifVocabulary(DatadirMixin):
         if os.path.exists(dumppath):
             logger.debug(f"loading graph dump from {dumppath}")
             try:
-                self._skos_vocab = annif.corpus.SubjectFileSKOS(dumppath)
+                self._skos_vocab = annif.vocab.SubjectFileSKOS(dumppath)
             except ModuleNotFoundError:
                 # Probably dump has been saved using a different rdflib version
                 logger.debug("could not load graph dump, using turtle file")
@@ -101,7 +101,7 @@ class AnnifVocabulary(DatadirMixin):
         path = os.path.join(self.datadir, self.INDEX_FILENAME_TTL)
         if os.path.exists(path):
             logger.debug(f"loading graph from {path}")
-            self._skos_vocab = annif.corpus.SubjectFileSKOS(path)
+            self._skos_vocab = annif.vocab.SubjectFileSKOS(path)
             # store the dump file so we can use it next time
             self._skos_vocab.save_skos(path)
             return self._skos_vocab

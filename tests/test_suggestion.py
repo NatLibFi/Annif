@@ -4,13 +4,13 @@ import numpy as np
 import pytest
 from scipy.sparse import csr_array
 
-from annif.corpus import Subject
 from annif.suggestion import (
     SubjectSuggestion,
     SuggestionBatch,
     filter_suggestion,
     vector_to_suggestions,
 )
+from annif.vocab import Subject
 
 
 def test_vector_to_suggestions():

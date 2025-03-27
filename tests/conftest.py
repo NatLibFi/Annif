@@ -12,6 +12,7 @@ import annif.analyzer
 import annif.corpus
 import annif.project
 import annif.registry
+import annif.vocab
 
 
 @pytest.fixture(scope="module")
@@ -22,7 +23,7 @@ def cxapp():
     with cxapp.app.app_context():
         project = annif.registry.get_project("dummy-en")
         # the vocab is needed for both English and Finnish language projects
-        vocab = annif.corpus.SubjectFileCSV(subjfile)
+        vocab = annif.vocab.SubjectFileCSV(subjfile)
         project.vocab.load_vocabulary(vocab)
     return cxapp
 
@@ -78,7 +79,7 @@ def subject_file():
     docfile = os.path.join(
         os.path.dirname(__file__), "corpora", "archaeology", "subjects.tsv"
     )
-    return annif.corpus.SubjectFileTSV(docfile, "fi")
+    return annif.vocab.SubjectFileTSV(docfile, "fi")
 
 
 @pytest.fixture(scope="module")
@@ -94,7 +95,7 @@ def vocabulary(datadir):
     subjfile = os.path.join(
         os.path.dirname(__file__), "corpora", "archaeology", "yso-archaeology.ttl"
     )
-    subjects = annif.corpus.SubjectFileSKOS(subjfile)
+    subjects = annif.vocab.SubjectFileSKOS(subjfile)
     vocab.load_vocabulary(subjects)
     return vocab
 

@@ -2,7 +2,7 @@
 
 import os.path
 
-from annif.corpus.skos import SubjectFileSKOS
+from annif.vocab import SubjectFileSKOS
 
 
 def test_recognize_turtle():

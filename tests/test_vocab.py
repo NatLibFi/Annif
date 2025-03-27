@@ -13,7 +13,7 @@ from annif.exception import NotInitializedException
 def load_dummy_vocab(tmpdir):
     vocab = annif.vocab.AnnifVocabulary("vocab-id", str(tmpdir))
     subjfile = os.path.join(os.path.dirname(__file__), "corpora", "dummy-subjects.tsv")
-    subjects = annif.corpus.SubjectFileTSV(subjfile, "en")
+    subjects = annif.vocab.SubjectFileTSV(subjfile, "en")
     vocab.load_vocabulary(subjects)
     return vocab
 
@@ -34,7 +34,7 @@ def test_update_subject_index_with_no_changes(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
 
     subjfile = os.path.join(os.path.dirname(__file__), "corpora", "dummy-subjects.tsv")
-    subjects = annif.corpus.SubjectFileTSV(subjfile, "en")
+    subjects = annif.vocab.SubjectFileTSV(subjfile, "en")
 
     vocab.load_vocabulary(subjects)
     assert len(vocab.subjects) == 2
@@ -53,7 +53,7 @@ def test_update_subject_index_with_removed_subject(tmpdir):
 
     subjfile_new = tmpdir.join("subjects_new.tsv")
     subjfile_new.write("<http://example.org/dummy>\tdummy\n")
-    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new), "en")
+    subjects_new = annif.vocab.SubjectFileTSV(str(subjfile_new), "en")
 
     vocab.load_vocabulary(subjects_new)
     assert len(vocab.subjects) == 2
@@ -75,7 +75,7 @@ def test_update_subject_index_with_renamed_label_and_added_notation(tmpdir):
         "<http://example.org/dummy>\tdummy\n"
         + "<http://example.org/none>\tnew none\t42.42\n"
     )
-    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new), "en")
+    subjects_new = annif.vocab.SubjectFileTSV(str(subjfile_new), "en")
 
     vocab.load_vocabulary(subjects_new)
     assert len(vocab.subjects) == 2
@@ -98,7 +98,7 @@ def test_update_subject_index_with_added_subjects(tmpdir):
         + "<http://example.org/new-dummy>\tnew dummy\t42.42\n"
         + "<http://example.org/new-none>\tnew none\n"
     )
-    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new), "en")
+    subjects_new = annif.vocab.SubjectFileTSV(str(subjfile_new), "en")
 
     vocab.load_vocabulary(subjects_new)
     assert len(vocab.subjects) == 4
@@ -120,7 +120,7 @@ def test_update_subject_index_force(tmpdir):
         + "<http://example.org/new-dummy>\tnew dummy\t42.42\n"
         + "<http://example.org/new-none>\tnew none\n"
     )
-    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new), "en")
+    subjects_new = annif.vocab.SubjectFileTSV(str(subjfile_new), "en")
 
     vocab.load_vocabulary(subjects_new, force=True)
     assert len(vocab.subjects) == 3
@@ -138,7 +138,7 @@ def test_skos(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
     assert tmpdir.join("vocabs/vocab-id/subjects.ttl").exists()
     assert tmpdir.join("vocabs/vocab-id/subjects.dump.gz").exists()
-    assert isinstance(vocab.skos, annif.corpus.SubjectFileSKOS)
+    assert isinstance(vocab.skos, annif.vocab.SubjectFileSKOS)
 
 
 def test_skos_cache(tmpdir):
@@ -148,7 +148,7 @@ def test_skos_cache(tmpdir):
     tmpdir.join("vocabs/vocab-id/subjects.dump.gz").remove()
     assert not tmpdir.join("vocabs/vocab-id/subjects.dump.gz").exists()
 
-    assert isinstance(vocab.skos, annif.corpus.SubjectFileSKOS)
+    assert isinstance(vocab.skos, annif.vocab.SubjectFileSKOS)
     # cached dump file has been recreated in .skos property access
     assert tmpdir.join("vocabs/vocab-id/subjects.dump.gz").exists()
 
