@@ -3,18 +3,12 @@
 from __future__ import annotations
 
 import csv
-from typing import TYPE_CHECKING
 
 import annif
-import annif.corpus
 import annif.util
 
-from .types import SubjectIndex
-
-if TYPE_CHECKING:
-
-    from annif.corpus.subject import Subject, SubjectCorpus
-
+from .subject_file import VocabFileCSV
+from .types import Subject, SubjectIndex, VocabSource
 
 logger = annif.logger
 logger.addFilter(annif.util.DuplicateFilter())
@@ -29,11 +23,11 @@ class SubjectIndexFile(SubjectIndex):
         self._label_idx = {}
         self._languages = None
 
-    def load_subjects(self, corpus: SubjectCorpus) -> None:
+    def load_subjects(self, vocab_source: VocabSource) -> None:
         """Initialize the subject index from a subject corpus"""
 
-        self._languages = corpus.languages
-        for subject in corpus.subjects:
+        self._languages = vocab_source.languages
+        for subject in vocab_source.subjects:
             self.append(subject)
 
     def __len__(self) -> int:
@@ -108,7 +102,7 @@ class SubjectIndexFile(SubjectIndex):
     def load(cls, path: str) -> SubjectIndex:
         """Load a subject index from a CSV file and return it."""
 
-        vocab_file = annif.vocab.VocabFileCSV(path)
+        vocab_file = VocabFileCSV(path)
         subject_index = cls()
         subject_index.load_subjects(vocab_file)
         return subject_index
