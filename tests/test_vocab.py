@@ -61,10 +61,7 @@ def test_update_subject_index_with_removed_subject(tmpdir):
     assert vocab.subjects[0].uri == "http://example.org/dummy"
     assert vocab.subjects[0].labels["en"] == "dummy"
     assert vocab.subjects[0].notation is None
-    assert vocab.subjects.by_uri("http://example.org/none") == 1
-    assert vocab.subjects[1].uri == "http://example.org/none"
-    assert vocab.subjects[1].labels is None
-    assert vocab.subjects[1].notation is None
+    assert vocab.subjects.by_uri("http://example.org/none") is None
 
 
 def test_update_subject_index_with_renamed_label_and_added_notation(tmpdir):
@@ -212,7 +209,8 @@ def test_subject_index_filter(subject_index):
     assert subject_index.languages == subject_filter.languages
 
     subj_id = subject_index.by_uri("http://www.yso.fi/onto/yso/p7141")
-    assert subject_filter[subj_id] is None
+    with pytest.raises(IndexError):
+        subject_filter[subj_id]
 
     assert not subject_filter.contains_uri("http://www.yso.fi/onto/yso/p7141")
 

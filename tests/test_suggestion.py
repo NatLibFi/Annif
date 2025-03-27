@@ -132,6 +132,7 @@ def test_suggestionbatch_from_sequence_with_deprecated(dummy_subject_index):
     dummy_subject_index.append(
         Subject(uri="http://example.org/deprecated", labels=None, notation=None)
     )
+    deprecated_id = len(dummy_subject_index) - 1
 
     orig_suggestions = [
         [
@@ -140,7 +141,7 @@ def test_suggestionbatch_from_sequence_with_deprecated(dummy_subject_index):
                 score=0.8,
             ),
             SubjectSuggestion(
-                subject_id=dummy_subject_index.by_uri("http://example.org/deprecated"),
+                subject_id=deprecated_id,
                 score=0.5,
             ),
             SubjectSuggestion(

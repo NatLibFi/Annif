@@ -98,8 +98,11 @@ class SuggestionBatch:
         data, rows, cols = [], [], []
         for idx, result in enumerate(suggestion_results):
             for suggestion in itertools.islice(result, limit):
-                subject = subject_index[suggestion.subject_id]
-                if subject is None or subject.labels is None or suggestion.score <= 0.0:
+                if suggestion.score <= 0.0:
+                    continue
+                try:  # check for deprecated subjects
+                    subject_index[suggestion.subject_id]
+                except IndexError:
                     continue
                 data.append(min(suggestion.score, 1.0))
                 rows.append(idx)

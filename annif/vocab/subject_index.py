@@ -44,7 +44,10 @@ class SubjectIndexFile(SubjectIndex):
         return self._languages
 
     def __getitem__(self, subject_id: int) -> Subject:
-        return self._subjects[subject_id]
+        subject = self._subjects[subject_id]
+        if subject.labels is None:
+            raise IndexError(f"Subject is deprecated: {subject_id}")
+        return subject
 
     def append(self, subject: Subject) -> None:
         if self._languages is None and subject.labels is not None:
@@ -62,7 +65,10 @@ class SubjectIndexFile(SubjectIndex):
 
     def by_uri(self, uri: str, warnings: bool = True) -> int | None:
         try:
-            return self._uri_idx[uri]
+            subject_id = self._uri_idx[uri]
+            if self._subjects[subject_id].labels is None:  # deprecated
+                return None
+            return subject_id
         except KeyError:
             if warnings:
                 logger.warning("Unknown subject URI <%s>", uri)
@@ -125,9 +131,9 @@ class SubjectIndexFilter(SubjectIndex):
 
     def __getitem__(self, subject_id: int) -> Subject:
         subject = self._subject_index[subject_id]
-        if subject and subject.uri not in self._exclude:
-            return subject
-        return None
+        if subject.uri in self._exclude:
+            raise IndexError(f"Subject is excluded: {subject.uri}")
+        return subject
 
     def contains_uri(self, uri: str) -> bool:
         if uri in self._exclude:
