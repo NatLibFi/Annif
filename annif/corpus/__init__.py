@@ -8,20 +8,13 @@ from .document import (
     LimitingDocumentCorpus,
     TransformingDocumentCorpus,
 )
-from .skos import SubjectFileSKOS
-from .subject import Subject, SubjectFileCSV, SubjectFileTSV, SubjectIndex, SubjectSet
-from .types import Document
+from .types import Document, SubjectSet
 
 __all__ = [
     "DocumentDirectory",
     "DocumentFile",
     "DocumentList",
-    "Subject",
-    "SubjectFileTSV",
-    "SubjectFileCSV",
-    "SubjectIndex",
     "SubjectSet",
-    "SubjectFileSKOS",
     "Document",
     "CombinedCorpus",
     "TransformingDocumentCorpus",

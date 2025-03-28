@@ -8,8 +8,8 @@ import pytest
 import requests.exceptions
 
 import annif.backend.http
-from annif.corpus import Subject
 from annif.exception import OperationFailedException
+from annif.vocab import Subject
 
 
 def test_http_suggest(app_project):

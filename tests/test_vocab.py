@@ -12,20 +12,22 @@ from annif.exception import NotInitializedException
 
 def load_dummy_vocab(tmpdir):
     vocab = annif.vocab.AnnifVocabulary("vocab-id", str(tmpdir))
-    subjfile = os.path.join(os.path.dirname(__file__), "corpora", "dummy-subjects.tsv")
-    subjects = annif.corpus.SubjectFileTSV(subjfile, "en")
-    vocab.load_vocabulary(subjects)
+    vocab_path = os.path.join(
+        os.path.dirname(__file__), "corpora", "dummy-subjects.tsv"
+    )
+    vocab_file = annif.vocab.VocabFileTSV(vocab_path, "en")
+    vocab.load_vocabulary(vocab_file)
     return vocab
 
 
 def test_get_vocab_invalid(registry):
     with pytest.raises(ValueError) as excinfo:
-        registry.get_vocab("", None)
-    assert "Invalid vocabulary specification" in str(excinfo.value)
+        registry.get_vocab("")
+    assert "Invalid vocabulary ID" in str(excinfo.value)
 
 
 def test_get_vocab_hyphen(registry):
-    vocab, lang = registry.get_vocab("dummy-noname", None)
+    vocab = registry.get_vocab("dummy-noname")
     assert vocab.vocab_id == "dummy-noname"
     assert vocab is not None
 
@@ -33,10 +35,12 @@ def test_get_vocab_hyphen(registry):
 def test_update_subject_index_with_no_changes(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
 
-    subjfile = os.path.join(os.path.dirname(__file__), "corpora", "dummy-subjects.tsv")
-    subjects = annif.corpus.SubjectFileTSV(subjfile, "en")
+    vocab_path = os.path.join(
+        os.path.dirname(__file__), "corpora", "dummy-subjects.tsv"
+    )
+    vocab_file = annif.vocab.VocabFileTSV(vocab_path, "en")
 
-    vocab.load_vocabulary(subjects)
+    vocab.load_vocabulary(vocab_file)
     assert len(vocab.subjects) == 2
     assert vocab.subjects.by_uri("http://example.org/dummy") == 0
     assert vocab.subjects[0].uri == "http://example.org/dummy"
@@ -51,33 +55,30 @@ def test_update_subject_index_with_no_changes(tmpdir):
 def test_update_subject_index_with_removed_subject(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
 
-    subjfile_new = tmpdir.join("subjects_new.tsv")
-    subjfile_new.write("<http://example.org/dummy>\tdummy\n")
-    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new), "en")
+    voctmp_new = tmpdir.join("subjects_new.tsv")
+    voctmp_new.write("<http://example.org/dummy>\tdummy\n")
+    vocab_file_new = annif.vocab.VocabFileTSV(str(voctmp_new), "en")
 
-    vocab.load_vocabulary(subjects_new)
+    vocab.load_vocabulary(vocab_file_new)
     assert len(vocab.subjects) == 2
     assert vocab.subjects.by_uri("http://example.org/dummy") == 0
     assert vocab.subjects[0].uri == "http://example.org/dummy"
     assert vocab.subjects[0].labels["en"] == "dummy"
     assert vocab.subjects[0].notation is None
-    assert vocab.subjects.by_uri("http://example.org/none") == 1
-    assert vocab.subjects[1].uri == "http://example.org/none"
-    assert vocab.subjects[1].labels is None
-    assert vocab.subjects[1].notation is None
+    assert vocab.subjects.by_uri("http://example.org/none") is None
 
 
 def test_update_subject_index_with_renamed_label_and_added_notation(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
 
-    subjfile_new = tmpdir.join("subjects_new.tsv")
-    subjfile_new.write(
+    voctmp_new = tmpdir.join("subjects_new.tsv")
+    voctmp_new.write(
         "<http://example.org/dummy>\tdummy\n"
         + "<http://example.org/none>\tnew none\t42.42\n"
     )
-    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new), "en")
+    vocab_file_new = annif.vocab.VocabFileTSV(str(voctmp_new), "en")
 
-    vocab.load_vocabulary(subjects_new)
+    vocab.load_vocabulary(vocab_file_new)
     assert len(vocab.subjects) == 2
     assert vocab.subjects.by_uri("http://example.org/dummy") == 0
     assert vocab.subjects[0].uri == "http://example.org/dummy"
@@ -91,16 +92,16 @@ def test_update_subject_index_with_renamed_label_and_added_notation(tmpdir):
 
 def test_update_subject_index_with_added_subjects(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
-    subjfile_new = tmpdir.join("subjects_new.tsv")
-    subjfile_new.write(
+    voctmp_new = tmpdir.join("subjects_new.tsv")
+    voctmp_new.write(
         "<http://example.org/dummy>\tdummy\n"
         + "<http://example.org/none>\tnone\n"
         + "<http://example.org/new-dummy>\tnew dummy\t42.42\n"
         + "<http://example.org/new-none>\tnew none\n"
     )
-    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new), "en")
+    vocab_file_new = annif.vocab.VocabFileTSV(str(voctmp_new), "en")
 
-    vocab.load_vocabulary(subjects_new)
+    vocab.load_vocabulary(vocab_file_new)
     assert len(vocab.subjects) == 4
     assert vocab.subjects.by_uri("http://example.org/dummy") == 0
     assert vocab.subjects[0].uri == "http://example.org/dummy"
@@ -114,15 +115,15 @@ def test_update_subject_index_with_added_subjects(tmpdir):
 
 def test_update_subject_index_force(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
-    subjfile_new = tmpdir.join("subjects_new.tsv")
-    subjfile_new.write(
+    voctmp_new = tmpdir.join("subjects_new.tsv")
+    voctmp_new.write(
         "<http://example.org/dummy>\tdummy\n"
         + "<http://example.org/new-dummy>\tnew dummy\t42.42\n"
         + "<http://example.org/new-none>\tnew none\n"
     )
-    subjects_new = annif.corpus.SubjectFileTSV(str(subjfile_new), "en")
+    vocab_file_new = annif.vocab.VocabFileTSV(str(voctmp_new), "en")
 
-    vocab.load_vocabulary(subjects_new, force=True)
+    vocab.load_vocabulary(vocab_file_new, force=True)
     assert len(vocab.subjects) == 3
     assert vocab.subjects.by_uri("http://example.org/dummy") == 0
     assert vocab.subjects[0].uri == "http://example.org/dummy"
@@ -138,7 +139,7 @@ def test_skos(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
     assert tmpdir.join("vocabs/vocab-id/subjects.ttl").exists()
     assert tmpdir.join("vocabs/vocab-id/subjects.dump.gz").exists()
-    assert isinstance(vocab.skos, annif.corpus.SubjectFileSKOS)
+    assert isinstance(vocab.skos, annif.vocab.VocabFileSKOS)
 
 
 def test_skos_cache(tmpdir):
@@ -148,7 +149,7 @@ def test_skos_cache(tmpdir):
     tmpdir.join("vocabs/vocab-id/subjects.dump.gz").remove()
     assert not tmpdir.join("vocabs/vocab-id/subjects.dump.gz").exists()
 
-    assert isinstance(vocab.skos, annif.corpus.SubjectFileSKOS)
+    assert isinstance(vocab.skos, annif.vocab.VocabFileSKOS)
     # cached dump file has been recreated in .skos property access
     assert tmpdir.join("vocabs/vocab-id/subjects.dump.gz").exists()
 
@@ -180,3 +181,53 @@ def test_as_graph(tmpdir):
     assert len(concepts) == 2
     assert "http://example.org/dummy" in concepts
     assert "http://example.org/none" in concepts
+
+
+def test_subject_by_uri(subject_index):
+    subj_id = subject_index.by_uri("http://www.yso.fi/onto/yso/p7141")
+    assert subject_index[subj_id].labels["fi"] == "sinetit"
+
+
+def test_subject_by_uri_missing(subject_index):
+    subj_id = subject_index.by_uri("http://nonexistent")
+    assert subj_id is None
+
+
+def test_subject_by_label(subject_index):
+    subj_id = subject_index.by_label("sinetit", "fi")
+    assert subject_index[subj_id].uri == "http://www.yso.fi/onto/yso/p7141"
+
+
+def test_subject_by_label_missing(subject_index):
+    subj_id = subject_index.by_label("nonexistent", "fi")
+    assert subj_id is None
+
+
+def test_subject_index_filter(subject_index):
+    excluded_uri = "http://www.yso.fi/onto/yso/p7141"  # sinetit@fi
+    included_uri = "http://www.yso.fi/onto/yso/p1265"  # arkeologia@fi
+
+    subject_filter = annif.vocab.SubjectIndexFilter(
+        subject_index, exclude=[excluded_uri]
+    )
+
+    assert len(subject_index) == len(subject_filter)
+
+    assert subject_index.languages == subject_filter.languages
+
+    subj_id_exc = subject_index.by_uri(excluded_uri)
+    with pytest.raises(IndexError):
+        _ = subject_filter[subj_id_exc]
+    subj_id_inc = subject_index.by_uri(included_uri)
+    assert subject_filter[subj_id_inc] is not None
+
+    assert subject_filter.by_uri(excluded_uri) is None
+    assert subject_filter.by_uri(included_uri) is not None
+
+    assert not subject_filter.contains_uri(excluded_uri)
+    assert subject_filter.contains_uri(included_uri)
+
+    assert subject_filter.by_label("sinetit", "fi") is None
+    assert subject_filter.by_label("arkeologia", "fi") is not None
+
+    assert len(subject_filter.active) == len(subject_index.active) - 1

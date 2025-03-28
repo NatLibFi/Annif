@@ -11,8 +11,7 @@ from typing import TYPE_CHECKING
 
 import annif.util
 
-from .subject import SubjectSet
-from .types import Document, DocumentCorpus
+from .types import Document, DocumentCorpus, SubjectSet
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

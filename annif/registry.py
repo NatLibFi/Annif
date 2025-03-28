@@ -11,7 +11,6 @@ import annif
 from annif.config import parse_config
 from annif.exception import ConfigurationException
 from annif.project import Access, AnnifProject
-from annif.util import parse_args
 from annif.vocab import AnnifVocabulary
 
 logger = annif.logger
@@ -90,24 +89,16 @@ class AnnifRegistry:
         except KeyError:
             raise ValueError("No such project {}".format(project_id))
 
-    def get_vocab(
-        self, vocab_spec: str, default_language: str | None
-    ) -> tuple[AnnifVocabulary, None] | tuple[AnnifVocabulary, str]:
-        """Return an (AnnifVocabulary, language) pair corresponding to the
-        vocab_spec. If no language information is specified, use the given
-        default language."""
+    def get_vocab(self, vocab_id: str) -> AnnifVocabulary:
+        """Return an AnnifVocabulary by vocab_id"""
 
-        match = re.match(r"([\w-]+)(\((.*)\))?$", vocab_spec)
-        if match is None:
-            raise ValueError(f"Invalid vocabulary specification: {vocab_spec}")
-        vocab_id = match.group(1)
-        posargs, kwargs = parse_args(match.group(3))
-        language = posargs[0] if posargs else default_language
+        if not vocab_id:
+            raise ValueError(f"Invalid vocabulary ID: '{vocab_id}'")
 
         self._init_vars()
         if vocab_id not in self._vocabs[self._rid]:
             self._vocabs[self._rid][vocab_id] = AnnifVocabulary(vocab_id, self._datadir)
-        return self._vocabs[self._rid][vocab_id], language
+        return self._vocabs[self._rid][vocab_id]
 
 
 def initialize_projects(app: Flask) -> None:

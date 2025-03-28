@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import enum
 import os.path
+import re
 from shutil import rmtree
 from typing import TYPE_CHECKING
 
@@ -19,6 +20,8 @@ from annif.exception import (
     NotInitializedException,
     NotSupportedException,
 )
+from annif.util import parse_args
+from annif.vocab import SubjectIndexFilter
 
 if TYPE_CHECKING:
     from collections import defaultdict
@@ -56,6 +59,8 @@ class AnnifProject(DatadirMixin):
     _backend = None
     _vocab = None
     _vocab_lang = None
+    _vocab_kwargs = {}
+    _subject_index = None
     initialized = False
 
     # default values for configuration settings
@@ -188,9 +193,14 @@ class AnnifProject(DatadirMixin):
             raise ConfigurationException(
                 "vocab setting is missing", project_id=self.project_id
             )
-        self._vocab, self._vocab_lang = self.registry.get_vocab(
-            self.vocab_spec, self.language
-        )
+
+        match = re.match(r"([\w-]+)(\((.*)\))?$", self.vocab_spec)
+        if match is None:
+            raise ValueError(f"Invalid vocabulary specification: {self.vocab_spec}")
+        vocab_id = match.group(1)
+        posargs, self._vocab_kwargs = parse_args(match.group(3))
+        self._vocab_lang = posargs[0] if posargs else self.language
+        self._vocab = self.registry.get_vocab(vocab_id)
 
     @property
     def vocab(self) -> AnnifVocabulary:
@@ -206,7 +216,14 @@ class AnnifProject(DatadirMixin):
 
     @property
     def subjects(self) -> SubjectIndex:
-        return self.vocab.subjects
+        if self._subject_index is None:
+            self._subject_index = self.vocab.subjects
+            if "exclude" in self._vocab_kwargs:
+                exclude_list = self._vocab_kwargs["exclude"].split("|")
+                self._subject_index = SubjectIndexFilter(
+                    self._subject_index, exclude=exclude_list
+                )
+        return self._subject_index
 
     def _get_info(self, key: str) -> bool | datetime | None:
         try:
