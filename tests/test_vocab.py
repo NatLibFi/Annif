@@ -12,9 +12,11 @@ from annif.exception import NotInitializedException
 
 def load_dummy_vocab(tmpdir):
     vocab = annif.vocab.AnnifVocabulary("vocab-id", str(tmpdir))
-    subjfile = os.path.join(os.path.dirname(__file__), "corpora", "dummy-subjects.tsv")
-    subjects = annif.vocab.VocabFileTSV(subjfile, "en")
-    vocab.load_vocabulary(subjects)
+    vocab_path = os.path.join(
+        os.path.dirname(__file__), "corpora", "dummy-subjects.tsv"
+    )
+    vocab_file = annif.vocab.VocabFileTSV(vocab_path, "en")
+    vocab.load_vocabulary(vocab_file)
     return vocab
 
 
@@ -33,10 +35,12 @@ def test_get_vocab_hyphen(registry):
 def test_update_subject_index_with_no_changes(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
 
-    subjfile = os.path.join(os.path.dirname(__file__), "corpora", "dummy-subjects.tsv")
-    subjects = annif.vocab.VocabFileTSV(subjfile, "en")
+    vocab_path = os.path.join(
+        os.path.dirname(__file__), "corpora", "dummy-subjects.tsv"
+    )
+    vocab_file = annif.vocab.VocabFileTSV(vocab_path, "en")
 
-    vocab.load_vocabulary(subjects)
+    vocab.load_vocabulary(vocab_file)
     assert len(vocab.subjects) == 2
     assert vocab.subjects.by_uri("http://example.org/dummy") == 0
     assert vocab.subjects[0].uri == "http://example.org/dummy"
@@ -51,11 +55,11 @@ def test_update_subject_index_with_no_changes(tmpdir):
 def test_update_subject_index_with_removed_subject(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
 
-    subjfile_new = tmpdir.join("subjects_new.tsv")
-    subjfile_new.write("<http://example.org/dummy>\tdummy\n")
-    subjects_new = annif.vocab.VocabFileTSV(str(subjfile_new), "en")
+    voctmp_new = tmpdir.join("subjects_new.tsv")
+    voctmp_new.write("<http://example.org/dummy>\tdummy\n")
+    vocab_file_new = annif.vocab.VocabFileTSV(str(voctmp_new), "en")
 
-    vocab.load_vocabulary(subjects_new)
+    vocab.load_vocabulary(vocab_file_new)
     assert len(vocab.subjects) == 2
     assert vocab.subjects.by_uri("http://example.org/dummy") == 0
     assert vocab.subjects[0].uri == "http://example.org/dummy"
@@ -67,14 +71,14 @@ def test_update_subject_index_with_removed_subject(tmpdir):
 def test_update_subject_index_with_renamed_label_and_added_notation(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
 
-    subjfile_new = tmpdir.join("subjects_new.tsv")
-    subjfile_new.write(
+    voctmp_new = tmpdir.join("subjects_new.tsv")
+    voctmp_new.write(
         "<http://example.org/dummy>\tdummy\n"
         + "<http://example.org/none>\tnew none\t42.42\n"
     )
-    subjects_new = annif.vocab.VocabFileTSV(str(subjfile_new), "en")
+    vocab_file_new = annif.vocab.VocabFileTSV(str(voctmp_new), "en")
 
-    vocab.load_vocabulary(subjects_new)
+    vocab.load_vocabulary(vocab_file_new)
     assert len(vocab.subjects) == 2
     assert vocab.subjects.by_uri("http://example.org/dummy") == 0
     assert vocab.subjects[0].uri == "http://example.org/dummy"
@@ -88,16 +92,16 @@ def test_update_subject_index_with_renamed_label_and_added_notation(tmpdir):
 
 def test_update_subject_index_with_added_subjects(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
-    subjfile_new = tmpdir.join("subjects_new.tsv")
-    subjfile_new.write(
+    voctmp_new = tmpdir.join("subjects_new.tsv")
+    voctmp_new.write(
         "<http://example.org/dummy>\tdummy\n"
         + "<http://example.org/none>\tnone\n"
         + "<http://example.org/new-dummy>\tnew dummy\t42.42\n"
         + "<http://example.org/new-none>\tnew none\n"
     )
-    subjects_new = annif.vocab.VocabFileTSV(str(subjfile_new), "en")
+    vocab_file_new = annif.vocab.VocabFileTSV(str(voctmp_new), "en")
 
-    vocab.load_vocabulary(subjects_new)
+    vocab.load_vocabulary(vocab_file_new)
     assert len(vocab.subjects) == 4
     assert vocab.subjects.by_uri("http://example.org/dummy") == 0
     assert vocab.subjects[0].uri == "http://example.org/dummy"
@@ -111,15 +115,15 @@ def test_update_subject_index_with_added_subjects(tmpdir):
 
 def test_update_subject_index_force(tmpdir):
     vocab = load_dummy_vocab(tmpdir)
-    subjfile_new = tmpdir.join("subjects_new.tsv")
-    subjfile_new.write(
+    voctmp_new = tmpdir.join("subjects_new.tsv")
+    voctmp_new.write(
         "<http://example.org/dummy>\tdummy\n"
         + "<http://example.org/new-dummy>\tnew dummy\t42.42\n"
         + "<http://example.org/new-none>\tnew none\n"
     )
-    subjects_new = annif.vocab.VocabFileTSV(str(subjfile_new), "en")
+    vocab_file_new = annif.vocab.VocabFileTSV(str(voctmp_new), "en")
 
-    vocab.load_vocabulary(subjects_new, force=True)
+    vocab.load_vocabulary(vocab_file_new, force=True)
     assert len(vocab.subjects) == 3
     assert vocab.subjects.by_uri("http://example.org/dummy") == 0
     assert vocab.subjects[0].uri == "http://example.org/dummy"

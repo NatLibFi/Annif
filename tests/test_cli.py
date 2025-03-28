@@ -297,7 +297,7 @@ def test_load_vocab_nonexistent_path():
     assert failed_result.exception
     assert failed_result.exit_code != 0
     assert (
-        "Invalid value for 'SUBJECTFILE': "
+        "Invalid value for 'VOCAB_FILE': "
         "File 'nonexistent_path' does not exist." in failed_result.output
     )
 

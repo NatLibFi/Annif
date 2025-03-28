@@ -27,8 +27,8 @@ def test_load_csv_uri_brackets(tmpdir):
         + "<http://www.yso.fi/onto/yso/p9285>,neoliittinen kausi"
     )
 
-    corpus = VocabFileCSV(str(tmpfile))
-    subjects = list(corpus.subjects)
+    vocab_file = VocabFileCSV(str(tmpfile))
+    subjects = list(vocab_file.subjects)
     assert len(subjects) == 2
     assert subjects[0].uri == "http://www.yso.fi/onto/yso/p8993"
     assert subjects[0].labels["fi"] == "hylyt"
@@ -46,8 +46,8 @@ def test_load_tsv_uri_nobrackets(tmpdir):
         + "http://www.yso.fi/onto/yso/p9285,neoliittinen kausi"
     )
 
-    corpus = VocabFileCSV(str(tmpfile))
-    subjects = list(corpus.subjects)
+    vocab_file = VocabFileCSV(str(tmpfile))
+    subjects = list(vocab_file.subjects)
     assert len(subjects) == 2
     assert subjects[0].uri == "http://www.yso.fi/onto/yso/p8993"
     assert subjects[0].labels["fi"] == "hylyt"
@@ -65,8 +65,8 @@ def test_load_tsv_with_notations(tmpdir):
         + "http://www.yso.fi/onto/yso/p9285,neoliittinen kausi,42.0"
     )
 
-    corpus = VocabFileCSV(str(tmpfile))
-    subjects = list(corpus.subjects)
+    vocab_file = VocabFileCSV(str(tmpfile))
+    subjects = list(vocab_file.subjects)
     assert len(subjects) == 2
     assert subjects[0].uri == "http://www.yso.fi/onto/yso/p8993"
     assert subjects[0].labels["fi"] == "hylyt"
@@ -85,13 +85,13 @@ def test_load_tsv_with_deprecated(tmpdir):
         + "<http://www.yso.fi/onto/yso/p9285>,neoliittinen kausi"
     )
 
-    corpus = VocabFileCSV(str(tmpfile))
-    subjects = list(corpus.subjects)
-    assert len(list(corpus.subjects)) == 3
+    vocab_file = VocabFileCSV(str(tmpfile))
+    subjects = list(vocab_file.subjects)
+    assert len(list(vocab_file.subjects)) == 3
     assert subjects[1].labels is None
 
     index = SubjectIndexFile()
-    index.load_subjects(corpus)
+    index.load_subjects(vocab_file)
 
     active = list(index.active)
     assert len(active) == 2
