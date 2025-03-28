@@ -1,4 +1,4 @@
-"""Support for subjects loaded from a SKOS/RDF file"""
+"""Classes for supporting vocabulary files in SKOS/RDF format"""
 
 from __future__ import annotations
 

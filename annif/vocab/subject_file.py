@@ -1,4 +1,4 @@
-"""Classes for supporting subject corpora expressed as directories or files"""
+"""Classes for supporting vocabulary files in CSV or TSV format"""
 
 from __future__ import annotations
 
