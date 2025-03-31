@@ -96,7 +96,7 @@ def test_nn_ensemble_train_and_learn(registry, tmpdir):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id="nn_ensemble",
-        config_params={"sources": "dummy-en", "epochs": 1},
+        config_params={"sources": "dummy-en", "epochs": 1, "allow_learn": True},
         project=project,
     )
 
@@ -164,7 +164,7 @@ def test_nn_ensemble_train_and_learn_params(registry, tmpdir, capfd):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id="nn_ensemble",
-        config_params={"sources": "dummy-en", "epochs": 3},
+        config_params={"sources": "dummy-en", "epochs": 3, "allow_learn": True},
         project=project,
     )
 
@@ -285,6 +285,7 @@ def test_nn_ensemble_default_params(app_project):
     expected_default_params = {
         "optimizer": "adam",
         "limit": 100,
+        "allow_learn": False,
     }
     actual_params = nn_ensemble.params
     for param, val in expected_default_params.items():

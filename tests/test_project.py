@@ -205,7 +205,7 @@ def test_project_learn(registry, tmpdir):
     docdir = annif.corpus.DocumentDirectory(
         str(tmpdir), project.subjects, "en", require_subjects=True
     )
-    project.learn(docdir)
+    project.learn(docdir, backend_params={"dummy": {"allow_learn": True}})
     result = project.suggest(["this is some text"])[0]
     assert len(result) == 1
     hits = list(result)

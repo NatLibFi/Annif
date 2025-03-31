@@ -9,6 +9,7 @@ from glob import glob
 from typing import TYPE_CHECKING, Any
 
 from annif import logger
+from annif.exception import ConfigurationException
 from annif.suggestion import SuggestionBatch
 
 if TYPE_CHECKING:
@@ -160,6 +161,16 @@ class AnnifBackend(metaclass=abc.ABCMeta):
 class AnnifLearningBackend(AnnifBackend):
     """Base class for Annif backends that can perform online learning"""
 
+    DEFAULT_PARAMETERS = {
+        "allow_learn": False,
+    }
+
+    def default_params(self) -> dict[str, Any]:
+        params = AnnifBackend.DEFAULT_PARAMETERS.copy()
+        params.update(AnnifLearningBackend.DEFAULT_PARAMETERS.copy())
+        params.update(self.DEFAULT_PARAMETERS)  # Optional backend specific parameters
+        return params
+
     @abc.abstractmethod
     def _learn(self, corpus, params):
         """This method should implemented by backends. It implements the learn
@@ -173,4 +184,9 @@ class AnnifLearningBackend(AnnifBackend):
     ) -> None:
         """Further train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)
-        return self._learn(corpus, params=beparams)
+        if beparams["allow_learn"]:
+            return self._learn(corpus, params=beparams)
+        else:
+            raise ConfigurationException(
+                "Learning not enabled for backend", backend_id=self.backend_id
+            )
