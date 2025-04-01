@@ -188,5 +188,5 @@ class AnnifLearningBackend(AnnifBackend):
             return self._learn(corpus, params=beparams)
         else:
             raise ConfigurationException(
-                "Learning not enabled for backend", backend_id=self.backend_id
+                "Learning not enabled for project", project_id=self.project.project_id
             )
