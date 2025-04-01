@@ -36,7 +36,7 @@ def test_learn_dummy(project, tmpdir):
         str(tmpdir), project.subjects, "en", require_subjects=True
     )
 
-    dummy.learn(docdir, {"allow_learn": True})
+    dummy.learn(docdir)
 
     result = dummy.suggest(["this is some text"])[0]
     assert len(result) == 1
@@ -51,7 +51,7 @@ def test_learn_dummy(project, tmpdir):
 def test_fill_params_with_defaults(project):
     dummy_type = annif.backend.get_backend("dummy")
     dummy = dummy_type(backend_id="dummy", config_params={}, project=project)
-    expected_default_params = {"limit": 100, "allow_learn": False}
+    expected_default_params = {"limit": 100}
     assert expected_default_params == dummy.params
 
 

@@ -398,18 +398,6 @@ def test_learn(testdatadir):
     assert result.exit_code == 0
 
 
-def test_learn_not_enabled(testdatadir):
-    docfile = os.path.join(
-        os.path.dirname(__file__), "corpora", "archaeology", "documents.tsv"
-    )
-    result = runner.invoke(
-        annif.cli.cli,
-        ["learn", "dummy-nolearn", docfile],
-    )
-    assert result.exit_code != 0
-    assert "Learning not enabled" in result.output
-
-
 def test_learn_notsupported(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__), "corpora", "archaeology", "documents.tsv"
