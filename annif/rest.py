@@ -11,7 +11,7 @@ import connexion
 import annif.registry
 import annif.simplemma_util
 from annif.corpus import Document, DocumentList, SubjectSet
-from annif.exception import AnnifException
+from annif.exception import AnnifException, ConfigurationException
 from annif.project import Access
 
 if TYPE_CHECKING:
@@ -28,6 +28,16 @@ def project_not_found_error(project_id: str) -> ConnexionResponse:
         status=404,
         title="Project not found",
         detail="Project '{}' not found".format(project_id),
+    )
+
+
+def learning_not_enabled_error(err: ConfigurationException) -> ConnexionResponse:
+    """return a Connexion error object when a project is not configured for learning"""
+
+    return connexion.problem(
+        status=403,
+        title="Learning not allowed",
+        detail="Project is not configured to allow learning",
     )
 
 
@@ -248,6 +258,11 @@ def learn(
     try:
         corpus = _documents_to_corpus(body, project.subjects)
         project.learn(corpus)
+    except ConfigurationException as err:
+        if str(err) == "Learning not enabled for project":
+            return learning_not_enabled_error(err)
+        else:
+            return server_error(err)
     except AnnifException as err:
         return server_error(err)
 
