@@ -19,6 +19,7 @@ from annif.exception import (
     ConfigurationException,
     NotInitializedException,
     NotSupportedException,
+    OperationFailedException,
 )
 from annif.util import parse_args
 from annif.vocab import SubjectIndexFilter
@@ -295,7 +296,12 @@ class AnnifProject(DatadirMixin):
         beparams = backend_params.get(self.backend.backend_id, {})
         corpus = self.transform.transform_corpus(corpus)
         if isinstance(self.backend, annif.backend.backend.AnnifLearningBackend):
-            self.backend.learn(corpus, beparams)
+            if annif.util.boolean(self.config.get("allow_learn", False)):
+                self.backend.learn(corpus, beparams)
+            else:
+                raise OperationFailedException(
+                    "Learning not enabled for project", project_id=self.project_id
+                )
         else:
             raise NotSupportedException(
                 "Learning not supported by backend", project_id=self.project_id
