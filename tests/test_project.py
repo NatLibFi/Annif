@@ -205,7 +205,7 @@ def test_project_learn(registry, tmpdir):
     docdir = annif.corpus.DocumentDirectory(
         str(tmpdir), project.subjects, "en", require_subjects=True
     )
-    project.learn(docdir, backend_params={"dummy": {"allow_learn": True}})
+    project.learn(docdir)
     result = project.suggest(["this is some text"])[0]
     assert len(result) == 1
     hits = list(result)
@@ -337,6 +337,6 @@ def test_project_file_toml():
 def test_project_directory():
     cxapp = annif.create_app(config_name="annif.default_config.TestingDirectoryConfig")
     with cxapp.app.app_context():
-        assert len(annif.registry.get_projects()) == 19 + 2
+        assert len(annif.registry.get_projects()) == 20 + 2
         assert annif.registry.get_project("dummy-fi").project_id == "dummy-fi"
         assert annif.registry.get_project("dummy-fi-toml").project_id == "dummy-fi-toml"

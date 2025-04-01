@@ -393,10 +393,7 @@ def test_learn(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__), "corpora", "archaeology", "documents.tsv"
     )
-    result = runner.invoke(
-        annif.cli.cli,
-        ["learn", "dummy-fi", docfile, "--backend-param", "dummy.allow_learn=True"],
-    )
+    result = runner.invoke(annif.cli.cli, ["learn", "dummy-fi", docfile])
     assert not result.exception
     assert result.exit_code == 0
 
@@ -407,7 +404,7 @@ def test_learn_not_enabled(testdatadir):
     )
     result = runner.invoke(
         annif.cli.cli,
-        ["learn", "dummy-fi", docfile],
+        ["learn", "dummy-nolearn", docfile],
     )
     assert result.exit_code != 0
     assert "Learning not enabled" in result.output
@@ -1148,7 +1145,7 @@ def test_upload_many(
     result = runner.invoke(annif.cli.cli, ["upload", "dummy-*", "dummy-repo"])
     assert not result.exception
     assert create_commit.call_count == 1
-    assert CommitOperationAdd.call_count == 13
+    assert CommitOperationAdd.call_count == 15
     assert upsert_modelcard.call_count == 1
 
 
@@ -1433,6 +1430,7 @@ def test_completion_show_project_project_ids_all():
     assert completions == [
         "dummy-fi",
         "dummy-en",
+        "dummy-nolearn",
         "dummy-private",
         "dummy-vocablang",
         "dummy-exclude",
@@ -1459,6 +1457,7 @@ def test_completion_show_project_project_ids_dummy():
     assert completions == [
         "dummy-fi",
         "dummy-en",
+        "dummy-nolearn",
         "dummy-private",
         "dummy-vocablang",
         "dummy-exclude",
