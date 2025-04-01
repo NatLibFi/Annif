@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from glob import glob
 from typing import TYPE_CHECKING, Any
 
-from annif import logger
+from annif import logger, util
 from annif.exception import ConfigurationException
 from annif.suggestion import SuggestionBatch
 
@@ -184,7 +184,7 @@ class AnnifLearningBackend(AnnifBackend):
     ) -> None:
         """Further train the model on the given document or subject corpus."""
         beparams = self._get_backend_params(params)
-        if beparams["allow_learn"]:
+        if util.boolean(beparams["allow_learn"]):
             return self._learn(corpus, params=beparams)
         else:
             raise ConfigurationException(
