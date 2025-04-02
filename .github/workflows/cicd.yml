@@ -53,7 +53,7 @@ jobs:
         poetry install
     - name: Generate sbom
       run: |
-        poetry cyclonedx-py poetry > sbom.json
+        poetry run cyclonedx-py poetry > sbom.json
     - uses: DependencyTrack/gh-upload-sbom@v3
       with:
         serverHostname: 'https://dtrack.it.helsinki.fi/api/v1/bom'
