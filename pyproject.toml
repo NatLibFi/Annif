@@ -70,6 +70,7 @@ bumpversion = "*"
 black = "25.*"
 isort = "*"
 schemathesis = "3.*.*"
+cyclonedx-bom = "5.3.*"
 
 [tool.poetry.extras]
 fasttext = ["fasttext-wheel"]
