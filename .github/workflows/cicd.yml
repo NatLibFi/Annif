@@ -38,6 +38,31 @@ jobs:
       run: |
         poetry run flake8
 
+  dependency-track:
+    runs-on: ubuntu-22.04
+    name: generate sbom & upload to dependency track
+    steps:
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - name: "Prepare: restore caches, install Poetry, set up Python"
+      uses: ./.github/actions/prepare
+      with:
+        python-version: "3.12"
+        poetry-version: ${{ env.POETRY_VERSION }}
+    - name: Install Python dev dependencies
+      run: |
+        poetry install
+    - name: Generate sbom
+      run: |
+        cyclonedx-py poetry > sbom.json
+    - uses: DependencyTrack/gh-upload-sbom@v3
+      with:
+        serverHostname: 'https://dtrack.it.helsinki.fi/api/v1/bom'
+        apiKey: ${{ secrets.DEPENDENCYTRACK_APIKEY }}
+        projectName: 'annif'
+        # projectVersion: 'master'
+        bomFilename: "sbom.json"
+        autoCreate: true
+
   time-startup:
     runs-on: ubuntu-22.04
     name: check CLI startup time
