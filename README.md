@@ -30,7 +30,7 @@ This repository contains a rewritten production version of Annif based on the
 
 Annif is developed and tested on Linux. If you want to run Annif on Windows or Mac OS, the recommended way is to use Docker (see below) or a Linux virtual machine.
 
-You will need Python 3.10-3.12 to install Annif.
+You will need Python 3.10-3.13 to install Annif.
 
 The recommended way is to install Annif from
 [PyPI](https://pypi.org/project/annif/) into a virtual environment.
@@ -137,13 +137,13 @@ https://arxiv.org/abs/2504.19675
 <summary>See BibTex</summary>
 
     @misc{suominen2025annifsemeval2025task5,
-      title={Annif at SemEval-2025 Task 5: Traditional XMTC augmented by LLMs}, 
+      title={Annif at SemEval-2025 Task 5: Traditional XMTC augmented by LLMs},
       author={Osma Suominen and Juho Inkinen and Mona Lehtinen},
       year={2025},
       eprint={2504.19675},
       archivePrefix={arXiv},
       primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2504.19675}, 
+      url={https://arxiv.org/abs/2504.19675},
     }
 </details>
 </li>
