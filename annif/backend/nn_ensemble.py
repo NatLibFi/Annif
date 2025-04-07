@@ -55,6 +55,7 @@ class LMDBSequence(Sequence):
     """A sequence of samples stored in a LMDB database."""
 
     def __init__(self, txn, batch_size):
+        super().__init__()
         self._txn = txn
         cursor = txn.cursor()
         if cursor.last():
