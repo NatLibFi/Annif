@@ -4,7 +4,7 @@ checks:
     duplicate_code: true
 build:
   environment:
-    python: 3.9.17
+    python: 3.12
   dependencies:
     override:
      - pip install .[dev]

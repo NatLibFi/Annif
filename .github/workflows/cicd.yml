@@ -23,7 +23,7 @@ jobs:
     - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
-        python-version: "3.11"
+        python-version: "3.12"
         poetry-version: ${{ env.POETRY_VERSION }}
     - name: Install Python dev dependencies
       run: |
@@ -47,7 +47,7 @@ jobs:
       id: prepare
       uses: ./.github/actions/prepare
       with:
-        python-version: "3.10"
+        python-version: "3.11"
         poetry-version: ${{ env.POETRY_VERSION }}
     - name: Install Python dependencies
       run: |
@@ -61,7 +61,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12"]
     name: test on Python ${{ matrix.python-version }}
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -79,25 +79,19 @@ jobs:
     - name: Install Python dependencies
       run: |
         # Selectively install the optional dependencies for some Python versions
-        # For Python 3.9:
-        if [[ ${{ matrix.python-version }} == '3.9' ]]; then
-          poetry install -E "nn omikuji yake voikko stwfsa";
-        fi
         # For Python 3.10:
         if [[ ${{ matrix.python-version }} == '3.10' ]]; then
-          poetry install -E "fasttext spacy estnltk";
-          # download the small English pretrained spaCy model needed by spacy analyzer
-          poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+          poetry install -E "nn omikuji yake voikko stwfsa";
         fi
         # For Python 3.11:
         if [[ ${{ matrix.python-version }} == '3.11' ]]; then
-          poetry install -E "nn fasttext yake stwfsa voikko spacy";
+          poetry install -E "fasttext spacy estnltk";
           # download the small English pretrained spaCy model needed by spacy analyzer
           poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
         # For Python 3.12:
         if [[ ${{ matrix.python-version }} == '3.12' ]]; then
-          poetry install -E "fasttext yake voikko spacy";
+          poetry install -E "nn fasttext yake stwfsa voikko spacy";
           # download the small English pretrained spaCy model needed by spacy analyzer
           poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
@@ -105,7 +99,7 @@ jobs:
     - name: Test with pytest
       run: |
         poetry run pytest --cov=./ --cov-report xml
-        if [[ ${{ matrix.python-version }} == '3.10' ]]; then
+        if [[ ${{ matrix.python-version }} == '3.11' ]]; then
           poetry run pytest --cov=./ --cov-report xml --cov-append -m slow
         fi
     - name: Upload coverage to Codecov
@@ -174,7 +168,7 @@ jobs:
     - name: "Prepare: restore caches, install Poetry, set up Python"
       uses: ./.github/actions/prepare
       with:
-        python-version: '3.10'
+        python-version: '3.11'
         poetry-version: ${{ env.POETRY_VERSION }}
     - name: Build and publish distribution to PyPI
       env:
