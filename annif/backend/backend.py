@@ -71,13 +71,11 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     @property
     def modification_time(self) -> datetime | None:
         mtimes = [
-            datetime.utcfromtimestamp(os.path.getmtime(p))
+            datetime.fromtimestamp(os.path.getmtime(p), tz=timezone.utc)
             for p in self._model_file_paths
         ]
         most_recent = max(mtimes, default=None)
-        if most_recent is None:
-            return None
-        return most_recent.replace(tzinfo=timezone.utc)
+        return most_recent
 
     def _get_backend_params(
         self,
