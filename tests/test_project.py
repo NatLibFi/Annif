@@ -145,6 +145,15 @@ def test_get_project_invalid_config_file():
             annif.registry.get_project("duplicatedvocab")
 
 
+def test_get_project_invalid_vocab_arg():
+    cxapp = annif.create_app(
+        config_name="annif.default_config.TestingInvalidProjectsConfig"
+    )
+    with cxapp.app.app_context():
+        with pytest.raises(ConfigurationException):
+            annif.registry.get_project("invalid_vocab_arg")
+
+
 def test_project_load_vocabulary_tfidf(registry, subject_file, testdatadir):
     project = registry.get_project("tfidf-fi")
     project.vocab.load_vocabulary(subject_file)

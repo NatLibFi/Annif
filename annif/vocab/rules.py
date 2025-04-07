@@ -1,5 +1,7 @@
 """Support for exclude/include rules for subject vocabularies"""
 
+from annif.exception import ConfigurationException
+
 
 def kwargs_to_exclude_uris(kwargs: dict[str, str]) -> set[str]:
     exclude_uris = set()
@@ -7,4 +9,6 @@ def kwargs_to_exclude_uris(kwargs: dict[str, str]) -> set[str]:
         vals = value.split("|")
         if key == "exclude":
             exclude_uris.update(vals)
+        else:
+            raise ConfigurationException(f"unknown vocab keyword argument {key}")
     return exclude_uris
