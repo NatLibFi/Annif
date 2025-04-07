@@ -28,7 +28,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = ">=3.9,<3.14"
 
 connexion = { version = "~3.1.0", extras = ["flask", "uvicorn", "swagger-ui"] }
 click = "8.1.*"
@@ -56,8 +56,8 @@ tensorflow-cpu = { version = "~2.18.0", optional = true }
 lmdb = { version = "~1.6.2", optional = true }
 omikuji = { version = "0.5.*", optional = true }
 yake = { version = "0.4.8", optional = true }
-spacy = { version = "~3.8.4", optional = true }
-stwfsapy = { version = "~0.5.0", optional = true }
+spacy = { version = "~3.8.4", optional = true, python = "<3.13" }
+stwfsapy = { version = "~0.5.0", optional = true, python = "<3.13" }
 
 [tool.poetry.dev-dependencies]
 py = "*"
