@@ -281,3 +281,9 @@ def test_rest_learn_not_supported(app):
     with app.app_context():
         result = annif.rest.learn("tfidf-fi", [])
         assert result.status_code == 503
+
+
+def test_rest_learn_not_enabled(app):
+    with app.app_context():
+        result = annif.rest.learn("dummy-nolearn", [])
+        assert result.status_code == 403
