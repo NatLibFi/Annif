@@ -791,5 +791,18 @@ def run_detect_language(languages, paths):
         detect_language_and_show(text, langs)
 
 
+@cli.command("status")
+@cli_util.common_options
+def run_status():
+    """
+    Check the status of Annif.
+    \f
+    This command will provide information about the current status of Annif,
+    such as running processes, loaded projects, and other relevant details.
+    """
+    # TODO: Implement the logic to check and display the status of Annif.
+    click.echo("Status command is not yet implemented.")
+
+
 if __name__ == "__main__":
     cli()
