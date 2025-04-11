@@ -801,7 +801,7 @@ def run_status():
     such as running processes, loaded projects, and other relevant details.
     """
     # TODO: Implement the logic to check and display the status of Annif.
-    click.echo("Status command is not yet implemented.")
+    click.echo("Status comm is not yet implem.")
 
 
 if __name__ == "__main__":
