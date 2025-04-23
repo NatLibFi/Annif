@@ -29,13 +29,8 @@ class BaseLLMBackend(backend.AnnifBackend):
     # """Base class for TODO backends"""
 
     def initialize(self, parallel: bool = False) -> None:
-        # initialize all the source projects
         params = self._get_backend_params(None)
-        for project_id, _ in annif.util.parse_sources(params["sources"]):
-            project = self.project.registry.get_project(project_id)
-            project.initialize(parallel)
-
-        # self.client = AsyncAzureOpenAI(
+        super().initialize(parallel)
         self.client = AzureOpenAI(
             azure_endpoint=params["endpoint"],
             api_key=os.getenv("AZURE_OPENAI_KEY"),
@@ -68,36 +63,26 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.BaseEnsembleBackend):
     ) -> SuggestionBatch:
         sources = annif.util.parse_sources(params["sources"])
         batch_by_source = self._suggest_with_sources(texts, sources)
-        return self._merge_source_batches(texts, batch_by_source, sources, params)
+        merged_source_batch = self._merge_source_batches(
+            batch_by_source, sources, params
+        )
 
-    def _merge_source_batches(
+        # Add LLM suggestions to the source batches
+        batch_by_source[self.project.project_id] = self._llm_suggest_batch(
+            texts, merged_source_batch, params
+        )
+        new_sources = sources + [(self.project.project_id, float(params["llm_weight"]))]
+        return self._merge_source_batches(batch_by_source, new_sources, params)
+
+    def _llm_suggest_batch(
         self,
         texts: list[str],
-        batch_by_source: dict[str, SuggestionBatch],
-        sources: list[tuple[str, float]],
+        suggestion_batch: SuggestionBatch,
         params: dict[str, Any],
     ) -> SuggestionBatch:
         model = params["model"]
         encoding = tiktoken.encoding_for_model(model.rsplit("-", 1)[0])
-
-        batches = [batch_by_source[project_id] for project_id, _ in sources]
-        weights = [weight for _, weight in sources]
-        avg_sources_suggestion_batch = SuggestionBatch.from_averaged(
-            batches, weights
-        ).filter(
-            limit=int(params["limit"])  # TODO Increase limit
-        )
-
-        labels_batch = []
-        for suggestionresult in avg_sources_suggestion_batch:
-            labels_batch.append(
-                [
-                    self.project.subjects[s.subject_id].labels[
-                        "en"
-                    ]  # TODO: make language selectable
-                    for s in suggestionresult
-                ]
-            )
+        labels_batch = self._get_labels_batch(suggestion_batch)
 
         llm_batch_suggestions = []
         for text, labels in zip(texts, labels_batch):
@@ -112,22 +97,29 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.BaseEnsembleBackend):
                 print(err)
                 llm_result = None
                 continue  # TODO: handle this error
-
-            suggestions = []
-            for llm_label, score in llm_result.items():
-                subj_id = self.project.subjects.by_label(
-                    llm_label, "en"
-                )  # TODO: make language selectable
-                suggestions.append(SubjectSuggestion(subject_id=subj_id, score=score))
-            llm_batch_suggestions.append(suggestions)
-
-        batches.append(
-            SuggestionBatch.from_sequence(llm_batch_suggestions, self.project.subjects)
+            llm_suggestions = [
+                SubjectSuggestion(
+                    subject_id=self.project.subjects.by_label(llm_label, "en"),
+                    score=score,
+                )
+                for llm_label, score in llm_result.items()
+            ]
+            llm_batch_suggestions.append(llm_suggestions)
+        return SuggestionBatch.from_sequence(
+            llm_batch_suggestions,
+            self.project.subjects,
         )
-        weights.append(float(params["llm_weight"]))
-        return SuggestionBatch.from_averaged(batches, weights).filter(
-            limit=int(params["limit"])
-        )
+
+    def _get_labels_batch(self, suggestion_batch: SuggestionBatch) -> list[list[str]]:
+        return [
+            [
+                self.project.subjects[suggestion.subject_id].labels[
+                    "en"
+                ]  # TODO: make language selectable
+                for suggestion in suggestion_result
+            ]
+            for suggestion_result in suggestion_batch
+        ]
 
     def _truncate_text(self, text, encoding):
         """truncate text so it contains at most MAX_PROMPT_TOKENS according to the
