@@ -1,6 +1,8 @@
 name: Prepare
 description:
 inputs:
+  os:
+    required: true
   python-version:
     required: true
   poetry-version:
@@ -21,13 +23,20 @@ runs:
           ~/.cache/pypoetry/
         key: ignore-me
         restore-keys: |
-          poetry-installation-and-cache-${{ inputs.python-version }}-${{ inputs.poetry-version }}-
+          poetry-installation-and-cache-${{ inputs.os }}-${{ inputs.python-version }}-${{ inputs.poetry-version }}-
     - name: Set up Python ${{ inputs.python-version }}
       uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b  # v5.3.0
       with:
         python-version: ${{ inputs.python-version }}
+    - name: fix installation on macos using /tmp dir
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        echo "PIPX_HOME=/tmp/.cache/pipx" >> "$GITHUB_ENV"
+        echo "PIPX_BIN_DIR=/tmp/.local/bin" >> "$GITHUB_ENV"
+        echo "/tmp/.local/bin" >> $GITHUB_PATH
     - name: Install Poetry
       shell: bash
       run: |
-        pipx install poetry==${{ inputs.poetry-version }}
-        poetry env use ${{ inputs.python-version }}
+        pipx install poetry==${{ inputs.poetry-version }} --python $(which python${{ inputs.python-version }})
+        pipx ensurepath

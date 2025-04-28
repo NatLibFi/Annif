@@ -57,15 +57,35 @@ jobs:
         poetry run tests/time-startup.sh
 
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+    continue-on-error: true  #${{ matrix.experimental }}
     strategy:
       matrix:
+        os: [ubuntu-22.04]
         python-version: ["3.9", "3.10", "3.11", "3.12"]
-    name: test on Python ${{ matrix.python-version }}
+        experimental: [false]
+        include:  # Add given combinations to the matrix allowing jobs to fail
+        - os: macos-13
+          python-version: "3.10"
+          experimental: true
+        - os: macos-14
+          python-version: "3.11"
+          experimental: true
+        - os: macos-15
+          python-version: "3.12"
+          experimental: true
+        - os: windows-2025
+          python-version: "3.11"
+          experimental: true
+        - os: windows-2022
+          python-version: "3.12"
+          experimental: true
+    name: test on ${{ matrix.os }}, Python ${{ matrix.python-version }}
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: Install system packages
+      if: runner.os == 'Linux'
       run: |
         sudo apt-get install \
           libvoikko1 \
@@ -74,6 +94,7 @@ jobs:
       id: prepare
       uses: ./.github/actions/prepare
       with:
+        os: ${{ matrix.os }}
         python-version: ${{ matrix.python-version }}
         poetry-version: ${{ env.POETRY_VERSION }}
     - name: Install Python dependencies
