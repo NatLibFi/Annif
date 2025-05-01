@@ -109,12 +109,12 @@ jobs:
           poetry run pytest --cov=./ --cov-report xml --cov-append -m slow
         fi
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@13ce06bfc6bbe3ecf90edbbf1bc32fe5978ca1d3  # v5.3.1
+      uses: codecov/codecov-action@ad3126e916f78f00edff4ed0317cf185271ccc2d  # v5.4.2
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     - name: Save cache
       if: steps.prepare.outputs.cache-matched-key != format('poetry-installation-and-cache-{0}-{1}-{2}', matrix.python-version, env.POETRY_VERSION, hashFiles('**/poetry.lock'))
-      uses: actions/cache/save@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+      uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       with:
         path: |
           ~/.cache/pipx/venvs
@@ -129,7 +129,7 @@ jobs:
     timeout-minutes: 15
     steps:
     - name: "Build image for testing"
-      uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991  # v6.13.0
+      uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1  # v6.16.0
       with:
         push: false
         tags: test-image
@@ -145,20 +145,20 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
     - name: Login to Quay.io
-      uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567  # v3.3.0
+      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772  # v3.4.0
       with:
         registry: quay.io
         username: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_USERNAME }}
         password: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_PASSWORD }}
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96  # v5.6.1
+      uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804  # v5.7.0
       with:
         images: quay.io/natlibfi/annif
         tags: |
           latest
     - name: Build and push to Quay.io
-      uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991  # v6.13.0
+      uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1  # v6.16.0
       with:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
@@ -184,14 +184,14 @@ jobs:
         poetry publish --build
 
     - name: Login to Quay.io
-      uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567  # v3.3.0
+      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772  # v3.4.0
       with:
         registry: quay.io
         username: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_USERNAME }}
         password: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_PASSWORD }}
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96  # v5.6.1
+      uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804  # v5.7.0
       with:
         images: quay.io/natlibfi/annif
         tags: |
@@ -199,7 +199,7 @@ jobs:
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
     - name: Build and push to Quay.io
-      uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991  # v6.13.0
+      uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1  # v6.16.0
       with:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
