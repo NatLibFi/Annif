@@ -62,17 +62,23 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.BaseEnsembleBackend):
         self, texts: list[str], params: dict[str, Any]
     ) -> SuggestionBatch:
         sources = annif.util.parse_sources(params["sources"])
+        llm_weight = float(params["llm_weight"])
+        if llm_weight < 0.0 or llm_weight > 1.0:
+            raise ValueError("llm_weight must be between 0.0 and 1.0")
+
         batch_by_source = self._suggest_with_sources(texts, sources)
         merged_source_batch = self._merge_source_batches(
             batch_by_source, sources, params
         )
 
-        # Add LLM suggestions to the source batches
-        batch_by_source[self.project.project_id] = self._llm_suggest_batch(
-            texts, merged_source_batch, params
+        # Score the suggestion labels with the LLM
+        llm_results_batch = self._llm_suggest_batch(texts, merged_source_batch, params)
+
+        batches = [merged_source_batch, llm_results_batch]
+        weights = [1.0 - llm_weight, llm_weight]
+        return SuggestionBatch.from_averaged(batches, weights).filter(
+            limit=int(params["limit"])
         )
-        new_sources = sources + [(self.project.project_id, float(params["llm_weight"]))]
-        return self._merge_source_batches(batch_by_source, new_sources, params)
 
     def _llm_suggest_batch(
         self,
