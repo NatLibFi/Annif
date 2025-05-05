@@ -134,6 +134,7 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.BaseEnsembleBackend):
                     score=score,
                 )
                 for llm_label, score in llm_result.items()
+                if llm_label in labels
             ]
             llm_batch_suggestions.append(llm_suggestions)
         return SuggestionBatch.from_sequence(
