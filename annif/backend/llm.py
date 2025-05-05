@@ -29,7 +29,7 @@ class BaseLLMBackend(backend.AnnifBackend):
     # """Base class for TODO backends"""
 
     DEFAULT_PARAMETERS = {
-        "api_version": "2024-02-15-preview",
+        "api_version": "2024-10-21",
         "temperature": 0.0,
         "top_p": 1.0,
         "seed": 0,
