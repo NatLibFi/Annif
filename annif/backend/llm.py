@@ -123,20 +123,28 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.BaseEnsembleBackend):
             try:
                 llm_result = json.loads(response)
             except (TypeError, json.decoder.JSONDecodeError) as err:
-                print(err)
-                llm_result = None
-                continue  # TODO: handle this error
-            llm_suggestions = [
-                SubjectSuggestion(
-                    subject_id=self.project.subjects.by_label(
-                        llm_label, self.params["labels_language"]
-                    ),
-                    score=score,
+                print(f"Error decoding JSON response from LLM: {response}")
+                print(f"Error: {err}")
+                llm_batch_suggestions.append(
+                    [SubjectSuggestion(subject_id=None, score=0.0) for _ in labels]
                 )
-                for llm_label, score in llm_result.items()
-                if llm_label in labels
-            ]
-            llm_batch_suggestions.append(llm_suggestions)
+                continue
+            llm_batch_suggestions.append(
+                [
+                    (
+                        SubjectSuggestion(
+                            subject_id=self.project.subjects.by_label(
+                                llm_label, self.params["labels_language"]
+                            ),
+                            score=score,
+                        )
+                        if llm_label in labels
+                        else SubjectSuggestion(subject_id=None, score=0.0)
+                    )
+                    for llm_label, score in llm_result.items()
+                ]
+            )
+
         return SuggestionBatch.from_sequence(
             llm_batch_suggestions,
             self.project.subjects,
