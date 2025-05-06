@@ -37,9 +37,9 @@ def _http() -> Type[AnnifBackend]:
 
 
 def _llm_ensemble() -> Type[AnnifBackend]:
-    from . import llm
+    from . import llm_ensemble
 
-    return llm.LLMEnsembleBackend
+    return llm_ensemble.LLMEnsembleBackend
 
 
 def _mllm() -> Type[AnnifBackend]:
