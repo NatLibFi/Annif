@@ -51,7 +51,7 @@ class BaseLLMBackend(backend.AnnifBackend):
         return params
 
 
-class LLMEnsembleBackend(BaseLLMBackend, ensemble.BaseEnsembleBackend):
+class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
     # """TODO backend that combines results from multiple projects"""
 
     name = "llm_ensemble"
@@ -75,8 +75,10 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.BaseEnsembleBackend):
     """
     # Give zero or very low score to the keywords that do not describe the text.
 
-    def _train(self, corpus: DocumentCorpus, params: dict[str, Any], jobs: int = 0):
-        raise NotSupportedException("Training LM ensemble backend is not possible.")
+    def get_hp_optimizer(self, corpus: DocumentCorpus, metric: str) -> None:
+        raise NotSupportedException(
+            "Hyperparameter optimization for LLM ensemble backend is not possible."
+        )
 
     def _suggest_batch(
         self, texts: list[str], params: dict[str, Any]

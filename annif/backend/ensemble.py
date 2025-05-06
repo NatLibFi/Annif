@@ -163,4 +163,4 @@ class EnsembleBackend(BaseEnsembleBackend, hyperopt.AnnifHyperoptBackend):
         return EnsembleOptimizer(self, corpus, metric)
 
     def _train(self, corpus: DocumentCorpus, params: dict[str, Any], jobs: int = 0):
-        raise NotSupportedException("Training ensemble backend is not possible.")
+        raise NotSupportedException(f"Training {self.name} backend is not possible.")
