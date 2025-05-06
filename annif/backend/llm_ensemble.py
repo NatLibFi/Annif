@@ -50,6 +50,37 @@ class BaseLLMBackend(backend.AnnifBackend):
         params.update(self.DEFAULT_PARAMETERS)
         return params
 
+    def _truncate_text(self, text, encoding, max_prompt_tokens):
+        """Truncate text so it contains at most max_prompt_tokens according to the
+        OpenAI tokenizer"""
+        tokens = encoding.encode(text)
+        return encoding.decode(tokens[:max_prompt_tokens])
+
+    def _call_llm(
+        self, system_prompt: str, prompt: str, model: str, params: dict[str, Any]
+    ) -> str:
+        temperature = float(params["temperature"])
+        top_p = float(params["top_p"])
+        seed = int(params["seed"])
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt},
+        ]
+        try:
+            completion = self.client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                seed=seed,
+                top_p=top_p,
+                response_format={"type": "json_object"},
+            )
+        except BadRequestError as err:  # openai.RateLimitError
+            print(err)
+            return "{}"
+        return completion.choices[0].message.content
+
 
 class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
     # """TODO backend that combines results from multiple projects"""
@@ -62,18 +93,6 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
         "labels_language": "en",
         "sources_limit": 10,
     }
-
-    system_prompt = """
-        You will be given text and a list of keywords to describe it. Your task is to
-        score the keywords with a value between 0.0 and 1.0. The score value
-        should depend on how well the keyword represents the text: a perfect
-        keyword should have score 1.0 and completely unrelated keyword score
-        0.0. You must output JSON with keywords as field names and add their scores
-        as field values.
-        There must be the same number of objects in the JSON as there are lines in the
-        intput keyword list; do not skip scoring any keywords.
-    """
-    # Give zero or very low score to the keywords that do not describe the text.
 
     def get_hp_optimizer(self, corpus: DocumentCorpus, metric: str) -> None:
         raise NotSupportedException(
@@ -113,6 +132,17 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
         encoding = tiktoken.encoding_for_model(model.rsplit("-", 1)[0])
         max_prompt_tokens = int(params["max_prompt_tokens"])
 
+        system_prompt = """
+            You will be given text and a list of keywords to describe it. Your task is
+            to score the keywords with a value between 0.0 and 1.0. The score value
+            should depend on how well the keyword represents the text: a perfect
+            keyword should have score 1.0 and completely unrelated keyword score
+            0.0. You must output JSON with keywords as field names and add their scores
+            as field values.
+            There must be the same number of objects in the JSON as there are lines in
+            the intput keyword list; do not skip scoring any keywords.
+        """
+
         labels_batch = self._get_labels_batch(suggestion_batch)
 
         llm_batch_suggestions = []
@@ -121,7 +151,7 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
             text = self._truncate_text(text, encoding, max_prompt_tokens)
             prompt += "Here is the text:\n" + text + "\n"
 
-            response = self._call_llm(prompt, model, params)
+            response = self._call_llm(system_prompt, prompt, model, params)
             try:
                 llm_result = json.loads(response)
             except (TypeError, json.decoder.JSONDecodeError) as err:
@@ -162,34 +192,3 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
             ]
             for suggestion_result in suggestion_batch
         ]
-
-    def _truncate_text(self, text, encoding, max_prompt_tokens):
-        """truncate text so it contains at most max_prompt_tokens according to the
-        OpenAI tokenizer"""
-        tokens = encoding.encode(text)
-        return encoding.decode(tokens[:max_prompt_tokens])
-
-    def _call_llm(self, prompt: str, model: str, params: dict[str, Any]) -> str:
-        temperature = float(params["temperature"])
-        top_p = float(params["top_p"])
-        seed = int(params["seed"])
-
-        messages = [
-            {"role": "system", "content": self.system_prompt},
-            {"role": "user", "content": prompt},
-        ]
-        try:
-            completion = self.client.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=temperature,
-                seed=seed,
-                top_p=top_p,
-                response_format={"type": "json_object"},
-            )
-
-            completion = completion.choices[0].message.content
-            return completion
-        except BadRequestError as err:  # openai.RateLimitError
-            print(err)
-            return "{}"
