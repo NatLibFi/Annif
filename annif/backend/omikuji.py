@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os.path
-import shutil
 from typing import TYPE_CHECKING, Any
 
 import omikuji
@@ -103,9 +102,7 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         hyper_param.collapse_every_n_layers = int(params["collapse_every_n_layers"])
 
         self._model = omikuji.Model.train_on_data(train_path, hyper_param, jobs or None)
-        if os.path.exists(model_path):
-            shutil.rmtree(model_path)
-        self._model.save(os.path.join(self.datadir, self.MODEL_FILE))
+        annif.util.atomic_save_folder(self._model, model_path)
 
     def _train(
         self,

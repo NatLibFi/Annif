@@ -2,7 +2,7 @@ FROM python:3.12-slim-bookworm
 LABEL org.opencontainers.image.authors="grp-natlibfi-annif@helsinki.fi"
 SHELL ["/bin/bash", "-c"]
 
-ARG optional_dependencies="voikko fasttext nn omikuji yake spacy stwfsa"
+ARG optional_dependencies="voikko fasttext nn omikuji yake spacy stwfsa pecos"
 ARG POETRY_VIRTUALENVS_CREATE=false
 
 # Install system dependencies needed at runtime:
@@ -36,6 +36,10 @@ RUN if [[ $optional_dependencies =~ "spacy" ]]; then \
 			python -m spacy download $model; \
 		done; \
 	fi
+RUN if [[ $optional_dependencies =~ "pecos" ]]; then \
+	mkdir /.cache -m a=rwx; \
+	fi
+
 
 # Second round of installation with the actual code:
 COPY annif /Annif/annif
