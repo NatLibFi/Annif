@@ -12,10 +12,10 @@ from openai import AzureOpenAI, BadRequestError, OpenAIError
 import annif.eval
 import annif.parallel
 import annif.util
-from annif.exception import NotSupportedException, OperationFailedException
+from annif.exception import OperationFailedException
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
 
-from . import backend, ensemble
+from . import backend, ensemble, hyperopt
 
 if TYPE_CHECKING:
     from annif.corpus.document import DocumentCorpus
@@ -116,9 +116,7 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
     }
 
     def get_hp_optimizer(self, corpus: DocumentCorpus, metric: str) -> None:
-        raise NotSupportedException(
-            "Hyperparameter optimization for LLM ensemble backend is not possible."
-        )
+        return LLMEnsembleOptimizer(self, corpus, metric)
 
     def _suggest_batch(
         self, texts: list[str], params: dict[str, Any]
@@ -219,3 +217,81 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
             ]
             for suggestion_result in suggestion_batch
         ]
+
+
+class LLMEnsembleOptimizer(ensemble.EnsembleOptimizer):
+    """Hyperparameter optimizer for the LLM ensemble backend"""
+
+    def _prepare(self, n_jobs=1):
+        sources = dict(annif.util.parse_sources(self._backend.params["sources"]))
+
+        # initialize the source projects before forking, to save memory
+        # for project_id in sources.keys():
+        #     project = self._backend.project.registry.get_project(project_id)
+        #     project.initialize(parallel=True)
+        self._backend.initialize(parallel=True)
+
+        psmap = annif.parallel.ProjectSuggestMap(
+            self._backend.project.registry,
+            list(sources.keys()),
+            backend_params=None,
+            limit=None,
+            threshold=0.0,
+        )
+
+        jobs, pool_class = annif.parallel.get_pool(n_jobs)
+
+        self._gold_batches = []
+        self._source_batches = []
+
+        print("Generating source batches")
+        with pool_class(jobs) as pool:
+            for suggestions_batch, gold_batch in pool.imap_unordered(
+                psmap.suggest_batch, self._corpus.doc_batches
+            ):
+                self._source_batches.append(suggestions_batch)
+                self._gold_batches.append(gold_batch)
+
+        # get the llm batches
+        print("Generating LLM batches")
+        self._merged_source_batches = []
+        self._llm_batches = []
+        for batch_by_source, docs_batch in zip(
+            self._source_batches, self._corpus.doc_batches
+        ):
+            merged_source_batch = self._backend._merge_source_batches(
+                batch_by_source,
+                sources.items(),
+                {"limit": self._backend.params["sources_limit"]},
+            )
+            llm_batch = self._backend._llm_suggest_batch(
+                [doc.text for doc in docs_batch],
+                merged_source_batch,
+                self._backend.params,
+            )
+            self._merged_source_batches.append(merged_source_batch)
+            self._llm_batches.append(llm_batch)
+
+    def _objective(self, trial) -> float:
+        eval_batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
+        params = {
+            "llm_weight": trial.suggest_float("llm_weight", 0.0, 1.0),
+        }
+        for merged_source_batch, llm_batch, gold_batch in zip(
+            self._merged_source_batches, self._llm_batches, self._gold_batches
+        ):
+            batches = [merged_source_batch, llm_batch]
+            weights = [1.0 - params["llm_weight"], params["llm_weight"]]
+            avg_batch = SuggestionBatch.from_averaged(batches, weights).filter(
+                limit=int(self._backend.params["limit"])
+            )
+            eval_batch.evaluate_many(avg_batch, gold_batch)
+        results = eval_batch.results(metrics=[self._metric])
+        return results[self._metric]
+
+    def _postprocess(self, study):
+        bp = study.best_params
+        lines = [
+            f"llm_weight={bp['llm_weight']}",
+        ]
+        return hyperopt.HPRecommendation(lines=lines, score=study.best_value)
