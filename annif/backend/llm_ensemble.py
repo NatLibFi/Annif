@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import json
 import os
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 import tiktoken
-from openai import AzureOpenAI, BadRequestError
+from openai import AzureOpenAI, BadRequestError, OpenAIError
 
 import annif.eval
 import annif.parallel
 import annif.util
-from annif.exception import NotSupportedException
+from annif.exception import NotSupportedException, OperationFailedException
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
 
 from . import backend, ensemble
@@ -38,7 +38,21 @@ class BaseLLMBackend(backend.AnnifBackend):
             api_version=self.params["api_version"],
             api_key=os.getenv("AZURE_OPENAI_KEY"),
         )
-        # TODO: Verify the connection?
+        self._verify_connection()
+
+    def _verify_connection(self):
+        try:
+            self._call_llm(
+                system_prompt="You are a helpful assistant.",
+                prompt="This is a test prompt to verify the connection.",
+                model=self.params["model"],
+                params=self.params,
+            )
+        except OpenAIError as err:
+            raise OperationFailedException(
+                f"Failed to connect to endpoint {self.params['endpoint']}: {err}"
+            ) from err
+        print(f"Successfully connected to endpoint {self.params['endpoint']}")
 
     def default_params(self):
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
@@ -53,7 +67,12 @@ class BaseLLMBackend(backend.AnnifBackend):
         return encoding.decode(tokens[:max_prompt_tokens])
 
     def _call_llm(
-        self, system_prompt: str, prompt: str, model: str, params: dict[str, Any]
+        self,
+        system_prompt: str,
+        prompt: str,
+        model: str,
+        params: dict[str, Any],
+        response_format: Optional[dict] = None,
     ) -> str:
         temperature = float(params["temperature"])
         top_p = float(params["top_p"])
@@ -70,7 +89,7 @@ class BaseLLMBackend(backend.AnnifBackend):
                 temperature=temperature,
                 seed=seed,
                 top_p=top_p,
-                response_format={"type": "json_object"},
+                response_format=response_format,
             )
         except BadRequestError as err:
             print(err)
@@ -148,7 +167,13 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
             text = self._truncate_text(text, encoding, max_prompt_tokens)
             prompt += "Here is the text:\n" + text + "\n"
 
-            response = self._call_llm(system_prompt, prompt, model, params)
+            response = self._call_llm(
+                system_prompt,
+                prompt,
+                model,
+                params,
+                response_format={"type": "json_object"},
+            )
             try:
                 llm_result = json.loads(response)
             except (TypeError, json.decoder.JSONDecodeError) as err:
