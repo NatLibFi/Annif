@@ -1,5 +1,4 @@
-"""Language model based ensemble backend that combines results from multiple
-projects."""
+"""Backend utilizing a large-language model."""
 
 from __future__ import annotations
 
@@ -18,15 +17,12 @@ from annif.suggestion import SubjectSuggestion, SuggestionBatch
 
 from . import backend, ensemble
 
-# from openai import AsyncAzureOpenAI
-
-
 if TYPE_CHECKING:
     from annif.corpus.document import DocumentCorpus
 
 
 class BaseLLMBackend(backend.AnnifBackend):
-    # """Base class for TODO backends"""
+    """Base class for LLM backends"""
 
     DEFAULT_PARAMETERS = {
         "api_version": "2024-10-21",
@@ -76,14 +72,15 @@ class BaseLLMBackend(backend.AnnifBackend):
                 top_p=top_p,
                 response_format={"type": "json_object"},
             )
-        except BadRequestError as err:  # openai.RateLimitError
+        except BadRequestError as err:
             print(err)
             return "{}"
         return completion.choices[0].message.content
 
 
 class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
-    # """TODO backend that combines results from multiple projects"""
+    """Ensemble backend that combines results from multiple projects and scores them
+    with a LLM"""
 
     name = "llm_ensemble"
 
