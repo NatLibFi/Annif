@@ -33,11 +33,16 @@ class BaseLLMBackend(backend.AnnifBackend):
 
     def initialize(self, parallel: bool = False) -> None:
         super().initialize(parallel)
-        self.client = AzureOpenAI(
-            azure_endpoint=self.params["endpoint"],
-            api_version=self.params["api_version"],
-            api_key=os.getenv("AZURE_OPENAI_KEY"),
-        )
+        try:
+            self.client = AzureOpenAI(
+                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+                api_key=os.getenv("AZURE_OPENAI_KEY"),
+                api_version=self.params["api_version"],
+            )
+        except ValueError as err:
+            raise OperationFailedException(
+                f"Failed to connect to Azure endpoint: {err}"
+            ) from err
         self._verify_connection()
 
     def _verify_connection(self):
@@ -52,7 +57,7 @@ class BaseLLMBackend(backend.AnnifBackend):
             raise OperationFailedException(
                 f"Failed to connect to endpoint {self.params['endpoint']}: {err}"
             ) from err
-        print(f"Successfully connected to endpoint {self.params['endpoint']}")
+        # print(f"Successfully connected to endpoint {self.params['endpoint']}")
 
     def default_params(self):
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
