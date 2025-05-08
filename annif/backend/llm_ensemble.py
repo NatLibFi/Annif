@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import concurrent.futures
 import json
 import os
 from typing import TYPE_CHECKING, Any, Optional
@@ -166,8 +167,7 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
 
         labels_batch = self._get_labels_batch(suggestion_batch)
 
-        llm_batch_suggestions = []
-        for text, labels in zip(texts, labels_batch):
+        def process_single_prompt(text, labels):
             prompt = "Here are the keywords:\n" + "\n".join(labels) + "\n" * 3
             text = self._truncate_text(text, encoding, max_prompt_tokens)
             prompt += "Here is the text:\n" + text + "\n"
@@ -184,24 +184,25 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
             except (TypeError, json.decoder.JSONDecodeError) as err:
                 print(f"Error decoding JSON response from LLM: {response}")
                 print(f"Error: {err}")
-                llm_batch_suggestions.append(
-                    [SubjectSuggestion(subject_id=None, score=0.0) for _ in labels]
-                )
-                continue
-            llm_batch_suggestions.append(
-                [
-                    (
-                        SubjectSuggestion(
-                            subject_id=self.project.subjects.by_label(
-                                llm_label, self.params["labels_language"]
-                            ),
-                            score=score,
-                        )
-                        if llm_label in labels
-                        else SubjectSuggestion(subject_id=None, score=0.0)
+                return [SubjectSuggestion(subject_id=None, score=0.0) for _ in labels]
+
+            return [
+                (
+                    SubjectSuggestion(
+                        subject_id=self.project.subjects.by_label(
+                            llm_label, self.params["labels_language"]
+                        ),
+                        score=score,
                     )
-                    for llm_label, score in llm_result.items()
-                ]
+                    if llm_label in labels
+                    else SubjectSuggestion(subject_id=None, score=0.0)
+                )
+                for llm_label, score in llm_result.items()
+            ]
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            llm_batch_suggestions = list(
+                executor.map(process_single_prompt, texts, labels_batch)
             )
 
         return SuggestionBatch.from_sequence(
