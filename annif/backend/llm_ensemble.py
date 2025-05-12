@@ -198,7 +198,7 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
                 for llm_label, score in llm_result.items()
             ]
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
             llm_batch_suggestions = list(
                 executor.map(process_single_prompt, texts, labels_batch)
             )
