@@ -112,6 +112,7 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
     DEFAULT_PARAMETERS = {
         "max_prompt_tokens": 127000,
         "llm_weight": 0.7,
+        "llm_exponent": 1.0,
         "labels_language": "en",
         "sources_limit": 10,
     }
@@ -124,8 +125,11 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
     ) -> SuggestionBatch:
         sources = annif.util.parse_sources(params["sources"])
         llm_weight = float(params["llm_weight"])
+        llm_exponent = float(params["llm_exponent"])
         if llm_weight < 0.0 or llm_weight > 1.0:
             raise ValueError("llm_weight must be between 0.0 and 1.0")
+        if llm_exponent < 0.0:
+            raise ValueError("llm_weight_exp must be greater than or equal to 0.0")
 
         batch_by_source = self._suggest_with_sources(texts, sources)
         merged_source_batch = self._merge_source_batches(
@@ -137,7 +141,8 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
 
         batches = [merged_source_batch, llm_results_batch]
         weights = [1.0 - llm_weight, llm_weight]
-        return SuggestionBatch.from_averaged(batches, weights).filter(
+        exponents = [1.0, llm_exponent]
+        return SuggestionBatch.from_averaged(batches, weights, exponents).filter(
             limit=int(params["limit"])
         )
 
@@ -277,15 +282,23 @@ class LLMEnsembleOptimizer(ensemble.EnsembleOptimizer):
         eval_batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
         params = {
             "llm_weight": trial.suggest_float("llm_weight", 0.0, 1.0),
+            "llm_exponent": trial.suggest_float("llm_exponent", 0.0, 10.0),
         }
         for merged_source_batch, llm_batch, gold_batch in zip(
             self._merged_source_batches, self._llm_batches, self._gold_batches
         ):
             batches = [merged_source_batch, llm_batch]
-            weights = [1.0 - params["llm_weight"], params["llm_weight"]]
-            avg_batch = SuggestionBatch.from_averaged(batches, weights).filter(
-                limit=int(self._backend.params["limit"])
-            )
+            weights = [
+                1.0 - params["llm_weight"],
+                params["llm_weight"],
+            ]
+            exponents = [
+                1.0,
+                params["llm_exponent"],
+            ]
+            avg_batch = SuggestionBatch.from_averaged(
+                batches, weights, exponents
+            ).filter(limit=int(self._backend.params["limit"]))
             eval_batch.evaluate_many(avg_batch, gold_batch)
         results = eval_batch.results(metrics=[self._metric])
         return results[self._metric]
@@ -294,5 +307,6 @@ class LLMEnsembleOptimizer(ensemble.EnsembleOptimizer):
         bp = study.best_params
         lines = [
             f"llm_weight={bp['llm_weight']}",
+            f"llm_exponent={bp['llm_exponent']}",
         ]
         return hyperopt.HPRecommendation(lines=lines, score=study.best_value)
