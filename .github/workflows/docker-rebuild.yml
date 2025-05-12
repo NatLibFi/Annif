@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 15
     steps:
     - name: "Build for testing"
-      uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991  # v6.13.0
+      uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1  # v6.16.0
       with:
         push: false
         tags: test-image
@@ -18,14 +18,14 @@ jobs:
       run: |
         docker run --rm --workdir /Annif test-image pytest -p no:cacheprovider
     - name: Login to Quay.io
-      uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567  # v3.3.0
+      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772  # v3.4.0
       with:
         registry: quay.io
         username: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_USERNAME }}
         password: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_PASSWORD }}
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96  # v5.6.1
+      uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804  # v5.7.0
       with:
         images: quay.io/natlibfi/annif
         flavor: |
@@ -35,7 +35,7 @@ jobs:
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
     - name: Build and push to Quay.io
-      uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991  # v6.13.0
+      uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1  # v6.16.0
       with:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
