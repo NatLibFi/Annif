@@ -145,9 +145,46 @@ See "Cite this repository" in the details of the repository.
 ## Annif articles
 <ul>
 <li>
-Golub, K.; Suominen, O.; Mohammed, A.; Aagaard, H.; Osterman, O, 2024.
+Suominen, O; Inkinen, J.; Lehtinen, M. 2025.
+Annif at SemEval-2025 Task 5: Traditional XMTC augmented by LLMs, pre-print.
+https://arxiv.org/abs/2504.19675
+<details>
+<summary>See BibTex</summary>
+
+    @misc{suominen2025annifsemeval2025task5,
+      title={Annif at SemEval-2025 Task 5: Traditional XMTC augmented by LLMs}, 
+      author={Osma Suominen and Juho Inkinen and Mona Lehtinen},
+      year={2025},
+      eprint={2504.19675},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2504.19675}, 
+    }
+</details>
+</li>
+<li>
+Inkinen, J.; Lehtinen, M.; Suominen, O., 2025.
+Annif Users Survey: Understanding Usage and Challenges.
+URL:
+https://urn.fi/URN:ISBN:978-952-84-1301-1
+<details>
+<summary>See BibTex</summary>
+
+    @misc{inkinen2025,
+      title={Annif Users Survey: Understanding Usage and Challenges},
+      author={Inkinen, Juho and Lehtinen, Mona and Suominen, Osma},
+      series={The National Library of Finland. Reports and Studies},
+      issn={2242–8119},
+      isbn={978-952-84-1301-1},
+      year={2025},
+      url={URN:ISBN:978-952-84-1301-1},
+    }
+</details>
+</li>
+<li>
+Golub, K.; Suominen, O.; Mohammed, A.; Aagaard, H.; Osterman, O., 2024.
 Automated Dewey Decimal Classification of Swedish library metadata using Annif software.
-Journal of Documentation, in press.
+Journal of Documentation, 80(5), pp. 1057-1079. URL:
 https://doi.org/10.1108/JD-01-2022-0026
 <details>
 <summary>See BibTex</summary>
@@ -156,7 +193,7 @@ https://doi.org/10.1108/JD-01-2022-0026
       title={Automated Dewey Decimal Classification of Swedish library metadata using Annif software},
       author={Golub, Koraljka and Suominen, Osma and Mohammed, Ahmed Taiye and Aagaard, Harriet and Osterman, Olof},
       journal={J. Doc.},
-      year={in press},
+      year={2024},
       doi = {10.1108/JD-01-2022-0026},
       url={https://www.emerald.com/insight/content/doi/10.1108/JD-01-2022-0026},
     }
