@@ -190,6 +190,8 @@ paths:
           content:
             application/json:
               {}
+        "403":
+          $ref: '#/components/responses/NotAllowed'
         "404":
           $ref: '#/components/responses/NotFound'
         "503":
@@ -482,6 +484,12 @@ components:
             $ref: '#/components/schemas/Problem'
     NotFound:
       description: Project not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotAllowed:
+      description: Operation is not allowed
       content:
         application/problem+json:
           schema:
