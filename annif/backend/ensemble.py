@@ -30,13 +30,13 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         sources = annif.util.parse_sources(params["sources"])
         return [
             getattr(self.project.registry.get_project(project_id), attr)
-            for project_id, _ in sources
+            for project_id, _, _ in sources
         ]
 
     def initialize(self, parallel: bool = False) -> None:
         # initialize all the source projects
         params = self._get_backend_params(None)
-        for project_id, _ in annif.util.parse_sources(params["sources"]):
+        for project_id, _, _ in annif.util.parse_sources(params["sources"]):
             project = self.project.registry.get_project(project_id)
             project.initialize(parallel)
 
@@ -45,7 +45,7 @@ class BaseEnsembleBackend(backend.AnnifBackend):
     ) -> dict[str, SuggestionBatch]:
         return {
             project_id: self.project.registry.get_project(project_id).suggest(texts)
-            for project_id, _ in sources
+            for project_id, _, _ in sources
         }
 
     def _merge_source_batches(
@@ -59,9 +59,10 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         average based on the weights given in the sources tuple. Intended
         to be overridden in subclasses."""
 
-        batches = [batch_by_source[project_id] for project_id, _ in sources]
-        weights = [weight for _, weight in sources]
-        return SuggestionBatch.from_averaged(batches, weights).filter(
+        batches = [batch_by_source[project_id] for project_id, _, _ in sources]
+        weights = [weight for _, weight, _ in sources]
+        exponents = [exp for _, _, exp in sources]
+        return SuggestionBatch.from_averaged(batches, weights, exponents).filter(
             limit=int(params["limit"])
         )
 
@@ -82,7 +83,7 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         super().__init__(backend, corpus, metric)
         self._sources = [
             project_id
-            for project_id, _ in annif.util.parse_sources(
+            for project_id, _, _ in annif.util.parse_sources(
                 backend.config_params["sources"]
             )
         ]
@@ -112,33 +113,49 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                 self._source_batches.append(suggestions)
                 self._gold_batches.append(gold_batch)
 
-    def _normalize(self, hps: dict[str, float]) -> dict[str, float]:
-        total = sum(hps.values())
-        return {source: hps[source] / total for source in hps}
+    def _normalize(self, weights: list[float]) -> list[float]:
+        total = sum(weights)
+        return [w / total for w in weights]
 
     def _format_cfg_line(self, hps: dict[str, float]) -> str:
+        weights = self._normalize(
+            [hps[source] for source in hps if source.endswith("_weight")]
+        )
+        exponents = [hps[source] for source in hps if source.endswith("_exp")]
         return "sources=" + ",".join(
-            [f"{src}:{weight:.4f}" for src, weight in hps.items()]
+            [
+                f"{proj_id}:{weight:.4f}:{exp:.4f}"
+                for proj_id, weight, exp in zip(self._sources, weights, exponents)
+            ]
         )
 
     def _objective(self, trial: Trial) -> float:
         eval_batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
-        proj_weights = {
-            project_id: trial.suggest_float(project_id, 0.0, 1.0)
+        proj_params = {
+            project_id: {
+                "weight": trial.suggest_float(project_id + "_weight", 0.0, 1.0),
+                "exponent": trial.suggest_float(project_id + "_exp", 0.0, 10.0),
+            }
             for project_id in self._sources
         }
+
         for gold_batch, src_batches in zip(self._gold_batches, self._source_batches):
             batches = [src_batches[project_id] for project_id in self._sources]
-            weights = [proj_weights[project_id] for project_id in self._sources]
-            avg_batch = SuggestionBatch.from_averaged(batches, weights).filter(
-                limit=int(self._backend.params["limit"])
-            )
+            weights = [
+                proj_params[project_id]["weight"] for project_id in self._sources
+            ]
+            exponents = [
+                proj_params[project_id]["exponent"] for project_id in self._sources
+            ]
+            avg_batch = SuggestionBatch.from_averaged(
+                batches, weights, exponents
+            ).filter(limit=int(self._backend.params["limit"]))
             eval_batch.evaluate_many(avg_batch, gold_batch)
         results = eval_batch.results(metrics=[self._metric])
         return results[self._metric]
 
     def _postprocess(self, study: Study) -> HPRecommendation:
-        line = self._format_cfg_line(self._normalize(study.best_params))
+        line = self._format_cfg_line(study.best_params)
         return hyperopt.HPRecommendation(lines=[line], score=study.best_value)
 
 
