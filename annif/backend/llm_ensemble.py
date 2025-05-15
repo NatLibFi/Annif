@@ -159,10 +159,10 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
 
         system_prompt = """
             You will be given text and a list of keywords to describe it. Your task is
-            to score the keywords with a value between 0.0 and 1.0. The score value
+            to score the keywords with a value between 0 and 100. The score value
             should depend on how well the keyword represents the text: a perfect
-            keyword should have score 1.0 and completely unrelated keyword score
-            0.0. You must output JSON with keywords as field names and add their scores
+            keyword should have score 100 and completely unrelated keyword score
+            0. You must output JSON with keywords as field names and add their scores
             as field values.
             There must be the same number of objects in the JSON as there are lines in
             the intput keyword list; do not skip scoring any keywords.
@@ -195,7 +195,7 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
                         subject_id=self.project.subjects.by_label(
                             llm_label, self.params["labels_language"]
                         ),
-                        score=score,
+                        score=score / 100.0,  # LLM scores are between 0 and 100
                     )
                     if llm_label in labels
                     else SubjectSuggestion(subject_id=None, score=0.0)
