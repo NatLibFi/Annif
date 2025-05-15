@@ -88,21 +88,28 @@ def cleanup_uri(uri: str) -> str:
 
 
 def parse_sources(sourcedef: str) -> list[tuple[str, float]]:
-    """parse a source definition such as 'src1:1.0,src2' into a sequence of
-    tuples (src_id, weight)"""
+    """parse a source definition such as 'src1:1.0:0.5,src2' into a sequence of
+    tuples (src_id, weight, exponent)"""
 
     sources = []
     totalweight = 0.0
     for srcdef in sourcedef.strip().split(","):
         srcval = srcdef.strip().split(":")
         src_id = srcval[0]
-        if len(srcval) > 1:
+        if len(srcval) == 3:
+            exponent = float(srcval[2])
+            weight = float(srcval[1])
+        elif len(srcval) == 2:
+            exponent = 1.0
             weight = float(srcval[1])
         else:
+            exponent = 1.0
             weight = 1.0
-        sources.append((src_id, weight))
+        sources.append((src_id, weight, exponent))
         totalweight += weight
-    return [(srcid, weight / totalweight) for srcid, weight in sources]
+    return [
+        (srcid, weight / totalweight, exponent) for srcid, weight, exponent in sources
+    ]
 
 
 def parse_args(param_string: str) -> tuple[list, dict]:
