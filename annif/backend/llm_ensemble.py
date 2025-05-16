@@ -33,7 +33,6 @@ class BaseLLMBackend(backend.AnnifBackend):
     }
 
     def initialize(self, parallel: bool = False) -> None:
-        super().initialize(parallel)
         try:
             self.client = AzureOpenAI(
                 azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
@@ -45,6 +44,7 @@ class BaseLLMBackend(backend.AnnifBackend):
                 f"Failed to connect to Azure endpoint: {err}"
             ) from err
         self._verify_connection()
+        super().initialize(parallel)
 
     def _verify_connection(self):
         try:
