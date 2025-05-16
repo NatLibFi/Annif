@@ -8,7 +8,7 @@ import os
 from typing import TYPE_CHECKING, Any, Optional
 
 import tiktoken
-from openai import AzureOpenAI, BadRequestError, OpenAIError
+from openai import AzureOpenAI, BadRequestError, OpenAI, OpenAIError
 
 import annif.eval
 import annif.parallel
@@ -33,16 +33,24 @@ class BaseLLMBackend(backend.AnnifBackend):
     }
 
     def initialize(self, parallel: bool = False) -> None:
-        try:
+        azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+        api_base_url = os.getenv("LLM_API_BASE_URL")
+        if api_base_url is not None:
+            self.client = OpenAI(
+                base_url=api_base_url,
+                api_key=os.getenv("LLM_API_KEY", "dummy-key"),
+            )
+        elif azure_endpoint is not None:
             self.client = AzureOpenAI(
-                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+                azure_endpoint=azure_endpoint,
                 api_key=os.getenv("AZURE_OPENAI_KEY"),
                 api_version=self.params["api_version"],
             )
-        except ValueError as err:
+        else:
             raise OperationFailedException(
-                f"Failed to connect to Azure endpoint: {err}"
-            ) from err
+                "Please set the AZURE_OPENAI_ENDPOINT or LLM_API_BASE_URL "
+                "environment variable for LLM API access."
+            )
         self._verify_connection()
         super().initialize(parallel)
 
@@ -56,7 +64,7 @@ class BaseLLMBackend(backend.AnnifBackend):
             )
         except OpenAIError as err:
             raise OperationFailedException(
-                f"Failed to connect to endpoint {self.params['endpoint']}: {err}"
+                f"Failed to connect to LLM API: {err}"
             ) from err
         # print(f"Successfully connected to endpoint {self.params['endpoint']}")
 
