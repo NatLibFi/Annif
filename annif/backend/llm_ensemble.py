@@ -8,15 +8,15 @@ import os
 from typing import TYPE_CHECKING, Any, Optional
 
 import tiktoken
-from openai import AzureOpenAI, BadRequestError, OpenAIError
+from openai import AzureOpenAI, BadRequestError, OpenAI, OpenAIError
 
 import annif.eval
 import annif.parallel
 import annif.util
-from annif.exception import NotSupportedException, OperationFailedException
+from annif.exception import OperationFailedException
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
 
-from . import backend, ensemble
+from . import backend, ensemble, hyperopt
 
 if TYPE_CHECKING:
     from annif.corpus.document import DocumentCorpus
@@ -33,18 +33,26 @@ class BaseLLMBackend(backend.AnnifBackend):
     }
 
     def initialize(self, parallel: bool = False) -> None:
-        super().initialize(parallel)
-        try:
+        azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+        api_base_url = os.getenv("LLM_API_BASE_URL")
+        if api_base_url is not None:
+            self.client = OpenAI(
+                base_url=api_base_url,
+                api_key=os.getenv("LLM_API_KEY", "dummy-key"),
+            )
+        elif azure_endpoint is not None:
             self.client = AzureOpenAI(
-                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+                azure_endpoint=azure_endpoint,
                 api_key=os.getenv("AZURE_OPENAI_KEY"),
                 api_version=self.params["api_version"],
             )
-        except ValueError as err:
+        else:
             raise OperationFailedException(
-                f"Failed to connect to Azure endpoint: {err}"
-            ) from err
+                "Please set the AZURE_OPENAI_ENDPOINT or LLM_API_BASE_URL "
+                "environment variable for LLM API access."
+            )
         self._verify_connection()
+        super().initialize(parallel)
 
     def _verify_connection(self):
         try:
@@ -56,7 +64,7 @@ class BaseLLMBackend(backend.AnnifBackend):
             )
         except OpenAIError as err:
             raise OperationFailedException(
-                f"Failed to connect to endpoint {self.params['endpoint']}: {err}"
+                f"Failed to connect to LLM API: {err}"
             ) from err
         # print(f"Successfully connected to endpoint {self.params['endpoint']}")
 
@@ -112,22 +120,24 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
     DEFAULT_PARAMETERS = {
         "max_prompt_tokens": 127000,
         "llm_weight": 0.7,
+        "llm_exponent": 1.0,
         "labels_language": "en",
         "sources_limit": 10,
     }
 
     def get_hp_optimizer(self, corpus: DocumentCorpus, metric: str) -> None:
-        raise NotSupportedException(
-            "Hyperparameter optimization for LLM ensemble backend is not possible."
-        )
+        return LLMEnsembleOptimizer(self, corpus, metric)
 
     def _suggest_batch(
         self, texts: list[str], params: dict[str, Any]
     ) -> SuggestionBatch:
         sources = annif.util.parse_sources(params["sources"])
         llm_weight = float(params["llm_weight"])
+        llm_exponent = float(params["llm_exponent"])
         if llm_weight < 0.0 or llm_weight > 1.0:
             raise ValueError("llm_weight must be between 0.0 and 1.0")
+        if llm_exponent < 0.0:
+            raise ValueError("llm_weight_exp must be greater than or equal to 0.0")
 
         batch_by_source = self._suggest_with_sources(texts, sources)
         merged_source_batch = self._merge_source_batches(
@@ -139,7 +149,8 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
 
         batches = [merged_source_batch, llm_results_batch]
         weights = [1.0 - llm_weight, llm_weight]
-        return SuggestionBatch.from_averaged(batches, weights).filter(
+        exponents = [1.0, llm_exponent]
+        return SuggestionBatch.from_averaged(batches, weights, exponents).filter(
             limit=int(params["limit"])
         )
 
@@ -156,10 +167,10 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
 
         system_prompt = """
             You will be given text and a list of keywords to describe it. Your task is
-            to score the keywords with a value between 0.0 and 1.0. The score value
+            to score the keywords with a value between 0 and 100. The score value
             should depend on how well the keyword represents the text: a perfect
-            keyword should have score 1.0 and completely unrelated keyword score
-            0.0. You must output JSON with keywords as field names and add their scores
+            keyword should have score 100 and completely unrelated keyword score
+            0. You must output JSON with keywords as field names and add their scores
             as field values.
             There must be the same number of objects in the JSON as there are lines in
             the intput keyword list; do not skip scoring any keywords.
@@ -192,7 +203,7 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
                         subject_id=self.project.subjects.by_label(
                             llm_label, self.params["labels_language"]
                         ),
-                        score=score,
+                        score=score / 100.0,  # LLM scores are between 0 and 100
                     )
                     if llm_label in labels
                     else SubjectSuggestion(subject_id=None, score=0.0)
@@ -200,7 +211,7 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
                 for llm_label, score in llm_result.items()
             ]
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
             llm_batch_suggestions = list(
                 executor.map(process_single_prompt, texts, labels_batch)
             )
@@ -220,3 +231,90 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
             ]
             for suggestion_result in suggestion_batch
         ]
+
+
+class LLMEnsembleOptimizer(ensemble.EnsembleOptimizer):
+    """Hyperparameter optimizer for the LLM ensemble backend"""
+
+    def _prepare(self, n_jobs=1):
+        sources = dict(annif.util.parse_sources(self._backend.params["sources"]))
+
+        # initialize the source projects before forking, to save memory
+        # for project_id in sources.keys():
+        #     project = self._backend.project.registry.get_project(project_id)
+        #     project.initialize(parallel=True)
+        self._backend.initialize(parallel=True)
+
+        psmap = annif.parallel.ProjectSuggestMap(
+            self._backend.project.registry,
+            list(sources.keys()),
+            backend_params=None,
+            limit=None,
+            threshold=0.0,
+        )
+
+        jobs, pool_class = annif.parallel.get_pool(n_jobs)
+
+        self._gold_batches = []
+        self._source_batches = []
+
+        print("Generating source batches")
+        with pool_class(jobs) as pool:
+            for suggestions_batch, gold_batch in pool.imap_unordered(
+                psmap.suggest_batch, self._corpus.doc_batches
+            ):
+                self._source_batches.append(suggestions_batch)
+                self._gold_batches.append(gold_batch)
+
+        # get the llm batches
+        print("Generating LLM batches")
+        self._merged_source_batches = []
+        self._llm_batches = []
+        for batch_by_source, docs_batch in zip(
+            self._source_batches, self._corpus.doc_batches
+        ):
+            merged_source_batch = self._backend._merge_source_batches(
+                batch_by_source,
+                sources.items(),
+                {"limit": self._backend.params["sources_limit"]},
+            )
+            llm_batch = self._backend._llm_suggest_batch(
+                [doc.text for doc in docs_batch],
+                merged_source_batch,
+                self._backend.params,
+            )
+            self._merged_source_batches.append(merged_source_batch)
+            self._llm_batches.append(llm_batch)
+
+    def _objective(self, trial) -> float:
+        eval_batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
+        params = {
+            "llm_weight": trial.suggest_float("llm_weight", 0.0, 1.0),
+            "llm_exponent": trial.suggest_float("llm_exponent", 0.0, 30.0),
+        }
+        for merged_source_batch, llm_batch, gold_batch in zip(
+            self._merged_source_batches, self._llm_batches, self._gold_batches
+        ):
+            batches = [merged_source_batch, llm_batch]
+            weights = [
+                1.0 - params["llm_weight"],
+                params["llm_weight"],
+            ]
+            exponents = [
+                1.0,
+                params["llm_exponent"],
+            ]
+            avg_batch = SuggestionBatch.from_averaged(
+                batches, weights, exponents
+            ).filter(limit=int(self._backend.params["limit"]))
+            eval_batch.evaluate_many(avg_batch, gold_batch)
+        results = eval_batch.results(metrics=[self._metric])
+        return results[self._metric]
+
+    def _postprocess(self, study):
+        bp = study.best_params
+        lines = [
+            f"llm_weight={bp['llm_weight']}",
+            f"llm_exponent={bp['llm_exponent']}",
+        ]
+        return hyperopt.HPRecommendation(lines=lines, score=study.best_value)
