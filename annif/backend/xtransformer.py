@@ -237,7 +237,7 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             texts,
             X_feat=vector.sorted_indices(),
             batch_size=new_params["batch_size"],
-            use_gpu=True,
+            use_gpu=False,
             only_top_k=new_params["limit"],
             post_processor=new_params["post_processor"],
         )
