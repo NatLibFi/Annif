@@ -85,11 +85,6 @@ class BaseLLMBackend(backend.AnnifBackend):
             raise OperationFailedException(
                 f"Failed to connect to LLM API: {err}"
             ) from err
-        except KeyError as err:
-            if err.args[0] == 'model':
-                raise ConfigurationException(
-                    "model setting is missing", project_id=self.project.project_id
-                )
         # print(f"Successfully connected to endpoint {self.params['endpoint']}")
 
     def default_params(self):
