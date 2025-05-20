@@ -13,7 +13,7 @@ from openai import AzureOpenAI, BadRequestError, OpenAI, OpenAIError
 import annif.eval
 import annif.parallel
 import annif.util
-from annif.exception import OperationFailedException
+from annif.exception import ConfigurationException, OperationFailedException
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
 
 from . import backend, ensemble, hyperopt
@@ -66,6 +66,11 @@ class BaseLLMBackend(backend.AnnifBackend):
             raise OperationFailedException(
                 f"Failed to connect to LLM API: {err}"
             ) from err
+        except KeyError as err:
+            if err.args[0] == 'model':
+                raise ConfigurationException(
+                    "model setting is missing", project_id=self.project.project_id
+                )
         # print(f"Successfully connected to endpoint {self.params['endpoint']}")
 
     def default_params(self):
