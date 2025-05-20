@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Optional
 
 import tiktoken
 from openai import AzureOpenAI, BadRequestError, OpenAI, OpenAIError
+from transformers import AutoTokenizer
 
 import annif.eval
 import annif.parallel
@@ -35,6 +36,14 @@ class BaseLLMBackend(backend.AnnifBackend):
     def initialize(self, parallel: bool = False) -> None:
         azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
         api_base_url = os.getenv("LLM_API_BASE_URL")
+
+        try:
+            self.model = self.params["model"]
+        except KeyError as err:
+            raise ConfigurationException(
+                "model setting is missing", project_id=self.project.project_id
+            )
+
         if api_base_url is not None:
             self.client = OpenAI(
                 base_url=api_base_url,
@@ -51,26 +60,31 @@ class BaseLLMBackend(backend.AnnifBackend):
                 "Please set the AZURE_OPENAI_ENDPOINT or LLM_API_BASE_URL "
                 "environment variable for LLM API access."
             )
+
+        self.tokenizer = self._get_tokenizer()
         self._verify_connection()
         super().initialize(parallel)
+
+    def _get_tokenizer(self):
+        try:
+            # Try OpenAI tokenizer
+            base_model = self.model.rsplit("-", 1)[0]
+            return tiktoken.encoding_for_model(base_model)
+        except KeyError:
+            # Fallback to Hugging Face tokenizer
+            return AutoTokenizer.from_pretrained(self.model)
 
     def _verify_connection(self):
         try:
             self._call_llm(
                 system_prompt="You are a helpful assistant.",
                 prompt="This is a test prompt to verify the connection.",
-                model=self.params["model"],
                 params=self.params,
             )
         except OpenAIError as err:
             raise OperationFailedException(
                 f"Failed to connect to LLM API: {err}"
             ) from err
-        except KeyError as err:
-            if err.args[0] == 'model':
-                raise ConfigurationException(
-                    "model setting is missing", project_id=self.project.project_id
-                )
         # print(f"Successfully connected to endpoint {self.params['endpoint']}")
 
     def default_params(self):
@@ -79,17 +93,16 @@ class BaseLLMBackend(backend.AnnifBackend):
         params.update(self.DEFAULT_PARAMETERS)
         return params
 
-    def _truncate_text(self, text, encoding, max_prompt_tokens):
+    def _truncate_text(self, text, max_prompt_tokens):
         """Truncate text so it contains at most max_prompt_tokens according to the
         OpenAI tokenizer"""
-        tokens = encoding.encode(text)
-        return encoding.decode(tokens[:max_prompt_tokens])
+        tokens = self.tokenizer.encode(text)
+        return self.tokenizer.decode(tokens[:max_prompt_tokens])
 
     def _call_llm(
         self,
         system_prompt: str,
         prompt: str,
-        model: str,
         params: dict[str, Any],
         response_format: Optional[dict] = None,
     ) -> str:
@@ -103,7 +116,7 @@ class BaseLLMBackend(backend.AnnifBackend):
         ]
         try:
             completion = self.client.chat.completions.create(
-                model=model,
+                model=self.model,
                 messages=messages,
                 temperature=temperature,
                 seed=seed,
@@ -166,8 +179,6 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
         params: dict[str, Any],
     ) -> SuggestionBatch:
 
-        model = params["model"]
-        encoding = tiktoken.encoding_for_model(model.rsplit("-", 1)[0])
         max_prompt_tokens = int(params["max_prompt_tokens"])
 
         system_prompt = """
@@ -185,13 +196,12 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
 
         def process_single_prompt(text, labels):
             prompt = "Here are the keywords:\n" + "\n".join(labels) + "\n" * 3
-            text = self._truncate_text(text, encoding, max_prompt_tokens)
+            text = self._truncate_text(text, max_prompt_tokens)
             prompt += "Here is the text:\n" + text + "\n"
 
             response = self._call_llm(
                 system_prompt,
                 prompt,
-                model,
                 params,
                 response_format={"type": "json_object"},
             )
