@@ -748,6 +748,14 @@ def run_completion(shell):
     """Generate the script for tab-key autocompletion for the given shell. To enable the
     completion support in your current bash terminal session run\n
         source <(annif completion --bash)
+
+    To enable the completion support in all new sessions first add the completion script
+    in your home directory:\n
+        annif completion --bash > ~/.annif-complete.bash
+
+    Then make the script to be automatically sourced for new terminal sessions by adding
+    the following to your ~/.bashrc file (or in some alternative startup file)\n
+        source ~/.annif-complete.bash
     """
 
     if shell is None:
