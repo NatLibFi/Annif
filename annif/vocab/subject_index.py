@@ -112,9 +112,9 @@ class SubjectIndexFilter(SubjectIndex):
     """SubjectIndex implementation that filters another SubjectIndex based
     on a list of subject URIs to exclude."""
 
-    def __init__(self, subject_index: SubjectIndex, exclude: list[str]):
+    def __init__(self, subject_index: SubjectIndex, exclude: set[str]):
         self._subject_index = subject_index
-        self._exclude = set(exclude)
+        self._exclude = exclude
 
     def __len__(self) -> int:
         return len(self._subject_index)
