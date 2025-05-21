@@ -61,7 +61,9 @@ class BaseLLMBackend(backend.AnnifBackend):
                 "environment variable for LLM API access."
             )
 
-        self.tokenizer = self._get_tokenizer()
+        # Tokenizer is unnecessary if truncation is not performed
+        if int(self.params["max_prompt_tokens"]) > 0:
+            self.tokenizer = self._get_tokenizer()
         self._verify_connection()
         super().initialize(parallel)
 
@@ -136,7 +138,7 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
     name = "llm_ensemble"
 
     DEFAULT_PARAMETERS = {
-        "max_prompt_tokens": 127000,
+        "max_prompt_tokens": 0,
         "llm_weight": 0.7,
         "llm_exponent": 1.0,
         "labels_language": "en",
@@ -196,7 +198,8 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
 
         def process_single_prompt(text, labels):
             prompt = "Here are the keywords:\n" + "\n".join(labels) + "\n" * 3
-            text = self._truncate_text(text, max_prompt_tokens)
+            if max_prompt_tokens > 0:
+                text = self._truncate_text(text, max_prompt_tokens)
             prompt += "Here is the text:\n" + text + "\n"
 
             response = self._call_llm(
