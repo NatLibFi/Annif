@@ -31,6 +31,7 @@ class BaseLLMBackend(backend.AnnifBackend):
         "temperature": 0.0,
         "top_p": 1.0,
         "seed": 0,
+        "max_completion_tokens": 2000,
     }
 
     def initialize(self, parallel: bool = False) -> None:
@@ -111,6 +112,7 @@ class BaseLLMBackend(backend.AnnifBackend):
         temperature = float(params["temperature"])
         top_p = float(params["top_p"])
         seed = int(params["seed"])
+        max_completion_tokens = int(params["max_completion_tokens"])
 
         messages = [
             {"role": "system", "content": system_prompt},
@@ -123,6 +125,7 @@ class BaseLLMBackend(backend.AnnifBackend):
                 temperature=temperature,
                 seed=seed,
                 top_p=top_p,
+                max_completion_tokens=max_completion_tokens,
                 response_format=response_format,
             )
         except BadRequestError as err:
