@@ -128,7 +128,7 @@ class BaseLLMBackend(backend.AnnifBackend):
                 max_completion_tokens=max_completion_tokens,
                 response_format=response_format,
             )
-        except BadRequestError as err:
+        except OpenAIError as err:
             print(err)
             return "{}"
         return completion.choices[0].message.content
