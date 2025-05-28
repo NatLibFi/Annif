@@ -218,8 +218,8 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
             try:
                 llm_result = json.loads(response)
             except (TypeError, json.decoder.JSONDecodeError) as err:
-                print(f"Error decoding JSON response from LLM: {response}")
-                print(f"Error: {err}")
+                print(f"Error decoding JSON response from LLM: '{response[:100]}...'")
+                print(f"{str(err)}")
                 return [SubjectSuggestion(subject_id=None, score=0.0) for _ in labels]
 
             return [
