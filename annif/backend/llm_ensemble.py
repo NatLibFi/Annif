@@ -26,6 +26,8 @@ if TYPE_CHECKING:
 class BaseLLMBackend(backend.AnnifBackend):
     """Base class for LLM backends"""
 
+    _client = None
+
     DEFAULT_PARAMETERS = {
         "api_version": "2024-10-21",
         "temperature": 0.0,
@@ -35,9 +37,11 @@ class BaseLLMBackend(backend.AnnifBackend):
     }
 
     def initialize(self, parallel: bool = False) -> None:
+        if self._client is not None:
+            return
+
         azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
         api_base_url = os.getenv("LLM_API_BASE_URL")
-
         try:
             self.model = self.params["model"]
         except KeyError as err:
@@ -46,12 +50,12 @@ class BaseLLMBackend(backend.AnnifBackend):
             )
 
         if api_base_url is not None:
-            self.client = OpenAI(
+            self._client = OpenAI(
                 base_url=api_base_url,
                 api_key=os.getenv("LLM_API_KEY", "dummy-key"),
             )
         elif azure_endpoint is not None:
-            self.client = AzureOpenAI(
+            self._client = AzureOpenAI(
                 azure_endpoint=azure_endpoint,
                 api_key=os.getenv("AZURE_OPENAI_KEY"),
                 api_version=self.params["api_version"],
@@ -119,7 +123,7 @@ class BaseLLMBackend(backend.AnnifBackend):
             {"role": "user", "content": prompt},
         ]
         try:
-            completion = self.client.chat.completions.create(
+            completion = self._client.chat.completions.create(
                 model=self.model,
                 messages=messages,
                 temperature=temperature,
