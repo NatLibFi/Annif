@@ -8,7 +8,7 @@ import os
 from typing import TYPE_CHECKING, Any, Optional
 
 import tiktoken
-from openai import AzureOpenAI, BadRequestError, OpenAI, OpenAIError
+from openai import AzureOpenAI, OpenAI, OpenAIError
 from transformers import AutoTokenizer
 
 import annif.eval
@@ -44,7 +44,7 @@ class BaseLLMBackend(backend.AnnifBackend):
         api_base_url = os.getenv("LLM_API_BASE_URL")
         try:
             self.model = self.params["model"]
-        except KeyError as err:
+        except KeyError:
             raise ConfigurationException(
                 "model setting is missing", project_id=self.project.project_id
             )
