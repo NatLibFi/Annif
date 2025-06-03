@@ -240,6 +240,7 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             use_gpu=False,
             only_top_k=new_params["limit"],
             post_processor=new_params["post_processor"],
+            batch_gen_workers=0,
         )
         current_batchsize = prediction.get_shape()[0]
         batch_result = []
