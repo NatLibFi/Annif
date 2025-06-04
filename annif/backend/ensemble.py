@@ -134,7 +134,9 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         proj_params = {
             project_id: {
                 "weight": trial.suggest_float(project_id + "_weight", 0.0, 1.0),
-                "exponent": trial.suggest_float(project_id + "_exp", 0.25, 10.0, log=True),
+                "exponent": trial.suggest_float(
+                    project_id + "_exp", 0.25, 10.0, log=True
+                ),
             }
             for project_id in self._sources
         }
