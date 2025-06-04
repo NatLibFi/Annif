@@ -262,7 +262,8 @@ class LLMEnsembleOptimizer(ensemble.EnsembleOptimizer):
     """Hyperparameter optimizer for the LLM ensemble backend"""
 
     def _prepare(self, n_jobs=1):
-        sources = dict(annif.util.parse_sources(self._backend.params["sources"]))
+        sources = annif.util.parse_sources(self._backend.params["sources"])
+        project_ids = [source[0] for source in sources]
 
         # initialize the source projects before forking, to save memory
         # for project_id in sources.keys():
@@ -272,7 +273,7 @@ class LLMEnsembleOptimizer(ensemble.EnsembleOptimizer):
 
         psmap = annif.parallel.ProjectSuggestMap(
             self._backend.project.registry,
-            list(sources.keys()),
+            project_ids,
             backend_params=None,
             limit=None,
             threshold=0.0,
@@ -300,7 +301,7 @@ class LLMEnsembleOptimizer(ensemble.EnsembleOptimizer):
         ):
             merged_source_batch = self._backend._merge_source_batches(
                 batch_by_source,
-                sources.items(),
+                sources,
                 {"limit": self._backend.params["sources_limit"]},
             )
             llm_batch = self._backend._llm_suggest_batch(
