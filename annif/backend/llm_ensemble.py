@@ -315,7 +315,7 @@ class LLMEnsembleOptimizer(ensemble.EnsembleOptimizer):
         eval_batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
         params = {
             "llm_weight": trial.suggest_float("llm_weight", 0.0, 1.0),
-            "llm_exponent": trial.suggest_float("llm_exponent", 0.01, 30.0, log=True),
+            "llm_exponent": trial.suggest_float("llm_exponent", 0.25, 10.0, log=True),
         }
         for merged_source_batch, llm_batch, gold_batch in zip(
             self._merged_source_batches, self._llm_batches, self._gold_batches
