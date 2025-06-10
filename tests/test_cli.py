@@ -1133,7 +1133,7 @@ def test_upload_many(
     result = runner.invoke(annif.cli.cli, ["upload", "dummy-*", "dummy-repo"])
     assert not result.exception
     assert create_commit.call_count == 1
-    assert CommitOperationAdd.call_count == 13
+    assert CommitOperationAdd.call_count == 15
     assert upsert_modelcard.call_count == 1
 
 
@@ -1418,6 +1418,7 @@ def test_completion_show_project_project_ids_all():
     assert completions == [
         "dummy-fi",
         "dummy-en",
+        "dummy-nolearn",
         "dummy-private",
         "dummy-vocablang",
         "dummy-exclude",
@@ -1444,6 +1445,7 @@ def test_completion_show_project_project_ids_dummy():
     assert completions == [
         "dummy-fi",
         "dummy-en",
+        "dummy-nolearn",
         "dummy-private",
         "dummy-vocablang",
         "dummy-exclude",
