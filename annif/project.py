@@ -21,7 +21,7 @@ from annif.exception import (
     NotSupportedException,
 )
 from annif.util import parse_args
-from annif.vocab import SubjectIndexFilter
+from annif.vocab import SubjectIndexFilter, kwargs_to_exclude_uris
 
 if TYPE_CHECKING:
     from collections import defaultdict
@@ -218,10 +218,10 @@ class AnnifProject(DatadirMixin):
     def subjects(self) -> SubjectIndex:
         if self._subject_index is None:
             self._subject_index = self.vocab.subjects
-            if "exclude" in self._vocab_kwargs:
-                exclude_list = self._vocab_kwargs["exclude"].split("|")
+            exclude_uris = kwargs_to_exclude_uris(self._vocab_kwargs)
+            if exclude_uris:
                 self._subject_index = SubjectIndexFilter(
-                    self._subject_index, exclude=exclude_list
+                    self._subject_index, exclude=exclude_uris
                 )
         return self._subject_index
 
