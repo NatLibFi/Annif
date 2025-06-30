@@ -52,31 +52,22 @@ for installation instructions for e.g. fastText and Omikuji backends and for Voi
 ## Shell compeletions
 Annif supports tab-key completion in bash, zsh and fish shells for commands and options
 and project id, vocabulary id and path parameters.
+The completion functionality is not enabled after Annif installation;
+get instructions for how to enable it by running
 
-To enable the completion support in your current terminal session use `annif completion`
-command with the option according to your shell to produce the completion script and
-source it. For example, run
+    annif completion --help
 
-    source <(annif completion --bash)
-
-To enable the completion support in all new sessions first add the completion script in
-your home directory:
-
-    annif completion --bash > ~/.annif-complete.bash
-
-Then make the script to be automatically sourced for new terminal sessions by adding the
-following to your `~/.bashrc` file (or in some [alternative startup
-file](https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html)):
-
-    source ~/.annif-complete.bash
-
-For details and usage for other shells see
-[Click documentation](https://click.palletsprojects.com/en/8.1.x/shell-completion/).
+or see [this wiki page](https://github.com/NatLibFi/Annif/wiki/Command-line-interface#shell-compeletions).
 # Docker install
 
 You can use Annif as a pre-built Docker container image from [quay.io/natlibfi/annif](https://quay.io/repository/natlibfi/annif) repository. Please see the
 [wiki documentation](https://github.com/NatLibFi/Annif/wiki/Usage-with-Docker)
 for details.
+
+# Demo install in Codespaces
+Annif can be tried out in the [GitHub Codespaces](https://docs.github.com/en/codespaces). Just open a page for configuring a new codespace via the badge below, start the codespace from the green "Create codespace" button, and a terminal session will start in your browser. The environment will have Annif installed and the contents of the [Annif-tutorial](https://github.com/NatLibFi/Annif-tutorial) repository available.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/NatLibFi/Annif-tutorial/tree/codespaces)
 
 # Development install
 
@@ -116,11 +107,6 @@ Enter the virtual environment:
 Start up the application:
 
     annif
-
-# Demo install in Codespaces
-Annif can be tried out in the [GitHub Codespaces](https://docs.github.com/en/codespaces). Just open a page for configuring a new codespace via the badge below, start the codespace from the green "Create codespace" button, and a terminal session will start in your browser with the contents of the [Annif-tutorial](https://github.com/NatLibFi/Annif-tutorial) repository:
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/NatLibFi/Annif-tutorial/tree/codespaces)
 
 # Getting help
 
