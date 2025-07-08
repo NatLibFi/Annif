@@ -110,6 +110,7 @@ _backend_fns = {
     "ensemble": _ensemble,
     "fasttext": _fasttext,
     "http": _http,
+    "llm_ensemble": _llm_ensemble,
     "mllm": _mllm,
     "nn_ensemble": _nn_ensemble,
     "omikuji": _omikuji,
