@@ -44,7 +44,7 @@ class BaseLLMBackend(backend.AnnifBackend):
         api_base_url = os.getenv("LLM_API_BASE_URL")
         try:
             self.model = self.params["model"]
-        except KeyError as err:
+        except KeyError:
             raise ConfigurationException(
                 "model setting is missing", project_id=self.project.project_id
             )
