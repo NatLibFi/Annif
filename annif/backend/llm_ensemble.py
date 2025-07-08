@@ -8,7 +8,7 @@ import os
 from typing import TYPE_CHECKING, Any, Optional
 
 import tiktoken
-from openai import AzureOpenAI, BadRequestError, OpenAI, OpenAIError
+from openai import AzureOpenAI, OpenAI, OpenAIError
 from transformers import AutoTokenizer
 
 import annif.eval
