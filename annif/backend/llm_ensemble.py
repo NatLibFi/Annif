@@ -264,11 +264,6 @@ class LLMEnsembleOptimizer(ensemble.EnsembleOptimizer):
     def _prepare(self, n_jobs=1):
         sources = annif.util.parse_sources(self._backend.params["sources"])
         project_ids = [source[0] for source in sources]
-
-        # initialize the source projects before forking, to save memory
-        # for project_id in sources.keys():
-        #     project = self._backend.project.registry.get_project(project_id)
-        #     project.initialize(parallel=True)
         self._backend.initialize(parallel=True)
 
         psmap = annif.parallel.ProjectSuggestMap(
