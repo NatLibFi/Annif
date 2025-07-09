@@ -92,7 +92,7 @@ class BaseLLMBackend(backend.AnnifBackend):
             raise OperationFailedException(
                 f"Failed to connect to LLM API: {err}"
             ) from err
-        # print(f"Successfully connected to endpoint {self.params['endpoint']}")
+        self.debug(f"connection successful to endpoint {self._client.base_url}")
 
     def default_params(self):
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
@@ -133,7 +133,10 @@ class BaseLLMBackend(backend.AnnifBackend):
                 response_format=response_format,
             )
         except OpenAIError as err:
-            print(err)
+            self.warning(
+                "error calling LLM API; the base project scores are directly used. "
+                f'API error: "{err}"'
+            )
             return "{}"
         return completion.choices[0].message.content
 
@@ -217,11 +220,22 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
             )
             try:
                 llm_result = json.loads(response)
-            except (TypeError, json.decoder.JSONDecodeError) as err:
-                print(f"Error decoding JSON response from LLM: '{response[:100]}...'")
-                print(f"{str(err)}")
+            except json.JSONDecodeError as err:
+                start = max(err.pos - 100, 0)
+                end = err.pos + 101  # Slicing out of bounds is ok
+                snippet = response[start:end]
+                self.warning(
+                    f"Failed to decode JSON response from LLM.\n"
+                    f"Error: {err}\n"
+                    f"Context (around error position {err.pos}):\n"
+                    f"...{snippet}..."
+                )
                 return [SubjectSuggestion(subject_id=None, score=0.0) for _ in labels]
-
+            except TypeError as err:
+                self.warning(
+                    f"Failed to decode JSON response from LLM due to TypeError: {err}\n"
+                )
+                return [SubjectSuggestion(subject_id=None, score=0.0) for _ in labels]
             return [
                 (
                     SubjectSuggestion(
@@ -279,7 +293,7 @@ class LLMEnsembleOptimizer(ensemble.EnsembleOptimizer):
         self._gold_batches = []
         self._source_batches = []
 
-        print("Generating source batches")
+        self.debug("Generating source batches")
         with pool_class(jobs) as pool:
             for suggestions_batch, gold_batch in pool.imap_unordered(
                 psmap.suggest_batch, self._corpus.doc_batches
@@ -288,7 +302,7 @@ class LLMEnsembleOptimizer(ensemble.EnsembleOptimizer):
                 self._gold_batches.append(gold_batch)
 
         # get the llm batches
-        print("Generating LLM batches")
+        self.debug("Generating LLM batches")
         self._merged_source_batches = []
         self._llm_batches = []
         for batch_by_source, docs_batch in zip(
