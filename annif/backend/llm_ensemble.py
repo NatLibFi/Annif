@@ -168,7 +168,7 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
         if llm_weight < 0.0 or llm_weight > 1.0:
             raise ValueError("llm_weight must be between 0.0 and 1.0")
         if llm_exponent < 0.0:
-            raise ValueError("llm_weight_exp must be greater than or equal to 0.0")
+            raise ValueError("llm_exponent must be greater than or equal to 0.0")
 
         batch_by_source = self._suggest_with_sources(texts, sources)
         merged_source_batch = self._merge_source_batches(
