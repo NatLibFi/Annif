@@ -31,7 +31,7 @@ This repository contains a rewritten production version of Annif based on the
 
 Annif is developed and tested on Linux. If you want to run Annif on Windows or Mac OS, the recommended way is to use Docker (see below) or a Linux virtual machine.
 
-You will need Python 3.9-3.12 to install Annif.
+You will need Python 3.10-3.12 to install Annif.
 
 The recommended way is to install Annif from
 [PyPI](https://pypi.org/project/annif/) into a virtual environment.
@@ -52,31 +52,22 @@ for installation instructions for e.g. fastText and Omikuji backends and for Voi
 ## Shell compeletions
 Annif supports tab-key completion in bash, zsh and fish shells for commands and options
 and project id, vocabulary id and path parameters.
+The completion functionality is not enabled after Annif installation;
+get instructions for how to enable it by running
 
-To enable the completion support in your current terminal session use `annif completion`
-command with the option according to your shell to produce the completion script and
-source it. For example, run
+    annif completion --help
 
-    source <(annif completion --bash)
-
-To enable the completion support in all new sessions first add the completion script in
-your home directory:
-
-    annif completion --bash > ~/.annif-complete.bash
-
-Then make the script to be automatically sourced for new terminal sessions by adding the
-following to your `~/.bashrc` file (or in some [alternative startup
-file](https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html)):
-
-    source ~/.annif-complete.bash
-
-For details and usage for other shells see
-[Click documentation](https://click.palletsprojects.com/en/8.1.x/shell-completion/).
+or see [this wiki page](https://github.com/NatLibFi/Annif/wiki/Command-line-interface#shell-compeletions).
 # Docker install
 
 You can use Annif as a pre-built Docker container image from [quay.io/natlibfi/annif](https://quay.io/repository/natlibfi/annif) repository. Please see the
 [wiki documentation](https://github.com/NatLibFi/Annif/wiki/Usage-with-Docker)
 for details.
+
+# Demo install in Codespaces
+Annif can be tried out in the [GitHub Codespaces](https://docs.github.com/en/codespaces). Just open a page for configuring a new codespace via the badge below, start the codespace from the green "Create codespace" button, and a terminal session will start in your browser. The environment will have Annif installed and the contents of the [Annif-tutorial](https://github.com/NatLibFi/Annif-tutorial) repository available.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/NatLibFi/Annif-tutorial/tree/codespaces)
 
 # Development install
 
@@ -117,11 +108,6 @@ Start up the application:
 
     annif
 
-# Demo install in Codespaces
-Annif can be tried out in the [GitHub Codespaces](https://docs.github.com/en/codespaces). Just open a page for configuring a new codespace via the badge below, start the codespace from the green "Create codespace" button, and a terminal session will start in your browser with the contents of the [Annif-tutorial](https://github.com/NatLibFi/Annif-tutorial) repository:
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/NatLibFi/Annif-tutorial/tree/codespaces)
-
 # Getting help
 
 Many resources are available:
@@ -145,9 +131,46 @@ See "Cite this repository" in the details of the repository.
 ## Annif articles
 <ul>
 <li>
-Golub, K.; Suominen, O.; Mohammed, A.; Aagaard, H.; Osterman, O, 2024.
+Suominen, O; Inkinen, J.; Lehtinen, M. 2025.
+Annif at SemEval-2025 Task 5: Traditional XMTC augmented by LLMs, pre-print.
+https://arxiv.org/abs/2504.19675
+<details>
+<summary>See BibTex</summary>
+
+    @misc{suominen2025annifsemeval2025task5,
+      title={Annif at SemEval-2025 Task 5: Traditional XMTC augmented by LLMs}, 
+      author={Osma Suominen and Juho Inkinen and Mona Lehtinen},
+      year={2025},
+      eprint={2504.19675},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2504.19675}, 
+    }
+</details>
+</li>
+<li>
+Inkinen, J.; Lehtinen, M.; Suominen, O., 2025.
+Annif Users Survey: Understanding Usage and Challenges.
+URL:
+https://urn.fi/URN:ISBN:978-952-84-1301-1
+<details>
+<summary>See BibTex</summary>
+
+    @misc{inkinen2025,
+      title={Annif Users Survey: Understanding Usage and Challenges},
+      author={Inkinen, Juho and Lehtinen, Mona and Suominen, Osma},
+      series={The National Library of Finland. Reports and Studies},
+      issn={2242–8119},
+      isbn={978-952-84-1301-1},
+      year={2025},
+      url={URN:ISBN:978-952-84-1301-1},
+    }
+</details>
+</li>
+<li>
+Golub, K.; Suominen, O.; Mohammed, A.; Aagaard, H.; Osterman, O., 2024.
 Automated Dewey Decimal Classification of Swedish library metadata using Annif software.
-Journal of Documentation, in press.
+Journal of Documentation, 80(5), pp. 1057-1079. URL:
 https://doi.org/10.1108/JD-01-2022-0026
 <details>
 <summary>See BibTex</summary>
@@ -156,7 +179,7 @@ https://doi.org/10.1108/JD-01-2022-0026
       title={Automated Dewey Decimal Classification of Swedish library metadata using Annif software},
       author={Golub, Koraljka and Suominen, Osma and Mohammed, Ahmed Taiye and Aagaard, Harriet and Osterman, Olof},
       journal={J. Doc.},
-      year={in press},
+      year={2024},
       doi = {10.1108/JD-01-2022-0026},
       url={https://www.emerald.com/insight/content/doi/10.1108/JD-01-2022-0026},
     }

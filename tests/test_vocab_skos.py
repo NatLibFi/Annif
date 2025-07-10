@@ -2,27 +2,27 @@
 
 import os.path
 
-from annif.corpus.skos import SubjectFileSKOS
+from annif.vocab import VocabFileSKOS
 
 
 def test_recognize_turtle():
-    assert SubjectFileSKOS.is_rdf_file("subjects.ttl")
+    assert VocabFileSKOS.is_rdf_file("subjects.ttl")
 
 
 def test_recognize_rdfxml():
-    assert SubjectFileSKOS.is_rdf_file("subjects.rdf")
+    assert VocabFileSKOS.is_rdf_file("subjects.rdf")
 
 
 def test_recognize_nt():
-    assert SubjectFileSKOS.is_rdf_file("subjects.nt")
+    assert VocabFileSKOS.is_rdf_file("subjects.nt")
 
 
 def test_recognize_tsv():
-    assert not SubjectFileSKOS.is_rdf_file("subjects.tsv")
+    assert not VocabFileSKOS.is_rdf_file("subjects.tsv")
 
 
 def test_recognize_noext():
-    assert not SubjectFileSKOS.is_rdf_file("subjects")
+    assert not VocabFileSKOS.is_rdf_file("subjects")
 
 
 def test_load_turtle(tmpdir):
@@ -47,7 +47,7 @@ yso:p9285
     """
     )
 
-    corpus = SubjectFileSKOS(str(tmpfile))
+    corpus = VocabFileSKOS(str(tmpfile))
     subjects = list(corpus.subjects)
     assert len(subjects) == 1  # one of the concepts was deprecated
     assert subjects[0].uri == "http://www.yso.fi/onto/yso/p8993"
@@ -71,7 +71,7 @@ yso:p8993
     """
     )
 
-    corpus = SubjectFileSKOS(str(tmpfile))
+    corpus = VocabFileSKOS(str(tmpfile))
     subjects = list(corpus.subjects)
     assert subjects[0].uri == "http://www.yso.fi/onto/yso/p8993"
     assert subjects[0].labels["fi"] == "hylyt"
@@ -98,7 +98,7 @@ ex:conc3 a skos:Concept .
     """
     )
 
-    corpus = SubjectFileSKOS(str(tmpfile))
+    corpus = VocabFileSKOS(str(tmpfile))
     subjects = list(corpus.subjects)
     assert len(subjects) == 3
 
@@ -113,7 +113,7 @@ def test_load_turtle_get_languages(testdatadir):
     subjectfile = os.path.join(
         os.path.dirname(__file__), "corpora", "archaeology", "yso-archaeology.ttl"
     )
-    corpus = SubjectFileSKOS(subjectfile)
+    corpus = VocabFileSKOS(subjectfile)
     langs = corpus.languages
     assert len(langs) == 3
     assert "fi" in langs

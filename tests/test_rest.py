@@ -156,6 +156,14 @@ def test_rest_suggest_with_different_vocab_language(app):
         assert result["results"][0]["label"] == "dummy-fi"
 
 
+def test_rest_suggest_with_exclude(app):
+    with app.app_context():
+        result = annif.rest.suggest(
+            "dummy-exclude", {"text": "example text", "limit": 10, "threshold": 0.0}
+        )[0]
+        assert not result["results"]
+
+
 def test_rest_suggest_with_notations(app):
     with app.app_context():
         result = annif.rest.suggest(

@@ -75,6 +75,11 @@ def test_get_project_fi_dump(registry):
         "backend": {
             "backend_id": "dummy",
         },
+        "vocab": {
+            "vocab_id": "dummy",
+            "languages": ["en", "fi"],
+        },
+        "vocab_language": "fi",
         "is_trained": True,
         "modification_time": None,
     }
@@ -332,6 +337,6 @@ def test_project_file_toml():
 def test_project_directory():
     cxapp = annif.create_app(config_name="annif.default_config.TestingDirectoryConfig")
     with cxapp.app.app_context():
-        assert len(annif.registry.get_projects()) == 18 + 2
+        assert len(annif.registry.get_projects()) == 19 + 2
         assert annif.registry.get_project("dummy-fi").project_id == "dummy-fi"
         assert annif.registry.get_project("dummy-fi-toml").project_id == "dummy-fi-toml"

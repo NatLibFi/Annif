@@ -142,8 +142,8 @@ def run_list_vocabs():
 
 @cli.command("load-vocab")
 @click.argument("vocab_id", shell_complete=cli_util.complete_param)
-@click.argument("subjectfile", type=click.Path(exists=True, dir_okay=False))
-@click.option("--language", "-L", help="Language of subject file")
+@click.argument("vocab_file", type=click.Path(exists=True, dir_okay=False))
+@click.option("--language", "-L", help="Language of TSV vocabulary file")
 @click.option(
     "--force",
     "-f",
@@ -152,19 +152,19 @@ def run_list_vocabs():
     help="Replace existing vocabulary completely instead of updating it",
 )
 @cli_util.common_options
-def run_load_vocab(vocab_id, language, force, subjectfile):
+def run_load_vocab(vocab_id, language, force, vocab_file):
     """
     Load a vocabulary from a subject file.
     """
     vocab = cli_util.get_vocab(vocab_id)
-    if annif.corpus.SubjectFileSKOS.is_rdf_file(subjectfile):
+    if annif.vocab.VocabFileSKOS.is_rdf_file(vocab_file):
         # SKOS/RDF file supported by rdflib
-        subjects = annif.corpus.SubjectFileSKOS(subjectfile)
-        click.echo(f"Loading vocabulary from SKOS file {subjectfile}...")
-    elif annif.corpus.SubjectFileCSV.is_csv_file(subjectfile):
+        vocab_file = annif.vocab.VocabFileSKOS(vocab_file)
+        click.echo(f"Loading vocabulary from SKOS file {vocab_file}...")
+    elif annif.vocab.VocabFileCSV.is_csv_file(vocab_file):
         # CSV file
-        subjects = annif.corpus.SubjectFileCSV(subjectfile)
-        click.echo(f"Loading vocabulary from CSV file {subjectfile}...")
+        vocab_file = annif.vocab.VocabFileCSV(vocab_file)
+        click.echo(f"Loading vocabulary from CSV file {vocab_file}...")
     else:
         # probably a TSV file - we need to know its language
         if not language:
@@ -173,9 +173,9 @@ def run_load_vocab(vocab_id, language, force, subjectfile):
                 err=True,
             )
             sys.exit(1)
-        click.echo(f"Loading vocabulary from TSV file {subjectfile}...")
-        subjects = annif.corpus.SubjectFileTSV(subjectfile, language)
-    vocab.load_vocabulary(subjects, force=force)
+        click.echo(f"Loading vocabulary from TSV file {vocab_file}...")
+        vocab_file = annif.vocab.VocabFileTSV(vocab_file, language)
+    vocab.load_vocabulary(vocab_file, force=force)
 
 
 @cli.command("train")
@@ -748,6 +748,14 @@ def run_completion(shell):
     """Generate the script for tab-key autocompletion for the given shell. To enable the
     completion support in your current bash terminal session run\n
         source <(annif completion --bash)
+
+    To enable the completion support in all new sessions first add the completion script
+    in your home directory:\n
+        annif completion --bash > ~/.annif-complete.bash
+
+    Then make the script to be automatically sourced for new terminal sessions by adding
+    the following to your ~/.bashrc file (or in some alternative startup file)\n
+        source ~/.annif-complete.bash
     """
 
     if shell is None:
