@@ -5,6 +5,7 @@ from __future__ import annotations
 import concurrent.futures
 import json
 import os
+import textwrap
 from typing import TYPE_CHECKING, Any, Optional
 
 import tiktoken
@@ -85,7 +86,7 @@ class BaseLLMBackend(backend.AnnifBackend):
         try:
             self._call_llm(
                 system_prompt="You are a helpful assistant.",
-                prompt="This is a test prompt to verify the connection.",
+                user_prompt="This is a test prompt to verify the connection.",
                 params=self.params,
             )
         except OpenAIError as err:
@@ -109,7 +110,7 @@ class BaseLLMBackend(backend.AnnifBackend):
     def _call_llm(
         self,
         system_prompt: str,
-        prompt: str,
+        user_prompt: str,
         params: dict[str, Any],
         response_format: Optional[dict] = None,
     ) -> str:
@@ -120,7 +121,7 @@ class BaseLLMBackend(backend.AnnifBackend):
 
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt},
+            {"role": "user", "content": user_prompt},
         ]
         try:
             completion = self._client.chat.completions.create(
@@ -193,28 +194,35 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
 
         max_prompt_tokens = int(params["max_prompt_tokens"])
 
-        system_prompt = """
+        system_prompt = textwrap.dedent(
+            """\
             You will be given text and a list of keywords to describe it. Your task is
             to score the keywords with a value between 0 and 100. The score value
             should depend on how well the keyword represents the text: a perfect
-            keyword should have score 100 and completely unrelated keyword score
-            0. You must output JSON with keywords as field names and add their scores
-            as field values.
+            keyword should have score 100 and completely unrelated keyword score 0.
+
+            You must output JSON with keywords as field names and add their scores as
+            field values.
+
             There must be the same number of objects in the JSON as there are lines in
-            the intput keyword list; do not skip scoring any keywords.
+            the input keyword list; do not skip scoring any keywords.
         """
+        )
 
         labels_batch = self._get_labels_batch(suggestion_batch)
 
         def process_single_prompt(text, labels):
-            prompt = "Here are the keywords:\n" + "\n".join(labels) + "\n" * 3
+            user_prompt = "Here are the keywords:\n" + "\n".join(labels) + "\n\n"
             if max_prompt_tokens > 0:
                 text = self._truncate_text(text, max_prompt_tokens)
-            prompt += "Here is the text:\n" + text + "\n"
+
+            user_prompt += "Here is the text:\n" + text
+            self.debug(f'LLM system prompt: "{system_prompt}"')
+            self.debug(f'LLM user prompt: "{user_prompt}"')
 
             response = self._call_llm(
                 system_prompt,
-                prompt,
+                user_prompt,
                 params,
                 response_format={"type": "json_object"},
             )
