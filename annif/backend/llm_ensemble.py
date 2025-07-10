@@ -154,6 +154,7 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
         "llm_exponent": 1.0,
         "labels_language": "en",
         "sources_limit": 10,
+        "max_workers": 32,
     }
 
     def get_hp_optimizer(self, corpus: DocumentCorpus, metric: str) -> None:
@@ -193,6 +194,7 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
     ) -> SuggestionBatch:
 
         max_prompt_tokens = int(params["max_prompt_tokens"])
+        max_workers = int(params["max_workers"])
 
         system_prompt = textwrap.dedent(
             """\
@@ -258,7 +260,7 @@ class LLMEnsembleBackend(BaseLLMBackend, ensemble.EnsembleBackend):
                 for llm_label, score in llm_result.items()
             ]
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             llm_batch_suggestions = list(
                 executor.map(process_single_prompt, texts, labels_batch)
             )
