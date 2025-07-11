@@ -127,6 +127,42 @@ class SuggestionBatch:
         ) / sum(weights)
         return SuggestionBatch(avg_array)
 
+    @classmethod
+    def from_rrf_fusion(
+        cls, batches: list[SuggestionBatch], weights: list[float]
+    ) -> SuggestionBatch:
+        """Create a new SuggestionBatch where the subject scores are the
+        weighted average of scores in several SuggestionBatches, using RRF fusion."""
+
+        k = 60  # RRF parameter, can be adjusted
+        for batch, weight in zip(batches, weights):
+            # print(batch.array)
+            # print(batch.array.indices)
+            # print(type(batch.array.data))  # Numpy NDArray
+
+            # Sort the batch array by values in descending order
+            sorted_indices = np.argsort(-batch.array.data)
+            batch.array.indices = batch.array.indices[sorted_indices]
+            # batch.array.data = batch.array.data[sorted_indices]  # Useless
+            batch.array.data = np.array(
+                [1.0 / (k + score) for score in range(len(batch.array.data))]
+            )
+
+        # Debugging output to check the arrays and weights
+        # for batch, weight in zip(batches, weights):
+        #     print(weight)
+        #     print(batch.array)
+        #     print(batch.array.indices)
+
+        avg_array = sum(
+            [batch.array * weight for batch, weight in zip(batches, weights)]
+        ) / sum(weights)
+        return SuggestionBatch(avg_array)
+
+        import sys
+
+        sys.exit(1)
+
     def filter(
         self, limit: int | None = None, threshold: float = 0.0
     ) -> SuggestionBatch:
