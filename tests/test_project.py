@@ -141,17 +141,22 @@ def test_get_project_invalid_config_file():
         config_name="annif.default_config.TestingInvalidProjectsConfig"
     )
     with cxapp.app.app_context():
-        with pytest.raises(ConfigurationException):
+        with pytest.raises(ConfigurationException) as excinfo:
             annif.registry.get_project("duplicatedvocab")
+        assert "option 'vocab' in section 'duplicatedvocab' already exists" in str(
+            excinfo.value
+        )
 
 
 def test_get_project_invalid_vocab_arg():
     cxapp = annif.create_app(
-        config_name="annif.default_config.TestingInvalidProjectsConfig"
+        config_name="annif.default_config.TestingInvalid2ProjectsConfig"
     )
     with cxapp.app.app_context():
-        with pytest.raises(ConfigurationException):
-            annif.registry.get_project("invalid_vocab_arg")
+        project = annif.registry.get_project("invalid-vocab-arg")
+        with pytest.raises(ConfigurationException) as excinfo:
+            project.subjects
+        assert "unknown vocab keyword argument foo" in str(excinfo.value)
 
 
 def test_project_load_vocabulary_tfidf(registry, subject_file, testdatadir):
