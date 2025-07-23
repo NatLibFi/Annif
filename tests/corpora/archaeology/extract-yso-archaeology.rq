@@ -1,15 +1,20 @@
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 CONSTRUCT {
-  ?c a skos:Concept .
+  ?c a ?type .
+  ?c skos:inScheme ?scheme .
   ?c skos:prefLabel ?prefLabel .
   ?c skos:altLabel ?altLabel .
   ?c ?rel ?c2 .
   ?coll a skos:Collection .
   ?coll skos:member ?c .
+  # extra scheme for testing exlude rules
+  <http://www.yso.fi/onto/yso/p1265> skos:inScheme <http://www.yso.fi/onto/yso/test-scheme> .
 }
 WHERE {
   ?c a skos:Concept .
+  ?c a ?type .
   <http://www.yso.fi/onto/yso/p26593> skos:member ?c .
+  OPTIONAL { ?c skos:inScheme ?scheme }
   ?c skos:prefLabel ?prefLabel .
   OPTIONAL { ?c skos:altLabel ?altLabel }
   OPTIONAL {

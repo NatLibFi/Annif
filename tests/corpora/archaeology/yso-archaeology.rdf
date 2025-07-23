@@ -27,7 +27,7 @@
     xmlns:tsrmeta="http://www.yso.fi/onto/tsr-meta/"
     xmlns:ns3="http://metadataregistry.org/uri/profile/regap/"
     xmlns:koko="http://www.yso.fi/onto/koko/"
-    xmlns:yso-update="http://www.yso.fi/onto/yso-update/"
+    xmlns:ysoupdate="http://www.yso.fi/onto/yso-update/"
     xmlns:taometa="http://www.yso.fi/onto/tao-meta/"
     xmlns:terometa="http://www.yso.fi/onto/tero-meta/"
     xmlns:sotometa="http://www.yso.fi/onto/soto-meta/"
@@ -63,6 +63,8 @@
         <skos:prefLabel xml:lang="fi">muinaismuistoalueet</skos:prefLabel>
         <skos:altLabel xml:lang="fi">muinaisjäännösalueet</skos:altLabel>
         <skos:prefLabel xml:lang="en">historic sites</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member>
@@ -72,6 +74,8 @@
         <skos:altLabel xml:lang="sv">Mesa Verde</skos:altLabel>
         <skos:altLabel xml:lang="sv">Mesa Verde (nationalpark)</skos:altLabel>
         <skos:prefLabel xml:lang="sv">Mesa Verde nationalpark</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Individual"/>
       </skos:Concept>
     </skos:member>
   </skos:Collection>
@@ -82,6 +86,8 @@
         <skos:prefLabel xml:lang="sv">lerkärl</skos:prefLabel>
         <skos:altLabel xml:lang="en">clay dishes</skos:altLabel>
         <skos:prefLabel xml:lang="fi">saviastiat</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
   </skos:Collection>
@@ -91,6 +97,8 @@
         <skos:prefLabel xml:lang="sv">forntidsdräkter</skos:prefLabel>
         <skos:prefLabel xml:lang="en">ancient costume reconstructions</skos:prefLabel>
         <skos:prefLabel xml:lang="fi">muinaispuvut</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
   </skos:Collection>
@@ -100,8 +108,9 @@
         <skos:prefLabel xml:lang="sv">förhistorisk konst</skos:prefLabel>
         <skos:prefLabel xml:lang="fi">esihistoriallinen taide</skos:prefLabel>
         <skos:narrower>
-          <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p13027">
+          <yso-meta:Concept rdf:about="http://www.yso.fi/onto/yso/p13027">
             <skos:altLabel xml:lang="fi">luolamaalaukset</skos:altLabel>
+            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
             <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p12463"/>
             <skos:altLabel xml:lang="sv">grottkonst</skos:altLabel>
             <skos:related>
@@ -114,35 +123,43 @@
                     <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5340"/>
                     <skos:altLabel xml:lang="sv">arkeologiska utgrävningar</skos:altLabel>
                     <skos:prefLabel xml:lang="sv">utgrävningar</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
                 <skos:narrower>
-                  <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p10417">
-                    <skos:prefLabel xml:lang="fi">muinaisesineet</skos:prefLabel>
+                  <yso-meta:Concept rdf:about="http://www.yso.fi/onto/yso/p10417">
                     <skos:prefLabel xml:lang="en">antiquities</skos:prefLabel>
-                    <skos:altLabel xml:lang="en">relics of antiquity</skos:altLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
                     <skos:narrower>
-                      <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p10416">
-                        <skos:prefLabel xml:lang="sv">skattfynd</skos:prefLabel>
-                        <skos:prefLabel xml:lang="en">treasure finds</skos:prefLabel>
+                      <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p10415">
+                        <skos:prefLabel xml:lang="fi">rahalöydöt</skos:prefLabel>
+                        <skos:prefLabel xml:lang="sv">myntfynd</skos:prefLabel>
                         <skos:related>
-                          <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p10415">
-                            <skos:prefLabel xml:lang="fi">rahalöydöt</skos:prefLabel>
-                            <skos:prefLabel xml:lang="sv">myntfynd</skos:prefLabel>
-                            <skos:related rdf:resource="http://www.yso.fi/onto/yso/p10416"/>
+                          <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p10416">
+                            <skos:prefLabel xml:lang="sv">skattfynd</skos:prefLabel>
+                            <skos:prefLabel xml:lang="en">treasure finds</skos:prefLabel>
+                            <skos:related rdf:resource="http://www.yso.fi/onto/yso/p10415"/>
                             <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p10417"/>
-                            <skos:prefLabel xml:lang="en">coin finds</skos:prefLabel>
+                            <skos:prefLabel xml:lang="fi">aarrelöydöt</skos:prefLabel>
+                            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                           </skos:Concept>
                         </skos:related>
                         <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p10417"/>
-                        <skos:prefLabel xml:lang="fi">aarrelöydöt</skos:prefLabel>
+                        <skos:prefLabel xml:lang="en">coin finds</skos:prefLabel>
+                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                       </skos:Concept>
                     </skos:narrower>
-                    <skos:narrower rdf:resource="http://www.yso.fi/onto/yso/p10415"/>
+                    <skos:prefLabel xml:lang="fi">muinaisesineet</skos:prefLabel>
                     <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p5340"/>
-                    <skos:altLabel xml:lang="sv">fornsaker</skos:altLabel>
+                    <skos:narrower rdf:resource="http://www.yso.fi/onto/yso/p10416"/>
+                    <skos:altLabel xml:lang="en">relics of antiquity</skos:altLabel>
+                    <rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
                     <skos:prefLabel xml:lang="sv">fornföremål</skos:prefLabel>
-                  </skos:Concept>
+                    <skos:altLabel xml:lang="sv">fornsaker</skos:altLabel>
+                  </yso-meta:Concept>
                 </skos:narrower>
                 <skos:altLabel xml:lang="sv">fornminnen</skos:altLabel>
                 <skos:prefLabel xml:lang="fi">muinaisjäännökset</skos:prefLabel>
@@ -158,9 +175,13 @@
                         <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p580"/>
                         <skos:altLabel xml:lang="fi">kuppikivet</skos:altLabel>
                         <skos:prefLabel xml:lang="sv">offerstenar</skos:prefLabel>
+                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                       </skos:Concept>
                     </skos:narrower>
                     <skos:prefLabel xml:lang="sv">offerplatser</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
                 <skos:related>
@@ -169,18 +190,22 @@
                     <skos:prefLabel xml:lang="sv">labyrinter</skos:prefLabel>
                     <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5340"/>
                     <skos:narrower>
-                      <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p27547">
+                      <yso-meta:Concept rdf:about="http://www.yso.fi/onto/yso/p27547">
                         <skos:prefLabel xml:lang="sv">jungfrudanser</skos:prefLabel>
-                        <skos:prefLabel xml:lang="en">troy towns</skos:prefLabel>
-                        <skos:altLabel xml:lang="sv">trojaborgar</skos:altLabel>
                         <skos:altLabel xml:lang="en">jatulintarhat</skos:altLabel>
-                        <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5340"/>
-                        <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p14174"/>
-                        <skos:altLabel xml:lang="sv">trojeborgar</skos:altLabel>
                         <skos:prefLabel xml:lang="fi">jatulintarhat</skos:prefLabel>
-                      </skos:Concept>
+                        <rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+                        <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5340"/>
+                        <skos:prefLabel xml:lang="en">troy towns</skos:prefLabel>
+                        <skos:altLabel xml:lang="sv">trojeborgar</skos:altLabel>
+                        <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p14174"/>
+                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                        <skos:altLabel xml:lang="sv">trojaborgar</skos:altLabel>
+                      </yso-meta:Concept>
                     </skos:narrower>
                     <skos:prefLabel xml:lang="fi">labyrintit</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
                 <skos:altLabel xml:lang="sv">fasta fornlämningar</skos:altLabel>
@@ -190,11 +215,13 @@
                     <skos:prefLabel xml:lang="sv">runstenar</skos:prefLabel>
                     <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5340"/>
                     <skos:related>
-                      <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p29406">
+                      <yso-meta:Concept rdf:about="http://www.yso.fi/onto/yso/p29406">
+                        <skos:altLabel xml:lang="sv">runforskning</skos:altLabel>
                         <skos:prefLabel xml:lang="fi">runologia</skos:prefLabel>
-                        <skos:prefLabel xml:lang="sv">runologi</skos:prefLabel>
                         <skos:altLabel xml:lang="fi">riimututkimus</skos:altLabel>
                         <skos:related rdf:resource="http://www.yso.fi/onto/yso/p14588"/>
+                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                        <rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
                         <skos:related>
                           <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p6218">
                             <skos:prefLabel xml:lang="fi">riimukirjoitus</skos:prefLabel>
@@ -203,13 +230,17 @@
                             <skos:related rdf:resource="http://www.yso.fi/onto/yso/p29406"/>
                             <skos:altLabel xml:lang="sv">runskrift</skos:altLabel>
                             <skos:prefLabel xml:lang="en">runic writing</skos:prefLabel>
+                            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                           </skos:Concept>
                         </skos:related>
-                        <skos:altLabel xml:lang="sv">runforskning</skos:altLabel>
                         <skos:prefLabel xml:lang="en">runology</skos:prefLabel>
-                      </skos:Concept>
+                        <skos:prefLabel xml:lang="sv">runologi</skos:prefLabel>
+                      </yso-meta:Concept>
                     </skos:related>
                     <skos:prefLabel xml:lang="en">runestones</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
                 <skos:related>
@@ -223,6 +254,8 @@
                         <skos:prefLabel xml:lang="sv">vrak</skos:prefLabel>
                         <skos:related rdf:resource="http://www.yso.fi/onto/yso/p8869"/>
                         <skos:prefLabel xml:lang="fi">hylyt</skos:prefLabel>
+                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                       </skos:Concept>
                     </skos:related>
                     <skos:related>
@@ -239,6 +272,7 @@
                               <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p1265">
                                 <skos:altLabel xml:lang="fi">muinaistutkimus</skos:altLabel>
                                 <skos:altLabel xml:lang="sv">fornforskning</skos:altLabel>
+                                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
                                 <skos:prefLabel xml:lang="sv"
                                 >arkeologi</skos:prefLabel>
                                 <skos:narrower>
@@ -258,6 +292,8 @@
                                         >classical period</skos:altLabel>
                                         <skos:prefLabel xml:lang="fi"
                                         >antiikki</skos:prefLabel>
+                                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                                       </skos:Concept>
                                     </skos:related>
                                     <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p1265"/>
@@ -265,6 +301,8 @@
                                     >klassillinen arkeologia</skos:altLabel>
                                     <skos:prefLabel xml:lang="fi"
                                     >klassinen arkeologia</skos:prefLabel>
+                                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                                   </skos:Concept>
                                 </skos:narrower>
                                 <skos:altLabel xml:lang="fi">esihistoriallinen arkeologia</skos:altLabel>
@@ -279,6 +317,8 @@
                                     >historiallisen ajan arkeologia</skos:altLabel>
                                     <skos:prefLabel xml:lang="sv"
                                     >historisk arkeologi</skos:prefLabel>
+                                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                                   </skos:Concept>
                                 </skos:narrower>
                                 <skos:narrower>
@@ -290,6 +330,8 @@
                                     <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p1265"/>
                                     <skos:prefLabel xml:lang="fi"
                                     >ympäristöarkeologia</skos:prefLabel>
+                                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                                   </skos:Concept>
                                 </skos:narrower>
                                 <skos:narrower>
@@ -301,25 +343,30 @@
                                     <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p1265"/>
                                     <skos:prefLabel xml:lang="en"
                                     >industrial archaeology</skos:prefLabel>
+                                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                                   </skos:Concept>
                                 </skos:narrower>
                                 <skos:related>
                                   <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p28252">
+                                    <skos:altLabel xml:lang="sv"
+                                    >deltagande arkeologi</skos:altLabel>
+                                    <skos:related rdf:resource="http://www.yso.fi/onto/yso/p1265"/>
                                     <skos:prefLabel xml:lang="sv"
                                     >publik arkeologi</skos:prefLabel>
+                                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
+                                    <skos:altLabel xml:lang="en"
+                                    >public archaeology</skos:altLabel>
+                                    <skos:prefLabel xml:lang="en"
+                                    >community archaeology</skos:prefLabel>
                                     <skos:prefLabel xml:lang="fi"
                                     >yhteisöarkeologia</skos:prefLabel>
                                     <skos:altLabel xml:lang="sv"
-                                    >deltagande arkeologi</skos:altLabel>
-                                    <skos:altLabel xml:lang="en"
-                                    >public archaeology</skos:altLabel>
-                                    <skos:related rdf:resource="http://www.yso.fi/onto/yso/p1265"/>
-                                    <skos:altLabel xml:lang="sv"
                                     >samskapande arkeologi</skos:altLabel>
-                                    <skos:prefLabel xml:lang="en"
-                                    >community archaeology</skos:prefLabel>
+                                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
                                   </skos:Concept>
                                 </skos:related>
+                                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/test-scheme"/>
                                 <skos:narrower>
                                   <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p20339">
                                     <skos:prefLabel xml:lang="sv"
@@ -329,6 +376,8 @@
                                     <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p1265"/>
                                     <skos:prefLabel xml:lang="en"
                                     >experimental archeology</skos:prefLabel>
+                                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                                   </skos:Concept>
                                 </skos:narrower>
                                 <skos:narrower>
@@ -340,6 +389,8 @@
                                     <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p1265"/>
                                     <skos:prefLabel xml:lang="sv"
                                     >molekylärarkeologi</skos:prefLabel>
+                                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                                   </skos:Concept>
                                 </skos:narrower>
                                 <skos:prefLabel xml:lang="fi"
@@ -359,6 +410,8 @@
                                     >växtarkeologi</skos:altLabel>
                                     <skos:prefLabel xml:lang="fi"
                                     >arkeobotaniikka</skos:prefLabel>
+                                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                                   </skos:Concept>
                                 </skos:narrower>
                                 <skos:narrower>
@@ -370,8 +423,11 @@
                                     <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p1265"/>
                                     <skos:prefLabel xml:lang="fi"
                                     >kaupunkiarkeologia</skos:prefLabel>
+                                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                                   </skos:Concept>
                                 </skos:narrower>
+                                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                                 <skos:prefLabel xml:lang="en"
                                 >archaeology</skos:prefLabel>
                                 <skos:narrower rdf:resource="http://www.yso.fi/onto/yso/p8868"/>
@@ -379,14 +435,21 @@
                               </skos:Concept>
                             </skos:broader>
                             <skos:prefLabel xml:lang="fi">vedenalainen arkeologia</skos:prefLabel>
+                            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                           </skos:Concept>
                         </skos:broader>
                         <skos:prefLabel xml:lang="fi">meriarkeologia</skos:prefLabel>
+                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                       </skos:Concept>
                     </skos:related>
                     <skos:prefLabel xml:lang="sv">skeppsfynd</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
                 <skos:narrower>
                   <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p7347">
                     <skos:prefLabel xml:lang="en">ancient castles</skos:prefLabel>
@@ -397,10 +460,14 @@
                         <skos:prefLabel xml:lang="fi">linnavuoret</skos:prefLabel>
                         <skos:related rdf:resource="http://www.yso.fi/onto/yso/p7347"/>
                         <skos:prefLabel xml:lang="en">hill forts</skos:prefLabel>
+                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                       </skos:Concept>
                     </skos:related>
                     <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p5340"/>
                     <skos:prefLabel xml:lang="fi">muinaislinnat</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:narrower>
                 <skos:related rdf:resource="http://www.yso.fi/onto/yso/p27547"/>
@@ -421,13 +488,19 @@
                             <skos:prefLabel xml:lang="sv">kraniologi</skos:prefLabel>
                             <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p5338"/>
                             <skos:prefLabel xml:lang="fi">kraniologia</skos:prefLabel>
+                            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                           </skos:Concept>
                         </skos:narrower>
                         <skos:altLabel xml:lang="fi">luuoppi</skos:altLabel>
                         <skos:prefLabel xml:lang="sv">osteologi</skos:prefLabel>
+                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                       </skos:Concept>
                     </skos:related>
                     <skos:prefLabel xml:lang="fi">luulöydöt</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
                 <skos:related rdf:resource="http://www.yso.fi/onto/yso/p13027"/>
@@ -437,6 +510,8 @@
                     <skos:prefLabel xml:lang="en">sphinxes</skos:prefLabel>
                     <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5340"/>
                     <skos:prefLabel xml:lang="sv">sfinxer</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
                 <skos:related>
@@ -454,11 +529,13 @@
                         <skos:altLabel xml:lang="fi">hautaesineet</skos:altLabel>
                         <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5713"/>
                         <skos:prefLabel xml:lang="fi">hauta-antimet</skos:prefLabel>
+                        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                         <skos:altLabel xml:lang="sv">gravföremål</skos:altLabel>
+                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
                       </skos:Concept>
                     </skos:related>
                     <skos:related>
-                      <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p5714">
+                      <yso-meta:Concept rdf:about="http://www.yso.fi/onto/yso/p5714">
                         <skos:prefLabel xml:lang="en">prehistoric graves</skos:prefLabel>
                         <skos:narrower>
                           <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p6477">
@@ -466,6 +543,8 @@
                             <skos:prefLabel xml:lang="sv">skelettgravar</skos:prefLabel>
                             <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p5714"/>
                             <skos:prefLabel xml:lang="en">non-cremated burial deposit</skos:prefLabel>
+                            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                           </skos:Concept>
                         </skos:narrower>
                         <skos:narrower>
@@ -475,6 +554,8 @@
                             <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p5714"/>
                             <skos:altLabel xml:lang="en">mounds (prehistoric graves)</skos:altLabel>
                             <skos:prefLabel xml:lang="en">barrows (prehistoric graves)</skos:prefLabel>
+                            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                           </skos:Concept>
                         </skos:narrower>
                         <skos:prefLabel xml:lang="fi">muinaishaudat</skos:prefLabel>
@@ -485,7 +566,7 @@
                             <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5340"/>
                             <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5714"/>
                             <skos:related>
-                              <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p8506">
+                              <yso-meta:Concept rdf:about="http://www.yso.fi/onto/yso/p8506">
                                 <skos:prefLabel xml:lang="en"
                                 >graves</skos:prefLabel>
                                 <skos:related rdf:resource="http://www.yso.fi/onto/yso/p8508"/>
@@ -503,6 +584,8 @@
                                     <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p8506"/>
                                     <skos:prefLabel xml:lang="en"
                                     >cremation graves</skos:prefLabel>
+                                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                                   </skos:Concept>
                                 </skos:narrower>
                                 <skos:narrower>
@@ -514,8 +597,12 @@
                                     <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p8506"/>
                                     <skos:prefLabel xml:lang="en"
                                     >burial chambers</skos:prefLabel>
+                                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                                   </skos:Concept>
                                 </skos:narrower>
+                                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                <rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
                                 <skos:prefLabel xml:lang="sv"
                                 >gravar</skos:prefLabel>
                                 <skos:narrower>
@@ -529,21 +616,29 @@
                                     >mass burials</skos:altLabel>
                                     <skos:prefLabel xml:lang="en"
                                     >mass graves</skos:prefLabel>
+                                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                                   </skos:Concept>
                                 </skos:narrower>
-                              </skos:Concept>
+                              </yso-meta:Concept>
                             </skos:related>
                             <skos:prefLabel xml:lang="en">burial sites</skos:prefLabel>
+                            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                           </skos:Concept>
                         </skos:related>
+                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
                         <skos:related rdf:resource="http://www.yso.fi/onto/yso/p17863"/>
                         <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5713"/>
-                        <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5340"/>
                         <skos:prefLabel xml:lang="sv">forngravar</skos:prefLabel>
+                        <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5340"/>
+                        <rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
                         <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p8506"/>
-                      </skos:Concept>
+                      </yso-meta:Concept>
                     </skos:related>
                     <skos:prefLabel xml:lang="sv">gravfynd</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
                 <skos:related>
@@ -567,6 +662,8 @@
                                 <skos:related rdf:resource="http://www.yso.fi/onto/yso/p7804"/>
                                 <skos:prefLabel xml:lang="fi"
                                 >termoluminesenssi</skos:prefLabel>
+                                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                               </skos:Concept>
                             </skos:related>
                             <skos:related>
@@ -578,12 +675,13 @@
                                 <skos:related rdf:resource="http://www.yso.fi/onto/yso/p7804"/>
                                 <skos:prefLabel xml:lang="sv"
                                 >stratigrafi</skos:prefLabel>
+                                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                               </skos:Concept>
                             </skos:related>
                             <skos:prefLabel xml:lang="en">age estimation</skos:prefLabel>
                             <skos:related rdf:resource="http://www.yso.fi/onto/yso/p20619"/>
                             <skos:prefLabel xml:lang="fi">iänmääritys</skos:prefLabel>
-                            <skos:prefLabel xml:lang="sv">åldersbestämning</skos:prefLabel>
                             <skos:related>
                               <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p7785">
                                 <skos:prefLabel xml:lang="en"
@@ -603,34 +701,47 @@
                                     >tree-ring dating</skos:altLabel>
                                     <skos:prefLabel xml:lang="fi"
                                     >dendrokronologia</skos:prefLabel>
+                                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                                   </skos:Concept>
                                 </skos:narrower>
                                 <skos:prefLabel xml:lang="sv"
                                 >kronologi</skos:prefLabel>
+                                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                               </skos:Concept>
                             </skos:related>
                             <skos:narrower>
                               <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p19077">
                                 <skos:prefLabel xml:lang="fi"
                                 >radiohiiliajoitus</skos:prefLabel>
+                                <skos:altLabel xml:lang="fi">C 14 -menetelmä</skos:altLabel>
+                                <skos:altLabel xml:lang="sv">C-datering</skos:altLabel>
+                                <skos:prefLabel xml:lang="sv"
+                                >kol-14-datering</skos:prefLabel>
+                                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
+                                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
                                 <skos:prefLabel xml:lang="en"
                                 >radiocarbon dating</skos:prefLabel>
                                 <skos:altLabel xml:lang="sv">C 14-metoden</skos:altLabel>
                                 <skos:altLabel xml:lang="sv">kol-fjorton-datering</skos:altLabel>
-                                <skos:altLabel xml:lang="sv">C-datering</skos:altLabel>
                                 <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p7804"/>
-                                <skos:altLabel xml:lang="fi">C 14 -menetelmä</skos:altLabel>
-                                <skos:prefLabel xml:lang="sv"
-                                >kol-14-datering</skos:prefLabel>
                               </skos:Concept>
                             </skos:narrower>
+                            <skos:prefLabel xml:lang="sv">åldersbestämning</skos:prefLabel>
+                            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                             <skos:related rdf:resource="http://www.yso.fi/onto/yso/p7784"/>
                           </skos:Concept>
                         </skos:related>
                         <skos:prefLabel xml:lang="fi">siitepölyanalyysi</skos:prefLabel>
+                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                       </skos:Concept>
                     </skos:related>
                     <skos:prefLabel xml:lang="en">macrofossils</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
                 <skos:related>
@@ -639,6 +750,8 @@
                     <skos:prefLabel xml:lang="sv">pyramider</skos:prefLabel>
                     <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5340"/>
                     <skos:prefLabel xml:lang="fi">pyramidit</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
                 <skos:related>
@@ -647,6 +760,8 @@
                     <skos:prefLabel xml:lang="en">bog finds</skos:prefLabel>
                     <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5340"/>
                     <skos:prefLabel xml:lang="fi">suolöydöt</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
                 <skos:altLabel xml:lang="fi">kiinteät muinaisjäännökset</skos:altLabel>
@@ -659,6 +774,8 @@
                     <skos:prefLabel xml:lang="en">obelisks</skos:prefLabel>
                     <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5340"/>
                     <skos:prefLabel xml:lang="sv">obelisker</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
                 <skos:related rdf:resource="http://www.yso.fi/onto/yso/p5714"/>
@@ -677,6 +794,8 @@
                             <skos:prefLabel xml:lang="en">hieroglyphs</skos:prefLabel>
                             <skos:related rdf:resource="http://www.yso.fi/onto/yso/p2192"/>
                             <skos:prefLabel xml:lang="sv">hieroglyfer</skos:prefLabel>
+                            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                           </skos:Concept>
                         </skos:related>
                         <skos:related rdf:resource="http://www.yso.fi/onto/yso/p2193"/>
@@ -687,9 +806,13 @@
                             <skos:related rdf:resource="http://www.yso.fi/onto/yso/p2192"/>
                             <skos:altLabel xml:lang="fi">assyrologia</skos:altLabel>
                             <skos:prefLabel xml:lang="en">assyriology</skos:prefLabel>
+                            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                           </skos:Concept>
                         </skos:related>
                         <skos:prefLabel xml:lang="sv">egyptologi</skos:prefLabel>
+                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                       </skos:Concept>
                     </skos:related>
                     <skos:related>
@@ -699,47 +822,59 @@
                         <skos:related rdf:resource="http://www.yso.fi/onto/yso/p2193"/>
                         <skos:altLabel xml:lang="fi">balsamointi</skos:altLabel>
                         <skos:prefLabel xml:lang="en">embalming</skos:prefLabel>
+                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                       </skos:Concept>
                     </skos:related>
                     <skos:prefLabel xml:lang="sv">mumier</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
                 <skos:prefLabel xml:lang="sv">fornlämningar</skos:prefLabel>
-                <skos:related rdf:resource="http://www.yso.fi/onto/yso/p8508"/>
                 <skos:altLabel xml:lang="sv">fornfynd</skos:altLabel>
+                <skos:related rdf:resource="http://www.yso.fi/onto/yso/p8508"/>
                 <skos:altLabel xml:lang="fi">muinaismuistot</skos:altLabel>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
               </skos:Concept>
             </skos:related>
             <skos:related>
-              <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p27963">
-                <skos:prefLabel xml:lang="fi">kalliopiirrokset</skos:prefLabel>
+              <yso-meta:Concept rdf:about="http://www.yso.fi/onto/yso/p27963">
                 <skos:prefLabel xml:lang="en">petroglyphs</skos:prefLabel>
-                <skos:altLabel xml:lang="sv">berginristningar</skos:altLabel>
+                <rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
                 <skos:related rdf:resource="http://www.yso.fi/onto/yso/p13027"/>
+                <skos:altLabel xml:lang="sv">petroglyfer</skos:altLabel>
+                <skos:altLabel xml:lang="sv">berginristningar</skos:altLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
                 <skos:related>
                   <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p27964">
-                    <skos:prefLabel xml:lang="en">rock paintings</skos:prefLabel>
-                    <skos:prefLabel xml:lang="sv">hällmålningar</skos:prefLabel>
-                    <skos:altLabel xml:lang="sv">grottmålningar</skos:altLabel>
-                    <skos:altLabel xml:lang="sv">klippmålningar</skos:altLabel>
-                    <skos:related rdf:resource="http://www.yso.fi/onto/yso/p13027"/>
-                    <skos:related rdf:resource="http://www.yso.fi/onto/yso/p27963"/>
                     <skos:altLabel xml:lang="sv">bergmålningar</skos:altLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <skos:altLabel xml:lang="sv">grottmålningar</skos:altLabel>
+                    <skos:prefLabel xml:lang="en">rock paintings</skos:prefLabel>
+                    <skos:altLabel xml:lang="sv">klippmålningar</skos:altLabel>
+                    <skos:related rdf:resource="http://www.yso.fi/onto/yso/p27963"/>
+                    <skos:related rdf:resource="http://www.yso.fi/onto/yso/p13027"/>
+                    <skos:prefLabel xml:lang="sv">hällmålningar</skos:prefLabel>
                     <skos:prefLabel xml:lang="fi">kalliomaalaukset</skos:prefLabel>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
-                <skos:altLabel xml:lang="sv">petroglyfer</skos:altLabel>
+                <skos:prefLabel xml:lang="fi">kalliopiirrokset</skos:prefLabel>
                 <skos:prefLabel xml:lang="sv">hällristningar</skos:prefLabel>
-              </skos:Concept>
+              </yso-meta:Concept>
             </skos:related>
             <skos:related rdf:resource="http://www.yso.fi/onto/yso/p27964"/>
             <skos:altLabel xml:lang="sv">hällkonst</skos:altLabel>
             <skos:prefLabel xml:lang="fi">kalliotaide</skos:prefLabel>
             <skos:prefLabel xml:lang="en">rock art</skos:prefLabel>
+            <rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
             <skos:prefLabel xml:lang="sv">bergkonst</skos:prefLabel>
-          </skos:Concept>
+          </yso-meta:Concept>
         </skos:narrower>
         <skos:prefLabel xml:lang="en">prehistoric art</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member rdf:resource="http://www.yso.fi/onto/yso/p13027"/>
@@ -758,6 +893,8 @@
         <skos:prefLabel xml:lang="en">European Convention on the Protection of the Archaeological Heritage</skos:prefLabel>
         <skos:altLabel xml:lang="fi">Maltan yleissopimus</skos:altLabel>
         <skos:prefLabel xml:lang="fi">Eurooppalainen yleissopimus arkeologisen perinnön suojelusta</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Individual"/>
       </skos:Concept>
     </skos:member>
   </skos:Collection>
@@ -775,10 +912,14 @@
             <skos:prefLabel xml:lang="sv">strandförskjutning</skos:prefLabel>
             <skos:related rdf:resource="http://www.yso.fi/onto/yso/p25576"/>
             <skos:prefLabel xml:lang="fi">rannansiirtyminen</skos:prefLabel>
+            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
           </skos:Concept>
         </skos:related>
         <skos:altLabel xml:lang="sv">forntida stränder</skos:altLabel>
         <skos:prefLabel xml:lang="en">raised shorelines</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member rdf:resource="http://www.yso.fi/onto/yso/p11052"/>
@@ -788,6 +929,7 @@
       <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p4622">
         <skos:prefLabel xml:lang="en">prehistory</skos:prefLabel>
         <skos:prefLabel xml:lang="sv">förhistoria</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
         <skos:altLabel xml:lang="sv">förhistorisk tid</skos:altLabel>
         <skos:narrower>
           <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p2558">
@@ -797,6 +939,8 @@
                 <skos:prefLabel xml:lang="sv">vikingatiden</skos:prefLabel>
                 <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p2558"/>
                 <skos:prefLabel xml:lang="fi">viikinkiaika</skos:prefLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
               </skos:Concept>
             </skos:narrower>
             <skos:prefLabel xml:lang="fi">rautakausi</skos:prefLabel>
@@ -806,6 +950,8 @@
                 <skos:prefLabel xml:lang="en">Age of the Crusades</skos:prefLabel>
                 <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p2558"/>
                 <skos:prefLabel xml:lang="sv">korstågstiden</skos:prefLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
               </skos:Concept>
             </skos:narrower>
             <skos:narrower>
@@ -814,6 +960,8 @@
                 <skos:prefLabel xml:lang="sv">romersk järnålder</skos:prefLabel>
                 <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p2558"/>
                 <skos:prefLabel xml:lang="fi">roomalainen rautakausi</skos:prefLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
               </skos:Concept>
             </skos:narrower>
             <skos:narrower>
@@ -822,6 +970,8 @@
                 <skos:prefLabel xml:lang="sv">folkvandringstiden</skos:prefLabel>
                 <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p2558"/>
                 <skos:prefLabel xml:lang="en">migration period</skos:prefLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
               </skos:Concept>
             </skos:narrower>
             <skos:narrower>
@@ -830,6 +980,8 @@
                 <skos:prefLabel xml:lang="en">Vendel Period</skos:prefLabel>
                 <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p2558"/>
                 <skos:prefLabel xml:lang="fi">merovingiaika</skos:prefLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
               </skos:Concept>
             </skos:narrower>
             <skos:prefLabel xml:lang="sv">järnåldern</skos:prefLabel>
@@ -845,10 +997,14 @@
                     <skos:related rdf:resource="http://www.yso.fi/onto/yso/p4626"/>
                     <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4622"/>
                     <skos:prefLabel xml:lang="sv">bronsåldern</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
                 <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4622"/>
                 <skos:prefLabel xml:lang="sv">tidig metallålder</skos:prefLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
               </skos:Concept>
             </skos:related>
             <skos:narrower>
@@ -857,8 +1013,11 @@
                 <skos:prefLabel xml:lang="fi">esiroomalainen rautakausi</skos:prefLabel>
                 <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p2558"/>
                 <skos:prefLabel xml:lang="sv">förromersk järnålder</skos:prefLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
               </skos:Concept>
             </skos:narrower>
+            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
             <skos:related>
               <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p29717">
                 <skos:prefLabel xml:lang="sv">Latènekulturen</skos:prefLabel>
@@ -867,6 +1026,8 @@
                 <skos:related rdf:resource="http://www.yso.fi/onto/yso/p2558"/>
                 <skos:altLabel xml:lang="en">La Tene period</skos:altLabel>
                 <skos:prefLabel xml:lang="en">La Tène period</skos:prefLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
               </skos:Concept>
             </skos:related>
             <skos:related>
@@ -875,31 +1036,31 @@
                 <skos:prefLabel xml:lang="fi">Hallstattin kulttuuri</skos:prefLabel>
                 <skos:related rdf:resource="http://www.yso.fi/onto/yso/p2558"/>
                 <skos:prefLabel xml:lang="sv">Hallstattkulturen</skos:prefLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
               </skos:Concept>
             </skos:related>
             <skos:prefLabel xml:lang="en">Iron Age</skos:prefLabel>
             <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4622"/>
+            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
           </skos:Concept>
         </skos:narrower>
         <skos:prefLabel xml:lang="fi">esihistoria</skos:prefLabel>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
         <skos:narrower>
           <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p4624">
-            <skos:prefLabel xml:lang="en">Stone Age</skos:prefLabel>
             <skos:prefLabel xml:lang="sv">stenåldern</skos:prefLabel>
+            <skos:prefLabel xml:lang="en">Stone Age</skos:prefLabel>
+            <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4622"/>
+            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
             <skos:narrower>
               <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p12484">
                 <skos:prefLabel xml:lang="sv">paleolitisk tid</skos:prefLabel>
                 <skos:prefLabel xml:lang="fi">paleoliittinen kausi</skos:prefLabel>
                 <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4624"/>
                 <skos:prefLabel xml:lang="en">Paleolithic period</skos:prefLabel>
-              </skos:Concept>
-            </skos:narrower>
-            <skos:narrower>
-              <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p20471">
-                <skos:prefLabel xml:lang="fi">mesoliittinen kausi</skos:prefLabel>
-                <skos:prefLabel xml:lang="sv">mesolitisk tid</skos:prefLabel>
-                <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4624"/>
-                <skos:prefLabel xml:lang="en">Mesolithic period</skos:prefLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
               </skos:Concept>
             </skos:narrower>
             <skos:narrower>
@@ -908,10 +1069,22 @@
                 <skos:prefLabel xml:lang="sv">neolitisk tid</skos:prefLabel>
                 <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4624"/>
                 <skos:prefLabel xml:lang="fi">neoliittinen kausi</skos:prefLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
               </skos:Concept>
             </skos:narrower>
-            <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4622"/>
+            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
             <skos:prefLabel xml:lang="fi">kivikausi</skos:prefLabel>
+            <skos:narrower>
+              <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p20471">
+                <skos:prefLabel xml:lang="fi">mesoliittinen kausi</skos:prefLabel>
+                <skos:prefLabel xml:lang="sv">mesolitisk tid</skos:prefLabel>
+                <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4624"/>
+                <skos:prefLabel xml:lang="en">Mesolithic period</skos:prefLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
+              </skos:Concept>
+            </skos:narrower>
           </skos:Concept>
         </skos:narrower>
         <skos:altLabel xml:lang="fi">esihistoriallinen aika</skos:altLabel>
@@ -925,6 +1098,8 @@
         <skos:prefLabel xml:lang="sv">assyriologer</skos:prefLabel>
         <skos:prefLabel xml:lang="fi">assyriologit</skos:prefLabel>
         <skos:prefLabel xml:lang="en">Assyriologists</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member>
@@ -938,17 +1113,23 @@
             <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p6479"/>
             <skos:altLabel xml:lang="sv">normanner</skos:altLabel>
             <skos:prefLabel xml:lang="sv">normander</skos:prefLabel>
+            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
           </skos:Concept>
         </skos:narrower>
         <skos:prefLabel xml:lang="sv">vikingar</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member>
       <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p26858">
         <skos:prefLabel xml:lang="en">ziggurats</skos:prefLabel>
         <skos:altLabel xml:lang="sv">zikkurat</skos:altLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
         <skos:prefLabel xml:lang="fi">zikkuratit</skos:prefLabel>
         <skos:altLabel xml:lang="sv">ziqqurrat</skos:altLabel>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
         <skos:prefLabel xml:lang="sv">ziqqurat</skos:prefLabel>
         <skos:altLabel xml:lang="fi">zigguratit</skos:altLabel>
         <skos:altLabel xml:lang="sv">trappstegspyramider</skos:altLabel>
@@ -962,6 +1143,8 @@
         <skos:prefLabel xml:lang="sv">folkvandringarna</skos:prefLabel>
         <skos:prefLabel xml:lang="en">migration of peoples</skos:prefLabel>
         <skos:prefLabel xml:lang="fi">kansainvaellukset</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member rdf:resource="http://www.yso.fi/onto/yso/p7785"/>
@@ -975,10 +1158,14 @@
             <skos:prefLabel xml:lang="sv">sigill</skos:prefLabel>
             <skos:related rdf:resource="http://www.yso.fi/onto/yso/p8810"/>
             <skos:prefLabel xml:lang="fi">sinetit</skos:prefLabel>
+            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
           </skos:Concept>
         </skos:related>
         <skos:altLabel xml:lang="sv">sigillvetenskap</skos:altLabel>
         <skos:prefLabel xml:lang="sv">sigillografi</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member rdf:resource="http://www.yso.fi/onto/yso/p18569"/>
@@ -990,6 +1177,8 @@
         <skos:prefLabel xml:lang="sv">vikingafärder</skos:prefLabel>
         <skos:prefLabel xml:lang="fi">viikinkiretket</skos:prefLabel>
         <skos:prefLabel xml:lang="en">Viking raids</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member rdf:resource="http://www.yso.fi/onto/yso/p14174"/>
@@ -1000,6 +1189,8 @@
         <skos:altLabel xml:lang="sv">bosättningshistoria</skos:altLabel>
         <skos:altLabel xml:lang="sv">kolonisationshistoria</skos:altLabel>
         <skos:prefLabel xml:lang="en">settlement history</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member rdf:resource="http://www.yso.fi/onto/yso/p7346"/>
@@ -1011,9 +1202,8 @@
         <skos:prefLabel xml:lang="sv">mykensk kultur</skos:prefLabel>
         <skos:broader>
           <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p7429">
-            <skos:prefLabel xml:lang="fi">aigeialainen kulttuuri</skos:prefLabel>
-            <skos:prefLabel xml:lang="sv">egeisk kultur</skos:prefLabel>
-            <skos:altLabel xml:lang="fi">kreetalais-mykeneläinen kulttuuri</skos:altLabel>
+            <skos:altLabel xml:lang="sv">kretensisk-mykensk kultur</skos:altLabel>
+            <skos:prefLabel xml:lang="en">Aegean culture</skos:prefLabel>
             <skos:narrower rdf:resource="http://www.yso.fi/onto/yso/p10073"/>
             <skos:narrower>
               <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p7428">
@@ -1021,13 +1211,20 @@
                 <skos:prefLabel xml:lang="en">Minoan culture</skos:prefLabel>
                 <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p7429"/>
                 <skos:prefLabel xml:lang="sv">minoisk kultur</skos:prefLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
               </skos:Concept>
             </skos:narrower>
-            <skos:altLabel xml:lang="sv">kretensisk-mykensk kultur</skos:altLabel>
-            <skos:prefLabel xml:lang="en">Aegean culture</skos:prefLabel>
+            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+            <skos:prefLabel xml:lang="sv">egeisk kultur</skos:prefLabel>
+            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
+            <skos:prefLabel xml:lang="fi">aigeialainen kulttuuri</skos:prefLabel>
+            <skos:altLabel xml:lang="fi">kreetalais-mykeneläinen kulttuuri</skos:altLabel>
           </skos:Concept>
         </skos:broader>
         <skos:prefLabel xml:lang="fi">mykeneläinen kulttuuri</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member>
@@ -1049,27 +1246,35 @@
                     <skos:prefLabel xml:lang="fi">piirtokirjoitukset</skos:prefLabel>
                     <skos:prefLabel xml:lang="sv">inskrifter</skos:prefLabel>
                     <skos:related>
-                      <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p21084">
-                        <skos:prefLabel xml:lang="fi">hautakirjoitukset</skos:prefLabel>
+                      <yso-meta:Concept rdf:about="http://www.yso.fi/onto/yso/p21084">
+                        <skos:related rdf:resource="http://www.yso.fi/onto/yso/p10986"/>
+                        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                        <skos:altLabel xml:lang="sv">epitafier</skos:altLabel>
                         <skos:prefLabel xml:lang="sv">gravinskrifter</skos:prefLabel>
                         <skos:altLabel xml:lang="en">tombstone inscriptions</skos:altLabel>
-                        <skos:altLabel xml:lang="sv">epitafier</skos:altLabel>
+                        <skos:prefLabel xml:lang="fi">hautakirjoitukset</skos:prefLabel>
                         <skos:altLabel xml:lang="fi">epitafit</skos:altLabel>
-                        <skos:related rdf:resource="http://www.yso.fi/onto/yso/p10986"/>
-                        <skos:altLabel xml:lang="sv">gravskrifter</skos:altLabel>
                         <skos:prefLabel xml:lang="en">epitaphs</skos:prefLabel>
-                      </skos:Concept>
+                        <rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+                        <skos:altLabel xml:lang="sv">gravskrifter</skos:altLabel>
+                      </yso-meta:Concept>
                     </skos:related>
                     <skos:related rdf:resource="http://www.yso.fi/onto/yso/p8714"/>
                     <skos:altLabel xml:lang="fi">inskriptiot</skos:altLabel>
                     <skos:prefLabel xml:lang="en">inscriptions</skos:prefLabel>
+                    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
                   </skos:Concept>
                 </skos:related>
                 <skos:altLabel xml:lang="fi">epigrafiikka</skos:altLabel>
                 <skos:prefLabel xml:lang="fi">epigrafia</skos:prefLabel>
+                <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+                <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
               </skos:Concept>
             </skos:related>
             <skos:prefLabel xml:lang="sv">paleografi</skos:prefLabel>
+            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
           </skos:Concept>
         </skos:related>
         <skos:related>
@@ -1078,9 +1283,13 @@
             <skos:prefLabel xml:lang="fi">papyrukset</skos:prefLabel>
             <skos:related rdf:resource="http://www.yso.fi/onto/yso/p8713"/>
             <skos:prefLabel xml:lang="en">papyri</skos:prefLabel>
+            <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+            <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
           </skos:Concept>
         </skos:related>
         <skos:prefLabel xml:lang="en">papyrology</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member rdf:resource="http://www.yso.fi/onto/yso/p2195"/>
@@ -1091,6 +1300,8 @@
         <skos:prefLabel xml:lang="sv">Induskulturen</skos:prefLabel>
         <skos:prefLabel xml:lang="fi">Indus-kulttuuri</skos:prefLabel>
         <skos:prefLabel xml:lang="en">Indus culture</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member rdf:resource="http://www.yso.fi/onto/yso/p7428"/>
@@ -1099,6 +1310,8 @@
         <skos:prefLabel xml:lang="sv">fenicisk kultur</skos:prefLabel>
         <skos:prefLabel xml:lang="en">Phoenician culture</skos:prefLabel>
         <skos:prefLabel xml:lang="fi">foinikialainen kulttuuri</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member>
@@ -1106,6 +1319,8 @@
         <skos:prefLabel xml:lang="fi">egyptologit</skos:prefLabel>
         <skos:prefLabel xml:lang="sv">egyptologer</skos:prefLabel>
         <skos:prefLabel xml:lang="en">Egyptologists</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member rdf:resource="http://www.yso.fi/onto/yso/p2557"/>
@@ -1116,6 +1331,8 @@
         <skos:prefLabel xml:lang="en">Great Wall of China</skos:prefLabel>
         <skos:altLabel xml:lang="sv">Kinesiska muren</skos:altLabel>
         <skos:prefLabel xml:lang="sv">kinesiska muren</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Individual"/>
       </skos:Concept>
     </skos:member>
     <skos:member>
@@ -1123,6 +1340,8 @@
         <skos:prefLabel xml:lang="sv">etruskologi</skos:prefLabel>
         <skos:prefLabel xml:lang="fi">etruskologia</skos:prefLabel>
         <skos:prefLabel xml:lang="en">etruscology</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member>
@@ -1132,6 +1351,8 @@
         <skos:altLabel xml:lang="sv">östliga handelsvägar</skos:altLabel>
         <skos:altLabel xml:lang="fi">idäntiet</skos:altLabel>
         <skos:prefLabel xml:lang="sv">handelsvägar</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member>
@@ -1141,6 +1362,8 @@
         <skos:altLabel xml:lang="sv">bosättningsorter</skos:altLabel>
         <skos:altLabel xml:lang="sv">boningsorter</skos:altLabel>
         <skos:prefLabel xml:lang="sv">boplatser</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member rdf:resource="http://www.yso.fi/onto/yso/p8714"/>
@@ -1156,6 +1379,8 @@
         <skos:prefLabel xml:lang="fi">kykladinen kulttuuri</skos:prefLabel>
         <skos:altLabel xml:lang="sv">cykladisk kultur</skos:altLabel>
         <skos:prefLabel xml:lang="en">Cycladic culture</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
     <skos:member rdf:resource="http://www.yso.fi/onto/yso/p29706"/>
@@ -1166,6 +1391,8 @@
         <skos:prefLabel xml:lang="sv">epigram</skos:prefLabel>
         <skos:prefLabel xml:lang="fi">epigrammit</skos:prefLabel>
         <skos:prefLabel xml:lang="en">epigrams</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
   </skos:Collection>
@@ -1186,6 +1413,8 @@
         <skos:prefLabel xml:lang="sv">lag om fornminnen</skos:prefLabel>
         <skos:altLabel xml:lang="sv">fornminneslagen</skos:altLabel>
         <skos:prefLabel xml:lang="fi">muinaismuistolaki</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Individual"/>
       </skos:Concept>
     </skos:member>
     <skos:member rdf:resource="http://www.yso.fi/onto/yso/p23677"/>
@@ -1222,6 +1451,8 @@
         <skos:prefLabel xml:lang="sv">bronsspeglar</skos:prefLabel>
         <skos:prefLabel xml:lang="fi">pronssipeilit</skos:prefLabel>
         <skos:prefLabel xml:lang="en">bronze mirrors</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
   </skos:Collection>
@@ -1234,6 +1465,8 @@
     <skos:prefLabel xml:lang="fi">arkeologit</skos:prefLabel>
     <skos:prefLabel xml:lang="en">archaeologists</skos:prefLabel>
     <skos:prefLabel xml:lang="sv">arkeologer</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
   </skos:Concept>
   <skos:Collection rdf:about="http://www.yso.fi/onto/yso/p26533">
     <skos:member rdf:resource="http://www.yso.fi/onto/yso/p29706"/>
@@ -1256,6 +1489,8 @@
     <skos:prefLabel xml:lang="en">phosphate analysis</skos:prefLabel>
     <skos:prefLabel xml:lang="sv">fosfatanalys</skos:prefLabel>
     <skos:prefLabel xml:lang="fi">fosfaattianalyysi</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
   </skos:Concept>
   <skos:Collection rdf:about="http://www.yso.fi/onto/yso/p26532">
     <skos:member rdf:resource="http://www.yso.fi/onto/yso/p23386"/>
@@ -1275,6 +1510,8 @@
         <skos:altLabel xml:lang="sv">aDNA</skos:altLabel>
         <skos:altLabel xml:lang="en">fossil DNA</skos:altLabel>
         <skos:prefLabel xml:lang="en">ancient DNA</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:member>
   </skos:Collection>
@@ -1293,6 +1530,8 @@
         <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4740"/>
         <skos:altLabel xml:lang="fi">vasarakirveskulttuuri</skos:altLabel>
         <skos:prefLabel xml:lang="sv">snörkeramiska kulturen</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:narrower>
     <skos:narrower>
@@ -1301,6 +1540,8 @@
         <skos:prefLabel xml:lang="en">Kunda culture</skos:prefLabel>
         <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4740"/>
         <skos:prefLabel xml:lang="sv">Kundakulturen</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:narrower>
     <skos:narrower>
@@ -1309,14 +1550,19 @@
         <skos:prefLabel xml:lang="fi">megaliittikulttuuri</skos:prefLabel>
         <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4740"/>
         <skos:prefLabel xml:lang="en">Megalithic culture</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:narrower>
+    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
     <skos:narrower>
       <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p11111">
         <skos:prefLabel xml:lang="fi">kuoppakeraaminen kulttuuri</skos:prefLabel>
         <skos:prefLabel xml:lang="sv">gropkeramiska kulturen</skos:prefLabel>
         <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4740"/>
         <skos:prefLabel xml:lang="en">Pitted Ware culture</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:narrower>
     <skos:narrower>
@@ -1325,6 +1571,8 @@
         <skos:prefLabel xml:lang="sv">kamkeramiska kulturen</skos:prefLabel>
         <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4740"/>
         <skos:prefLabel xml:lang="en">Comb Ceramic culture</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:narrower>
     <skos:prefLabel xml:lang="fi">kivikautiset kulttuurit</skos:prefLabel>
@@ -1334,6 +1582,8 @@
         <skos:prefLabel xml:lang="sv">Komsakulturen</skos:prefLabel>
         <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4740"/>
         <skos:prefLabel xml:lang="fi">Komsan kulttuuri</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:narrower>
     <skos:narrower>
@@ -1342,14 +1592,19 @@
         <skos:prefLabel xml:lang="sv">Kiukaiskulturen</skos:prefLabel>
         <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4740"/>
         <skos:prefLabel xml:lang="fi">Kiukaisten kulttuuri</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:narrower>
+    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
     <skos:narrower>
       <skos:Concept rdf:about="http://www.yso.fi/onto/yso/p10826">
         <skos:prefLabel xml:lang="en">Askola culture</skos:prefLabel>
         <skos:prefLabel xml:lang="fi">Askolan kulttuuri</skos:prefLabel>
         <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4740"/>
         <skos:prefLabel xml:lang="sv">Askolakulturen</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:narrower>
     <skos:prefLabel xml:lang="en">Stone Age cultures</skos:prefLabel>
@@ -1359,6 +1614,8 @@
         <skos:prefLabel xml:lang="en">Suomusjärvi culture</skos:prefLabel>
         <skos:broader rdf:resource="http://www.yso.fi/onto/yso/p4740"/>
         <skos:prefLabel xml:lang="sv">Suomusjärvikulturen</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:narrower>
   </skos:Concept>
@@ -1371,8 +1628,12 @@
         <skos:prefLabel xml:lang="sv">asbestkeramik</skos:prefLabel>
         <skos:related rdf:resource="http://www.yso.fi/onto/yso/p1421"/>
         <skos:prefLabel xml:lang="fi">asbestikeramiikka</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+        <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
       </skos:Concept>
     </skos:related>
     <skos:prefLabel xml:lang="sv">textilkeramik</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://www.yso.fi/onto/yso/"/>
+    <rdf:type rdf:resource="http://www.yso.fi/onto/yso-meta/Concept"/>
   </skos:Concept>
 </rdf:RDF>
