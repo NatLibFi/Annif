@@ -1,14 +1,38 @@
 """Support for exclude/include rules for subject vocabularies"""
 
+from rdflib import RDF, Graph, URIRef
+from rdflib.namespace import SKOS
+
 from annif.exception import ConfigurationException
 
 
-def kwargs_to_exclude_uris(kwargs: dict[str, str]) -> set[str]:
+def uris_by_type(graph: Graph, type: str) -> list[str]:
+    return [str(uri) for uri in graph.subjects(RDF.type, URIRef(type))]
+
+
+def uris_by_scheme(graph: Graph, type: str) -> list[str]:
+    return [str(uri) for uri in graph.subjects(SKOS.inScheme, URIRef(type))]
+
+
+def uris_by_collection(graph: Graph, type: str) -> list[str]:
+    return [str(uri) for uri in graph.objects(URIRef(type), SKOS.member)]
+
+
+def kwargs_to_exclude_uris(graph: Graph, kwargs: dict[str, str]) -> set[str]:
     exclude_uris = set()
     for key, value in kwargs.items():
         vals = value.split("|")
         if key == "exclude":
             exclude_uris.update(vals)
+        elif key == "exclude_type":
+            for val in vals:
+                exclude_uris.update(uris_by_type(graph, val))
+        elif key == "exclude_scheme":
+            for val in vals:
+                exclude_uris.update(uris_by_scheme(graph, val))
+        elif key == "exclude_collection":
+            for val in vals:
+                exclude_uris.update(uris_by_collection(graph, val))
         else:
             raise ConfigurationException(f"unknown vocab keyword argument {key}")
     return exclude_uris

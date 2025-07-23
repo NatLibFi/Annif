@@ -218,7 +218,9 @@ class AnnifProject(DatadirMixin):
     def subjects(self) -> SubjectIndex:
         if self._subject_index is None:
             self._subject_index = self.vocab.subjects
-            exclude_uris = kwargs_to_exclude_uris(self._vocab_kwargs)
+            exclude_uris = kwargs_to_exclude_uris(
+                self.vocab.as_graph(), self._vocab_kwargs
+            )
             if exclude_uris:
                 self._subject_index = SubjectIndexFilter(
                     self._subject_index, exclude=exclude_uris
