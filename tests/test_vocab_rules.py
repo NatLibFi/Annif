@@ -56,7 +56,12 @@ def test_vocab_rules_exclude_include_combination(vocabulary):
         vocabulary.as_graph(),
         {
             "exclude": "*",
-            "include": "http://www.yso.fi/onto/yso/p6436|http://www.yso.fi/onto/yso/p11052",
+            "include": "|".join(
+                [
+                    "http://www.yso.fi/onto/yso/p6436",
+                    "http://www.yso.fi/onto/yso/p11052",
+                ]
+            ),
             "include_type": "http://www.yso.fi/onto/yso-meta/Individual",
             "include_scheme": "http://www.yso.fi/onto/yso/test-scheme",
             "include_collection": "http://www.yso.fi/onto/yso/p26569",
