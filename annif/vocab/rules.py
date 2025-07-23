@@ -23,7 +23,10 @@ def kwargs_to_exclude_uris(graph: Graph, kwargs: dict[str, str]) -> set[str]:
     for key, value in kwargs.items():
         vals = value.split("|")
         if key == "exclude":
-            exclude_uris.update(vals)
+            if "*" in vals:
+                exclude_uris.update(uris_by_type(graph, SKOS.Concept))
+            else:
+                exclude_uris.update(vals)
         elif key == "exclude_type":
             for val in vals:
                 exclude_uris.update(uris_by_type(graph, val))
@@ -33,6 +36,21 @@ def kwargs_to_exclude_uris(graph: Graph, kwargs: dict[str, str]) -> set[str]:
         elif key == "exclude_collection":
             for val in vals:
                 exclude_uris.update(uris_by_collection(graph, val))
+        elif key == "include":
+            for val in vals:
+                exclude_uris.remove(val)
+        elif key == "include_type":
+            for val in vals:
+                for uri in uris_by_type(graph, val):
+                    exclude_uris.remove(uri)
+        elif key == "include_scheme":
+            for val in vals:
+                for uri in uris_by_scheme(graph, val):
+                    exclude_uris.remove(uri)
+        elif key == "include_collection":
+            for val in vals:
+                for uri in uris_by_collection(graph, val):
+                    exclude_uris.remove(uri)
         else:
             raise ConfigurationException(f"unknown vocab keyword argument {key}")
     return exclude_uris

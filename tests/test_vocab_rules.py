@@ -10,6 +10,19 @@ def test_vocab_rules_exclude(vocabulary):
     assert uris == {"https://example.org/"}
 
 
+def test_vocab_rules_exclude_many(vocabulary):
+    uris = kwargs_to_exclude_uris(
+        vocabulary.as_graph(),
+        {"exclude": "https://example.org/1|https://example.org/2"},
+    )
+    assert uris == {"https://example.org/1", "https://example.org/2"}
+
+
+def test_vocab_rules_exclude_all(vocabulary):
+    uris = kwargs_to_exclude_uris(vocabulary.as_graph(), {"exclude": "*"})
+    assert len(uris) == 130
+
+
 def test_vocab_rules_exclude_type(vocabulary):
     uris = kwargs_to_exclude_uris(
         vocabulary.as_graph(),
@@ -36,3 +49,17 @@ def test_vocab_rules_exclude_collection(vocabulary):
     )
     assert len(uris) == 3
     assert "http://www.yso.fi/onto/yso/p7141" in uris
+
+
+def test_vocab_rules_exclude_include_combination(vocabulary):
+    uris = kwargs_to_exclude_uris(
+        vocabulary.as_graph(),
+        {
+            "exclude": "*",
+            "include": "http://www.yso.fi/onto/yso/p6436|http://www.yso.fi/onto/yso/p11052",
+            "include_type": "http://www.yso.fi/onto/yso-meta/Individual",
+            "include_scheme": "http://www.yso.fi/onto/yso/test-scheme",
+            "include_collection": "http://www.yso.fi/onto/yso/p26569",
+        },
+    )
+    assert len(uris) == (130 - 10)
