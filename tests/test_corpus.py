@@ -7,6 +7,7 @@ import pytest
 
 import annif.corpus
 from annif.corpus import TransformingDocumentCorpus
+from annif.exception import OperationFailedException
 
 
 def test_subjectset_uris(subject_index):
@@ -298,6 +299,22 @@ def test_docfile_tsv_plain_invalid_lines(tmpdir, caplog, subject_index):
         assert expected_msg in record.message
 
 
+def test_docfile_csv_plain_invalid_columns(tmpdir, subject_index):
+    docfile = tmpdir.join("documents_invalid.csv")
+    lines = (
+        "text,subject_uri",  # mistyped subject_uris column name
+        "Läntinen,<http://www.yso.fi/onto/yso/p2557>",
+        "Oulunlinnan,<http://www.yso.fi/onto/yso/p7346>",
+        '"Harald Hirmuinen",<http://www.yso.fi/onto/yso/p6479>',
+    )
+    docfile.write("\n".join(lines).encode("utf-8-sig"))
+
+    docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
+    with pytest.raises(OperationFailedException) as excinfo:
+        list(docs.documents)
+    assert str(excinfo.value).startswith("Cannot parse CSV file")
+
+
 def test_docfile_tsv_gzipped(tmpdir, subject_index):
     docfile = tmpdir.join("documents.tsv.gz")
     with gzip.open(str(docfile), "wt") as gzf:
@@ -335,6 +352,15 @@ def test_docfile_tsv_is_empty(tmpdir, subject_index):
 def test_docfile_csv_is_empty(tmpdir, subject_index):
     empty_file = tmpdir.ensure("empty.csv")
     docs = annif.corpus.DocumentFileCSV(str(empty_file), subject_index)
+    with pytest.raises(OperationFailedException) as excinfo:
+        list(docs.documents)
+    assert str(excinfo.value).startswith("Cannot parse CSV file")
+
+
+def test_docfile_csv_header_only(tmpdir, subject_index):
+    docfile = tmpdir.join("header_only.csv")
+    docfile.write("text,subject_uris")
+    docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
     assert docs.is_empty()
 
 

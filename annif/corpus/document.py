@@ -11,6 +11,7 @@ from itertools import islice
 from typing import TYPE_CHECKING
 
 import annif.util
+from annif.exception import OperationFailedException
 
 from .types import Document, DocumentCorpus, SubjectSet
 
@@ -114,6 +115,12 @@ class DocumentFileCSV(DocumentCorpus):
             opener = open
         with opener(self.path, mode="rt", encoding="utf-8-sig") as csvfile:
             reader = csv.DictReader(csvfile)
+            if not self._check_fields(reader):
+                raise OperationFailedException(
+                    f"Cannot parse CSV file {self.path}. "
+                    + "The file must have a header row that defines at least "
+                    + "the columns 'text' and 'subject_uris'."
+                )
             for row in reader:
                 yield from self._parse_row(row)
 
@@ -123,6 +130,10 @@ class DocumentFileCSV(DocumentCorpus):
             for uri in row["subject_uris"].strip().split()
         }
         yield Document(text=row["text"], subject_set=SubjectSet(subject_ids))
+
+    def _check_fields(self, reader: csv.DictReader) -> bool:
+        fns = reader.fieldnames
+        return fns is not None and "text" in fns and "subject_uris" in fns
 
     @staticmethod
     def is_csv_file(path: str) -> bool:
