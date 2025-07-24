@@ -253,6 +253,26 @@ def test_docfile_csv_plain(tmpdir, subject_index):
     assert len(list(docs.documents)) == 3
 
 
+def test_docfile_csv_metadata(tmpdir, subject_index):
+    docfile = tmpdir.join("documents-metadata.csv")
+    lines = (
+        "text,title,subject_uris,author",
+        (
+            "Consider a future device...,"
+            "As We May Think,"
+            "http://www.yso.fi/onto/yso/p817,"
+            '"Bush, Vannevar"'
+        ),
+    )
+    docfile.write("\n".join(lines))
+
+    docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
+    firstdoc = next(docs.documents)
+    assert firstdoc.text == "Consider a future device..."
+    assert firstdoc.metadata["title"] == "As We May Think"
+    assert firstdoc.metadata["author"] == "Bush, Vannevar"
+
+
 def test_docfile_tsv_bom(tmpdir, subject_index):
     docfile = tmpdir.join("documents_bom.tsv")
     data = """Läntinen\t<http://www.yso.fi/onto/yso/p2557>
@@ -263,6 +283,7 @@ def test_docfile_tsv_bom(tmpdir, subject_index):
     docs = annif.corpus.DocumentFileTSV(str(docfile), subject_index)
     firstdoc = next(docs.documents)
     assert firstdoc.text.startswith("Läntinen")
+    assert firstdoc.metadata == {}
 
 
 def test_docfile_csv_bom(tmpdir, subject_index):
@@ -278,6 +299,7 @@ def test_docfile_csv_bom(tmpdir, subject_index):
     docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
     firstdoc = next(docs.documents)
     assert firstdoc.text.startswith("Läntinen")
+    assert firstdoc.metadata == {}
 
 
 def test_docfile_tsv_plain_invalid_lines(tmpdir, caplog, subject_index):
