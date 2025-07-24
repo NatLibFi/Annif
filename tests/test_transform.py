@@ -35,6 +35,14 @@ def test_input_limiter_with_negative_value(project):
         annif.transform.get_transform("limit(-2)", project)
 
 
+def test_select_transform():
+    transf = annif.transform.get_transform("select(title,text)", project=None)
+    doc = Document(text="mytext", metadata={"title": "My Title"})
+    new_doc = transf.transform_doc(doc)
+    assert new_doc.text == "My Title\nmytext"
+    assert new_doc.metadata == doc.metadata
+
+
 def test_chained_transforms_doc():
     transf = annif.transform.get_transform("limit(5),pass,limit(3),", project=None)
     assert transf.transform_doc(Document(text="abcdefghij")).text == "abc"

@@ -9,7 +9,7 @@ import annif
 from annif.exception import ConfigurationException
 from annif.util import parse_args
 
-from . import inputlimiter, transform
+from . import inputlimiter, select, transform
 
 if TYPE_CHECKING:
     from annif.project import AnnifProject
@@ -51,6 +51,7 @@ def get_transform(transform_specs: str, project: AnnifProject | None) -> Transfo
 _transforms = {
     transform.IdentityTransform.name: transform.IdentityTransform,
     inputlimiter.InputLimiter.name: inputlimiter.InputLimiter,
+    select.SelectTransform.name: select.SelectTransform,
 }
 
 # Optional transforms
