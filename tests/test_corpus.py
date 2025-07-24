@@ -10,6 +10,14 @@ from annif.corpus import Document, TransformingDocumentCorpus
 from annif.exception import OperationFailedException
 
 
+def test_document():
+    doc = Document(text="Hello world")
+    assert doc.text == "Hello world"
+    assert doc.subject_set == set()
+    assert doc.metadata == {}
+    assert repr(doc) == "Document(text='Hello world', subject_set=set(), metadata={})"
+
+
 def test_subjectset_uris(subject_index):
     data = """<http://www.yso.fi/onto/yso/p2558>\trautakausi
     <http://www.yso.fi/onto/yso/p12738>\tviikinkiaika
