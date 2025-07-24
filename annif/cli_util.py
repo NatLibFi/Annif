@@ -135,7 +135,7 @@ def open_documents(
     docs_limit: int | None,
 ) -> DocumentCorpus:
     """Helper function to open a document corpus from a list of pathnames,
-    each of which is either a TSV file or a directory of TXT files. For
+    each of which is either a TSV or CSV file or a directory of TXT files. For
     directories with subjects in TSV files, the given vocabulary language
     will be used to convert subject labels into URIs. The corpus will be
     returned as an instance of DocumentCorpus or LimitingDocumentCorpus."""
@@ -146,7 +146,10 @@ def open_documents(
             return annif.corpus.DocumentDirectory(
                 path, subject_index, vocab_lang, require_subjects=True
             )
-        return annif.corpus.DocumentFile(path, subject_index)
+        if annif.corpus.DocumentFileCSV.is_csv_file(path):
+            return annif.corpus.DocumentFileCSV(path, subject_index)
+        else:
+            return annif.corpus.DocumentFileTSV(path, subject_index)
 
     if len(paths) == 0:
         logger.warning("Reading empty file")

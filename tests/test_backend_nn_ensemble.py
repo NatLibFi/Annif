@@ -85,7 +85,7 @@ def test_set_lmdb_map_size(registry, tmpdir):
         + "another\thttp://example.org/dummy\n"
         + "none\thttp://example.org/none\n" * 40
     )
-    document_corpus = annif.corpus.DocumentFile(str(tmpfile), project.subjects)
+    document_corpus = annif.corpus.DocumentFileTSV(str(tmpfile), project.subjects)
 
     with pytest.raises(lmdb.MapFullError):
         nn_ensemble.train(document_corpus)
@@ -106,7 +106,7 @@ def test_nn_ensemble_train_and_learn(registry, tmpdir):
         + "another\thttp://example.org/dummy\n"
         + "none\thttp://example.org/none\n" * 40
     )
-    document_corpus = annif.corpus.DocumentFile(str(tmpfile), project.subjects)
+    document_corpus = annif.corpus.DocumentFileTSV(str(tmpfile), project.subjects)
     datadir = py.path.local(project.datadir)
 
     with umask_context(0o007):
@@ -174,7 +174,7 @@ def test_nn_ensemble_train_and_learn_params(registry, tmpdir, capfd):
         + "another\thttp://example.org/dummy\n"
         + "none\thttp://example.org/none"
     )
-    document_corpus = annif.corpus.DocumentFile(str(tmpfile), project.subjects)
+    document_corpus = annif.corpus.DocumentFileTSV(str(tmpfile), project.subjects)
 
     train_params = {"epochs": 3}
     nn_ensemble.train(document_corpus, train_params)

@@ -37,7 +37,7 @@ def test_omikuji_create_train_file(tmpdir, project, datadir):
         + "arkeologia\thttp://www.yso.fi/onto/yso/p1265\n"
         + "...\thttp://example.com/none"
     )
-    corpus = annif.corpus.DocumentFile(str(tmpfile), project.subjects)
+    corpus = annif.corpus.DocumentFileTSV(str(tmpfile), project.subjects)
     omikuji_type = annif.backend.get_backend("omikuji")
     omikuji = omikuji_type(backend_id="omikuji", config_params={}, project=project)
     input = (doc.text for doc in corpus.documents)
