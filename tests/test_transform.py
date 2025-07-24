@@ -67,4 +67,4 @@ def test_transform_not_implemented():
         pass
 
     with pytest.raises(NotImplementedError):
-        transform = NotImplementedTransform(None)
+        NotImplementedTransform(None)
