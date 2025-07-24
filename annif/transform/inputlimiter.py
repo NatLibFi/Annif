@@ -21,7 +21,7 @@ class InputLimiter(transform.BaseTransform):
         self.input_limit = int(input_limit)
         self._validate_value(self.input_limit)
 
-    def transform_fn(self, text: str) -> str:
+    def transform_text(self, text: str) -> str:
         return text[: self.input_limit]
 
     def _validate_value(self, input_limit: int) -> None:

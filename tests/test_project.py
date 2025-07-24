@@ -7,6 +7,7 @@ import pytest
 
 import annif.backend.dummy
 import annif.project
+from annif.corpus import Document
 from annif.exception import ConfigurationException, NotSupportedException
 from annif.project import Access
 
@@ -290,7 +291,8 @@ def test_project_train_state_not_available(registry, caplog):
 
 def test_project_transform_text_pass_through(registry):
     project = registry.get_project("dummy-transform")
-    assert project.transform.transform_text("this is some text") == "this is some text"
+    doc = Document(text="this is some text")
+    assert project.transform.transform_doc(doc).text == "this is some text"
 
 
 def test_project_not_initialized(registry):

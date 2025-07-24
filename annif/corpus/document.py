@@ -171,9 +171,7 @@ class TransformingDocumentCorpus(DocumentCorpus):
     @property
     def documents(self):
         for doc in self._orig_corpus.documents:
-            yield Document(
-                text=self._transform_fn(doc.text), subject_set=doc.subject_set
-            )
+            yield self._transform_fn(doc)
 
 
 class LimitingDocumentCorpus(DocumentCorpus):

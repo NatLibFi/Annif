@@ -13,6 +13,7 @@ import annif.analyzer
 import annif.backend
 import annif.corpus
 import annif.transform
+from annif.corpus import Document
 from annif.datadir import DatadirMixin
 from annif.exception import (
     AnnifException,
@@ -33,7 +34,7 @@ if TYPE_CHECKING:
     from annif.analyzer import Analyzer
     from annif.backend import AnnifBackend
     from annif.backend.hyperopt import HPRecommendation
-    from annif.corpus.document import DocumentCorpus
+    from annif.corpus import DocumentCorpus
     from annif.corpus.subject import SubjectIndex
     from annif.registry import AnnifRegistry
     from annif.transform.transform import TransformChain
@@ -140,13 +141,13 @@ class AnnifProject(DatadirMixin):
 
     def _suggest_with_backend(
         self,
-        texts: list[str],
+        docs: list[Document],
         backend_params: defaultdict[str, dict] | None,
     ) -> annif.suggestion.SuggestionBatch:
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-        return self.backend.suggest(texts, beparams)
+        return self.backend.suggest([doc.text for doc in docs], beparams)
 
     @property
     def analyzer(self) -> Analyzer:
@@ -267,8 +268,8 @@ class AnnifProject(DatadirMixin):
                 logger.warning("Could not get train state information.")
             else:
                 raise NotInitializedException("Project is not trained.")
-        texts = [self.transform.transform_text(text) for text in texts]
-        return self._suggest_with_backend(texts, backend_params)
+        docs = [self.transform.transform_doc(Document(text=text)) for text in texts]
+        return self._suggest_with_backend(docs, backend_params)
 
     def train(
         self,

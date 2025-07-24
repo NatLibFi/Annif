@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 import annif.corpus
-from annif.corpus import TransformingDocumentCorpus
+from annif.corpus import Document, TransformingDocumentCorpus
 from annif.exception import OperationFailedException
 
 
@@ -420,8 +420,8 @@ def test_combinedcorpus(tmpdir, subject_index):
 
 
 def test_transformingcorpus(document_corpus):
-    def double(x):
-        return x + x
+    def double(doc):
+        return Document(doc.text + doc.text, subject_set=doc.subject_set)
 
     transformed_corpus = TransformingDocumentCorpus(document_corpus, double)
     for transf_doc, doc in zip(transformed_corpus.documents, document_corpus.documents):

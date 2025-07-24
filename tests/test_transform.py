@@ -3,6 +3,7 @@
 import pytest
 
 import annif.transform
+from annif.corpus import Document
 from annif.exception import ConfigurationException
 from annif.transform import parse_specs
 
@@ -24,7 +25,8 @@ def test_get_transform_badspec(project):
 
 def test_input_limiter():
     transf = annif.transform.get_transform("limit(3)", project=None)
-    assert transf.transform_text("running") == "run"
+    doc = Document(text="running")
+    assert transf.transform_doc(doc).text == "run"
 
 
 def test_input_limiter_with_negative_value(project):
@@ -32,15 +34,15 @@ def test_input_limiter_with_negative_value(project):
         annif.transform.get_transform("limit(-2)", project)
 
 
-def test_chained_transforms_text():
+def test_chained_transforms_doc():
     transf = annif.transform.get_transform("limit(5),pass,limit(3),", project=None)
-    assert transf.transform_text("abcdefghij") == "abc"
+    assert transf.transform_doc(Document(text="abcdefghij")).text == "abc"
 
     # Check with a more arbitrary transform function
     reverser = annif.transform.transform.IdentityTransform(None)
-    reverser.transform_fn = lambda x: x[::-1]
+    reverser.transform_text = lambda x: x[::-1]
     transf.transforms.append(reverser)
-    assert transf.transform_text("abcdefghij") == "cba"
+    assert transf.transform_doc(Document(text="abcdefghij")).text == "cba"
 
 
 def test_chained_transforms_corpus(document_corpus):
@@ -52,7 +54,7 @@ def test_chained_transforms_corpus(document_corpus):
 
     # Check with a more arbitrary transform function
     reverser = annif.transform.transform.IdentityTransform(None)
-    reverser.transform_fn = lambda x: x[::-1]
+    reverser.transform_text = lambda x: x[::-1]
     transf.transforms.append(reverser)
     for transf_doc, doc in zip(transformed_corpus.documents, document_corpus.documents):
         assert transf_doc.text == doc.text[:3][::-1]

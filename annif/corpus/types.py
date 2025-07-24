@@ -14,9 +14,9 @@ if TYPE_CHECKING:
 
 
 class Document:
-    def __init__(self, text, subject_set, metadata=None):
+    def __init__(self, text, subject_set=None, metadata=None):
         self.text = text
-        self.subject_set = subject_set
+        self.subject_set = subject_set if subject_set is not None else set()
         self.metadata = metadata if metadata is not None else {}
 
     def __repr__(self):
