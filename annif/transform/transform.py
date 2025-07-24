@@ -43,7 +43,7 @@ class BaseTransform(abc.ABC):
 
         raise NotImplementedError(
             "Subclasses must implement transform_text if they call it"
-        )
+        )  # pragma: no cover
 
 
 class IdentityTransform(BaseTransform):

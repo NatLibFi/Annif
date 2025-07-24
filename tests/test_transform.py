@@ -6,6 +6,7 @@ import annif.transform
 from annif.corpus import Document
 from annif.exception import ConfigurationException
 from annif.transform import parse_specs
+from annif.transform.transform import BaseTransform
 
 
 def test_parse_specs():
@@ -59,3 +60,11 @@ def test_chained_transforms_corpus(document_corpus):
     for transf_doc, doc in zip(transformed_corpus.documents, document_corpus.documents):
         assert transf_doc.text == doc.text[:3][::-1]
         assert transf_doc.subject_set == doc.subject_set
+
+
+def test_transform_not_implemented():
+    class NotImplementedTransform(BaseTransform):
+        pass
+
+    with pytest.raises(NotImplementedError):
+        transform = NotImplementedTransform(None)
