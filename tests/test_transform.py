@@ -43,6 +43,14 @@ def test_select_transform():
     assert new_doc.metadata == doc.metadata
 
 
+def test_select_transform_nonexistent():
+    transf = annif.transform.get_transform("select(nonexistent)", project=None)
+    doc = Document(text="mytext", metadata={"title": "My Title"})
+    new_doc = transf.transform_doc(doc)
+    assert new_doc.text == ""
+    assert new_doc.metadata == doc.metadata
+
+
 def test_chained_transforms_doc():
     transf = annif.transform.get_transform("limit(5),pass,limit(3),", project=None)
     assert transf.transform_doc(Document(text="abcdefghij")).text == "abc"

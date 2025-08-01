@@ -25,7 +25,7 @@ class SelectTransform(transform.BaseTransform):
             if fld == "text":
                 yield doc.text
             else:
-                yield doc.metadata[fld]
+                yield doc.metadata.get(fld, "")
 
     def transform_doc(self, doc: Document) -> Document:
         new_text = "\n".join(self._get_texts(doc))
