@@ -4,6 +4,7 @@ import pytest
 
 import annif
 import annif.backend
+from annif.corpus import Document
 from annif.exception import NotInitializedException, NotSupportedException
 
 
@@ -80,12 +81,14 @@ def test_mllm_suggest(project):
 
     results = mllm.suggest(
         [
-            """Arkeologia on tieteenala, jota sanotaan joskus
+            Document(
+                text="""Arkeologia on tieteenala, jota sanotaan joskus
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan."""
+            )
         ]
     )[0]
 
@@ -101,7 +104,7 @@ def test_mllm_suggest_no_matches(project):
         backend_id="mllm", config_params={"limit": 8, "language": "fi"}, project=project
     )
 
-    results = mllm.suggest(["Nothing matches this."])[0]
+    results = mllm.suggest([Document(text="Nothing matches this.")])[0]
 
     assert len(results) == 0
 
@@ -143,4 +146,4 @@ def test_mllm_suggest_no_model(datadir, project):
 
     datadir.join("mllm-model.gz").remove()
     with pytest.raises(NotInitializedException):
-        mllm.suggest("example text")
+        mllm.suggest([Document(text="example text")])

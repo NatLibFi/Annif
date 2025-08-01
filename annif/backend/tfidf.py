@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
     from scipy.sparse._csr import csr_matrix
 
-    from annif.corpus.document import DocumentCorpus
+    from annif.corpus import Document, DocumentCorpus
 
 
 class SubjectBuffer:
@@ -129,10 +129,12 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         veccorpus = self.create_vectorizer(subjects)
         self._create_index(veccorpus)
 
-    def _suggest(self, text: str, params: dict[str, Any]) -> Iterator:
+    def _suggest(self, doc: Document, params: dict[str, Any]) -> Iterator:
         self.debug(
-            'Suggesting subjects for text "{}..." (len={})'.format(text[:20], len(text))
+            'Suggesting subjects for text "{}..." (len={})'.format(
+                doc.text[:20], len(doc.text)
+            )
         )
-        tokens = self.project.analyzer.tokenize_words(text)
+        tokens = self.project.analyzer.tokenize_words(doc.text)
         vectors = self.vectorizer.transform([" ".join(tokens)])
         return vector_to_suggestions(self._index[vectors[0]], int(params["limit"]))

@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from optuna.trial import Trial
 
     from annif.backend.hyperopt import HPRecommendation
-    from annif.corpus.document import DocumentCorpus
+    from annif.corpus import Document, DocumentCorpus
     from annif.lexical.mllm import Candidate
 
 
@@ -163,7 +163,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
             vector[subject_id] = score
         return vector_to_suggestions(vector, int(params["limit"]))
 
-    def _suggest(self, text: str, params: dict[str, Any]) -> Iterator:
-        candidates = self._generate_candidates(text)
+    def _suggest(self, doc: Document, params: dict[str, Any]) -> Iterator:
+        candidates = self._generate_candidates(doc.text)
         prediction = self._model.predict(candidates)
         return self._prediction_to_result(prediction, params)

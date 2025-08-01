@@ -4,6 +4,7 @@ import pytest
 
 import annif
 import annif.backend
+from annif.corpus import Document
 from annif.exception import ConfigurationException, NotSupportedException
 
 pytest.importorskip("annif.backend.yake")
@@ -17,7 +18,7 @@ def test_invalid_label_type(project):
         project=project,
     )
     with pytest.raises(ConfigurationException):
-        yake.suggest("example text")
+        yake.suggest([Document(text="example text")])
 
 
 def test_yake_suggest(project):
@@ -28,12 +29,14 @@ def test_yake_suggest(project):
 
     results = yake.suggest(
         [
-            """Arkeologia on tieteenala, jota sanotaan joskus
+            Document(
+                text="""Arkeologia on tieteenala, jota sanotaan joskus
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan."""
+            )
         ]
     )[0]
 
@@ -49,7 +52,7 @@ def test_yake_suggest_no_input(project):
         backend_id="yake", config_params={"limit": 8, "language": "fi"}, project=project
     )
 
-    results = yake.suggest(["ja tai .,!"])[0]
+    results = yake.suggest([Document(text="ja tai .,!")])[0]
     assert len(results) == 0
 
 

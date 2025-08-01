@@ -8,6 +8,7 @@ import pytest
 import requests.exceptions
 
 import annif.backend.http
+from annif.corpus import Document
 from annif.exception import OperationFailedException
 from annif.vocab import Subject
 
@@ -31,7 +32,7 @@ def test_http_suggest(app_project):
             },
             project=app_project,
         )
-        result = http.suggest(["this is some text"])[0]
+        result = http.suggest([Document(text="this is some text")])[0]
         assert len(result) == 1
         hits = list(result)
         assert hits[0].subject_id is not None
@@ -74,7 +75,7 @@ def test_http_suggest_with_results(app_project):
             )
         )
 
-        result = http.suggest(["this is some text"])[0]
+        result = http.suggest([Document(text="this is some text")])[0]
         assert len(result) == 1
         hits = list(result)
         assert hits[0].subject_id is not None
@@ -96,7 +97,7 @@ def test_http_suggest_post_args(app_project):
             },
             project=app_project,
         )
-        http.suggest(["this is some text"])
+        http.suggest([Document(text="this is some text")])
 
         assert requests.post.call_args.args == ("http://api.example.org/analyze",)
         assert "text" in requests.post.call_args.kwargs["data"]
@@ -126,7 +127,7 @@ def test_http_suggest_zero_score(project):
             },
             project=project,
         )
-        result = http.suggest(["this is some text"])[0]
+        result = http.suggest([Document(text="this is some text")])[0]
         assert len(result) == 0
 
 
@@ -143,7 +144,7 @@ def test_http_suggest_error(project):
             },
             project=project,
         )
-        result = http.suggest(["this is some text"])[0]
+        result = http.suggest([Document(text="this is some text")])[0]
         assert len(result) == 0
 
 
@@ -164,7 +165,7 @@ def test_http_suggest_json_fails(project):
             },
             project=project,
         )
-        result = http.suggest(["this is some text"])[0]
+        result = http.suggest([Document(text="this is some text")])[0]
         assert len(result) == 0
 
 
@@ -185,7 +186,7 @@ def test_http_suggest_unexpected_json(project):
             },
             project=project,
         )
-        result = http.suggest(["this is some text"])[0]
+        result = http.suggest([Document(text="this is some text")])[0]
         assert len(result) == 0
 
 
@@ -300,7 +301,7 @@ def test_headers(project):
             },
             project=project,
         )
-        http.suggest("this is some text")
+        http.suggest([Document("this is some text")])
 
         version = importlib.metadata.version("annif")
         assert requests.post.call_args.kwargs["headers"] == {

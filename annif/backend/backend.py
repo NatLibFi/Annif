@@ -14,7 +14,7 @@ from annif.suggestion import SuggestionBatch
 if TYPE_CHECKING:
     from configparser import SectionProxy
 
-    from annif.corpus.document import DocumentCorpus
+    from annif.corpus.document import Document, DocumentCorpus
     from annif.project import AnnifProject
 
 
@@ -113,34 +113,34 @@ class AnnifBackend(metaclass=abc.ABCMeta):
         parallel operation."""
         pass
 
-    def _suggest(self, text, params):
+    def _suggest(self, doc: Document, params: dict[str, Any]):
         """Either this method or _suggest_batch should be implemented by by
         backends.  It implements the suggest functionality for a single
         document, with pre-processed parameters."""
         pass  # pragma: no cover
 
     def _suggest_batch(
-        self, texts: list[str], params: dict[str, Any]
+        self, documents: list[Document], params: dict[str, Any]
     ) -> SuggestionBatch:
         """This method can be implemented by backends to use batching of documents in
         their operations. This default implementation uses the regular suggest
         functionality."""
         return SuggestionBatch.from_sequence(
-            [self._suggest(text, params) for text in texts],
+            [self._suggest(doc, params) for doc in documents],
             self.project.subjects,
             limit=int(params.get("limit")),
         )
 
     def suggest(
         self,
-        texts: list[str],
+        documents: list[Document],
         params: dict[str, Any] | None = None,
     ) -> SuggestionBatch:
         """Suggest subjects for the input documents and return a list of subject sets
         represented as a list of SubjectSuggestion objects."""
         beparams = self._get_backend_params(params)
         self.initialize()
-        return self._suggest_batch(texts, params=beparams)
+        return self._suggest_batch(documents, params=beparams)
 
     def debug(self, message: str) -> None:
         """Log a debug message from this backend"""

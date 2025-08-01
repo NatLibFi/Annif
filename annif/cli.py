@@ -13,11 +13,11 @@ import click_log
 from flask.cli import FlaskGroup
 
 import annif
-import annif.corpus
 import annif.parallel
 import annif.project
 import annif.registry
 from annif import cli_util, hfh_util
+from annif.corpus import Document, DocumentDirectory
 from annif.exception import (
     NotInitializedException,
     NotSupportedException,
@@ -282,9 +282,9 @@ def run_suggest(
             cli_util.show_hits(suggestions, project, lang)
     else:
         text = sys.stdin.read()
-        suggestions = project.suggest([text], backend_params).filter(limit, threshold)[
-            0
-        ]
+        suggestions = project.suggest([Document(text=text)], backend_params).filter(
+            limit, threshold
+        )[0]
         cli_util.show_hits(suggestions, project, lang)
 
 
@@ -319,7 +319,7 @@ def run_index(
         raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
     backend_params = cli_util.parse_backend_params(backend_param, project)
 
-    documents = annif.corpus.DocumentDirectory(directory, require_subjects=False)
+    documents = DocumentDirectory(directory, require_subjects=False)
     results = project.suggest_corpus(documents, backend_params).filter(limit, threshold)
 
     for (docfilename, _), suggestions in zip(documents, results):

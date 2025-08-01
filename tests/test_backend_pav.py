@@ -7,7 +7,7 @@ import py.path
 import pytest
 
 import annif.backend
-import annif.corpus
+from annif.corpus import Document, DocumentFileTSV
 from annif.exception import NotSupportedException
 
 
@@ -48,7 +48,7 @@ def test_pav_train(tmpdir, app_project):
         + "another\thttp://example.org/dummy\n"
         + "none\thttp://example.org/none"
     )
-    document_corpus = annif.corpus.DocumentFileTSV(str(tmpfile), app_project.subjects)
+    document_corpus = DocumentFileTSV(str(tmpfile), app_project.subjects)
 
     pav.train(document_corpus)
     datadir = py.path.local(app_project.datadir)
@@ -106,12 +106,14 @@ def test_pav_suggest(app_project):
 
     results = pav.suggest(
         [
-            """Arkeologiaa sanotaan joskus myös
+            Document(
+                text="""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan."""
+            )
         ]
     )[0]
 
@@ -137,7 +139,7 @@ def test_pav_train_params(tmpdir, app_project, caplog):
         + "another\thttp://example.org/dummy\n"
         + "none\thttp://example.org/none"
     )
-    document_corpus = annif.corpus.DocumentFileTSV(str(tmpfile), app_project.subjects)
+    document_corpus = DocumentFileTSV(str(tmpfile), app_project.subjects)
     params = {"min-docs": 5}
 
     with caplog.at_level(logging.DEBUG):
@@ -156,12 +158,14 @@ def test_pav_suggest_after_min_docs(app_project):
 
     results = pav.suggest(
         [
-            """Arkeologiaa sanotaan joskus myös
+            Document(
+                text="""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan."""
+            )
         ]
     )[0]
 
