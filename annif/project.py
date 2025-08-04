@@ -17,6 +17,7 @@ from annif.datadir import DatadirMixin
 from annif.exception import (
     AnnifException,
     ConfigurationException,
+    NotEnabledException,
     NotInitializedException,
     NotSupportedException,
 )
@@ -295,7 +296,12 @@ class AnnifProject(DatadirMixin):
         beparams = backend_params.get(self.backend.backend_id, {})
         corpus = self.transform.transform_corpus(corpus)
         if isinstance(self.backend, annif.backend.backend.AnnifLearningBackend):
-            self.backend.learn(corpus, beparams)
+            if annif.util.boolean(self.config.get("allow_learn", False)):
+                self.backend.learn(corpus, beparams)
+            else:
+                raise NotEnabledException(
+                    "Learning not enabled for project", project_id=self.project_id
+                )
         else:
             raise NotSupportedException(
                 "Learning not supported by backend", project_id=self.project_id
