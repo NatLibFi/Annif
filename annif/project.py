@@ -17,9 +17,9 @@ from annif.datadir import DatadirMixin
 from annif.exception import (
     AnnifException,
     ConfigurationException,
+    NotEnabledException,
     NotInitializedException,
     NotSupportedException,
-    OperationFailedException,
 )
 from annif.util import parse_args
 from annif.vocab import SubjectIndexFilter
@@ -299,7 +299,7 @@ class AnnifProject(DatadirMixin):
             if annif.util.boolean(self.config.get("allow_learn", False)):
                 self.backend.learn(corpus, beparams)
             else:
-                raise OperationFailedException(
+                raise NotEnabledException(
                     "Learning not enabled for project", project_id=self.project_id
                 )
         else:

@@ -11,7 +11,7 @@ import connexion
 import annif.registry
 import annif.simplemma_util
 from annif.corpus import Document, DocumentList, SubjectSet
-from annif.exception import AnnifException, OperationFailedException
+from annif.exception import AnnifException, NotEnabledException
 from annif.project import Access
 
 if TYPE_CHECKING:
@@ -258,11 +258,8 @@ def learn(
     try:
         corpus = _documents_to_corpus(body, project.subjects)
         project.learn(corpus)
-    except OperationFailedException as err:
-        if str(err) == "Learning not enabled for project":
-            return learning_not_enabled_error(project_id)
-        else:
-            return server_error(err)
+    except NotEnabledException:
+        return learning_not_enabled_error(project_id)
     except AnnifException as err:
         return server_error(err)
 

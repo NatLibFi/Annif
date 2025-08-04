@@ -1,10 +1,8 @@
 """Unit tests for REST API backend code in Annif"""
 
 import importlib
-from unittest import mock
 
 import annif.rest
-from annif.exception import OperationFailedException
 
 
 def test_rest_list_projects(app):
@@ -289,13 +287,3 @@ def test_rest_learn_not_enabled(app):
     with app.app_context():
         result = annif.rest.learn("dummy-nolearn", [])
         assert result.status_code == 403
-
-
-@mock.patch(
-    "annif.project.AnnifProject.learn",
-    side_effect=OperationFailedException("my error message"),
-)
-def test_rest_other_operational_error(mock_learn, app):
-    with app.app_context():
-        result = annif.rest.learn("dummy-en", [])
-        assert result.status_code == 503
