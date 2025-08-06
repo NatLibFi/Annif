@@ -2,7 +2,7 @@
 
 import annif
 import annif.backend
-import annif.corpus
+from annif.corpus import Document
 
 
 def test_tfidf_default_params(project):
@@ -31,12 +31,14 @@ def test_tfidf_suggest(project):
 
     results = tfidf.suggest(
         [
-            """Arkeologiaa sanotaan joskus myös
+            Document(
+                text="""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan."""
+            )
         ]
     )[0]
 
@@ -52,12 +54,14 @@ def test_suggest_params(project):
 
     results = tfidf.suggest(
         [
-            """Arkeologiaa sanotaan joskus myös
+            Document(
+                text="""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan."""
+            )
         ],
         params,
     )[0]
@@ -68,6 +72,6 @@ def test_tfidf_suggest_unknown(project):
     tfidf_type = annif.backend.get_backend("tfidf")
     tfidf = tfidf_type(backend_id="tfidf", config_params={"limit": 10}, project=project)
 
-    results = tfidf.suggest(["abcdefghijk"])[0]  # unknown word
+    results = tfidf.suggest([Document(text="abcdefghijk")])[0]  # unknown word
 
     assert len(results) == 0

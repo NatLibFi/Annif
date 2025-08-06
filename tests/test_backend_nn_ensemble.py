@@ -10,7 +10,7 @@ import py.path
 import pytest
 
 import annif.backend
-import annif.corpus
+from annif.corpus import Document, DocumentFileTSV, LimitingDocumentCorpus
 from annif.exception import (
     NotInitializedException,
     NotSupportedException,
@@ -46,7 +46,7 @@ def test_nn_ensemble_suggest_no_model(project):
     )
 
     with pytest.raises(NotInitializedException):
-        nn_ensemble.suggest(["example text"])[0]
+        nn_ensemble.suggest([Document(text="example text")])[0]
 
 
 def test_nn_ensemble_is_not_trained(app_project):
@@ -85,7 +85,7 @@ def test_set_lmdb_map_size(registry, tmpdir):
         + "another\thttp://example.org/dummy\n"
         + "none\thttp://example.org/none\n" * 40
     )
-    document_corpus = annif.corpus.DocumentFileTSV(str(tmpfile), project.subjects)
+    document_corpus = DocumentFileTSV(str(tmpfile), project.subjects)
 
     with pytest.raises(lmdb.MapFullError):
         nn_ensemble.train(document_corpus)
@@ -106,7 +106,7 @@ def test_nn_ensemble_train_and_learn(registry, tmpdir):
         + "another\thttp://example.org/dummy\n"
         + "none\thttp://example.org/none\n" * 40
     )
-    document_corpus = annif.corpus.DocumentFileTSV(str(tmpfile), project.subjects)
+    document_corpus = DocumentFileTSV(str(tmpfile), project.subjects)
     datadir = py.path.local(project.datadir)
 
     with umask_context(0o007):
@@ -132,7 +132,7 @@ def test_nn_ensemble_train_and_learn(registry, tmpdir):
     time.sleep(0.1)  # make sure the timestamp has a chance to increase
 
     # Learning is typically performed on one document at a time
-    document_corpus_single_doc = annif.corpus.LimitingDocumentCorpus(document_corpus, 1)
+    document_corpus_single_doc = LimitingDocumentCorpus(document_corpus, 1)
     nn_ensemble.learn(document_corpus_single_doc)
 
     assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
@@ -174,7 +174,7 @@ def test_nn_ensemble_train_and_learn_params(registry, tmpdir, capfd):
         + "another\thttp://example.org/dummy\n"
         + "none\thttp://example.org/none"
     )
-    document_corpus = annif.corpus.DocumentFileTSV(str(tmpfile), project.subjects)
+    document_corpus = DocumentFileTSV(str(tmpfile), project.subjects)
 
     train_params = {"epochs": 3}
     nn_ensemble.train(document_corpus, train_params)
@@ -310,12 +310,14 @@ def test_nn_ensemble_suggest(app_project):
 
     results = nn_ensemble.suggest(
         [
-            """Arkeologiaa sanotaan joskus myös
+            Document(
+                text="""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen
         tiede tai oikeammin joukko tieteitä, jotka tutkivat ihmisen
         menneisyyttä. Tutkimusta tehdään analysoimalla muinaisjäännöksiä
         eli niitä jälkiä, joita ihmisten toiminta on jättänyt maaperään
         tai vesistöjen pohjaan."""
+            )
         ]
     )[0]
 

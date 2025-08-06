@@ -129,7 +129,14 @@ class DocumentFileCSV(DocumentCorpus):
             self.subject_index.by_uri(annif.util.cleanup_uri(uri))
             for uri in (row["subject_uris"] or "").strip().split()
         }
-        yield Document(text=(row["text"] or ""), subject_set=SubjectSet(subject_ids))
+        metadata = {
+            key: val for key, val in row.items() if key not in ("text", "subject_uris")
+        }
+        yield Document(
+            text=(row["text"] or ""),
+            subject_set=SubjectSet(subject_ids),
+            metadata=metadata,
+        )
 
     def _check_fields(self, reader: csv.DictReader) -> bool:
         fns = reader.fieldnames
@@ -166,9 +173,7 @@ class TransformingDocumentCorpus(DocumentCorpus):
     @property
     def documents(self):
         for doc in self._orig_corpus.documents:
-            yield Document(
-                text=self._transform_fn(doc.text), subject_set=doc.subject_set
-            )
+            yield self._transform_fn(doc)
 
 
 class LimitingDocumentCorpus(DocumentCorpus):

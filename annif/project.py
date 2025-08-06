@@ -13,6 +13,7 @@ import annif.analyzer
 import annif.backend
 import annif.corpus
 import annif.transform
+from annif.corpus import Document
 from annif.datadir import DatadirMixin
 from annif.exception import (
     AnnifException,
@@ -34,7 +35,7 @@ if TYPE_CHECKING:
     from annif.analyzer import Analyzer
     from annif.backend import AnnifBackend
     from annif.backend.hyperopt import HPRecommendation
-    from annif.corpus.document import DocumentCorpus
+    from annif.corpus import DocumentCorpus
     from annif.corpus.subject import SubjectIndex
     from annif.registry import AnnifRegistry
     from annif.transform.transform import TransformChain
@@ -141,13 +142,13 @@ class AnnifProject(DatadirMixin):
 
     def _suggest_with_backend(
         self,
-        texts: list[str],
+        docs: list[Document],
         backend_params: defaultdict[str, dict] | None,
     ) -> annif.suggestion.SuggestionBatch:
         if backend_params is None:
             backend_params = {}
         beparams = backend_params.get(self.backend.backend_id, {})
-        return self.backend.suggest(texts, beparams)
+        return self.backend.suggest(docs, beparams)
 
     @property
     def analyzer(self) -> Analyzer:
@@ -250,8 +251,7 @@ class AnnifProject(DatadirMixin):
     ) -> annif.suggestion.SuggestionResults:
         """Suggest subjects for the given documents corpus in batches of documents."""
         suggestions = (
-            self.suggest([doc.text for doc in doc_batch], backend_params)
-            for doc_batch in corpus.doc_batches
+            self.suggest(doc_batch, backend_params) for doc_batch in corpus.doc_batches
         )
         import annif.suggestion
 
@@ -259,7 +259,7 @@ class AnnifProject(DatadirMixin):
 
     def suggest(
         self,
-        texts: list[str],
+        documents: list[Document],
         backend_params: defaultdict[str, dict] | None = None,
     ) -> annif.suggestion.SuggestionBatch:
         """Suggest subjects for the given documents batch."""
@@ -268,8 +268,8 @@ class AnnifProject(DatadirMixin):
                 logger.warning("Could not get train state information.")
             else:
                 raise NotInitializedException("Project is not trained.")
-        texts = [self.transform.transform_text(text) for text in texts]
-        return self._suggest_with_backend(texts, backend_params)
+        transformed_docs = [self.transform.transform_doc(doc) for doc in documents]
+        return self._suggest_with_backend(transformed_docs, backend_params)
 
     def train(
         self,

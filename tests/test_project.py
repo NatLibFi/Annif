@@ -7,6 +7,7 @@ import pytest
 
 import annif.backend.dummy
 import annif.project
+from annif.corpus import Document
 from annif.exception import ConfigurationException, NotSupportedException
 from annif.project import Access
 
@@ -206,7 +207,7 @@ def test_project_learn(registry, tmpdir):
         str(tmpdir), project.subjects, "en", require_subjects=True
     )
     project.learn(docdir)
-    result = project.suggest(["this is some text"])[0]
+    result = project.suggest([Document(text="this is some text")])[0]
     assert len(result) == 1
     hits = list(result)
     assert hits[0].subject_id == project.subjects.by_uri("http://example.org/none")
@@ -243,7 +244,7 @@ def test_project_train_fasttext(registry, document_corpus, testdatadir):
 
 def test_project_suggest(registry):
     project = registry.get_project("dummy-en")
-    result = project.suggest(["this is some text"])[0]
+    result = project.suggest([Document(text="this is some text")])[0]
     assert len(result) == 1
     hits = list(result)
     assert hits[0].subject_id == project.subjects.by_uri("http://example.org/dummy")
@@ -252,7 +253,7 @@ def test_project_suggest(registry):
 
 def test_project_suggest_transform_limit(registry):
     project = registry.get_project("limit-transform")
-    result = project.suggest(["this is some text"])[0]
+    result = project.suggest([Document(text="this is some text")])[0]
     assert len(result) == 0
 
 
@@ -279,7 +280,7 @@ def test_project_train_state_not_available(registry, caplog):
     project = registry.get_project("dummy-vocablang")
     project.backend.is_trained = None
     with caplog.at_level(logging.WARNING):
-        result = project.suggest(["this is some text"])[0]
+        result = project.suggest([Document(text="this is some text")])[0]
     assert project.is_trained is None
     assert len(result) == 1
     hits = list(result)
@@ -290,7 +291,8 @@ def test_project_train_state_not_available(registry, caplog):
 
 def test_project_transform_text_pass_through(registry):
     project = registry.get_project("dummy-transform")
-    assert project.transform.transform_text("this is some text") == "this is some text"
+    doc = Document(text="this is some text")
+    assert project.transform.transform_doc(doc).text == "this is some text"
 
 
 def test_project_not_initialized(registry):

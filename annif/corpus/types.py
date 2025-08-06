@@ -12,7 +12,19 @@ if TYPE_CHECKING:
 
     from annif.vocab import SubjectIndex
 
-Document = collections.namedtuple("Document", "text subject_set")
+
+class Document:
+    def __init__(self, text, subject_set=None, metadata=None):
+        self.text = text
+        self.subject_set = subject_set if subject_set is not None else set()
+        self.metadata = metadata if metadata is not None else {}
+
+    def __repr__(self):
+        return (
+            f"Document(text={self.text!r}, "
+            f"subject_set={self.subject_set!r}, "
+            f"metadata={self.metadata!r})"
+        )
 
 
 class DocumentCorpus(metaclass=abc.ABCMeta):

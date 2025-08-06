@@ -6,8 +6,16 @@ import numpy as np
 import pytest
 
 import annif.corpus
-from annif.corpus import TransformingDocumentCorpus
+from annif.corpus import Document, TransformingDocumentCorpus
 from annif.exception import OperationFailedException
+
+
+def test_document():
+    doc = Document(text="Hello world")
+    assert doc.text == "Hello world"
+    assert doc.subject_set == set()
+    assert doc.metadata == {}
+    assert repr(doc) == "Document(text='Hello world', subject_set=set(), metadata={})"
 
 
 def test_subjectset_uris(subject_index):
@@ -253,6 +261,26 @@ def test_docfile_csv_plain(tmpdir, subject_index):
     assert len(list(docs.documents)) == 3
 
 
+def test_docfile_csv_metadata(tmpdir, subject_index):
+    docfile = tmpdir.join("documents-metadata.csv")
+    lines = (
+        "text,title,subject_uris,author",
+        (
+            "Consider a future device...,"
+            "As We May Think,"
+            "http://www.yso.fi/onto/yso/p817,"
+            '"Bush, Vannevar"'
+        ),
+    )
+    docfile.write("\n".join(lines))
+
+    docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
+    firstdoc = next(docs.documents)
+    assert firstdoc.text == "Consider a future device..."
+    assert firstdoc.metadata["title"] == "As We May Think"
+    assert firstdoc.metadata["author"] == "Bush, Vannevar"
+
+
 def test_docfile_tsv_bom(tmpdir, subject_index):
     docfile = tmpdir.join("documents_bom.tsv")
     data = """Läntinen\t<http://www.yso.fi/onto/yso/p2557>
@@ -263,6 +291,7 @@ def test_docfile_tsv_bom(tmpdir, subject_index):
     docs = annif.corpus.DocumentFileTSV(str(docfile), subject_index)
     firstdoc = next(docs.documents)
     assert firstdoc.text.startswith("Läntinen")
+    assert firstdoc.metadata == {}
 
 
 def test_docfile_csv_bom(tmpdir, subject_index):
@@ -278,6 +307,7 @@ def test_docfile_csv_bom(tmpdir, subject_index):
     docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
     firstdoc = next(docs.documents)
     assert firstdoc.text.startswith("Läntinen")
+    assert firstdoc.metadata == {}
 
 
 def test_docfile_tsv_plain_invalid_lines(tmpdir, caplog, subject_index):
@@ -413,8 +443,8 @@ def test_combinedcorpus(tmpdir, subject_index):
 
 
 def test_transformingcorpus(document_corpus):
-    def double(x):
-        return x + x
+    def double(doc):
+        return Document(doc.text + doc.text, subject_set=doc.subject_set)
 
     transformed_corpus = TransformingDocumentCorpus(document_corpus, double)
     for transf_doc, doc in zip(transformed_corpus.documents, document_corpus.documents):

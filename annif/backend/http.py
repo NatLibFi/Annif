@@ -18,6 +18,8 @@ from . import backend
 if TYPE_CHECKING:
     from datetime import datetime
 
+    from annif.corpus import Document
+
 
 class HTTPBackend(backend.AnnifBackend):
     name = "http"
@@ -64,8 +66,10 @@ class HTTPBackend(backend.AnnifBackend):
         else:
             return None
 
-    def _suggest(self, text: str, params: dict[str, Any]) -> list[SubjectSuggestion]:
-        data = {"text": text}
+    def _suggest(
+        self, doc: Document, params: dict[str, Any]
+    ) -> list[SubjectSuggestion]:
+        data = {"text": doc.text}
         if "project" in params:
             data["project"] = params["project"]
         if "limit" in params:

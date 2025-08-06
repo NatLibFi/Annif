@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from optuna.trial import Trial
 
     from annif.backend.hyperopt import HPRecommendation
-    from annif.corpus.document import DocumentCorpus
+    from annif.corpus.document import Document, DocumentCorpus
 
 
 class BaseEnsembleBackend(backend.AnnifBackend):
@@ -41,10 +41,10 @@ class BaseEnsembleBackend(backend.AnnifBackend):
             project.initialize(parallel)
 
     def _suggest_with_sources(
-        self, texts: list[str], sources: list[tuple[str, float]]
+        self, documents: list[Document], sources: list[tuple[str, float]]
     ) -> dict[str, SuggestionBatch]:
         return {
-            project_id: self.project.registry.get_project(project_id).suggest(texts)
+            project_id: self.project.registry.get_project(project_id).suggest(documents)
             for project_id, _ in sources
         }
 
@@ -66,10 +66,10 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         )
 
     def _suggest_batch(
-        self, texts: list[str], params: dict[str, Any]
+        self, documents: list[Document], params: dict[str, Any]
     ) -> SuggestionBatch:
         sources = annif.util.parse_sources(params["sources"])
-        batch_by_source = self._suggest_with_sources(texts, sources)
+        batch_by_source = self._suggest_with_sources(documents, sources)
         return self._merge_source_batches(batch_by_source, sources, params)
 
 

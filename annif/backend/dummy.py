@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from annif.corpus import Document
 from annif.suggestion import SubjectSuggestion
 
 from . import backend
@@ -22,14 +23,17 @@ class DummyBackend(backend.AnnifLearningBackend):
     def initialize(self, parallel: bool = False) -> None:
         self.initialized = True
 
-    def _suggest(self, text: str, params: dict[str, Any]) -> list[SubjectSuggestion]:
+    def _suggest(
+        self, doc: Document, params: dict[str, Any]
+    ) -> list[SubjectSuggestion]:
         score = float(params.get("score", 1.0))
 
-        # Ensure tests fail if "text" with wrong type ends up here
-        assert isinstance(text, str)
+        # Ensure tests fail if "doc" with wrong type ends up here
+        assert isinstance(doc, Document)
+        assert isinstance(doc.text, str)
 
         # Give no hits for no text
-        if len(text) == 0:
+        if len(doc.text) == 0:
             return []
 
         # allow overriding returned subject via uri parameter

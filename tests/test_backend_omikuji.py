@@ -3,7 +3,7 @@
 import pytest
 
 import annif.backend
-import annif.corpus
+from annif.corpus import Document, DocumentFileTSV
 from annif.exception import NotInitializedException, NotSupportedException
 
 pytest.importorskip("annif.backend.omikuji")
@@ -27,7 +27,7 @@ def test_omikuji_suggest_no_vectorizer(project):
     omikuji = omikuji_type(backend_id="omikuji", config_params={}, project=project)
 
     with pytest.raises(NotInitializedException):
-        omikuji.suggest("example text")
+        omikuji.suggest([Document("example text")])
 
 
 def test_omikuji_create_train_file(tmpdir, project, datadir):
@@ -37,7 +37,7 @@ def test_omikuji_create_train_file(tmpdir, project, datadir):
         + "arkeologia\thttp://www.yso.fi/onto/yso/p1265\n"
         + "...\thttp://example.com/none"
     )
-    corpus = annif.corpus.DocumentFileTSV(str(tmpfile), project.subjects)
+    corpus = DocumentFileTSV(str(tmpfile), project.subjects)
     omikuji_type = annif.backend.get_backend("omikuji")
     omikuji = omikuji_type(backend_id="omikuji", config_params={}, project=project)
     input = (doc.text for doc in corpus.documents)
@@ -123,12 +123,14 @@ def test_omikuji_suggest(project):
 
     results = omikuji.suggest(
         [
-            """Arkeologiaa sanotaan joskus myös
+            Document(
+                text="""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan."""
+            )
         ]
     )[0]
 
@@ -144,7 +146,7 @@ def test_omikuji_suggest_no_input(project):
         backend_id="omikuji", config_params={"limit": 8}, project=project
     )
 
-    results = omikuji.suggest(["j"])[0]
+    results = omikuji.suggest([Document(text="j")])[0]
     assert len(results) == 0
 
 
@@ -154,4 +156,4 @@ def test_omikuji_suggest_no_model(datadir, project):
 
     datadir.join("omikuji-model").remove()
     with pytest.raises(NotInitializedException):
-        omikuji.suggest(["example text"])[0]
+        omikuji.suggest([Document(text="example text")])[0]
