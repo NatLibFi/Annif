@@ -11,24 +11,36 @@ from .vocab import AnnifVocabulary
 logger = annif.logger
 
 
-def uris_by_type(graph: Graph, type: str, action: str) -> list[str]:
-    uris = [str(uri) for uri in graph.subjects(RDF.type, URIRef(type))]
+def resolve_uri_or_curie(graph: Graph, value: str) -> URIRef:
+    try:
+        # Try to expand as CURIE using the graph's namespace manager
+        return graph.namespace_manager.expand_curie(value)
+    except ValueError:
+        # Not a CURIE or prefix not defined; treat as full URI
+        return URIRef(value)
+
+
+def uris_by_type(graph: Graph, type_: str, action: str) -> list[str]:
+    type_uri = resolve_uri_or_curie(graph, type_)
+    uris = [str(uri) for uri in graph.subjects(RDF.type, type_uri)]
     if not uris:
-        logger.warning(f"{action}: no concepts found with type {type}")
+        logger.warning(f"{action}: no concepts found with type {type_uri}")
     return uris
 
 
 def uris_by_scheme(graph: Graph, scheme: str, action: str) -> list[str]:
-    uris = [str(uri) for uri in graph.subjects(SKOS.inScheme, URIRef(scheme))]
+    scheme_uri = resolve_uri_or_curie(graph, scheme)
+    uris = [str(uri) for uri in graph.subjects(SKOS.inScheme, scheme_uri)]
     if not uris:
-        logger.warning(f"{action}: no concepts found in scheme {scheme}")
+        logger.warning(f"{action}: no concepts found in scheme {scheme_uri}")
     return uris
 
 
 def uris_by_collection(graph: Graph, collection: str, action: str) -> list[str]:
-    uris = [str(uri) for uri in graph.objects(URIRef(collection), SKOS.member)]
+    collection_uri = resolve_uri_or_curie(graph, collection)
+    uris = [str(uri) for uri in graph.objects(collection_uri, SKOS.member)]
     if not uris:
-        logger.warning(f"{action}: no concepts found in collection {collection}")
+        logger.warning(f"{action}: no concepts found in collection {collection_uri}")
     return uris
 
 
@@ -53,7 +65,7 @@ def kwargs_to_exclude_uris(vocab: AnnifVocabulary, kwargs: dict[str, str]) -> se
         "exclude": lambda vals: exclude_uris.update(
             vals
             if "*" not in vals
-            else uris_by_type(vocab.as_graph(), SKOS.Concept, "exclude")
+            else uris_by_type(vocab.as_graph(), "skos:Concept", "exclude")
         ),
         "exclude_type": lambda vals: add_uris(
             vocab.as_graph(), uris_by_type, exclude_uris, vals, "exclude_type"

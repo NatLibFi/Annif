@@ -33,6 +33,16 @@ def test_vocab_rules_exclude_type(vocabulary):
     assert "http://www.yso.fi/onto/yso/p19180" in uris
 
 
+def test_vocab_rules_exclude_type_curie(vocabulary):
+    uris = kwargs_to_exclude_uris(
+        vocabulary,
+        {"exclude_type": "yso-meta:Individual"},
+    )
+    # there are 4 concepts of type Individual in yso-archaeology
+    assert len(uris) == 4
+    assert "http://www.yso.fi/onto/yso/p19180" in uris
+
+
 def test_vocab_rules_exclude_type_nonexistent(vocabulary, caplog):
     with caplog.at_level(logging.WARNING):
         uris = kwargs_to_exclude_uris(
@@ -55,6 +65,15 @@ def test_vocab_rules_exclude_scheme(vocabulary):
     assert "http://www.yso.fi/onto/yso/p1265" in uris
 
 
+def test_vocab_rules_exclude_scheme_curie(vocabulary):
+    uris = kwargs_to_exclude_uris(
+        vocabulary,
+        {"exclude_scheme": "yso:test-scheme"},
+    )
+    assert len(uris) == 1
+    assert "http://www.yso.fi/onto/yso/p1265" in uris
+
+
 def test_vocab_rules_exclude_scheme_nonexistent(vocabulary, caplog):
     with caplog.at_level(logging.WARNING):
         uris = kwargs_to_exclude_uris(
@@ -72,6 +91,15 @@ def test_vocab_rules_exclude_collection(vocabulary):
     uris = kwargs_to_exclude_uris(
         vocabulary,
         {"exclude_collection": "http://www.yso.fi/onto/yso/p26569"},
+    )
+    assert len(uris) == 3
+    assert "http://www.yso.fi/onto/yso/p7141" in uris
+
+
+def test_vocab_rules_exclude_collection_curie(vocabulary):
+    uris = kwargs_to_exclude_uris(
+        vocabulary,
+        {"exclude_collection": "yso:p26569"},
     )
     assert len(uris) == 3
     assert "http://www.yso.fi/onto/yso/p7141" in uris
