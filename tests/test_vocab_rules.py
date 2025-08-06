@@ -1,5 +1,7 @@
 """Unit tests for vocabulary exclude rules in Annif"""
 
+import logging
+
 from annif.vocab import kwargs_to_exclude_uris
 
 
@@ -31,6 +33,19 @@ def test_vocab_rules_exclude_type(vocabulary):
     assert "http://www.yso.fi/onto/yso/p19180" in uris
 
 
+def test_vocab_rules_exclude_type_nonexistent(vocabulary, caplog):
+    with caplog.at_level(logging.WARNING):
+        uris = kwargs_to_exclude_uris(
+            vocabulary,
+            {"exclude_type": "http://example.org/no-such-type"},
+        )
+    assert len(uris) == 0
+    assert (
+        "exclude_type: no concepts found with type http://example.org/no-such-type"
+        in caplog.text
+    )
+
+
 def test_vocab_rules_exclude_scheme(vocabulary):
     uris = kwargs_to_exclude_uris(
         vocabulary,
@@ -40,6 +55,19 @@ def test_vocab_rules_exclude_scheme(vocabulary):
     assert "http://www.yso.fi/onto/yso/p1265" in uris
 
 
+def test_vocab_rules_exclude_scheme_nonexistent(vocabulary, caplog):
+    with caplog.at_level(logging.WARNING):
+        uris = kwargs_to_exclude_uris(
+            vocabulary,
+            {"exclude_scheme": "http://example.org/no-such-scheme"},
+        )
+    assert len(uris) == 0
+    assert (
+        "exclude_scheme: no concepts found in scheme http://example.org/no-such-scheme"
+        in caplog.text
+    )
+
+
 def test_vocab_rules_exclude_collection(vocabulary):
     uris = kwargs_to_exclude_uris(
         vocabulary,
@@ -47,6 +75,19 @@ def test_vocab_rules_exclude_collection(vocabulary):
     )
     assert len(uris) == 3
     assert "http://www.yso.fi/onto/yso/p7141" in uris
+
+
+def test_vocab_rules_exclude_collection_nonexistent(vocabulary, caplog):
+    with caplog.at_level(logging.WARNING):
+        uris = kwargs_to_exclude_uris(
+            vocabulary,
+            {"exclude_collection": "http://example.org/no-such-collection"},
+        )
+    assert len(uris) == 0
+    assert (
+        "exclude_collection: no concepts found in collection "
+        "http://example.org/no-such-collection" in caplog.text
+    )
 
 
 def test_vocab_rules_exclude_include_combination(vocabulary):
