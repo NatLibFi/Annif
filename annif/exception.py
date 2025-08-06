@@ -52,6 +52,12 @@ class ConfigurationException(AnnifException):
     prefix = "Misconfigured"
 
 
+class NotEnabledException(AnnifException):
+    """Exception raised when an operation is not enabled."""
+
+    prefix = "Not enabled"
+
+
 class NotSupportedException(AnnifException):
     """Exception raised when an operation is not supported by a project or
     backend."""

@@ -127,13 +127,13 @@ class DocumentFileCSV(DocumentCorpus):
     def _parse_row(self, row: dict[str, str]) -> Iterator[Document]:
         subject_ids = {
             self.subject_index.by_uri(annif.util.cleanup_uri(uri))
-            for uri in row["subject_uris"].strip().split()
+            for uri in (row["subject_uris"] or "").strip().split()
         }
         metadata = {
             key: val for key, val in row.items() if key not in ("text", "subject_uris")
         }
         yield Document(
-            text=row["text"], subject_set=SubjectSet(subject_ids), metadata=metadata
+            text=(row["text"] or ""), subject_set=SubjectSet(subject_ids), metadata=metadata
         )
 
     def _check_fields(self, reader: csv.DictReader) -> bool:
