@@ -7,6 +7,7 @@ import pytest
 
 import annif.corpus
 from annif.corpus import TransformingDocumentCorpus
+from annif.exception import OperationFailedException
 
 
 def test_subjectset_uris(subject_index):
@@ -226,7 +227,7 @@ def test_docdir_key_as_doccorpus(tmpdir, subject_index):
     )
 
 
-def test_docfile_plain(tmpdir, subject_index):
+def test_docfile_tsv_plain(tmpdir, subject_index):
     docfile = tmpdir.join("documents.tsv")
     docfile.write(
         """Läntinen\t<http://www.yso.fi/onto/yso/p2557>
@@ -234,23 +235,52 @@ def test_docfile_plain(tmpdir, subject_index):
         Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>"""
     )
 
-    docs = annif.corpus.DocumentFile(str(docfile), subject_index)
+    docs = annif.corpus.DocumentFileTSV(str(docfile), subject_index)
     assert len(list(docs.documents)) == 3
 
 
-def test_docfile_bom(tmpdir, subject_index):
+def test_docfile_csv_plain(tmpdir, subject_index):
+    docfile = tmpdir.join("documents.csv")
+    lines = (
+        "text,subject_uris",
+        "Läntinen,<http://www.yso.fi/onto/yso/p2557>",
+        "Oulunlinnan,<http://www.yso.fi/onto/yso/p7346>",
+        '"Harald Hirmuinen",<http://www.yso.fi/onto/yso/p6479>',
+    )
+    docfile.write("\n".join(lines))
+
+    docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
+    assert len(list(docs.documents)) == 3
+
+
+def test_docfile_tsv_bom(tmpdir, subject_index):
     docfile = tmpdir.join("documents_bom.tsv")
     data = """Läntinen\t<http://www.yso.fi/onto/yso/p2557>
         Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
         Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>"""
     docfile.write(data.encode("utf-8-sig"))
 
-    docs = annif.corpus.DocumentFile(str(docfile), subject_index)
+    docs = annif.corpus.DocumentFileTSV(str(docfile), subject_index)
     firstdoc = next(docs.documents)
     assert firstdoc.text.startswith("Läntinen")
 
 
-def test_docfile_plain_invalid_lines(tmpdir, caplog, subject_index):
+def test_docfile_csv_bom(tmpdir, subject_index):
+    docfile = tmpdir.join("documents_bom.csv")
+    lines = (
+        "text,subject_uris",
+        "Läntinen,<http://www.yso.fi/onto/yso/p2557>",
+        "Oulunlinnan,<http://www.yso.fi/onto/yso/p7346>",
+        '"Harald Hirmuinen",<http://www.yso.fi/onto/yso/p6479>',
+    )
+    docfile.write("\n".join(lines).encode("utf-8-sig"))
+
+    docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
+    firstdoc = next(docs.documents)
+    assert firstdoc.text.startswith("Läntinen")
+
+
+def test_docfile_tsv_plain_invalid_lines(tmpdir, caplog, subject_index):
     logger = annif.logger
     logger.propagate = True
     docfile = tmpdir.join("documents_invalid.tsv")
@@ -261,7 +291,7 @@ def test_docfile_plain_invalid_lines(tmpdir, caplog, subject_index):
         A line with no tabs
         Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>"""
     )
-    docs = annif.corpus.DocumentFile(str(docfile), subject_index)
+    docs = annif.corpus.DocumentFileTSV(str(docfile), subject_index)
     assert len(list(docs.documents)) == 3
     assert len(caplog.records) == 2
     expected_msg = "Skipping invalid line (missing tab):"
@@ -269,7 +299,38 @@ def test_docfile_plain_invalid_lines(tmpdir, caplog, subject_index):
         assert expected_msg in record.message
 
 
-def test_docfile_gzipped(tmpdir, subject_index):
+def test_docfile_csv_plain_invalid_lines(tmpdir, caplog, subject_index):
+    docfile = tmpdir.join("documents.csv")
+    lines = (
+        "text,subject_uris",
+        "Läntinen,<http://www.yso.fi/onto/yso/p2557>",
+        "Oulunlinnan,<http://www.yso.fi/onto/yso/p7346>",
+        "no comma on this line",
+        '"Harald Hirmuinen",<http://www.yso.fi/onto/yso/p6479>',
+    )
+    docfile.write("\n".join(lines))
+
+    docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
+    assert len(list(docs.documents)) == 4
+
+
+def test_docfile_csv_plain_invalid_columns(tmpdir, subject_index):
+    docfile = tmpdir.join("documents_invalid.csv")
+    lines = (
+        "text,subject_uri",  # mistyped subject_uris column name
+        "Läntinen,<http://www.yso.fi/onto/yso/p2557>",
+        "Oulunlinnan,<http://www.yso.fi/onto/yso/p7346>",
+        '"Harald Hirmuinen",<http://www.yso.fi/onto/yso/p6479>',
+    )
+    docfile.write("\n".join(lines).encode("utf-8-sig"))
+
+    docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
+    with pytest.raises(OperationFailedException) as excinfo:
+        list(docs.documents)
+    assert str(excinfo.value).startswith("Cannot parse CSV file")
+
+
+def test_docfile_tsv_gzipped(tmpdir, subject_index):
     docfile = tmpdir.join("documents.tsv.gz")
     with gzip.open(str(docfile), "wt") as gzf:
         gzf.write(
@@ -278,13 +339,43 @@ def test_docfile_gzipped(tmpdir, subject_index):
             Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>"""
         )
 
-    docs = annif.corpus.DocumentFile(str(docfile), subject_index)
+    docs = annif.corpus.DocumentFileTSV(str(docfile), subject_index)
     assert len(list(docs.documents)) == 3
 
 
-def test_docfile_is_empty(tmpdir, subject_index):
+def test_docfile_csv_gzipped(tmpdir, subject_index):
+    docfile = tmpdir.join("documents.csv.gz")
+    lines = (
+        "text,subject_uris",
+        "Läntinen,<http://www.yso.fi/onto/yso/p2557>",
+        "Oulunlinnan,<http://www.yso.fi/onto/yso/p7346>",
+        '"Harald Hirmuinen",<http://www.yso.fi/onto/yso/p6479>',
+    )
+    with gzip.open(str(docfile), "wt") as gzf:
+        gzf.write("\n".join(lines))
+
+    docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
+    assert len(list(docs.documents)) == 3
+
+
+def test_docfile_tsv_is_empty(tmpdir, subject_index):
     empty_file = tmpdir.ensure("empty.tsv")
-    docs = annif.corpus.DocumentFile(str(empty_file), subject_index)
+    docs = annif.corpus.DocumentFileTSV(str(empty_file), subject_index)
+    assert docs.is_empty()
+
+
+def test_docfile_csv_is_empty(tmpdir, subject_index):
+    empty_file = tmpdir.ensure("empty.csv")
+    docs = annif.corpus.DocumentFileCSV(str(empty_file), subject_index)
+    with pytest.raises(OperationFailedException) as excinfo:
+        list(docs.documents)
+    assert str(excinfo.value).startswith("Cannot parse CSV file")
+
+
+def test_docfile_csv_header_only(tmpdir, subject_index):
+    docfile = tmpdir.join("header_only.csv")
+    docfile.write("text,subject_uris")
+    docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
     assert docs.is_empty()
 
 
@@ -296,7 +387,7 @@ def test_docfile_batches(tmpdir, subject_index):
         Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>"""
     )
 
-    docs = annif.corpus.DocumentFile(str(docfile), subject_index)
+    docs = annif.corpus.DocumentFileTSV(str(docfile), subject_index)
     docs.DOC_BATCH_SIZE = 1
     assert len(list(docs.doc_batches)) == 3
     assert len(list(docs.doc_batches)[0]) == 1
@@ -313,8 +404,8 @@ def test_combinedcorpus(tmpdir, subject_index):
         Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>"""
     )
 
-    corpus1 = annif.corpus.DocumentFile(str(docfile), subject_index)
-    corpus2 = annif.corpus.DocumentFile(str(docfile), subject_index)
+    corpus1 = annif.corpus.DocumentFileTSV(str(docfile), subject_index)
+    corpus2 = annif.corpus.DocumentFileTSV(str(docfile), subject_index)
 
     combined = annif.corpus.CombinedCorpus([corpus1, corpus2])
 
@@ -345,7 +436,7 @@ def test_limitingcorpus(tmpdir, subject_index):
         Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>"""
     )
 
-    document_corpus = annif.corpus.DocumentFile(str(docfile), subject_index)
+    document_corpus = annif.corpus.DocumentFileTSV(str(docfile), subject_index)
     limiting_corpus = annif.corpus.LimitingDocumentCorpus(document_corpus, 2)
 
     assert len(list(limiting_corpus.documents)) == 2

@@ -110,7 +110,7 @@ def document_corpus(subject_index):
     docfile = os.path.join(
         os.path.dirname(__file__), "corpora", "archaeology", "documents.tsv"
     )
-    doc_corpus = annif.corpus.DocumentFile(docfile, subject_index)
+    doc_corpus = annif.corpus.DocumentFileTSV(docfile, subject_index)
     return doc_corpus
 
 
@@ -158,4 +158,4 @@ def app_project(app):
 @pytest.fixture(scope="function")
 def empty_corpus(tmpdir, subject_index):
     empty_file = tmpdir.ensure("empty.tsv")
-    return annif.corpus.DocumentFile(str(empty_file), subject_index)
+    return annif.corpus.DocumentFileTSV(str(empty_file), subject_index)

@@ -48,7 +48,7 @@ def test_pav_train(tmpdir, app_project):
         + "another\thttp://example.org/dummy\n"
         + "none\thttp://example.org/none"
     )
-    document_corpus = annif.corpus.DocumentFile(str(tmpfile), app_project.subjects)
+    document_corpus = annif.corpus.DocumentFileTSV(str(tmpfile), app_project.subjects)
 
     pav.train(document_corpus)
     datadir = py.path.local(app_project.datadir)
@@ -137,7 +137,7 @@ def test_pav_train_params(tmpdir, app_project, caplog):
         + "another\thttp://example.org/dummy\n"
         + "none\thttp://example.org/none"
     )
-    document_corpus = annif.corpus.DocumentFile(str(tmpfile), app_project.subjects)
+    document_corpus = annif.corpus.DocumentFileTSV(str(tmpfile), app_project.subjects)
     params = {"min-docs": 5}
 
     with caplog.at_level(logging.DEBUG):

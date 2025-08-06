@@ -71,7 +71,7 @@ def test_fasttext_train_unknown_subject(tmpdir, datadir, project):
         "nonexistent\thttp://example.com/nonexistent\n"
         + "arkeologia\thttp://www.yso.fi/onto/yso/p1265"
     )
-    document_corpus = annif.corpus.DocumentFile(str(tmpfile), project.subjects)
+    document_corpus = annif.corpus.DocumentFileTSV(str(tmpfile), project.subjects)
 
     fasttext.train(document_corpus)
     assert fasttext._model is not None

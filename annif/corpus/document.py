@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import glob
 import gzip
 import os.path
@@ -10,6 +11,7 @@ from itertools import islice
 from typing import TYPE_CHECKING
 
 import annif.util
+from annif.exception import OperationFailedException
 
 from .types import Document, DocumentCorpus, SubjectSet
 
@@ -69,7 +71,7 @@ class DocumentDirectory(DocumentCorpus):
             yield Document(text=text, subject_set=subjects)
 
 
-class DocumentFile(DocumentCorpus):
+class DocumentFileTSV(DocumentCorpus):
     """A TSV file as a corpus of documents with subjects"""
 
     def __init__(self, path: str, subject_index: SubjectIndex) -> None:
@@ -96,6 +98,49 @@ class DocumentFile(DocumentCorpus):
             yield Document(text=text, subject_set=SubjectSet(subject_ids))
         else:
             logger.warning('Skipping invalid line (missing tab): "%s"', line.rstrip())
+
+
+class DocumentFileCSV(DocumentCorpus):
+    """A CSV file as a corpus of documents with subjects"""
+
+    def __init__(self, path: str, subject_index: SubjectIndex) -> None:
+        self.path = path
+        self.subject_index = subject_index
+
+    @property
+    def documents(self) -> Iterator[Document]:
+        if self.path.endswith(".gz"):
+            opener = gzip.open
+        else:
+            opener = open
+        with opener(self.path, mode="rt", encoding="utf-8-sig") as csvfile:
+            reader = csv.DictReader(csvfile)
+            if not self._check_fields(reader):
+                raise OperationFailedException(
+                    f"Cannot parse CSV file {self.path}. "
+                    + "The file must have a header row that defines at least "
+                    + "the columns 'text' and 'subject_uris'."
+                )
+            for row in reader:
+                yield from self._parse_row(row)
+
+    def _parse_row(self, row: dict[str, str]) -> Iterator[Document]:
+        subject_ids = {
+            self.subject_index.by_uri(annif.util.cleanup_uri(uri))
+            for uri in (row["subject_uris"] or "").strip().split()
+        }
+        yield Document(text=(row["text"] or ""), subject_set=SubjectSet(subject_ids))
+
+    def _check_fields(self, reader: csv.DictReader) -> bool:
+        fns = reader.fieldnames
+        return fns is not None and "text" in fns and "subject_uris" in fns
+
+    @staticmethod
+    def is_csv_file(path: str) -> bool:
+        """return True if the path looks like a CSV file"""
+
+        path_lc = path.lower()
+        return path_lc.endswith(".csv") or path_lc.endswith(".csv.gz")
 
 
 class DocumentList(DocumentCorpus):

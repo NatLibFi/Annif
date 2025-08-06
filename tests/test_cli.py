@@ -310,7 +310,7 @@ def test_list_vocabs_after_load():
     assert re.search(r"^yso\s+en,fi,sv\s+130\s+True", result.output, re.MULTILINE)
 
 
-def test_train(testdatadir):
+def test_train_tsv(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__), "corpora", "archaeology", "documents.tsv"
     )
@@ -323,11 +323,29 @@ def test_train(testdatadir):
     assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
 
 
-def test_train_multiple(testdatadir):
+def test_train_csv(testdatadir):
     docfile = os.path.join(
+        os.path.dirname(__file__), "corpora", "archaeology", "documents.csv"
+    )
+    result = runner.invoke(annif.cli.cli, ["train", "tfidf-fi", docfile])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
+    assert testdatadir.join("projects/tfidf-fi/vectorizer").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-index").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
+
+
+def test_train_multiple(testdatadir):
+    docfile_tsv = os.path.join(
         os.path.dirname(__file__), "corpora", "archaeology", "documents.tsv"
     )
-    result = runner.invoke(annif.cli.cli, ["train", "tfidf-fi", docfile, docfile])
+    docfile_csv = os.path.join(
+        os.path.dirname(__file__), "corpora", "archaeology", "documents.csv"
+    )
+    result = runner.invoke(
+        annif.cli.cli, ["train", "tfidf-fi", docfile_tsv, docfile_csv]
+    )
     assert not result.exception
     assert result.exit_code == 0
     assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
