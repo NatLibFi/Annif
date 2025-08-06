@@ -127,9 +127,9 @@ class DocumentFileCSV(DocumentCorpus):
     def _parse_row(self, row: dict[str, str]) -> Iterator[Document]:
         subject_ids = {
             self.subject_index.by_uri(annif.util.cleanup_uri(uri))
-            for uri in row["subject_uris"].strip().split()
+            for uri in (row["subject_uris"] or "").strip().split()
         }
-        yield Document(text=row["text"], subject_set=SubjectSet(subject_ids))
+        yield Document(text=(row["text"] or ""), subject_set=SubjectSet(subject_ids))
 
     def _check_fields(self, reader: csv.DictReader) -> bool:
         fns = reader.fieldnames

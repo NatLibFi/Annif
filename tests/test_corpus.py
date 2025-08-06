@@ -299,6 +299,21 @@ def test_docfile_tsv_plain_invalid_lines(tmpdir, caplog, subject_index):
         assert expected_msg in record.message
 
 
+def test_docfile_csv_plain_invalid_lines(tmpdir, caplog, subject_index):
+    docfile = tmpdir.join("documents.csv")
+    lines = (
+        "text,subject_uris",
+        "Läntinen,<http://www.yso.fi/onto/yso/p2557>",
+        "Oulunlinnan,<http://www.yso.fi/onto/yso/p7346>",
+        "no comma on this line",
+        '"Harald Hirmuinen",<http://www.yso.fi/onto/yso/p6479>',
+    )
+    docfile.write("\n".join(lines))
+
+    docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
+    assert len(list(docs.documents)) == 4
+
+
 def test_docfile_csv_plain_invalid_columns(tmpdir, subject_index):
     docfile = tmpdir.join("documents_invalid.csv")
     lines = (
