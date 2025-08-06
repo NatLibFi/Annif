@@ -5,6 +5,8 @@ from rdflib.namespace import SKOS
 
 from annif.exception import ConfigurationException
 
+from .vocab import AnnifVocabulary
+
 
 def uris_by_type(graph: Graph, type: str) -> list[str]:
     return [str(uri) for uri in graph.subjects(RDF.type, URIRef(type))]
@@ -33,28 +35,30 @@ def remove_uris(
             uris_set.discard(uri)
 
 
-def kwargs_to_exclude_uris(graph: Graph, kwargs: dict[str, str]) -> set[str]:
+def kwargs_to_exclude_uris(vocab: AnnifVocabulary, kwargs: dict[str, str]) -> set[str]:
     exclude_uris = set()
     actions = {
         "exclude": lambda vals: exclude_uris.update(
-            vals if "*" not in vals else uris_by_type(graph, SKOS.Concept)
+            vals if "*" not in vals else uris_by_type(vocab.as_graph(), SKOS.Concept)
         ),
-        "exclude_type": lambda vals: add_uris(graph, uris_by_type, exclude_uris, vals),
+        "exclude_type": lambda vals: add_uris(
+            vocab.as_graph(), uris_by_type, exclude_uris, vals
+        ),
         "exclude_scheme": lambda vals: add_uris(
-            graph, uris_by_scheme, exclude_uris, vals
+            vocab.as_graph(), uris_by_scheme, exclude_uris, vals
         ),
         "exclude_collection": lambda vals: add_uris(
-            graph, uris_by_collection, exclude_uris, vals
+            vocab.as_graph(), uris_by_collection, exclude_uris, vals
         ),
         "include": lambda vals: exclude_uris.difference_update(vals),
         "include_type": lambda vals: remove_uris(
-            graph, uris_by_type, exclude_uris, vals
+            vocab.as_graph(), uris_by_type, exclude_uris, vals
         ),
         "include_scheme": lambda vals: remove_uris(
-            graph, uris_by_scheme, exclude_uris, vals
+            vocab.as_graph(), uris_by_scheme, exclude_uris, vals
         ),
         "include_collection": lambda vals: remove_uris(
-            graph, uris_by_collection, exclude_uris, vals
+            vocab.as_graph(), uris_by_collection, exclude_uris, vals
         ),
     }
 
