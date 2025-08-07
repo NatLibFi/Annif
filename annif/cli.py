@@ -266,8 +266,9 @@ def run_suggest(
     project_id, paths, limit, threshold, language, backend_param, metadata, docs_limit
 ):
     """
-    Suggest subjects for a single document from standard input or for one or more
-    document file(s) given its/their path(s).
+    Suggest subjects for a single document from standard input (optionally
+    with metadata) or for one or more document file(s) given its/their
+    path(s).
     \f
     This will read a text document from standard input and suggest subjects for
     it, or if given path(s) to file(s), suggest subjects for it/them.
