@@ -522,6 +522,20 @@ def test_suggest_metadata():
     assert result.exit_code == 0
 
 
+def test_suggest_metadata_bad_value():
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        ["suggest", "--metadata", "foo", "dummy-fi"],
+        input="kissa",
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert (
+        "Invalid value: --metadata 'foo'. Expected <key>=<value>."
+        in failed_result.output
+    )
+
+
 def test_suggest_param_backend_nonexistent():
     result = runner.invoke(
         annif.cli.cli,

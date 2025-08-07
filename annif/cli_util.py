@@ -233,8 +233,10 @@ def parse_metadata(metadata: tuple[str, ...] | tuple[()]) -> dict[str, str]:
     option into a dictionary"""
 
     metadata_dict = {}
-    for setting in metadata:
-        key, value = setting.split("=", 1)
+    for item in metadata:
+        if "=" not in item:
+            raise click.BadParameter(f"--metadata '{item}'. Expected <key>=<value>.")
+        key, value = item.split("=", 1)
         metadata_dict[key] = value
 
     return metadata_dict
