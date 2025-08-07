@@ -224,6 +224,22 @@ def test_rest_suggest_batch_two_docs(app):
         assert result[1]["results"][0]["label"] == "dummy-fi"
 
 
+def test_rest_suggest_batch_two_docs_with_metadata(app):
+    with app.app_context():
+        result = annif.rest.suggest_batch(
+            "dummy-fi",
+            {
+                "documents": [
+                    {"text": "example text", "metadata": {"score": 0.5}},
+                    {"text": "another example text", "metadata": {"score": 0.7}},
+                ]
+            },
+        )[0]
+        assert len(result) == 2
+        assert result[0]["results"][0]["score"] == pytest.approx(0.5)
+        assert result[1]["results"][0]["score"] == pytest.approx(0.7)
+
+
 def test_rest_suggest_batch_with_language_override(app):
     with app.app_context():
         result = annif.rest.suggest_batch(
