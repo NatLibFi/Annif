@@ -254,13 +254,21 @@ def run_learn(project_id, paths, docs_limit, backend_param):
 @click.option("--language", "-L", help="Language of subject labels")
 @cli_util.docs_limit_option
 @cli_util.backend_param_option
+@click.option(
+    "--metadata",
+    "-D",
+    multiple=True,
+    help="Additional metadata for a document read from standard input. "
+    + "Syntax: `-D <field>=<value>`.",
+)
 @cli_util.common_options
 def run_suggest(
-    project_id, paths, limit, threshold, language, backend_param, docs_limit
+    project_id, paths, limit, threshold, language, backend_param, metadata, docs_limit
 ):
     """
-    Suggest subjects for a single document from standard input or for one or more
-    document file(s) given its/their path(s).
+    Suggest subjects for a single document from standard input (optionally
+    with metadata) or for one or more document file(s) given its/their
+    path(s).
     \f
     This will read a text document from standard input and suggest subjects for
     it, or if given path(s) to file(s), suggest subjects for it/them.
@@ -282,9 +290,10 @@ def run_suggest(
             cli_util.show_hits(suggestions, project, lang)
     else:
         text = sys.stdin.read()
-        suggestions = project.suggest([Document(text=text)], backend_params).filter(
-            limit, threshold
-        )[0]
+        doc_metadata = cli_util.parse_metadata(metadata)
+        suggestions = project.suggest(
+            [Document(text=text, metadata=doc_metadata)], backend_params
+        ).filter(limit, threshold)[0]
         cli_util.show_hits(suggestions, project, lang)
 
 

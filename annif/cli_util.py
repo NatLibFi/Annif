@@ -228,6 +228,20 @@ def _validate_backend_params(backend: str, beparam: str, project: AnnifProject) 
         )
 
 
+def parse_metadata(metadata: tuple[str, ...] | tuple[()]) -> dict[str, str]:
+    """Parse a list of metadata parameters given with the --metadata
+    option into a dictionary"""
+
+    metadata_dict = {}
+    for item in metadata:
+        if "=" not in item:
+            raise click.BadParameter(f"--metadata '{item}'. Expected <key>=<value>.")
+        key, value = item.split("=", 1)
+        metadata_dict[key] = value
+
+    return metadata_dict
+
+
 def generate_filter_params(filter_batch_max_limit: int) -> list[tuple[int, float]]:
     limits = range(1, filter_batch_max_limit + 1)
     thresholds = [i * 0.05 for i in range(20)]
