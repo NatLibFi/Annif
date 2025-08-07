@@ -392,13 +392,21 @@ components:
         document_id:
           type: string
           example: doc-1234
-      description: A document with an optional identifier
+        metadata:
+          type: object
+          additionalProperties:
+              type: string
+      description: A document with an optional identifier and/or metadata
     IndexedDocument:
       type: object
       properties:
         text:
           type: string
           example: A quick brown fox jumped over the lazy dog.
+        metadata:
+          type: object
+          additionalProperties:
+              type: string
         subjects:
           type: array
           items:
