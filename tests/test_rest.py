@@ -2,6 +2,8 @@
 
 import importlib
 
+import pytest
+
 import annif.rest
 
 
@@ -170,6 +172,20 @@ def test_rest_suggest_with_notations(app):
             "dummy-fi", {"text": "example text", "limit": 10, "threshold": 0.0}
         )[0]
         assert result["results"][0]["notation"] is None
+
+
+def test_rest_suggest_with_metadata(app):
+    with app.app_context():
+        result = annif.rest.suggest(
+            "dummy-fi",
+            {
+                "text": "example text",
+                "limit": 10,
+                "threshold": 0.0,
+                "metadata_score": 0.6,
+            },
+        )[0]
+        assert result["results"][0]["score"] == pytest.approx(0.6)
 
 
 def test_rest_suggest_batch_one_doc(app):

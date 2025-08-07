@@ -96,6 +96,9 @@ paths:
                 language:
                   type: string
                   description: language of subject labels
+              additionalProperties:
+                type: string
+                description: Additional metadata properties, starting with 'metadata_'
         required: true
       responses:
         "200":
