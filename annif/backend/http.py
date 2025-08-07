@@ -70,6 +70,8 @@ class HTTPBackend(backend.AnnifBackend):
         self, doc: Document, params: dict[str, Any]
     ) -> list[SubjectSuggestion]:
         data = {"text": doc.text}
+        for key, value in doc.metadata.items():
+            data[f"metadata_{key}"] = value
         if "project" in params:
             data["project"] = params["project"]
         if "limit" in params:

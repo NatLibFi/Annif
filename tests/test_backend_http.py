@@ -97,7 +97,7 @@ def test_http_suggest_post_args(app_project):
             },
             project=app_project,
         )
-        http.suggest([Document(text="this is some text")])
+        http.suggest([Document(text="this is some text", metadata={"field": "value"})])
 
         assert requests.post.call_args.args == ("http://api.example.org/analyze",)
         assert "text" in requests.post.call_args.kwargs["data"]
@@ -106,6 +106,8 @@ def test_http_suggest_post_args(app_project):
         assert requests.post.call_args.kwargs["data"]["project"] == "dummy"
         assert "limit" in requests.post.call_args.kwargs["data"]
         assert requests.post.call_args.kwargs["data"]["limit"] == "42"
+        assert "metadata_field" in requests.post.call_args.kwargs["data"]
+        assert requests.post.call_args.kwargs["data"]["metadata_field"] == "value"
 
 
 def test_http_suggest_zero_score(project):
