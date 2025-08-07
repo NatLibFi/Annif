@@ -2,6 +2,8 @@
 
 import importlib
 
+import pytest
+
 import annif.rest
 
 
@@ -172,6 +174,20 @@ def test_rest_suggest_with_notations(app):
         assert result["results"][0]["notation"] is None
 
 
+def test_rest_suggest_with_metadata(app):
+    with app.app_context():
+        result = annif.rest.suggest(
+            "dummy-fi",
+            {
+                "text": "example text",
+                "limit": 10,
+                "threshold": 0.0,
+                "metadata_score": 0.6,
+            },
+        )[0]
+        assert result["results"][0]["score"] == pytest.approx(0.6)
+
+
 def test_rest_suggest_batch_one_doc(app):
     with app.app_context():
         result = annif.rest.suggest_batch(
@@ -206,6 +222,22 @@ def test_rest_suggest_batch_two_docs(app):
         )[0]
         assert len(result) == 2
         assert result[1]["results"][0]["label"] == "dummy-fi"
+
+
+def test_rest_suggest_batch_two_docs_with_metadata(app):
+    with app.app_context():
+        result = annif.rest.suggest_batch(
+            "dummy-fi",
+            {
+                "documents": [
+                    {"text": "example text", "metadata": {"score": 0.5}},
+                    {"text": "another example text", "metadata": {"score": 0.7}},
+                ]
+            },
+        )[0]
+        assert len(result) == 2
+        assert result[0]["results"][0]["score"] == pytest.approx(0.5)
+        assert result[1]["results"][0]["score"] == pytest.approx(0.7)
 
 
 def test_rest_suggest_batch_with_language_override(app):

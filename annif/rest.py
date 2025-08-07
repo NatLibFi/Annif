@@ -166,7 +166,12 @@ def suggest(
     parameters = dict(
         (key, body[key]) for key in ["language", "limit", "threshold"] if key in body
     )
-    documents = [{"text": body["text"]}]
+    metadata = {
+        key[len("metadata_") :]: value
+        for key, value in body.items()
+        if key.startswith("metadata_")
+    }
+    documents = [{"text": body["text"], "metadata": metadata}]
     result = _suggest(project_id, documents, parameters)
 
     if _is_error(result):
@@ -233,13 +238,16 @@ def _documents_to_corpus(
                 subject_set=SubjectSet(
                     [subject_index.by_uri(subj["uri"]) for subj in d["subjects"]]
                 ),
+                metadata=d.get("metadata", {}),
             )
             for d in documents
             if "text" in d and "subjects" in d
         ]
     else:
         corpus = [
-            Document(text=d["text"], subject_set=None) for d in documents if "text" in d
+            Document(text=d["text"], subject_set=None, metadata=d.get("metadata", {}))
+            for d in documents
+            if "text" in d
         ]
     return DocumentList(corpus)
 
