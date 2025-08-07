@@ -66,6 +66,10 @@ paths:
       tags:
       - Automatic subject indexing
       summary: suggest subjects for a given text
+      description: >
+        This method suggests relevant subjects for a given input text (with
+        optional metadata). It supports optional parameters to control the
+        number of results, score threshold, and language of the subject labels.
       operationId: annif.rest.suggest
       parameters:
       - $ref: '#/components/parameters/project_id'
@@ -118,6 +122,10 @@ paths:
       tags:
       - Automatic subject indexing
       summary: suggest subjects for the given batch of up to 32 documents
+      description: >
+        This method suggests relevant subjects for a batch of up to 32 input texts
+        (with optional metadata). It supports optional parameters to control the
+        number of results, score threshold, and language of the subject labels.
       operationId: annif.rest.suggest_batch
       parameters:
       - $ref: '#/components/parameters/project_id'
