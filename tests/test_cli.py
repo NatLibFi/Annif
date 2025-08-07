@@ -511,6 +511,17 @@ def test_suggest_param():
     assert result.exit_code == 0
 
 
+def test_suggest_metadata():
+    result = runner.invoke(
+        annif.cli.cli,
+        ["suggest", "--metadata", "score=0.6", "dummy-fi"],
+        input="kissa",
+    )
+    assert not result.exception
+    assert result.output.startswith("<http://example.org/dummy>\tdummy-fi\t0.6")
+    assert result.exit_code == 0
+
+
 def test_suggest_param_backend_nonexistent():
     result = runner.invoke(
         annif.cli.cli,

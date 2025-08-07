@@ -26,7 +26,7 @@ class DummyBackend(backend.AnnifLearningBackend):
     def _suggest(
         self, doc: Document, params: dict[str, Any]
     ) -> list[SubjectSuggestion]:
-        score = float(params.get("score", 1.0))
+        score = float(params.get("score", doc.metadata.get("score", 1.0)))
 
         # Ensure tests fail if "doc" with wrong type ends up here
         assert isinstance(doc, Document)
