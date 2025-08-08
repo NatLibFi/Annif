@@ -57,6 +57,14 @@
           <div id="project-selection-wrapper">
             <annif-projects :projects="projects" @project-selected="onProjectSelected"></annif-projects>
             <annif-project-info :projects="projects" :project="project"></annif-project-info>
+              <!-- Collapsible section for candidate language selection, styled like Project information -->
+              <label style="border-top: 1px solid #343260; margin-bottom: 0.5rem; padding-top: 0.5rem; text-transform: uppercase; font-size: 1.1rem; display: block; opacity: 0.5; cursor: default;">&nbsp;</label>
+              <details id="language-selection-details" class="mt-2">
+                <summary>Language detection</summary>
+                <div id="language-selection" class="mt-2">
+                  <annif-language-select :languages="candidateLanguages" :selected="selectedLanguages" @languages-changed="onLanguagesChanged"></annif-language-select>
+                </div>
+              </details>
           </div>
           <annif-limit :limit="limit" @limit-selected="onLimitSelected"></annif-limit>
           <button id="get-suggestions" type="button" class="btn btn-primary" @click="suggest" :disabled="loading">
@@ -213,6 +221,29 @@ Vue.component('annif-limit', {
 </div>'
 });
 
+// Component for selecting candidate languages
+Vue.component('annif-language-select', {
+  delimiters: ["<%","%>"],
+  props: ['languages', 'selected'],
+  methods: {
+    handleLanguageChange: function(event) {
+      // Collect all checked languages
+      const checkboxes = event.target.closest('#language-checkboxes').querySelectorAll('input[type=checkbox]:checked');
+      const selected = Array.from(checkboxes).map(cb => cb.value);
+      this.$emit('languages-changed', selected);
+    }
+  },
+  template: '<div class="form-group">\
+      <label>Candidate language(s)</label>\
+      <div id="language-checkboxes">\
+        <div v-for="lang in languages" :key="lang.code" class="form-check">\
+          <input class="form-check-input" type="checkbox" :id="\'lang-\' + lang.code" :value="lang.code" :checked="selected.includes(lang.code)" @change="handleLanguageChange">\
+          <label class="form-check-label" :for="\'lang-\' + lang.code"><% lang.label %></label>\
+        </div>\
+      </div>\
+    </div>'
+});
+
 // Component with the list of results
 Vue.component('annif-results', {
   delimiters: ["<%","%>"],
@@ -240,7 +271,15 @@ new Vue({
     projects: [],
     results: [],
     problems: [],
-    loading: false
+    loading: false,
+    candidateLanguages: [
+      { code: 'en', label: 'English' },
+      { code: 'fi', label: 'Finnish' },
+      { code: 'sv', label: 'Swedish' },
+      { code: 'de', label: 'German' },
+      { code: 'fr', label: 'French' }
+    ],
+  selectedLanguages: []
   },
   mounted: function() {
     // TBD: we can add a button to reload the list of projects later
@@ -265,6 +304,9 @@ new Vue({
     },
     onLimitSelected(limit) {
       this.limit = limit;
+      },
+      onLanguagesChanged(langs) {
+        this.selectedLanguages = langs;
     },
     loadProjects: function() {
       var this_ = this;
