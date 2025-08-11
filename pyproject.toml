@@ -31,7 +31,7 @@ classifiers = [
 python = ">=3.10,<3.13"
 
 connexion = { version = "~3.1.0", extras = ["flask", "uvicorn", "swagger-ui"] }
-click = "8.1.*"
+click = "~8.2.1"
 click-log = "0.4.*"
 joblib = "1.4.*"
 nltk = "~3.9.1"
