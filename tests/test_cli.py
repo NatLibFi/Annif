@@ -1122,7 +1122,7 @@ def test_run_help():
 
 
 @mock.patch("annif.hfh_util.upsert_modelcard")
-@mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
+@mock.patch("huggingface_hub.preupload_lfs_files")
 @mock.patch("huggingface_hub.CommitOperationAdd")
 @mock.patch("huggingface_hub.HfApi.create_commit")
 def test_upload(
@@ -1167,7 +1167,7 @@ def test_upload(
 
 
 @mock.patch("annif.hfh_util.upsert_modelcard")
-@mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
+@mock.patch("huggingface_hub.preupload_lfs_files")
 @mock.patch("huggingface_hub.CommitOperationAdd")
 @mock.patch("huggingface_hub.HfApi.create_commit")
 def test_upload_many(
@@ -1180,7 +1180,7 @@ def test_upload_many(
     assert upsert_modelcard.call_count == 1
 
 
-@mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
+@mock.patch("huggingface_hub.preupload_lfs_files")
 @mock.patch("huggingface_hub.CommitOperationAdd")
 @mock.patch("huggingface_hub.HfApi.create_commit")
 @mock.patch("annif.hfh_util.upsert_modelcard")
