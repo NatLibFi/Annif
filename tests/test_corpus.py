@@ -98,7 +98,7 @@ def test_docdir_key(tmpdir):
     tmpdir.join("doc3.txt").write("doc3")
 
     docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=False)
-    files = sorted(list(docdir))
+    files = sorted(docdir)
     assert len(files) == 3
     assert files[0] == str(tmpdir.join("doc1.txt"))
     assert files[1] == str(tmpdir.join("doc2.txt"))
@@ -113,7 +113,7 @@ def test_docdir_tsv(tmpdir):
     tmpdir.join("doc3.txt").write("doc3")
 
     docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=False)
-    files = sorted(list(docdir))
+    files = sorted(docdir)
     assert len(files) == 3
     assert files[0] == str(tmpdir.join("doc1.txt"))
     assert files[1] == str(tmpdir.join("doc2.txt"))
@@ -155,7 +155,7 @@ def test_docdir_json(tmpdir):
     tmpdir.join("doc3.json").write(json.dumps(data3))
 
     docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=False)
-    files = sorted(list(docdir))
+    files = sorted(docdir)
     assert len(files) == 3
     assert files[0] == str(tmpdir.join("doc1.json"))
     assert files[1] == str(tmpdir.join("doc2.json"))
@@ -174,7 +174,7 @@ def test_docdir_key_require_subjects(tmpdir, subject_index):
     )
 
     # the docdir contains 3 files
-    files = sorted(list(docdir))
+    files = sorted(docdir)
     assert len(files) == 3
     assert files[0] == str(tmpdir.join("doc1.txt"))
     assert files[1] == str(tmpdir.join("doc2.txt"))
@@ -197,7 +197,7 @@ def test_docdir_tsv_require_subjects(tmpdir, subject_index):
     )
 
     # the docdir contains 3 files
-    files = sorted(list(docdir))
+    files = sorted(docdir)
     assert len(files) == 3
     assert files[0] == str(tmpdir.join("doc1.txt"))
     assert files[1] == str(tmpdir.join("doc2.txt"))
@@ -221,7 +221,7 @@ def test_docdir_json_require_subjects(tmpdir, subject_index):
     )
 
     # the docdir contains 3 files
-    files = sorted(list(docdir))
+    files = sorted(docdir)
     assert len(files) == 3
     assert files[0] == str(tmpdir.join("doc1.json"))
     assert files[1] == str(tmpdir.join("doc2.json"))
