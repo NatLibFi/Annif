@@ -10,6 +10,7 @@ import shutil
 from datetime import datetime, timedelta
 from unittest import mock
 
+import pytest
 from click.shell_completion import ShellComplete
 from click.testing import CliRunner
 from huggingface_hub.utils import HFValidationError
@@ -728,17 +729,17 @@ def test_eval_label(tmpdir):
     assert result.exit_code == 0
 
     precision = re.search(r"Precision .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(precision.group(1)) == 0.5
+    assert float(precision.group(1)) == pytest.approx(0.5)
     recall = re.search(r"Recall .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == 0.5
+    assert float(recall.group(1)) == pytest.approx(0.5)
     f_measure = re.search(r"F1 score .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(f_measure.group(1)) == 0.5
+    assert float(f_measure.group(1)) == pytest.approx(0.5)
     precision1 = re.search(r"Precision@1:\s+(\d.\d+)", result.output)
-    assert float(precision1.group(1)) == 0.5
+    assert float(precision1.group(1)) == pytest.approx(0.5)
     precision3 = re.search(r"Precision@3:\s+(\d.\d+)", result.output)
-    assert float(precision3.group(1)) == 0.5
+    assert float(precision3.group(1)) == pytest.approx(0.5)
     precision5 = re.search(r"Precision@5:\s+(\d.\d+)", result.output)
-    assert float(precision5.group(1)) == 0.5
+    assert float(precision5.group(1)) == pytest.approx(0.5)
     true_positives = re.search(r"True positives:\s+(\d+)", result.output)
     assert int(true_positives.group(1)) == 1
     false_positives = re.search(r"False positives:\s+(\d+)", result.output)
@@ -761,17 +762,17 @@ def test_eval_uri(tmpdir):
     assert result.exit_code == 0
 
     precision = re.search(r"Precision .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(precision.group(1)) == 0.5
+    assert float(precision.group(1)) == pytest.approx(0.5)
     recall = re.search(r"Recall .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == 0.5
+    assert float(recall.group(1)) == pytest.approx(0.5)
     f_measure = re.search(r"F1 score .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(f_measure.group(1)) == 0.5
+    assert float(f_measure.group(1)) == pytest.approx(0.5)
     precision1 = re.search(r"Precision@1:\s+(\d.\d+)", result.output)
-    assert float(precision1.group(1)) == 0.5
+    assert float(precision1.group(1)) == pytest.approx(0.5)
     precision3 = re.search(r"Precision@3:\s+(\d.\d+)", result.output)
-    assert float(precision3.group(1)) == 0.5
+    assert float(precision3.group(1)) == pytest.approx(0.5)
     precision5 = re.search(r"Precision@5:\s+(\d.\d+)", result.output)
-    assert float(precision5.group(1)) == 0.5
+    assert float(precision5.group(1)) == pytest.approx(0.5)
     true_positives = re.search(r"True positives:\s+(\d+)", result.output)
     assert int(true_positives.group(1)) == 1
     false_positives = re.search(r"False positives:\s+(\d+)", result.output)
@@ -795,17 +796,17 @@ def test_eval_json(tmpdir):
     assert result.exit_code == 0
 
     precision = re.search(r"Precision .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(precision.group(1)) == 0.5
+    assert float(precision.group(1)) == pytest.approx(0.5)
     recall = re.search(r"Recall .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == 0.5
+    assert float(recall.group(1)) == pytest.approx(0.5)
     f_measure = re.search(r"F1 score .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(f_measure.group(1)) == 0.5
+    assert float(f_measure.group(1)) == pytest.approx(0.5)
     precision1 = re.search(r"Precision@1:\s+(\d.\d+)", result.output)
-    assert float(precision1.group(1)) == 0.5
+    assert float(precision1.group(1)) == pytest.approx(0.5)
     precision3 = re.search(r"Precision@3:\s+(\d.\d+)", result.output)
-    assert float(precision3.group(1)) == 0.5
+    assert float(precision3.group(1)) == pytest.approx(0.5)
     precision5 = re.search(r"Precision@5:\s+(\d.\d+)", result.output)
-    assert float(precision5.group(1)) == 0.5
+    assert float(precision5.group(1)) == pytest.approx(0.5)
     true_positives = re.search(r"True positives:\s+(\d+)", result.output)
     assert int(true_positives.group(1)) == 1
     false_positives = re.search(r"False positives:\s+(\d+)", result.output)
@@ -833,7 +834,7 @@ def test_eval_param(tmpdir):
     # since zero scores were set with the parameter, there should be no hits
     # at all
     recall = re.search(r"Recall .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == 0.0
+    assert float(recall.group(1)) == pytest.approx(0.0)
 
 
 def test_eval_metric(tmpdir):
@@ -1043,11 +1044,11 @@ def test_optimize_dir(tmpdir):
     assert result.exit_code == 0
 
     precision = re.search(r"Best\s+Precision .*?doc.*?:\s+(\d.\d+)", result.output)
-    assert float(precision.group(1)) == 0.5
+    assert float(precision.group(1)) == pytest.approx(0.5)
     recall = re.search(r"Best\s+Recall .*?doc.*?:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == 0.5
+    assert float(recall.group(1)) == pytest.approx(0.5)
     f_measure = re.search(r"Best\s+F1 score .*?doc.*?:\s+(\d.\d+)", result.output)
-    assert float(f_measure.group(1)) == 0.5
+    assert float(f_measure.group(1)) == pytest.approx(0.5)
     ndocs = re.search(r"Documents evaluated:\s+(\d)", result.output)
     assert int(ndocs.group(1)) == 2
 
