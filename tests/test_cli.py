@@ -782,6 +782,40 @@ def test_eval_uri(tmpdir):
     assert int(ndocs.group(1)) == 2
 
 
+def test_eval_json(tmpdir):
+    data1 = {"text": "doc1", "subjects": [{"uri": "http://example.org/dummy"}]}
+    tmpdir.join("doc1.json").write(json.dumps(data1))
+    data2 = {"text": "doc2", "subjects": [{"uri": "http://example.org/none"}]}
+    tmpdir.join("doc2.json").write(json.dumps(data2))
+    data3 = {"text": "doc3"}
+    tmpdir.join("doc3.json").write(json.dumps(data3))
+
+    result = runner.invoke(annif.cli.cli, ["eval", "dummy-en", str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    precision = re.search(r"Precision .*doc.*:\s+(\d.\d+)", result.output)
+    assert float(precision.group(1)) == 0.5
+    recall = re.search(r"Recall .*doc.*:\s+(\d.\d+)", result.output)
+    assert float(recall.group(1)) == 0.5
+    f_measure = re.search(r"F1 score .*doc.*:\s+(\d.\d+)", result.output)
+    assert float(f_measure.group(1)) == 0.5
+    precision1 = re.search(r"Precision@1:\s+(\d.\d+)", result.output)
+    assert float(precision1.group(1)) == 0.5
+    precision3 = re.search(r"Precision@3:\s+(\d.\d+)", result.output)
+    assert float(precision3.group(1)) == 0.5
+    precision5 = re.search(r"Precision@5:\s+(\d.\d+)", result.output)
+    assert float(precision5.group(1)) == 0.5
+    true_positives = re.search(r"True positives:\s+(\d+)", result.output)
+    assert int(true_positives.group(1)) == 1
+    false_positives = re.search(r"False positives:\s+(\d+)", result.output)
+    assert int(false_positives.group(1)) == 1
+    false_negatives = re.search(r"False negatives:\s+(\d+)", result.output)
+    assert int(false_negatives.group(1)) == 1
+    ndocs = re.search(r"Documents evaluated:\s+(\d+)", result.output)
+    assert int(ndocs.group(1)) == 2
+
+
 def test_eval_param(tmpdir):
     tmpdir.join("doc1.txt").write("doc1")
     tmpdir.join("doc1.key").write("dummy")
