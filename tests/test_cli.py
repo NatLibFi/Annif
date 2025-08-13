@@ -576,8 +576,8 @@ def test_suggest_file(tmpdir):
 def test_suggest_two_files(tmpdir):
     docfile1 = tmpdir.join("doc-1.txt")
     docfile1.write("nothing special")
-    docfile2 = tmpdir.join("doc-2.txt")
-    docfile2.write("again nothing special")
+    docfile2 = tmpdir.join("doc-2.json")
+    docfile2.write(json.dumps({"text": "again nothing special"}))
 
     result = runner.invoke(
         annif.cli.cli, ["suggest", "dummy-fi", str(docfile1), str(docfile2)]
