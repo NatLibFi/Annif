@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import glob
 import gzip
+import json
 import os.path
 import re
 from itertools import islice
@@ -41,7 +42,12 @@ class DocumentDirectory(DocumentCorpus):
     def __iter__(self) -> Iterator[str]:
         """Iterate through the directory, yielding file paths with corpus documents."""
 
+        # txt files
         for filename in sorted(glob.glob(os.path.join(self.path, "*.txt"))):
+            yield filename
+
+        # json files
+        for filename in sorted(glob.glob(os.path.join(self.path, "*.json"))):
             yield filename
 
     @staticmethod
@@ -56,25 +62,52 @@ class DocumentDirectory(DocumentCorpus):
 
         return None
 
+    def _read_txt_file(self, filename: str) -> Document | None:
+        with open(filename, errors="replace", encoding="utf-8-sig") as docfile:
+            text = docfile.read()
+        if not self.require_subjects:
+            return Document(text=text, subject_set=None)
+
+        subjfilename = self._get_subject_filename(filename)
+        if subjfilename is None:
+            # subjects required but not found, skipping this docfile
+            return None
+
+        with open(subjfilename, encoding="utf-8-sig") as subjfile:
+            subjects = SubjectSet.from_string(
+                subjfile.read(), self.subject_index, self.language
+            )
+        return Document(text=text, subject_set=subjects)
+
+    def _read_json_file(self, filename: str) -> Document | None:
+        with open(filename) as jsonfile:
+            data = json.load(jsonfile)
+
+        subjects = SubjectSet(
+            [
+                self.subject_index.by_uri(subj["uri"])
+                for subj in data.get("subjects", [])
+            ]
+        )
+        if self.require_subjects and not subjects:
+            return None
+
+        return Document(
+            text=data.get("text", ""),
+            metadata=data.get("metadata", {}),
+            subject_set=subjects,
+        )
+
     @property
     def documents(self) -> Iterator[Document]:
         for docfilename in self:
-            with open(docfilename, errors="replace", encoding="utf-8-sig") as docfile:
-                text = docfile.read()
-            if not self.require_subjects:
-                yield Document(text=text, subject_set=None)
-                continue
+            if docfilename.endswith(".txt"):
+                doc = self._read_txt_file(docfilename)
+            else:
+                doc = self._read_json_file(docfilename)
 
-            subjfilename = self._get_subject_filename(docfilename)
-            if subjfilename is None:
-                # subjects required but not found, skipping this docfile
-                continue
-
-            with open(subjfilename, encoding="utf-8-sig") as subjfile:
-                subjects = SubjectSet.from_string(
-                    subjfile.read(), self.subject_index, self.language
-                )
-            yield Document(text=text, subject_set=subjects)
+            if doc is not None:
+                yield doc
 
 
 class DocumentFileTSV(DocumentCorpus):

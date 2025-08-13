@@ -1,6 +1,7 @@
 """Unit tests for corpus functionality in Annif"""
 
 import gzip
+import json
 
 import numpy as np
 import pytest
@@ -145,6 +146,22 @@ def test_docdir_tsv_bom(tmpdir, subject_index):
     assert len(docs[1].subject_set) == 1
 
 
+def test_docdir_json(tmpdir):
+    data1 = {"text": "doc1", "subjects": [{"uri": "http://example.org/key1"}]}
+    tmpdir.join("doc1.json").write(json.dumps(data1))
+    data2 = {"text": "doc2", "subjects": [{"uri": "http://example.org/key2"}]}
+    tmpdir.join("doc2.json").write(json.dumps(data2))
+    data3 = {"text": "doc3"}
+    tmpdir.join("doc3.json").write(json.dumps(data3))
+
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=False)
+    files = sorted(list(docdir))
+    assert len(files) == 3
+    assert files[0] == str(tmpdir.join("doc1.json"))
+    assert files[1] == str(tmpdir.join("doc2.json"))
+    assert files[2] == str(tmpdir.join("doc3.json"))
+
+
 def test_docdir_key_require_subjects(tmpdir, subject_index):
     tmpdir.join("doc1.txt").write("doc1")
     tmpdir.join("doc1.key").write("<http://example.org/key1>\tkey1")
@@ -191,12 +208,61 @@ def test_docdir_tsv_require_subjects(tmpdir, subject_index):
     assert len(docs) == 2
 
 
+def test_docdir_json_require_subjects(tmpdir, subject_index):
+    data1 = {"text": "doc1", "subjects": [{"uri": "http://www.yso.fi/onto/yso/p2558"}]}
+    tmpdir.join("doc1.json").write(json.dumps(data1))
+    data2 = {"text": "doc2", "subjects": [{"uri": "http://www.yso.fi/onto/yso/p4622"}]}
+    tmpdir.join("doc2.json").write(json.dumps(data2))
+    data3 = {"text": "doc3"}
+    tmpdir.join("doc3.json").write(json.dumps(data3))
+
+    docdir = annif.corpus.DocumentDirectory(
+        str(tmpdir), subject_index, "en", require_subjects=True
+    )
+
+    # the docdir contains 3 files
+    files = sorted(list(docdir))
+    assert len(files) == 3
+    assert files[0] == str(tmpdir.join("doc1.json"))
+    assert files[1] == str(tmpdir.join("doc2.json"))
+    assert files[2] == str(tmpdir.join("doc3.json"))
+
+    # only 2 of the files include subjects
+    docs = list(docdir.documents)
+    assert len(docs) == 2
+
+
 def test_docdir_tsv_as_doccorpus(tmpdir, subject_index):
     tmpdir.join("doc1.txt").write("doc1")
     tmpdir.join("doc1.tsv").write("<http://www.yso.fi/onto/yso/p4622>\tesihistoria")
     tmpdir.join("doc2.txt").write("doc2")
     tmpdir.join("doc2.tsv").write("<http://www.yso.fi/onto/yso/p2558>\trautakausi")
     tmpdir.join("doc3.txt").write("doc3")
+
+    docdir = annif.corpus.DocumentDirectory(
+        str(tmpdir), subject_index, "fi", require_subjects=True
+    )
+    docs = list(docdir.documents)
+    assert len(docs) == 2
+    assert docs[0].text == "doc1"
+    assert len(docs[0].subject_set) == 1
+    assert (
+        subject_index.by_uri("http://www.yso.fi/onto/yso/p4622") in docs[0].subject_set
+    )
+    assert docs[1].text == "doc2"
+    assert (
+        subject_index.by_uri("http://www.yso.fi/onto/yso/p2558") in docs[1].subject_set
+    )
+    assert len(docs[1].subject_set) == 1
+
+
+def test_docdir_json_as_doccorpus(tmpdir, subject_index):
+    data1 = {"text": "doc1", "subjects": [{"uri": "http://www.yso.fi/onto/yso/p4622"}]}
+    tmpdir.join("doc1.json").write(json.dumps(data1))
+    data2 = {"text": "doc2", "subjects": [{"uri": "http://www.yso.fi/onto/yso/p2558"}]}
+    tmpdir.join("doc2.json").write(json.dumps(data2))
+    data3 = {"text": "doc3"}
+    tmpdir.join("doc3.json").write(json.dumps(data3))
 
     docdir = annif.corpus.DocumentDirectory(
         str(tmpdir), subject_index, "fi", require_subjects=True
