@@ -99,12 +99,9 @@ def test_docdir_key(tmpdir):
     docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=False)
     files = sorted(list(docdir))
     assert len(files) == 3
-    assert files[0][0] == str(tmpdir.join("doc1.txt"))
-    assert files[0][1] is None
-    assert files[1][0] == str(tmpdir.join("doc2.txt"))
-    assert files[1][1] is None
-    assert files[2][0] == str(tmpdir.join("doc3.txt"))
-    assert files[2][1] is None
+    assert files[0] == str(tmpdir.join("doc1.txt"))
+    assert files[1] == str(tmpdir.join("doc2.txt"))
+    assert files[2] == str(tmpdir.join("doc3.txt"))
 
 
 def test_docdir_tsv(tmpdir):
@@ -117,12 +114,9 @@ def test_docdir_tsv(tmpdir):
     docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=False)
     files = sorted(list(docdir))
     assert len(files) == 3
-    assert files[0][0] == str(tmpdir.join("doc1.txt"))
-    assert files[0][1] is None
-    assert files[1][0] == str(tmpdir.join("doc2.txt"))
-    assert files[1][1] is None
-    assert files[2][0] == str(tmpdir.join("doc3.txt"))
-    assert files[2][1] is None
+    assert files[0] == str(tmpdir.join("doc1.txt"))
+    assert files[1] == str(tmpdir.join("doc2.txt"))
+    assert files[2] == str(tmpdir.join("doc3.txt"))
 
 
 def test_docdir_tsv_bom(tmpdir, subject_index):
@@ -161,12 +155,17 @@ def test_docdir_key_require_subjects(tmpdir, subject_index):
     docdir = annif.corpus.DocumentDirectory(
         str(tmpdir), subject_index, "en", require_subjects=True
     )
+
+    # the docdir contains 3 files
     files = sorted(list(docdir))
-    assert len(files) == 2
-    assert files[0][0] == str(tmpdir.join("doc1.txt"))
-    assert files[0][1] == str(tmpdir.join("doc1.key"))
-    assert files[1][0] == str(tmpdir.join("doc2.txt"))
-    assert files[1][1] == str(tmpdir.join("doc2.key"))
+    assert len(files) == 3
+    assert files[0] == str(tmpdir.join("doc1.txt"))
+    assert files[1] == str(tmpdir.join("doc2.txt"))
+    assert files[2] == str(tmpdir.join("doc3.txt"))
+
+    # only 2 of the files include subjects
+    docs = list(docdir.documents)
+    assert len(docs) == 2
 
 
 def test_docdir_tsv_require_subjects(tmpdir, subject_index):
@@ -179,12 +178,17 @@ def test_docdir_tsv_require_subjects(tmpdir, subject_index):
     docdir = annif.corpus.DocumentDirectory(
         str(tmpdir), subject_index, "en", require_subjects=True
     )
+
+    # the docdir contains 3 files
     files = sorted(list(docdir))
-    assert len(files) == 2
-    assert files[0][0] == str(tmpdir.join("doc1.txt"))
-    assert files[0][1] == str(tmpdir.join("doc1.tsv"))
-    assert files[1][0] == str(tmpdir.join("doc2.txt"))
-    assert files[1][1] == str(tmpdir.join("doc2.tsv"))
+    assert len(files) == 3
+    assert files[0] == str(tmpdir.join("doc1.txt"))
+    assert files[1] == str(tmpdir.join("doc2.txt"))
+    assert files[2] == str(tmpdir.join("doc3.txt"))
+
+    # only 2 of the files include subjects
+    docs = list(docdir.documents)
+    assert len(docs) == 2
 
 
 def test_docdir_tsv_as_doccorpus(tmpdir, subject_index):

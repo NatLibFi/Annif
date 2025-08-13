@@ -331,7 +331,7 @@ def run_index(
     documents = DocumentDirectory(directory, require_subjects=False)
     results = project.suggest_corpus(documents, backend_params).filter(limit, threshold)
 
-    for (docfilename, _), suggestions in zip(documents, results):
+    for docfilename, suggestions in zip(documents, results):
         subjectfilename = re.sub(r"\.txt$", suffix, docfilename)
         if os.path.exists(subjectfilename) and not force:
             click.echo(

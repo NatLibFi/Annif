@@ -38,32 +38,38 @@ class DocumentDirectory(DocumentCorpus):
         self.language = language
         self.require_subjects = require_subjects
 
-    def __iter__(self) -> Iterator[tuple[str, str] | tuple[str, None]]:
-        """Iterate through the directory, yielding tuples of (docfile,
-        subjectfile) containing file paths. If require_subjects is False, the
-        subjectfile will be returned as None."""
+    def __iter__(self) -> Iterator[str]:
+        """Iterate through the directory, yielding file paths with corpus documents."""
 
         for filename in sorted(glob.glob(os.path.join(self.path, "*.txt"))):
-            if self.require_subjects:
-                tsvfilename = re.sub(r"\.txt$", ".tsv", filename)
-                if os.path.exists(tsvfilename):
-                    yield (filename, tsvfilename)
-                    continue
-                keyfilename = re.sub(r"\.txt$", ".key", filename)
-                if os.path.exists(keyfilename):
-                    yield (filename, keyfilename)
-                    continue
-            else:
-                yield (filename, None)
+            yield filename
+
+    @staticmethod
+    def _get_subject_filename(filename: str) -> str | None:
+        tsvfilename = re.sub(r"\.txt$", ".tsv", filename)
+        if os.path.exists(tsvfilename):
+            return tsvfilename
+
+        keyfilename = re.sub(r"\.txt$", ".key", filename)
+        if os.path.exists(keyfilename):
+            return keyfilename
+
+        return None
 
     @property
     def documents(self) -> Iterator[Document]:
-        for docfilename, subjfilename in self:
+        for docfilename in self:
             with open(docfilename, errors="replace", encoding="utf-8-sig") as docfile:
                 text = docfile.read()
-            if subjfilename is None:
+            if not self.require_subjects:
                 yield Document(text=text, subject_set=None)
                 continue
+
+            subjfilename = self._get_subject_filename(docfilename)
+            if subjfilename is None:
+                # subjects required but not found, skipping this docfile
+                continue
+
             with open(subjfilename, encoding="utf-8-sig") as subjfile:
                 subjects = SubjectSet.from_string(
                     subjfile.read(), self.subject_index, self.language
