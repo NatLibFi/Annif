@@ -2,12 +2,12 @@
 
 import pytest
 import schemathesis
-from hypothesis import settings
+from hypothesis import HealthCheck, settings
 
 import annif
 
 cxapp = annif.create_app(config_name="annif.default_config.TestingConfig")
-schema = schemathesis.from_path("annif/openapi/annif.yaml", app=cxapp)
+schema = schemathesis.openapi.from_asgi("/v1/openapi.json", app=cxapp)
 
 
 @schemathesis.hook("filter_path_parameters")
@@ -20,14 +20,14 @@ def filter_path_parameters(context, path_parameters):
 
 
 @schema.parametrize()
-@settings(max_examples=10)
+@settings(max_examples=10, suppress_health_check=[HealthCheck.filter_too_much])
 def test_openapi_fuzzy(case):
     case.call_and_validate()
 
 
 @pytest.mark.slow
-@schema.include(path_regex="/v1/projects/{project_id}").parametrize()
-@settings(max_examples=50)
+@schema.include(path_regex="projects/{project_id}").parametrize()
+@settings(max_examples=50, suppress_health_check=[HealthCheck.filter_too_much])
 def test_openapi_fuzzy_target_dummy_fi(case):
     case.path_parameters = {"project_id": "dummy-fi"}
     case.call_and_validate()
