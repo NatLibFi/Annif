@@ -42,7 +42,7 @@ def json_file_to_document(
         logger.warning(f"Skipping empty file {filename}")
         return None
 
-    with open(filename) as jsonfile:
+    with open(filename, "r", encoding="utf-8") as jsonfile:
         try:
             data = json.load(jsonfile)
         except json.JSONDecodeError as err:
