@@ -52,7 +52,7 @@ def json_file_to_document(
     try:
         jsonschema.validate(instance=data, schema=_get_json_schema("document.json"))
     except jsonschema.ValidationError as err:
-        logger.warning(f"JSON validation failed for file {filename}: {err}")
+        logger.warning(f"JSON validation failed for file {filename}: {err.message}")
         return None
 
     subject_set = _subjects_to_subject_set(
