@@ -79,6 +79,17 @@ class DocumentDirectory(DocumentCorpus):
             )
         return Document(text=text, subject_set=subjects)
 
+    def _subjects_to_subject_set(self, subjects):
+        subject_ids = []
+        for subj in subjects:
+            if "uri" in subj:
+                subject_ids.append(self.subject_index.by_uri(subj["uri"]))
+            else:
+                subject_ids.append(
+                    self.subject_index.by_label(subj["label"], self.language)
+                )
+        return SubjectSet(subject_ids)
+
     def _read_json_file(self, filename: str) -> Document | None:
         if os.path.getsize(filename) == 0:
             logger.warning(f"Skipping empty file {filename}")
@@ -91,19 +102,14 @@ class DocumentDirectory(DocumentCorpus):
                 logger.warning(f"JSON parsing failed for file {filename}: {err}")
                 return None
 
-        subjects = SubjectSet(
-            [
-                self.subject_index.by_uri(subj["uri"])
-                for subj in data.get("subjects", [])
-            ]
-        )
-        if self.require_subjects and not subjects:
+        subject_set = self._subjects_to_subject_set(data.get("subjects", []))
+        if self.require_subjects and not subject_set:
             return None
 
         return Document(
             text=data.get("text", ""),
             metadata=data.get("metadata", {}),
-            subject_set=subjects,
+            subject_set=subject_set,
         )
 
     @property

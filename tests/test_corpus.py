@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 import annif.corpus
-from annif.corpus import Document, TransformingDocumentCorpus
+from annif.corpus import Document, SubjectSet, TransformingDocumentCorpus
 from annif.exception import OperationFailedException
 
 
@@ -242,7 +242,7 @@ def test_docdir_tsv_require_subjects(tmpdir, subject_index):
 def test_docdir_json_require_subjects(tmpdir, subject_index):
     data1 = {"text": "doc1", "subjects": [{"uri": "http://www.yso.fi/onto/yso/p2558"}]}
     tmpdir.join("doc1.json").write(json.dumps(data1))
-    data2 = {"text": "doc2", "subjects": [{"uri": "http://www.yso.fi/onto/yso/p4622"}]}
+    data2 = {"text": "doc2", "subjects": [{"label": "prehistory"}]}
     tmpdir.join("doc2.json").write(json.dumps(data2))
     data3 = {"text": "doc3"}
     tmpdir.join("doc3.json").write(json.dumps(data3))
@@ -261,6 +261,12 @@ def test_docdir_json_require_subjects(tmpdir, subject_index):
     # only 2 of the files include subjects
     docs = list(docdir.documents)
     assert len(docs) == 2
+    assert docs[0].subject_set == SubjectSet(
+        [subject_index.by_uri("http://www.yso.fi/onto/yso/p2558")]
+    )
+    assert docs[1].subject_set == SubjectSet(
+        [subject_index.by_uri("http://www.yso.fi/onto/yso/p4622")]
+    )
 
 
 def test_docdir_tsv_as_doccorpus(tmpdir, subject_index):
