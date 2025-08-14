@@ -645,11 +645,40 @@ def test_suggest_dash_path():
     assert result.exit_code == 0
 
 
-def test_index(tmpdir):
+def test_index_txt(tmpdir):
     tmpdir.join("doc1.txt").write("nothing special")
     # Existing subject files should not have an effect
     tmpdir.join("doc1.tsv").write("<http://example.org/dummy>\tdummy")
     tmpdir.join("doc1.key").write("<http://example.org/dummy>\tdummy")
+
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    assert tmpdir.join("doc1.annif").exists()
+    assert (
+        tmpdir.join("doc1.annif").read_text("utf-8")
+        == "<http://example.org/dummy>\tdummy\t1.0000\n"
+    )
+
+    # make sure that preexisting subject files are not overwritten
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Not overwriting" in result.output
+
+    # check that the --force parameter forces overwriting
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-fi", "--force", str(tmpdir)])
+    assert tmpdir.join("doc1.annif").exists()
+    assert "Not overwriting" not in result.output
+    assert (
+        tmpdir.join("doc1.annif").read_text("utf-8")
+        == "<http://example.org/dummy>\tdummy-fi\t1.0000\n"
+    )
+
+
+def test_index_json(tmpdir):
+    tmpdir.join("doc1.json").write('{"text": "nothing special"}')
 
     result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(tmpdir)])
     assert not result.exception

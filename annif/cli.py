@@ -332,7 +332,7 @@ def run_index(
     results = project.suggest_corpus(documents, backend_params).filter(limit, threshold)
 
     for docfilename, suggestions in zip(documents, results):
-        subjectfilename = re.sub(r"\.txt$", suffix, docfilename)
+        subjectfilename = re.sub(r"\.(txt|json)$", suffix, docfilename)
         if os.path.exists(subjectfilename) and not force:
             click.echo(
                 "Not overwriting {} (use --force to override)".format(subjectfilename)
