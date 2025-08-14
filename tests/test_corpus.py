@@ -193,6 +193,21 @@ def test_docdir_json_broken(tmpdir, caplog):
     assert "JSON parsing failed" in caplog.text
 
 
+def test_docdir_json_invalid(tmpdir, caplog):
+    tmpdir.join("doc1.json").write(json.dumps({"follows_schema": False}))
+
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=False)
+    files = sorted(docdir)
+    assert len(files) == 1
+    assert files[0] == str(tmpdir.join("doc1.json"))
+
+    with caplog.at_level(logging.WARNING):
+        docs = list(docdir.documents)
+
+    assert len(docs) == 0
+    assert "JSON validation failed" in caplog.text
+
+
 def test_docdir_key_require_subjects(tmpdir, subject_index):
     tmpdir.join("doc1.txt").write("doc1")
     tmpdir.join("doc1.key").write("<http://example.org/key1>\tkey1")

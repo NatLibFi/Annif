@@ -1,7 +1,11 @@
 """Support for document corpora in JSON format"""
 
+import functools
 import json
 import os.path
+from importlib.resources import files
+
+import jsonschema
 
 import annif
 from annif.vocab import SubjectIndex
@@ -9,6 +13,13 @@ from annif.vocab import SubjectIndex
 from .types import Document, SubjectSet
 
 logger = annif.logger
+
+
+@functools.lru_cache(maxsize=1)
+def _get_json_schema(schema_name):
+    schema_path = files("annif.schemas").joinpath(schema_name)
+    with schema_path.open("r", encoding="utf-8") as schema_file:
+        return json.load(schema_file)
 
 
 def _subjects_to_subject_set(subjects, subject_index, language):
@@ -37,6 +48,12 @@ def json_file_to_document(
         except json.JSONDecodeError as err:
             logger.warning(f"JSON parsing failed for file {filename}: {err}")
             return None
+
+    try:
+        jsonschema.validate(instance=data, schema=_get_json_schema("document.json"))
+    except jsonschema.ValidationError as err:
+        logger.warning(f"JSON validation failed for file {filename}: {err}")
+        return None
 
     subject_set = _subjects_to_subject_set(
         data.get("subjects", []), subject_index, language
