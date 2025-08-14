@@ -2,6 +2,7 @@
 
 import gzip
 import json
+import logging
 
 import numpy as np
 import pytest
@@ -160,6 +161,36 @@ def test_docdir_json(tmpdir):
     assert files[0] == str(tmpdir.join("doc1.json"))
     assert files[1] == str(tmpdir.join("doc2.json"))
     assert files[2] == str(tmpdir.join("doc3.json"))
+
+
+def test_docdir_json_empty(tmpdir, caplog):
+    tmpdir.join("doc1.json").write("")
+
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=False)
+    files = sorted(docdir)
+    assert len(files) == 1
+    assert files[0] == str(tmpdir.join("doc1.json"))
+
+    docs = list(docdir.documents)
+    assert len(docs) == 0
+
+    assert len(docs) == 0
+    assert "Skipping empty file" in caplog.text
+
+
+def test_docdir_json_broken(tmpdir, caplog):
+    tmpdir.join("doc1.json").write('{ "broken_syntax": yes }')
+
+    docdir = annif.corpus.DocumentDirectory(str(tmpdir), require_subjects=False)
+    files = sorted(docdir)
+    assert len(files) == 1
+    assert files[0] == str(tmpdir.join("doc1.json"))
+
+    with caplog.at_level(logging.WARNING):
+        docs = list(docdir.documents)
+
+    assert len(docs) == 0
+    assert "JSON parsing failed" in caplog.text
 
 
 def test_docdir_key_require_subjects(tmpdir, subject_index):

@@ -80,8 +80,16 @@ class DocumentDirectory(DocumentCorpus):
         return Document(text=text, subject_set=subjects)
 
     def _read_json_file(self, filename: str) -> Document | None:
+        if os.path.getsize(filename) == 0:
+            logger.warning(f"Skipping empty file {filename}")
+            return None
+
         with open(filename) as jsonfile:
-            data = json.load(jsonfile)
+            try:
+                data = json.load(jsonfile)
+            except json.JSONDecodeError as err:
+                logger.warning(f"JSON parsing failed for file {filename}: {err}")
+                return None
 
         subjects = SubjectSet(
             [
