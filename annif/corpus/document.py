@@ -66,7 +66,7 @@ class DocumentDirectory(DocumentCorpus):
         with open(filename, errors="replace", encoding="utf-8-sig") as docfile:
             text = docfile.read()
         if not self.require_subjects:
-            return Document(text=text, subject_set=None)
+            return Document(text=text, subject_set=None, file_path=filename)
 
         subjfilename = self._get_subject_filename(filename)
         if subjfilename is None:
@@ -77,7 +77,7 @@ class DocumentDirectory(DocumentCorpus):
             subjects = SubjectSet.from_string(
                 subjfile.read(), self.subject_index, self.language
             )
-        return Document(text=text, subject_set=subjects)
+        return Document(text=text, subject_set=subjects, file_path=filename)
 
     @property
     def documents(self) -> Iterator[Document]:

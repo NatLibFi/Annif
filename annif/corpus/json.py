@@ -65,4 +65,5 @@ def json_file_to_document(
         text=data.get("text", ""),
         metadata=data.get("metadata", {}),
         subject_set=subject_set,
+        file_path=filename,
     )

@@ -328,11 +328,11 @@ def run_index(
         raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
     backend_params = cli_util.parse_backend_params(backend_param, project)
 
-    documents = DocumentDirectory(directory, require_subjects=False)
-    results = project.suggest_corpus(documents, backend_params).filter(limit, threshold)
+    corpus = DocumentDirectory(directory, require_subjects=False)
+    results = project.suggest_corpus(corpus, backend_params).filter(limit, threshold)
 
-    for docfilename, suggestions in zip(documents, results):
-        subjectfilename = re.sub(r"\.(txt|json)$", suffix, docfilename)
+    for doc, suggestions in zip(corpus.documents, results):
+        subjectfilename = re.sub(r"\.(txt|json)$", suffix, doc.file_path)
         if os.path.exists(subjectfilename) and not force:
             click.echo(
                 "Not overwriting {} (use --force to override)".format(subjectfilename)

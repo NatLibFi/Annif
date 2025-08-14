@@ -17,7 +17,11 @@ def test_document():
     assert doc.text == "Hello world"
     assert doc.subject_set == set()
     assert doc.metadata == {}
-    assert repr(doc) == "Document(text='Hello world', subject_set=set(), metadata={})"
+    assert doc.file_path is None
+    assert repr(doc) == (
+        "Document(text='Hello world', subject_set=set(), "
+        "metadata={}, file_path=None)"
+    )
 
 
 def test_subjectset_uris(subject_index):
