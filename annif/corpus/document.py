@@ -1,11 +1,10 @@
-"""Clases for supporting document corpora"""
+"""Classes for supporting document corpora"""
 
 from __future__ import annotations
 
 import csv
 import glob
 import gzip
-import json
 import os.path
 import re
 from itertools import islice
@@ -14,12 +13,13 @@ from typing import TYPE_CHECKING
 import annif.util
 from annif.exception import OperationFailedException
 
+from .json import json_file_to_document
 from .types import Document, DocumentCorpus, SubjectSet
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from annif.corpus.subject import SubjectIndex
+    from annif.vocab import SubjectIndex
 
 logger = annif.logger
 
@@ -79,46 +79,18 @@ class DocumentDirectory(DocumentCorpus):
             )
         return Document(text=text, subject_set=subjects)
 
-    def _subjects_to_subject_set(self, subjects):
-        subject_ids = []
-        for subj in subjects:
-            if "uri" in subj:
-                subject_ids.append(self.subject_index.by_uri(subj["uri"]))
-            else:
-                subject_ids.append(
-                    self.subject_index.by_label(subj["label"], self.language)
-                )
-        return SubjectSet(subject_ids)
-
-    def _read_json_file(self, filename: str) -> Document | None:
-        if os.path.getsize(filename) == 0:
-            logger.warning(f"Skipping empty file {filename}")
-            return None
-
-        with open(filename) as jsonfile:
-            try:
-                data = json.load(jsonfile)
-            except json.JSONDecodeError as err:
-                logger.warning(f"JSON parsing failed for file {filename}: {err}")
-                return None
-
-        subject_set = self._subjects_to_subject_set(data.get("subjects", []))
-        if self.require_subjects and not subject_set:
-            return None
-
-        return Document(
-            text=data.get("text", ""),
-            metadata=data.get("metadata", {}),
-            subject_set=subject_set,
-        )
-
     @property
     def documents(self) -> Iterator[Document]:
         for docfilename in self:
             if docfilename.endswith(".txt"):
                 doc = self._read_txt_file(docfilename)
             else:
-                doc = self._read_json_file(docfilename)
+                doc = json_file_to_document(
+                    docfilename,
+                    self.subject_index,
+                    self.language,
+                    self.require_subjects,
+                )
 
             if doc is not None:
                 yield doc
