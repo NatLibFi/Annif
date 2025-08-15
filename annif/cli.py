@@ -585,7 +585,7 @@ def run_optimize(project_id, paths, jobs, docs_limit, backend_param):
     "--results-file",
     "-r",
     type=click.File("w", encoding="utf-8", errors="ignore", lazy=True),
-    help="""Specify file path to write trial results as CSV.
+    help="""Specify file path to write trial results as TSV.
     File directory must exist, existing file will be overwritten.""",
 )
 @cli_util.docs_limit_option
