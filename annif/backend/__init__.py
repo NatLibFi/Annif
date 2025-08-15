@@ -89,6 +89,17 @@ def _tfidf() -> Type[AnnifBackend]:
     return tfidf.TFIDFBackend
 
 
+def _xtransformer() -> Type[AnnifBackend]:
+    try:
+        from . import xtransformer
+
+        return xtransformer.XTransformerBackend
+    except ImportError:
+        raise ValueError(
+            "XTransformer not available, not enabling XTransformer backend"
+        )
+
+
 def _yake() -> Type[AnnifBackend]:
     try:
         from . import yake
@@ -111,6 +122,7 @@ _backend_fns = {
     "stwfsa": _stwfsa,
     "svc": _svc,
     "tfidf": _tfidf,
+    "xtransformer": _xtransformer,
     "yake": _yake,
 }
 
