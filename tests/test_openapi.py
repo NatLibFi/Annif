@@ -2,9 +2,14 @@
 
 import pytest
 import schemathesis
-from hypothesis import HealthCheck, settings
+from hypothesis import HealthCheck, settings, strategies
+from simplemma.strategies.dictionaries.dictionary_factory import SUPPORTED_LANGUAGES
 
 import annif
+
+bcp47_strategy = strategies.sampled_from(SUPPORTED_LANGUAGES)
+schemathesis.openapi.format("bcp47", bcp47_strategy)
+
 
 cxapp = annif.create_app(config_name="annif.default_config.TestingConfig")
 schema = schemathesis.openapi.from_asgi("/v1/openapi.json", app=cxapp)
