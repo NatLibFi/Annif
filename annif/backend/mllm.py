@@ -11,7 +11,12 @@ import numpy as np
 import annif.eval
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
-from annif.lexical.mllm import MLLMModel
+from annif.lexical.mllm import (
+    MLLMModel,
+    candidates_to_features,
+    create_classifier,
+    prediction_to_list,
+)
 from annif.suggestion import vector_to_suggestions
 
 from . import hyperopt
@@ -25,6 +30,46 @@ if TYPE_CHECKING:
     from annif.backend.hyperopt import HPRecommendation
     from annif.corpus import Document, DocumentCorpus
     from annif.lexical.mllm import Candidate
+    from annif.vocab import SubjectIndex
+
+
+def prediction_to_result(
+    prediction: list[tuple[np.float64, int]],
+    params: dict[str, Any],
+    subject_index: SubjectIndex,
+) -> Iterator:
+    vector = np.zeros(len(subject_index), dtype=np.float32)
+    for score, subject_id in prediction:
+        vector[subject_id] = score
+    return vector_to_suggestions(vector, int(params["limit"]))
+
+
+class MLLMHPObjective(hyperopt.HPObjective):
+    """Objective function of the MLLM hyperparameter optimizer"""
+
+    @classmethod
+    def objective(cls, trial: Trial, args) -> float:
+        params = {
+            "min_samples_leaf": trial.suggest_int("min_samples_leaf", 5, 30),
+            "max_leaf_nodes": trial.suggest_int("max_leaf_nodes", 100, 2000),
+            "max_samples": trial.suggest_float("max_samples", 0.5, 1.0),
+            "limit": 100,
+        }
+        model = create_classifier(params)
+        model.fit(args["train_x"], args["train_y"])
+
+        batch = annif.eval.EvaluationBatch(args["subject_index"])
+        for goldsubj, candidates in zip(args["gold_subjects"], args["candidates"]):
+            if candidates:
+                features = candidates_to_features(candidates, args["model_data"])
+                scores = model.predict_proba(features)
+                ranking = prediction_to_list(scores, candidates)
+            else:
+                ranking = []
+            results = prediction_to_result(ranking, params, args["subject_index"])
+            batch.evaluate_many([results], [goldsubj])
+        results = batch.results(metrics=[args["metric"]])
+        return results[args["metric"]]
 
 
 class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
@@ -32,38 +77,25 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
 
     def _prepare(self, n_jobs: int = 1) -> None:
         self._backend.initialize()
-        self._train_x, self._train_y = self._backend._load_train_data()
-        self._candidates = []
-        self._gold_subjects = []
+        train_x, train_y = self._backend._load_train_data()
+        all_candidates = []
+        gold_subjects = []
 
         # TODO parallelize generation of candidates
         for doc in self._corpus.documents:
             candidates = self._backend._generate_candidates(doc.text)
-            self._candidates.append(candidates)
-            self._gold_subjects.append(doc.subject_set)
+            all_candidates.append(candidates)
+            gold_subjects.append(doc.subject_set)
 
-    def _objective(self, trial: Trial) -> float:
-        params = {
-            "min_samples_leaf": trial.suggest_int("min_samples_leaf", 5, 30),
-            "max_leaf_nodes": trial.suggest_int("max_leaf_nodes", 100, 2000),
-            "max_samples": trial.suggest_float("max_samples", 0.5, 1.0),
-            "limit": 100,
+        return {
+            "train_x": train_x,
+            "train_y": train_y,
+            "subject_index": self._backend.project.subjects,
+            "gold_subjects": gold_subjects,
+            "candidates": all_candidates,
+            "model_data": self._backend._model._model_data,
+            "metric": self._metric,
         }
-        model = self._backend._model._create_classifier(params)
-        model.fit(self._train_x, self._train_y)
-
-        batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
-        for goldsubj, candidates in zip(self._gold_subjects, self._candidates):
-            if candidates:
-                features = self._backend._model._candidates_to_features(candidates)
-                scores = model.predict_proba(features)
-                ranking = self._backend._model._prediction_to_list(scores, candidates)
-            else:
-                ranking = []
-            results = self._backend._prediction_to_result(ranking, params)
-            batch.evaluate_many([results], [goldsubj])
-        results = batch.results(metrics=[self._metric])
-        return results[self._metric]
 
     def _postprocess(self, study: Study) -> HPRecommendation:
         bp = study.best_params
@@ -94,7 +126,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
     }
 
     def get_hp_optimizer(self, corpus: DocumentCorpus, metric: str) -> MLLMOptimizer:
-        return MLLMOptimizer(self, corpus, metric)
+        return MLLMOptimizer(self, corpus, metric, MLLMHPObjective)
 
     def _load_model(self) -> MLLMModel:
         path = os.path.join(self.datadir, self.MODEL_FILE)
@@ -153,17 +185,7 @@ class MLLMBackend(hyperopt.AnnifHyperoptBackend):
     def _generate_candidates(self, text: str) -> list[Candidate]:
         return self._model.generate_candidates(text, self.project.analyzer)
 
-    def _prediction_to_result(
-        self,
-        prediction: list[tuple[np.float64, int]],
-        params: dict[str, Any],
-    ) -> Iterator:
-        vector = np.zeros(len(self.project.subjects), dtype=np.float32)
-        for score, subject_id in prediction:
-            vector[subject_id] = score
-        return vector_to_suggestions(vector, int(params["limit"]))
-
     def _suggest(self, doc: Document, params: dict[str, Any]) -> Iterator:
         candidates = self._generate_candidates(doc.text)
         prediction = self._model.predict(candidates)
-        return self._prediction_to_result(prediction, params)
+        return prediction_to_result(prediction, params, self.project.subjects)
