@@ -110,7 +110,7 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
             )
         ]
 
-    def _prepare(self, n_jobs: int = 1) -> None:
+    def _prepare(self, n_jobs: int = 1) -> dict[str, Any]:
         gold_batches = []
         source_batches = []
 

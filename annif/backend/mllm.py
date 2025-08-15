@@ -75,7 +75,7 @@ class MLLMHPObjective(hyperopt.HPObjective):
 class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
     """Hyperparameter optimizer for the MLLM backend"""
 
-    def _prepare(self, n_jobs: int = 1) -> None:
+    def _prepare(self, n_jobs: int = 1) -> dict[str, Any]:
         self._backend.initialize()
         train_x, train_y = self._backend._load_train_data()
         all_candidates = []
