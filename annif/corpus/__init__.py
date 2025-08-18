@@ -4,6 +4,7 @@ from .combine import CombinedCorpus
 from .document import (
     DocumentDirectory,
     DocumentFileCSV,
+    DocumentFileJSONL,
     DocumentFileTSV,
     DocumentList,
     LimitingDocumentCorpus,
@@ -14,6 +15,7 @@ from .types import Document, SubjectSet
 __all__ = [
     "DocumentDirectory",
     "DocumentFileCSV",
+    "DocumentFileJSONL",
     "DocumentFileTSV",
     "DocumentList",
     "SubjectSet",

@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 import annif.util
 from annif.exception import OperationFailedException
 
-from .json import json_file_to_document
+from .json import json_file_to_document, json_to_document
 from .types import Document, DocumentCorpus, SubjectSet
 
 if TYPE_CHECKING:
@@ -173,6 +173,36 @@ class DocumentFileCSV(DocumentCorpus):
 
         path_lc = path.lower()
         return path_lc.endswith(".csv") or path_lc.endswith(".csv.gz")
+
+
+class DocumentFileJSONL(DocumentCorpus):
+    """A JSON Lines file as a corpus of documents with subjects"""
+
+    def __init__(self, path: str, subject_index: SubjectIndex, language: str) -> None:
+        self.path = path
+        self.subject_index = subject_index
+        self.language = language
+
+    @property
+    def documents(self) -> Iterator[Document]:
+        if self.path.endswith(".gz"):
+            opener = gzip.open
+        else:
+            opener = open
+        with opener(self.path, mode="rt", encoding="utf-8") as jsonlfile:
+            for line in jsonlfile:
+                doc = json_to_document(
+                    self.path, line, self.subject_index, self.language, True
+                )
+                if doc is not None:
+                    yield doc
+
+    @staticmethod
+    def is_jsonl_file(path: str) -> bool:
+        """return True if the path looks like a JSONL file"""
+
+        path_lc = path.lower()
+        return path_lc.endswith(".jsonl") or path_lc.endswith(".jsonl.gz")
 
 
 class DocumentList(DocumentCorpus):

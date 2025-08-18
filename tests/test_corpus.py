@@ -407,6 +407,46 @@ def test_docfile_csv_metadata(tmpdir, subject_index):
     assert firstdoc.metadata["author"] == "Bush, Vannevar"
 
 
+def test_docfile_jsonl_plain(tmpdir, subject_index):
+    docfile = tmpdir.join("documents.jsonl")
+    lines = (
+        '{"text": "Läntinen", '
+        + '"subjects": [{"uri": "http://www.yso.fi/onto/yso/p2557"}]}',
+        '{"text": "Oulunlinnan", '
+        + '"subjects": [{"uri": "http://www.yso.fi/onto/yso/p7346"}]}',
+        '{"text": "Harald Hirmuinen", '
+        + '"subjects": [{"uri": "http://www.yso.fi/onto/yso/p6479"}]}',
+    )
+    docfile.write("\n".join(lines))
+
+    docs = annif.corpus.DocumentFileJSONL(str(docfile), subject_index, "fi")
+    assert len(list(docs.documents)) == 3
+
+
+def test_docfile_jsonl_broken(tmpdir, subject_index, caplog):
+    docfile = tmpdir.join("documents.jsonl")
+    docfile.write('{ "broken_syntax": yes }')
+
+    corpus = annif.corpus.DocumentFileJSONL(str(docfile), subject_index, "fi")
+    with caplog.at_level(logging.WARNING):
+        docs = list(corpus.documents)
+
+    assert len(docs) == 0
+    assert "JSON parsing failed" in caplog.text
+
+
+def test_docfile_jsonl_invalid(tmpdir, subject_index, caplog):
+    docfile = tmpdir.join("documents.jsonl")
+    docfile.write(json.dumps({"follows_schema": False}))
+
+    corpus = annif.corpus.DocumentFileJSONL(str(docfile), subject_index, "fi")
+    with caplog.at_level(logging.WARNING):
+        docs = list(corpus.documents)
+
+    assert len(docs) == 0
+    assert "JSON validation failed" in caplog.text
+
+
 def test_docfile_tsv_bom(tmpdir, subject_index):
     docfile = tmpdir.join("documents_bom.tsv")
     data = """Läntinen\t<http://www.yso.fi/onto/yso/p2557>
@@ -511,6 +551,23 @@ def test_docfile_csv_gzipped(tmpdir, subject_index):
         gzf.write("\n".join(lines))
 
     docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
+    assert len(list(docs.documents)) == 3
+
+
+def test_docfile_jsonl_gzipped(tmpdir, subject_index):
+    docfile = tmpdir.join("documents.jsonl.gz")
+    lines = (
+        '{"text": "Läntinen", '
+        + '"subjects": [{"uri": "http://www.yso.fi/onto/yso/p2557"}]}',
+        '{"text": "Oulunlinnan", '
+        + '"subjects": [{"uri": "http://www.yso.fi/onto/yso/p7346"}]}',
+        '{"text": "Harald Hirmuinen", '
+        + '"subjects": [{"uri": "http://www.yso.fi/onto/yso/p6479"}]}',
+    )
+    with gzip.open(str(docfile), "wt") as gzf:
+        gzf.write("\n".join(lines))
+
+    docs = annif.corpus.DocumentFileJSONL(str(docfile), subject_index, "fi")
     assert len(list(docs.documents)) == 3
 
 
