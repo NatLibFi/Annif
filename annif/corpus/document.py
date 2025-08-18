@@ -99,9 +99,12 @@ class DocumentDirectory(DocumentCorpus):
 class DocumentFileTSV(DocumentCorpus):
     """A TSV file as a corpus of documents with subjects"""
 
-    def __init__(self, path: str, subject_index: SubjectIndex) -> None:
+    def __init__(
+        self, path: str, subject_index: SubjectIndex, require_subjects=True
+    ) -> None:
         self.path = path
         self.subject_index = subject_index
+        self.require_subjects = require_subjects
 
     @property
     def documents(self) -> Iterator[Document]:
@@ -122,15 +125,23 @@ class DocumentFileTSV(DocumentCorpus):
             }
             yield Document(text=text, subject_set=SubjectSet(subject_ids))
         else:
-            logger.warning('Skipping invalid line (missing tab): "%s"', line.rstrip())
+            if self.require_subjects:
+                logger.warning(
+                    'Skipping invalid line (missing tab): "%s"', line.rstrip()
+                )
+            else:
+                yield Document(text=line.strip())
 
 
 class DocumentFileCSV(DocumentCorpus):
     """A CSV file as a corpus of documents with subjects"""
 
-    def __init__(self, path: str, subject_index: SubjectIndex) -> None:
+    def __init__(
+        self, path: str, subject_index: SubjectIndex, require_subjects=True
+    ) -> None:
         self.path = path
         self.subject_index = subject_index
+        self.require_subjects = require_subjects
 
     @property
     def documents(self) -> Iterator[Document]:
@@ -141,19 +152,29 @@ class DocumentFileCSV(DocumentCorpus):
         with opener(self.path, mode="rt", encoding="utf-8-sig") as csvfile:
             reader = csv.DictReader(csvfile)
             if not self._check_fields(reader):
-                raise OperationFailedException(
-                    f"Cannot parse CSV file {self.path}. "
-                    + "The file must have a header row that defines at least "
-                    + "the columns 'text' and 'subject_uris'."
-                )
+                if self.require_subjects:
+                    raise OperationFailedException(
+                        f"Cannot parse CSV file {self.path}. "
+                        + "The file must have a header row that defines at least "
+                        + "the columns 'text' and 'subject_uris'."
+                    )
+                else:
+                    raise OperationFailedException(
+                        f"Cannot parse CSV file {self.path}. "
+                        + "The file must have a header row that defines at least "
+                        + "the column 'text'."
+                    )
             for row in reader:
                 yield from self._parse_row(row)
 
     def _parse_row(self, row: dict[str, str]) -> Iterator[Document]:
-        subject_ids = {
-            self.subject_index.by_uri(annif.util.cleanup_uri(uri))
-            for uri in (row["subject_uris"] or "").strip().split()
-        }
+        if self.require_subjects:
+            subject_ids = {
+                self.subject_index.by_uri(annif.util.cleanup_uri(uri))
+                for uri in (row["subject_uris"] or "").strip().split()
+            }
+        else:
+            subject_ids = set()
         metadata = {
             key: val for key, val in row.items() if key not in ("text", "subject_uris")
         }
@@ -165,7 +186,10 @@ class DocumentFileCSV(DocumentCorpus):
 
     def _check_fields(self, reader: csv.DictReader) -> bool:
         fns = reader.fieldnames
-        return fns is not None and "text" in fns and "subject_uris" in fns
+        if self.require_subjects:
+            return fns is not None and "text" in fns and "subject_uris" in fns
+        else:
+            return fns is not None and "text" in fns
 
     @staticmethod
     def is_csv_file(path: str) -> bool:
@@ -178,10 +202,17 @@ class DocumentFileCSV(DocumentCorpus):
 class DocumentFileJSONL(DocumentCorpus):
     """A JSON Lines file as a corpus of documents with subjects"""
 
-    def __init__(self, path: str, subject_index: SubjectIndex, language: str) -> None:
+    def __init__(
+        self,
+        path: str,
+        subject_index: SubjectIndex,
+        language: str,
+        require_subjects=True,
+    ) -> None:
         self.path = path
         self.subject_index = subject_index
         self.language = language
+        self.require_subjects = require_subjects
 
     @property
     def documents(self) -> Iterator[Document]:
@@ -192,7 +223,11 @@ class DocumentFileJSONL(DocumentCorpus):
         with opener(self.path, mode="rt", encoding="utf-8") as jsonlfile:
             for line in jsonlfile:
                 doc = json_to_document(
-                    self.path, line, self.subject_index, self.language, True
+                    self.path,
+                    line,
+                    self.subject_index,
+                    self.language,
+                    self.require_subjects,
                 )
                 if doc is not None:
                     yield doc

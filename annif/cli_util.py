@@ -128,6 +128,22 @@ def format_datetime(dt: datetime | None) -> str:
     return dt.astimezone().strftime("%Y-%m-%d %H:%M:%S")
 
 
+def open_doc_path(path, subject_index, vocab_lang, require_subjects=True):
+    """open a single path and return it as a DocumentCorpus"""
+    if os.path.isdir(path):
+        return annif.corpus.DocumentDirectory(
+            path, subject_index, vocab_lang, require_subjects
+        )
+    if annif.corpus.DocumentFileCSV.is_csv_file(path):
+        return annif.corpus.DocumentFileCSV(path, subject_index, require_subjects)
+    elif annif.corpus.DocumentFileJSONL.is_jsonl_file(path):
+        return annif.corpus.DocumentFileJSONL(
+            path, subject_index, vocab_lang, require_subjects
+        )
+    else:
+        return annif.corpus.DocumentFileTSV(path, subject_index, require_subjects)
+
+
 def open_documents(
     paths: tuple[str, ...],
     subject_index: SubjectIndex,
@@ -141,26 +157,13 @@ def open_documents(
     The corpus will be returned as an instance of DocumentCorpus or
     LimitingDocumentCorpus."""
 
-    def open_doc_path(path, subject_index):
-        """open a single path and return it as a DocumentCorpus"""
-        if os.path.isdir(path):
-            return annif.corpus.DocumentDirectory(
-                path, subject_index, vocab_lang, require_subjects=True
-            )
-        if annif.corpus.DocumentFileCSV.is_csv_file(path):
-            return annif.corpus.DocumentFileCSV(path, subject_index)
-        elif annif.corpus.DocumentFileJSONL.is_jsonl_file(path):
-            return annif.corpus.DocumentFileJSONL(path, subject_index, vocab_lang)
-        else:
-            return annif.corpus.DocumentFileTSV(path, subject_index)
-
     if len(paths) == 0:
         logger.warning("Reading empty file")
-        docs = open_doc_path(os.path.devnull, subject_index)
+        docs = open_doc_path(os.path.devnull, subject_index, vocab_lang)
     elif len(paths) == 1:
-        docs = open_doc_path(paths[0], subject_index)
+        docs = open_doc_path(paths[0], subject_index, vocab_lang)
     else:
-        corpora = [open_doc_path(path, subject_index) for path in paths]
+        corpora = [open_doc_path(path, subject_index, vocab_lang) for path in paths]
         docs = annif.corpus.CombinedCorpus(corpora)
     if docs_limit is not None:
         docs = annif.corpus.LimitingDocumentCorpus(docs, docs_limit)

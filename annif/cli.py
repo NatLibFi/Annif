@@ -342,6 +342,70 @@ def run_index(
             cli_util.show_hits(suggestions, project, lang, file=subjfile)
 
 
+@cli.command("index-text")
+@cli_util.project_id
+@click.argument("paths", type=click.Path(exists=True, dir_okay=False), nargs=-1)
+@click.option(
+    "--suffix", "-s", default=".annif.jsonl", help="File name suffix for result files"
+)
+@click.option(
+    "--force/--no-force",
+    "-f/-F",
+    default=False,
+    help="Force overwriting of existing result files",
+)
+@click.option("--limit", "-l", default=10, help="Maximum number of subjects")
+@click.option("--threshold", "-t", default=0.0, help="Minimum score threshold")
+@click.option("--language", "-L", help="Language of subject labels")
+@cli_util.backend_param_option
+@cli_util.common_options
+def run_index_text(
+    project_id, paths, suffix, force, limit, threshold, language, backend_param
+):
+    """
+    Index a file with documents, suggesting subjects for each document.
+    Write the results in JSONL files with the given suffix (``.annif.jsonl`` by
+    default).
+    """
+    project = cli_util.get_project(project_id)
+    lang = language or project.vocab_lang
+    if lang not in project.vocab.languages:
+        raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
+    backend_params = cli_util.parse_backend_params(backend_param, project)
+
+    for path in paths:
+        corpus = cli_util.open_doc_path(
+            path, project.subjects, lang, require_subjects=False
+        )
+        results = project.suggest_corpus(corpus, backend_params).filter(
+            limit, threshold
+        )
+
+        outfilename = re.sub(r"\.(csv|tsv|jsonl)$", suffix, path)
+        if os.path.exists(outfilename) and not force:
+            click.echo(
+                "Not overwriting {} (use --force to override)".format(outfilename)
+            )
+            continue
+
+        with open(outfilename, "w", encoding="utf-8") as outfile:
+            for doc, suggestions in zip(corpus.documents, results):
+                out_suggestions = []
+                for suggestion in suggestions:
+                    subj = project.subjects[suggestion.subject_id]
+                    out_suggestions.append(
+                        {
+                            "uri": subj.uri,
+                            "label": subj.labels[lang],
+                            "notation": subj.notation,
+                            "score": suggestion.score,
+                        }
+                    )
+
+                output = {"suggestions": [out_suggestions]}
+                outfile.write(json.dumps(output) + "\n")
+
+
 @cli.command("eval")
 @cli_util.project_id
 @click.argument("paths", type=click.Path(exists=True), nargs=-1)
