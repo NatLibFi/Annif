@@ -423,6 +423,30 @@ def test_docfile_jsonl_plain(tmpdir, subject_index):
     assert len(list(docs.documents)) == 3
 
 
+def test_docfile_jsonl_broken(tmpdir, subject_index, caplog):
+    docfile = tmpdir.join("documents.jsonl")
+    docfile.write('{ "broken_syntax": yes }')
+
+    corpus = annif.corpus.DocumentFileJSONL(str(docfile), subject_index, "fi")
+    with caplog.at_level(logging.WARNING):
+        docs = list(corpus.documents)
+
+    assert len(docs) == 0
+    assert "JSON parsing failed" in caplog.text
+
+
+def test_docfile_jsonl_invalid(tmpdir, subject_index, caplog):
+    docfile = tmpdir.join("documents.jsonl")
+    docfile.write(json.dumps({"follows_schema": False}))
+
+    corpus = annif.corpus.DocumentFileJSONL(str(docfile), subject_index, "fi")
+    with caplog.at_level(logging.WARNING):
+        docs = list(corpus.documents)
+
+    assert len(docs) == 0
+    assert "JSON validation failed" in caplog.text
+
+
 def test_docfile_tsv_bom(tmpdir, subject_index):
     docfile = tmpdir.join("documents_bom.tsv")
     data = """Läntinen\t<http://www.yso.fi/onto/yso/p2557>
