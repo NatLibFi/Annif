@@ -32,22 +32,19 @@ def _subjects_to_subject_set(subjects, subject_index, language):
     return SubjectSet(subject_ids)
 
 
-def json_file_to_document(
+def json_to_document(
     filename: str,
+    json_data: str,
     subject_index: SubjectIndex | None,
     language: str,
     require_subjects: bool,
 ) -> Document | None:
-    if os.path.getsize(filename) == 0:
-        logger.warning(f"Skipping empty file {filename}")
-        return None
 
-    with open(filename, "r", encoding="utf-8") as jsonfile:
-        try:
-            data = json.load(jsonfile)
-        except json.JSONDecodeError as err:
-            logger.warning(f"JSON parsing failed for file {filename}: {err}")
-            return None
+    try:
+        data = json.loads(json_data)
+    except json.JSONDecodeError as err:
+        logger.warning(f"JSON parsing failed for file {filename}: {err}")
+        return None
 
     try:
         jsonschema.validate(instance=data, schema=_get_json_schema("document.json"))
@@ -69,4 +66,22 @@ def json_file_to_document(
         metadata=data.get("metadata", {}),
         subject_set=subject_set,
         file_path=filename,
+    )
+
+
+def json_file_to_document(
+    filename: str,
+    subject_index: SubjectIndex | None,
+    language: str,
+    require_subjects: bool,
+) -> Document | None:
+    if os.path.getsize(filename) == 0:
+        logger.warning(f"Skipping empty file {filename}")
+        return None
+
+    with open(filename, "r", encoding="utf-8") as jsonfile:
+        json_data = jsonfile.read()
+
+    return json_to_document(
+        filename, json_data, subject_index, language, require_subjects
     )

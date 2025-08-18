@@ -337,6 +337,19 @@ def test_train_csv(testdatadir):
     assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
 
 
+def test_train_jsonl(testdatadir):
+    docfile = os.path.join(
+        os.path.dirname(__file__), "corpora", "archaeology", "documents.jsonl"
+    )
+    result = runner.invoke(annif.cli.cli, ["train", "tfidf-fi", docfile])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
+    assert testdatadir.join("projects/tfidf-fi/vectorizer").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-index").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
+
+
 def test_train_multiple(testdatadir):
     docfile_tsv = os.path.join(
         os.path.dirname(__file__), "corpora", "archaeology", "documents.tsv"
