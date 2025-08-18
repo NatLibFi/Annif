@@ -679,6 +679,9 @@ def test_index_txt(tmpdir):
 
 def test_index_json(tmpdir):
     tmpdir.join("doc1.json").write('{"text": "nothing special"}')
+    tmpdir.join("doc2.json").write(
+        '{"text": "nothing special", "subjects": [{"label": "dummy"}]}'
+    )
 
     result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(tmpdir)])
     assert not result.exception
@@ -687,6 +690,12 @@ def test_index_json(tmpdir):
     assert tmpdir.join("doc1.annif").exists()
     assert (
         tmpdir.join("doc1.annif").read_text("utf-8")
+        == "<http://example.org/dummy>\tdummy\t1.0000\n"
+    )
+
+    assert tmpdir.join("doc2.annif").exists()
+    assert (
+        tmpdir.join("doc2.annif").read_text("utf-8")
         == "<http://example.org/dummy>\tdummy\t1.0000\n"
     )
 

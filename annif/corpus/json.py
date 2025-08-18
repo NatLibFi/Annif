@@ -34,7 +34,7 @@ def _subjects_to_subject_set(subjects, subject_index, language):
 
 def json_file_to_document(
     filename: str,
-    subject_index: SubjectIndex,
+    subject_index: SubjectIndex | None,
     language: str,
     require_subjects: bool,
 ) -> Document | None:
@@ -55,11 +55,14 @@ def json_file_to_document(
         logger.warning(f"JSON validation failed for file {filename}: {err.message}")
         return None
 
-    subject_set = _subjects_to_subject_set(
-        data.get("subjects", []), subject_index, language
-    )
-    if require_subjects and not subject_set:
-        return None
+    if require_subjects:
+        subject_set = _subjects_to_subject_set(
+            data.get("subjects", []), subject_index, language
+        )
+        if not subject_set:
+            return None
+    else:
+        subject_set = None
 
     return Document(
         text=data.get("text", ""),
