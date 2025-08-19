@@ -7,8 +7,8 @@ import os.path
 import tempfile
 from typing import TYPE_CHECKING, Any
 
-import gensim.similarities
-from gensim.matutils import Sparse2Corpus
+from scipy.sparse import load_npz, save_npz
+from sklearn.metrics.pairwise import cosine_similarity
 
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
@@ -18,8 +18,6 @@ from . import backend, mixins
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-
-    from scipy.sparse._csr import csr_matrix
 
     from annif.corpus import Document, DocumentCorpus
 
@@ -68,9 +66,9 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     name = "tfidf"
 
     # defaults for uninitialized instances
-    _index = None
+    _tfidf_matrix = None
 
-    INDEX_FILE = "tfidf-index"
+    MATRIX_FILE = "tfidf-matrix.npz"
 
     def _generate_subjects_from_documents(
         self, corpus: DocumentCorpus
@@ -89,28 +87,20 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
                 yield subject_buffer[sid].read()
 
     def _initialize_index(self) -> None:
-        if self._index is None:
-            path = os.path.join(self.datadir, self.INDEX_FILE)
-            self.debug("loading similarity index from {}".format(path))
+        if self._tfidf_matrix is None:
+            path = os.path.join(self.datadir, self.MATRIX_FILE)
+            self.debug("loading tf-idf matrix from {}".format(path))
             if os.path.exists(path):
-                self._index = gensim.similarities.SparseMatrixSimilarity.load(path)
+                self._tfidf_matrix = load_npz(path)
             else:
                 raise NotInitializedException(
-                    "similarity index {} not found".format(path),
+                    "tf-idf matrix {} not found".format(path),
                     backend_id=self.backend_id,
                 )
 
     def initialize(self, parallel: bool = False) -> None:
         self.initialize_vectorizer()
         self._initialize_index()
-
-    def _create_index(self, veccorpus: csr_matrix) -> None:
-        self.info("creating similarity index")
-        gscorpus = Sparse2Corpus(veccorpus, documents_columns=False)
-        self._index = gensim.similarities.SparseMatrixSimilarity(
-            gscorpus, num_features=len(self.vectorizer.vocabulary_)
-        )
-        annif.util.atomic_save(self._index, self.datadir, self.INDEX_FILE)
 
     def _train(
         self,
@@ -126,8 +116,14 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             raise NotSupportedException("Cannot train tfidf project with no documents")
         self.info("transforming subject corpus")
         subjects = self._generate_subjects_from_documents(corpus)
-        veccorpus = self.create_vectorizer(subjects)
-        self._create_index(veccorpus)
+        self._tfidf_matrix = self.create_vectorizer(subjects)
+        self.info("saving tf-idf matrix")
+        annif.util.atomic_save(
+            self._tfidf_matrix,
+            self.datadir,
+            self.MATRIX_FILE,
+            lambda obj, filename: save_npz(filename, obj),
+        )
 
     def _suggest(self, doc: Document, params: dict[str, Any]) -> Iterator:
         self.debug(
@@ -136,5 +132,9 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             )
         )
         tokens = self.project.analyzer.tokenize_words(doc.text)
-        vectors = self.vectorizer.transform([" ".join(tokens)])
-        return vector_to_suggestions(self._index[vectors[0]], int(params["limit"]))
+        query_vector = self.vectorizer.transform([" ".join(tokens)])
+
+        # Compute cosine similarity between query and indexed corpus
+        similarities = cosine_similarity(query_vector, self._tfidf_matrix).flatten()
+
+        return vector_to_suggestions(similarities, int(params["limit"]))

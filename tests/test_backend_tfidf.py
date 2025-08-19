@@ -20,9 +20,9 @@ def test_tfidf_train(datadir, document_corpus, project):
     tfidf = tfidf_type(backend_id="tfidf", config_params={"limit": 10}, project=project)
 
     tfidf.train(document_corpus)
-    assert len(tfidf._index) > 0
-    assert datadir.join("tfidf-index").exists()
-    assert datadir.join("tfidf-index").size() > 0
+    assert tfidf._tfidf_matrix.shape[0] > 0
+    assert datadir.join("tfidf-matrix.npz").exists()
+    assert datadir.join("tfidf-matrix.npz").size() > 0
 
 
 def test_tfidf_suggest(project):
