@@ -25,7 +25,7 @@ from annif.exception import (
 )
 from annif.project import Access
 from annif.simplemma_util import detect_language
-from annif.util import metric_code
+from annif.util import metric_code, suggestion_to_dict
 
 logger = annif.logger
 click_log.basic_config(logger)
@@ -390,19 +390,11 @@ def run_index_text(
 
         with open(outfilename, "w", encoding="utf-8") as outfile:
             for doc, suggestions in zip(corpus.documents, results):
-                out_suggestions = []
-                for suggestion in suggestions:
-                    subj = project.subjects[suggestion.subject_id]
-                    out_suggestions.append(
-                        {
-                            "uri": subj.uri,
-                            "label": subj.labels[lang],
-                            "notation": subj.notation,
-                            "score": suggestion.score,
-                        }
-                    )
-
-                output = {"suggestions": [out_suggestions]}
+                out_suggestions = [
+                    suggestion_to_dict(suggestion, project.subjects, lang)
+                    for suggestion in suggestions
+                ]
+                output = {"results": out_suggestions}
                 outfile.write(json.dumps(output) + "\n")
 
 
