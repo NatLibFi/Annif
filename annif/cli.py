@@ -381,7 +381,7 @@ def run_index_text(
             limit, threshold
         )
 
-        outfilename = re.sub(r"\.(csv|tsv|jsonl)$", suffix, path)
+        outfilename = re.sub(r"(\.[^.]+)?(\.gz)?$", "", path) + suffix
         if os.path.exists(outfilename) and not force:
             click.echo(
                 "Not overwriting {} (use --force to override)".format(outfilename)
