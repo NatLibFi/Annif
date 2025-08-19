@@ -342,7 +342,7 @@ def run_index(
             cli_util.show_hits(suggestions, project, lang, file=subjfile)
 
 
-@cli.command("index-text")
+@cli.command("index-file")
 @cli_util.project_id
 @click.argument("paths", type=click.Path(exists=True, dir_okay=False), nargs=-1)
 @click.option(
@@ -365,7 +365,7 @@ def run_index(
 @click.option("--language", "-L", help="Language of subject labels")
 @cli_util.backend_param_option
 @cli_util.common_options
-def run_index_text(
+def run_index_file(
     project_id,
     paths,
     suffix,
