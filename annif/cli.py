@@ -354,13 +354,27 @@ def run_index(
     default=False,
     help="Force overwriting of existing result files",
 )
+@click.option(
+    "--include-doc/--no-include-doc",
+    "-i/-I",
+    default=True,
+    help="Include input documents in output",
+)
 @click.option("--limit", "-l", default=10, help="Maximum number of subjects")
 @click.option("--threshold", "-t", default=0.0, help="Minimum score threshold")
 @click.option("--language", "-L", help="Language of subject labels")
 @cli_util.backend_param_option
 @cli_util.common_options
 def run_index_text(
-    project_id, paths, suffix, force, limit, threshold, language, backend_param
+    project_id,
+    paths,
+    suffix,
+    force,
+    include_doc,
+    limit,
+    threshold,
+    language,
+    backend_param,
 ):
     """
     Index a file with documents, suggesting subjects for each document.
@@ -390,11 +404,11 @@ def run_index_text(
 
         with open(outfilename, "w", encoding="utf-8") as outfile:
             for doc, suggestions in zip(corpus.documents, results):
-                out_suggestions = [
+                output = doc.as_dict(project.subjects, lang) if include_doc else {}
+                output["results"] = [
                     suggestion_to_dict(suggestion, project.subjects, lang)
                     for suggestion in suggestions
                 ]
-                output = {"results": out_suggestions}
                 outfile.write(json.dumps(output) + "\n")
 
 

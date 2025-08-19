@@ -15,11 +15,11 @@ from annif.exception import OperationFailedException
 def test_document():
     doc = Document(text="Hello world")
     assert doc.text == "Hello world"
-    assert doc.subject_set == set()
+    assert doc.subject_set == SubjectSet()
     assert doc.metadata == {}
     assert doc.file_path is None
     assert repr(doc) == (
-        "Document(text='Hello world', subject_set=set(), "
+        "Document(text='Hello world', subject_set=SubjectSet([]), "
         "metadata={}, file_path=None)"
     )
 

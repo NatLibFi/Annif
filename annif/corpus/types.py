@@ -14,11 +14,24 @@ if TYPE_CHECKING:
 
 
 class Document:
-    def __init__(self, text, subject_set=None, metadata=None, file_path=None):
+    def __init__(
+        self,
+        text: str,
+        subject_set: SubjectSet | None = None,
+        metadata: dict[str, Any] | None = None,
+        file_path: str | None = None,
+    ):
         self.text = text
-        self.subject_set = subject_set if subject_set is not None else set()
+        self.subject_set = subject_set if subject_set is not None else SubjectSet()
         self.metadata = metadata if metadata is not None else {}
         self.file_path = file_path
+
+    def as_dict(self, subject_index: SubjectIndex, language: str) -> dict[str, Any]:
+        return {
+            "text": self.text,
+            "metadata": self.metadata,
+            "subjects": self.subject_set.as_list(subject_index, language),
+        }
 
     def __repr__(self):
         return (
@@ -136,3 +149,14 @@ class SubjectSet:
         destination[list(self._subject_ids)] = True
 
         return destination
+
+    def as_list(
+        self, subject_index: SubjectIndex, language: str
+    ) -> list[dict[str:str]]:
+        ret = []
+        for subject_id in self._subject_ids:
+            subject = subject_index[subject_id]
+            ret.append({"uri": subject.uri, "label": subject.labels[language]})
+
+    def __repr__(self):
+        return f"SubjectSet({self._subject_ids!r})"
