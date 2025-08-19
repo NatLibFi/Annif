@@ -8,7 +8,7 @@ import tempfile
 from typing import TYPE_CHECKING, Any
 
 from scipy.sparse import load_npz, save_npz
-from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import normalize
 
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
@@ -116,7 +116,7 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             raise NotSupportedException("Cannot train tfidf project with no documents")
         self.info("transforming subject corpus")
         subjects = self._generate_subjects_from_documents(corpus)
-        self._tfidf_matrix = self.create_vectorizer(subjects)
+        self._tfidf_matrix = normalize(self.create_vectorizer(subjects))
         self.info("saving tf-idf matrix")
         annif.util.atomic_save(
             self._tfidf_matrix,
@@ -132,9 +132,9 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             )
         )
         tokens = self.project.analyzer.tokenize_words(doc.text)
-        query_vector = self.vectorizer.transform([" ".join(tokens)])
+        query_vector = normalize(self.vectorizer.transform([" ".join(tokens)]))
 
         # Compute cosine similarity between query and indexed corpus
-        similarities = cosine_similarity(query_vector, self._tfidf_matrix).flatten()
+        similarities = (query_vector @ self._tfidf_matrix.T).toarray().flatten()
 
         return vector_to_suggestions(similarities, int(params["limit"]))
