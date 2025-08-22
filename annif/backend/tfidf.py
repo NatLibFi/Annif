@@ -7,12 +7,12 @@ import os.path
 import tempfile
 from typing import TYPE_CHECKING, Any
 
-from scipy.sparse import load_npz, save_npz
+from scipy.sparse import csr_array, load_npz, save_npz
 from sklearn.preprocessing import normalize
 
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
-from annif.suggestion import vector_to_suggestions
+from annif.suggestion import SuggestionBatch
 
 from . import backend, mixins
 
@@ -116,6 +116,10 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             raise NotSupportedException("Cannot train tfidf project with no documents")
         self.info("transforming subject corpus")
         subjects = self._generate_subjects_from_documents(corpus)
+        # Note: Intentionally don't pass a tokenizer to the vectorizer here.
+        # Instead the tokenization is done inside _generate_subjects_from_documents
+        # and in _suggest_batch. This way, the same train document doesn't have to be
+        # tokenized many times during training if it has many subjects.
         self._tfidf_matrix = normalize(self.create_vectorizer(subjects))
         self.info("saving tf-idf matrix")
         annif.util.atomic_save(
@@ -125,16 +129,19 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             lambda obj, filename: save_npz(filename, obj),
         )
 
-    def _suggest(self, doc: Document, params: dict[str, Any]) -> Iterator:
-        self.debug(
-            'Suggesting subjects for text "{}..." (len={})'.format(
-                doc.text[:20], len(doc.text)
+    def _suggest_batch(
+        self, documents: list[Document], params: dict[str, Any]
+    ) -> SuggestionBatch:
+        query_vector = normalize(
+            self.vectorizer.transform(
+                [
+                    " ".join(self.project.analyzer.tokenize_words(doc.text))
+                    for doc in documents
+                ]
             )
         )
-        tokens = self.project.analyzer.tokenize_words(doc.text)
-        query_vector = normalize(self.vectorizer.transform([" ".join(tokens)]))
 
         # Compute cosine similarity between query and indexed corpus
-        similarities = (query_vector @ self._tfidf_matrix.T).toarray().flatten()
+        similarities = query_vector @ self._tfidf_matrix.T
 
-        return vector_to_suggestions(similarities, int(params["limit"]))
+        return SuggestionBatch(csr_array(similarities)).filter(int(params["limit"]))
