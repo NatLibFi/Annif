@@ -14,16 +14,18 @@ if TYPE_CHECKING:
 
 
 class Document:
-    def __init__(self, text, subject_set=None, metadata=None):
+    def __init__(self, text, subject_set=None, metadata=None, file_path=None):
         self.text = text
         self.subject_set = subject_set if subject_set is not None else set()
         self.metadata = metadata if metadata is not None else {}
+        self.file_path = file_path
 
     def __repr__(self):
         return (
             f"Document(text={self.text!r}, "
             f"subject_set={self.subject_set!r}, "
-            f"metadata={self.metadata!r})"
+            f"metadata={self.metadata!r}, "
+            f"file_path={self.file_path!r})"
         )
 
 

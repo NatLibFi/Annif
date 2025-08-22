@@ -10,6 +10,7 @@ import shutil
 from datetime import datetime, timedelta
 from unittest import mock
 
+import pytest
 from click.shell_completion import ShellComplete
 from click.testing import CliRunner
 from huggingface_hub.utils import HFValidationError
@@ -319,8 +320,8 @@ def test_train_tsv(testdatadir):
     assert result.exit_code == 0
     assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
     assert testdatadir.join("projects/tfidf-fi/vectorizer").size() > 0
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").exists()
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
 
 
 def test_train_csv(testdatadir):
@@ -332,8 +333,21 @@ def test_train_csv(testdatadir):
     assert result.exit_code == 0
     assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
     assert testdatadir.join("projects/tfidf-fi/vectorizer").size() > 0
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").exists()
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
+
+
+def test_train_jsonl(testdatadir):
+    docfile = os.path.join(
+        os.path.dirname(__file__), "corpora", "archaeology", "documents.jsonl"
+    )
+    result = runner.invoke(annif.cli.cli, ["train", "tfidf-fi", docfile])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
+    assert testdatadir.join("projects/tfidf-fi/vectorizer").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
 
 
 def test_train_multiple(testdatadir):
@@ -350,8 +364,8 @@ def test_train_multiple(testdatadir):
     assert result.exit_code == 0
     assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
     assert testdatadir.join("projects/tfidf-fi/vectorizer").size() > 0
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").exists()
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
 
 
 def test_train_cached(testdatadir):
@@ -576,8 +590,8 @@ def test_suggest_file(tmpdir):
 def test_suggest_two_files(tmpdir):
     docfile1 = tmpdir.join("doc-1.txt")
     docfile1.write("nothing special")
-    docfile2 = tmpdir.join("doc-2.txt")
-    docfile2.write("again nothing special")
+    docfile2 = tmpdir.join("doc-2.json")
+    docfile2.write(json.dumps({"text": "again nothing special"}))
 
     result = runner.invoke(
         annif.cli.cli, ["suggest", "dummy-fi", str(docfile1), str(docfile2)]
@@ -644,7 +658,7 @@ def test_suggest_dash_path():
     assert result.exit_code == 0
 
 
-def test_index(tmpdir):
+def test_index_txt(tmpdir):
     tmpdir.join("doc1.txt").write("nothing special")
     # Existing subject files should not have an effect
     tmpdir.join("doc1.tsv").write("<http://example.org/dummy>\tdummy")
@@ -657,6 +671,44 @@ def test_index(tmpdir):
     assert tmpdir.join("doc1.annif").exists()
     assert (
         tmpdir.join("doc1.annif").read_text("utf-8")
+        == "<http://example.org/dummy>\tdummy\t1.0000\n"
+    )
+
+    # make sure that preexisting subject files are not overwritten
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Not overwriting" in result.output
+
+    # check that the --force parameter forces overwriting
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-fi", "--force", str(tmpdir)])
+    assert tmpdir.join("doc1.annif").exists()
+    assert "Not overwriting" not in result.output
+    assert (
+        tmpdir.join("doc1.annif").read_text("utf-8")
+        == "<http://example.org/dummy>\tdummy-fi\t1.0000\n"
+    )
+
+
+def test_index_json(tmpdir):
+    tmpdir.join("doc1.json").write('{"text": "nothing special"}')
+    tmpdir.join("doc2.json").write(
+        '{"text": "nothing special", "subjects": [{"label": "dummy"}]}'
+    )
+
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    assert tmpdir.join("doc1.annif").exists()
+    assert (
+        tmpdir.join("doc1.annif").read_text("utf-8")
+        == "<http://example.org/dummy>\tdummy\t1.0000\n"
+    )
+
+    assert tmpdir.join("doc2.annif").exists()
+    assert (
+        tmpdir.join("doc2.annif").read_text("utf-8")
         == "<http://example.org/dummy>\tdummy\t1.0000\n"
     )
 
@@ -728,17 +780,17 @@ def test_eval_label(tmpdir):
     assert result.exit_code == 0
 
     precision = re.search(r"Precision .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(precision.group(1)) == 0.5
+    assert float(precision.group(1)) == pytest.approx(0.5)
     recall = re.search(r"Recall .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == 0.5
+    assert float(recall.group(1)) == pytest.approx(0.5)
     f_measure = re.search(r"F1 score .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(f_measure.group(1)) == 0.5
+    assert float(f_measure.group(1)) == pytest.approx(0.5)
     precision1 = re.search(r"Precision@1:\s+(\d.\d+)", result.output)
-    assert float(precision1.group(1)) == 0.5
+    assert float(precision1.group(1)) == pytest.approx(0.5)
     precision3 = re.search(r"Precision@3:\s+(\d.\d+)", result.output)
-    assert float(precision3.group(1)) == 0.5
+    assert float(precision3.group(1)) == pytest.approx(0.5)
     precision5 = re.search(r"Precision@5:\s+(\d.\d+)", result.output)
-    assert float(precision5.group(1)) == 0.5
+    assert float(precision5.group(1)) == pytest.approx(0.5)
     true_positives = re.search(r"True positives:\s+(\d+)", result.output)
     assert int(true_positives.group(1)) == 1
     false_positives = re.search(r"False positives:\s+(\d+)", result.output)
@@ -761,17 +813,51 @@ def test_eval_uri(tmpdir):
     assert result.exit_code == 0
 
     precision = re.search(r"Precision .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(precision.group(1)) == 0.5
+    assert float(precision.group(1)) == pytest.approx(0.5)
     recall = re.search(r"Recall .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == 0.5
+    assert float(recall.group(1)) == pytest.approx(0.5)
     f_measure = re.search(r"F1 score .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(f_measure.group(1)) == 0.5
+    assert float(f_measure.group(1)) == pytest.approx(0.5)
     precision1 = re.search(r"Precision@1:\s+(\d.\d+)", result.output)
-    assert float(precision1.group(1)) == 0.5
+    assert float(precision1.group(1)) == pytest.approx(0.5)
     precision3 = re.search(r"Precision@3:\s+(\d.\d+)", result.output)
-    assert float(precision3.group(1)) == 0.5
+    assert float(precision3.group(1)) == pytest.approx(0.5)
     precision5 = re.search(r"Precision@5:\s+(\d.\d+)", result.output)
-    assert float(precision5.group(1)) == 0.5
+    assert float(precision5.group(1)) == pytest.approx(0.5)
+    true_positives = re.search(r"True positives:\s+(\d+)", result.output)
+    assert int(true_positives.group(1)) == 1
+    false_positives = re.search(r"False positives:\s+(\d+)", result.output)
+    assert int(false_positives.group(1)) == 1
+    false_negatives = re.search(r"False negatives:\s+(\d+)", result.output)
+    assert int(false_negatives.group(1)) == 1
+    ndocs = re.search(r"Documents evaluated:\s+(\d+)", result.output)
+    assert int(ndocs.group(1)) == 2
+
+
+def test_eval_json(tmpdir):
+    data1 = {"text": "doc1", "subjects": [{"uri": "http://example.org/dummy"}]}
+    tmpdir.join("doc1.json").write(json.dumps(data1))
+    data2 = {"text": "doc2", "subjects": [{"uri": "http://example.org/none"}]}
+    tmpdir.join("doc2.json").write(json.dumps(data2))
+    data3 = {"text": "doc3"}
+    tmpdir.join("doc3.json").write(json.dumps(data3))
+
+    result = runner.invoke(annif.cli.cli, ["eval", "dummy-en", str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    precision = re.search(r"Precision .*doc.*:\s+(\d.\d+)", result.output)
+    assert float(precision.group(1)) == pytest.approx(0.5)
+    recall = re.search(r"Recall .*doc.*:\s+(\d.\d+)", result.output)
+    assert float(recall.group(1)) == pytest.approx(0.5)
+    f_measure = re.search(r"F1 score .*doc.*:\s+(\d.\d+)", result.output)
+    assert float(f_measure.group(1)) == pytest.approx(0.5)
+    precision1 = re.search(r"Precision@1:\s+(\d.\d+)", result.output)
+    assert float(precision1.group(1)) == pytest.approx(0.5)
+    precision3 = re.search(r"Precision@3:\s+(\d.\d+)", result.output)
+    assert float(precision3.group(1)) == pytest.approx(0.5)
+    precision5 = re.search(r"Precision@5:\s+(\d.\d+)", result.output)
+    assert float(precision5.group(1)) == pytest.approx(0.5)
     true_positives = re.search(r"True positives:\s+(\d+)", result.output)
     assert int(true_positives.group(1)) == 1
     false_positives = re.search(r"False positives:\s+(\d+)", result.output)
@@ -799,7 +885,7 @@ def test_eval_param(tmpdir):
     # since zero scores were set with the parameter, there should be no hits
     # at all
     recall = re.search(r"Recall .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == 0.0
+    assert float(recall.group(1)) == pytest.approx(0.0)
 
 
 def test_eval_metric(tmpdir):
@@ -1009,11 +1095,11 @@ def test_optimize_dir(tmpdir):
     assert result.exit_code == 0
 
     precision = re.search(r"Best\s+Precision .*?doc.*?:\s+(\d.\d+)", result.output)
-    assert float(precision.group(1)) == 0.5
+    assert float(precision.group(1)) == pytest.approx(0.5)
     recall = re.search(r"Best\s+Recall .*?doc.*?:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == 0.5
+    assert float(recall.group(1)) == pytest.approx(0.5)
     f_measure = re.search(r"Best\s+F1 score .*?doc.*?:\s+(\d.\d+)", result.output)
-    assert float(f_measure.group(1)) == 0.5
+    assert float(f_measure.group(1)) == pytest.approx(0.5)
     ndocs = re.search(r"Documents evaluated:\s+(\d)", result.output)
     assert int(ndocs.group(1)) == 2
 

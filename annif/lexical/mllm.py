@@ -137,6 +137,23 @@ def candidates_to_features(
     return matrix
 
 
+def create_classifier(params: dict[str, Any]) -> BaggingClassifier:
+    return BaggingClassifier(
+        DecisionTreeClassifier(
+            min_samples_leaf=int(params["min_samples_leaf"]),
+            max_leaf_nodes=int(params["max_leaf_nodes"]),
+        ),
+        max_samples=float(params["max_samples"]),
+    )
+
+
+def prediction_to_list(
+    scores: np.ndarray, candidates: list[Candidate]
+) -> list[tuple[np.float64, int]]:
+    subj_scores = [(score[1], c.subject_id) for score, c in zip(scores, candidates)]
+    return sorted(subj_scores, reverse=True)
+
+
 class MLLMCandidateGenerator(annif.parallel.BaseWorker):
     @classmethod
     def generate_candidates(cls, doc_subject_set, text):
@@ -319,15 +336,6 @@ class MLLMModel:
 
         return (np.vstack(features), np.array(train_y))
 
-    def _create_classifier(self, params: dict[str, Any]) -> BaggingClassifier:
-        return BaggingClassifier(
-            DecisionTreeClassifier(
-                min_samples_leaf=int(params["min_samples_leaf"]),
-                max_leaf_nodes=int(params["max_leaf_nodes"]),
-            ),
-            max_samples=float(params["max_samples"]),
-        )
-
     def train(
         self,
         train_x: np.ndarray | list[tuple[int, int]],
@@ -335,7 +343,7 @@ class MLLMModel:
         params: dict[str, Any],
     ) -> None:
         # fit the model on the training corpus
-        self._classifier = self._create_classifier(params)
+        self._classifier = create_classifier(params)
         self._classifier.fit(train_x, train_y)
         # sanity check: verify that the classifier has seen both classes
         if self._classifier.n_classes_ != 2:
@@ -346,18 +354,12 @@ class MLLMModel:
                 + "data matches your vocabulary."
             )
 
-    def _prediction_to_list(
-        self, scores: np.ndarray, candidates: list[Candidate]
-    ) -> list[tuple[np.float64, int]]:
-        subj_scores = [(score[1], c.subject_id) for score, c in zip(scores, candidates)]
-        return sorted(subj_scores, reverse=True)
-
     def predict(self, candidates: list[Candidate]) -> list[tuple[np.float64, int]]:
         if not candidates:
             return []
         features = self._candidates_to_features(candidates)
         scores = self._classifier.predict_proba(features)
-        return self._prediction_to_list(scores, candidates)
+        return prediction_to_list(scores, candidates)
 
     def save(self, filename: str) -> list[str]:
         return joblib.dump(self, filename)

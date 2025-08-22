@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import abc
 import collections
-import warnings
-from typing import TYPE_CHECKING, Callable
+import tempfile
+from typing import TYPE_CHECKING, Any, Callable
 
 import optuna
 import optuna.exceptions
+
+import annif.parallel
 
 from .backend import AnnifBackend
 
@@ -31,46 +33,84 @@ class TrialWriter:
         self.normalize_func = normalize_func
         self.header_written = False
 
-    def write(self, study: Study, trial: Trial) -> None:
+    def write(self, trial_data: dict[str, Any]) -> None:
         """Write the results of one trial into the results file.  On the
         first run, write the header line first."""
 
         if not self.header_written:
-            param_names = list(trial.params.keys())
+            param_names = list(trial_data["params"].keys())
             print("\t".join(["trial", "value"] + param_names), file=self.results_file)
             self.header_written = True
         print(
             "\t".join(
                 (
                     str(e)
-                    for e in [trial.number, trial.value]
-                    + list(self.normalize_func(trial.params).values())
+                    for e in [trial_data["number"], trial_data["value"]]
+                    + list(self.normalize_func(trial_data["params"]).values())
                 )
             ),
             file=self.results_file,
         )
 
 
+class HPObjective(annif.parallel.BaseWorker):
+    """Base class for hyperparameter optimizer objective functions"""
+
+    @classmethod
+    def objective(cls, trial: Trial, args) -> float:
+        """Objective function to optimize. To be implemented by subclasses."""
+
+        pass  # pragma: no cover
+
+    @classmethod
+    def _objective_wrapper(cls, trial: Trial) -> float:
+        return cls.objective(trial, cls.args)
+
+    @classmethod
+    def run_trial(
+        cls, trial_id: int, storage_url: str, study_name: str
+    ) -> dict[str, Any]:
+
+        # use a callback to set the completed trial, to avoid race conditions
+        completed_trial = []
+
+        def set_trial_callback(study: Study, trial: Trial) -> None:
+            completed_trial.append(trial)
+
+        study = optuna.load_study(storage=storage_url, study_name=study_name)
+        study.optimize(
+            cls._objective_wrapper,
+            n_trials=1,
+            callbacks=[set_trial_callback],
+        )
+
+        return {
+            "number": completed_trial[0].number,
+            "value": completed_trial[0].value,
+            "params": completed_trial[0].params,
+        }
+
+
 class HyperparameterOptimizer:
     """Base class for hyperparameter optimizers"""
 
     def __init__(
-        self, backend: AnnifBackend, corpus: DocumentCorpus, metric: str
+        self,
+        backend: AnnifBackend,
+        corpus: DocumentCorpus,
+        metric: str,
+        objective: HPObjective,
     ) -> None:
         self._backend = backend
         self._corpus = corpus
         self._metric = metric
+        self._objective = objective
 
     def _prepare(self, n_jobs: int = 1):
         """Prepare the optimizer for hyperparameter evaluation.  Up to
         n_jobs parallel threads or processes may be used during the
-        operation."""
+        operation. The return value will be passed to the objective function."""
 
-        pass  # pragma: no cover
-
-    @abc.abstractmethod
-    def _objective(self, trial: Trial) -> float:
-        """Objective function to optimize"""
         pass  # pragma: no cover
 
     @abc.abstractmethod
@@ -89,26 +129,28 @@ class HyperparameterOptimizer:
         """Find the optimal hyperparameters by testing up to the given number
         of hyperparameter combinations"""
 
-        self._prepare(n_jobs)
+        objective_args = self._prepare(n_jobs)
+        self._objective.init(objective_args)
 
-        if results_file:
-            callbacks = [TrialWriter(results_file, self._normalize).write]
-        else:
-            callbacks = []
+        writer = TrialWriter(results_file, self._normalize) if results_file else None
+        write_callback = writer.write if writer else None
 
-        study = optuna.create_study(direction="maximize")
-        # silence the ExperimentalWarning when using the Optuna progress bar
-        warnings.filterwarnings(
-            "ignore", category=optuna.exceptions.ExperimentalWarning
-        )
-        study.optimize(
-            self._objective,
-            n_trials=n_trials,
-            n_jobs=n_jobs,
-            callbacks=callbacks,
-            gc_after_trial=False,
-            show_progress_bar=(n_jobs == 1),
-        )
+        temp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+        storage_url = f"sqlite:///{temp_db.name}"
+
+        study = optuna.create_study(direction="maximize", storage=storage_url)
+
+        jobs, pool_class = annif.parallel.get_pool(n_jobs)
+        with pool_class(jobs) as pool:
+            for i in range(n_trials):
+                pool.apply_async(
+                    self._objective.run_trial,
+                    args=(i, storage_url, study.study_name),
+                    callback=write_callback,
+                )
+            pool.close()
+            pool.join()
+
         return self._postprocess(study)
 
 

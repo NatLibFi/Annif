@@ -328,11 +328,11 @@ def run_index(
         raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
     backend_params = cli_util.parse_backend_params(backend_param, project)
 
-    documents = DocumentDirectory(directory, require_subjects=False)
-    results = project.suggest_corpus(documents, backend_params).filter(limit, threshold)
+    corpus = DocumentDirectory(directory, require_subjects=False)
+    results = project.suggest_corpus(corpus, backend_params).filter(limit, threshold)
 
-    for (docfilename, _), suggestions in zip(documents, results):
-        subjectfilename = re.sub(r"\.txt$", suffix, docfilename)
+    for doc, suggestions in zip(corpus.documents, results):
+        subjectfilename = re.sub(r"\.(txt|json)$", suffix, doc.file_path)
         if os.path.exists(subjectfilename) and not force:
             click.echo(
                 "Not overwriting {} (use --force to override)".format(subjectfilename)
@@ -585,7 +585,7 @@ def run_optimize(project_id, paths, jobs, docs_limit, backend_param):
     "--results-file",
     "-r",
     type=click.File("w", encoding="utf-8", errors="ignore", lazy=True),
-    help="""Specify file path to write trial results as CSV.
+    help="""Specify file path to write trial results as TSV.
     File directory must exist, existing file will be overwritten.""",
 )
 @cli_util.docs_limit_option

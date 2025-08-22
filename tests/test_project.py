@@ -189,8 +189,8 @@ def test_project_tfidf_modification_time_prepared_only(registry, testdatadir):
 def test_project_train_tfidf(registry, document_corpus, testdatadir):
     project = registry.get_project("tfidf-fi")
     project.train(document_corpus)
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").exists()
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
 
 
 def test_project_tfidf_is_trained(registry):
