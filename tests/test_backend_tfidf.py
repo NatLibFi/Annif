@@ -88,7 +88,7 @@ def test_tfidf_suggest_old_model_error(datadir, project):
     datadir.join("tfidf-index").ensure()
 
     with pytest.raises(OperationFailedException) as excinfo:
-        results = tfidf.suggest([Document(text="abcdefghijk")])
+        tfidf.suggest([Document(text="abcdefghijk")])
 
     assert (
         "TFIDF models trained on Annif versions older than 1.4 cannot be loaded"
@@ -103,7 +103,7 @@ def test_tfidf_suggest_no_model_error(datadir, project):
     datadir.join("tfidf-index").remove()
 
     with pytest.raises(NotInitializedException) as excinfo:
-        results = tfidf.suggest([Document(text="abcdefghijk")])
+        tfidf.suggest([Document(text="abcdefghijk")])
 
     assert f"tf-idf matrix {datadir.join('tfidf-matrix.npz')} not found" in str(
         excinfo.value
