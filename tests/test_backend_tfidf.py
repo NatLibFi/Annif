@@ -1,8 +1,11 @@
 """Unit tests for the TF-IDF backend in Annif"""
 
+import pytest
+
 import annif
 import annif.backend
 from annif.corpus import Document
+from annif.exception import OperationFailedException
 
 
 def test_tfidf_default_params(project):
@@ -75,3 +78,19 @@ def test_tfidf_suggest_unknown(project):
     results = tfidf.suggest([Document(text="abcdefghijk")])[0]  # unknown word
 
     assert len(results) == 0
+
+
+def test_tfidf_suggest_old_model_error(datadir, project):
+    tfidf_type = annif.backend.get_backend("tfidf")
+    tfidf = tfidf_type(backend_id="tfidf", config_params={"limit": 10}, project=project)
+
+    datadir.join("tfidf-matrix.npz").remove()
+    datadir.join("tfidf-index").ensure()
+
+    with pytest.raises(OperationFailedException) as excinfo:
+        results = tfidf.suggest([Document(text="abcdefghijk")])
+
+    assert (
+        "TFIDF models trained on Annif versions older than 1.4 cannot be loaded"
+        in str(excinfo.value)
+    )
