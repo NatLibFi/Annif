@@ -11,7 +11,11 @@ from scipy.sparse import csr_array, load_npz, save_npz
 from sklearn.preprocessing import normalize
 
 import annif.util
-from annif.exception import NotInitializedException, NotSupportedException
+from annif.exception import (
+    NotInitializedException,
+    NotSupportedException,
+    OperationFailedException,
+)
 from annif.suggestion import SuggestionBatch
 
 from . import backend, mixins
@@ -69,6 +73,7 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     _tfidf_matrix = None
 
     MATRIX_FILE = "tfidf-matrix.npz"
+    OLD_INDEX_FILE = "tfidf-index"
 
     def _generate_subjects_from_documents(
         self, corpus: DocumentCorpus
@@ -92,6 +97,11 @@ class TFIDFBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             self.debug("loading tf-idf matrix from {}".format(path))
             if os.path.exists(path):
                 self._tfidf_matrix = load_npz(path)
+            elif os.path.exists(os.path.join(self.datadir, self.OLD_INDEX_FILE)):
+                raise OperationFailedException(
+                    "TFIDF models trained on Annif versions older than 1.4 cannot be "
+                    "loaded. Please retrain your project."
+                )
             else:
                 raise NotInitializedException(
                     "tf-idf matrix {} not found".format(path),
