@@ -168,7 +168,9 @@ class DocumentFileCSV(DocumentCorpus):
                 yield from self._parse_row(row)
 
     def _parse_row(self, row: dict[str, str]) -> Iterator[Document]:
-        if self.require_subjects:
+        if self.require_subjects or (
+            self.subject_index is not None and "subject_uris" in row
+        ):
             subject_ids = {
                 self.subject_index.by_uri(annif.util.cleanup_uri(uri))
                 for uri in (row["subject_uris"] or "").strip().split()

@@ -153,10 +153,11 @@ class SubjectSet:
     def as_list(
         self, subject_index: SubjectIndex, language: str
     ) -> list[dict[str:str]]:
-        ret = []
+        subjects = []
         for subject_id in self._subject_ids:
             subject = subject_index[subject_id]
-            ret.append({"uri": subject.uri, "label": subject.labels[language]})
+            subjects.append({"uri": subject.uri, "label": subject.labels[language]})
+        return subjects
 
     def __repr__(self):
         return f"SubjectSet({self._subject_ids!r})"

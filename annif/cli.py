@@ -377,7 +377,7 @@ def run_index_file(
     backend_param,
 ):
     """
-    Index a file with documents, suggesting subjects for each document.
+    Index file(s) containing documents, suggesting subjects for each document.
     Write the results in JSONL files with the given suffix (``.annif.jsonl`` by
     default).
     """
