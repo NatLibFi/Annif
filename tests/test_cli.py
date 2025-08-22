@@ -320,8 +320,8 @@ def test_train_tsv(testdatadir):
     assert result.exit_code == 0
     assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
     assert testdatadir.join("projects/tfidf-fi/vectorizer").size() > 0
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").exists()
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
 
 
 def test_train_csv(testdatadir):
@@ -333,8 +333,8 @@ def test_train_csv(testdatadir):
     assert result.exit_code == 0
     assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
     assert testdatadir.join("projects/tfidf-fi/vectorizer").size() > 0
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").exists()
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
 
 
 def test_train_jsonl(testdatadir):
@@ -346,8 +346,8 @@ def test_train_jsonl(testdatadir):
     assert result.exit_code == 0
     assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
     assert testdatadir.join("projects/tfidf-fi/vectorizer").size() > 0
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").exists()
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
 
 
 def test_train_multiple(testdatadir):
@@ -364,8 +364,8 @@ def test_train_multiple(testdatadir):
     assert result.exit_code == 0
     assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
     assert testdatadir.join("projects/tfidf-fi/vectorizer").size() > 0
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").exists()
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
 
 
 def test_train_cached(testdatadir):
