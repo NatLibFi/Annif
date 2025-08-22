@@ -768,6 +768,124 @@ def test_index_nonexistent_path():
     )
 
 
+def test_index_file_tsv(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    lines = (
+        "Läntinen\t<http://example.org/none>",
+        "Oulunlinnan\t<http://example.org/dummy>",
+        "Harald Hirmuinen\t<http://example.org/none>",
+    )
+    docfile.write("\n".join(lines))
+
+    result = runner.invoke(annif.cli.cli, ["index-file", "dummy-en", str(docfile)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    outfile = tmpdir.join("documents.annif.jsonl")
+    assert outfile.exists()
+
+    lines = outfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert data0["text"] == "Läntinen"
+    assert data0["subjects"][0]["uri"] == "http://example.org/none"
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+    assert data0["results"][0]["label"] == "dummy"
+    assert data0["results"][0]["score"] == 1.0
+
+    data1 = json.loads(lines[1])
+    assert data1["text"] == "Oulunlinnan"
+    assert data1["subjects"][0]["uri"] == "http://example.org/dummy"
+    assert len(data1["results"]) == 1
+
+    # make sure that preexisting output files are not overwritten
+    result = runner.invoke(annif.cli.cli, ["index-file", "dummy-en", str(docfile)])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Not overwriting" in result.output
+
+    # check that the --force parameter forces overwriting
+    result = runner.invoke(
+        annif.cli.cli, ["index-file", "dummy-fi", "--force", str(docfile)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+    lines = outfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert data0["text"] == "Läntinen"
+    assert data0["subjects"][0]["uri"] == "http://example.org/none"
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+    assert data0["results"][0]["label"] == "dummy-fi"
+    assert data0["results"][0]["score"] == 1.0
+
+
+def test_index_file_csv(tmpdir):
+    docfile = tmpdir.join("documents.csv")
+    lines = (
+        "text,subject_uris",
+        "Läntinen,<http://example.org/none>",
+        "Oulunlinnan,<http://example.org/dummy>",
+        '"Harald Hirmuinen",<http://example.org/none>',
+    )
+    docfile.write("\n".join(lines))
+
+    result = runner.invoke(annif.cli.cli, ["index-file", "dummy-en", str(docfile)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    outfile = tmpdir.join("documents.annif.jsonl")
+    assert outfile.exists()
+
+    lines = outfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert data0["text"] == "Läntinen"
+    assert data0["subjects"][0]["uri"] == "http://example.org/none"
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+    assert data0["results"][0]["label"] == "dummy"
+    assert data0["results"][0]["score"] == 1.0
+
+    data1 = json.loads(lines[1])
+    assert data1["text"] == "Oulunlinnan"
+    assert data1["subjects"][0]["uri"] == "http://example.org/dummy"
+    assert len(data1["results"]) == 1
+
+
+def test_index_file_jsonl(tmpdir):
+    docfile = tmpdir.join("documents.jsonl")
+    lines = (
+        '{"text": "Läntinen", ' + '"subjects": [{"uri": "http://example.org/none"}]}',
+        '{"text": "Oulunlinnan", '
+        + '"subjects": [{"uri": "http://example.org/dummy"}]}',
+        '{"text": "Harald Hirmuinen", '
+        + '"subjects": [{"uri": "http://example.org/none"}]}',
+    )
+    docfile.write("\n".join(lines))
+
+    result = runner.invoke(annif.cli.cli, ["index-file", "dummy-en", str(docfile)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    outfile = tmpdir.join("documents.annif.jsonl")
+    assert outfile.exists()
+
+    lines = outfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert data0["text"] == "Läntinen"
+    assert data0["subjects"][0]["uri"] == "http://example.org/none"
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+    assert data0["results"][0]["label"] == "dummy"
+    assert data0["results"][0]["score"] == 1.0
+
+    data1 = json.loads(lines[1])
+    assert data1["text"] == "Oulunlinnan"
+    assert data1["subjects"][0]["uri"] == "http://example.org/dummy"
+    assert len(data1["results"]) == 1
+
+
 def test_eval_label(tmpdir):
     tmpdir.join("doc1.txt").write("doc1")
     tmpdir.join("doc1.key").write("dummy")
