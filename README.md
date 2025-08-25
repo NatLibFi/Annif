@@ -131,19 +131,50 @@ See "Cite this repository" in the details of the repository.
 <ul>
 <li>
 Suominen, O; Inkinen, J.; Lehtinen, M. 2025.
-Annif at SemEval-2025 Task 5: Traditional XMTC augmented by LLMs, pre-print.
-https://arxiv.org/abs/2504.19675
+Annif at the GermEval-2025 LLMs4Subjects Task: Traditional XMTC Augmented by Efficient LLMs, pre-print.
+https://arxiv.org/abs/2508.15877
 <details>
 <summary>See BibTex</summary>
 
-    @misc{suominen2025annifsemeval2025task5,
-      title={Annif at SemEval-2025 Task 5: Traditional XMTC augmented by LLMs},
+    @misc{suominen2025annifgermeval2025,
+      title={https://arxiv.org/abs/2508.15877},
       author={Osma Suominen and Juho Inkinen and Mona Lehtinen},
       year={2025},
-      eprint={2504.19675},
+      eprint={2508.15877},
       archivePrefix={arXiv},
       primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2504.19675},
+      url={https://arxiv.org/abs/2508.15877},
+    }
+</details>
+</li>
+<li>
+Suominen, O; Inkinen, J.; Lehtinen, M. 2025.
+Annif at SemEval-2025 Task 5: Traditional XMTC augmented by LLMs.
+In Proceedings of the 19th International Workshop on Semantic Evaluation (SemEval-2025), pp. 2424–2431, Vienna, Austria. Association for Computational Linguistics.
+https://aclanthology.org/2025.semeval-1.315/
+https://arxiv.org/abs/2504.19675
+<details>
+<summary>See BibTex</summary>
+    
+    @misc{suominen2025annifsemeval2025task5,
+      title={Annif at SemEval-2025 Task 5: Traditional XMTC augmented by LLMs},
+      title = "Annif at {S}em{E}val-2025 Task 5: Traditional {XMTC} augmented by {LLM}s",
+      author = "Suominen, Osma and Inkinen, Juho and Lehtinen, Mona",
+      editor = "Rosenthal, Sara  and  Ros{\'a}, Aiala  and  Ghosh, Debanjan  and  Zampieri, Marcos",
+      booktitle = "Proceedings of the 19th International Workshop on Semantic Evaluation (SemEval-2025)",
+      month = jul,
+      year = "2025",
+      address = "Vienna, Austria",
+      publisher = "Association for Computational Linguistics",
+      url = "https://aclanthology.org/2025.semeval-1.315/",
+      pages = "2424--2431",
+      ISBN = "979-8-89176-273-2",
+      # ArXiv 
+      # year={2025},
+      # eprint={2504.19675},
+      # archivePrefix={arXiv},
+      # primaryClass={cs.CL},
+      # url={https://arxiv.org/abs/2504.19675},
     }
 </details>
 </li>
