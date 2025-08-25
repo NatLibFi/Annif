@@ -570,6 +570,22 @@ def test_docfile_csv_plain_invalid_columns_no_require_subjects(tmpdir, subject_i
     assert str(excinfo.value).startswith("Cannot parse CSV file")
 
 
+def test_docfile_csv_plain_no_require_subjects(tmpdir, subject_index):
+    docfile = tmpdir.join("documents_invalid.csv")
+    lines = (
+        "text",
+        "Läntinen",
+        "Oulunlinnan",
+        '"Harald Hirmuinen"',
+    )
+    docfile.write("\n".join(lines).encode("utf-8-sig"))
+
+    docs = annif.corpus.DocumentFileCSV(
+        str(docfile), subject_index, require_subjects=False
+    )
+    assert len(list(docs.documents)) == 3
+
+
 def test_docfile_tsv_gzipped(tmpdir, subject_index):
     docfile = tmpdir.join("documents.tsv.gz")
     with gzip.open(str(docfile), "wt") as gzf:
