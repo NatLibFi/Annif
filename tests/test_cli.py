@@ -1,6 +1,7 @@
 """Unit test module for Annif CLI commands"""
 
 import contextlib
+import gzip
 import importlib
 import json
 import os.path
@@ -819,6 +820,29 @@ def test_index_file_tsv(tmpdir):
     assert data0["results"][0]["uri"] == "http://example.org/dummy"
     assert data0["results"][0]["label"] == "dummy-fi"
     assert data0["results"][0]["score"] == 1.0
+
+
+def test_index_file_tsv_gzipped_output(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    lines = (
+        "Läntinen\t<http://example.org/none>",
+        "Oulunlinnan\t<http://example.org/dummy>",
+        "Harald Hirmuinen\t<http://example.org/none>",
+    )
+    docfile.write("\n".join(lines))
+
+    result = runner.invoke(
+        annif.cli.cli, ["index-file", "--gzip", "dummy-en", str(docfile)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+    outfile = tmpdir.join("documents.annif.jsonl.gz")
+    assert outfile.exists()
+
+    with gzip.open(str(outfile), "rt") as gzf:
+        lines = gzf.readlines()
+        assert len(lines) == 3
 
 
 def test_index_file_csv(tmpdir):
