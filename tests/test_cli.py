@@ -792,7 +792,7 @@ def test_index_file_tsv(tmpdir):
     assert data0["subjects"][0]["uri"] == "http://example.org/none"
     assert data0["results"][0]["uri"] == "http://example.org/dummy"
     assert data0["results"][0]["label"] == "dummy"
-    assert data0["results"][0]["score"] == 1.0
+    assert data0["results"][0]["score"] == pytest.approx(1.0)
 
     data1 = json.loads(lines[1])
     assert data1["text"] == "Oulunlinnan"
@@ -819,7 +819,7 @@ def test_index_file_tsv(tmpdir):
     assert data0["subjects"][0]["uri"] == "http://example.org/none"
     assert data0["results"][0]["uri"] == "http://example.org/dummy"
     assert data0["results"][0]["label"] == "dummy-fi"
-    assert data0["results"][0]["score"] == 1.0
+    assert data0["results"][0]["score"] == pytest.approx(1.0)
 
 
 def test_index_file_tsv_gzipped_output(tmpdir):
@@ -869,7 +869,7 @@ def test_index_file_csv(tmpdir):
     assert data0["subjects"][0]["uri"] == "http://example.org/none"
     assert data0["results"][0]["uri"] == "http://example.org/dummy"
     assert data0["results"][0]["label"] == "dummy"
-    assert data0["results"][0]["score"] == 1.0
+    assert data0["results"][0]["score"] == pytest.approx(1.0)
 
     data1 = json.loads(lines[1])
     assert data1["text"] == "Oulunlinnan"
@@ -902,7 +902,7 @@ def test_index_file_jsonl(tmpdir):
     assert data0["subjects"][0]["uri"] == "http://example.org/none"
     assert data0["results"][0]["uri"] == "http://example.org/dummy"
     assert data0["results"][0]["label"] == "dummy"
-    assert data0["results"][0]["score"] == 1.0
+    assert data0["results"][0]["score"] == pytest.approx(1.0)
 
     data1 = json.loads(lines[1])
     assert data1["text"] == "Oulunlinnan"
@@ -935,7 +935,7 @@ def test_index_file_with_language_override(tmpdir):
     assert data0["subjects"][0]["uri"] == "http://example.org/none"
     assert data0["results"][0]["uri"] == "http://example.org/dummy"
     assert data0["results"][0]["label"] == "dummy-fi"
-    assert data0["results"][0]["score"] == 1.0
+    assert data0["results"][0]["score"] == pytest.approx(1.0)
 
 
 def test_index_file_with_language_override_bad_value(tmpdir):
