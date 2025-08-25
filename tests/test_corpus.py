@@ -510,7 +510,7 @@ def test_docfile_csv_plain_invalid_lines(tmpdir, caplog, subject_index):
     assert len(list(docs.documents)) == 4
 
 
-def test_docfile_csv_plain_invalid_columns(tmpdir, subject_index):
+def test_docfile_csv_plain_invalid_columns_require_subjects(tmpdir, subject_index):
     docfile = tmpdir.join("documents_invalid.csv")
     lines = (
         "text,subject_uri",  # mistyped subject_uris column name
@@ -520,7 +520,27 @@ def test_docfile_csv_plain_invalid_columns(tmpdir, subject_index):
     )
     docfile.write("\n".join(lines).encode("utf-8-sig"))
 
-    docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
+    docs = annif.corpus.DocumentFileCSV(
+        str(docfile), subject_index, require_subjects=True
+    )
+    with pytest.raises(OperationFailedException) as excinfo:
+        list(docs.documents)
+    assert str(excinfo.value).startswith("Cannot parse CSV file")
+
+
+def test_docfile_csv_plain_invalid_columns_no_require_subjects(tmpdir, subject_index):
+    docfile = tmpdir.join("documents_invalid.csv")
+    lines = (
+        "texts,subject_uris",  # mistyped text column name
+        "Läntinen,<http://www.yso.fi/onto/yso/p2557>",
+        "Oulunlinnan,<http://www.yso.fi/onto/yso/p7346>",
+        '"Harald Hirmuinen",<http://www.yso.fi/onto/yso/p6479>',
+    )
+    docfile.write("\n".join(lines).encode("utf-8-sig"))
+
+    docs = annif.corpus.DocumentFileCSV(
+        str(docfile), subject_index, require_subjects=False
+    )
     with pytest.raises(OperationFailedException) as excinfo:
         list(docs.documents)
     assert str(excinfo.value).startswith("Cannot parse CSV file")
