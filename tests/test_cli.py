@@ -910,6 +910,51 @@ def test_index_file_jsonl(tmpdir):
     assert len(data1["results"]) == 1
 
 
+def test_index_file_with_language_override(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    lines = (
+        "Läntinen\t<http://example.org/none>",
+        "Oulunlinnan\t<http://example.org/dummy>",
+        "Harald Hirmuinen\t<http://example.org/none>",
+    )
+    docfile.write("\n".join(lines))
+
+    result = runner.invoke(
+        annif.cli.cli, ["index-file", "--language", "fi", "dummy-en", str(docfile)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+    outfile = tmpdir.join("documents.annif.jsonl")
+    assert outfile.exists()
+
+    lines = outfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert data0["text"] == "Läntinen"
+    assert data0["subjects"][0]["uri"] == "http://example.org/none"
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+    assert data0["results"][0]["label"] == "dummy-fi"
+    assert data0["results"][0]["score"] == 1.0
+
+
+def test_index_file_with_language_override_bad_value(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    lines = (
+        "Läntinen\t<http://example.org/none>",
+        "Oulunlinnan\t<http://example.org/dummy>",
+        "Harald Hirmuinen\t<http://example.org/none>",
+    )
+    docfile.write("\n".join(lines))
+
+    failed_result = runner.invoke(
+        annif.cli.cli, ["index-file", "--language", "xx", "dummy-en", str(docfile)]
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'language "xx" not supported by vocabulary' in failed_result.output
+
+
 def test_eval_label(tmpdir):
     tmpdir.join("doc1.txt").write("doc1")
     tmpdir.join("doc1.key").write("dummy")
