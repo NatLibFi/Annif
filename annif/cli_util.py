@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import collections
+import gzip
 import itertools
 import os
+import re
 import sys
-from typing import TYPE_CHECKING
+from contextlib import nullcontext
+from typing import TYPE_CHECKING, Optional, TextIO
 
 import click
 import click_log
@@ -188,6 +191,30 @@ def open_text_documents(paths: tuple[str, ...], docs_limit: int | None) -> Docum
             yield doc
 
     return annif.corpus.DocumentList(_docs(paths[:docs_limit]))
+
+
+def get_output_stream(
+    path: str, suffix: str, output: Optional[str], use_gzip: bool, force: bool
+) -> Optional[TextIO]:
+    """Return a writable output stream based on the output option."""
+
+    if output == "-":
+        return nullcontext(sys.stdout)
+    elif output:
+        outfilename = output + (
+            ".gz" if use_gzip and not output.endswith(".gz") else ""
+        )
+    else:
+        outfilename = re.sub(r"(\.[^.]+)?(\.gz)?$", "", path) + suffix
+        if use_gzip and not outfilename.endswith(".gz"):
+            outfilename += ".gz"
+
+    if not force and os.path.exists(outfilename):
+        click.echo(f"Not overwriting {outfilename} (use --force to override)")
+        return None
+
+    opener = gzip.open if use_gzip else open
+    return opener(outfilename, "wt", encoding="utf-8")
 
 
 def show_hits(

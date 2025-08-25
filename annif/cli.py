@@ -2,7 +2,6 @@
 operations and printing the results to console."""
 
 import collections
-import gzip
 import importlib
 import json
 import os.path
@@ -357,6 +356,13 @@ def run_index(
     help="Gzip compress result files",
 )
 @click.option(
+    "--output",
+    "-O",
+    type=click.Path(dir_okay=False, writable=True),
+    default=None,
+    help="Redirect all output to the given file (or '-' for stdout)",
+)
+@click.option(
     "--force/--no-force",
     "-f/-F",
     default=False,
@@ -378,6 +384,7 @@ def run_index_file(
     paths,
     suffix,
     use_gzip,
+    output,
     force,
     include_doc,
     limit,
@@ -390,6 +397,7 @@ def run_index_file(
     Write the results in JSONL files with the given suffix (``.annif.jsonl`` by
     default).
     """
+
     project = cli_util.get_project(project_id)
     lang = language or project.vocab_lang
     if lang not in project.vocab.languages:
@@ -404,28 +412,18 @@ def run_index_file(
             limit, threshold
         )
 
-        outfilename = re.sub(r"(\.[^.]+)?(\.gz)?$", "", path) + suffix
-
-        if use_gzip:
-            opener = gzip.open
-            outfilename += ".gz"
-        else:
-            opener = open
-
-        if os.path.exists(outfilename) and not force:
-            click.echo(
-                "Not overwriting {} (use --force to override)".format(outfilename)
-            )
+        stream_cm = cli_util.get_output_stream(path, suffix, output, use_gzip, force)
+        if stream_cm is None:
             continue
 
-        with opener(outfilename, "wt", encoding="utf-8") as outfile:
+        with stream_cm as stream:
             for doc, suggestions in zip(corpus.documents, results):
-                output = doc.as_dict(project.subjects, lang) if include_doc else {}
-                output["results"] = [
+                output_data = doc.as_dict(project.subjects, lang) if include_doc else {}
+                output_data["results"] = [
                     suggestion_to_dict(suggestion, project.subjects, lang)
                     for suggestion in suggestions
                 ]
-                outfile.write(json.dumps(output) + "\n")
+                stream.write(json.dumps(output_data) + "\n")
 
 
 @cli.command("eval")

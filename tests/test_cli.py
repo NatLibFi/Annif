@@ -955,6 +955,113 @@ def test_index_file_with_language_override_bad_value(tmpdir):
     assert 'language "xx" not supported by vocabulary' in failed_result.output
 
 
+def test_index_file_output_file(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    docfile.write(
+        "\n".join(
+            [
+                "Läntinen\t<http://example.org/none>",
+                "Oulunlinnan\t<http://example.org/dummy>",
+                "Harald Hirmuinen\t<http://example.org/none>",
+            ]
+        )
+    )
+
+    outputfile = tmpdir.join("output.jsonl")
+    result = runner.invoke(
+        annif.cli.cli,
+        ["index-file", "dummy-en", "--output", str(outputfile), str(docfile)],
+    )
+    assert result.exit_code == 0
+    assert outputfile.exists()
+
+    lines = outputfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert data0["text"] == "Läntinen"
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+
+
+def test_index_file_output_no_force(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    docfile.write("Läntinen\t<http://example.org/none>")
+
+    outputfile = tmpdir.join("output.jsonl")
+    outputfile.write("existing content")
+
+    result = runner.invoke(
+        annif.cli.cli,
+        ["index-file", "dummy-en", "--output", str(outputfile), str(docfile)],
+    )
+    assert result.exit_code == 0
+    assert "Not overwriting" in result.output
+    assert outputfile.read() == "existing content"
+
+
+def test_index_file_output_force(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    docfile.write("Läntinen\t<http://example.org/none>")
+
+    outputfile = tmpdir.join("output.jsonl")
+    outputfile.write("existing content")
+
+    result = runner.invoke(
+        annif.cli.cli,
+        [
+            "index-file",
+            "dummy-fi",
+            "--output",
+            str(outputfile),
+            "--force",
+            str(docfile),
+        ],
+    )
+    assert result.exit_code == 0
+
+    lines = outputfile.readlines()
+    assert len(lines) == 1
+    data0 = json.loads(lines[0])
+    assert data0["results"][0]["label"] == "dummy-fi"
+
+
+def test_index_file_output_stdout(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    docfile.write("Läntinen\t<http://example.org/none>")
+
+    result = runner.invoke(
+        annif.cli.cli,
+        ["index-file", "dummy-en", "--output", "-", str(docfile)],
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+
+    output_lines = result.output.strip().split("\n")
+    assert len(output_lines) == 1
+    data0 = json.loads(output_lines[0])
+    assert data0["text"] == "Läntinen"
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+
+
+def test_index_file_output_gzipped(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    docfile.write("Oulunlinnan\t<http://example.org/dummy>")
+
+    outputfile = tmpdir.join("custom-output.jsonl.gz")
+    result = runner.invoke(
+        annif.cli.cli,
+        ["index-file", "dummy-en", "--gzip", "--output", str(outputfile), str(docfile)],
+    )
+    assert result.exit_code == 0
+    assert outputfile.exists()
+
+    with gzip.open(str(outputfile), "rt", encoding="utf-8") as f:
+        lines = f.readlines()
+    assert len(lines) == 1
+    data = json.loads(lines[0])
+    assert data["text"] == "Oulunlinnan"
+    assert data["results"][0]["uri"] == "http://example.org/dummy"
+
+
 def test_eval_label(tmpdir):
     tmpdir.join("doc1.txt").write("doc1")
     tmpdir.join("doc1.key").write("dummy")
