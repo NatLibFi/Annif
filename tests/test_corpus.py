@@ -476,7 +476,9 @@ def test_docfile_csv_bom(tmpdir, subject_index):
     assert firstdoc.metadata == {}
 
 
-def test_docfile_tsv_plain_invalid_lines(tmpdir, caplog, subject_index):
+def test_docfile_tsv_plain_invalid_lines_require_subjects(
+    tmpdir, caplog, subject_index
+):
     logger = annif.logger
     logger.propagate = True
     docfile = tmpdir.join("documents_invalid.tsv")
@@ -487,12 +489,34 @@ def test_docfile_tsv_plain_invalid_lines(tmpdir, caplog, subject_index):
         A line with no tabs
         Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>"""
     )
-    docs = annif.corpus.DocumentFileTSV(str(docfile), subject_index)
+    docs = annif.corpus.DocumentFileTSV(
+        str(docfile), subject_index, require_subjects=True
+    )
     assert len(list(docs.documents)) == 3
     assert len(caplog.records) == 2
     expected_msg = "Skipping invalid line (missing tab):"
     for record in caplog.records:
         assert expected_msg in record.message
+
+
+def test_docfile_tsv_plain_tabless_no_require_subjects(tmpdir, subject_index):
+    logger = annif.logger
+    logger.propagate = True
+    docfile = tmpdir.join("documents_invalid.tsv")
+    docfile.write(
+        """Läntinen\t<http://www.yso.fi/onto/yso/p2557>
+
+        Oulunlinnan\t<http://www.yso.fi/onto/yso/p7346>
+        A line with no tabs
+        Harald Hirmuinen\t<http://www.yso.fi/onto/yso/p6479>"""
+    )
+    corpus = annif.corpus.DocumentFileTSV(
+        str(docfile), subject_index, require_subjects=False
+    )
+    docs = list(corpus.documents)
+    assert len(docs) == 5
+    assert docs[1].text == ""
+    assert docs[3].text == "A line with no tabs"
 
 
 def test_docfile_csv_plain_invalid_lines(tmpdir, caplog, subject_index):
