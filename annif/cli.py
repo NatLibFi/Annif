@@ -40,7 +40,6 @@ cli.params = [opt for opt in cli.params if opt.name not in ("env_file", "app")]
 
 @cli.command("list-projects")
 @cli_util.common_options
-@click_log.simple_verbosity_option(logger, default="ERROR")
 def run_list_projects():
     """
     List available projects.
@@ -112,7 +111,6 @@ def run_clear_project(project_id):
 
 @cli.command("list-vocabs")
 @cli_util.common_options
-@click_log.simple_verbosity_option(logger, default="ERROR")
 def run_list_vocabs():
     """
     List available vocabularies.
