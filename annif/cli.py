@@ -454,7 +454,7 @@ def run_eval(
 @cli.command("run")
 @click.option("--host", type=str, default="127.0.0.1")
 @click.option("--port", type=int, default=5000)
-@click_log.simple_verbosity_option(logger, default="ERROR")
+@click_log.simple_verbosity_option(logger)
 def run_app(**kwargs):
     """
     Run Annif in server mode for development.
