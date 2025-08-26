@@ -52,7 +52,7 @@ def json_to_document(
         logger.warning(f"JSON validation failed for file {filename}: {err.message}")
         return None
 
-    if require_subjects:
+    if require_subjects or (subject_index is not None and "subjects" in data):
         subject_set = _subjects_to_subject_set(
             data.get("subjects", []), subject_index, language
         )

@@ -25,7 +25,7 @@ from annif.exception import (
 )
 from annif.project import Access
 from annif.simplemma_util import detect_language
-from annif.util import metric_code
+from annif.util import metric_code, suggestion_to_dict
 
 logger = annif.logger
 click_log.basic_config(logger)
@@ -340,6 +340,90 @@ def run_index(
             continue
         with open(subjectfilename, "w", encoding="utf-8") as subjfile:
             cli_util.show_hits(suggestions, project, lang, file=subjfile)
+
+
+@cli.command("index-file")
+@cli_util.project_id
+@click.argument("paths", type=click.Path(exists=True, dir_okay=False), nargs=-1)
+@click.option(
+    "--suffix", "-s", default=".annif.jsonl", help="File name suffix for result files"
+)
+@click.option(
+    "--gzip/--no-gzip",
+    "-z/-Z",
+    "use_gzip",
+    default=False,
+    help="Gzip compress result files",
+)
+@click.option(
+    "--output",
+    "-O",
+    type=click.Path(dir_okay=False, writable=True),
+    default=None,
+    help="Redirect all output to the given file (or '-' for stdout)",
+)
+@click.option(
+    "--force/--no-force",
+    "-f/-F",
+    default=False,
+    help="Force overwriting of existing result files",
+)
+@click.option(
+    "--include-doc/--no-include-doc",
+    "-i/-I",
+    default=True,
+    help="Include input documents in output",
+)
+@click.option("--limit", "-l", default=10, help="Maximum number of subjects")
+@click.option("--threshold", "-t", default=0.0, help="Minimum score threshold")
+@click.option("--language", "-L", help="Language of subject labels")
+@cli_util.backend_param_option
+@cli_util.common_options
+def run_index_file(
+    project_id,
+    paths,
+    suffix,
+    use_gzip,
+    output,
+    force,
+    include_doc,
+    limit,
+    threshold,
+    language,
+    backend_param,
+):
+    """
+    Index file(s) containing documents, suggesting subjects for each document.
+    Write the results in JSONL files with the given suffix (``.annif.jsonl`` by
+    default).
+    """
+
+    project = cli_util.get_project(project_id)
+    lang = language or project.vocab_lang
+    if lang not in project.vocab.languages:
+        raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
+    backend_params = cli_util.parse_backend_params(backend_param, project)
+
+    for path in paths:
+        corpus = cli_util.open_doc_path(
+            path, project.subjects, lang, require_subjects=False
+        )
+        results = project.suggest_corpus(corpus, backend_params).filter(
+            limit, threshold
+        )
+
+        stream_cm = cli_util.get_output_stream(path, suffix, output, use_gzip, force)
+        if stream_cm is None:
+            continue
+
+        with stream_cm as stream:
+            for doc, suggestions in zip(corpus.documents, results):
+                output_data = doc.as_dict(project.subjects, lang) if include_doc else {}
+                output_data["results"] = [
+                    suggestion_to_dict(suggestion, project.subjects, lang)
+                    for suggestion in suggestions
+                ]
+                stream.write(json.dumps(output_data) + "\n")
 
 
 @cli.command("eval")
