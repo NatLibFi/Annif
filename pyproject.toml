@@ -17,6 +17,7 @@ maintainers = [
 keywords = [
     "machine-learning",
     "text-classification",
+    "multilabel-classification",
     "rest-api",
     "code4lib",
     "subject-indexing",
@@ -25,6 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
 ]
 
 dependencies = [
