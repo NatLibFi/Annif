@@ -848,10 +848,10 @@ def test_index_file_tsv_gzipped_output(tmpdir):
 def test_index_file_csv(tmpdir):
     docfile = tmpdir.join("documents.csv")
     lines = (
-        "text,subject_uris",
-        "Läntinen,<http://example.org/none>",
-        "Oulunlinnan,<http://example.org/dummy>",
-        '"Harald Hirmuinen",<http://example.org/none>',
+        "document_id,text,subject_uris",
+        "L,Läntinen,<http://example.org/none>",
+        "O,Oulunlinnan,<http://example.org/dummy>",
+        'HH,"Harald Hirmuinen",<http://example.org/none>',
     )
     docfile.write("\n".join(lines))
 
@@ -866,6 +866,7 @@ def test_index_file_csv(tmpdir):
     assert len(lines) == 3
     data0 = json.loads(lines[0])
     assert data0["text"] == "Läntinen"
+    assert data0["document_id"] == "L"
     assert data0["subjects"][0]["uri"] == "http://example.org/none"
     assert data0["results"][0]["uri"] == "http://example.org/dummy"
     assert data0["results"][0]["label"] == "dummy"
@@ -873,6 +874,7 @@ def test_index_file_csv(tmpdir):
 
     data1 = json.loads(lines[1])
     assert data1["text"] == "Oulunlinnan"
+    assert data1["document_id"] == "O"
     assert data1["subjects"][0]["uri"] == "http://example.org/dummy"
     assert len(data1["results"]) == 1
 
@@ -883,7 +885,7 @@ def test_index_file_jsonl(tmpdir):
         '{"text": "Läntinen", ' + '"subjects": [{"uri": "http://example.org/none"}]}',
         '{"text": "Oulunlinnan", '
         + '"subjects": [{"uri": "http://example.org/dummy"}]}',
-        '{"text": "Harald Hirmuinen", '
+        '{"text": "Harald Hirmuinen", "document_id": "HH", '
         + '"subjects": [{"uri": "http://example.org/none"}]}',
     )
     docfile.write("\n".join(lines))
@@ -908,6 +910,10 @@ def test_index_file_jsonl(tmpdir):
     assert data1["text"] == "Oulunlinnan"
     assert data1["subjects"][0]["uri"] == "http://example.org/dummy"
     assert len(data1["results"]) == 1
+
+    data2 = json.loads(lines[2])
+    assert data2["text"] == "Harald Hirmuinen"
+    assert data2["document_id"] == "HH"
 
 
 def test_index_file_with_language_override(tmpdir):

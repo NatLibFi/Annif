@@ -19,7 +19,7 @@ def test_document():
     assert doc.metadata == {}
     assert doc.file_path is None
     assert repr(doc) == (
-        "Document(text='Hello world', subject_set=SubjectSet([]), "
+        "Document(document_id=None, text='Hello world', subject_set=SubjectSet([]), "
         "metadata={}, file_path=None)"
     )
 
@@ -387,6 +387,22 @@ def test_docfile_csv_plain(tmpdir, subject_index):
     assert len(list(docs.documents)) == 3
 
 
+def test_docfile_csv_document_id(tmpdir, subject_index):
+    docfile = tmpdir.join("documents.csv")
+    lines = (
+        "document_id,text,subject_uris",
+        "L,Läntinen,<http://www.yso.fi/onto/yso/p2557>",
+        "O,Oulunlinnan,<http://www.yso.fi/onto/yso/p7346>",
+        'HH,"Harald Hirmuinen",<http://www.yso.fi/onto/yso/p6479>',
+    )
+    docfile.write("\n".join(lines))
+
+    docs = annif.corpus.DocumentFileCSV(str(docfile), subject_index)
+    assert len(list(docs.documents)) == 3
+    firstdoc = next(docs.documents)
+    assert firstdoc.document_id == "L"
+
+
 def test_docfile_csv_metadata(tmpdir, subject_index):
     docfile = tmpdir.join("documents-metadata.csv")
     lines = (
@@ -410,7 +426,7 @@ def test_docfile_csv_metadata(tmpdir, subject_index):
 def test_docfile_jsonl_plain(tmpdir, subject_index):
     docfile = tmpdir.join("documents.jsonl")
     lines = (
-        '{"text": "Läntinen", '
+        '{"text": "Läntinen", "document_id": "L", '
         + '"subjects": [{"uri": "http://www.yso.fi/onto/yso/p2557"}]}',
         '{"text": "Oulunlinnan", '
         + '"subjects": [{"uri": "http://www.yso.fi/onto/yso/p7346"}]}',
@@ -421,6 +437,8 @@ def test_docfile_jsonl_plain(tmpdir, subject_index):
 
     docs = annif.corpus.DocumentFileJSONL(str(docfile), subject_index, "fi")
     assert len(list(docs.documents)) == 3
+    firstdoc = next(docs.documents)
+    assert firstdoc.document_id == "L"
 
 
 def test_docfile_jsonl_broken(tmpdir, subject_index, caplog):
