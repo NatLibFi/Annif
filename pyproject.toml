@@ -48,6 +48,7 @@ tomli = { version = "~2.2.1", python = "<3.11" }
 simplemma = "~1.1.1"
 jsonschema = "~4.23.0"
 huggingface-hub = "~0.28.1"
+transformers = "<=4.49.0"
 
 fasttext-wheel = { version = "0.9.2", optional = true }
 voikko = { version = "0.5.*", optional = true }
