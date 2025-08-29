@@ -129,13 +129,6 @@ Subject index administration
 
    N/A
 
-.. click:: annif.cli:run_index_file
-   :prog: annif index-file
-
-**REST equivalent**
-
-   N/A
-
 .. click:: annif.cli:run_hyperopt
    :prog: annif hyperopt
 
