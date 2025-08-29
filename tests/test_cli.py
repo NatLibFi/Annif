@@ -789,6 +789,7 @@ def test_index_file_tsv(tmpdir):
     assert len(lines) == 3
     data0 = json.loads(lines[0])
     assert data0["text"] == "Läntinen"
+    assert "document_id" not in data0
     assert data0["subjects"][0]["uri"] == "http://example.org/none"
     assert data0["results"][0]["uri"] == "http://example.org/dummy"
     assert data0["results"][0]["label"] == "dummy"
@@ -796,6 +797,7 @@ def test_index_file_tsv(tmpdir):
 
     data1 = json.loads(lines[1])
     assert data1["text"] == "Oulunlinnan"
+    assert "document_id" not in data1
     assert data1["subjects"][0]["uri"] == "http://example.org/dummy"
     assert len(data1["results"]) == 1
 
@@ -876,6 +878,42 @@ def test_index_file_csv(tmpdir):
     assert data1["text"] == "Oulunlinnan"
     assert data1["document_id"] == "O"
     assert data1["subjects"][0]["uri"] == "http://example.org/dummy"
+    assert len(data1["results"]) == 1
+
+
+def test_index_file_csv_no_include_doc(tmpdir):
+    docfile = tmpdir.join("documents.csv")
+    lines = (
+        "document_id,text,subject_uris",
+        "L,Läntinen,<http://example.org/none>",
+        "O,Oulunlinnan,<http://example.org/dummy>",
+        'HH,"Harald Hirmuinen",<http://example.org/none>',
+    )
+    docfile.write("\n".join(lines))
+
+    result = runner.invoke(
+        annif.cli.cli, ["index-file", "--no-include-doc", "dummy-en", str(docfile)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+    outfile = tmpdir.join("documents.annif.jsonl")
+    assert outfile.exists()
+
+    lines = outfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert "text" not in data0
+    assert data0["document_id"] == "L"
+    assert "subjects" not in data0
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+    assert data0["results"][0]["label"] == "dummy"
+    assert data0["results"][0]["score"] == pytest.approx(1.0)
+
+    data1 = json.loads(lines[1])
+    assert "text" not in data1
+    assert data1["document_id"] == "O"
+    assert "subjects" not in data1
     assert len(data1["results"]) == 1
 
 

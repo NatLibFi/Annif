@@ -418,7 +418,12 @@ def run_index_file(
 
         with stream_cm as stream:
             for doc, suggestions in zip(corpus.documents, results):
-                output_data = doc.as_dict(project.subjects, lang) if include_doc else {}
+                if include_doc:
+                    output_data = doc.as_dict(project.subjects, lang)
+                else:
+                    output_data = {}
+                    if doc.document_id:
+                        output_data["document_id"] = doc.document_id
                 output_data["results"] = [
                     suggestion_to_dict(suggestion, project.subjects, lang)
                     for suggestion in suggestions

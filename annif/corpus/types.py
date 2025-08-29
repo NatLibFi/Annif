@@ -29,12 +29,16 @@ class Document:
         self.file_path = file_path
 
     def as_dict(self, subject_index: SubjectIndex, language: str) -> dict[str, Any]:
-        return {
-            "document_id": self.document_id,
-            "text": self.text,
-            "metadata": self.metadata,
-            "subjects": self.subject_set.as_list(subject_index, language),
-        }
+        doc = {"text": self.text}
+
+        if self.document_id:
+            doc["document_id"] = self.document_id
+        if self.metadata:
+            doc["metadata"] = self.metadata
+        if self.subject_set:
+            doc["subjects"] = self.subject_set.as_list(subject_index, language)
+
+        return doc
 
     def __repr__(self):
         return (
