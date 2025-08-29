@@ -3,6 +3,9 @@
   "title": "Document",
   "type": "object",
   "properties": {
+    "document_id": {
+      "type": "string"
+    },
     "text": {
       "type": "string"
     },
