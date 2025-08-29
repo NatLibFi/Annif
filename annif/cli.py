@@ -429,8 +429,6 @@ def run_index(
             process_directory(path)
         elif os.path.isfile(path):
             process_file(path)
-        else:
-            raise click.BadParameter(f"Path '{path}' is neither a file nor a directory")
 
 
 @cli.command("eval")
