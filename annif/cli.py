@@ -297,7 +297,7 @@ def run_suggest(
 
 @cli.command("index")
 @cli_util.project_id
-@click.argument("directory", type=click.Path(exists=True, file_okay=False))
+@click.argument("paths", type=click.Path(exists=True), nargs=-1)
 @click.option(
     "--suffix", "-s", default=".annif", help="File name suffix for result files"
 )
@@ -310,42 +310,6 @@ def run_suggest(
 @click.option("--limit", "-l", default=10, help="Maximum number of subjects")
 @click.option("--threshold", "-t", default=0.0, help="Minimum score threshold")
 @click.option("--language", "-L", help="Language of subject labels")
-@cli_util.backend_param_option
-@cli_util.common_options
-def run_index(
-    project_id, directory, suffix, force, limit, threshold, language, backend_param
-):
-    """
-    Index a directory with documents, suggesting subjects for each document.
-    Write the results in TSV files with the given suffix (``.annif`` by
-    default).
-    """
-    project = cli_util.get_project(project_id)
-    lang = language or project.vocab_lang
-    if lang not in project.vocab.languages:
-        raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
-    backend_params = cli_util.parse_backend_params(backend_param, project)
-
-    corpus = DocumentDirectory(directory, require_subjects=False)
-    results = project.suggest_corpus(corpus, backend_params).filter(limit, threshold)
-
-    for doc, suggestions in zip(corpus.documents, results):
-        subjectfilename = re.sub(r"\.(txt|json)$", suffix, doc.file_path)
-        if os.path.exists(subjectfilename) and not force:
-            click.echo(
-                "Not overwriting {} (use --force to override)".format(subjectfilename)
-            )
-            continue
-        with open(subjectfilename, "w", encoding="utf-8") as subjfile:
-            cli_util.show_hits(suggestions, project, lang, file=subjfile)
-
-
-@cli.command("index-file")
-@cli_util.project_id
-@click.argument("paths", type=click.Path(exists=True, dir_okay=False), nargs=-1)
-@click.option(
-    "--suffix", "-s", default=".annif.jsonl", help="File name suffix for result files"
-)
 @click.option(
     "--gzip/--no-gzip",
     "-z/-Z",
@@ -361,48 +325,58 @@ def run_index(
     help="Redirect all output to the given file (or '-' for stdout)",
 )
 @click.option(
-    "--force/--no-force",
-    "-f/-F",
-    default=False,
-    help="Force overwriting of existing result files",
-)
-@click.option(
     "--include-doc/--no-include-doc",
     "-i/-I",
     default=True,
     help="Include input documents in output",
 )
-@click.option("--limit", "-l", default=10, help="Maximum number of subjects")
-@click.option("--threshold", "-t", default=0.0, help="Minimum score threshold")
-@click.option("--language", "-L", help="Language of subject labels")
 @cli_util.backend_param_option
 @cli_util.common_options
-def run_index_file(
+def run_index(
     project_id,
     paths,
     suffix,
-    use_gzip,
-    output,
     force,
-    include_doc,
     limit,
     threshold,
     language,
     backend_param,
+    use_gzip=False,
+    output=None,
+    include_doc=True,
 ):
     """
-    Index file(s) containing documents, suggesting subjects for each document.
-    Write the results in JSONL files with the given suffix (``.annif.jsonl`` by
-    default).
+    Index documents from directories or files, suggesting subjects for each document.
+    Write the results in TSV files (for directories) or JSONL files (for files) with
+    the given suffix (.jsonl suffix will be added to JSONL files).
     """
-
     project = cli_util.get_project(project_id)
     lang = language or project.vocab_lang
     if lang not in project.vocab.languages:
         raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
     backend_params = cli_util.parse_backend_params(backend_param, project)
 
-    for path in paths:
+    # Helper function to process a directory
+    def process_directory(directory):
+        corpus = DocumentDirectory(directory, require_subjects=False)
+        results = project.suggest_corpus(corpus, backend_params).filter(
+            limit, threshold
+        )
+
+        for doc, suggestions in zip(corpus.documents, results):
+            subjectfilename = re.sub(r"\.(txt|json)$", suffix, doc.file_path)
+            if os.path.exists(subjectfilename) and not force:
+                click.echo(
+                    "Not overwriting {} (use --force to override)".format(
+                        subjectfilename
+                    )
+                )
+                continue
+            with open(subjectfilename, "w", encoding="utf-8") as subjfile:
+                cli_util.show_hits(suggestions, project, lang, file=subjfile)
+
+    # Helper function to process a file
+    def process_file(path):
         corpus = cli_util.open_doc_path(
             path, project.subjects, lang, require_subjects=False
         )
@@ -410,9 +384,12 @@ def run_index_file(
             limit, threshold
         )
 
-        stream_cm = cli_util.get_output_stream(path, suffix, output, use_gzip, force)
+        jsonl_suffix = suffix + ".jsonl" if not suffix.endswith(".jsonl") else suffix
+        stream_cm = cli_util.get_output_stream(
+            path, jsonl_suffix, output, use_gzip, force
+        )
         if stream_cm is None:
-            continue
+            return
 
         with stream_cm as stream:
             for doc, suggestions in zip(corpus.documents, results):
@@ -427,6 +404,13 @@ def run_index_file(
                     for suggestion in suggestions
                 ]
                 stream.write(json.dumps(output_data) + "\n")
+
+    # Process paths in the order they were given
+    for path in paths:
+        if os.path.isdir(path):
+            process_directory(path)
+        elif os.path.isfile(path):
+            process_file(path)
 
 
 @cli.command("eval")
