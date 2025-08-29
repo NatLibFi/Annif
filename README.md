@@ -72,7 +72,7 @@ Annif can be tried out in the [GitHub Codespaces](https://docs.github.com/en/cod
 
 A development version of Annif can be installed by cloning the [GitHub
 repository](https://github.com/NatLibFi/Annif).
-[Poetry](https://python-poetry.org/) is used for managing dependencies and virtual environment for the development version.
+[Poetry](https://python-poetry.org/) is used for managing dependencies and virtual environment for the development version; Poetry 2.0+ is required.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for information on [unit tests](CONTRIBUTING.md#unit-tests), [code style](CONTRIBUTING.md#code-style), [development flow](CONTRIBUTING.md#development-flow) etc. details that are useful when participating in Annif development.
 
@@ -89,7 +89,7 @@ Install [pipx](https://pypa.github.io/pipx/) and Poetry if you don't have them. 
 
 Open a new shell, and then install Poetry:
 
-    pipx install poetry
+    pipx install poetry==2.*
 
 Poetry can be installed also without pipx: check the [Poetry documentation](https://python-poetry.org/docs/master/#installation).
 
