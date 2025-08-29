@@ -40,7 +40,6 @@ cli.params = [opt for opt in cli.params if opt.name not in ("env_file", "app")]
 
 @cli.command("list-projects")
 @cli_util.common_options
-@click_log.simple_verbosity_option(logger, default="ERROR")
 def run_list_projects():
     """
     List available projects.
@@ -112,7 +111,6 @@ def run_clear_project(project_id):
 
 @cli.command("list-vocabs")
 @cli_util.common_options
-@click_log.simple_verbosity_option(logger, default="ERROR")
 def run_list_vocabs():
     """
     List available vocabularies.
@@ -545,8 +543,7 @@ def run_eval(
 @cli.command("run")
 @click.option("--host", type=str, default="127.0.0.1")
 @click.option("--port", type=int, default=5000)
-@click.option("--log-level")
-@click_log.simple_verbosity_option(logger, default="ERROR")
+@click_log.simple_verbosity_option(logger)
 def run_app(**kwargs):
     """
     Run Annif in server mode for development.
