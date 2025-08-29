@@ -39,8 +39,9 @@ def test_document_with_all_fields(subject_index):
     assert doc.metadata == {"title": "Hello"}
     assert doc.file_path == "hello.txt"
     assert repr(doc) == (
-        "Document(document_id='test', text='Hello world', subject_set=SubjectSet([42, 55]), "
-        "metadata={'title': 'Hello'}, file_path='hello.txt')"
+        "Document(document_id='test', text='Hello world', "
+        "subject_set=SubjectSet([42, 55]), metadata={'title': 'Hello'}, "
+        "file_path='hello.txt')"
     )
     assert doc.as_dict(subject_index, "en") == {
         "document_id": "test",
