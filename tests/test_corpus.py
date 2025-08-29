@@ -12,7 +12,7 @@ from annif.corpus import Document, SubjectSet, TransformingDocumentCorpus
 from annif.exception import OperationFailedException
 
 
-def test_document():
+def test_document(subject_index):
     doc = Document(text="Hello world")
     assert doc.text == "Hello world"
     assert doc.subject_set == SubjectSet()
@@ -22,6 +22,43 @@ def test_document():
         "Document(document_id=None, text='Hello world', subject_set=SubjectSet([]), "
         "metadata={}, file_path=None)"
     )
+    assert doc.as_dict(subject_index, "en") == {"text": "Hello world"}
+
+
+def test_document_with_all_fields(subject_index):
+    doc = Document(
+        text="Hello world",
+        document_id="test",
+        subject_set=SubjectSet([42, 55]),
+        metadata={"title": "Hello"},
+        file_path="hello.txt",
+    )
+    assert doc.text == "Hello world"
+    assert doc.document_id == "test"
+    assert doc.subject_set == SubjectSet([42, 55])
+    assert doc.metadata == {"title": "Hello"}
+    assert doc.file_path == "hello.txt"
+    assert repr(doc) == (
+        "Document(document_id='test', text='Hello world', subject_set=SubjectSet([42, 55]), "
+        "metadata={'title': 'Hello'}, file_path='hello.txt')"
+    )
+    assert doc.as_dict(subject_index, "en") == {
+        "document_id": "test",
+        "metadata": {
+            "title": "Hello",
+        },
+        "subjects": [
+            {
+                "label": "ancient DNA",
+                "uri": "http://www.yso.fi/onto/yso/p29546",
+            },
+            {
+                "label": "Megalithic culture",
+                "uri": "http://www.yso.fi/onto/yso/p14800",
+            },
+        ],
+        "text": "Hello world",
+    }
 
 
 def test_subjectset_uris(subject_index):
