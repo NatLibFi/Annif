@@ -5,8 +5,6 @@ import json
 import os.path
 from importlib.resources import files
 
-import jsonschema
-
 import annif
 from annif.vocab import SubjectIndex
 
@@ -39,6 +37,8 @@ def json_to_document(
     language: str,
     require_subjects: bool,
 ) -> Document | None:
+
+    import jsonschema
 
     try:
         data = json.loads(json_data)
