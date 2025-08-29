@@ -384,28 +384,10 @@ def run_index(
             limit, threshold
         )
 
-        # Determine output stream
-        if output == "-":
-            stream_cm = cli_util.get_output_stream(path, suffix, "-", use_gzip, force)
-        else:
-            # For individual files, generate output filename based on input path
-            if output:
-                outfilename = output + (
-                    ".gz" if use_gzip and not output.endswith(".gz") else ""
-                )
-                stream_cm = cli_util.get_output_stream(
-                    path, suffix, outfilename, use_gzip, force
-                )
-            else:
-                outfilename = (
-                    re.sub(r"(\.[^.]+)?(\.gz)?$", "", path) + suffix + ".jsonl"
-                )
-                if use_gzip and not outfilename.endswith(".gz"):
-                    outfilename += ".gz"
-                stream_cm = cli_util.get_output_stream(
-                    path, suffix, outfilename, use_gzip, force
-                )
-
+        jsonl_suffix = suffix + ".jsonl" if not suffix.endswith(".jsonl") else suffix
+        stream_cm = cli_util.get_output_stream(
+            path, jsonl_suffix, output, use_gzip, force
+        )
         if stream_cm is None:
             return
 
