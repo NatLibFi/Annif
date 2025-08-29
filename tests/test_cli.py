@@ -342,7 +342,9 @@ def test_train_jsonl(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__), "corpora", "archaeology", "documents.jsonl"
     )
-    result = runner.invoke(annif.cli.cli, ["train", "tfidf-fi", docfile])
+    result = runner.invoke(
+        annif.cli.cli, ["train", "--docs-limit", "100", "tfidf-fi", docfile]
+    )
     assert not result.exception
     assert result.exit_code == 0
     assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
