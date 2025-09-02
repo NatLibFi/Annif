@@ -122,21 +122,6 @@ def test_get_project_default_params_tfidf(registry):
         assert param in actual_params and actual_params[param] == val
 
 
-def test_get_project_default_params_fasttext(registry):
-    pytest.importorskip("annif.backend.fasttext")
-    project = registry.get_project("noparams-fasttext-fi")
-    expected_default_params = {
-        "limit": 100,  # From AnnifBackend class
-        "dim": 100,  # Rest from FastTextBackend class
-        "lr": 0.25,
-        "epoch": 5,
-        "loss": "hs",
-    }
-    actual_params = project.backend.params
-    for param, val in expected_default_params.items():
-        assert param in actual_params and actual_params[param] == val
-
-
 def test_get_project_invalid_config_file():
     cxapp = annif.create_app(
         config_name="annif.default_config.TestingInvalidProjectsConfig"
@@ -240,22 +225,6 @@ def test_project_learn_not_supported(registry, tmpdir):
         project.learn(docdir)
 
 
-def test_project_load_vocabulary_fasttext(registry, subject_file, testdatadir):
-    pytest.importorskip("annif.backend.fasttext")
-    project = registry.get_project("fasttext-fi")
-    project.vocab.load_vocabulary(subject_file)
-    assert testdatadir.join("vocabs/yso/subjects.csv").exists()
-    assert testdatadir.join("vocabs/yso/subjects.csv").size() > 0
-
-
-def test_project_train_fasttext(registry, document_corpus, testdatadir):
-    pytest.importorskip("annif.backend.fasttext")
-    project = registry.get_project("fasttext-fi")
-    project.train(document_corpus)
-    assert testdatadir.join("projects/fasttext-fi/fasttext-model").exists()
-    assert testdatadir.join("projects/fasttext-fi/fasttext-model").size() > 0
-
-
 def test_project_suggest(registry):
     project = registry.get_project("dummy-en")
     result = project.suggest([Document(text="this is some text")])[0]
@@ -353,6 +322,6 @@ def test_project_file_toml():
 def test_project_directory():
     cxapp = annif.create_app(config_name="annif.default_config.TestingDirectoryConfig")
     with cxapp.app.app_context():
-        assert len(annif.registry.get_projects()) == 20 + 2
+        assert len(annif.registry.get_projects()) == 17 + 2
         assert annif.registry.get_project("dummy-fi").project_id == "dummy-fi"
         assert annif.registry.get_project("dummy-fi-toml").project_id == "dummy-fi-toml"
