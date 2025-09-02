@@ -161,20 +161,18 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         params: dict[str, Any],
     ) -> SuggestionBatch:
         src_weight = dict(sources)
-        score_vectors = [
-            np.array(
+        score_vectors = np.array(
+            [
                 [
-                    [
-                        np.sqrt(suggestions.as_vector())
-                        * src_weight[project_id]
-                        * len(batch_by_source)
-                        for suggestions in batch
-                    ]
-                    for project_id, batch in batch_by_source.items()
-                ],
-                dtype=np.float32,
-            ).transpose(1, 2, 0)
-        ]
+                    np.sqrt(suggestions.as_vector())
+                    * src_weight[project_id]
+                    * len(batch_by_source)
+                    for suggestions in batch
+                ]
+                for project_id, batch in batch_by_source.items()
+            ],
+            dtype=np.float32,
+        ).transpose(1, 2, 0)
         prediction = self._model(score_vectors).numpy()
         return SuggestionBatch.from_sequence(
             [
