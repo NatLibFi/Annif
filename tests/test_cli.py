@@ -1897,12 +1897,9 @@ def test_completion_show_project_project_ids_all():
         "nobackend",
         "noname",
         "noparams-tfidf-fi",
-        "noparams-fasttext-fi",
         "pav",
         "tfidf-fi",
         "tfidf-en",
-        "fasttext-en",
-        "fasttext-fi",
     ]
 
 
