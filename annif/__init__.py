@@ -44,7 +44,9 @@ def create_cx_app(config_name: str | None = None) -> FlaskApp:
     from annif.openapi.validation import CustomRequestBodyValidator
 
     specdir = os.path.join(os.path.dirname(__file__), "openapi")
-    cxapp = connexion.FlaskApp(__name__, specification_dir=specdir)
+    cxapp = connexion.FlaskApp(
+        __name__, specification_dir=specdir, strict_validation=True
+    )
     config_name = _get_config_name(config_name)
     logger.debug(f"creating connexion app with configuration {config_name}")
     cxapp.app.config.from_object(config_name)
