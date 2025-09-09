@@ -1,6 +1,7 @@
 """Unit test module for Annif CLI commands"""
 
 import contextlib
+import gzip
 import importlib
 import json
 import os.path
@@ -10,6 +11,7 @@ import shutil
 from datetime import datetime, timedelta
 from unittest import mock
 
+import pytest
 from click.shell_completion import ShellComplete
 from click.testing import CliRunner
 from huggingface_hub.utils import HFValidationError
@@ -310,7 +312,7 @@ def test_list_vocabs_after_load():
     assert re.search(r"^yso\s+en,fi,sv\s+130\s+True", result.output, re.MULTILINE)
 
 
-def test_train(testdatadir):
+def test_train_tsv(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__), "corpora", "archaeology", "documents.tsv"
     )
@@ -319,21 +321,54 @@ def test_train(testdatadir):
     assert result.exit_code == 0
     assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
     assert testdatadir.join("projects/tfidf-fi/vectorizer").size() > 0
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").exists()
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
 
 
-def test_train_multiple(testdatadir):
+def test_train_csv(testdatadir):
     docfile = os.path.join(
-        os.path.dirname(__file__), "corpora", "archaeology", "documents.tsv"
+        os.path.dirname(__file__), "corpora", "archaeology", "documents.csv"
     )
-    result = runner.invoke(annif.cli.cli, ["train", "tfidf-fi", docfile, docfile])
+    result = runner.invoke(annif.cli.cli, ["train", "tfidf-fi", docfile])
     assert not result.exception
     assert result.exit_code == 0
     assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
     assert testdatadir.join("projects/tfidf-fi/vectorizer").size() > 0
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").exists()
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
+
+
+def test_train_jsonl(testdatadir):
+    docfile = os.path.join(
+        os.path.dirname(__file__), "corpora", "archaeology", "documents.jsonl"
+    )
+    result = runner.invoke(
+        annif.cli.cli, ["train", "--docs-limit", "100", "tfidf-fi", docfile]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+    assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
+    assert testdatadir.join("projects/tfidf-fi/vectorizer").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
+
+
+def test_train_multiple(testdatadir):
+    docfile_tsv = os.path.join(
+        os.path.dirname(__file__), "corpora", "archaeology", "documents.tsv"
+    )
+    docfile_csv = os.path.join(
+        os.path.dirname(__file__), "corpora", "archaeology", "documents.csv"
+    )
+    result = runner.invoke(
+        annif.cli.cli, ["train", "tfidf-fi", docfile_tsv, docfile_csv]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+    assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
+    assert testdatadir.join("projects/tfidf-fi/vectorizer").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
 
 
 def test_train_cached(testdatadir):
@@ -493,6 +528,31 @@ def test_suggest_param():
     assert result.exit_code == 0
 
 
+def test_suggest_metadata():
+    result = runner.invoke(
+        annif.cli.cli,
+        ["suggest", "--metadata", "score=0.6", "dummy-fi"],
+        input="kissa",
+    )
+    assert not result.exception
+    assert result.output.startswith("<http://example.org/dummy>\tdummy-fi\t0.6")
+    assert result.exit_code == 0
+
+
+def test_suggest_metadata_bad_value():
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        ["suggest", "--metadata", "foo", "dummy-fi"],
+        input="kissa",
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert (
+        "Invalid value: --metadata 'foo'. Expected <key>=<value>."
+        in failed_result.output
+    )
+
+
 def test_suggest_param_backend_nonexistent():
     result = runner.invoke(
         annif.cli.cli,
@@ -533,8 +593,8 @@ def test_suggest_file(tmpdir):
 def test_suggest_two_files(tmpdir):
     docfile1 = tmpdir.join("doc-1.txt")
     docfile1.write("nothing special")
-    docfile2 = tmpdir.join("doc-2.txt")
-    docfile2.write("again nothing special")
+    docfile2 = tmpdir.join("doc-2.json")
+    docfile2.write(json.dumps({"text": "again nothing special"}))
 
     result = runner.invoke(
         annif.cli.cli, ["suggest", "dummy-fi", str(docfile1), str(docfile2)]
@@ -601,7 +661,7 @@ def test_suggest_dash_path():
     assert result.exit_code == 0
 
 
-def test_index(tmpdir):
+def test_index_txt(tmpdir):
     tmpdir.join("doc1.txt").write("nothing special")
     # Existing subject files should not have an effect
     tmpdir.join("doc1.tsv").write("<http://example.org/dummy>\tdummy")
@@ -614,6 +674,44 @@ def test_index(tmpdir):
     assert tmpdir.join("doc1.annif").exists()
     assert (
         tmpdir.join("doc1.annif").read_text("utf-8")
+        == "<http://example.org/dummy>\tdummy\t1.0000\n"
+    )
+
+    # make sure that preexisting subject files are not overwritten
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Not overwriting" in result.output
+
+    # check that the --force parameter forces overwriting
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-fi", "--force", str(tmpdir)])
+    assert tmpdir.join("doc1.annif").exists()
+    assert "Not overwriting" not in result.output
+    assert (
+        tmpdir.join("doc1.annif").read_text("utf-8")
+        == "<http://example.org/dummy>\tdummy-fi\t1.0000\n"
+    )
+
+
+def test_index_json(tmpdir):
+    tmpdir.join("doc1.json").write('{"text": "nothing special"}')
+    tmpdir.join("doc2.json").write(
+        '{"text": "nothing special", "subjects": [{"label": "dummy"}]}'
+    )
+
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    assert tmpdir.join("doc1.annif").exists()
+    assert (
+        tmpdir.join("doc1.annif").read_text("utf-8")
+        == "<http://example.org/dummy>\tdummy\t1.0000\n"
+    )
+
+    assert tmpdir.join("doc2.annif").exists()
+    assert (
+        tmpdir.join("doc2.annif").read_text("utf-8")
         == "<http://example.org/dummy>\tdummy\t1.0000\n"
     )
 
@@ -668,9 +766,344 @@ def test_index_nonexistent_path():
     assert failed_result.exception
     assert failed_result.exit_code != 0
     assert (
-        "Invalid value for 'DIRECTORY': "
-        "Directory 'nonexistent_path' does not exist." in failed_result.output
+        "Invalid value for '[PATHS]...': "
+        "Path 'nonexistent_path' does not exist." in failed_result.output
     )
+
+
+def test_index_tsv(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    lines = (
+        "Läntinen\t<http://example.org/none>",
+        "Oulunlinnan\t<http://example.org/dummy>",
+        "Harald Hirmuinen\t<http://example.org/none>",
+    )
+    docfile.write("\n".join(lines))
+
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(docfile)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    outfile = tmpdir.join("documents.annif.jsonl")
+    assert outfile.exists()
+
+    lines = outfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert data0["text"] == "Läntinen"
+    assert "document_id" not in data0
+    assert data0["subjects"][0]["uri"] == "http://example.org/none"
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+    assert data0["results"][0]["label"] == "dummy"
+    assert data0["results"][0]["score"] == pytest.approx(1.0)
+
+    data1 = json.loads(lines[1])
+    assert data1["text"] == "Oulunlinnan"
+    assert "document_id" not in data1
+    assert data1["subjects"][0]["uri"] == "http://example.org/dummy"
+    assert len(data1["results"]) == 1
+
+    # make sure that preexisting output files are not overwritten
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(docfile)])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Not overwriting" in result.output
+
+    # check that the --force parameter forces overwriting
+    result = runner.invoke(
+        annif.cli.cli, ["index", "dummy-fi", "--force", str(docfile)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+    lines = outfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert data0["text"] == "Läntinen"
+    assert data0["subjects"][0]["uri"] == "http://example.org/none"
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+    assert data0["results"][0]["label"] == "dummy-fi"
+    assert data0["results"][0]["score"] == pytest.approx(1.0)
+
+
+def test_index_tsv_gzipped_output(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    lines = (
+        "Läntinen\t<http://example.org/none>",
+        "Oulunlinnan\t<http://example.org/dummy>",
+        "Harald Hirmuinen\t<http://example.org/none>",
+    )
+    docfile.write("\n".join(lines))
+
+    result = runner.invoke(annif.cli.cli, ["index", "--gzip", "dummy-en", str(docfile)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    outfile = tmpdir.join("documents.annif.jsonl.gz")
+    assert outfile.exists()
+
+    with gzip.open(str(outfile), "rt") as gzf:
+        lines = gzf.readlines()
+        assert len(lines) == 3
+
+
+def test_index_csv(tmpdir):
+    docfile = tmpdir.join("documents.csv")
+    lines = (
+        "document_id,text,subject_uris",
+        "L,Läntinen,<http://example.org/none>",
+        "O,Oulunlinnan,<http://example.org/dummy>",
+        'HH,"Harald Hirmuinen",<http://example.org/none>',
+    )
+    docfile.write("\n".join(lines))
+
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(docfile)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    outfile = tmpdir.join("documents.annif.jsonl")
+    assert outfile.exists()
+
+    lines = outfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert data0["text"] == "Läntinen"
+    assert data0["document_id"] == "L"
+    assert data0["subjects"][0]["uri"] == "http://example.org/none"
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+    assert data0["results"][0]["label"] == "dummy"
+    assert data0["results"][0]["score"] == pytest.approx(1.0)
+
+    data1 = json.loads(lines[1])
+    assert data1["text"] == "Oulunlinnan"
+    assert data1["document_id"] == "O"
+    assert data1["subjects"][0]["uri"] == "http://example.org/dummy"
+    assert len(data1["results"]) == 1
+
+
+def test_index_csv_no_include_doc(tmpdir):
+    docfile = tmpdir.join("documents.csv")
+    lines = (
+        "document_id,text,subject_uris",
+        "L,Läntinen,<http://example.org/none>",
+        "O,Oulunlinnan,<http://example.org/dummy>",
+        'HH,"Harald Hirmuinen",<http://example.org/none>',
+    )
+    docfile.write("\n".join(lines))
+
+    result = runner.invoke(
+        annif.cli.cli, ["index", "--no-include-doc", "dummy-en", str(docfile)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+    outfile = tmpdir.join("documents.annif.jsonl")
+    assert outfile.exists()
+
+    lines = outfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert "text" not in data0
+    assert data0["document_id"] == "L"
+    assert "subjects" not in data0
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+    assert data0["results"][0]["label"] == "dummy"
+    assert data0["results"][0]["score"] == pytest.approx(1.0)
+
+    data1 = json.loads(lines[1])
+    assert "text" not in data1
+    assert data1["document_id"] == "O"
+    assert "subjects" not in data1
+    assert len(data1["results"]) == 1
+
+
+def test_index_jsonl(tmpdir):
+    docfile = tmpdir.join("documents.jsonl")
+    lines = (
+        '{"text": "Läntinen", ' + '"subjects": [{"uri": "http://example.org/none"}]}',
+        '{"text": "Oulunlinnan", '
+        + '"subjects": [{"uri": "http://example.org/dummy"}]}',
+        '{"text": "Harald Hirmuinen", "document_id": "HH", '
+        + '"subjects": [{"uri": "http://example.org/none"}]}',
+    )
+    docfile.write("\n".join(lines))
+
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(docfile)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    outfile = tmpdir.join("documents.annif.jsonl")
+    assert outfile.exists()
+
+    lines = outfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert data0["text"] == "Läntinen"
+    assert data0["subjects"][0]["uri"] == "http://example.org/none"
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+    assert data0["results"][0]["label"] == "dummy"
+    assert data0["results"][0]["score"] == pytest.approx(1.0)
+
+    data1 = json.loads(lines[1])
+    assert data1["text"] == "Oulunlinnan"
+    assert data1["subjects"][0]["uri"] == "http://example.org/dummy"
+    assert len(data1["results"]) == 1
+
+    data2 = json.loads(lines[2])
+    assert data2["text"] == "Harald Hirmuinen"
+    assert data2["document_id"] == "HH"
+
+
+def test_index_tsv_with_language_override(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    lines = (
+        "Läntinen\t<http://example.org/none>",
+        "Oulunlinnan\t<http://example.org/dummy>",
+        "Harald Hirmuinen\t<http://example.org/none>",
+    )
+    docfile.write("\n".join(lines))
+
+    result = runner.invoke(
+        annif.cli.cli, ["index", "--language", "fi", "dummy-en", str(docfile)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+    outfile = tmpdir.join("documents.annif.jsonl")
+    assert outfile.exists()
+
+    lines = outfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert data0["text"] == "Läntinen"
+    assert data0["subjects"][0]["uri"] == "http://example.org/none"
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+    assert data0["results"][0]["label"] == "dummy-fi"
+    assert data0["results"][0]["score"] == pytest.approx(1.0)
+
+
+def test_index_tsv_with_language_override_bad_value(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    lines = (
+        "Läntinen\t<http://example.org/none>",
+        "Oulunlinnan\t<http://example.org/dummy>",
+        "Harald Hirmuinen\t<http://example.org/none>",
+    )
+    docfile.write("\n".join(lines))
+
+    failed_result = runner.invoke(
+        annif.cli.cli, ["index", "--language", "xx", "dummy-en", str(docfile)]
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert 'language "xx" not supported by vocabulary' in failed_result.output
+
+
+def test_index_output_file(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    docfile.write(
+        "\n".join(
+            [
+                "Läntinen\t<http://example.org/none>",
+                "Oulunlinnan\t<http://example.org/dummy>",
+                "Harald Hirmuinen\t<http://example.org/none>",
+            ]
+        )
+    )
+
+    outputfile = tmpdir.join("output.jsonl")
+    result = runner.invoke(
+        annif.cli.cli,
+        ["index", "dummy-en", "--output", str(outputfile), str(docfile)],
+    )
+    assert result.exit_code == 0
+    assert outputfile.exists()
+
+    lines = outputfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert data0["text"] == "Läntinen"
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+
+
+def test_index_output_no_force(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    docfile.write("Läntinen\t<http://example.org/none>")
+
+    outputfile = tmpdir.join("output.jsonl")
+    outputfile.write("existing content")
+
+    result = runner.invoke(
+        annif.cli.cli,
+        ["index", "dummy-en", "--output", str(outputfile), str(docfile)],
+    )
+    assert result.exit_code == 0
+    assert "Not overwriting" in result.output
+    assert outputfile.read() == "existing content"
+
+
+def test_index_output_force(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    docfile.write("Läntinen\t<http://example.org/none>")
+
+    outputfile = tmpdir.join("output.jsonl")
+    outputfile.write("existing content")
+
+    result = runner.invoke(
+        annif.cli.cli,
+        [
+            "index",
+            "dummy-fi",
+            "--output",
+            str(outputfile),
+            "--force",
+            str(docfile),
+        ],
+    )
+    assert result.exit_code == 0
+
+    lines = outputfile.readlines()
+    assert len(lines) == 1
+    data0 = json.loads(lines[0])
+    assert data0["results"][0]["label"] == "dummy-fi"
+
+
+def test_index_output_stdout(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    docfile.write("Läntinen\t<http://example.org/none>")
+
+    result = runner.invoke(
+        annif.cli.cli,
+        ["index", "dummy-en", "--output", "-", str(docfile)],
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+
+    output_lines = result.output.strip().split("\n")
+    assert len(output_lines) == 1
+    data0 = json.loads(output_lines[0])
+    assert data0["text"] == "Läntinen"
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+
+
+def test_index_output_gzipped(tmpdir):
+    docfile = tmpdir.join("documents.tsv")
+    docfile.write("Oulunlinnan\t<http://example.org/dummy>")
+
+    outputfile = tmpdir.join("custom-output.jsonl.gz")
+    result = runner.invoke(
+        annif.cli.cli,
+        ["index", "dummy-en", "--gzip", "--output", str(outputfile), str(docfile)],
+    )
+    assert result.exit_code == 0
+    assert outputfile.exists()
+
+    with gzip.open(str(outputfile), "rt", encoding="utf-8") as f:
+        lines = f.readlines()
+    assert len(lines) == 1
+    data = json.loads(lines[0])
+    assert data["text"] == "Oulunlinnan"
+    assert data["results"][0]["uri"] == "http://example.org/dummy"
 
 
 def test_eval_label(tmpdir):
@@ -685,17 +1118,17 @@ def test_eval_label(tmpdir):
     assert result.exit_code == 0
 
     precision = re.search(r"Precision .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(precision.group(1)) == 0.5
+    assert float(precision.group(1)) == pytest.approx(0.5)
     recall = re.search(r"Recall .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == 0.5
+    assert float(recall.group(1)) == pytest.approx(0.5)
     f_measure = re.search(r"F1 score .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(f_measure.group(1)) == 0.5
+    assert float(f_measure.group(1)) == pytest.approx(0.5)
     precision1 = re.search(r"Precision@1:\s+(\d.\d+)", result.output)
-    assert float(precision1.group(1)) == 0.5
+    assert float(precision1.group(1)) == pytest.approx(0.5)
     precision3 = re.search(r"Precision@3:\s+(\d.\d+)", result.output)
-    assert float(precision3.group(1)) == 0.5
+    assert float(precision3.group(1)) == pytest.approx(0.5)
     precision5 = re.search(r"Precision@5:\s+(\d.\d+)", result.output)
-    assert float(precision5.group(1)) == 0.5
+    assert float(precision5.group(1)) == pytest.approx(0.5)
     true_positives = re.search(r"True positives:\s+(\d+)", result.output)
     assert int(true_positives.group(1)) == 1
     false_positives = re.search(r"False positives:\s+(\d+)", result.output)
@@ -718,17 +1151,51 @@ def test_eval_uri(tmpdir):
     assert result.exit_code == 0
 
     precision = re.search(r"Precision .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(precision.group(1)) == 0.5
+    assert float(precision.group(1)) == pytest.approx(0.5)
     recall = re.search(r"Recall .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == 0.5
+    assert float(recall.group(1)) == pytest.approx(0.5)
     f_measure = re.search(r"F1 score .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(f_measure.group(1)) == 0.5
+    assert float(f_measure.group(1)) == pytest.approx(0.5)
     precision1 = re.search(r"Precision@1:\s+(\d.\d+)", result.output)
-    assert float(precision1.group(1)) == 0.5
+    assert float(precision1.group(1)) == pytest.approx(0.5)
     precision3 = re.search(r"Precision@3:\s+(\d.\d+)", result.output)
-    assert float(precision3.group(1)) == 0.5
+    assert float(precision3.group(1)) == pytest.approx(0.5)
     precision5 = re.search(r"Precision@5:\s+(\d.\d+)", result.output)
-    assert float(precision5.group(1)) == 0.5
+    assert float(precision5.group(1)) == pytest.approx(0.5)
+    true_positives = re.search(r"True positives:\s+(\d+)", result.output)
+    assert int(true_positives.group(1)) == 1
+    false_positives = re.search(r"False positives:\s+(\d+)", result.output)
+    assert int(false_positives.group(1)) == 1
+    false_negatives = re.search(r"False negatives:\s+(\d+)", result.output)
+    assert int(false_negatives.group(1)) == 1
+    ndocs = re.search(r"Documents evaluated:\s+(\d+)", result.output)
+    assert int(ndocs.group(1)) == 2
+
+
+def test_eval_json(tmpdir):
+    data1 = {"text": "doc1", "subjects": [{"uri": "http://example.org/dummy"}]}
+    tmpdir.join("doc1.json").write(json.dumps(data1))
+    data2 = {"text": "doc2", "subjects": [{"uri": "http://example.org/none"}]}
+    tmpdir.join("doc2.json").write(json.dumps(data2))
+    data3 = {"text": "doc3"}
+    tmpdir.join("doc3.json").write(json.dumps(data3))
+
+    result = runner.invoke(annif.cli.cli, ["eval", "dummy-en", str(tmpdir)])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    precision = re.search(r"Precision .*doc.*:\s+(\d.\d+)", result.output)
+    assert float(precision.group(1)) == pytest.approx(0.5)
+    recall = re.search(r"Recall .*doc.*:\s+(\d.\d+)", result.output)
+    assert float(recall.group(1)) == pytest.approx(0.5)
+    f_measure = re.search(r"F1 score .*doc.*:\s+(\d.\d+)", result.output)
+    assert float(f_measure.group(1)) == pytest.approx(0.5)
+    precision1 = re.search(r"Precision@1:\s+(\d.\d+)", result.output)
+    assert float(precision1.group(1)) == pytest.approx(0.5)
+    precision3 = re.search(r"Precision@3:\s+(\d.\d+)", result.output)
+    assert float(precision3.group(1)) == pytest.approx(0.5)
+    precision5 = re.search(r"Precision@5:\s+(\d.\d+)", result.output)
+    assert float(precision5.group(1)) == pytest.approx(0.5)
     true_positives = re.search(r"True positives:\s+(\d+)", result.output)
     assert int(true_positives.group(1)) == 1
     false_positives = re.search(r"False positives:\s+(\d+)", result.output)
@@ -756,7 +1223,7 @@ def test_eval_param(tmpdir):
     # since zero scores were set with the parameter, there should be no hits
     # at all
     recall = re.search(r"Recall .*doc.*:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == 0.0
+    assert float(recall.group(1)) == pytest.approx(0.0)
 
 
 def test_eval_metric(tmpdir):
@@ -966,11 +1433,11 @@ def test_optimize_dir(tmpdir):
     assert result.exit_code == 0
 
     precision = re.search(r"Best\s+Precision .*?doc.*?:\s+(\d.\d+)", result.output)
-    assert float(precision.group(1)) == 0.5
+    assert float(precision.group(1)) == pytest.approx(0.5)
     recall = re.search(r"Best\s+Recall .*?doc.*?:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == 0.5
+    assert float(recall.group(1)) == pytest.approx(0.5)
     f_measure = re.search(r"Best\s+F1 score .*?doc.*?:\s+(\d.\d+)", result.output)
-    assert float(f_measure.group(1)) == 0.5
+    assert float(f_measure.group(1)) == pytest.approx(0.5)
     ndocs = re.search(r"Documents evaluated:\s+(\d)", result.output)
     assert int(ndocs.group(1)) == 2
 
@@ -1079,7 +1546,7 @@ def test_run_help():
 
 
 @mock.patch("annif.hfh_util.upsert_modelcard")
-@mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
+@mock.patch("huggingface_hub.preupload_lfs_files")
 @mock.patch("huggingface_hub.CommitOperationAdd")
 @mock.patch("huggingface_hub.HfApi.create_commit")
 def test_upload(
@@ -1124,7 +1591,7 @@ def test_upload(
 
 
 @mock.patch("annif.hfh_util.upsert_modelcard")
-@mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
+@mock.patch("huggingface_hub.preupload_lfs_files")
 @mock.patch("huggingface_hub.CommitOperationAdd")
 @mock.patch("huggingface_hub.HfApi.create_commit")
 def test_upload_many(
@@ -1133,11 +1600,11 @@ def test_upload_many(
     result = runner.invoke(annif.cli.cli, ["upload", "dummy-*", "dummy-repo"])
     assert not result.exception
     assert create_commit.call_count == 1
-    assert CommitOperationAdd.call_count == 13
+    assert CommitOperationAdd.call_count == 15
     assert upsert_modelcard.call_count == 1
 
 
-@mock.patch("huggingface_hub.HfApi.preupload_lfs_files")
+@mock.patch("huggingface_hub.preupload_lfs_files")
 @mock.patch("huggingface_hub.CommitOperationAdd")
 @mock.patch("huggingface_hub.HfApi.create_commit")
 @mock.patch("annif.hfh_util.upsert_modelcard")
@@ -1418,6 +1885,7 @@ def test_completion_show_project_project_ids_all():
     assert completions == [
         "dummy-fi",
         "dummy-en",
+        "dummy-nolearn",
         "dummy-private",
         "dummy-vocablang",
         "dummy-exclude",
@@ -1429,12 +1897,9 @@ def test_completion_show_project_project_ids_all():
         "nobackend",
         "noname",
         "noparams-tfidf-fi",
-        "noparams-fasttext-fi",
         "pav",
         "tfidf-fi",
         "tfidf-en",
-        "fasttext-en",
-        "fasttext-fi",
     ]
 
 
@@ -1444,6 +1909,7 @@ def test_completion_show_project_project_ids_dummy():
     assert completions == [
         "dummy-fi",
         "dummy-en",
+        "dummy-nolearn",
         "dummy-private",
         "dummy-vocablang",
         "dummy-exclude",

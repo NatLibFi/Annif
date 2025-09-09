@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
     from scipy.sparse._csr import csr_matrix
 
+    from annif.corpus import Document
     from annif.suggestion import SubjectSuggestion
 
 
@@ -37,11 +38,15 @@ class ChunkingBackend(metaclass=abc.ABCMeta):
 
         pass  # pragma: no cover
 
-    def _suggest(self, text: str, params: dict[str, Any]) -> list[SubjectSuggestion]:
+    def _suggest(
+        self, doc: Document, params: dict[str, Any]
+    ) -> list[SubjectSuggestion]:
         self.debug(
-            'Suggesting subjects for text "{}..." (len={})'.format(text[:20], len(text))
+            'Suggesting subjects for text "{}..." (len={})'.format(
+                doc.text[:20], len(doc.text)
+            )
         )
-        sentences = self.project.analyzer.tokenize_sentences(text)
+        sentences = self.project.analyzer.tokenize_sentences(doc.text)
         self.debug("Found {} sentences".format(len(sentences)))
         chunksize = int(params["chunksize"])
         chunktexts = []

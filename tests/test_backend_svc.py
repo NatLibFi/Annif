@@ -3,7 +3,7 @@
 import pytest
 
 import annif.backend
-import annif.corpus
+from annif.corpus import Document
 from annif.exception import NotInitializedException, NotSupportedException
 
 
@@ -25,7 +25,7 @@ def test_svc_suggest_no_vectorizer(project):
     svc = svc_type(backend_id="svc", config_params={}, project=project)
 
     with pytest.raises(NotInitializedException):
-        svc.suggest(["example text"])[0]
+        svc.suggest([Document(text="example text")])[0]
 
 
 def test_svc_train(datadir, document_corpus, project, caplog):
@@ -71,7 +71,7 @@ def test_svc_suggest(project):
     svc_type = annif.backend.get_backend("svc")
     svc = svc_type(backend_id="svc", config_params={"limit": 20}, project=project)
 
-    results = svc.suggest(["""Arkeologiaa sanotaan joskus myös..."""])[0]
+    results = svc.suggest([Document(text="Arkeologiaa sanotaan joskus myös...")])[0]
 
     assert len(results) > 0
     assert len(results) <= 20
@@ -83,7 +83,7 @@ def test_svc_suggest_no_input(project):
     svc_type = annif.backend.get_backend("svc")
     svc = svc_type(backend_id="svc", config_params={"limit": 8}, project=project)
 
-    results = svc.suggest(["j"])[0]
+    results = svc.suggest([Document(text="j")])[0]
     assert len(results) == 0
 
 
@@ -93,4 +93,4 @@ def test_svc_suggest_no_model(datadir, project):
 
     datadir.join("svc-model.gz").remove()
     with pytest.raises(NotInitializedException):
-        svc.suggest(["example text"])[0]
+        svc.suggest([Document(text="example text")])[0]

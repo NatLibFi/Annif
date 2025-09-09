@@ -101,7 +101,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
 
         ndocs = 0
         for docid, doc in enumerate(corpus.documents):
-            hits = source_project.suggest([doc.text])[0]
+            hits = source_project.suggest([doc])[0]
             vector = hits.as_vector()
             for cid in np.flatnonzero(vector):
                 data.append(vector[cid])

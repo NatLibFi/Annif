@@ -21,7 +21,7 @@ from . import backend, mixins
 if TYPE_CHECKING:
     from scipy.sparse._csr import csr_matrix
 
-    from annif.corpus.document import DocumentCorpus
+    from annif.corpus import Document, DocumentCorpus
 
 
 class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
@@ -131,9 +131,9 @@ class OmikujiBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         self._create_model(params, jobs)
 
     def _suggest_batch(
-        self, texts: list[str], params: dict[str, Any]
+        self, documents: list[Document], params: dict[str, Any]
     ) -> SuggestionBatch:
-        vector = self.vectorizer.transform(texts)
+        vector = self.vectorizer.transform([doc.text for doc in documents])
         limit = int(params["limit"])
 
         batch_results = []

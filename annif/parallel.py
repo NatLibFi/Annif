@@ -61,7 +61,7 @@ class ProjectSuggestMap:
         filtered_hits = {}
         for project_id in self.project_ids:
             project = self.registry.get_project(project_id)
-            batch = project.suggest([doc.text], self.backend_params)
+            batch = project.suggest([doc], self.backend_params)
             filtered_hits[project_id] = batch.filter(self.limit, self.threshold)[0]
         return (filtered_hits, doc.subject_set)
 
@@ -69,12 +69,14 @@ class ProjectSuggestMap:
         self, batch
     ) -> tuple[dict[str, SuggestionBatch], Iterator[SubjectSet]]:
         filtered_hit_sets = {}
-        texts, subject_sets = zip(*[(doc.text, doc.subject_set) for doc in batch])
+        subject_sets = [doc.subject_set for doc in batch]
 
         for project_id in self.project_ids:
             project = self.registry.get_project(project_id)
-            batch = project.suggest(texts, self.backend_params)
-            filtered_hit_sets[project_id] = batch.filter(self.limit, self.threshold)
+            suggestion_batch = project.suggest(batch, self.backend_params)
+            filtered_hit_sets[project_id] = suggestion_batch.filter(
+                self.limit, self.threshold
+            )
         return (filtered_hit_sets, subject_sets)
 
 

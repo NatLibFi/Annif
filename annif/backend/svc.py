@@ -19,7 +19,7 @@ from . import backend, mixins
 if TYPE_CHECKING:
     from scipy.sparse._csr import csr_matrix
 
-    from annif.corpus.document import DocumentCorpus
+    from annif.corpus import Document, DocumentCorpus
 
 
 class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
@@ -106,9 +106,9 @@ class SVCBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         return results
 
     def _suggest_batch(
-        self, texts: list[str], params: dict[str, Any]
+        self, documents: list[Document], params: dict[str, Any]
     ) -> SuggestionBatch:
-        vector = self.vectorizer.transform(texts)
+        vector = self.vectorizer.transform([doc.text for doc in documents])
         confidences = self._model.decision_function(vector)
         # convert to 0..1 score range using logistic function
         scores_list = scipy.special.expit(confidences)

@@ -11,14 +11,14 @@ import connexion
 import annif.registry
 import annif.simplemma_util
 from annif.corpus import Document, DocumentList, SubjectSet
-from annif.exception import AnnifException
+from annif.exception import AnnifException, NotEnabledException
 from annif.project import Access
+from annif.util import suggestion_results_to_list
 
 if TYPE_CHECKING:
     from connexion.lifecycle import ConnexionResponse
 
     from annif.corpus.subject import SubjectIndex
-    from annif.suggestion import SubjectSuggestion, SuggestionResults
 
 
 def project_not_found_error(project_id: str) -> ConnexionResponse:
@@ -28,6 +28,16 @@ def project_not_found_error(project_id: str) -> ConnexionResponse:
         status=404,
         title="Project not found",
         detail="Project '{}' not found".format(project_id),
+    )
+
+
+def learning_not_enabled_error(project_id) -> ConnexionResponse:
+    """return a Connexion error object when a project is not configured for learning"""
+
+    return connexion.problem(
+        status=403,
+        title="Learning not allowed",
+        detail=f"Project '{project_id}' is not configured to allow learning via API",
     )
 
 
@@ -119,27 +129,6 @@ def detect_language(body: dict[str, Any]):
     return result, 200, {"Content-Type": "application/json"}
 
 
-def _suggestion_to_dict(
-    suggestion: SubjectSuggestion, subject_index: SubjectIndex, language: str
-) -> dict[str, str | float | None]:
-    subject = subject_index[suggestion.subject_id]
-    return {
-        "uri": subject.uri,
-        "label": subject.labels[language],
-        "notation": subject.notation,
-        "score": suggestion.score,
-    }
-
-
-def _hit_sets_to_list(
-    hit_sets: SuggestionResults, subjects: SubjectIndex, lang: str
-) -> list[dict[str, list]]:
-    return [
-        {"results": [_suggestion_to_dict(hit, subjects, lang) for hit in hits]}
-        for hits in hit_sets
-    ]
-
-
 def _is_error(result: list[dict[str, list]] | ConnexionResponse) -> bool:
     return (
         isinstance(result, connexion.lifecycle.ConnexionResponse)
@@ -156,7 +145,12 @@ def suggest(
     parameters = dict(
         (key, body[key]) for key in ["language", "limit", "threshold"] if key in body
     )
-    documents = [{"text": body["text"]}]
+    metadata = {
+        key[len("metadata_") :]: value
+        for key, value in body.items()
+        if key.startswith("metadata_")
+    }
+    documents = [{"text": body["text"], "metadata": metadata}]
     result = _suggest(project_id, documents, parameters)
 
     if _is_error(result):
@@ -205,11 +199,11 @@ def _suggest(
     threshold = parameters.get("threshold", 0.0)
 
     try:
-        hit_sets = project.suggest_corpus(corpus).filter(limit, threshold)
+        suggestion_results = project.suggest_corpus(corpus).filter(limit, threshold)
     except AnnifException as err:
         return server_error(err)
 
-    return _hit_sets_to_list(hit_sets, project.subjects, lang)
+    return suggestion_results_to_list(suggestion_results, project.subjects, lang)
 
 
 def _documents_to_corpus(
@@ -223,13 +217,16 @@ def _documents_to_corpus(
                 subject_set=SubjectSet(
                     [subject_index.by_uri(subj["uri"]) for subj in d["subjects"]]
                 ),
+                metadata=d.get("metadata", {}),
             )
             for d in documents
             if "text" in d and "subjects" in d
         ]
     else:
         corpus = [
-            Document(text=d["text"], subject_set=None) for d in documents if "text" in d
+            Document(text=d["text"], subject_set=None, metadata=d.get("metadata", {}))
+            for d in documents
+            if "text" in d
         ]
     return DocumentList(corpus)
 
@@ -248,6 +245,8 @@ def learn(
     try:
         corpus = _documents_to_corpus(body, project.subjects)
         project.learn(corpus)
+    except NotEnabledException:
+        return learning_not_enabled_error(project_id)
     except AnnifException as err:
         return server_error(err)
 

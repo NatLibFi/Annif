@@ -5,7 +5,7 @@ import logging
 import pytest
 
 import annif.backend
-import annif.corpus
+from annif.corpus import Document, DocumentFileTSV
 from annif.exception import NotSupportedException
 
 fasttext = pytest.importorskip("annif.backend.fasttext")
@@ -32,7 +32,7 @@ def test_fasttext_train(document_corpus, project, datadir):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id="fasttext",
-        config_params={"limit": 50, "dim": 100, "lr": 0.25, "epoch": 20, "loss": "hs"},
+        config_params={"limit": 50, "dim": 200, "lr": 0.25, "epoch": 20, "loss": "hs"},
         project=project,
     )
 
@@ -48,7 +48,7 @@ def test_fasttext_train_cached_jobs(project, datadir):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id="fasttext",
-        config_params={"limit": 50, "dim": 100, "lr": 0.25, "epoch": 20, "loss": "hs"},
+        config_params={"limit": 50, "dim": 200, "lr": 0.25, "epoch": 20, "loss": "hs"},
         project=project,
     )
 
@@ -62,7 +62,7 @@ def test_fasttext_train_unknown_subject(tmpdir, datadir, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id="fasttext",
-        config_params={"limit": 50, "dim": 100, "lr": 0.25, "epoch": 20, "loss": "hs"},
+        config_params={"limit": 50, "dim": 200, "lr": 0.25, "epoch": 20, "loss": "hs"},
         project=project,
     )
 
@@ -71,7 +71,7 @@ def test_fasttext_train_unknown_subject(tmpdir, datadir, project):
         "nonexistent\thttp://example.com/nonexistent\n"
         + "arkeologia\thttp://www.yso.fi/onto/yso/p1265"
     )
-    document_corpus = annif.corpus.DocumentFile(str(tmpfile), project.subjects)
+    document_corpus = DocumentFileTSV(str(tmpfile), project.subjects)
 
     fasttext.train(document_corpus)
     assert fasttext._model is not None
@@ -83,7 +83,7 @@ def test_fasttext_train_nodocuments(project, empty_corpus):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id="fasttext",
-        config_params={"limit": 50, "dim": 100, "lr": 0.25, "epoch": 20, "loss": "hs"},
+        config_params={"limit": 50, "dim": 200, "lr": 0.25, "epoch": 20, "loss": "hs"},
         project=project,
     )
 
@@ -126,7 +126,7 @@ def test_fasttext_train_pretrained(
         backend_id="fasttext",
         config_params={
             "limit": 50,
-            "dim": 100,
+            "dim": 200,
             "lr": 0.25,
             "epoch": 20,
             "loss": "hs",
@@ -173,7 +173,7 @@ def test_fasttext_suggest(project):
         config_params={
             "limit": 50,
             "chunksize": 1,
-            "dim": 100,
+            "dim": 200,
             "lr": 0.25,
             "epoch": 20,
             "loss": "hs",
@@ -183,12 +183,14 @@ def test_fasttext_suggest(project):
 
     results = fasttext.suggest(
         [
-            """Arkeologiaa sanotaan joskus myös
+            Document(
+                text="""Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
         pohjaan."""
+            )
         ]
     )[0]
 
@@ -204,7 +206,7 @@ def test_fasttext_suggest_empty_chunks(project):
         config_params={
             "limit": 50,
             "chunksize": 1,
-            "dim": 100,
+            "dim": 200,
             "lr": 0.25,
             "epoch": 20,
             "loss": "hs",
@@ -212,6 +214,6 @@ def test_fasttext_suggest_empty_chunks(project):
         project=project,
     )
 
-    results = fasttext.suggest([""])[0]
+    results = fasttext.suggest([Document(text="")])[0]
 
     assert len(results) == 0

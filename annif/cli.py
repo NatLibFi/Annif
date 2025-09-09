@@ -13,11 +13,11 @@ import click_log
 from flask.cli import FlaskGroup
 
 import annif
-import annif.corpus
 import annif.parallel
 import annif.project
 import annif.registry
 from annif import cli_util, hfh_util
+from annif.corpus import Document, DocumentDirectory
 from annif.exception import (
     NotInitializedException,
     NotSupportedException,
@@ -25,7 +25,7 @@ from annif.exception import (
 )
 from annif.project import Access
 from annif.simplemma_util import detect_language
-from annif.util import metric_code
+from annif.util import metric_code, suggestion_to_dict
 
 logger = annif.logger
 click_log.basic_config(logger)
@@ -40,7 +40,6 @@ cli.params = [opt for opt in cli.params if opt.name not in ("env_file", "app")]
 
 @cli.command("list-projects")
 @cli_util.common_options
-@click_log.simple_verbosity_option(logger, default="ERROR")
 def run_list_projects():
     """
     List available projects.
@@ -112,7 +111,6 @@ def run_clear_project(project_id):
 
 @cli.command("list-vocabs")
 @cli_util.common_options
-@click_log.simple_verbosity_option(logger, default="ERROR")
 def run_list_vocabs():
     """
     List available vocabularies.
@@ -254,13 +252,21 @@ def run_learn(project_id, paths, docs_limit, backend_param):
 @click.option("--language", "-L", help="Language of subject labels")
 @cli_util.docs_limit_option
 @cli_util.backend_param_option
+@click.option(
+    "--metadata",
+    "-D",
+    multiple=True,
+    help="Additional metadata for a document read from standard input. "
+    + "Syntax: `-D <field>=<value>`.",
+)
 @cli_util.common_options
 def run_suggest(
-    project_id, paths, limit, threshold, language, backend_param, docs_limit
+    project_id, paths, limit, threshold, language, backend_param, metadata, docs_limit
 ):
     """
-    Suggest subjects for a single document from standard input or for one or more
-    document file(s) given its/their path(s).
+    Suggest subjects for a single document from standard input (optionally
+    with metadata) or for one or more document file(s) given its/their
+    path(s).
     \f
     This will read a text document from standard input and suggest subjects for
     it, or if given path(s) to file(s), suggest subjects for it/them.
@@ -282,15 +288,16 @@ def run_suggest(
             cli_util.show_hits(suggestions, project, lang)
     else:
         text = sys.stdin.read()
-        suggestions = project.suggest([text], backend_params).filter(limit, threshold)[
-            0
-        ]
+        doc_metadata = cli_util.parse_metadata(metadata)
+        suggestions = project.suggest(
+            [Document(text=text, metadata=doc_metadata)], backend_params
+        ).filter(limit, threshold)[0]
         cli_util.show_hits(suggestions, project, lang)
 
 
 @cli.command("index")
 @cli_util.project_id
-@click.argument("directory", type=click.Path(exists=True, file_okay=False))
+@click.argument("paths", type=click.Path(exists=True), nargs=-1)
 @click.option(
     "--suffix", "-s", default=".annif", help="File name suffix for result files"
 )
@@ -303,15 +310,45 @@ def run_suggest(
 @click.option("--limit", "-l", default=10, help="Maximum number of subjects")
 @click.option("--threshold", "-t", default=0.0, help="Minimum score threshold")
 @click.option("--language", "-L", help="Language of subject labels")
+@click.option(
+    "--gzip/--no-gzip",
+    "-z/-Z",
+    "use_gzip",
+    default=False,
+    help="Gzip compress result files",
+)
+@click.option(
+    "--output",
+    "-O",
+    type=click.Path(dir_okay=False, writable=True),
+    default=None,
+    help="Redirect all output to the given file (or '-' for stdout)",
+)
+@click.option(
+    "--include-doc/--no-include-doc",
+    "-i/-I",
+    default=True,
+    help="Include input documents in output",
+)
 @cli_util.backend_param_option
 @cli_util.common_options
 def run_index(
-    project_id, directory, suffix, force, limit, threshold, language, backend_param
+    project_id,
+    paths,
+    suffix,
+    force,
+    limit,
+    threshold,
+    language,
+    backend_param,
+    use_gzip=False,
+    output=None,
+    include_doc=True,
 ):
     """
-    Index a directory with documents, suggesting subjects for each document.
-    Write the results in TSV files with the given suffix (``.annif`` by
-    default).
+    Index documents from directories or files, suggesting subjects for each document.
+    Write the results in TSV files (for directories) or JSONL files (for files) with
+    the given suffix (.jsonl suffix will be added to JSONL files).
     """
     project = cli_util.get_project(project_id)
     lang = language or project.vocab_lang
@@ -319,18 +356,61 @@ def run_index(
         raise click.BadParameter(f'language "{lang}" not supported by vocabulary')
     backend_params = cli_util.parse_backend_params(backend_param, project)
 
-    documents = annif.corpus.DocumentDirectory(directory, require_subjects=False)
-    results = project.suggest_corpus(documents, backend_params).filter(limit, threshold)
+    # Helper function to process a directory
+    def process_directory(directory):
+        corpus = DocumentDirectory(directory, require_subjects=False)
+        results = project.suggest_corpus(corpus, backend_params).filter(
+            limit, threshold
+        )
 
-    for (docfilename, _), suggestions in zip(documents, results):
-        subjectfilename = re.sub(r"\.txt$", suffix, docfilename)
-        if os.path.exists(subjectfilename) and not force:
-            click.echo(
-                "Not overwriting {} (use --force to override)".format(subjectfilename)
-            )
-            continue
-        with open(subjectfilename, "w", encoding="utf-8") as subjfile:
-            cli_util.show_hits(suggestions, project, lang, file=subjfile)
+        for doc, suggestions in zip(corpus.documents, results):
+            subjectfilename = re.sub(r"\.(txt|json)$", suffix, doc.file_path)
+            if os.path.exists(subjectfilename) and not force:
+                click.echo(
+                    "Not overwriting {} (use --force to override)".format(
+                        subjectfilename
+                    )
+                )
+                continue
+            with open(subjectfilename, "w", encoding="utf-8") as subjfile:
+                cli_util.show_hits(suggestions, project, lang, file=subjfile)
+
+    # Helper function to process a file
+    def process_file(path):
+        corpus = cli_util.open_doc_path(
+            path, project.subjects, lang, require_subjects=False
+        )
+        results = project.suggest_corpus(corpus, backend_params).filter(
+            limit, threshold
+        )
+
+        jsonl_suffix = suffix + ".jsonl" if not suffix.endswith(".jsonl") else suffix
+        stream_cm = cli_util.get_output_stream(
+            path, jsonl_suffix, output, use_gzip, force
+        )
+        if stream_cm is None:
+            return
+
+        with stream_cm as stream:
+            for doc, suggestions in zip(corpus.documents, results):
+                if include_doc:
+                    output_data = doc.as_dict(project.subjects, lang)
+                else:
+                    output_data = {}
+                    if doc.document_id:
+                        output_data["document_id"] = doc.document_id
+                output_data["results"] = [
+                    suggestion_to_dict(suggestion, project.subjects, lang)
+                    for suggestion in suggestions
+                ]
+                stream.write(json.dumps(output_data) + "\n")
+
+    # Process paths in the order they were given
+    for path in paths:
+        if os.path.isdir(path):
+            process_directory(path)
+        elif os.path.isfile(path):
+            process_file(path)
 
 
 @cli.command("eval")
@@ -447,8 +527,7 @@ def run_eval(
 @cli.command("run")
 @click.option("--host", type=str, default="127.0.0.1")
 @click.option("--port", type=int, default=5000)
-@click.option("--log-level")
-@click_log.simple_verbosity_option(logger, default="ERROR")
+@click_log.simple_verbosity_option(logger)
 def run_app(**kwargs):
     """
     Run Annif in server mode for development.
@@ -576,7 +655,7 @@ def run_optimize(project_id, paths, jobs, docs_limit, backend_param):
     "--results-file",
     "-r",
     type=click.File("w", encoding="utf-8", errors="ignore", lazy=True),
-    help="""Specify file path to write trial results as CSV.
+    help="""Specify file path to write trial results as TSV.
     File directory must exist, existing file will be overwritten.""",
 )
 @cli_util.docs_limit_option
@@ -748,6 +827,14 @@ def run_completion(shell):
     """Generate the script for tab-key autocompletion for the given shell. To enable the
     completion support in your current bash terminal session run\n
         source <(annif completion --bash)
+
+    To enable the completion support in all new sessions first add the completion script
+    in your home directory:\n
+        annif completion --bash > ~/.annif-complete.bash
+
+    Then make the script to be automatically sourced for new terminal sessions by adding
+    the following to your ~/.bashrc file (or in some alternative startup file)\n
+        source ~/.annif-complete.bash
     """
 
     if shell is None:

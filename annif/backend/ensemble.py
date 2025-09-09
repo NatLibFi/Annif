@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from optuna.trial import Trial
 
     from annif.backend.hyperopt import HPRecommendation
-    from annif.corpus.document import DocumentCorpus
+    from annif.corpus.document import Document, DocumentCorpus
 
 
 class BaseEnsembleBackend(backend.AnnifBackend):
@@ -41,10 +41,10 @@ class BaseEnsembleBackend(backend.AnnifBackend):
             project.initialize(parallel)
 
     def _suggest_with_sources(
-        self, texts: list[str], sources: list[tuple[str, float]]
+        self, documents: list[Document], sources: list[tuple[str, float]]
     ) -> dict[str, SuggestionBatch]:
         return {
-            project_id: self.project.registry.get_project(project_id).suggest(texts)
+            project_id: self.project.registry.get_project(project_id).suggest(documents)
             for project_id, _ in sources
         }
 
@@ -66,11 +66,34 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         )
 
     def _suggest_batch(
-        self, texts: list[str], params: dict[str, Any]
+        self, documents: list[Document], params: dict[str, Any]
     ) -> SuggestionBatch:
         sources = annif.util.parse_sources(params["sources"])
-        batch_by_source = self._suggest_with_sources(texts, sources)
+        batch_by_source = self._suggest_with_sources(documents, sources)
         return self._merge_source_batches(batch_by_source, sources, params)
+
+
+class EnsembleHPObjective(hyperopt.HPObjective):
+    """Objective function of the ensemble hyperparameter optimizer"""
+
+    @classmethod
+    def objective(cls, trial: Trial, args) -> float:
+        eval_batch = annif.eval.EvaluationBatch(args["subject_index"])
+        proj_weights = {
+            project_id: trial.suggest_float(project_id, 0.0, 1.0)
+            for project_id in args["sources"]
+        }
+        for gold_batch, src_batches in zip(
+            args["gold_batches"], args["source_batches"]
+        ):
+            batches = [src_batches[project_id] for project_id in args["sources"]]
+            weights = [proj_weights[project_id] for project_id in args["sources"]]
+            avg_batch = SuggestionBatch.from_averaged(batches, weights).filter(
+                limit=int(args["limit"])
+            )
+            eval_batch.evaluate_many(avg_batch, gold_batch)
+        results = eval_batch.results(metrics=[args["metric"]])
+        return results[args["metric"]]
 
 
 class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
@@ -79,7 +102,7 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
     def __init__(
         self, backend: EnsembleBackend, corpus: DocumentCorpus, metric: str
     ) -> None:
-        super().__init__(backend, corpus, metric)
+        super().__init__(backend, corpus, metric, EnsembleHPObjective)
         self._sources = [
             project_id
             for project_id, _ in annif.util.parse_sources(
@@ -87,9 +110,9 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
             )
         ]
 
-    def _prepare(self, n_jobs: int = 1) -> None:
-        self._gold_batches = []
-        self._source_batches = []
+    def _prepare(self, n_jobs: int = 1) -> dict[str, Any]:
+        gold_batches = []
+        source_batches = []
 
         for project_id in self._sources:
             project = self._backend.project.registry.get_project(project_id)
@@ -109,8 +132,17 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
             for suggestions, gold_batch in pool.imap_unordered(
                 psmap.suggest_batch, self._corpus.doc_batches
             ):
-                self._source_batches.append(suggestions)
-                self._gold_batches.append(gold_batch)
+                source_batches.append(suggestions)
+                gold_batches.append(gold_batch)
+
+        return {
+            "gold_batches": gold_batches,
+            "source_batches": source_batches,
+            "subject_index": self._backend.project.subjects,
+            "sources": self._sources,
+            "limit": self._backend.params["limit"],
+            "metric": self._metric,
+        }
 
     def _normalize(self, hps: dict[str, float]) -> dict[str, float]:
         total = sum(hps.values())
@@ -120,22 +152,6 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         return "sources=" + ",".join(
             [f"{src}:{weight:.4f}" for src, weight in hps.items()]
         )
-
-    def _objective(self, trial: Trial) -> float:
-        eval_batch = annif.eval.EvaluationBatch(self._backend.project.subjects)
-        proj_weights = {
-            project_id: trial.suggest_float(project_id, 0.0, 1.0)
-            for project_id in self._sources
-        }
-        for gold_batch, src_batches in zip(self._gold_batches, self._source_batches):
-            batches = [src_batches[project_id] for project_id in self._sources]
-            weights = [proj_weights[project_id] for project_id in self._sources]
-            avg_batch = SuggestionBatch.from_averaged(batches, weights).filter(
-                limit=int(self._backend.params["limit"])
-            )
-            eval_batch.evaluate_many(avg_batch, gold_batch)
-        results = eval_batch.results(metrics=[self._metric])
-        return results[self._metric]
 
     def _postprocess(self, study: Study) -> HPRecommendation:
         line = self._format_cfg_line(self._normalize(study.best_params))
