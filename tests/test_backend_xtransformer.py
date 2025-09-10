@@ -48,7 +48,6 @@ def test_xtransformer_default_params(project):
         "max_match_clusters": 32768,
         "do_fine_tune": True,
         "model_shortcut": "distilbert-base-multilingual-uncased",
-        # "model_shortcut": "bert-base-multilingual-uncased",
         "beam_size": 20,
         "limit": 100,
         "post_processor": "sigmoid",
@@ -72,7 +71,7 @@ def test_xtransformer_default_params(project):
         "max_active_matching_labels": None,
         "max_num_labels_in_gpu": 65536,
         "use_gpu": True,
-        "bootstrap_model": "linear",
+        "bootstrap_model": "linear"
     }
     actual = xtransformer.params
     assert len(actual) == len(expected)
@@ -128,7 +127,7 @@ def test_xtransformer_train(datadir, document_corpus, project, mocked_xtransform
         first_arg = train_mock.call_args.args[0]
         kwargs = train_mock.call_args.kwargs
         assert len(first_arg.X_text) == 6402
-        assert first_arg.X_feat.shape == (6402, 12479)
+        assert first_arg.X_feat.shape == (6402, 19507)
         assert first_arg.Y.shape == (6402, 130)
         expected_pred_params = XTransformer.PredParams.from_dict(
             {
@@ -156,7 +155,6 @@ def test_xtransformer_train(datadir, document_corpus, project, mocked_xtransform
                 "neg_mining_chain": "tfn+man",
                 "imbalanced_ratio": 0.0,
                 "imbalanced_depth": 100,
-                # "model_shortcut": "bert-base-multilingual-uncased",
                 "model_shortcut": "distilbert-base-multilingual-uncased",
                 "post_processor": "sigmoid",
                 "negative_sampling": "tfn",
@@ -179,7 +177,7 @@ def test_xtransformer_train(datadir, document_corpus, project, mocked_xtransform
                 "max_active_matching_labels": None,
                 "max_num_labels_in_gpu": 65536,
                 "use_gpu": True,
-                "bootstrap_model": "linear",
+                "bootstrap_model": "linear"
             },
             recursive=True,
         ).to_dict()

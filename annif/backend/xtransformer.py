@@ -25,7 +25,7 @@ from annif.util import (
 from . import backend, mixins
 
 
-class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
+class XTransformerBackend(mixins.PecosTfidfVectorizerMixin, backend.AnnifBackend):
     """XTransformer based backend for Annif"""
 
     name = "xtransformer"
@@ -79,7 +79,7 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         "max_active_matching_labels": int,
         "max_num_labels_in_gpu": int,
         "use_gpu": boolean,
-        "bootstrap_model": str,
+        "bootstrap_model": str
     }
 
     DEFAULT_PARAMETERS = {
@@ -123,7 +123,7 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
         "max_active_matching_labels": None,
         "max_num_labels_in_gpu": 65536,
         "use_gpu": True,
-        "bootstrap_model": "linear",
+        "bootstrap_model": "linear"
     }
 
     def _initialize_model(self):
@@ -227,12 +227,11 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             self.info("Reusing cached training data from previous run.")
         else:
             if corpus.is_empty():
-                raise NotSupportedException("Cannot t project with no documents")
+                raise NotSupportedException("Cannot train project with no documents")
             input = (doc.text for doc in corpus.documents)
             vecparams = {
                 "min_df": int(params["min_df"]),
-                "tokenizer": self.project.analyzer.tokenize_words,
-                "ngram_range": (1, int(params["ngram"])),
+                "ngram_range": [1, int(params["ngram"])]
             }
             veccorpus = self.create_vectorizer(input, vecparams)
             self._create_train_files(veccorpus, corpus)
@@ -241,7 +240,7 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
     def _suggest_batch(
         self, texts: list[str], params: dict[str, Any]
     ) -> SuggestionBatch:
-        vector = self.vectorizer.transform(texts)
+        vector = self.vectorizer.predict(texts)
         if vector.nnz == 0:  # All zero vector, empty result
             return list()
         new_params = apply_param_parse_config(self.PARAM_CONFIG, params)
@@ -249,7 +248,7 @@ class XTransformerBackend(mixins.TfidfVectorizerMixin, backend.AnnifBackend):
             texts,
             X_feat=vector.sorted_indices(),
             batch_size=new_params["batch_size"],
-            use_gpu=True,
+            use_gpu=new_params["use_gpu"],
             only_top_k=new_params["limit"],
             post_processor=new_params["post_processor"],
         )
