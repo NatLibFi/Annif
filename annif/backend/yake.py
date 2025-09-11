@@ -22,7 +22,7 @@ from . import backend
 if TYPE_CHECKING:
     from rdflib.term import URIRef
 
-    from annif.corpus.document import DocumentCorpus
+    from annif.corpus import Document, DocumentCorpus
 
 
 class YakeBackend(backend.AnnifBackend):
@@ -112,8 +112,12 @@ class YakeBackend(backend.AnnifBackend):
         words = phrase.split()
         return " ".join(sorted(words))
 
-    def _suggest(self, text: str, params: dict[str, Any]) -> list[SubjectSuggestion]:
-        self.debug(f'Suggesting subjects for text "{text[:20]}..." (len={len(text)})')
+    def _suggest(
+        self, doc: Document, params: dict[str, Any]
+    ) -> list[SubjectSuggestion]:
+        self.debug(
+            f'Suggesting subjects for text "{doc.text[:20]}..." (len={len(doc.text)})'
+        )
         limit = int(params["limit"])
 
         self._kw_extractor = yake.KeywordExtractor(
@@ -125,7 +129,7 @@ class YakeBackend(backend.AnnifBackend):
             top=int(params["num_keywords"]),
             features=self.params["features"],
         )
-        keyphrases = self._kw_extractor.extract_keywords(text)
+        keyphrases = self._kw_extractor.extract_keywords(doc.text)
         suggestions = self._keyphrases2suggestions(keyphrases)
 
         subject_suggestions = [

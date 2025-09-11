@@ -1,7 +1,7 @@
 import pytest
 
-import annif.corpus
 from annif.backend import get_backend
+from annif.corpus import Document, DocumentList
 from annif.exception import NotInitializedException, NotSupportedException
 
 stwfsa = pytest.importorskip("annif.backend.stwfsa")
@@ -46,7 +46,7 @@ def test_stwfsa_not_initialized(project):
     stwfsa_type = get_backend(stwfsa_backend_name)
     stwfsa = stwfsa_type(backend_id="stwfsa", config_params={}, project=project)
     with pytest.raises(NotInitializedException):
-        stwfsa.suggest(["example text"])[0]
+        stwfsa.suggest([Document(text="example text")])[0]
 
 
 def test_stwfsa_train(document_corpus, project, datadir):
@@ -62,7 +62,7 @@ def test_stwfsa_train(document_corpus, project, datadir):
 
 
 def test_empty_corpus(project):
-    corpus = annif.corpus.DocumentList([])
+    corpus = DocumentList([])
     stwfsa_type = get_backend(stwfsa_backend_name)
     stwfsa = stwfsa_type(
         backend_id=stwfsa_backend_name, config_params={"limit": 10}, project=project
@@ -86,7 +86,7 @@ def test_stwfsa_suggest_unknown(project):
     stwfsa = stwfsa_type(
         backend_id=stwfsa_backend_name, config_params={"limit": 10}, project=project
     )
-    results = stwfsa.suggest(["1234"])[0]
+    results = stwfsa.suggest([Document(text="1234")])[0]
     assert len(results) == 0
 
 
@@ -99,7 +99,8 @@ def test_stwfsa_suggest(project, datadir):
     # And "random" words between them
     results = stwfsa.suggest(
         [
-            """random
+            Document(
+                text="""random
     muinais-DNA random random
     labyrintit random random random
     Eurooppalainen yleissopimus arkeologisen perinnön suojelusta random
@@ -110,6 +111,7 @@ def test_stwfsa_suggest(project, datadir):
     muinaismuistoalueet  random random random
     zikkuratit random random
     termoluminesenssi random random random"""
+            )
         ]
     )[0]
     assert len(results) == 10

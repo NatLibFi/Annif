@@ -9,6 +9,11 @@ import os.path
 import tempfile
 from shutil import rmtree
 from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
+
+if TYPE_CHECKING:
+    from annif.corpus.subject import SubjectIndex
+    from annif.suggestion import SubjectSuggestion, SuggestionResults
 
 from annif import logger
 
@@ -148,3 +153,29 @@ def identity(x: Any) -> Any:
 def metric_code(metric):
     """Convert a human-readable metric name into an alphanumeric string"""
     return metric.translate(metric.maketrans(" ", "_", "()"))
+
+
+def suggestion_to_dict(
+    suggestion: SubjectSuggestion, subject_index: SubjectIndex, language: str
+) -> dict[str, str | float | None]:
+    subject = subject_index[suggestion.subject_id]
+    return {
+        "uri": subject.uri,
+        "label": subject.labels[language],
+        "notation": subject.notation,
+        "score": suggestion.score,
+    }
+
+
+def suggestion_results_to_list(
+    suggestion_results: SuggestionResults, subjects: SubjectIndex, lang: str
+) -> list[dict[str, list]]:
+    return [
+        {
+            "results": [
+                suggestion_to_dict(suggestion, subjects, lang)
+                for suggestion in suggestions
+            ]
+        }
+        for suggestions in suggestion_results
+    ]

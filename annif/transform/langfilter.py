@@ -34,7 +34,7 @@ class LangFilter(transform.BaseTransform):
             self.project.language
         )
 
-    def transform_fn(self, text: str) -> str:
+    def transform_text(self, text: str) -> str:
         if len(text) < self.text_min_length:
             return text
 

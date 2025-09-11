@@ -6,7 +6,7 @@ import pytest
 
 import annif
 import annif.backend
-import annif.corpus
+from annif.corpus import Document, DocumentDirectory
 
 
 def test_get_backend_nonexistent():
@@ -17,7 +17,7 @@ def test_get_backend_nonexistent():
 def test_get_backend_dummy(project, dummy_subject_index):
     dummy_type = annif.backend.get_backend("dummy")
     dummy = dummy_type(backend_id="dummy", config_params={}, project=project)
-    result = dummy.suggest(["this is some text"])[0]
+    result = dummy.suggest([Document(text="this is some text")])[0]
     assert len(result) == 1
     hits = list(result)
     assert hits[0].subject_id == dummy_subject_index.by_uri("http://example.org/dummy")
@@ -32,13 +32,13 @@ def test_learn_dummy(project, tmpdir):
     tmpdir.join("doc1.tsv").write("<http://www.yso.fi/onto/yso/p10849>\tarchaeologists")
     tmpdir.join("doc2.txt").write("doc2")
     tmpdir.join("doc2.tsv").write("<http://example.org/dummy>\tdummy")
-    docdir = annif.corpus.DocumentDirectory(
+    docdir = DocumentDirectory(
         str(tmpdir), project.subjects, "en", require_subjects=True
     )
 
     dummy.learn(docdir)
 
-    result = dummy.suggest(["this is some text"])[0]
+    result = dummy.suggest([Document(text="this is some text")])[0]
     assert len(result) == 1
     hits = list(result)
     assert hits[0].subject_id is not None

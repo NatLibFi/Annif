@@ -7,6 +7,7 @@ import pytest
 
 import annif.backend.dummy
 import annif.project
+from annif.corpus import Document
 from annif.exception import ConfigurationException, NotSupportedException
 from annif.project import Access
 
@@ -141,8 +142,22 @@ def test_get_project_invalid_config_file():
         config_name="annif.default_config.TestingInvalidProjectsConfig"
     )
     with cxapp.app.app_context():
-        with pytest.raises(ConfigurationException):
+        with pytest.raises(ConfigurationException) as excinfo:
             annif.registry.get_project("duplicatedvocab")
+        assert "option 'vocab' in section 'duplicatedvocab' already exists" in str(
+            excinfo.value
+        )
+
+
+def test_get_project_invalid_vocab_arg():
+    cxapp = annif.create_app(
+        config_name="annif.default_config.TestingInvalid2ProjectsConfig"
+    )
+    with cxapp.app.app_context():
+        project = annif.registry.get_project("invalid-vocab-arg")
+        with pytest.raises(ConfigurationException) as excinfo:
+            project.subjects
+        assert "unknown vocab keyword argument foo" in str(excinfo.value)
 
 
 def test_project_load_vocabulary_tfidf(registry, subject_file, testdatadir):
@@ -174,8 +189,8 @@ def test_project_tfidf_modification_time_prepared_only(registry, testdatadir):
 def test_project_train_tfidf(registry, document_corpus, testdatadir):
     project = registry.get_project("tfidf-fi")
     project.train(document_corpus)
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").exists()
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
 
 
 def test_project_tfidf_is_trained(registry):
@@ -206,7 +221,7 @@ def test_project_learn(registry, tmpdir):
         str(tmpdir), project.subjects, "en", require_subjects=True
     )
     project.learn(docdir)
-    result = project.suggest(["this is some text"])[0]
+    result = project.suggest([Document(text="this is some text")])[0]
     assert len(result) == 1
     hits = list(result)
     assert hits[0].subject_id == project.subjects.by_uri("http://example.org/none")
@@ -243,7 +258,7 @@ def test_project_train_fasttext(registry, document_corpus, testdatadir):
 
 def test_project_suggest(registry):
     project = registry.get_project("dummy-en")
-    result = project.suggest(["this is some text"])[0]
+    result = project.suggest([Document(text="this is some text")])[0]
     assert len(result) == 1
     hits = list(result)
     assert hits[0].subject_id == project.subjects.by_uri("http://example.org/dummy")
@@ -252,7 +267,7 @@ def test_project_suggest(registry):
 
 def test_project_suggest_transform_limit(registry):
     project = registry.get_project("limit-transform")
-    result = project.suggest(["this is some text"])[0]
+    result = project.suggest([Document(text="this is some text")])[0]
     assert len(result) == 0
 
 
@@ -279,7 +294,7 @@ def test_project_train_state_not_available(registry, caplog):
     project = registry.get_project("dummy-vocablang")
     project.backend.is_trained = None
     with caplog.at_level(logging.WARNING):
-        result = project.suggest(["this is some text"])[0]
+        result = project.suggest([Document(text="this is some text")])[0]
     assert project.is_trained is None
     assert len(result) == 1
     hits = list(result)
@@ -290,7 +305,8 @@ def test_project_train_state_not_available(registry, caplog):
 
 def test_project_transform_text_pass_through(registry):
     project = registry.get_project("dummy-transform")
-    assert project.transform.transform_text("this is some text") == "this is some text"
+    doc = Document(text="this is some text")
+    assert project.transform.transform_doc(doc).text == "this is some text"
 
 
 def test_project_not_initialized(registry):
@@ -337,6 +353,6 @@ def test_project_file_toml():
 def test_project_directory():
     cxapp = annif.create_app(config_name="annif.default_config.TestingDirectoryConfig")
     with cxapp.app.app_context():
-        assert len(annif.registry.get_projects()) == 19 + 2
+        assert len(annif.registry.get_projects()) == 20 + 2
         assert annif.registry.get_project("dummy-fi").project_id == "dummy-fi"
         assert annif.registry.get_project("dummy-fi-toml").project_id == "dummy-fi-toml"

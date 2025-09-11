@@ -12,7 +12,7 @@ from annif.util import apply_param_parse_config, atomic_save, boolean
 from . import backend
 
 if TYPE_CHECKING:
-    from annif.corpus.document import DocumentCorpus
+    from annif.corpus import Document, DocumentCorpus
 
 _KEY_CONCEPT_TYPE_URI = "concept_type_uri"
 _KEY_SUBTHESAURUS_TYPE_URI = "sub_thesaurus_type_uri"
@@ -121,9 +121,13 @@ class StwfsaBackend(backend.AnnifBackend):
             lambda model, store_path: model.store(store_path),
         )
 
-    def _suggest(self, text: str, params: dict[str, Any]) -> list[SubjectSuggestion]:
-        self.debug(f'Suggesting subjects for text "{text[:20]}..." (len={len(text)})')
-        result = self._model.suggest_proba([text])[0]
+    def _suggest(
+        self, doc: Document, params: dict[str, Any]
+    ) -> list[SubjectSuggestion]:
+        self.debug(
+            f'Suggesting subjects for text "{doc.text[:20]}..." (len={len(doc.text)})'
+        )
+        result = self._model.suggest_proba([doc.text])[0]
         suggestions = []
         for uri, score in result:
             subject_id = self.project.subjects.by_uri(uri)

@@ -66,6 +66,10 @@ paths:
       tags:
       - Automatic subject indexing
       summary: suggest subjects for a given text
+      description: >
+        This method suggests relevant subjects for a given input text (with
+        optional metadata). It supports optional parameters to control the
+        number of results, score threshold, and language of the subject labels.
       operationId: annif.rest.suggest
       parameters:
       - $ref: '#/components/parameters/project_id'
@@ -96,6 +100,9 @@ paths:
                 language:
                   type: string
                   description: language of subject labels
+              additionalProperties:
+                type: string
+                description: Additional metadata properties, starting with 'metadata_'
         required: true
       responses:
         "200":
@@ -115,6 +122,10 @@ paths:
       tags:
       - Automatic subject indexing
       summary: suggest subjects for the given batch of up to 32 documents
+      description: >
+        This method suggests relevant subjects for a batch of up to 32 input texts
+        (with optional metadata). It supports optional parameters to control the
+        number of results, score threshold, and language of the subject labels.
       operationId: annif.rest.suggest_batch
       parameters:
       - $ref: '#/components/parameters/project_id'
@@ -190,6 +201,8 @@ paths:
           content:
             application/json:
               {}
+        "403":
+          $ref: '#/components/responses/NotAllowed'
         "404":
           $ref: '#/components/responses/NotFound'
         "503":
@@ -387,13 +400,21 @@ components:
         document_id:
           type: string
           example: doc-1234
-      description: A document with an optional identifier
+        metadata:
+          type: object
+          additionalProperties:
+              type: string
+      description: A document with an optional identifier and/or metadata
     IndexedDocument:
       type: object
       properties:
         text:
           type: string
           example: A quick brown fox jumped over the lazy dog.
+        metadata:
+          type: object
+          additionalProperties:
+              type: string
         subjects:
           type: array
           items:
@@ -482,6 +503,12 @@ components:
             $ref: '#/components/schemas/Problem'
     NotFound:
       description: Project not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotAllowed:
+      description: Operation is not allowed
       content:
         application/problem+json:
           schema:

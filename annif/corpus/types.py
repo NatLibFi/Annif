@@ -12,7 +12,34 @@ if TYPE_CHECKING:
 
     from annif.vocab import SubjectIndex
 
-Document = collections.namedtuple("Document", "text subject_set")
+
+class Document:
+    def __init__(
+        self,
+        text: str,
+        subject_set: SubjectSet | None = None,
+        metadata: dict[str, Any] | None = None,
+        file_path: str | None = None,
+    ):
+        self.text = text
+        self.subject_set = subject_set if subject_set is not None else SubjectSet()
+        self.metadata = metadata if metadata is not None else {}
+        self.file_path = file_path
+
+    def as_dict(self, subject_index: SubjectIndex, language: str) -> dict[str, Any]:
+        return {
+            "text": self.text,
+            "metadata": self.metadata,
+            "subjects": self.subject_set.as_list(subject_index, language),
+        }
+
+    def __repr__(self):
+        return (
+            f"Document(text={self.text!r}, "
+            f"subject_set={self.subject_set!r}, "
+            f"metadata={self.metadata!r}, "
+            f"file_path={self.file_path!r})"
+        )
 
 
 class DocumentCorpus(metaclass=abc.ABCMeta):
@@ -122,3 +149,15 @@ class SubjectSet:
         destination[list(self._subject_ids)] = True
 
         return destination
+
+    def as_list(
+        self, subject_index: SubjectIndex, language: str
+    ) -> list[dict[str:str]]:
+        subjects = []
+        for subject_id in self._subject_ids:
+            subject = subject_index[subject_id]
+            subjects.append({"uri": subject.uri, "label": subject.labels[language]})
+        return subjects
+
+    def __repr__(self):
+        return f"SubjectSet({self._subject_ids!r})"

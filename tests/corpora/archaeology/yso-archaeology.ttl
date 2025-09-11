@@ -1,704 +1,840 @@
-@prefix kulometa: <http://www.yso.fi/onto/kulo-meta/> .
-@prefix ysa-meta: <http://www.yso.fi/onto/ysa-meta/> .
-@prefix owl:   <http://www.w3.org/2002/07/owl#> .
-@prefix ysa:   <http://www.yso.fi/onto/ysa/> .
-@prefix xhv:   <http://www.w3.org/1999/xhtml/vocab#> .
-@prefix gtkmeta: <http://www.yso.fi/onto/gtk-meta/> .
-@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .
-@prefix allars: <http://www.yso.fi/onto/allars/> .
-@prefix ns2:   <http://spinrdf.org/spin#> .
-@prefix ns1:   <http://spinrdf.org/sp#> .
-@prefix yso-update: <http://www.yso.fi/onto/yso-update/> .
-@prefix ns3:   <http://metadataregistry.org/uri/profile/regap/> .
-@prefix taometa: <http://www.yso.fi/onto/tao-meta/> .
-@prefix kitometa: <http://www.yso.fi/onto/kito-meta/> .
-@prefix yso:   <http://www.yso.fi/onto/yso/> .
+@prefix afometa:       <http://www.yso.fi/onto/afo-meta/> .
+@prefix allars:        <http://www.yso.fi/onto/allars/> .
+@prefix allars-meta:   <http://www.yso.fi/onto/allars-meta/> .
+@prefix dc:            <http://purl.org/dc/elements/1.1/> .
+@prefix dcam:          <http://purl.org/dc/dcam/> .
+@prefix dct:           <http://purl.org/dc/terms/> .
+@prefix dcterms:       <http://purl.org/dc/terms/> .
+@prefix dsv:           <http://purl.org/iso25964/DataSet/Versioning#> .
+@prefix foaf:          <http://xmlns.com/foaf/0.1/> .
+@prefix gtkmeta:       <http://www.yso.fi/onto/gtk-meta/> .
+@prefix isothes:       <http://purl.org/iso25964/skos-thes#> .
+@prefix juho:          <http://www.yso.fi/onto/juho/> .
+@prefix juhometa:      <http://www.yso.fi/onto/juho-meta/> .
+@prefix jupometa:      <http://www.yso.fi/onto/jupo-meta/> .
+@prefix kauno:         <http://www.yso.fi/onto/kauno/> .
+@prefix kaunometa:     <http://www.yso.fi/onto/kauno-meta/> .
+@prefix kitometa:      <http://www.yso.fi/onto/kito-meta/> .
+@prefix koko:          <http://www.yso.fi/onto/koko/> .
+@prefix koko-meta:     <http://www.yso.fi/onto/koko-meta/> .
+@prefix ktometa:       <http://www.yso.fi/onto/kto-meta/> .
+@prefix kulometa:      <http://www.yso.fi/onto/kulo-meta/> .
+@prefix lcsh:          <http://id.loc.gov/authorities/subjects> .
+@prefix liitometa:     <http://www.yso.fi/onto/liito-meta/> .
+@prefix lukemeta:      <http://www.yso.fi/onto/luke-meta/> .
+@prefix maometa:       <http://www.yso.fi/onto/mao-meta/> .
+@prefix merometa:      <http://www.yso.fi/onto/mero-meta/> .
+@prefix musometa:      <http://www.yso.fi/onto/muso-meta/> .
+@prefix ns1:           <http://spinrdf.org/sp#> .
+@prefix ns2:           <http://spinrdf.org/spin#> .
+@prefix ns3:           <http://metadataregistry.org/uri/profile/regap/> .
+@prefix oikometa:      <http://www.yso.fi/onto/oiko-meta/> .
+@prefix om:            <http://www.yso.fi/onto/yso-peilaus/2007-03-02/> .
+@prefix owl:           <http://www.w3.org/2002/07/owl#> .
+@prefix puhometa:      <http://www.yso.fi/onto/puho-meta/> .
+@prefix rdau:          <http://rdaregistry.info/Elements/u/> .
+@prefix rdf:           <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:          <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sd:            <http://www.w3.org/ns/sparql-service-description#> .
+@prefix sh:            <http://purl.org/skos-history/> .
+@prefix skos:          <http://www.w3.org/2004/02/skos/core#> .
+@prefix skosext:       <http://purl.org/finnonto/schema/skosext#> .
+@prefix sotometa:      <http://www.yso.fi/onto/soto-meta/> .
+@prefix taometa:       <http://www.yso.fi/onto/tao-meta/> .
+@prefix termed:        <termed:property:> .
+@prefix terometa:      <http://www.yso.fi/onto/tero-meta/> .
+@prefix tsrmeta:       <http://www.yso.fi/onto/tsr-meta/> .
+@prefix valometa:      <http://www.yso.fi/onto/valo-meta/> .
+@prefix xhv:           <http://www.w3.org/1999/xhtml/vocab#> .
+@prefix xml:           <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd:           <http://www.w3.org/2001/XMLSchema#> .
+@prefix ysa:           <http://www.yso.fi/onto/ysa/> .
+@prefix ysa-meta:      <http://www.yso.fi/onto/ysa-meta/> .
+@prefix yso:           <http://www.yso.fi/onto/yso/> .
+@prefix yso-kehitys:   <http://www.yso.fi/onto/yso-kehitys/> .
+@prefix yso-meta:      <http://www.yso.fi/onto/yso-meta/> .
+@prefix yso-meta1:     <http://www.yso.fi/onto/yso-meta/2007-03-02/> .
 @prefix yso-translate: <http://www.yso.fi/onto/yso-translate/> .
-@prefix foaf:  <http://xmlns.com/foaf/0.1/> .
-@prefix juho:  <http://www.yso.fi/onto/juho/> .
-@prefix juhometa: <http://www.yso.fi/onto/juho-meta/> .
-@prefix musometa: <http://www.yso.fi/onto/muso-meta/> .
-@prefix skosext: <http://purl.org/finnonto/schema/skosext#> .
-@prefix oikometa: <http://www.yso.fi/onto/oiko-meta/> .
-@prefix lukemeta: <http://www.yso.fi/onto/luke-meta/> .
-@prefix zbwext: <http://zbw.eu/namespaces/zbw-extensions/> .
-@prefix maometa: <http://www.yso.fi/onto/mao-meta/> .
-@prefix termed: <termed:property:> .
-@prefix lcsh:  <http://id.loc.gov/authorities/subjects> .
-@prefix dcam:  <http://purl.org/dc/dcam/> .
-@prefix dsv:   <http://purl.org/iso25964/DataSet/Versioning#> .
-@prefix terometa: <http://www.yso.fi/onto/tero-meta/> .
-@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix kaunometa: <http://www.yso.fi/onto/kauno-meta/> .
-@prefix yso-meta: <http://www.yso.fi/onto/yso-meta/> .
-@prefix yso-kehitys: <http://www.yso.fi/onto/yso-kehitys/> .
-@prefix sd:    <http://www.w3.org/ns/sparql-service-description#> .
-@prefix tsrmeta: <http://www.yso.fi/onto/tsr-meta/> .
-@prefix puhometa: <http://www.yso.fi/onto/puho-meta/> .
-@prefix valometa: <http://www.yso.fi/onto/valo-meta/> .
-@prefix rdau:  <http://rdaregistry.info/Elements/u/> .
-@prefix dct:   <http://purl.org/dc/terms/> .
-@prefix sh:    <http://purl.org/skos-history/> .
-@prefix ktometa: <http://www.yso.fi/onto/kto-meta/> .
-@prefix merometa: <http://www.yso.fi/onto/mero-meta/> .
-@prefix isothes: <http://purl.org/iso25964/skos-thes#> .
-@prefix yso-meta1: <http://www.yso.fi/onto/yso-meta/2007-03-02/> .
-@prefix om:    <http://www.yso.fi/onto/yso-peilaus/2007-03-02/> .
-@prefix sotometa: <http://www.yso.fi/onto/soto-meta/> .
-@prefix koko-meta: <http://www.yso.fi/onto/koko-meta/> .
-@prefix liitometa: <http://www.yso.fi/onto/liito-meta/> .
-@prefix jupometa: <http://www.yso.fi/onto/jupo-meta/> .
-@prefix kauno: <http://www.yso.fi/onto/kauno/> .
-@prefix allars-meta: <http://www.yso.fi/onto/allars-meta/> .
-@prefix afometa: <http://www.yso.fi/onto/afo-meta/> .
-@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix koko:  <http://www.yso.fi/onto/koko/> .
-@prefix dc:    <http://purl.org/dc/elements/1.1/> .
+@prefix yso-update:    <http://www.yso.fi/onto/yso-update/> .
+@prefix ysokehitys:    <http://www.yso.fi/onto/yso-kehitys/> .
+@prefix ysometa:       <http://www.yso.fi/onto/yso-meta/2007-03-02/> .
+@prefix ysotranslate:  <http://www.yso.fi/onto/yso-translate/> .
+@prefix ysoupdate:     <http://www.yso.fi/onto/yso-update/> .
+@prefix zbwext:        <http://zbw.eu/namespaces/zbw-extensions/> .
 
-yso:p12484  a           skos:Concept ;
+yso:p12484  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4624 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "paleolitisk tid"@sv , "paleoliittinen kausi"@fi , "Paleolithic period"@en .
 
-yso:p4626  a            skos:Concept ;
+yso:p4626  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4622 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Early Metal Age"@en , "varhaismetallikausi"@fi , "tidig metallålder"@sv ;
         skos:related    yso:p2558 , yso:p4625 .
 
-yso:p12463  a           skos:Concept ;
+yso:p12463  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p13027 ;
         skos:prefLabel  "förhistorisk konst"@sv , "esihistoriallinen taide"@fi , "prehistoric art"@en .
 
-yso:p29406  a           skos:Concept ;
-        skos:altLabel   "riimututkimus"@fi , "runforskning"@sv ;
-        skos:prefLabel  "runologia"@fi , "runologi"@sv , "runology"@en ;
+yso:p29406  rdf:type    yso-meta:Concept , skos:Concept ;
+        skos:altLabel   "runforskning"@sv , "riimututkimus"@fi ;
+        skos:inScheme   yso: ;
+        skos:prefLabel  "runologia"@fi , "runology"@en , "runologi"@sv ;
         skos:related    yso:p14588 , yso:p6218 .
 
-yso:p12179  a           skos:Concept ;
+yso:p12179  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "balsamointi"@fi ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "balsamering"@sv , "palsamointi"@fi , "embalming"@en ;
         skos:related    yso:p2193 .
 
-yso:p26540  a        skos:Collection ;
+yso:p26540  rdf:type  skos:Collection ;
         skos:member  yso:p4622 , yso:p12738 , yso:p24443 , yso:p6479 , yso:p26858 , yso:p19740 , yso:p1894 , yso:p7785 , yso:p8810 , yso:p18569 , yso:p20280 , yso:p2192 , yso:p7141 , yso:p15031 , yso:p14174 , yso:p16323 , yso:p7346 , yso:p8307 , yso:p3973 , yso:p10073 , yso:p8713 , yso:p2195 , yso:p10986 , yso:p2193 , yso:p6780 , yso:p7428 , yso:p8888 , yso:p1747 , yso:p2557 , yso:p7347 , yso:p22768 , yso:p13721 , yso:p1209 , yso:p14303 , yso:p8714 , yso:p12179 , yso:p27547 , yso:p8712 , yso:p2194 , yso:p7429 , yso:p21820 , yso:p10295 , yso:p29706 .
 
-yso:p8869  a            skos:Concept ;
+yso:p8869  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "laivalöydöt"@fi , "ship finds"@en , "skeppsfynd"@sv ;
         skos:related    yso:p5340 , yso:p8993 , yso:p8867 .
 
-yso:p2557  a            skos:Concept ;
+yso:p2557  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p2558 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "ristiretkiaika"@fi , "Age of the Crusades"@en , "korstågstiden"@sv .
 
-yso:p2194  a            skos:Concept ;
+yso:p2194  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "hieroglyfit"@fi , "hieroglyphs"@en , "hieroglyfer"@sv ;
         skos:related    yso:p2192 .
 
-yso:p12897  a           skos:Concept ;
+yso:p12897  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "muinaisjäännösalueet"@fi ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "fornminnesområden"@sv , "muinaismuistoalueet"@fi , "historic sites"@en .
 
-yso:p1209  a            skos:Concept ;
+yso:p1209  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:altLabel   "östliga handelsvägar"@sv , "idäntiet"@fi ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "trade routes"@en , "kauppatiet"@fi , "handelsvägar"@sv .
 
-yso:p14173  a           skos:Concept ;
+yso:p14173  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "arkeologiset kaivaukset"@fi , "arkeologiska utgrävningar"@sv ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "kaivaukset"@fi , "excavations"@en , "utgrävningar"@sv ;
         skos:related    yso:p5340 .
 
-yso:p13564  a           skos:Concept ;
+yso:p13564  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "thermoluminescence"@en , "termoluminiscens"@sv , "termoluminesenssi"@fi ;
         skos:related    yso:p7804 .
 
-yso:p7429  a            skos:Concept ;
-        skos:altLabel   "kreetalais-mykeneläinen kulttuuri"@fi , "kretensisk-mykensk kultur"@sv ;
+yso:p7429  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:altLabel   "kretensisk-mykensk kultur"@sv , "kreetalais-mykeneläinen kulttuuri"@fi ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p10073 , yso:p7428 ;
-        skos:prefLabel  "aigeialainen kulttuuri"@fi , "egeisk kultur"@sv , "Aegean culture"@en .
+        skos:prefLabel  "Aegean culture"@en , "egeisk kultur"@sv , "aigeialainen kulttuuri"@fi .
 
-yso:p7784  a            skos:Concept ;
+yso:p7784  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:altLabel   "tree-ring dating"@en ;
         skos:broader    yso:p7785 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "dendrokronologi"@sv , "dendrochronology"@en , "dendrokronologia"@fi ;
         skos:related    yso:p7804 .
 
-yso:p26569  a        skos:Collection ;
+yso:p26569  rdf:type  skos:Collection ;
         skos:member  yso:p7141 , yso:p8307 , yso:p8810 .
 
-yso:p8714  a            skos:Concept ;
+yso:p8714  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:altLabel   "epigrafiikka"@fi ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "epigraphy"@en , "epigrafi"@sv , "epigrafia"@fi ;
         skos:related    yso:p8712 , yso:p10986 .
 
-yso:p19258  a           skos:Concept ;
+yso:p19258  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4740 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Suomusjärven kulttuuri"@fi , "Suomusjärvi culture"@en , "Suomusjärvikulturen"@sv .
 
-yso:p6436  a            skos:Concept ;
+yso:p6436  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p2558 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Pre-Roman Iron Age"@en , "esiroomalainen rautakausi"@fi , "förromersk järnålder"@sv .
 
-yso:p11052  a           skos:Concept ;
+yso:p11052  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "shorelevel displacement"@en , "strandförskjutning"@sv , "rannansiirtyminen"@fi ;
         skos:related    yso:p25576 .
 
-yso:p25576  a           skos:Concept ;
+yso:p25576  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "forntida stränder"@sv ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "muinaisrannat"@fi , "fornstränder"@sv , "raised shorelines"@en ;
         skos:related    yso:p11052 .
 
-yso:p21412  a           skos:Concept ;
+yso:p21412  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "makrofossiilit"@fi , "makrofossiler"@sv , "macrofossils"@en ;
         skos:related    yso:p5340 , yso:p20619 .
 
-yso:p29706  a           skos:Concept ;
+yso:p29706  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "kasviarkeologia"@fi , "växtarkeologi"@sv ;
         skos:broader    yso:p1265 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "archaeobotany"@en , "arkeobotanik"@sv , "arkeobotaniikka"@fi .
 
-yso:p5714  a            skos:Concept ;
+yso:p5714  rdf:type     yso-meta:Concept , skos:Concept ;
         skos:broader    yso:p8506 ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p6477 , yso:p5842 ;
         skos:prefLabel  "prehistoric graves"@en , "muinaishaudat"@fi , "forngravar"@sv ;
         skos:related    yso:p8508 , yso:p17863 , yso:p5713 , yso:p5340 .
 
-yso:p26577  a        skos:Collection ;
+yso:p26577  rdf:type  skos:Collection ;
         skos:member  yso:p8993 .
 
-yso:p22768  a           skos:Concept ;
+yso:p22768  rdf:type    skos:Concept , yso-meta:Individual ;
         skos:altLabel   "Kinesiska muren"@sv ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Kiinan muuri"@fi , "Great Wall of China"@en , "kinesiska muren"@sv .
 
-yso:p26535  a        skos:Collection ;
+yso:p26535  rdf:type  skos:Collection ;
         skos:member  yso:p2714 , yso:p25576 , yso:p7804 , yso:p20619 , yso:p11052 , yso:p19077 .
 
-yso:p28955  a           skos:Concept ;
+yso:p28955  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "bronsspeglar"@sv , "pronssipeilit"@fi , "bronze mirrors"@en .
 
-yso:p20619  a           skos:Concept ;
+yso:p20619  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "pollenanalys"@sv , "pollen analysis"@en , "siitepölyanalyysi"@fi ;
         skos:related    yso:p21412 , yso:p7804 .
 
-yso:p5338  a            skos:Concept ;
+yso:p5338  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:altLabel   "luuoppi"@fi ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p19353 ;
         skos:prefLabel  "osteologia"@fi , "osteology"@en , "osteologi"@sv ;
         skos:related    yso:p5337 .
 
-yso:p26564  a        skos:Collection ;
+yso:p26564  rdf:type  skos:Collection ;
         skos:member  yso:p14374 .
 
-yso:p29572  a           skos:Concept ;
+yso:p29572  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "hautalahjat"@fi , "burial objects"@en , "gravgods"@sv , "hautaesineet"@fi , "gravföremål"@sv ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "grave goods"@en , "gravgåvor"@sv , "hauta-antimet"@fi ;
         skos:related    yso:p5713 .
 
-yso:p23677  a           skos:Concept ;
+yso:p23677  rdf:type    skos:Concept , yso-meta:Individual ;
         skos:altLabel   "Maltan yleissopimus"@fi ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Europeisk konvention om skydd för det arkeologiska arvet"@sv , "European Convention on the Protection of the Archaeological Heritage"@en , "Eurooppalainen yleissopimus arkeologisen perinnön suojelusta"@fi .
 
-yso:p6218  a            skos:Concept ;
+yso:p6218  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:altLabel   "runor"@sv , "runskrift"@sv ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "riimukirjoitus"@fi , "runinskrift"@sv , "runic writing"@en ;
         skos:related    yso:p29406 .
 
-yso:p10417  a           skos:Concept ;
+yso:p10417  rdf:type    yso-meta:Concept , skos:Concept ;
         skos:altLabel   "relics of antiquity"@en , "fornsaker"@sv ;
         skos:broader    yso:p5340 ;
-        skos:narrower   yso:p10416 , yso:p10415 ;
-        skos:prefLabel  "muinaisesineet"@fi , "antiquities"@en , "fornföremål"@sv .
+        skos:inScheme   yso: ;
+        skos:narrower   yso:p10415 , yso:p10416 ;
+        skos:prefLabel  "antiquities"@en , "muinaisesineet"@fi , "fornföremål"@sv .
 
-yso:p8993  a            skos:Concept ;
+yso:p8993  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "shipwrecks (objects)"@en , "vrak"@sv , "hylyt"@fi ;
         skos:related    yso:p8869 .
 
-yso:p29672  a           skos:Concept ;
+yso:p29672  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Hallstatt period"@en , "Hallstattin kulttuuri"@fi , "Hallstattkulturen"@sv ;
         skos:related    yso:p2558 .
 
-yso:p19353  a           skos:Concept ;
+yso:p19353  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p5338 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "craniology"@en , "kraniologi"@sv , "kraniologia"@fi .
 
-yso:p21820  a           skos:Concept ;
+yso:p21820  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "papyrer"@sv , "papyrukset"@fi , "papyri"@en ;
         skos:related    yso:p8713 .
 
-yso:p6289  a            skos:Concept ;
+yso:p6289  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:altLabel   "clay dishes"@en ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "pottery"@en , "lerkärl"@sv , "saviastiat"@fi .
 
-yso:p26551  a        skos:Collection ;
+yso:p26551  rdf:type  skos:Collection ;
         skos:member  yso:p23386 , yso:p8508 , yso:p29572 , yso:p580 , yso:p21482 , yso:p8506 .
 
-yso:p26530  a        skos:Collection ;
+yso:p26530  rdf:type  skos:Collection ;
         skos:member  yso:p6289 .
 
-yso:p7148  a            skos:Concept ;
+yso:p7148  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4740 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Kiukainen culture"@en , "Kiukaiskulturen"@sv , "Kiukaisten kulttuuri"@fi .
 
-yso:p4624  a            skos:Concept ;
+yso:p4624  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4622 ;
-        skos:narrower   yso:p12484 , yso:p20471 , yso:p9285 ;
-        skos:prefLabel  "Stone Age"@en , "stenåldern"@sv , "kivikausi"@fi .
+        skos:inScheme   yso: ;
+        skos:narrower   yso:p12484 , yso:p9285 , yso:p20471 ;
+        skos:prefLabel  "stenåldern"@sv , "Stone Age"@en , "kivikausi"@fi .
 
-yso:p9505  a         skos:Collection ;
+yso:p9505  rdf:type  skos:Collection ;
         skos:member  yso:p2932 .
 
-yso:p26580  a        skos:Collection ;
+yso:p26580  rdf:type  skos:Collection ;
         skos:member  yso:p25576 , yso:p11052 .
 
-yso:p26559  a        skos:Collection ;
+yso:p26559  rdf:type  skos:Collection ;
         skos:member  yso:p27358 , yso:p23677 .
 
-yso:p8888  a            skos:Concept ;
+yso:p8888  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "fenicisk kultur"@sv , "Phoenician culture"@en , "foinikialainen kulttuuri"@fi .
 
-yso:p19077  a           skos:Concept ;
-        skos:altLabel   "C 14-metoden"@sv , "kol-fjorton-datering"@sv , "C-datering"@sv , "C 14 -menetelmä"@fi ;
+yso:p19077  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:altLabel   "C 14 -menetelmä"@fi , "C-datering"@sv , "C 14-metoden"@sv , "kol-fjorton-datering"@sv ;
         skos:broader    yso:p7804 ;
-        skos:prefLabel  "radiohiiliajoitus"@fi , "radiocarbon dating"@en , "kol-14-datering"@sv .
+        skos:inScheme   yso: ;
+        skos:prefLabel  "radiohiiliajoitus"@fi , "kol-14-datering"@sv , "radiocarbon dating"@en .
 
-yso:p2192  a            skos:Concept ;
+yso:p2192  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "egyptologia"@fi , "Egyptology"@en , "egyptologi"@sv ;
         skos:related    yso:p2194 , yso:p2193 , yso:p2195 .
 
-yso:p8867  a            skos:Concept ;
+yso:p8867  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p8868 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "marinarkeologi"@sv , "marine archaeology"@en , "meriarkeologia"@fi ;
         skos:related    yso:p8869 .
 
-yso:p20280  a           skos:Concept ;
+yso:p20280  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "normanner"@sv ;
         skos:broader    yso:p6479 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Normans"@en , "normannit"@fi , "normander"@sv .
 
-yso:p29546  a           skos:Concept ;
+yso:p29546  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "aDNA"@fi , "aDNA"@sv , "fossil DNA"@en ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "muinais-DNA"@fi , "arkeologiskt dna"@sv , "ancient DNA"@en .
 
-yso:p29717  a           skos:Concept ;
+yso:p29717  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "La Tenen kulttuuri"@fi , "La Tene period"@en ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Latènekulturen"@sv , "La Tènen kulttuuri"@fi , "La Tène period"@en ;
         skos:related    yso:p2558 .
 
-yso:p29433  a           skos:Concept ;
+yso:p29433  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p1265 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "miljöarkeologi"@sv , "environmental archaeology"@en , "ympäristöarkeologia"@fi .
 
-yso:p8712  a            skos:Concept ;
+yso:p8712  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "paleografia"@fi , "paleography"@en , "paleografi"@sv ;
         skos:related    yso:p8713 , yso:p8714 .
 
-yso:p8307  a            skos:Concept ;
+yso:p8307  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "sfinksit"@fi , "sphinxes"@en , "sfinxer"@sv ;
         skos:related    yso:p5340 .
 
-yso:p20096  a           skos:Concept ;
+yso:p20096  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p2558 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "kansainvaellusaika"@fi , "folkvandringstiden"@sv , "migration period"@en .
 
-yso:p19740  a           skos:Concept ;
+yso:p19740  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "obeliskit"@fi , "obelisks"@en , "obelisker"@sv ;
         skos:related    yso:p5340 .
 
-yso:p12627  a           skos:Concept ;
+yso:p12627  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p2558 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "merovingertiden"@sv , "Vendel Period"@en , "merovingiaika"@fi .
 
-yso:p27547  a           skos:Concept ;
-        skos:altLabel   "trojaborgar"@sv , "jatulintarhat"@en , "trojeborgar"@sv ;
+yso:p27547  rdf:type    yso-meta:Concept , skos:Concept ;
+        skos:altLabel   "jatulintarhat"@en , "trojeborgar"@sv , "trojaborgar"@sv ;
         skos:broader    yso:p14174 ;
-        skos:prefLabel  "jungfrudanser"@sv , "troy towns"@en , "jatulintarhat"@fi ;
+        skos:inScheme   yso: ;
+        skos:prefLabel  "jungfrudanser"@sv , "jatulintarhat"@fi , "troy towns"@en ;
         skos:related    yso:p5340 .
 
-yso:p4740  a            skos:Concept ;
+yso:p4740  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p13489 , yso:p12651 , yso:p14800 , yso:p11111 , yso:p7751 , yso:p4739 , yso:p7148 , yso:p10826 , yso:p19258 ;
         skos:prefLabel  "stenålderskulturer"@sv , "kivikautiset kulttuurit"@fi , "Stone Age cultures"@en .
 
-yso:p1265  a            skos:Concept ;
+yso:p1265  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:altLabel   "muinaistutkimus"@fi , "fornforskning"@sv , "esihistoriallinen arkeologia"@fi , "förhistorisk arkeologi"@sv , "muinaistiede"@fi , "fornkunskap"@sv ;
+        skos:inScheme   yso: , yso:test-scheme ;
         skos:narrower   yso:p11348 , yso:p16476 , yso:p29433 , yso:p18838 , yso:p20339 , yso:p18211 , yso:p29706 , yso:p1264 , yso:p8868 ;
         skos:prefLabel  "arkeologi"@sv , "arkeologia"@fi , "archaeology"@en ;
         skos:related    yso:p28252 .
 
-yso:p26533  a        skos:Collection ;
+yso:p26533  rdf:type  skos:Collection ;
         skos:member  yso:p29706 .
 
-yso:p16323  a           skos:Concept ;
+yso:p16323  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "bosättningshistoria"@sv , "kolonisationshistoria"@sv ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "bebyggelsehistoria"@sv , "asutushistoria"@fi , "settlement history"@en .
 
-yso:p21084  a           skos:Concept ;
-        skos:altLabel   "tombstone inscriptions"@en , "epitafier"@sv , "epitafit"@fi , "gravskrifter"@sv ;
-        skos:prefLabel  "hautakirjoitukset"@fi , "gravinskrifter"@sv , "epitaphs"@en ;
+yso:p21084  rdf:type    yso-meta:Concept , skos:Concept ;
+        skos:altLabel   "epitafier"@sv , "tombstone inscriptions"@en , "epitafit"@fi , "gravskrifter"@sv ;
+        skos:inScheme   yso: ;
+        skos:prefLabel  "gravinskrifter"@sv , "hautakirjoitukset"@fi , "epitaphs"@en ;
         skos:related    yso:p10986 .
 
-yso:p26541  a        skos:Collection ;
+yso:p26541  rdf:type  skos:Collection ;
         skos:member  yso:p23677 .
 
-yso:p14800  a           skos:Concept ;
+yso:p14800  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4740 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "megalitkulturen"@sv , "megaliittikulttuuri"@fi , "Megalithic culture"@en .
 
-yso:p2558  a            skos:Concept ;
+yso:p2558  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4622 ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p12738 , yso:p2557 , yso:p4831 , yso:p20096 , yso:p12627 , yso:p6436 ;
         skos:prefLabel  "rautakausi"@fi , "järnåldern"@sv , "Iron Age"@en ;
         skos:related    yso:p4626 , yso:p29717 , yso:p29672 .
 
-yso:p2195  a            skos:Concept ;
+yso:p2195  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:altLabel   "assyrologia"@fi ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "assyriologia"@fi , "assyriologi"@sv , "assyriology"@en ;
         skos:related    yso:p2192 .
 
-yso:p10073  a           skos:Concept ;
+yso:p10073  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p7429 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Mycenaean culture"@en , "mykensk kultur"@sv , "mykeneläinen kulttuuri"@fi .
 
-yso:p10415  a           skos:Concept ;
+yso:p10415  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p10417 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "rahalöydöt"@fi , "myntfynd"@sv , "coin finds"@en ;
         skos:related    yso:p10416 .
 
-yso:p19180  a           skos:Concept ;
+yso:p19180  rdf:type    skos:Concept , yso-meta:Individual ;
         skos:altLabel   "Mesa Verde"@sv , "Mesa Verde (nationalpark)"@sv ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Mesa Verde"@fi , "Mesa Verde National Park"@en , "Mesa Verde nationalpark"@sv .
 
-yso:p14174  a           skos:Concept ;
+yso:p14174  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p27547 ;
         skos:prefLabel  "labyrinths"@en , "labyrinter"@sv , "labyrintit"@fi ;
         skos:related    yso:p5340 .
 
-yso:p14303  a           skos:Concept ;
+yso:p14303  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "bosättningsorter"@sv , "boningsorter"@sv ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "asuinpaikat"@fi , "places of residence"@en , "boplatser"@sv .
 
-yso:p7785  a            skos:Concept ;
+yso:p7785  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p7784 ;
         skos:prefLabel  "chronology"@en , "kronologia"@fi , "kronologi"@sv ;
         skos:related    yso:p7804 .
 
-yso:p6479  a            skos:Concept ;
+yso:p6479  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p20280 ;
         skos:prefLabel  "Vikings"@en , "viikingit"@fi , "vikingar"@sv .
 
-yso:p10849  a           skos:Concept ;
+yso:p10849  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "arkeologit"@fi , "archaeologists"@en , "arkeologer"@sv .
 
-yso:p6074  a            skos:Concept ;
+yso:p6074  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "mossfynd"@sv , "bog finds"@en , "suolöydöt"@fi ;
         skos:related    yso:p5340 .
 
-yso:p14374  a           skos:Concept ;
+yso:p14374  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "epigram"@sv , "epigrammit"@fi , "epigrams"@en .
 
-yso:p12651  a           skos:Concept ;
+yso:p12651  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4740 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Kundan kulttuuri"@fi , "Kunda culture"@en , "Kundakulturen"@sv .
 
-yso:p4622  a            skos:Concept ;
+yso:p4622  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:altLabel   "förhistorisk tid"@sv , "esihistoriallinen aika"@fi ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p2558 , yso:p4624 , yso:p4625 , yso:p4626 ;
         skos:prefLabel  "prehistory"@en , "förhistoria"@sv , "esihistoria"@fi .
 
-yso:p11111  a           skos:Concept ;
+yso:p11111  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4740 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "kuoppakeraaminen kulttuuri"@fi , "gropkeramiska kulturen"@sv , "Pitted Ware culture"@en .
 
-yso:p27358  a           skos:Concept ;
+yso:p27358  rdf:type    skos:Concept , yso-meta:Individual ;
         skos:altLabel   "fornminneslagen"@sv ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Antiquities Act"@en , "lag om fornminnen"@sv , "muinaismuistolaki"@fi .
 
-yso:p26578  a        skos:Collection ;
+yso:p26578  rdf:type  skos:Collection ;
         skos:member  yso:p2932 .
 
-yso:p26557  a        skos:Collection ;
+yso:p26557  rdf:type  skos:Collection ;
         skos:member  yso:p8712 , yso:p2194 , yso:p21820 , yso:p29406 , yso:p8713 , yso:p6218 , yso:p8714 .
 
-yso:p7751  a            skos:Concept ;
+yso:p7751  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4740 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "kampakeraaminen kulttuuri"@fi , "kamkeramiska kulturen"@sv , "Comb Ceramic culture"@en .
 
-yso:p7346  a            skos:Concept ;
+yso:p7346  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "borgberg"@sv , "linnavuoret"@fi , "hill forts"@en ;
         skos:related    yso:p7347 .
 
-yso:p27963  a           skos:Concept ;
-        skos:altLabel   "berginristningar"@sv , "petroglyfer"@sv ;
-        skos:prefLabel  "kalliopiirrokset"@fi , "petroglyphs"@en , "hällristningar"@sv ;
+yso:p27963  rdf:type    yso-meta:Concept , skos:Concept ;
+        skos:altLabel   "petroglyfer"@sv , "berginristningar"@sv ;
+        skos:inScheme   yso: ;
+        skos:prefLabel  "petroglyphs"@en , "kalliopiirrokset"@fi , "hällristningar"@sv ;
         skos:related    yso:p13027 , yso:p27964 .
 
-yso:p1894  a            skos:Concept ;
+yso:p1894  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "folkvandringarna"@sv , "migration of peoples"@en , "kansainvaellukset"@fi .
 
-yso:p18211  a           skos:Concept ;
+yso:p18211  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p1265 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "molecular archaeology"@en , "molekyyliarkeologia"@fi , "molekylärarkeologi"@sv .
 
-yso:p23386  a           skos:Concept ;
+yso:p23386  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "mass burials"@en ;
         skos:broader    yso:p8506 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "joukkohaudat"@fi , "massgravar"@sv , "mass graves"@en .
 
-yso:p26586  a        skos:Collection ;
+yso:p26586  rdf:type  skos:Collection ;
         skos:member  yso:p28955 .
 
-yso:p12738  a           skos:Concept ;
+yso:p12738  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p2558 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Viking Age"@en , "vikingatiden"@sv , "viikinkiaika"@fi .
 
-yso:p13489  a           skos:Concept ;
+yso:p13489  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "båtyxekulturen"@sv , "vasarakirveskulttuuri"@fi ;
         skos:broader    yso:p4740 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "nuorakeraaminen kulttuuri"@fi , "Corded Ware culture"@en , "snörkeramiska kulturen"@sv .
 
-yso:p10986  a           skos:Concept ;
+yso:p10986  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "inskriptiot"@fi ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "piirtokirjoitukset"@fi , "inskrifter"@sv , "inscriptions"@en ;
         skos:related    yso:p21084 , yso:p8714 .
 
-yso:p16476  a           skos:Concept ;
+yso:p16476  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "historiallisen ajan arkeologia"@fi ;
         skos:broader    yso:p1265 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "historical archaeology"@en , "historiallinen arkeologia"@fi , "historisk arkeologi"@sv .
 
-yso:p8810  a            skos:Concept ;
+yso:p8810  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:altLabel   "sigillvetenskap"@sv ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "sinettitiede"@fi , "sphragistics"@en , "sigillografi"@sv ;
         skos:related    yso:p7141 .
 
-yso:p7141  a            skos:Concept ;
+yso:p7141  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "seals (labels)"@en , "sigill"@sv , "sinetit"@fi ;
         skos:related    yso:p8810 .
 
-yso:p580  a             skos:Concept ;
+yso:p580  rdf:type      skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p4791 ;
         skos:prefLabel  "uhripaikat"@fi , "places of sacrifice"@en , "offerplatser"@sv ;
         skos:related    yso:p5340 .
 
-yso:p2932  a            skos:Concept ;
+yso:p2932  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "forntidsdräkter"@sv , "ancient costume reconstructions"@en , "muinaispuvut"@fi .
 
-yso:p26552  a        skos:Collection ;
+yso:p26552  rdf:type  skos:Collection ;
         skos:member  yso:p14174 , yso:p7347 , yso:p26858 , yso:p19740 , yso:p18569 .
 
-yso:p26531  a        skos:Collection ;
+yso:p26531  rdf:type  skos:Collection ;
         skos:member  yso:p29546 .
 
-yso:p1747  a            skos:Concept ;
+yso:p1747  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "egyptologit"@fi , "egyptologer"@sv , "Egyptologists"@en .
 
-yso:p11348  a           skos:Concept ;
+yso:p11348  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "klassillinen arkeologia"@fi ;
         skos:broader    yso:p1265 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "classical archaeology"@en , "klassisk arkeologi"@sv , "klassinen arkeologia"@fi ;
         skos:related    yso:p3973 .
 
-yso:p4625  a            skos:Concept ;
+yso:p4625  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4622 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Bronze Age"@en , "pronssikausi"@fi , "bronsåldern"@sv ;
         skos:related    yso:p4626 .
 
-yso:p7804  a            skos:Concept ;
+yso:p7804  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p19077 ;
         skos:prefLabel  "age estimation"@en , "iänmääritys"@fi , "åldersbestämning"@sv ;
         skos:related    yso:p13564 , yso:p2714 , yso:p20619 , yso:p7785 , yso:p7784 .
 
-yso:p26581  a        skos:Collection ;
+yso:p26581  rdf:type  skos:Collection ;
         skos:member  yso:p12463 , yso:p13027 , yso:p27964 , yso:p27963 , yso:p3973 .
 
-yso:p26560  a        skos:Collection ;
+yso:p26560  rdf:type  skos:Collection ;
         skos:member  yso:p12897 , yso:p19180 , yso:p29433 .
 
-yso:p9285  a            skos:Concept ;
+yso:p9285  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4624 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Neolithic period"@en , "neolitisk tid"@sv , "neoliittinen kausi"@fi .
 
-yso:p1421  a            skos:Concept ;
+yso:p1421  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "tekstiilikeramiikka"@fi , "textile ceramics"@en , "textilkeramik"@sv ;
         skos:related    yso:p1419 .
 
-yso:p8868  a            skos:Concept ;
+yso:p8868  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p1265 ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p8867 ;
         skos:prefLabel  "underwater archaeology"@en , "undervattensarkeologi"@sv , "vedenalainen arkeologia"@fi .
 
-yso:p2193  a            skos:Concept ;
+yso:p2193  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "muumiot"@fi , "mummies"@en , "mumier"@sv ;
         skos:related    yso:p5340 , yso:p2192 , yso:p12179 .
 
-yso:p18569  a           skos:Concept ;
+yso:p18569  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "pyramids"@en , "pyramider"@sv , "pyramidit"@fi ;
         skos:related    yso:p5340 .
 
-yso:p7428  a            skos:Concept ;
+yso:p7428  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p7429 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "minolainen kulttuuri"@fi , "Minoan culture"@en , "minoisk kultur"@sv .
 
-yso:p6477  a            skos:Concept ;
+yso:p6477  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p5714 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "ruumishaudat"@fi , "skelettgravar"@sv , "non-cremated burial deposit"@en .
 
-yso:p20339  a           skos:Concept ;
+yso:p20339  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p1265 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "experimentell arkeologi"@sv , "kokeellinen arkeologia"@fi , "experimental archeology"@en .
 
-yso:p8713  a            skos:Concept ;
+yso:p8713  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "papyrologi"@sv , "papyrologia"@fi , "papyrology"@en ;
         skos:related    yso:p8712 , yso:p21820 .
 
-yso:p15031  a           skos:Concept ;
+yso:p15031  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "vikingafärder"@sv , "viikinkiretket"@fi , "Viking raids"@en .
 
-yso:p10826  a           skos:Concept ;
+yso:p10826  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4740 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Askola culture"@en , "Askolan kulttuuri"@fi , "Askolakulturen"@sv .
 
-yso:p26526  a        skos:Collection ;
+yso:p26526  rdf:type  skos:Collection ;
         skos:member  yso:p12897 , yso:p19180 .
 
-yso:p2714  a            skos:Concept ;
+yso:p2714  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "stratigraphy"@en , "stratigrafia"@fi , "stratigrafi"@sv ;
         skos:related    yso:p7804 .
 
-yso:p5713  a            skos:Concept ;
+yso:p5713  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "grave findings"@en , "hautalöydöt"@fi , "gravfynd"@sv ;
         skos:related    yso:p5340 , yso:p29572 , yso:p5714 .
 
-yso:p21482  a           skos:Concept ;
+yso:p21482  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p8506 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "gravkammare"@sv , "hautakammiot"@fi , "burial chambers"@en .
 
-yso:p13721  a           skos:Concept ;
+yso:p13721  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "etruskologi"@sv , "etruskologia"@fi , "etruscology"@en .
 
-yso:p8508  a            skos:Concept ;
+yso:p8508  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "kalmistot"@fi , "gravfält"@sv , "burial sites"@en ;
         skos:related    yso:p5340 , yso:p5714 , yso:p8506 .
 
-yso:p4791  a            skos:Concept ;
+yso:p4791  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:altLabel   "kuppikivet"@fi ;
         skos:broader    yso:p580 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "uhrikivet"@fi , "sacrificial stones"@en , "offerstenar"@sv .
 
-yso:p5337  a            skos:Concept ;
+yso:p5337  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "bone finds"@en , "benfynd"@sv , "luulöydöt"@fi ;
         skos:related    yso:p5340 , yso:p5338 .
 
-yso:p5842  a            skos:Concept ;
+yso:p5842  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:altLabel   "mounds (prehistoric graves)"@en ;
         skos:broader    yso:p5714 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "hiidenkiukaat"@fi , "rösen"@sv , "barrows (prehistoric graves)"@en .
 
-yso:p17863  a           skos:Concept ;
+yso:p17863  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p8506 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "polttohaudat"@fi , "brandgravar"@sv , "cremation graves"@en ;
         skos:related    yso:p5714 .
 
-yso:p10416  a           skos:Concept ;
+yso:p10416  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p10417 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "skattfynd"@sv , "treasure finds"@en , "aarrelöydöt"@fi ;
         skos:related    yso:p10415 .
 
-yso:p10174  a           skos:Concept ;
+yso:p10174  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "phosphate analysis"@en , "fosfatanalys"@sv , "fosfaattianalyysi"@fi .
 
-yso:p26550  a        skos:Collection ;
+yso:p26550  rdf:type  skos:Collection ;
         skos:member  yso:p5338 , yso:p12179 .
 
-yso:p10295  a           skos:Concept ;
+yso:p10295  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "cykladisk kultur"@sv ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "kykladisk kultur"@sv , "kykladinen kulttuuri"@fi , "Cycladic culture"@en .
 
-yso:p28252  a           skos:Concept ;
+yso:p28252  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "deltagande arkeologi"@sv , "public archaeology"@en , "samskapande arkeologi"@sv ;
-        skos:prefLabel  "publik arkeologi"@sv , "yhteisöarkeologia"@fi , "community archaeology"@en ;
+        skos:inScheme   yso: ;
+        skos:prefLabel  "publik arkeologi"@sv , "community archaeology"@en , "yhteisöarkeologia"@fi ;
         skos:related    yso:p1265 .
 
-yso:p24443  a           skos:Concept ;
+yso:p24443  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "assyriologer"@sv , "assyriologit"@fi , "Assyriologists"@en .
 
-yso:p14588  a           skos:Concept ;
+yso:p14588  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "riimukivet"@fi , "runstenar"@sv , "runestones"@en ;
         skos:related    yso:p5340 , yso:p29406 .
 
-yso:p3973  a            skos:Concept ;
+yso:p3973  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:altLabel   "classical period"@en ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "antiken"@sv , "antiquity"@en , "antiikki"@fi ;
         skos:related    yso:p11348 .
 
-yso:p13027  a           skos:Concept ;
+yso:p13027  rdf:type    yso-meta:Concept , skos:Concept ;
         skos:altLabel   "luolamaalaukset"@fi , "grottkonst"@sv , "hällkonst"@sv ;
         skos:broader    yso:p12463 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "kalliotaide"@fi , "rock art"@en , "bergkonst"@sv ;
         skos:related    yso:p5340 , yso:p27963 , yso:p27964 .
 
-yso:p26579  a        skos:Collection ;
+yso:p26579  rdf:type  skos:Collection ;
         skos:member  yso:p7784 , yso:p7804 , yso:p29546 .
 
-yso:p6780  a            skos:Concept ;
+yso:p6780  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Induskulturen"@sv , "Indus-kulttuuri"@fi , "Indus culture"@en .
 
-yso:p26537  a        skos:Collection ;
+yso:p26537  rdf:type  skos:Collection ;
         skos:member  yso:p7784 , yso:p7804 .
 
-yso:p1419  a            skos:Concept ;
+yso:p1419  rdf:type     skos:Concept , yso-meta:Concept ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "asbestos-ceramic"@en , "asbestkeramik"@sv , "asbestikeramiikka"@fi ;
         skos:related    yso:p1421 .
 
-yso:p20471  a           skos:Concept ;
+yso:p20471  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4624 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "mesoliittinen kausi"@fi , "mesolitisk tid"@sv , "Mesolithic period"@en .
 
-yso:p7347  a            skos:Concept ;
+yso:p7347  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p5340 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "ancient castles"@en , "fornborgar"@sv , "muinaislinnat"@fi ;
         skos:related    yso:p7346 .
 
-yso:p27964  a           skos:Concept ;
-        skos:altLabel   "grottmålningar"@sv , "klippmålningar"@sv , "bergmålningar"@sv ;
+yso:p27964  rdf:type    skos:Concept , yso-meta:Concept ;
+        skos:altLabel   "bergmålningar"@sv , "grottmålningar"@sv , "klippmålningar"@sv ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "rock paintings"@en , "hällmålningar"@sv , "kalliomaalaukset"@fi ;
-        skos:related    yso:p13027 , yso:p27963 .
+        skos:related    yso:p27963 , yso:p13027 .
 
-yso:p28189  a        skos:Collection ;
+yso:p28189  rdf:type  skos:Collection ;
         skos:member  yso:p12463 .
 
-yso:p5340  a            skos:Concept ;
+yso:p5340  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:altLabel   "fornminnen"@sv , "fasta fornlämningar"@sv , "arkeologiska fynd"@sv , "kiinteät muinaisjäännökset"@fi , "muinaislöydöt"@fi , "arkeologiset löydöt"@fi , "fornfynd"@sv , "muinaismuistot"@fi ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p10417 , yso:p7347 ;
         skos:prefLabel  "muinaisjäännökset"@fi , "prehistoric remains"@en , "fornlämningar"@sv ;
         skos:related    yso:p14173 , yso:p580 , yso:p14174 , yso:p14588 , yso:p8869 , yso:p27547 , yso:p5337 , yso:p13027 , yso:p8307 , yso:p5713 , yso:p21412 , yso:p18569 , yso:p6074 , yso:p19740 , yso:p5714 , yso:p2193 , yso:p8508 .
 
-yso:p1619  a         skos:Collection ;
+yso:p1619  rdf:type  skos:Collection ;
         skos:member  yso:p18569 .
 
-yso:p18838  a           skos:Concept ;
+yso:p18838  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p1265 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "industriarkeologi"@sv , "teollisuusarkeologia"@fi , "industrial archaeology"@en .
 
-yso:p26858  a           skos:Concept ;
+yso:p26858  rdf:type    skos:Concept , yso-meta:Concept ;
         skos:altLabel   "zikkurat"@sv , "ziqqurrat"@sv , "zigguratit"@fi , "trappstegspyramider"@sv , "ziggurat"@sv , "zikkurratit"@fi ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "ziggurats"@en , "zikkuratit"@fi , "ziqqurat"@sv .
 
-yso:p4831  a            skos:Concept ;
+yso:p4831  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p2558 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Roman Iron Age"@en , "romersk järnålder"@sv , "roomalainen rautakausi"@fi .
 
-yso:p4739  a            skos:Concept ;
+yso:p4739  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p4740 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "Komsa culture"@en , "Komsakulturen"@sv , "Komsan kulttuuri"@fi .
 
-yso:p1264  a            skos:Concept ;
+yso:p1264  rdf:type     skos:Concept , yso-meta:Concept ;
         skos:broader    yso:p1265 ;
+        skos:inScheme   yso: ;
         skos:prefLabel  "urban archaeology"@en , "stadsarkeologi"@sv , "kaupunkiarkeologia"@fi .
 
-yso:p26532  a        skos:Collection ;
+yso:p26532  rdf:type  skos:Collection ;
         skos:member  yso:p23386 , yso:p14174 , yso:p29572 , yso:p580 , yso:p23677 , yso:p8506 , yso:p2932 .
 
-yso:p8506  a            skos:Concept ;
+yso:p8506  rdf:type     yso-meta:Concept , skos:Concept ;
         skos:altLabel   "tombs"@en ;
+        skos:inScheme   yso: ;
         skos:narrower   yso:p5714 , yso:p17863 , yso:p21482 , yso:p23386 ;
         skos:prefLabel  "graves"@en , "haudat"@fi , "gravar"@sv ;
         skos:related    yso:p8508 .
