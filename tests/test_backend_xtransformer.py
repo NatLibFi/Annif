@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from scipy.sparse import csr_matrix, load_npz
+import scipy.sparse as sp
 
 import annif.backend
 import annif.corpus
@@ -95,7 +96,7 @@ def test_xtransformer_create_train_files(tmpdir, project, datadir):
         + "arkeologia\thttp://www.yso.fi/onto/yso/p1265\n"
         + "...\thttp://example.com/none"
     )
-    corpus = annif.corpus.DocumentFile(str(tmpfile), project.subjects)
+    corpus = annif.corpus.DocumentFileTSV(str(tmpfile), project.subjects)
     backend_type = annif.backend.get_backend("xtransformer")
     xtransformer = backend_type(
         backend_id="xtransformer", config_params={}, project=project
@@ -258,3 +259,58 @@ def test_xtransformer_suggest_no_model(datadir, project):
     datadir.remove()
     with pytest.raises(NotInitializedException):
         xtransformer.suggest("example text")
+
+
+# ---------------- Vectorizer-only tests (PecosTfidfVectorizerMixin via XTransformer) ----------------
+
+def _make_backend(project):
+    backend_type = annif.backend.get_backend("xtransformer")
+    return backend_type(backend_id="xtransformer", config_params={}, project=project)
+
+
+def test_vectorizer_dict_defaults(project):
+    backend = _make_backend(project)
+    cfg = backend.vectorizer_dict(params={})
+    assert cfg["type"] == "tfidf"
+    kwargs = cfg["kwargs"]
+    assert "base_vect_configs" in kwargs and isinstance(kwargs["base_vect_configs"], list)
+    base = kwargs["base_vect_configs"][0]
+    assert base["ngram_range"] == [1, 1]
+    assert base["max_df_ratio"] == 0.98
+    assert base["analyzer"] == "word"
+    assert base["min_df_cnt"] == 1
+
+
+def test_vectorizer_dict_overrides(project):
+    backend = _make_backend(project)
+    cfg = backend.vectorizer_dict(params={"ngram_range": [1, 2], "min_df": 3})
+    base = cfg["kwargs"]["base_vect_configs"][0]
+    assert base["ngram_range"] == [1, 2]
+    assert base["min_df_cnt"] == 3
+
+
+def test_create_vectorizer_trains_and_saves(datadir, project):
+    backend = _make_backend(project)
+    data = [
+            """Arkeologiaa sanotaan joskus myös
+        muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
+        tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
+        Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
+        joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
+        pohjaan."""
+        ]
+    mat = backend.create_vectorizer(data, params={"ngram_range": [1, 1], "min_df": 1})
+    assert backend.vectorizer is not None
+    assert sp.issparse(mat)
+    assert mat.shape[0] == len(data)
+    vec_path = osp.join(str(datadir), backend.VECTORIZER_FILE)
+    assert osp.exists(vec_path)
+
+
+def test_initialize_vectorizer_loads_existing(datadir, project):
+    backend = _make_backend(project)
+    data = ["alpha", "beta", "gamma"]
+    backend.create_vectorizer(data, params={})
+    backend.vectorizer = None
+    backend.initialize_vectorizer()
+    assert backend.vectorizer is not None
