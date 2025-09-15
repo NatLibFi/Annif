@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any
 
 import joblib
 import numpy as np
-import scipy.sparse as sp
 from pecos.utils.featurization.text.vectorizers import Vectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -107,6 +106,7 @@ class PecosTfidfVectorizerMixin:
             path = os.path.join(self.datadir, self.VECTORIZER_FILE)
             if os.path.exists(path):
                 self.debug("loading vectorizer from {}".format(path))
+                
                 self.vectorizer = Vectorizer.load(path)
             else:
                 raise NotInitializedException(
@@ -145,12 +145,5 @@ class PecosTfidfVectorizerMixin:
             data,
             threads=params.get("threads", -1)
         )
-
-        # # Fix scikit-learn requirement: enforce int32 indices
-        # if sp.issparse(veccorpus):
-        #     if veccorpus.indices.dtype != np.int32:
-        #         veccorpus.indices = veccorpus.indices.astype(np.int32, copy=False)
-        #     if veccorpus.indptr.dtype != np.int32:
-        #         veccorpus.indptr = veccorpus.indptr.astype(np.int32, copy=False)
         
         return veccorpus

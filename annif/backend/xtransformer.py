@@ -12,7 +12,7 @@ from pecos.xmc.xtransformer import matcher, model
 from pecos.xmc.xtransformer.model import XTransformer
 from pecos.xmc.xtransformer.module import MLProblemWithText
 
-from annif.corpus.document import DocumentCorpus
+from annif.corpus.document import DocumentCorpus, Document
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
 from annif.util import (
@@ -238,8 +238,9 @@ class XTransformerBackend(mixins.PecosTfidfVectorizerMixin, backend.AnnifBackend
         self._create_model(params, jobs)
 
     def _suggest_batch(
-        self, texts: list[str], params: dict[str, Any]
+        self, documents: list[Document], params: dict[str, Any]
     ) -> SuggestionBatch:
+        texts = [doc.text for doc in documents]
         vector = self.vectorizer.predict(texts)
         if vector.nnz == 0:  # All zero vector, empty result
             return list()
