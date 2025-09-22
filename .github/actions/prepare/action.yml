@@ -13,7 +13,7 @@ runs:
   steps:
     - name: Restore cached Poetry installation and its cache
       id: restore-cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809  # v4.2.4
       with:
         path: |
           ~/.cache/pipx/venvs
