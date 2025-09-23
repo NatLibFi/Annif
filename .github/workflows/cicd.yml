@@ -194,6 +194,11 @@ jobs:
     needs: [lint, test, test-docker-image]
     runs-on: ubuntu-22.04
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    environment:
+      name: pypi
+      url: https://pypi.org/project/annif/
+    permissions:
+      id-token: write
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -206,12 +211,11 @@ jobs:
       with:
         python-version: '3.11'
         poetry-version: ${{ env.POETRY_VERSION }}
-    - name: Build and publish distribution to PyPI
-      env:
-        POETRY_HTTP_BASIC_PYPI_USERNAME: __token__
-        POETRY_HTTP_BASIC_PYPI_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+    - name: Build distributions
       run: |
-        poetry publish --build
+        poetry build
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e  # v1.13.0
 
     - name: Login to Quay.io
       uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1  # v3.5.0
