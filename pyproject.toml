@@ -43,10 +43,11 @@ dependencies = [
     "python-dateutil==2.9.*",
     "simplemma~=1.1.1",
     "scikit-learn~=1.7.1",
-    "scipy~=1.15.3",
+    "scipy>=1.4.1,<1.14.0",
     "requests~=2.32.3",
     "rdflib~=7.1.3",
     "tomli~=2.2.1; python_version<'3.11'",
+    "transformers<=4.49.0",
 ]
 
 [project.optional-dependencies]
@@ -58,6 +59,7 @@ spacy = ["spacy~=3.8.4"]
 stwfsa = ["stwfsapy~=0.6.1"]
 voikko = ["voikko==0.5.*"]
 yake = ["yake~=0.6.0"]
+pecos = ["libpecos~=1.2.8"]
 
 [tool.poetry.group.dev.dependencies]
 py = "*"
