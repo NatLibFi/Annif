@@ -5,11 +5,12 @@ from os import mknod
 from unittest.mock import MagicMock, patch
 
 import pytest
-from scipy.sparse import csr_matrix, load_npz
 import scipy.sparse as sp
+from scipy.sparse import csr_matrix, load_npz
 
 import annif.backend
 import annif.corpus
+from annif.corpus import Document
 from annif.exception import NotInitializedException, NotSupportedException
 
 pytest.importorskip("annif.backend.xtransformer")
@@ -226,13 +227,13 @@ def test_xtransformer_suggest(project):
     xtransformer._model = MagicMock()
     xtransformer._model.predict.return_value = csr_matrix([0, 0.2, 0, 0, 0, 0.5, 0])
     results = xtransformer.suggest(
-        [
+        [Document(text=
             """Arkeologiaa sanotaan joskus myös
         muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
         tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
         Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
         joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
-        pohjaan."""
+        pohjaan.""")
         ]
     )[0]
     xtransformer._model.predict.assert_called_once()
@@ -247,7 +248,7 @@ def test_xtransformer_suggest_no_input(project, datadir):
         backend_id="xtransfomer", config_params={"limit": 5}, project=project
     )
     xtransformer._model = MagicMock()
-    results = xtransformer.suggest(["j"])
+    results = xtransformer.suggest([Document(text="j")])
     assert len(results) == 0
 
 
@@ -258,7 +259,7 @@ def test_xtransformer_suggest_no_model(datadir, project):
     )
     datadir.remove()
     with pytest.raises(NotInitializedException):
-        xtransformer.suggest("example text")
+        xtransformer.suggest(Document(text="example text"))
 
 
 # ---------------- Vectorizer-only tests (PecosTfidfVectorizerMixin via XTransformer) ----------------
