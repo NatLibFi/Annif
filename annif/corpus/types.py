@@ -19,23 +19,31 @@ class Document:
         text: str,
         subject_set: SubjectSet | None = None,
         metadata: dict[str, Any] | None = None,
+        document_id: str | None = None,
         file_path: str | None = None,
     ):
         self.text = text
         self.subject_set = subject_set if subject_set is not None else SubjectSet()
         self.metadata = metadata if metadata is not None else {}
+        self.document_id = document_id
         self.file_path = file_path
 
     def as_dict(self, subject_index: SubjectIndex, language: str) -> dict[str, Any]:
-        return {
-            "text": self.text,
-            "metadata": self.metadata,
-            "subjects": self.subject_set.as_list(subject_index, language),
-        }
+        doc = {"text": self.text}
+
+        if self.document_id:
+            doc["document_id"] = self.document_id
+        if self.metadata:
+            doc["metadata"] = self.metadata
+        if self.subject_set:
+            doc["subjects"] = self.subject_set.as_list(subject_index, language)
+
+        return doc
 
     def __repr__(self):
         return (
-            f"Document(text={self.text!r}, "
+            f"Document(document_id={self.document_id!r}, "
+            f"text={self.text!r}, "
             f"subject_set={self.subject_set!r}, "
             f"metadata={self.metadata!r}, "
             f"file_path={self.file_path!r})"

@@ -5,8 +5,6 @@ import json
 import os.path
 from importlib.resources import files
 
-import jsonschema
-
 import annif
 from annif.vocab import SubjectIndex
 
@@ -40,6 +38,8 @@ def json_to_document(
     require_subjects: bool,
 ) -> Document | None:
 
+    import jsonschema
+
     try:
         data = json.loads(json_data)
     except json.JSONDecodeError as err:
@@ -66,6 +66,7 @@ def json_to_document(
         metadata=data.get("metadata", {}),
         subject_set=subject_set,
         file_path=filename,
+        document_id=data.get("document_id", None),
     )
 
 

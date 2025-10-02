@@ -342,7 +342,9 @@ def test_train_jsonl(testdatadir):
     docfile = os.path.join(
         os.path.dirname(__file__), "corpora", "archaeology", "documents.jsonl"
     )
-    result = runner.invoke(annif.cli.cli, ["train", "tfidf-fi", docfile])
+    result = runner.invoke(
+        annif.cli.cli, ["train", "--docs-limit", "100", "tfidf-fi", docfile]
+    )
     assert not result.exception
     assert result.exit_code == 0
     assert testdatadir.join("projects/tfidf-fi/vectorizer").exists()
@@ -764,12 +766,12 @@ def test_index_nonexistent_path():
     assert failed_result.exception
     assert failed_result.exit_code != 0
     assert (
-        "Invalid value for 'DIRECTORY': "
-        "Directory 'nonexistent_path' does not exist." in failed_result.output
+        "Invalid value for '[PATHS]...': "
+        "Path 'nonexistent_path' does not exist." in failed_result.output
     )
 
 
-def test_index_file_tsv(tmpdir):
+def test_index_tsv(tmpdir):
     docfile = tmpdir.join("documents.tsv")
     lines = (
         "Läntinen\t<http://example.org/none>",
@@ -778,7 +780,7 @@ def test_index_file_tsv(tmpdir):
     )
     docfile.write("\n".join(lines))
 
-    result = runner.invoke(annif.cli.cli, ["index-file", "dummy-en", str(docfile)])
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(docfile)])
     assert not result.exception
     assert result.exit_code == 0
 
@@ -789,6 +791,7 @@ def test_index_file_tsv(tmpdir):
     assert len(lines) == 3
     data0 = json.loads(lines[0])
     assert data0["text"] == "Läntinen"
+    assert "document_id" not in data0
     assert data0["subjects"][0]["uri"] == "http://example.org/none"
     assert data0["results"][0]["uri"] == "http://example.org/dummy"
     assert data0["results"][0]["label"] == "dummy"
@@ -796,18 +799,19 @@ def test_index_file_tsv(tmpdir):
 
     data1 = json.loads(lines[1])
     assert data1["text"] == "Oulunlinnan"
+    assert "document_id" not in data1
     assert data1["subjects"][0]["uri"] == "http://example.org/dummy"
     assert len(data1["results"]) == 1
 
     # make sure that preexisting output files are not overwritten
-    result = runner.invoke(annif.cli.cli, ["index-file", "dummy-en", str(docfile)])
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(docfile)])
     assert not result.exception
     assert result.exit_code == 0
     assert "Not overwriting" in result.output
 
     # check that the --force parameter forces overwriting
     result = runner.invoke(
-        annif.cli.cli, ["index-file", "dummy-fi", "--force", str(docfile)]
+        annif.cli.cli, ["index", "dummy-fi", "--force", str(docfile)]
     )
     assert not result.exception
     assert result.exit_code == 0
@@ -822,7 +826,7 @@ def test_index_file_tsv(tmpdir):
     assert data0["results"][0]["score"] == pytest.approx(1.0)
 
 
-def test_index_file_tsv_gzipped_output(tmpdir):
+def test_index_tsv_gzipped_output(tmpdir):
     docfile = tmpdir.join("documents.tsv")
     lines = (
         "Läntinen\t<http://example.org/none>",
@@ -831,9 +835,7 @@ def test_index_file_tsv_gzipped_output(tmpdir):
     )
     docfile.write("\n".join(lines))
 
-    result = runner.invoke(
-        annif.cli.cli, ["index-file", "--gzip", "dummy-en", str(docfile)]
-    )
+    result = runner.invoke(annif.cli.cli, ["index", "--gzip", "dummy-en", str(docfile)])
     assert not result.exception
     assert result.exit_code == 0
 
@@ -845,17 +847,17 @@ def test_index_file_tsv_gzipped_output(tmpdir):
         assert len(lines) == 3
 
 
-def test_index_file_csv(tmpdir):
+def test_index_csv(tmpdir):
     docfile = tmpdir.join("documents.csv")
     lines = (
-        "text,subject_uris",
-        "Läntinen,<http://example.org/none>",
-        "Oulunlinnan,<http://example.org/dummy>",
-        '"Harald Hirmuinen",<http://example.org/none>',
+        "document_id,text,subject_uris",
+        "L,Läntinen,<http://example.org/none>",
+        "O,Oulunlinnan,<http://example.org/dummy>",
+        'HH,"Harald Hirmuinen",<http://example.org/none>',
     )
     docfile.write("\n".join(lines))
 
-    result = runner.invoke(annif.cli.cli, ["index-file", "dummy-en", str(docfile)])
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(docfile)])
     assert not result.exception
     assert result.exit_code == 0
 
@@ -866,6 +868,7 @@ def test_index_file_csv(tmpdir):
     assert len(lines) == 3
     data0 = json.loads(lines[0])
     assert data0["text"] == "Läntinen"
+    assert data0["document_id"] == "L"
     assert data0["subjects"][0]["uri"] == "http://example.org/none"
     assert data0["results"][0]["uri"] == "http://example.org/dummy"
     assert data0["results"][0]["label"] == "dummy"
@@ -873,22 +876,59 @@ def test_index_file_csv(tmpdir):
 
     data1 = json.loads(lines[1])
     assert data1["text"] == "Oulunlinnan"
+    assert data1["document_id"] == "O"
     assert data1["subjects"][0]["uri"] == "http://example.org/dummy"
     assert len(data1["results"]) == 1
 
 
-def test_index_file_jsonl(tmpdir):
+def test_index_csv_no_include_doc(tmpdir):
+    docfile = tmpdir.join("documents.csv")
+    lines = (
+        "document_id,text,subject_uris",
+        "L,Läntinen,<http://example.org/none>",
+        "O,Oulunlinnan,<http://example.org/dummy>",
+        'HH,"Harald Hirmuinen",<http://example.org/none>',
+    )
+    docfile.write("\n".join(lines))
+
+    result = runner.invoke(
+        annif.cli.cli, ["index", "--no-include-doc", "dummy-en", str(docfile)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+    outfile = tmpdir.join("documents.annif.jsonl")
+    assert outfile.exists()
+
+    lines = outfile.readlines()
+    assert len(lines) == 3
+    data0 = json.loads(lines[0])
+    assert "text" not in data0
+    assert data0["document_id"] == "L"
+    assert "subjects" not in data0
+    assert data0["results"][0]["uri"] == "http://example.org/dummy"
+    assert data0["results"][0]["label"] == "dummy"
+    assert data0["results"][0]["score"] == pytest.approx(1.0)
+
+    data1 = json.loads(lines[1])
+    assert "text" not in data1
+    assert data1["document_id"] == "O"
+    assert "subjects" not in data1
+    assert len(data1["results"]) == 1
+
+
+def test_index_jsonl(tmpdir):
     docfile = tmpdir.join("documents.jsonl")
     lines = (
         '{"text": "Läntinen", ' + '"subjects": [{"uri": "http://example.org/none"}]}',
         '{"text": "Oulunlinnan", '
         + '"subjects": [{"uri": "http://example.org/dummy"}]}',
-        '{"text": "Harald Hirmuinen", '
+        '{"text": "Harald Hirmuinen", "document_id": "HH", '
         + '"subjects": [{"uri": "http://example.org/none"}]}',
     )
     docfile.write("\n".join(lines))
 
-    result = runner.invoke(annif.cli.cli, ["index-file", "dummy-en", str(docfile)])
+    result = runner.invoke(annif.cli.cli, ["index", "dummy-en", str(docfile)])
     assert not result.exception
     assert result.exit_code == 0
 
@@ -909,8 +949,12 @@ def test_index_file_jsonl(tmpdir):
     assert data1["subjects"][0]["uri"] == "http://example.org/dummy"
     assert len(data1["results"]) == 1
 
+    data2 = json.loads(lines[2])
+    assert data2["text"] == "Harald Hirmuinen"
+    assert data2["document_id"] == "HH"
 
-def test_index_file_with_language_override(tmpdir):
+
+def test_index_tsv_with_language_override(tmpdir):
     docfile = tmpdir.join("documents.tsv")
     lines = (
         "Läntinen\t<http://example.org/none>",
@@ -920,7 +964,7 @@ def test_index_file_with_language_override(tmpdir):
     docfile.write("\n".join(lines))
 
     result = runner.invoke(
-        annif.cli.cli, ["index-file", "--language", "fi", "dummy-en", str(docfile)]
+        annif.cli.cli, ["index", "--language", "fi", "dummy-en", str(docfile)]
     )
     assert not result.exception
     assert result.exit_code == 0
@@ -938,7 +982,7 @@ def test_index_file_with_language_override(tmpdir):
     assert data0["results"][0]["score"] == pytest.approx(1.0)
 
 
-def test_index_file_with_language_override_bad_value(tmpdir):
+def test_index_tsv_with_language_override_bad_value(tmpdir):
     docfile = tmpdir.join("documents.tsv")
     lines = (
         "Läntinen\t<http://example.org/none>",
@@ -948,14 +992,14 @@ def test_index_file_with_language_override_bad_value(tmpdir):
     docfile.write("\n".join(lines))
 
     failed_result = runner.invoke(
-        annif.cli.cli, ["index-file", "--language", "xx", "dummy-en", str(docfile)]
+        annif.cli.cli, ["index", "--language", "xx", "dummy-en", str(docfile)]
     )
     assert failed_result.exception
     assert failed_result.exit_code != 0
     assert 'language "xx" not supported by vocabulary' in failed_result.output
 
 
-def test_index_file_output_file(tmpdir):
+def test_index_output_file(tmpdir):
     docfile = tmpdir.join("documents.tsv")
     docfile.write(
         "\n".join(
@@ -970,7 +1014,7 @@ def test_index_file_output_file(tmpdir):
     outputfile = tmpdir.join("output.jsonl")
     result = runner.invoke(
         annif.cli.cli,
-        ["index-file", "dummy-en", "--output", str(outputfile), str(docfile)],
+        ["index", "dummy-en", "--output", str(outputfile), str(docfile)],
     )
     assert result.exit_code == 0
     assert outputfile.exists()
@@ -982,7 +1026,7 @@ def test_index_file_output_file(tmpdir):
     assert data0["results"][0]["uri"] == "http://example.org/dummy"
 
 
-def test_index_file_output_no_force(tmpdir):
+def test_index_output_no_force(tmpdir):
     docfile = tmpdir.join("documents.tsv")
     docfile.write("Läntinen\t<http://example.org/none>")
 
@@ -991,14 +1035,14 @@ def test_index_file_output_no_force(tmpdir):
 
     result = runner.invoke(
         annif.cli.cli,
-        ["index-file", "dummy-en", "--output", str(outputfile), str(docfile)],
+        ["index", "dummy-en", "--output", str(outputfile), str(docfile)],
     )
     assert result.exit_code == 0
     assert "Not overwriting" in result.output
     assert outputfile.read() == "existing content"
 
 
-def test_index_file_output_force(tmpdir):
+def test_index_output_force(tmpdir):
     docfile = tmpdir.join("documents.tsv")
     docfile.write("Läntinen\t<http://example.org/none>")
 
@@ -1008,7 +1052,7 @@ def test_index_file_output_force(tmpdir):
     result = runner.invoke(
         annif.cli.cli,
         [
-            "index-file",
+            "index",
             "dummy-fi",
             "--output",
             str(outputfile),
@@ -1024,13 +1068,13 @@ def test_index_file_output_force(tmpdir):
     assert data0["results"][0]["label"] == "dummy-fi"
 
 
-def test_index_file_output_stdout(tmpdir):
+def test_index_output_stdout(tmpdir):
     docfile = tmpdir.join("documents.tsv")
     docfile.write("Läntinen\t<http://example.org/none>")
 
     result = runner.invoke(
         annif.cli.cli,
-        ["index-file", "dummy-en", "--output", "-", str(docfile)],
+        ["index", "dummy-en", "--output", "-", str(docfile)],
         catch_exceptions=False,
     )
     assert result.exit_code == 0
@@ -1042,14 +1086,14 @@ def test_index_file_output_stdout(tmpdir):
     assert data0["results"][0]["uri"] == "http://example.org/dummy"
 
 
-def test_index_file_output_gzipped(tmpdir):
+def test_index_output_gzipped(tmpdir):
     docfile = tmpdir.join("documents.tsv")
     docfile.write("Oulunlinnan\t<http://example.org/dummy>")
 
     outputfile = tmpdir.join("custom-output.jsonl.gz")
     result = runner.invoke(
         annif.cli.cli,
-        ["index-file", "dummy-en", "--gzip", "--output", str(outputfile), str(docfile)],
+        ["index", "dummy-en", "--gzip", "--output", str(outputfile), str(docfile)],
     )
     assert result.exit_code == 0
     assert outputfile.exists()
@@ -1853,12 +1897,9 @@ def test_completion_show_project_project_ids_all():
         "nobackend",
         "noname",
         "noparams-tfidf-fi",
-        "noparams-fasttext-fi",
         "pav",
         "tfidf-fi",
         "tfidf-en",
-        "fasttext-en",
-        "fasttext-fi",
     ]
 
 

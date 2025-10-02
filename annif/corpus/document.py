@@ -178,12 +178,15 @@ class DocumentFileCSV(DocumentCorpus):
         else:
             subject_ids = set()
         metadata = {
-            key: val for key, val in row.items() if key not in ("text", "subject_uris")
+            key: val
+            for key, val in row.items()
+            if key not in ("document_id", "text", "subject_uris")
         }
         yield Document(
             text=(row["text"] or ""),
             subject_set=SubjectSet(subject_ids),
             metadata=metadata,
+            document_id=row.get("document_id", None),
         )
 
     def _check_fields(self, reader: csv.DictReader) -> bool:

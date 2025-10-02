@@ -6,7 +6,6 @@
 [![CI/CD](https://github.com/NatLibFi/Annif/actions/workflows/cicd.yml/badge.svg)](https://github.com/NatLibFi/Annif/actions/workflows/cicd.yml)
 [![codecov](https://codecov.io/gh/NatLibFi/Annif/branch/main/graph/badge.svg)](https://codecov.io/gh/NatLibFi/Annif)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/NatLibFi/Annif/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/NatLibFi/Annif/?branch=main)
-[![Code Climate](https://codeclimate.com/github/NatLibFi/Annif/badges/gpa.svg)](https://codeclimate.com/github/NatLibFi/Annif)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/NatLibFi/Annif/badge)](https://securityscorecards.dev/viewer/?uri=github.com/NatLibFi/Annif)
 [![CodeQL](https://github.com/NatLibFi/Annif/actions/workflows/codeql.yml/badge.svg)](https://github.com/NatLibFi/Annif/actions/workflows/codeql.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=NatLibFi_Annif&metric=alert_status)](https://sonarcloud.io/dashboard?id=NatLibFi_Annif)
@@ -72,7 +71,7 @@ Annif can be tried out in the [GitHub Codespaces](https://docs.github.com/en/cod
 
 A development version of Annif can be installed by cloning the [GitHub
 repository](https://github.com/NatLibFi/Annif).
-[Poetry](https://python-poetry.org/) is used for managing dependencies and virtual environment for the development version.
+[Poetry](https://python-poetry.org/) is used for managing dependencies and virtual environment for the development version; Poetry 2.0+ is required.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for information on [unit tests](CONTRIBUTING.md#unit-tests), [code style](CONTRIBUTING.md#code-style), [development flow](CONTRIBUTING.md#development-flow) etc. details that are useful when participating in Annif development.
 
@@ -89,7 +88,7 @@ Install [pipx](https://pypa.github.io/pipx/) and Poetry if you don't have them. 
 
 Open a new shell, and then install Poetry:
 
-    pipx install poetry
+    pipx install poetry==2.*
 
 Poetry can be installed also without pipx: check the [Poetry documentation](https://python-poetry.org/docs/master/#installation).
 

@@ -1,66 +1,65 @@
-[tool.poetry]
+[project]
 name = "annif"
-version = "1.4.0-dev"
+version = "1.5.0-dev"
 description = "Automated subject indexing and classification tool"
-authors = ["National Library of Finland <finto-posti@helsinki.fi>"]
-maintainers = [
-    "Osma Suominen <osma.suominen@helsinki.fi>",
-    "Juho Inkinen <juho.inkinen@helsinki.fi>",
-    "Mona Lehtinen <mona.lehtinen@helsinki.fi>",
-]
 license = "Apache-2.0"
 readme = "README.md"
-homepage = "https://annif.org"
-repository = "https://github.com/NatLibFi/Annif"
-documentation = "https://github.com/NatLibFi/Annif/wiki"
+requires-python = ">=3.10,<3.14"
+
+authors = [
+    {name = "National Library of Finland", email = "finto-posti@helsinki.fi"},
+]
+maintainers = [
+    {name = "Osma Suominen", email = "osma.suominen@helsinki.fi"},
+    {name = "Juho Inkinen", email = "juho.inkinen@helsinki.fi"},
+    {name = "Mona Lehtinen", email = "mona.lehtinen@helsinki.fi"},
+]
 keywords = [
     "machine-learning",
     "text-classification",
+    "multilabel-classification",
     "rest-api",
     "code4lib",
     "subject-indexing",
 ]
-
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.14"
+dependencies = [
+    "click~=8.2.1",
+    "click-log==0.4.*",
+    "connexion[flask, uvicorn, swagger-ui]~=3.1.0",
+    "gunicorn~=23.0.0",
+    "huggingface-hub~=0.34.4",
+    "joblib~=1.5.1",
+    "jsonschema~=4.25.0",
+    "nltk~=3.9.1",
+    "numpy~=2.2.6",
+    "optuna~=4.5.0",
+    "python-dateutil==2.9.*",
+    "simplemma~=1.1.1",
+    "scikit-learn~=1.7.1",
+    "scipy~=1.15.3",
+    "requests~=2.32.3",
+    "rdflib~=7.1.3",
+    "tomli~=2.2.1; python_version<'3.11'",
+]
 
-connexion = { version = "~3.1.0", extras = ["flask", "uvicorn", "swagger-ui"] }
-click = "~8.2.1"
-click-log = "0.4.*"
-joblib = "~1.5.1"
-nltk = "~3.9.1"
-scikit-learn = "~1.7.1"
-scipy = "~1.15.3"
-rdflib = "~7.1.3"
-requests = "~2.32.3"
-gunicorn = "~23.0.0"
-numpy = "~2.2.6"
-optuna = "~4.5.0"
-python-dateutil = "2.9.*"
-tomli = { version = "~2.2.1", python = "<3.11" }
-simplemma = "~1.1.1"
-jsonschema = "~4.25.0"
-huggingface-hub = "~0.34.4"
-transformers = "<=4.49.0"
+[project.optional-dependencies]
+fasttext = ["fasttext-numpy2==0.10.4"]
+estnltk = ["estnltk==1.7.4"]
+nn = ["tensorflow-cpu~=2.20.0", "lmdb~=1.7.3"]
+omikuji = ["omikuji==0.5.*"]
+spacy = ["spacy~=3.8.4"]
+stwfsa = ["stwfsapy~=0.6.1"]
+voikko = ["voikko==0.5.*"]
+yake = ["yake~=0.6.0"]
 
-fasttext-wheel = { version = "0.9.2", optional = true }
-voikko = { version = "0.5.*", optional = true }
-estnltk = { version = "1.7.4", optional = true }
-tensorflow-cpu = { version = "~2.20.0", optional = true }
-lmdb = { version = "~1.7.3", optional = true }
-omikuji = { version = "0.5.*", optional = true }
-yake = { version = "~0.6.0", optional = true }
-spacy = { version = "~3.8.4", optional = true }
-stwfsapy = { version = "~0.6.1", optional = true }
-libpecos = {version = "~1.2.7", optional = true}
-
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 py = "*"
 pytest = "8.*"
 pytest-cov = "*"
@@ -72,22 +71,16 @@ black = "25.*"
 isort = "*"
 schemathesis = "3.*.*"
 
-[tool.poetry.extras]
-fasttext = ["fasttext-wheel"]
-voikko = ["voikko"]
-estnltk = ["estnltk"]
-nn = ["tensorflow-cpu", "lmdb"]
-omikuji = ["omikuji"]
-yake = ["yake"]
-spacy = ["spacy"]
-stwfsa = ["stwfsapy"]
-pecos = ["libpecos"]
+[project.urls]
+homepage = "https://annif.org"
+repository = "https://github.com/NatLibFi/Annif"
+documentation = "https://github.com/NatLibFi/Annif/wiki"
 
-[tool.poetry.scripts]
+[project.scripts]
 annif = "annif.cli:cli"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
