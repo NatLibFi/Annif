@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 logger = annif.logger
 
-csv.field_size_limit(2147483647) # Increase field size limit to 2 GB
+csv.field_size_limit(2147483647)  # Increase field size limit to 2 GB
 
 
 class DocumentDirectory(DocumentCorpus):
