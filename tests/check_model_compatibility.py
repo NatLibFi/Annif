@@ -9,6 +9,7 @@ Script to automate model compatibility and reproducibility checks for Annif.
 - Gracefully handles missing models/metrics
 """
 
+import argparse
 import json
 import os
 import subprocess
@@ -20,8 +21,10 @@ PREV_RESULTS_DIR = "metrics"
 CURR_RESULTS_DIR = "new_metrics"
 THRESHOLD = 0.01  # Allowable relative difference in metrics
 
-os.makedirs(CURR_RESULTS_DIR, exist_ok=True)
-os.makedirs(PREV_RESULTS_DIR, exist_ok=True)
+
+def setup_dirs():
+    os.makedirs(CURR_RESULTS_DIR, exist_ok=True)
+    os.makedirs(PREV_RESULTS_DIR, exist_ok=True)
 
 
 def get_project_ids(cfg_path):
@@ -129,8 +132,26 @@ def compare_metrics(metrics1, metrics2):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Annif model compatibility and reproducibility check."
+    )
+    parser.add_argument(
+        "--ci",
+        action="store_true",
+        help="Enable CI mode for GitHub Actions",
+    )
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=THRESHOLD,
+        help="Relative metric difference threshold",
+    )
+    args = parser.parse_args()
+
+    setup_dirs()
     project_ids = get_project_ids(PROJECTS_CFG)
     download_metrics()
+    significant_diffs = []
     for project_id in project_ids:
         print(f"\n=== Checking project {project_id} ===")
         # 1. Download previous model and metrics
@@ -139,7 +160,8 @@ def main():
         prev_metrics = load_metrics(prev_metrics_path)
         if prev_metrics is None:
             print(
-                f"No previous metrics for {project_id}, skipping compatibility check."
+                f"No previous metrics for {project_id}, "
+                "skipping compatibility check."
             )
         else:
             # 2. Evaluate previous model with current Annif
@@ -150,10 +172,17 @@ def main():
                 if curr_metrics:
                     diffs = compare_metrics(prev_metrics, curr_metrics)
                     if diffs:
-                        print(
+                        msg = (
                             f"Metric differences for {project_id} "
                             f"(> {THRESHOLD * 100:.1f}%): {diffs}"
                         )
+                        print(msg)
+                        if args.ci:
+                            print(
+                                f"::error file={project_id}::"
+                                f"Backward compatibility check failed: {msg}"
+                            )
+                        significant_diffs.append((project_id, "compatibility", diffs))
                     else:
                         print(f"No significant metric differences for {project_id}.")
             except Exception as e:
@@ -167,10 +196,17 @@ def main():
             if prev_metrics and new_metrics:
                 diffs = compare_metrics(prev_metrics, new_metrics)
                 if diffs:
-                    print(
+                    msg = (
                         f"Reproducibility metric differences for {project_id} "
                         f"(> {THRESHOLD * 100:.1f}%): {diffs}"
                     )
+                    print(msg)
+                    if args.ci:
+                        print(
+                            f"::error file={project_id}::"
+                            f"Reproducibility check failed: {msg}"
+                        )
+                    significant_diffs.append((project_id, "reproducibility", diffs))
                 else:
                     print(
                         f"No significant reproducibility metric differences for "
@@ -181,6 +217,10 @@ def main():
     # Upload new models and metrics
     upload_models()
     upload_metrics()
+
+    if args.ci and significant_diffs:
+        print("\n::error::Significant metric differences found. Failing CI.")
+        exit(1)
 
 
 if __name__ == "__main__":

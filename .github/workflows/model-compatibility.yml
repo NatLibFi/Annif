@@ -1,0 +1,36 @@
+# This workflow runs the Annif model compatibility and reproducibility checks.
+# It will fail if significant metric differences are found.
+
+name: Model Compatibility Check
+
+on:
+  push:
+    branches: [ main, "issue906-automate-model-compatibility-checks" ]
+  workflow_dispatch:
+env:
+  PIPX_HOME: "/home/runner/.cache/pipx"
+  PIPX_BIN_DIR: "/home/runner/.local/bin"
+  POETRY_VERSION: "2.*"
+permissions:
+  contents: read
+jobs:
+  model-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: "Prepare: restore caches, install Poetry, set up Python"
+        id: prepare
+        uses: ./.github/actions/prepare
+        with:
+            python-version: "3.11"
+            poetry-version: ${{ env.POETRY_VERSION }}
+      - name: Install Python dependencies
+        run: |
+            poetry install
+      - name: Run model compatibility and reproducibility check
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          cd tests
+          python check_model_compatibility.py --ci
