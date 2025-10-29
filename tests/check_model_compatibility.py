@@ -15,7 +15,7 @@ import os
 import subprocess
 
 HUB_REPO = "juhoinkinen/Annif-models-compat"
-PROJECTS_CFG = "projects.cfg.dist"
+PROJECTS_CFG = "tests/projects-compatibility.cfg"
 CORPORA_DIR = "tests/corpora/archaeology/fulltext/"
 PREV_RESULTS_DIR = "metrics"
 CURR_RESULTS_DIR = "new_metrics"
