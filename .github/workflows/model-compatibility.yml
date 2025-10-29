@@ -28,9 +28,9 @@ jobs:
             poetry-version: ${{ env.POETRY_VERSION }}
       - name: Install Python dependencies
         run: |
-            poetry install
+            poetry install --all-extras
       - name: Run model compatibility and reproducibility check
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          python tests/check_model_compatibility.py --ci
+          poetry run python tests/check_model_compatibility.py --ci
