@@ -141,6 +141,11 @@ def main():
         help="Enable CI mode for GitHub Actions",
     )
     parser.add_argument(
+        "--upload",
+        action="store_true",
+        help="Upload new models and metrics to Hugging Face Hub",
+    )
+    parser.add_argument(
         "--threshold",
         type=float,
         default=THRESHOLD,
@@ -214,13 +219,14 @@ def main():
                     )
         except Exception as e:
             print(f"Training/evaluation failed for {project_id}: {e}")
-    # Upload new models and metrics
-    upload_models()
-    upload_metrics()
 
     if args.ci and significant_diffs:
         print("\n::error::Significant metric differences found. Failing CI.")
         exit(1)
+    if args.upload:
+        print("\nUploading new models and metrics to Hugging Face Hub.")
+        upload_models()
+        upload_metrics()
 
 
 if __name__ == "__main__":
