@@ -1,25 +1,15 @@
-"""
-Script to automate model compatibility and reproducibility checks for Annif.
-
-- Downloads previous models and metrics from Hugging Face Hub (if available)
-- Evaluates them with the current Annif version
-- Trains and evaluates new models
-- Compares metrics and reports differences (1% threshold)
-- Uses projects defined in projects.cfg.dist
-- Gracefully handles missing models/metrics
-"""
-
-import argparse
 import json
 import os
 import subprocess
+
+import click
 
 HUB_REPO = "juhoinkinen/Annif-models-compat"
 PROJECTS_CFG = "tests/projects-compatibility.cfg"
 CORPORA_DIR = "tests/corpora/archaeology/fulltext/"
 PREV_RESULTS_DIR = "metrics"
 CURR_RESULTS_DIR = "new_metrics"
-THRESHOLD = 0.01  # Allowable relative difference in metrics
+DEFAULT_THRESHOLD = 0.01  # Allowable relative difference in metrics
 
 
 def setup_dirs():
@@ -29,7 +19,6 @@ def setup_dirs():
 
 def get_project_ids(cfg_path):
     ids = []
-
     with open(cfg_path) as f:
         for line in f:
             line = line.strip()
@@ -40,7 +29,6 @@ def get_project_ids(cfg_path):
 
 
 def run_cmd(cmd, check=True):
-
     print(f"Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True)
     print(result.stdout)
@@ -52,7 +40,6 @@ def run_cmd(cmd, check=True):
 
 
 def download_model(project_id):
-
     cmd = ["annif", "download", project_id, HUB_REPO, "-f", "--trust-repo"]
     try:
         run_cmd(cmd, check=False)
@@ -61,7 +48,6 @@ def download_model(project_id):
 
 
 def download_metrics():
-
     cmd = ["hf", "download", HUB_REPO, "--include", "metrics/*", "--local-dir", "./"]
     try:
         run_cmd(cmd, check=False)
@@ -70,7 +56,6 @@ def download_metrics():
 
 
 def upload_models():
-
     cmd = ["annif", "upload", "*", HUB_REPO, "-p", PROJECTS_CFG]
     try:
         run_cmd(cmd, check=False)
@@ -79,7 +64,6 @@ def upload_models():
 
 
 def upload_metrics():
-
     cmd = ["hf", "upload", HUB_REPO, CURR_RESULTS_DIR, "metrics/"]
     try:
         run_cmd(cmd, check=False)
@@ -88,7 +72,6 @@ def upload_metrics():
 
 
 def eval_model(project_id, result_file):
-    # Assume test data is defined in the project config
     cmd = [
         "annif",
         "eval",
@@ -114,7 +97,7 @@ def load_metrics(metrics_path):
         return json.load(f)
 
 
-def compare_metrics(metrics1, metrics2):
+def compare_metrics(metrics1, metrics2, threshold):
     diffs = {}
     for key in metrics1:
         if (
@@ -126,104 +109,96 @@ def compare_metrics(metrics1, metrics2):
             if v1 == 0:
                 continue
             rel_diff = abs(v1 - v2) / abs(v1)
-            if rel_diff > THRESHOLD:
+            if rel_diff > threshold:
                 diffs[key] = (v1, v2, rel_diff)
     return diffs
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Annif model compatibility and reproducibility check."
-    )
-    parser.add_argument(
-        "--ci",
-        action="store_true",
-        help="Enable CI mode for GitHub Actions",
-    )
-    parser.add_argument(
-        "--upload",
-        action="store_true",
-        help="Upload new models and metrics to Hugging Face Hub",
-    )
-    parser.add_argument(
-        "--threshold",
-        type=float,
-        default=THRESHOLD,
-        help="Relative metric difference threshold",
-    )
-    args = parser.parse_args()
-
+@click.command()
+@click.option("--ci", is_flag=True, help="Enable CI mode for GitHub Actions")
+@click.option(
+    "--upload", is_flag=True, help="Upload new models and metrics to Hugging Face Hub"
+)
+@click.option(
+    "--threshold",
+    default=DEFAULT_THRESHOLD,
+    type=float,
+    help="Relative metric difference threshold",
+)
+def main(ci, upload, threshold):
     setup_dirs()
     project_ids = get_project_ids(PROJECTS_CFG)
     download_metrics()
     significant_diffs = []
+
     for project_id in project_ids:
         print(f"\n=== Checking project {project_id} ===")
-        # 1. Download previous model and metrics
         download_model(project_id)
         prev_metrics_path = os.path.join(PREV_RESULTS_DIR, f"{project_id}.json")
         prev_metrics = load_metrics(prev_metrics_path)
+
         if prev_metrics is None:
             print(
-                f"No previous metrics for {project_id}, "
-                "skipping compatibility check."
+                f"❔ No previous metrics for {project_id}, skipping compatibility check."
             )
         else:
-            # 2. Evaluate previous model with current Annif
             curr_metrics_path = os.path.join(CURR_RESULTS_DIR, f"{project_id}.json")
             try:
                 eval_model(project_id, curr_metrics_path)
                 curr_metrics = load_metrics(curr_metrics_path)
                 if curr_metrics:
-                    diffs = compare_metrics(prev_metrics, curr_metrics)
+                    diffs = compare_metrics(prev_metrics, curr_metrics, threshold)
                     if diffs:
                         msg = (
-                            f"Metric differences for {project_id} "
-                            f"(> {THRESHOLD * 100:.1f}%): {diffs}"
+                            f"❌ Metric differences for {project_id} "
+                            f"(> {threshold * 100:.1f}%): {diffs}"
                         )
                         print(msg)
-                        if args.ci:
+                        if ci:
                             print(
-                                f"::error file={project_id}::"
-                                f"Backward compatibility check failed: {msg}"
+                                f"::error file={project_id}::Backward compatibility "
+                                f"check failed: {msg}"
                             )
                         significant_diffs.append((project_id, "compatibility", diffs))
                     else:
-                        print(f"No significant metric differences for {project_id}.")
+                        print(
+                            f"✅ No significant metric differences for {project_id}.\n"
+                        )
             except Exception as e:
-                print(f"Evaluation failed for {project_id}: {e}")
-        # 3. Train and evaluate new model
+                print(f"❗ Evaluation failed for {project_id}: {e}")
+
         try:
             train_model(project_id)
             new_metrics_path = os.path.join(CURR_RESULTS_DIR, f"{project_id}.json")
             eval_model(project_id, new_metrics_path)
             new_metrics = load_metrics(new_metrics_path)
             if prev_metrics and new_metrics:
-                diffs = compare_metrics(prev_metrics, new_metrics)
+                diffs = compare_metrics(prev_metrics, new_metrics, threshold)
                 if diffs:
                     msg = (
-                        f"Reproducibility metric differences for {project_id} "
-                        f"(> {THRESHOLD * 100:.1f}%): {diffs}"
+                        f"❌ Reproducibility metric differences for {project_id} "
+                        f"(> {threshold * 100:.1f}%): {diffs}"
                     )
                     print(msg)
-                    if args.ci:
+                    if ci:
                         print(
-                            f"::error file={project_id}::"
-                            f"Reproducibility check failed: {msg}"
+                            f"::error file={project_id}::Reproducibility "
+                            f"check failed: {msg}"
                         )
                     significant_diffs.append((project_id, "reproducibility", diffs))
                 else:
                     print(
-                        f"No significant reproducibility metric differences for "
-                        f"{project_id}."
+                        "✅ No significant reproducibility metric differences "
+                        f"for {project_id}.\n"
                     )
         except Exception as e:
-            print(f"Training/evaluation failed for {project_id}: {e}")
+            print(f"❗ Training/evaluation failed for {project_id}: {e}")
 
-    if args.ci and significant_diffs:
+    if ci and significant_diffs:
         print("\n::error::Significant metric differences found. Failing CI.")
         exit(1)
-    if args.upload:
+
+    if upload:
         print("\nUploading new models and metrics to Hugging Face Hub.")
         upload_models()
         upload_metrics()
