@@ -37,8 +37,13 @@ jobs:
       - name: Install Python dependencies
         run: |
             poetry install --all-extras
-      - name: Run model compatibility and reproducibility check
+      - name: Run model backward compatibility check
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          poetry run python tests/check_model_compatibility.py --ci
+          poetry run python tests/check_model_compatibility.py compatibility --ci
+      - name: Run model reproducibility consistency check
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          poetry run python tests/check_model_compatibility.py consistency --ci

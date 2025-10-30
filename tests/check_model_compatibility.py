@@ -9,7 +9,7 @@ PROJECTS_CFG = "tests/projects-compatibility.cfg"
 CORPORA_DIR = "tests/corpora/archaeology/fulltext/"
 PREV_RESULTS_DIR = "metrics"
 CURR_RESULTS_DIR = "new_metrics"
-DEFAULT_THRESHOLD = 0.01  # Allowable relative difference in metrics
+THRESHOLD = 0.01  # Allowable relative difference in metrics
 
 
 def setup_dirs():
@@ -39,12 +39,12 @@ def run_cmd(cmd, check=True):
     return result
 
 
-def download_model(project_id):
-    cmd = ["annif", "download", project_id, HUB_REPO, "-f", "--trust-repo"]
+def download_models():
+    cmd = ["annif", "download", "*", HUB_REPO, "-f", "--trust-repo"]
     try:
         run_cmd(cmd, check=False)
     except Exception as e:
-        print(f"Download failed for {project_id}: {e}")
+        print(f"Download failed: {e}")
 
 
 def download_metrics():
@@ -91,8 +91,6 @@ def train_model(project_id):
 
 
 def load_metrics(metrics_path):
-    if not os.path.exists(metrics_path):
-        return None
     with open(metrics_path) as f:
         return json.load(f)
 
@@ -114,90 +112,70 @@ def compare_metrics(metrics1, metrics2, threshold):
     return diffs
 
 
-@click.command()
+def check_project_metrics(
+    ci, threshold, significant_diffs, project_id, prev_metrics, check_type
+):
+    curr_metrics_path = os.path.join(CURR_RESULTS_DIR, f"{project_id}.json")
+    try:
+        eval_model(project_id, curr_metrics_path)
+        curr_metrics = load_metrics(curr_metrics_path)
+        diffs = compare_metrics(prev_metrics, curr_metrics, threshold)
+        if diffs:
+            msg = (
+                f"❌ {check_type.capitalize()} differences for {project_id} "
+                f"(> {threshold * 100:.1f}%): {diffs}"
+            )
+            print(msg)
+            if ci:
+                print(
+                    f"::error file={project_id}::{check_type.capitalize()} "
+                    "check failed: {msg}"
+                )
+            significant_diffs.append((project_id, check_type, diffs))
+        else:
+            print(f"✅ No significant {check_type} differences for {project_id}.")
+    except Exception as e:
+        print(f"❗ Evaluation failed for {project_id}: {e}")
+
+
+def check(check_type, ci, train=False):
+    project_ids = get_project_ids(PROJECTS_CFG)
+    significant_diffs = []
+    for project_id in project_ids:
+        print(f"=== Checking {check_type} of project {project_id} ===")
+        prev_metrics_path = os.path.join(PREV_RESULTS_DIR, f"{project_id}.json")
+        prev_metrics = load_metrics(prev_metrics_path)
+        if train:
+            train_model(project_id)
+        if prev_metrics is not None:
+            check_project_metrics(
+                ci, THRESHOLD, significant_diffs, project_id, prev_metrics, check_type
+            )
+        else:
+            print(f"❔ No previous metrics for {project_id}, skipping check.")
+    if ci and significant_diffs:
+        print("::error::Significant metric differences found. Failing CI.")
+        exit(1)
+
+
+@click.group()
+def cli():
+    pass
+
+
+@cli.command("compatibility")
+@click.option("--ci", is_flag=True, help="Enable CI mode for GitHub Actions")
+def run_compatibility_checks(ci):
+    check("compatibility", ci)
+
+
+@cli.command("consistency")
 @click.option("--ci", is_flag=True, help="Enable CI mode for GitHub Actions")
 @click.option(
     "--upload", is_flag=True, help="Upload new models and metrics to Hugging Face Hub"
 )
-@click.option(
-    "--threshold",
-    default=DEFAULT_THRESHOLD,
-    type=float,
-    help="Relative metric difference threshold",
-)
-def main(ci, upload, threshold):
-    setup_dirs()
-    project_ids = get_project_ids(PROJECTS_CFG)
-    download_metrics()
-    significant_diffs = []
-
-    for project_id in project_ids:
-        print(f"\n=== Checking project {project_id} ===")
-        download_model(project_id)
-        prev_metrics_path = os.path.join(PREV_RESULTS_DIR, f"{project_id}.json")
-        prev_metrics = load_metrics(prev_metrics_path)
-
-        if prev_metrics is None:
-            print(
-                f"❔ No previous metrics for {project_id}, skipping compatibility check."
-            )
-        else:
-            curr_metrics_path = os.path.join(CURR_RESULTS_DIR, f"{project_id}.json")
-            try:
-                eval_model(project_id, curr_metrics_path)
-                curr_metrics = load_metrics(curr_metrics_path)
-                if curr_metrics:
-                    diffs = compare_metrics(prev_metrics, curr_metrics, threshold)
-                    if diffs:
-                        msg = (
-                            f"❌ Metric differences for {project_id} "
-                            f"(> {threshold * 100:.1f}%): {diffs}"
-                        )
-                        print(msg)
-                        if ci:
-                            print(
-                                f"::error file={project_id}::Backward compatibility "
-                                f"check failed: {msg}"
-                            )
-                        significant_diffs.append((project_id, "compatibility", diffs))
-                    else:
-                        print(
-                            f"✅ No significant metric differences for {project_id}.\n"
-                        )
-            except Exception as e:
-                print(f"❗ Evaluation failed for {project_id}: {e}")
-
-        try:
-            train_model(project_id)
-            new_metrics_path = os.path.join(CURR_RESULTS_DIR, f"{project_id}.json")
-            eval_model(project_id, new_metrics_path)
-            new_metrics = load_metrics(new_metrics_path)
-            if prev_metrics and new_metrics:
-                diffs = compare_metrics(prev_metrics, new_metrics, threshold)
-                if diffs:
-                    msg = (
-                        f"❌ Reproducibility metric differences for {project_id} "
-                        f"(> {threshold * 100:.1f}%): {diffs}"
-                    )
-                    print(msg)
-                    if ci:
-                        print(
-                            f"::error file={project_id}::Reproducibility "
-                            f"check failed: {msg}"
-                        )
-                    significant_diffs.append((project_id, "reproducibility", diffs))
-                else:
-                    print(
-                        "✅ No significant reproducibility metric differences "
-                        f"for {project_id}.\n"
-                    )
-        except Exception as e:
-            print(f"❗ Training/evaluation failed for {project_id}: {e}")
-
-    if ci and significant_diffs:
-        print("\n::error::Significant metric differences found. Failing CI.")
-        exit(1)
-
+def run_consistency_checks(ci, upload):
+    check("consistency", ci, train=True)
     if upload:
         print("\nUploading new models and metrics to Hugging Face Hub.")
         upload_models()
@@ -205,4 +183,7 @@ def main(ci, upload, threshold):
 
 
 if __name__ == "__main__":
-    main()
+    setup_dirs()
+    download_models()  # Downloads also the vocabularies
+    download_metrics()
+    cli()
