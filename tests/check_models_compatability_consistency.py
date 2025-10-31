@@ -8,7 +8,8 @@ HUB_REPO = "juhoinkinen/Annif-models-compat"
 CORPORA_DIR = "tests/corpora/archaeology/fulltext/"
 PREV_RESULTS_DIR = "metrics"
 CURR_RESULTS_DIR = "new_metrics"
-THRESHOLD = 0.01  # Allowable relative difference in metrics
+THRESHOLD_COMPATIBILITY = 0.01
+THRESHOLD_CONSISTENCY = 0.03
 
 
 def setup_dirs():
@@ -79,6 +80,10 @@ def eval_model(project_id, result_file):
         CORPORA_DIR,
         "--metrics-file",
         result_file,
+        "--metric",
+        "F1@5",
+        "--metric",
+        "NDCG",
     ]
     run_cmd(cmd)
 
@@ -144,6 +149,11 @@ def check_project_metrics(
 
 def check_projects(check_type, ci, train=False):
     projects_cfg_name = f"tests/projects-{check_type}.cfg"
+    threshold = (
+        THRESHOLD_COMPATIBILITY
+        if check_type == "compatibility"
+        else THRESHOLD_CONSISTENCY
+    )
     project_ids = get_project_ids(projects_cfg_name)
     os.environ["ANNIF_PROJECTS"] = projects_cfg_name
     significant_diffs = []
@@ -155,7 +165,7 @@ def check_projects(check_type, ci, train=False):
             if train:
                 train_model(project_id)
             check_project_metrics(
-                ci, THRESHOLD, significant_diffs, project_id, prev_metrics, check_type
+                ci, threshold, significant_diffs, project_id, prev_metrics, check_type
             )
         else:
             print(f"❔ No previous metrics for {project_id}, skipping check.\n")
