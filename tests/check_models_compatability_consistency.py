@@ -1,20 +1,14 @@
 import json
 import os
 import subprocess
+import tempfile
 
 import click
 
 HUB_REPO = "juhoinkinen/Annif-models-compat"
 CORPORA_DIR = "tests/corpora/archaeology/fulltext/"
-PREV_RESULTS_DIR = "metrics"
-CURR_RESULTS_DIR = "new_metrics"
 THRESHOLD_COMPATIBILITY = 0.01
 THRESHOLD_CONSISTENCY = 0.03
-
-
-def setup_dirs():
-    os.makedirs(CURR_RESULTS_DIR, exist_ok=True)
-    os.makedirs(PREV_RESULTS_DIR, exist_ok=True)
 
 
 def get_project_ids(cfg_path):
@@ -49,11 +43,26 @@ def download_models():
 
 
 def download_metrics():
-    cmd = ["hf", "download", HUB_REPO, "--include", "metrics/*", "--local-dir", "./"]
+    cmd = [
+        "hf",
+        "download",
+        HUB_REPO,
+        "--include",
+        "metrics/*",
+        "--local-dir",
+        PREV_RESULTS_DIR,
+    ]
     try:
         run_cmd(cmd, check=False, silent=True)
     except Exception as e:
         print(f"Download failed: {e}")
+    # Move downloaded metrics to PREV_RESULTS_DIR/metrics
+    downloaded_metrics_dir = os.path.join(PREV_RESULTS_DIR, "metrics")
+    for filename in os.listdir(downloaded_metrics_dir):
+        src_path = os.path.join(downloaded_metrics_dir, filename)
+        dest_path = os.path.join(PREV_RESULTS_DIR, filename)
+        os.rename(src_path, dest_path)
+    os.rmdir(downloaded_metrics_dir)
 
 
 def upload_models():
@@ -214,5 +223,10 @@ def run_upload():
 
 
 if __name__ == "__main__":
-    setup_dirs()
-    cli()
+    with tempfile.TemporaryDirectory() as temp_dir:
+        CURR_RESULTS_DIR = os.path.join(temp_dir, "curr_metrics")
+        PREV_RESULTS_DIR = os.path.join(temp_dir, "prev_metrics")
+        os.makedirs(CURR_RESULTS_DIR, exist_ok=True)
+        os.makedirs(PREV_RESULTS_DIR, exist_ok=True)
+        os.environ["ANNIF_DATADIR"] = os.path.join(temp_dir, "data")
+        cli()
