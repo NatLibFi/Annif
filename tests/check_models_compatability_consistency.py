@@ -27,10 +27,11 @@ def get_project_ids(cfg_path):
     return ids
 
 
-def run_cmd(cmd, check=True):
+def run_cmd(cmd, check=True, silent=False):
     print(f"Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True)
-    print(result.stdout)
+    if not silent:
+        print(result.stdout)
     if result.returncode != 0:
         print(result.stderr)
         if check:
@@ -49,7 +50,7 @@ def download_models():
 def download_metrics():
     cmd = ["hf", "download", HUB_REPO, "--include", "metrics/*", "--local-dir", "./"]
     try:
-        run_cmd(cmd, check=False)
+        run_cmd(cmd, check=False, silent=True)
     except Exception as e:
         print(f"Download failed: {e}")
 
@@ -71,7 +72,6 @@ def upload_metrics():
 
 
 def eval_model(project_id, result_file):
-    print(os.environ.get("ANNIF_PROJECTS"))
     cmd = [
         "annif",
         "eval",
@@ -134,12 +134,12 @@ def check_project_metrics(
                     f"check failed: {msg}"
                 )
             else:
-                print(msg)
+                print(msg + "\n")
             significant_diffs.append((project_id, check_type, diffs))
         else:
-            print(f"✅ No significant {check_type} differences for {project_id}.")
+            print(f"✅ No significant {check_type} differences for {project_id}.\n")
     except Exception as e:
-        print(f"❗ Evaluation failed for {project_id}: {e}")
+        print(f"❗ Evaluation failed for {project_id}: {e}\n")
 
 
 def check(check_type, ci, train=False):
@@ -158,7 +158,7 @@ def check(check_type, ci, train=False):
                 ci, THRESHOLD, significant_diffs, project_id, prev_metrics, check_type
             )
         else:
-            print(f"❔ No previous metrics for {project_id}, skipping check.")
+            print(f"❔ No previous metrics for {project_id}, skipping check.\n")
     if ci and significant_diffs:
         print("::error::Significant metric differences found. Failing CI.")
         exit(1)
