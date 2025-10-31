@@ -5,7 +5,6 @@ import tempfile
 
 import click
 
-HUB_REPO = "juhoinkinen/Annif-models-compat"
 CORPORA_DIR = "tests/corpora/archaeology/fulltext/"
 THRESHOLD_COMPATIBILITY = 0.01
 THRESHOLD_CONSISTENCY = 0.03
@@ -34,19 +33,16 @@ def run_cmd(cmd, check=True, silent=False):
     return result
 
 
-def download_models():
-    cmd = ["annif", "download", "*", HUB_REPO, "-f", "--trust-repo"]
-    try:
-        run_cmd(cmd, check=False)
-    except Exception as e:
-        print(f"Download failed: {e}")
+def download_models(hf_repo):
+    cmd = ["annif", "download", "*", hf_repo, "-f", "--trust-repo"]
+    run_cmd(cmd, check=False)
 
 
-def download_metrics():
+def download_metrics(hf_repo):
     cmd = [
         "hf",
         "download",
-        HUB_REPO,
+        hf_repo,
         "--include",
         "metrics/*",
         "--local-dir",
@@ -65,16 +61,16 @@ def download_metrics():
     os.rmdir(downloaded_metrics_dir)
 
 
-def upload_models():
-    cmd = ["annif", "upload", "*", HUB_REPO]
+def upload_models(hf_repo):
+    cmd = ["annif", "upload", "*", hf_repo]
     try:
         run_cmd(cmd, check=False)
     except Exception as e:
         print(f"Upload failed: {e}")
 
 
-def upload_metrics():
-    cmd = ["hf", "upload", HUB_REPO, CURR_RESULTS_DIR, "metrics/"]
+def upload_metrics(hf_repo):
+    cmd = ["hf", "upload", hf_repo, CURR_RESULTS_DIR, "metrics/"]
     try:
         run_cmd(cmd, check=False)
     except Exception as e:
@@ -100,6 +96,17 @@ def eval_model(project_id, result_file):
 def train_model(project_id):
     cmd = ["annif", "train", project_id, CORPORA_DIR]
     run_cmd(cmd)
+
+
+def load_vocab():
+    cmd = [
+        "annif",
+        "load-vocab",
+        "yso",
+        "tests/corpora/archaeology/yso-archaeology.ttl",
+        "--force",
+    ]
+    run_cmd(cmd, check=False)
 
 
 def load_metrics(metrics_path):
@@ -190,27 +197,31 @@ def cli():
 
 @cli.command("compatibility")
 @click.option("--ci", is_flag=True, help="Enable CI mode for GitHub Actions")
-def run_compatibility_checks(ci):
-    download_models()
-    download_metrics()
+@click.option("--hf_repo", required=True, envvar="HF_REPO")
+def run_compatibility_checks(ci, hf_repo):
+    download_models(hf_repo)
+    download_metrics(hf_repo)
     check_projects("compatibility", ci)
 
 
 @cli.command("consistency")
 @click.option("--ci", is_flag=True, help="Enable CI mode for GitHub Actions")
-def run_consistency_checks(ci):
-    download_models()
-    download_metrics()
+@click.option("--hf_repo", required=True, envvar="HF_REPO")
+def run_consistency_checks(ci, hf_repo):
+    download_models(hf_repo)
+    download_metrics(hf_repo)
     check_projects("consistency", ci, train=True)
 
 
 @cli.command("upload")
-def run_upload():
+@click.option("--hf_repo", required=True, envvar="HF_REPO")
+def run_upload(hf_repo):
     print("Training new models and evaluating metrics.")
     projects_cfg_name = "tests/projects-consistency.cfg"
     project_ids = get_project_ids(projects_cfg_name)
     os.environ["ANNIF_PROJECTS"] = projects_cfg_name
 
+    load_vocab()
     for project_id in project_ids:
         print(f"=== Project {project_id} ===")
         train_model(project_id)
@@ -218,8 +229,8 @@ def run_upload():
         eval_model(project_id, curr_metrics_path)
 
     print("Uploading new models and metrics to Hugging Face Hub.")
-    upload_models()
-    upload_metrics()
+    upload_models(hf_repo)
+    upload_metrics(hf_repo)
 
 
 if __name__ == "__main__":
