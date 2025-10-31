@@ -125,12 +125,13 @@ def check_project_metrics(
                 f"❌ {check_type.capitalize()} differences for {project_id} "
                 f"(> {threshold * 100:.1f}%): {diffs}"
             )
-            print(msg)
             if ci:
                 print(
                     f"::error file={project_id}::{check_type.capitalize()} "
                     f"check failed: {msg}"
                 )
+            else:
+                print(msg)
             significant_diffs.append((project_id, check_type, diffs))
         else:
             print(f"✅ No significant {check_type} differences for {project_id}.")
