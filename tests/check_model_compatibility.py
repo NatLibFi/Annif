@@ -129,7 +129,7 @@ def check_project_metrics(
             if ci:
                 print(
                     f"::error file={project_id}::{check_type.capitalize()} "
-                    "check failed: {msg}"
+                    f"check failed: {msg}"
                 )
             significant_diffs.append((project_id, check_type, diffs))
         else:
