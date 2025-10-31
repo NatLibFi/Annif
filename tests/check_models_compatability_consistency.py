@@ -5,7 +5,6 @@ import subprocess
 import click
 
 HUB_REPO = "juhoinkinen/Annif-models-compat"
-PROJECTS_CFG = "tests/projects-compatibility.cfg"
 CORPORA_DIR = "tests/corpora/archaeology/fulltext/"
 PREV_RESULTS_DIR = "metrics"
 CURR_RESULTS_DIR = "new_metrics"
@@ -56,7 +55,7 @@ def download_metrics():
 
 
 def upload_models():
-    cmd = ["annif", "upload", "*", HUB_REPO, "-p", PROJECTS_CFG]
+    cmd = ["annif", "upload", "*", HUB_REPO]
     try:
         run_cmd(cmd, check=False)
     except Exception as e:
@@ -72,21 +71,20 @@ def upload_metrics():
 
 
 def eval_model(project_id, result_file):
+    print(os.environ.get("ANNIF_PROJECTS"))
     cmd = [
         "annif",
         "eval",
         project_id,
         CORPORA_DIR,
-        "-p",
-        PROJECTS_CFG,
-        "-M",
+        "--metrics-file",
         result_file,
     ]
     run_cmd(cmd)
 
 
 def train_model(project_id):
-    cmd = ["annif", "train", project_id, CORPORA_DIR, "-p", PROJECTS_CFG]
+    cmd = ["annif", "train", project_id, CORPORA_DIR]
     run_cmd(cmd)
 
 
@@ -145,7 +143,9 @@ def check_project_metrics(
 
 
 def check(check_type, ci, train=False):
-    project_ids = get_project_ids(PROJECTS_CFG)
+    projects_cfg_name = f"tests/projects-{check_type}.cfg"
+    project_ids = get_project_ids(projects_cfg_name)
+    os.environ["ANNIF_PROJECTS"] = projects_cfg_name
     significant_diffs = []
     for project_id in project_ids:
         print(f"=== Checking {check_type} of project {project_id} ===")
