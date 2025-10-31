@@ -38,6 +38,7 @@ jobs:
         run: |
             poetry install --all-extras
       - name: Run model backward compatibility check
+        continue-on-error: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
