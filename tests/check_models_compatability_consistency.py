@@ -91,8 +91,11 @@ def train_model(project_id):
 
 
 def load_metrics(metrics_path):
-    with open(metrics_path) as f:
-        return json.load(f)
+    try:
+        with open(metrics_path) as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return None
 
 
 def compare_metrics(metrics1, metrics2, threshold):
