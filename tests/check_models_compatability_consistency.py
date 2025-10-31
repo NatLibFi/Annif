@@ -142,7 +142,7 @@ def check_project_metrics(
         print(f"❗ Evaluation failed for {project_id}: {e}\n")
 
 
-def check(check_type, ci, train=False):
+def check_projects(check_type, ci, train=False):
     projects_cfg_name = f"tests/projects-{check_type}.cfg"
     project_ids = get_project_ids(projects_cfg_name)
     os.environ["ANNIF_PROJECTS"] = projects_cfg_name
@@ -151,9 +151,9 @@ def check(check_type, ci, train=False):
         print(f"=== Checking {check_type} of project {project_id} ===")
         prev_metrics_path = os.path.join(PREV_RESULTS_DIR, f"{project_id}.json")
         prev_metrics = load_metrics(prev_metrics_path)
-        if train:
-            train_model(project_id)
         if prev_metrics is not None:
+            if train:
+                train_model(project_id)
             check_project_metrics(
                 ci, THRESHOLD, significant_diffs, project_id, prev_metrics, check_type
             )
@@ -172,24 +172,37 @@ def cli():
 @cli.command("compatibility")
 @click.option("--ci", is_flag=True, help="Enable CI mode for GitHub Actions")
 def run_compatibility_checks(ci):
-    check("compatibility", ci)
+    download_models()
+    download_metrics()
+    check_projects("compatibility", ci)
 
 
 @cli.command("consistency")
 @click.option("--ci", is_flag=True, help="Enable CI mode for GitHub Actions")
-@click.option(
-    "--upload", is_flag=True, help="Upload new models and metrics to Hugging Face Hub"
-)
-def run_consistency_checks(ci, upload):
-    check("consistency", ci, train=True)
-    if upload:
-        print("\nUploading new models and metrics to Hugging Face Hub.")
-        upload_models()
-        upload_metrics()
+def run_consistency_checks(ci):
+    download_models()
+    download_metrics()
+    check_projects("consistency", ci, train=True)
+
+
+@cli.command("upload")
+def run_upload():
+    print("Training new models and evaluating metrics.")
+    projects_cfg_name = "tests/projects-consistency.cfg"
+    project_ids = get_project_ids(projects_cfg_name)
+    os.environ["ANNIF_PROJECTS"] = projects_cfg_name
+
+    for project_id in project_ids:
+        print(f"=== Project {project_id} ===")
+        train_model(project_id)
+        curr_metrics_path = os.path.join(CURR_RESULTS_DIR, f"{project_id}.json")
+        eval_model(project_id, curr_metrics_path)
+
+    print("Uploading new models and metrics to Hugging Face Hub.")
+    upload_models()
+    upload_metrics()
 
 
 if __name__ == "__main__":
     setup_dirs()
-    download_models()  # Downloads also the vocabularies
-    download_metrics()
     cli()
