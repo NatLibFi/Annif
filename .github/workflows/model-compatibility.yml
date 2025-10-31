@@ -1,8 +1,7 @@
-
 # This workflow runs the Annif model compatibility and reproducibility checks.
 # It will fail if significant metric differences are found.
 
-name: Model Compatibility Check
+name: Models Check
 
 on:
   push:
@@ -42,9 +41,9 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          poetry run python tests/check_model_compatibility.py compatibility --ci
+          poetry run python tests/check_models_compatability_consistency.py compatibility --ci
       - name: Run model reproducibility consistency check
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          poetry run python tests/check_model_compatibility.py consistency --ci
+          poetry run python tests/check_models_compatability_consistency.py consistency --ci
