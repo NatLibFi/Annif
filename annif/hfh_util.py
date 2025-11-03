@@ -110,17 +110,23 @@ def _prepare_config_commit(project: AnnifProject) -> tuple[io.BytesIO, Any]:
 
 
 def _is_train_file(fname: str) -> bool:
+    # Detect if the file path includes a training data pattern
     train_file_patterns = ("-train", "tmp-")
     for pat in train_file_patterns:
-        if pat in fname:
-            return True
+        for part in fname.parts:
+            if pat in part:
+                return True
     return False
 
 
 def _archive_dir(data_dir: str) -> io.BufferedRandom:
     fp = tempfile.TemporaryFile()
     path = pathlib.Path(data_dir)
-    fpaths = [fpath for fpath in path.glob("**/*") if not _is_train_file(fpath.name)]
+    fpaths = [
+        fpath
+        for fpath in path.glob("**/*")
+        if not _is_train_file(fpath.relative_to(path))
+    ]
     with zipfile.ZipFile(fp, mode="w") as zfile:
         zfile.comment = bytes(
             f"Archived by Annif {importlib.metadata.version('annif')}",
