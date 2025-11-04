@@ -109,33 +109,33 @@ def _prepare_config_commit(project: AnnifProject) -> tuple[io.BytesIO, Any]:
     return fobj, operation
 
 
-def _is_train_file(fname: str) -> bool:
-    # Detect if the file path includes a training data pattern
-    train_file_patterns = ("-train", "tmp-")
-    for pat in train_file_patterns:
-        for part in fname.parts:
+def _is_train_path(path: str) -> bool:
+    # Detect if the path includes a training data pattern
+    train_path_patterns = ("-train", "tmp-")
+    for pat in train_path_patterns:
+        for part in path.parts:
             if pat in part:
                 return True
     return False
 
 
 def _archive_dir(data_dir: str) -> io.BufferedRandom:
-    fp = tempfile.TemporaryFile()
-    path = pathlib.Path(data_dir)
-    fpaths = [
-        fpath
-        for fpath in path.glob("**/*")
-        if not _is_train_file(fpath.relative_to(path))
+    data_dir_path = pathlib.Path(data_dir)
+    archived_paths = [
+        path
+        for path in data_dir_path.glob("**/*")
+        if not _is_train_path(path.relative_to(data_dir_path))
     ]
+    fp = tempfile.TemporaryFile()
     with zipfile.ZipFile(fp, mode="w") as zfile:
         zfile.comment = bytes(
             f"Archived by Annif {importlib.metadata.version('annif')}",
             encoding="utf-8",
         )
-        for fpath in fpaths:
-            logger.debug(f"Adding {fpath}")
-            arcname = os.path.join(*fpath.parts[1:])
-            zfile.write(fpath, arcname=arcname)
+        for path in archived_paths:
+            logger.debug(f"Adding {path}")
+            arcname = os.path.join(*path.parts[1:])
+            zfile.write(path, arcname=arcname)
     fp.seek(0)
     return fp
 
