@@ -158,11 +158,11 @@ def run_load_vocab(vocab_id, language, force, vocab_file):
     if annif.vocab.VocabFileSKOS.is_rdf_file(vocab_file):
         # SKOS/RDF file supported by rdflib
         vocab_file = annif.vocab.VocabFileSKOS(vocab_file)
-        click.echo(f"Loading vocabulary from SKOS file {vocab_file}...")
+        click.echo(f"Loading vocabulary from SKOS file {vocab_file.path} ...")
     elif annif.vocab.VocabFileCSV.is_csv_file(vocab_file):
         # CSV file
         vocab_file = annif.vocab.VocabFileCSV(vocab_file)
-        click.echo(f"Loading vocabulary from CSV file {vocab_file}...")
+        click.echo(f"Loading vocabulary from CSV file {vocab_file.path} ...")
     else:
         # probably a TSV file - we need to know its language
         if not language:
@@ -171,8 +171,8 @@ def run_load_vocab(vocab_id, language, force, vocab_file):
                 err=True,
             )
             sys.exit(1)
-        click.echo(f"Loading vocabulary from TSV file {vocab_file}...")
         vocab_file = annif.vocab.VocabFileTSV(vocab_file, language)
+        click.echo(f"Loading vocabulary from TSV file {vocab_file.path} ...")
     vocab.load_vocabulary(vocab_file, force=force)
 
 
