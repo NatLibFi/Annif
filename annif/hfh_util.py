@@ -94,7 +94,7 @@ def prepare_commits(
 def _prepare_datadir_commit(data_dir: str) -> tuple[io.BufferedRandom, Any]:
     from huggingface_hub import CommitOperationAdd
 
-    zip_repo_path = data_dir.split(os.path.sep, 1)[1] + ".zip"
+    zip_repo_path = os.path.join(*data_dir.rsplit(os.path.sep, 2)[1:3]) + ".zip"
     fobj = _archive_dir(data_dir)
     operation = CommitOperationAdd(path_in_repo=zip_repo_path, path_or_fileobj=fobj)
     return fobj, operation

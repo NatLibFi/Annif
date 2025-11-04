@@ -1559,14 +1559,14 @@ def test_upload(
     assert (
         mock.call(
             path_or_fileobj=mock.ANY,  # io.BufferedRandom object
-            path_in_repo="data/vocabs/dummy.zip",
+            path_in_repo="vocabs/dummy.zip",
         )
         in CommitOperationAdd.call_args_list
     )
     assert (
         mock.call(
             path_or_fileobj=mock.ANY,  # io.BufferedRandom object
-            path_in_repo="data/projects/dummy-fi.zip",
+            path_in_repo="projects/dummy-fi.zip",
         )
         in CommitOperationAdd.call_args_list
     )
