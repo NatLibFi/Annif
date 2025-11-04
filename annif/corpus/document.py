@@ -23,6 +23,8 @@ if TYPE_CHECKING:
 
 logger = annif.logger
 
+csv.field_size_limit(2147483647)  # Increase field size limit to 2 GB
+
 
 class DocumentDirectory(DocumentCorpus):
     """A directory of files as a full text document corpus"""
