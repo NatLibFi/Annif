@@ -79,6 +79,8 @@ def test_get_project_fi_dump(registry):
         "vocab": {
             "vocab_id": "dummy",
             "languages": ["en", "fi"],
+            "size": 2,
+            "loaded": True,
         },
         "vocab_language": "fi",
         "is_trained": True,

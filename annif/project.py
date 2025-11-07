@@ -330,10 +330,7 @@ class AnnifProject(DatadirMixin):
         """return this project as a dict"""
 
         try:
-            vocab = {
-                "vocab_id": self.vocab.vocab_id,
-                "languages": sorted(self.vocab.languages),
-            }
+            vocab = self.vocab.dump()
             vocab_lang = self.vocab_lang
         except ConfigurationException:
             vocab = None
