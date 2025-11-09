@@ -128,7 +128,7 @@ jobs:
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     - name: Save cache
-      if: steps.prepare.outputs.cache-matched-key != format('poetry-installation-and-cache-{0}-{1}-{2}', matrix.python-version, env.POETRY_VERSION, hashFiles('**/poetry.lock'))
+      if: steps.prepare.outputs.cache-matched-key != format('python-{0}-poetry-{1}-hashfiles-{2}', matrix.python-version, env.POETRY_VERSION, hashFiles('**/poetry.lock'))
       uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
       with:
         path: |
@@ -136,7 +136,7 @@ jobs:
           ~/.local/bin
           ~/.cache/pypoetry/
         # A new key is created to update the cache if some dependency has been updated
-        key:  poetry-installation-and-cache-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+        key:  python-${{ matrix.python-version }}-poetry-${{ env.POETRY_VERSION }}-hashFiles-${{ hashFiles('**/poetry.lock') }}
 
   test-docker-image:
     name: "test Docker image"
