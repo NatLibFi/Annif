@@ -127,8 +127,9 @@ def _archive_dir(data_dir: str) -> io.BufferedRandom:
             encoding="utf-8",
         )
         for fpath in fpaths:
-            logger.debug(f"Adding {fpath}")
-            arcname = os.path.join(*fpath.parts[1:])
+            # Get file path retaining projects/<projectid> or vocabs/<vocabid> parents
+            arcname = fpath.relative_to(path.parent.parent)
+            logger.debug(f"Adding {fpath} to zip archive as member {arcname}")
             zfile.write(fpath, arcname=arcname)
     fp.seek(0)
     return fp
