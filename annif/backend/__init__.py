@@ -15,6 +15,15 @@ def _dummy() -> Type[AnnifBackend]:
     return dummy.DummyBackend
 
 
+def _ebm() -> Type[AnnifBackend]:
+    try:
+        from . import ebm
+
+        return ebm.EbmBackend
+    except ImportError:
+        raise ValueError("EBM not available, cannot use ebm backend")
+
+
 def _ensemble() -> Type[AnnifBackend]:
     from . import ensemble
 
@@ -112,6 +121,7 @@ _backend_fns = {
     "svc": _svc,
     "tfidf": _tfidf,
     "yake": _yake,
+    "ebm": _ebm,
 }
 
 
