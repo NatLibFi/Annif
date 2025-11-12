@@ -119,16 +119,19 @@ def _is_train_file(fname: str) -> bool:
 
 def _archive_dir(data_dir: str) -> io.BufferedRandom:
     fp = tempfile.TemporaryFile()
-    path = pathlib.Path(data_dir)
-    fpaths = [fpath for fpath in path.glob("**/*") if not _is_train_file(fpath.name)]
+    data_dir_path = pathlib.Path(data_dir)  # <projectid> or <vocabid> directory
+    fpaths = [p for p in data_dir_path.glob("**/*") if not _is_train_file(p.name)]
+    # Strip projects/<projectid> or vocabs/<vocabid>:
+    root_datadir = data_dir_path.parent.parent
+
     with zipfile.ZipFile(fp, mode="w") as zfile:
         zfile.comment = bytes(
             f"Archived by Annif {importlib.metadata.version('annif')}",
             encoding="utf-8",
         )
         for fpath in fpaths:
-            logger.debug(f"Adding {fpath}")
-            arcname = os.path.join(*fpath.parts[1:])
+            arcname = fpath.relative_to(root_datadir)
+            logger.debug(f"Adding {fpath} to zip archive as member {arcname}")
             zfile.write(fpath, arcname=arcname)
     fp.seek(0)
     return fp
