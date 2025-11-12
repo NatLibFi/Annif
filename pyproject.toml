@@ -51,6 +51,7 @@ dependencies = [
 
 [project.optional-dependencies]
 fasttext = ["fasttext-numpy2==0.10.4"]
+ebm = ["ebm4subjects==0.5.0"]
 estnltk = ["estnltk==1.7.4"]
 nn = ["tensorflow-cpu~=2.20.0", "lmdb~=1.7.3"]
 omikuji = ["omikuji==0.5.*"]
