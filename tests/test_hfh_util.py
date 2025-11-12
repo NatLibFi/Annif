@@ -67,9 +67,9 @@ def test_archive_dir(testdatadir):
     assert isinstance(fobj, io.BufferedRandom)
 
     with zipfile.ZipFile(fobj, mode="r") as zfile:
-        archived_files = zfile.namelist()
-    assert len(archived_files) == 1
-    assert os.path.split(archived_files[0])[1] == "foo.txt"
+        archived_file_paths = zfile.namelist()
+    assert len(archived_file_paths) == 1
+    assert archived_file_paths[0] == os.path.join("projects", "dummy-fi", "foo.txt")
 
 
 def test_get_project_config(app_project):
