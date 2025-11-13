@@ -42,10 +42,10 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_REPO: ${{ secrets.HF_REPO }}
         run: |
-          poetry run python tests/check_models_compatability_consistency.py compatibility --ci
+          poetry run python tests/check_models_compatibility_consistency.py compatibility --ci
       - name: Run model reproducibility consistency check
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_REPO: ${{ secrets.HF_REPO }}
         run: |
-          poetry run python tests/check_models_compatability_consistency.py consistency --ci
+          poetry run python tests/check_models_compatibility_consistency.py consistency --ci
