@@ -241,7 +241,7 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory() as temp_dir:
         CURR_RESULTS_DIR = os.path.join(temp_dir, "curr_metrics")
         PREV_RESULTS_DIR = os.path.join(temp_dir, "prev_metrics")
-        os.makedirs(CURR_RESULTS_DIR, exist_ok=True)
-        os.makedirs(PREV_RESULTS_DIR, exist_ok=True)
+        os.makedirs(CURR_RESULTS_DIR)
+        os.makedirs(PREV_RESULTS_DIR)
         os.environ["ANNIF_DATADIR"] = os.path.join(temp_dir, "data")
         cli()
