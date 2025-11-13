@@ -1,0 +1,51 @@
+# This workflow runs the Annif model compatibility and reproducibility checks.
+# It will fail if significant metric differences are found.
+
+name: Models Check
+
+on:
+  push:
+    branches: [ main, "issue906-automate-model-compatibility-checks" ]
+  workflow_dispatch:
+env:
+  PIPX_HOME: "/home/runner/.cache/pipx"
+  PIPX_BIN_DIR: "/home/runner/.local/bin"
+  POETRY_VERSION: "2.*"
+permissions:
+  contents: read
+jobs:
+  model-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Install system packages
+        run: |
+          sudo apt-get install \
+            libvoikko1 \
+            voikko-fi
+      - name: "Prepare: restore caches, install Poetry, set up Python"
+        id: prepare
+        uses: ./.github/actions/prepare
+        with:
+          python-version: "3.11"
+          poetry-version: ${{ env.POETRY_VERSION }}
+      - name: Install Python dependencies
+        run: |
+          poetry install --all-extras
+      - name: Run model backward compatibility check
+        continue-on-error: true
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO: ${{ secrets.HF_REPO }}
+        run: |
+          poetry run python tests/check_models_compatibility_consistency.py compatibility --ci
+      - name: Run model reproducibility consistency check
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO: ${{ secrets.HF_REPO }}
+        run: |
+          poetry run python tests/check_models_compatibility_consistency.py consistency --ci
