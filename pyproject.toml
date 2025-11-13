@@ -38,26 +38,29 @@ dependencies = [
     "joblib~=1.5.1",
     "jsonschema~=4.25.0",
     "nltk~=3.9.1",
-    "numpy~=2.2.6",
+    "numpy>=1.19.5",
     "optuna~=4.5.0",
     "python-dateutil==2.9.*",
     "simplemma~=1.1.1",
     "scikit-learn~=1.7.1",
-    "scipy~=1.15.3",
+    "scipy>=1.4.1,<1.14.0",
     "requests~=2.32.3",
     "rdflib~=7.1.3",
     "tomli~=2.2.1; python_version<'3.11'",
+    "transformers<=4.49.0",
 ]
 
 [project.optional-dependencies]
 fasttext = ["fasttext-numpy2==0.10.4"]
 estnltk = ["estnltk==1.7.4"]
-nn = ["tensorflow-cpu~=2.20.0", "lmdb~=1.7.3"]
+# Restrict the entire 'nn' group to Python <3.12 to avoid the tensorflow-io-gcs-filesystem conflict with Python 3.12+.
+nn = ["tensorflow-cpu~=2.20.0; python_version < '3.12'", "lmdb~=1.7.3; python_version < '3.12'"]
 omikuji = ["omikuji==0.5.*"]
-spacy = ["spacy~=3.8.4"]
-stwfsa = ["stwfsapy~=0.6.1"]
+spacy = ["spacy~=3.8.4; python_version < '3.13'"]
+stwfsa = ["stwfsapy~=0.5.3; python_version < '3.13'"]
 voikko = ["voikko==0.5.*"]
 yake = ["yake~=0.6.0"]
+pecos = ["libpecos~=1.2.8"]
 
 [tool.poetry.group.dev.dependencies]
 py = "*"
