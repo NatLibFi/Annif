@@ -53,6 +53,7 @@ def download_metrics(hf_repo):
         run_cmd(cmd, check=False, silent=True)
     except Exception as e:
         print(f"Download failed: {e}")
+        raise
     # Move downloaded metrics to PREV_RESULTS_DIR/metrics
     downloaded_metrics_dir = os.path.join(PREV_RESULTS_DIR, "metrics")
     for filename in os.listdir(downloaded_metrics_dir):
