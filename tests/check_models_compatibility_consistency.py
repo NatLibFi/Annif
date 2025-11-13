@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import sys
 import tempfile
 
 import click
@@ -189,7 +190,7 @@ def check_projects(check_type, ci, train=False):
             print(f"❔ No previous metrics for {project_id}, skipping check.\n")
     if ci and significant_diffs:
         print("::error::Significant metric differences found. Failing CI.")
-        exit(1)
+        sys.exit(1)
 
 
 @click.group()
