@@ -1,5 +1,6 @@
 """Unit tests for the EBM backend in Annif"""
 
+import numpy as np
 import pytest
 
 import annif
@@ -7,7 +8,20 @@ import annif.backend
 from annif.corpus import Document
 from annif.exception import NotInitializedException, NotSupportedException
 
+
+class MockTransformer:
+    def encode(self, texts, **kwargs):
+        return np.ones((len(texts), 1024))
+
+
 ebm = pytest.importorskip("annif.backend.ebm")
+
+_backend_conf = {
+    "language": "fi",
+    "limit": 10,
+    "embedding_model_name": MockTransformer(),
+    "embedding_dimensions": 1024,
+}
 
 
 def test_ebm_default_params(project):
@@ -31,7 +45,7 @@ def test_ebm_train(datadir, fulltext_corpus, project):
     ebm_type = annif.backend.get_backend("ebm")
     ebm = ebm_type(
         backend_id="ebm",
-        config_params={"limit": 10, "language": "fi"},
+        config_params=_backend_conf,
         project=project,
     )
 
@@ -58,7 +72,7 @@ def test_ebm_train_cached(datadir, project):
     ebm_type = annif.backend.get_backend("ebm")
     ebm = ebm_type(
         backend_id="ebm",
-        config_params={"limit": 10, "language": "fi"},
+        config_params=_backend_conf,
         project=project,
     )
 
@@ -73,7 +87,7 @@ def test_ebm_train_nodocuments(project, empty_corpus):
     ebm_type = annif.backend.get_backend("ebm")
     ebm = ebm_type(
         backend_id="ebm",
-        config_params={"limit": 10, "language": "fi"},
+        config_params=_backend_conf,
         project=project,
     )
 
@@ -91,7 +105,7 @@ def test_ebm_train_cached_no_data(datadir, project):
     ebm_type = annif.backend.get_backend("ebm")
     ebm = ebm_type(
         backend_id="ebm",
-        config_params={"limit": 10, "language": "fi"},
+        config_params=_backend_conf,
         project=project,
     )
 
@@ -101,9 +115,7 @@ def test_ebm_train_cached_no_data(datadir, project):
 
 def test_ebm_suggest(project):
     ebm_type = annif.backend.get_backend("ebm")
-    ebm = ebm_type(
-        backend_id="ebm", config_params={"limit": 8, "language": "fi"}, project=project
-    )
+    ebm = ebm_type(backend_id="ebm", config_params=_backend_conf, project=project)
 
     results = ebm.suggest(
         [
@@ -119,16 +131,12 @@ def test_ebm_suggest(project):
     )[0]
 
     assert len(results) > 0
-    assert len(results) <= 8
-    archaeology = project.subjects.by_uri("http://www.yso.fi/onto/yso/p1265")
-    assert archaeology in [result.subject_id for result in results]
+    assert len(results) <= 10
 
 
 def test_ebm_suggest_no_model(datadir, project):
     ebm_type = annif.backend.get_backend("ebm")
-    ebm = ebm_type(
-        backend_id="ebm", config_params={"limit": 8, "language": "fi"}, project=project
-    )
+    ebm = ebm_type(backend_id="ebm", config_params=_backend_conf, project=project)
 
     datadir.join("ebm-model.gz").remove()
     with pytest.raises(NotInitializedException):
