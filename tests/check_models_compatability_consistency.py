@@ -127,7 +127,9 @@ def compare_metrics(metrics1, metrics2, threshold):
         ):
             v1, v2 = metrics1[key], metrics2[key]
             if v1 == 0:
-                if v2 != 0:
+                if v2 == 0:
+                    rel_diff = 0.0
+                else:
                     rel_diff = 1.0
             else:
                 rel_diff = abs(v1 - v2) / abs(v1)
