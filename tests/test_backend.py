@@ -106,7 +106,7 @@ def test_get_backend_stwfsa_not_installed():
 
 
 @pytest.mark.skipif(
-    importlib.util.find_spec("ebm") is not None,
+    importlib.util.find_spec("ebm4subjects") is not None,
     reason="test requires that EBM is NOT installed",
 )
 def test_get_backend_ebm_not_installed():
