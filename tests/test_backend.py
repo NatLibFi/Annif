@@ -103,3 +103,13 @@ def test_get_backend_stwfsa_not_installed():
     with pytest.raises(ValueError) as excinfo:
         annif.backend.get_backend("stwfsa")
     assert "STWFSA not available" in str(excinfo.value)
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("ebm") is not None,
+    reason="test requires that EBM is NOT installed",
+)
+def test_get_backend_ebm_not_installed():
+    with pytest.raises(ValueError) as excinfo:
+        annif.backend.get_backend("ebm")
+    assert "EBM not available" in str(excinfo.value)
