@@ -67,7 +67,8 @@ jobs:
         poetry run tests/time-startup.sh
 
   test:
-    runs-on: ubuntu-22.04
+    runs-on:
+      group: github-hosted-large-runners
     timeout-minutes: 15
     strategy:
       matrix:
