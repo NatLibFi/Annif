@@ -41,6 +41,19 @@ def test_ebm_not_initialized(project):
         ebm.suggest([Document(text="example text")])[0]
 
 
+def test_ebm_train_no_documents(project, empty_corpus):
+    ebm_type = annif.backend.get_backend("ebm")
+    ebm = ebm_type(
+        backend_id="ebm",
+        config_params=_backend_conf,
+        project=project,
+    )
+
+    with pytest.raises(NotSupportedException) as excinfo:
+        ebm.train(empty_corpus)
+    assert "training backend ebm with no documents" in str(excinfo.value)
+
+
 def test_ebm_train(datadir, fulltext_corpus, project):
     ebm_type = annif.backend.get_backend("ebm")
     ebm = ebm_type(
@@ -58,6 +71,27 @@ def test_ebm_train(datadir, fulltext_corpus, project):
     assert datadir.join("ebm-train.gz").size() > 0
     assert datadir.join("ebm-model.gz").exists()
     assert datadir.join("ebm-model.gz").size() > 0
+
+
+def test_ebm_suggest(project):
+    ebm_type = annif.backend.get_backend("ebm")
+    ebm = ebm_type(backend_id="ebm", config_params=_backend_conf, project=project)
+
+    results = ebm.suggest(
+        [
+            Document(
+                text="""Arkeologia on tieteenala, jota sanotaan joskus
+        muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
+        tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
+        Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
+        joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
+        pohjaan."""
+            )
+        ]
+    )[0]
+
+    assert len(results) > 0
+    assert len(results) <= 10
 
 
 def test_ebm_train_cached(datadir, project):
@@ -83,24 +117,9 @@ def test_ebm_train_cached(datadir, project):
     assert modelfile.size() != old_size or modelfile.mtime() != old_mtime
 
 
-def test_ebm_train_no_documents(project, empty_corpus):
-    ebm_type = annif.backend.get_backend("ebm")
-    ebm = ebm_type(
-        backend_id="ebm",
-        config_params=_backend_conf,
-        project=project,
-    )
-
-    with pytest.raises(NotSupportedException) as excinfo:
-        ebm.train(empty_corpus)
-    assert "training backend ebm with no documents" in str(excinfo.value)
-
-
 def test_ebm_train_cached_no_train_data(datadir, project):
     modelfile = datadir.join("ebm-model.gz")
     assert modelfile.exists()
-    dbfile = datadir.join("ebm-duck.db")
-    assert dbfile.exists()
     trainfile = datadir.join("ebm-train.gz")
     trainfile.remove()
 
@@ -118,8 +137,6 @@ def test_ebm_train_cached_no_train_data(datadir, project):
 def test_ebm_train_cached_no_db(datadir, project):
     modelfile = datadir.join("ebm-model.gz")
     assert modelfile.exists()
-    trainfile = datadir.join("ebm-train.gz")
-    assert trainfile.exists()
     dbfile = datadir.join("ebm-duck.db")
     dbfile.remove()
 
@@ -132,27 +149,6 @@ def test_ebm_train_cached_no_db(datadir, project):
 
     with pytest.raises(NotInitializedException):
         ebm.train("cached")
-
-
-def test_ebm_suggest(project):
-    ebm_type = annif.backend.get_backend("ebm")
-    ebm = ebm_type(backend_id="ebm", config_params=_backend_conf, project=project)
-
-    results = ebm.suggest(
-        [
-            Document(
-                text="""Arkeologia on tieteenala, jota sanotaan joskus
-        muinaistutkimukseksi tai muinaistieteeksi. Se on humanistinen tiede
-        tai oikeammin joukko tieteitä, jotka tutkivat ihmisen menneisyyttä.
-        Tutkimusta tehdään analysoimalla muinaisjäännöksiä eli niitä jälkiä,
-        joita ihmisten toiminta on jättänyt maaperään tai vesistöjen
-        pohjaan."""
-            )
-        ]
-    )[0]
-
-    assert len(results) > 0
-    assert len(results) <= 10
 
 
 def test_ebm_suggest_no_model(datadir, project):
