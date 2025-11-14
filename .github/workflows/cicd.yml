@@ -67,7 +67,8 @@ jobs:
         poetry run tests/time-startup.sh
 
   test:
-    runs-on: ubuntu-22.04
+    runs-on:
+      group: github-hosted-large-runners
     timeout-minutes: 15
     strategy:
       matrix:
@@ -100,7 +101,7 @@ jobs:
         fi
         # For Python 3.11:
         if [[ ${{ matrix.python-version }} == '3.11' ]]; then
-          poetry install -E "fasttext spacy estnltk";
+          poetry install -E "fasttext spacy estnltk ebm";
           # download the small English pretrained spaCy model needed by spacy analyzer
           poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
@@ -112,7 +113,7 @@ jobs:
         fi
         # For Python 3.13:
         if [[ ${{ matrix.python-version }} == '3.13' ]]; then
-          poetry install -E "fasttext yake voikko spacy";
+          poetry install -E "fasttext yake voikko spacy ebm";
           # download the small English pretrained spaCy model needed by spacy analyzer
           poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
