@@ -5,7 +5,7 @@ name: Models Check
 
 on:
   push:
-    branches: [ main, "issue906-automate-model-compatibility-checks" ]
+    branches: [ main ]
   workflow_dispatch:
 env:
   PIPX_HOME: "/home/runner/.cache/pipx"
