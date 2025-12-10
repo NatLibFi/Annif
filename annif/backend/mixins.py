@@ -7,6 +7,8 @@ import os.path
 from typing import TYPE_CHECKING, Any
 
 import joblib
+import numpy as np
+from pecos.utils.featurization.text.vectorizers import Vectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 import annif.util
@@ -57,7 +59,6 @@ class ChunkingBackend(metaclass=abc.ABCMeta):
             return []
         return self._suggest_chunks(chunktexts, params)
 
-
 class TfidfVectorizerMixin:
     """Annif backend mixin that implements TfidfVectorizer functionality"""
 
@@ -91,4 +92,58 @@ class TfidfVectorizerMixin:
         annif.util.atomic_save(
             self.vectorizer, self.datadir, self.VECTORIZER_FILE, method=joblib.dump
         )
+        return veccorpus
+
+class PecosTfidfVectorizerMixin:
+    """Annif backend mixin that implements TfidfVectorizer functionality from Pecos"""
+
+    VECTORIZER_FILE = "vectorizer"
+
+    vectorizer = None
+
+    def initialize_vectorizer(self) -> None:
+        if self.vectorizer is None:
+            path = os.path.join(self.datadir, self.VECTORIZER_FILE)
+            if os.path.exists(path):
+                self.debug("loading vectorizer from {}".format(path))
+                
+                self.vectorizer = Vectorizer.load(path)
+            else:
+                raise NotInitializedException(
+                    "vectorizer file '{}' not found".format(path),
+                    backend_id=self.backend_id,
+                )
+            
+    def vectorizer_dict(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Create a vectorizer configuration dictionary from the given parameters."""
+        
+        config = {
+            "base_vect_configs": [
+                {
+                    "ngram_range": params.get("ngram_range", [1, 1]),
+                    "max_df_ratio": 0.98,
+                    "analyzer": "word",
+                    "min_df_cnt": params.get("min_df", 1),
+                }
+            ]
+        }
+        return {"type": "tfidf", "kwargs": {**config}} 
+    
+
+    def create_vectorizer(
+        self, input: Iterable[str], params: dict[str, Any] = None
+    ) -> csr_matrix:
+
+        self.info("creating Pecos vectorizer")
+        if params is None:
+            params = {}
+        data = list(input)
+        vectorizer_config = self.vectorizer_dict(params)
+        self.vectorizer = Vectorizer.train(data, vectorizer_config, np.float32)
+        self.vectorizer.save(os.path.join(self.datadir, self.VECTORIZER_FILE))
+        veccorpus = self.vectorizer.predict(
+            data,
+            threads=params.get("threads", -1)
+        )
+        
         return veccorpus

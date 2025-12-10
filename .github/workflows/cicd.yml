@@ -96,17 +96,17 @@ jobs:
         # Selectively install the optional dependencies for some Python versions
         # For Python 3.10:
         if [[ ${{ matrix.python-version }} == '3.10' ]]; then
-          poetry install -E "nn omikuji yake voikko stwfsa";
+          poetry install -E "nn omikuji yake voikko stwfsa pecos";
         fi
         # For Python 3.11:
         if [[ ${{ matrix.python-version }} == '3.11' ]]; then
-          poetry install -E "fasttext spacy estnltk";
+          poetry install -E "fasttext spacy estnltk pecos";
           # download the small English pretrained spaCy model needed by spacy analyzer
           poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
         # For Python 3.12:
         if [[ ${{ matrix.python-version }} == '3.12' ]]; then
-          poetry install -E "nn fasttext yake stwfsa voikko spacy";
+          poetry install -E "nn fasttext yake stwfsa voikko spacy pecos";
           # download the small English pretrained spaCy model needed by spacy analyzer
           poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
