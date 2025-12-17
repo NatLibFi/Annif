@@ -10,7 +10,7 @@ on:
 env:
   PIPX_HOME: "/home/runner/.cache/pipx"
   PIPX_BIN_DIR: "/home/runner/.local/bin"
-  POETRY_VERSION: "2.*"
+  UV_VERSION: "0.9.*"
 permissions:
   contents: read
 jobs:
@@ -25,23 +25,23 @@ jobs:
         egress-policy: audit
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-    - name: "Prepare: restore caches, install Poetry, set up Python"
+    - name: "Prepare: restore caches, install uv, set up Python"
       uses: ./.github/actions/prepare
       with:
         python-version: "3.12"
-        poetry-version: ${{ env.POETRY_VERSION }}
+        uv-version: ${{ env.UV_VERSION }}
     - name: Install Python dev dependencies
       run: |
-        poetry install --only dev
+        uv sync --only-dev
     - name: Lint with isort
       run: |
-        poetry run isort . --check-only --diff
+        uv run isort . --check-only --diff
     - name: Lint with Black
       run: |
-        poetry run black . --check --diff
+        uv run black . --check --diff
     - name: Lint with flake8
       run: |
-        poetry run flake8
+        uv run flake8
 
   time-startup:
     runs-on: ubuntu-22.04
@@ -53,18 +53,18 @@ jobs:
         egress-policy: audit
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-    - name: "Prepare: restore caches, install Poetry, set up Python"
+    - name: "Prepare: restore caches, install uv, set up Python"
       id: prepare
       uses: ./.github/actions/prepare
       with:
         python-version: "3.11"
-        poetry-version: ${{ env.POETRY_VERSION }}
+        uv-version: ${{ env.UV_VERSION }}
     - name: Install Python dependencies
       run: |
-        poetry install
+        uv sync
     - name: Check startup time
       run: |
-        poetry run tests/time-startup.sh
+        uv run tests/time-startup.sh
 
   test:
     runs-on: ubuntu-22.04
@@ -85,58 +85,48 @@ jobs:
         sudo apt-get install \
           libvoikko1 \
           voikko-fi
-    - name: "Prepare: restore caches, install Poetry, set up Python"
+    - name: "Prepare: restore caches, install uv, set up Python"
       id: prepare
       uses: ./.github/actions/prepare
       with:
         python-version: ${{ matrix.python-version }}
-        poetry-version: ${{ env.POETRY_VERSION }}
+        uv-version: ${{ env.UV_VERSION }}
     - name: Install Python dependencies
       run: |
         # Selectively install the optional dependencies for some Python versions
         # For Python 3.10:
         if [[ ${{ matrix.python-version }} == '3.10' ]]; then
-          poetry install -E "nn omikuji yake voikko stwfsa";
+          uv sync --extra "nn omikuji yake voikko stwfsa";
         fi
         # For Python 3.11:
         if [[ ${{ matrix.python-version }} == '3.11' ]]; then
-          poetry install -E "fasttext spacy estnltk";
+          uv sync --extra "fasttext spacy estnltk";
           # download the small English pretrained spaCy model needed by spacy analyzer
-          poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+          uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
         # For Python 3.12:
         if [[ ${{ matrix.python-version }} == '3.12' ]]; then
-          poetry install -E "nn fasttext yake stwfsa voikko spacy";
+          uv sync --extra "nn fasttext yake stwfsa voikko spacy";
           # download the small English pretrained spaCy model needed by spacy analyzer
-          poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+          uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
         # For Python 3.13:
         if [[ ${{ matrix.python-version }} == '3.13' ]]; then
-          poetry install -E "fasttext yake voikko spacy";
+          uv sync --extra "fasttext yake voikko spacy";
           # download the small English pretrained spaCy model needed by spacy analyzer
-          poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+          uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
-        poetry run python -m nltk.downloader punkt_tab
+        uv run python -m nltk.downloader punkt_tab
     - name: Test with pytest
       run: |
-        poetry run pytest --cov=./ --cov-report xml
+        uv run pytest --cov=./ --cov-report xml
         if [[ ${{ matrix.python-version }} == '3.11' ]]; then
-          poetry run pytest --cov=./ --cov-report xml --cov-append -m slow
+          uv run pytest --cov=./ --cov-report xml --cov-append -m slow
         fi
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7  # v5.5.1
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    - name: Save cache
-      if: steps.prepare.outputs.cache-matched-key != format('poetry-installation-and-cache-{0}-{1}-{2}', matrix.python-version, env.POETRY_VERSION, hashFiles('**/poetry.lock'))
-      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-      with:
-        path: |
-          ~/.cache/pipx/venvs
-          ~/.local/bin
-          ~/.cache/pypoetry/
-        # A new key is created to update the cache if some dependency has been updated
-        key:  poetry-installation-and-cache-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}
 
   test-docker-image:
     name: "test Docker image"
@@ -206,14 +196,14 @@ jobs:
         egress-policy: audit
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-    - name: "Prepare: restore caches, install Poetry, set up Python"
+    - name: "Prepare: restore caches, install uv, set up Python"
       uses: ./.github/actions/prepare
       with:
         python-version: '3.11'
-        poetry-version: ${{ env.POETRY_VERSION }}
+        uv-version: ${{ env.UV_VERSION }}
     - name: Build distributions
       run: |
-        poetry build
+        uv build
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e  # v1.13.0
 

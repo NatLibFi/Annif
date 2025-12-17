@@ -3,31 +3,18 @@ description:
 inputs:
   python-version:
     required: true
-  poetry-version:
+  uv-version:
     required: true
-outputs:
-  cache-matched-key:
-    value: ${{ steps.restore-cache.outputs.cache-matched-key }}
 runs:
   using: "composite"
   steps:
-    - name: Restore cached Poetry installation and its cache
-      id: restore-cache
-      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
-      with:
-        path: |
-          ~/.cache/pipx/venvs
-          ~/.local/bin
-          ~/.cache/pypoetry/
-        key: ignore-me
-        restore-keys: |
-          poetry-installation-and-cache-${{ inputs.python-version }}-${{ inputs.poetry-version }}-
     - name: Set up Python ${{ inputs.python-version }}
       uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548  # v6.1.0
       with:
         python-version: ${{ inputs.python-version }}
-    - name: Install Poetry
-      shell: bash
-      run: |
-        pipx install poetry==${{ inputs.poetry-version }}
-        poetry env use ${{ inputs.python-version }}
+    - name: Install uv
+      uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867  # v7.1.6
+      with:
+        version: ${{ inputs.uv-version }}
+        python-version: ${{ inputs.python-version }}
+        enable-cache: true
