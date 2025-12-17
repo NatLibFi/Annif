@@ -1,47 +1,53 @@
-FROM python:3.12-slim-bookworm
+# Use a Python 3.12 + uv image (Debian bookworm-slim)
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 LABEL org.opencontainers.image.authors="grp-natlibfi-annif@helsinki.fi"
 SHELL ["/bin/bash", "-c"]
 
 ARG optional_dependencies="voikko fasttext nn omikuji yake spacy stwfsa"
-ARG POETRY_VIRTUALENVS_CREATE=false
 
 # Install system dependencies needed at runtime:
 RUN apt-get update && apt-get upgrade -y && \
-	if [[ $optional_dependencies =~ "voikko" ]]; then \
-		apt-get install -y --no-install-recommends \
-			libvoikko1 \
-			voikko-fi; \
-	fi && \
-	# Install rsync for model transfers:
-	apt-get install -y --no-install-recommends rsync && \
-	rm -rf /var/lib/apt/lists/* /usr/include/*
+    if [[ $optional_dependencies =~ "voikko" ]]; then \
+        apt-get install -y --no-install-recommends \
+            libvoikko1 \
+            voikko-fi; \
+    fi && \
+    # Install rsync for model transfers:
+    apt-get install -y --no-install-recommends rsync && \
+    rm -rf /var/lib/apt/lists/* /usr/include/*
 
 WORKDIR /Annif
-RUN pip install --upgrade pip "poetry~=2.0" --no-cache-dir
 
+# Copy only project metadata first to maximize Docker layer caching
 COPY pyproject.toml setup.cfg README.md LICENSE.txt CITATION.cff projects.cfg.dist /Annif/
 
-# First round of installation for Docker layer caching:
-RUN echo "Installing dependencies for optional features: $optional_dependencies" \
-	&& poetry install -E "$optional_dependencies" --no-root \
-	&& rm -rf /root/.cache/pypoetry  # No need for cache because of poetry.lock
+# First round: install dependencies only (no project), with selected extras.
+RUN extras=(); \
+    for e in ${optional_dependencies}; do extras+=(--extra "$e"); done; \
+    uv sync --no-install-project --no-dev "${extras[@]}"
 
 # Download nltk data
-RUN python -m nltk.downloader punkt_tab -d /usr/share/nltk_data
+RUN uv run --no-sync python -m nltk.downloader punkt_tab -d /usr/share/nltk_data
 
-# Download spaCy models, if the optional feature was selected
+# Download spaCy models only if 'spacy' extra is selected
 ARG spacy_models=en_core_web_sm
 RUN if [[ $optional_dependencies =~ "spacy" ]]; then \
-		for model in $(echo $spacy_models | tr "," "\n"); do \
-			python -m spacy download $model; \
-		done; \
-	fi
+        for model in $(echo "$spacy_models" | tr "," "\n"); do \
+            uv run --no-sync python -m spacy download "$model"; \
+        done; \
+    fi
 
-# Second round of installation with the actual code:
+# Second round: add source and install the actual project (editable by default)
 COPY annif /Annif/annif
 COPY tests /Annif/tests
-RUN poetry install -E "$optional_dependencies"
+RUN extras=(); \
+    for e in ${optional_dependencies}; do extras+=(--extra "$e"); done; \
+    uv sync --no-dev "${extras[@]}"
 
+# Make virtualenv executables available to shell and entrypoint
+ENV PATH="/Annif/.venv/bin:${PATH}"
+
+# Enable Annif bash completion (now available on PATH)
 WORKDIR /annif-projects
 RUN annif completion --bash >> /etc/bash.bashrc  # Enable tab completion
 
