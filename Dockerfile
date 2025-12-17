@@ -29,6 +29,13 @@ RUN extras=(); \
 # Download nltk data
 RUN uv run --no-sync python -m nltk.downloader punkt_tab -d /usr/share/nltk_data
 
+# Second round: add source and install the actual project (editable by default)
+COPY annif /Annif/annif
+COPY tests /Annif/tests
+RUN extras=(); \
+    for e in ${optional_dependencies}; do extras+=(--extra "$e"); done; \
+    uv sync "${extras[@]}"
+
 # Download spaCy models only if 'spacy' extra is selected
 ARG spacy_models=en_core_web_sm
 RUN if [[ $optional_dependencies =~ "spacy" ]]; then \
@@ -36,13 +43,6 @@ RUN if [[ $optional_dependencies =~ "spacy" ]]; then \
             uv run --no-sync python -m spacy download "$model"; \
         done; \
     fi
-
-# Second round: add source and install the actual project (editable by default)
-COPY annif /Annif/annif
-COPY tests /Annif/tests
-RUN extras=(); \
-    for e in ${optional_dependencies}; do extras+=(--extra "$e"); done; \
-    uv sync "${extras[@]}"
 
 # Make virtualenv executables available to shell and entrypoint
 ENV PATH="/Annif/.venv/bin:${PATH}"
