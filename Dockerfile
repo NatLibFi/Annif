@@ -24,7 +24,7 @@ COPY pyproject.toml setup.cfg README.md LICENSE.txt CITATION.cff projects.cfg.di
 # First round: install dependencies only (no project), with selected extras.
 RUN extras=(); \
     for e in ${optional_dependencies}; do extras+=(--extra "$e"); done; \
-    uv sync --no-install-project --no-dev "${extras[@]}"
+    uv sync --no-install-project "${extras[@]}"
 
 # Download nltk data
 RUN uv run --no-sync python -m nltk.downloader punkt_tab -d /usr/share/nltk_data
@@ -42,7 +42,7 @@ COPY annif /Annif/annif
 COPY tests /Annif/tests
 RUN extras=(); \
     for e in ${optional_dependencies}; do extras+=(--extra "$e"); done; \
-    uv sync --no-dev "${extras[@]}"
+    uv sync "${extras[@]}"
 
 # Make virtualenv executables available to shell and entrypoint
 ENV PATH="/Annif/.venv/bin:${PATH}"
