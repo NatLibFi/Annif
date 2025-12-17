@@ -43,6 +43,7 @@ dependencies = [
     "requests~=2.32.3",
     "rdflib~=7.1.3",
     "tomli~=2.2.1; python_version<'3.11'",
+    "pip>=25.3",
 ]
 
 [project.optional-dependencies]
