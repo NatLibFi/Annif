@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import tempfile
+from glob import glob
 
 import click
 
@@ -12,13 +13,15 @@ THRESHOLD_CONSISTENCY = 0.03
 
 
 def get_project_ids(cfg_path):
+    fpaths = glob(os.path.join(cfg_path, "*.cfg"))
     ids = []
-    with open(cfg_path) as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith("#"):
-                if line.startswith("[") and line.endswith("]"):
-                    ids.append(line[1:-1])
+    for fpath in sorted(fpaths):
+        with open(fpath) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    if line.startswith("[") and line.endswith("]"):
+                        ids.append(line[1:-1])
     return ids
 
 
@@ -168,7 +171,7 @@ def check_project_metrics(
 
 
 def check_projects(check_type, ci, train=False):
-    projects_cfg_name = f"tests/projects-{check_type}.cfg"
+    projects_cfg_name = f"tests/projects-{check_type}"
     threshold = (
         THRESHOLD_COMPATIBILITY
         if check_type == "compatibility"
@@ -177,7 +180,7 @@ def check_projects(check_type, ci, train=False):
     project_ids = get_project_ids(projects_cfg_name)
     os.environ["ANNIF_PROJECTS"] = projects_cfg_name
     significant_diffs = []
-    for project_id in project_ids:
+    for project_id in sorted(project_ids):
         print(f"=== Checking {check_type} of project {project_id} ===")
         prev_metrics_path = os.path.join(PREV_RESULTS_DIR, f"{project_id}.json")
         prev_metrics = load_metrics(prev_metrics_path)
@@ -221,7 +224,7 @@ def run_consistency_checks(ci, hf_repo):
 @click.option("--hf_repo", required=True, envvar="HF_REPO")
 def run_upload(hf_repo):
     print("Training new models and evaluating metrics.")
-    projects_cfg_name = "tests/projects-consistency.cfg"
+    projects_cfg_name = "tests/projects-consistency"
     project_ids = get_project_ids(projects_cfg_name)
     os.environ["ANNIF_PROJECTS"] = projects_cfg_name
 
