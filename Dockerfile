@@ -47,13 +47,15 @@ RUN if [[ $optional_dependencies =~ "spacy" ]]; then \
 # Make virtualenv executables available to shell and entrypoint
 ENV PATH="/Annif/.venv/bin:${PATH}"
 
-# Create non-root user for running annif commands
+# Set up working dir & non-root user for running annif commands
+WORKDIR /annif-projects
 RUN groupadd -g 998 annif_user && \
-    useradd -m -u 998 -g annif_user annif_user
+    useradd -m -u 998 -g annif_user annif_user && \
+    mkdir -p /Annif/tests/data && \
+    chown -R annif_user:annif_user /annif-projects /Annif/tests/data
 USER annif_user
 
 # Enable Annif bash completion (now available on PATH)
-WORKDIR /annif-projects
 RUN annif completion --bash >> ~/.bashrc
 
 ENV GUNICORN_CMD_ARGS="--worker-class uvicorn.workers.UvicornWorker"
