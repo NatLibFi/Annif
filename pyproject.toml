@@ -49,7 +49,7 @@ dependencies = [
 fasttext = ["fasttext-numpy2==0.10.4"]
 estnltk = ["estnltk==1.7.4"]
 nn = [
-    "tensorflow-cpu~=2.20.0",
+    "torch~=2.9.1",
     "lmdb~=1.7.3",
 ]
 omikuji = ["omikuji==0.5.*"]
@@ -91,6 +91,16 @@ skip_gitignore = true
 [tool.pytest.ini_options]
 markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
 addopts = "-m 'not slow'"
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [build-system]
 requires = ["hatchling"]
