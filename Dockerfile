@@ -51,9 +51,10 @@ ENV PATH="/Annif/.venv/bin:${PATH}"
 WORKDIR /annif-projects
 RUN groupadd -g 998 annif_user && \
     useradd -m -u 998 -g annif_user annif_user && \
-    mkdir -p /Annif/tests/data && \
+    mkdir -p /Annif/tests/data /Annif/projects.d && \
     chown -R annif_user:annif_user /annif-projects /Annif/tests/data
 USER annif_user
+ENV HF_HOME="/tmp"
 
 # Enable Annif bash completion (now available on PATH)
 RUN annif completion --bash >> ~/.bashrc
