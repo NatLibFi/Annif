@@ -18,13 +18,8 @@ RUN apt-get update && apt-get upgrade -y && \
 
 WORKDIR /Annif
 
-RUN groupadd -g 998 annif_user && \
-    useradd -m -u 998 -g annif_user annif_user && \
-    chown -R annif_user:annif_user /Annif
-USER annif_user
-
 # Copy only project metadata first to maximize Docker layer caching
-COPY --chown=annif_user:annif_user pyproject.toml setup.cfg README.md LICENSE.txt CITATION.cff projects.cfg.dist /Annif/
+COPY pyproject.toml setup.cfg README.md LICENSE.txt CITATION.cff projects.cfg.dist /Annif/
 
 # First round: install dependencies only (no project), with selected extras.
 RUN extras=(); \
@@ -32,11 +27,11 @@ RUN extras=(); \
     uv sync --no-install-project "${extras[@]}"
 
 # Download nltk data
-RUN uv run --no-sync python -m nltk.downloader punkt_tab
+RUN uv run --no-sync python -m nltk.downloader punkt_tab -d /usr/share/nltk_data
 
 # Second round: add source and install the actual project (editable by default)
-COPY --chown=annif_user:annif_user annif /Annif/annif
-COPY --chown=annif_user:annif_user tests /Annif/tests
+COPY annif /Annif/annif
+COPY tests /Annif/tests
 RUN extras=(); \
     for e in ${optional_dependencies}; do extras+=(--extra "$e"); done; \
     uv sync "${extras[@]}"
@@ -51,6 +46,11 @@ RUN if [[ $optional_dependencies =~ "spacy" ]]; then \
 
 # Make virtualenv executables available to shell and entrypoint
 ENV PATH="/Annif/.venv/bin:${PATH}"
+
+# Create non-root user for running annif commands
+RUN groupadd -g 998 annif_user && \
+    useradd -m -u 998 -g annif_user annif_user
+USER annif_user
 
 # Enable Annif bash completion (now available on PATH)
 WORKDIR /annif-projects
