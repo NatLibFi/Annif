@@ -43,7 +43,6 @@ dependencies = [
     "requests~=2.32.3",
     "rdflib~=7.1.3",
     "tomli~=2.2.1; python_version<'3.11'",
-    "pip>=25.3",
 ]
 
 [project.optional-dependencies]
@@ -54,7 +53,10 @@ nn = [
     "lmdb~=1.7.3",
 ]
 omikuji = ["omikuji==0.5.*"]
-spacy = ["spacy~=3.8.4"]
+spacy = [
+    "spacy~=3.8.4",
+    "pip>=25.3",
+]
 stwfsa = ["stwfsapy~=0.6.1"]
 voikko = ["voikko==0.5.*"]
 yake = ["yake~=0.6.0"]
