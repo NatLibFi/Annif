@@ -12,14 +12,13 @@ from io import BytesIO
 from typing import TYPE_CHECKING, Any
 
 import joblib
-import keras
 import lmdb
 import numpy as np
-from keras.layers import Add, Dense, Dropout, Flatten, Input, Layer
-from keras.models import Model
-from keras.saving import load_model
-from keras.utils import Sequence
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from scipy.sparse import csc_matrix, csr_matrix
+from torch.utils.data import DataLoader, Dataset
 
 import annif.corpus
 import annif.parallel
@@ -34,8 +33,6 @@ from annif.suggestion import SuggestionBatch, vector_to_suggestions
 from . import backend, ensemble
 
 if TYPE_CHECKING:
-    from tensorflow.python.framework.ops import EagerTensor
-
     from annif.corpus.document import DocumentCorpus
 
 logger = annif.logger
@@ -51,10 +48,10 @@ def key_to_idx(key: memoryview | bytes) -> int:
     return int(key)
 
 
-class LMDBSequence(Sequence):
+class LMDBDataset(Dataset):
     """A sequence of samples stored in a LMDB database."""
 
-    def __init__(self, txn, batch_size):
+    def __init__(self, txn):
         super().__init__()
         self._txn = txn
         cursor = txn.cursor()
@@ -63,7 +60,6 @@ class LMDBSequence(Sequence):
             self._counter = key_to_idx(cursor.key()) + 1
         else:  # empty database
             self._counter = 0
-        self._batch_size = batch_size
 
     def add_sample(self, inputs: np.ndarray, targets: np.ndarray) -> None:
         # use zero-padded 8-digit key
@@ -77,30 +73,64 @@ class LMDBSequence(Sequence):
         self._txn.put(key, buf.read())
 
     def __getitem__(self, idx: int) -> tuple[np.ndarray, np.ndarray]:
-        """get a particular batch of samples"""
+        """get a particular sample"""
         cursor = self._txn.cursor()
-        first_key = idx * self._batch_size
-        cursor.set_key(idx_to_key(first_key))
-        input_arrays = []
-        target_arrays = []
-        for key, value in cursor.iternext():
-            if key_to_idx(key) >= (first_key + self._batch_size):
-                break
-            input_csr, target_csr = joblib.load(BytesIO(value))
-            input_arrays.append(input_csr.toarray())
-            target_arrays.append(target_csr.toarray().flatten())
-        return np.array(input_arrays), np.array(target_arrays)
+        cursor.set_key(idx_to_key(idx))
+        value = cursor.value()
+        input_csr, target_csr = joblib.load(BytesIO(value))
+        input_tensor = torch.from_numpy(input_csr.toarray())
+        target_tensor = torch.from_numpy(target_csr.toarray()[0]).float()
+        return input_tensor, target_tensor
 
     def __len__(self) -> int:
-        """return the number of available batches"""
-        return int(np.ceil(self._counter / self._batch_size))
+        """return the number of available samples"""
+        return self._counter
 
 
-class MeanLayer(Layer):
-    """Custom Keras layer that calculates mean values along the 2nd axis."""
+class NNEnsembleModel(nn.Module):
+    def __init__(
+        self, input_dim: int, hidden_dim: int, output_dim: int, dropout_rate: float
+    ):
+        super().__init__()
+        self.model_config = {
+            "input_dim": input_dim,
+            "hidden_dim": hidden_dim,
+            "output_dim": output_dim,
+            "dropout_rate": dropout_rate,
+        }
+        self.flatten = nn.Flatten()
+        self.dropout1 = nn.Dropout(dropout_rate)
+        self.hidden = nn.Linear(input_dim, hidden_dim)
+        self.dropout2 = nn.Dropout(dropout_rate)
+        self.delta_layer = nn.Linear(hidden_dim, output_dim)
 
-    def call(self, inputs: EagerTensor) -> EagerTensor:
-        return keras.ops.mean(inputs, axis=2)
+    def forward(self, inputs):
+        mean = torch.mean(inputs, dim=1)
+        x = self.flatten(inputs)
+        x = self.dropout1(x)
+        x = F.relu(self.hidden(x))
+        x = self.dropout2(x)
+        delta = self.delta_layer(x)
+        return mean + delta
+
+    def save(self, filepath):
+        torch.save(
+            {
+                "model_state_dict": self.state_dict(),
+                "model_config": self.model_config,
+                "model_class": self.__class__.__name__,
+            },
+            filepath,
+        )
+
+    @classmethod
+    def load(cls, filepath, map_location="cpu"):
+        checkpoint = torch.load(filepath, map_location=map_location, weights_only=True)
+        config = checkpoint["model_config"]
+        model = cls(**config)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        model.eval()
+        return model
 
 
 class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBackend):
@@ -109,13 +139,14 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
     name = "nn_ensemble"
 
-    MODEL_FILE = "nn-model.keras"
+    MODEL_FILE = "nn-model.pt"
     LMDB_FILE = "nn-train.mdb"
 
     DEFAULT_PARAMETERS = {
         "nodes": 100,
         "dropout_rate": 0.2,
         "optimizer": "adam",
+        "lr": 0.001,
         "epochs": 10,
         "learn-epochs": 1,
         "lmdb_map_size": 1024 * 1024 * 1024,
@@ -129,7 +160,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         if self._model is not None:
             return  # already initialized
         if parallel:
-            # Don't load TF model just before parallel execution,
+            # Don't load model just before parallel execution,
             # since it won't work after forking worker processes
             return
         model_filename = os.path.join(self.datadir, self.MODEL_FILE)
@@ -138,18 +169,14 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 "model file {} not found".format(model_filename),
                 backend_id=self.backend_id,
             )
-        self.debug("loading Keras model from {}".format(model_filename))
+        self.debug("loading model from {}".format(model_filename))
         try:
-            self._model = load_model(
-                model_filename, custom_objects={"MeanLayer": MeanLayer}
-            )
+            self._model = NNEnsembleModel.load(model_filename)
         except Exception as err:
             metadata = self.get_model_metadata(model_filename)
-            keras_version = importlib.metadata.version("keras")
             message = (
-                f"loading Keras model from {model_filename}; "
+                f"loading model from {model_filename}; "
                 f"model metadata: {metadata}; "
-                f"you have Keras version {keras_version}. "
                 f'Original error message: "{err}"'
             )
             raise OperationFailedException(message, backend_id=self.backend_id)
@@ -172,8 +199,10 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 for project_id, batch in batch_by_source.items()
             ],
             dtype=np.float32,
-        ).transpose(1, 2, 0)
-        prediction = self._model(score_vectors).numpy()
+        )
+        score_vector_tensor = torch.from_numpy(score_vectors.swapaxes(0, 1))
+        with torch.no_grad():
+            prediction = self._model(score_vector_tensor)
         return SuggestionBatch.from_sequence(
             [
                 vector_to_suggestions(row, limit=int(params["limit"]))
@@ -185,34 +214,22 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     def _create_model(self, sources: list[tuple[str, float]]) -> None:
         self.info("creating NN ensemble model")
 
-        inputs = Input(shape=(len(self.project.subjects), len(sources)))
+        # Create PyTorch model
+        input_dim = len(self.project.subjects) * len(sources)
+        hidden_dim = int(self.params["nodes"])
+        output_dim = len(self.project.subjects)
+        dropout_rate = float(self.params["dropout_rate"])
 
-        flat_input = Flatten()(inputs)
-        drop_input = Dropout(rate=float(self.params["dropout_rate"]))(flat_input)
-        hidden = Dense(int(self.params["nodes"]), activation="relu")(drop_input)
-        drop_hidden = Dropout(rate=float(self.params["dropout_rate"]))(hidden)
-        delta = Dense(
-            len(self.project.subjects),
-            kernel_initializer="zeros",
-            bias_initializer="zeros",
-        )(drop_hidden)
-
-        mean = MeanLayer()(inputs)
-
-        predictions = Add()([mean, delta])
-
-        self._model = Model(inputs=inputs, outputs=predictions)
-        self._model.compile(
-            optimizer=self.params["optimizer"],
-            loss="binary_crossentropy",
-            metrics=["top_k_categorical_accuracy"],
+        self._model = NNEnsembleModel(
+            input_dim=input_dim,
+            hidden_dim=hidden_dim,
+            output_dim=output_dim,
+            dropout_rate=dropout_rate,
         )
-        if "lr" in self.params:
-            self._model.optimizer.learning_rate.assign(float(self.params["lr"]))
 
-        summary = []
-        self._model.summary(print_fn=summary.append)
-        self.debug("Created model: \n" + "\n".join(summary))
+    #        summary = []
+    #        self._model.summary(print_fn=summary.append)
+    #        self.debug("Created model: \n" + "\n".join(summary))
 
     def _train(
         self,
@@ -232,7 +249,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     def _corpus_to_vectors(
         self,
         corpus: DocumentCorpus,
-        seq: LMDBSequence,
+        seq: LMDBDataset,
         n_jobs: int,
     ) -> None:
         # pass corpus through all source projects
@@ -265,7 +282,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                     doc_scores.append(
                         np.sqrt(vector) * sources[project_id] * len(sources)
                     )
-                score_vector = np.array(doc_scores, dtype=np.float32).transpose()
+                score_vector = np.array(doc_scores, dtype=np.float32)
                 true_vector = subject_set.as_vector(len(self.project.subjects))
                 seq.add_sample(score_vector, true_vector)
 
@@ -289,15 +306,31 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                     "Cannot train nn_ensemble project with no documents"
                 )
             with env.begin(write=True, buffers=True) as txn:
-                seq = LMDBSequence(txn, batch_size=32)
+                seq = LMDBDataset(txn)
                 self._corpus_to_vectors(corpus, seq, n_jobs)
         else:
             self.info("Reusing cached training data from previous run.")
+
         # fit the model using a read-only view of the LMDB
         self.info("Training neural network model...")
         with env.begin(buffers=True) as txn:
-            seq = LMDBSequence(txn, batch_size=32)
-            self._model.fit(seq, verbose=True, epochs=epochs)
+            dataset = LMDBDataset(txn)
+            dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+
+            # Training loop
+            optimizer = torch.optim.Adam(
+                self._model.parameters(), lr=float(self.params["lr"])
+            )
+            criterion = nn.BCEWithLogitsLoss()
+
+            self._model.train()
+            for epoch in range(epochs):
+                for inputs, targets in dataloader:
+                    optimizer.zero_grad()
+                    outputs = self._model(inputs)
+                    loss = criterion(outputs, targets)
+                    loss.backward()
+                    optimizer.step()
 
         annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)
 
