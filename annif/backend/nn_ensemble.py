@@ -3,11 +3,9 @@ projects."""
 
 from __future__ import annotations
 
-import importlib
-import json
 import os.path
 import shutil
-import zipfile
+import sys
 from io import BytesIO
 from typing import TYPE_CHECKING, Any
 
@@ -117,8 +115,10 @@ class NNEnsembleModel(nn.Module):
         torch.save(
             {
                 "model_state_dict": self.state_dict(),
-                "model_config": self.model_config,
                 "model_class": self.__class__.__name__,
+                "model_config": self.model_config,
+                "pytorch_version": str(torch.__version__),
+                "python_version": sys.version,
             },
             filepath,
         )
@@ -173,11 +173,9 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         try:
             self._model = NNEnsembleModel.load(model_filename)
         except Exception as err:
-            metadata = self.get_model_metadata(model_filename)
             message = (
                 f"loading model from {model_filename}; "
-                f"model metadata: {metadata}; "
-                f'Original error message: "{err}"'
+                f'original error message: "{err}"'
             )
             raise OperationFailedException(message, backend_id=self.backend_id)
 
@@ -343,16 +341,3 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         self._fit_model(
             corpus, int(params["learn-epochs"]), int(params["lmdb_map_size"])
         )
-
-    def get_model_metadata(self, model_filename: str) -> dict | None:
-        """Read metadata from Keras model files."""
-
-        try:
-            with zipfile.ZipFile(model_filename, "r") as zip:
-                with zip.open("metadata.json") as metadata_file:
-                    metadata_str = metadata_file.read().decode("utf-8")
-                    metadata = json.loads(metadata_str)
-                    return metadata
-        except Exception:
-            self.warning(f"Failed to read metadata from {model_filename}")
-            return None
