@@ -47,10 +47,8 @@ dependencies = [
 
 [project.optional-dependencies]
 fasttext = ["fasttext-numpy2==0.10.4"]
-ebm = ["ebm4subjects==0.5.1"]
+ebm = ["ebm4subjects==0.5.5"]
 estnltk = ["estnltk==1.7.5"]
-ebm = ["ebm4subjects==0.5.1"]
-estnltk = ["estnltk==1.7.4"]
 nn = [
     "torch~=2.14.0",
     "tqdm~=4.70.1",

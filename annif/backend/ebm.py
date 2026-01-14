@@ -18,7 +18,6 @@ class EbmBackend(backend.AnnifBackend):
     name = "ebm"
 
     EBM_PARAMETERS = {
-        "embedding_model_name": str,
         "embedding_dimensions": int,
         "max_chunk_count": int,
         "max_chunk_length": int,
@@ -35,13 +34,14 @@ class EbmBackend(backend.AnnifBackend):
         "xgb_jobs": int,
         "duck_db_threads": int,
         "use_altLabels": bool,
-        "model_args": dict[str, Any],
+        "embedding_model_name": str,
+        "embedding_model_deployment": str,
+        "embedding_model_args": dict[str, Any],
         "encode_args_vocab": dict[str, Any],
         "encode_args_documents": dict[str, Any],
     }
 
     DEFAULT_PARAMETERS = {
-        "embedding_model_name": "BAAI/bge-m3",
         "embedding_dimensions": 1024,
         "max_chunk_count": 100,
         "max_chunk_length": 50,
@@ -58,7 +58,9 @@ class EbmBackend(backend.AnnifBackend):
         "xgb_jobs": 1,
         "duckdb_threads": 1,
         "use_altLabels": True,
-        "model_args": {"device": "cpu", "trust_remote_code": False},
+        "embedding_model_name": "BAAI/bge-m3",
+        "embedding_model_deployment": "offline-inference",
+        "embedding_model_args": {"device": "cpu", "trust_remote_code": False},
         "encode_args_vocab": {"batch_size": 32, "show_progress_bar": True},
         "encode_args_documents": {"batch_size": 32, "show_progress_bar": True},
     }
@@ -94,7 +96,6 @@ class EbmBackend(backend.AnnifBackend):
         self.info("starting train")
         self._model = EbmModel(
             db_path=os.path.join(self.datadir, self.DB_FILE),
-            embedding_model_name=params["embedding_model_name"],
             embedding_dimensions=params["embedding_dimensions"],
             chunk_tokenizer=self._analyzer,
             max_chunk_count=params["max_chunk_count"],
@@ -112,7 +113,9 @@ class EbmBackend(backend.AnnifBackend):
             xgb_jobs=params["xgb_jobs"],
             duckdb_threads=jobs if jobs else params["duckdb_threads"],
             use_altLabels=params["use_altLabels"],
-            model_args=params["model_args"],
+            embedding_model_name=params["embedding_model_name"],
+            embedding_model_deployment=params["embedding_model_deployment"],
+            embedding_model_args=params["embedding_model_args"],
             encode_args_vocab=params["encode_args_vocab"],
             encode_args_documents=params["encode_args_documents"],
             logger=self,
