@@ -1,6 +1,5 @@
 """Unit tests for the EBM backend in Annif"""
 
-import numpy as np
 import pytest
 
 import annif
@@ -8,18 +7,14 @@ import annif.backend
 from annif.corpus import Document
 from annif.exception import NotInitializedException, NotSupportedException
 
-
-class MockTransformer:
-    def encode(self, texts, **kwargs):
-        return np.ones((len(texts), 1024))
-
-
 ebm = pytest.importorskip("annif.backend.ebm")
 
 _backend_conf = {
     "language": "fi",
     "limit": 10,
-    "embedding_model_name": MockTransformer(),
+    "embedding_model_name": None,
+    "embedding_model_deployment": "mock",
+    "embedding_model_args": None,
     "embedding_dimensions": 1024,
 }
 
