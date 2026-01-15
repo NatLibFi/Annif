@@ -52,6 +52,8 @@ nn = [
     "torch~=2.9.1",
     "lmdb~=1.7.3",
 ]
+torch-cpu = ["torch"]
+torch-cu128 = ["torch"]
 omikuji = ["omikuji==0.5.*"]
 spacy = [
     "spacy~=3.8.4",
@@ -92,14 +94,28 @@ skip_gitignore = true
 markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
 addopts = "-m 'not slow'"
 
+[tool.uv]
+conflicts = [
+  [
+    { extra = "torch-cpu" },
+    { extra = "torch-cu128" },
+  ],
+]
+
 [tool.uv.sources]
 torch = [
-    { index = "pytorch-cpu" },
+  { index = "pytorch-cpu",    extra = "torch-cpu" },
+  { index = "pytorch-cu128",  extra = "torch-cu128" },
 ]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
 [build-system]
