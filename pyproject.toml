@@ -2,17 +2,14 @@
 name = "annif"
 version = "1.5.0-dev"
 description = "Automated subject indexing and classification tool"
-license = "Apache-2.0"
-readme = "README.md"
+authors = [{ name = "National Library of Finland", email = "finto-posti@helsinki.fi" }]
 requires-python = ">=3.10,<3.14"
-
-authors = [
-    {name = "National Library of Finland", email = "finto-posti@helsinki.fi"},
-]
+readme = "README.md"
+license = "Apache-2.0"
 maintainers = [
-    {name = "Osma Suominen", email = "osma.suominen@helsinki.fi"},
-    {name = "Juho Inkinen", email = "juho.inkinen@helsinki.fi"},
-    {name = "Mona Lehtinen", email = "mona.lehtinen@helsinki.fi"},
+    { name = "Osma Suominen", email = "osma.suominen@helsinki.fi" },
+    { name = "Juho Inkinen", email = "juho.inkinen@helsinki.fi" },
+    { name = "Mona Lehtinen", email = "mona.lehtinen@helsinki.fi" },
 ]
 keywords = [
     "machine-learning",
@@ -28,7 +25,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Development Status :: 5 - Production/Stable",
 ]
-
 dependencies = [
     "click~=8.2.1",
     "click-log==0.4.*",
@@ -52,24 +48,18 @@ dependencies = [
 [project.optional-dependencies]
 fasttext = ["fasttext-numpy2==0.10.4"]
 estnltk = ["estnltk==1.7.4"]
-nn = ["tensorflow-cpu~=2.20.0", "lmdb~=1.7.3"]
+nn = [
+    "tensorflow-cpu~=2.20.0",
+    "lmdb~=1.7.3",
+]
 omikuji = ["omikuji==0.5.*"]
-spacy = ["spacy~=3.8.4"]
+spacy = [
+    "spacy~=3.8.4",
+    "pip>=25.3",
+]
 stwfsa = ["stwfsapy~=0.6.1"]
 voikko = ["voikko==0.5.*"]
 yake = ["yake~=0.6.0"]
-
-[tool.poetry.group.dev.dependencies]
-py = "*"
-pytest = "8.*"
-pytest-cov = "*"
-pytest-watch = "*"
-pytest-flask = "*"
-flake8 = "*"
-bumpversion = "*"
-black = "25.*"
-isort = "*"
-schemathesis = "3.*.*"
 
 [project.urls]
 homepage = "https://annif.org"
@@ -79,9 +69,19 @@ documentation = "https://github.com/NatLibFi/Annif/wiki"
 [project.scripts]
 annif = "annif.cli:cli"
 
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+[dependency-groups]
+dev = [
+    "py",
+    "pytest==8.*",
+    "pytest-cov",
+    "pytest-watch",
+    "pytest-flask",
+    "flake8",
+    "bumpversion",
+    "black==25.*",
+    "isort",
+    "schemathesis==3.*",
+]
 
 [tool.isort]
 profile = "black"
@@ -91,3 +91,7 @@ skip_gitignore = true
 [tool.pytest.ini_options]
 markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
 addopts = "-m 'not slow'"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

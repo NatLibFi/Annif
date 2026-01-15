@@ -71,7 +71,7 @@ Annif can be tried out in the [GitHub Codespaces](https://docs.github.com/en/cod
 
 A development version of Annif can be installed by cloning the [GitHub
 repository](https://github.com/NatLibFi/Annif).
-[Poetry](https://python-poetry.org/) is used for managing dependencies and virtual environment for the development version; Poetry 2.0+ is required.
+[uv](https://docs.astral.sh/uv/) is used for managing dependencies and virtual environment for the development version.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for information on [unit tests](CONTRIBUTING.md#unit-tests), [code style](CONTRIBUTING.md#code-style), [development flow](CONTRIBUTING.md#development-flow) etc. details that are useful when participating in Annif development.
 
@@ -81,26 +81,34 @@ Clone the repository.
 
 Switch into the repository directory.
 
-Install [pipx](https://pypa.github.io/pipx/) and Poetry if you don't have them. First pipx:
+Install [pipx](https://pypa.github.io/pipx/) and uv if you don't have them. First pipx:
 
     python3 -m pip install --user pipx
     python3 -m pipx ensurepath
 
-Open a new shell, and then install Poetry:
+Open a new shell, and then install uv:
 
-    pipx install poetry==2.*
+    pipx install uv
 
-Poetry can be installed also without pipx: check the [Poetry documentation](https://python-poetry.org/docs/master/#installation).
+uv can be installed also without pipx: check the [uv documentation](https://docs.astral.sh/uv/getting-started/installation/).
 
 Create a virtual environment and install dependencies:
 
-    poetry install
+    uv sync
 
-By default development dependencies are included. Use option `-E` to install dependencies for selected optional features (`-E "extra1 extra2"` for multiple extras), or install all of them with `--all-extras`. By default the virtual environment directory is not under the project directory, but there is a [setting for selecting this](https://python-poetry.org/docs/configuration/#virtualenvsin-project).
+By default development dependencies are included. Use option `--extra` to install dependencies for selected optional features (`--extra "extra1 extra2"` for multiple extras), or install all of them with `--all-extras`. By default the virtual environment directory is `.venv` under the project directory.
+
+You can run Annif in one of two ways:
+
+### 1. One-off using `uv run`
+
+    uv run annif
+
+### 2. Activating the virtual environment
 
 Enter the virtual environment:
 
-    eval $(poetry env activate)
+    source .venv/bin/activate
 
 Start up the application:
 
