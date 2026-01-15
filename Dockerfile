@@ -3,7 +3,7 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 LABEL org.opencontainers.image.authors="grp-natlibfi-annif@helsinki.fi"
 SHELL ["/bin/bash", "-c"]
 
-ARG optional_dependencies="voikko fasttext nn omikuji yake spacy stwfsa"
+ARG optional_dependencies="voikko fasttext nn omikuji yake spacy stwfsa torch-cpu"
 
 # Install system dependencies needed at runtime:
 RUN apt-get update && apt-get upgrade -y && \
