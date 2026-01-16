@@ -227,10 +227,6 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             dropout_rate=dropout_rate,
         )
 
-    #        summary = []
-    #        self._model.summary(print_fn=summary.append)
-    #        self.debug("Created model: \n" + "\n".join(summary))
-
     def _train(
         self,
         corpus: DocumentCorpus,
