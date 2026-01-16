@@ -315,11 +315,11 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         self.info("Training neural network model...")
         with env.begin(buffers=True) as txn:
             dataset = LMDBDataset(txn)
-            dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+            dataloader = DataLoader(dataset, batch_size=32, shuffle=True, num_workers=0)
 
             # Training loop
             optimizer = torch.optim.Adam(
-                self._model.parameters(), lr=float(self.params["lr"])
+                self._model.parameters(), lr=float(self.params["lr"]), weight_decay=0
             )
             criterion = nn.BCEWithLogitsLoss()
             ndcg_metric = RetrievalNormalizedDCG(top_k=None)
