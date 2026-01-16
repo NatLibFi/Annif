@@ -142,7 +142,6 @@ def test_nn_ensemble_train_cached(registry):
     assert datadir.join("nn-model.pt").size() > 0
 
 
-@pytest.mark.skip
 def test_nn_ensemble_train_and_learn_params(registry, tmpdir, capfd):
     project = registry.get_project("dummy-en")
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
@@ -162,13 +161,13 @@ def test_nn_ensemble_train_and_learn_params(registry, tmpdir, capfd):
 
     train_params = {"epochs": 3}
     nn_ensemble.train(document_corpus, train_params)
-    out, _ = capfd.readouterr()
-    assert "Epoch 3/3" in out
+    _, err = capfd.readouterr()
+    assert "Epoch 3/3" in err
 
     learn_params = {"learn-epochs": 2}
     nn_ensemble.learn(document_corpus, learn_params)
-    out, _ = capfd.readouterr()
-    assert "Epoch 2/2" in out
+    _, err = capfd.readouterr()
+    assert "Epoch 2/2" in err
 
 
 def test_nn_ensemble_is_trained(app_project):

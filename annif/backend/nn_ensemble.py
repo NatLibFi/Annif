@@ -17,6 +17,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from scipy.sparse import csc_matrix, csr_matrix
 from torch.utils.data import DataLoader, Dataset
+from tqdm import tqdm
 
 import annif.corpus
 import annif.parallel
@@ -323,12 +324,19 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
             self._model.train()
             for epoch in range(epochs):
-                for inputs, targets in dataloader:
+                tqdm_loader = tqdm(
+                    dataloader,
+                    desc=f"Epoch {epoch + 1}/{epochs}",
+                    postfix={"loss": "0.000"},
+                )
+                for inputs, targets in tqdm_loader:
                     optimizer.zero_grad()
                     outputs = self._model(inputs)
                     loss = criterion(outputs, targets)
                     loss.backward()
                     optimizer.step()
+                    tqdm_loader.set_postfix(loss=loss.item())
+                    tqdm_loader.update()
 
         annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)
 
