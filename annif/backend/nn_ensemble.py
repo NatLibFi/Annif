@@ -17,6 +17,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from scipy.sparse import csc_matrix, csr_matrix
 from torch.utils.data import DataLoader, Dataset
+from torchmetrics.retrieval import RetrievalNormalizedDCG
 from tqdm import tqdm
 
 import annif.corpus
@@ -321,9 +322,13 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 self._model.parameters(), lr=float(self.params["lr"])
             )
             criterion = nn.BCEWithLogitsLoss()
+            ndcg_metric = RetrievalNormalizedDCG(top_k=None)
 
             self._model.train()
             for epoch in range(epochs):
+                ndcg_metric.reset()
+                total_loss = 0.0
+                total_samples = 0
                 tqdm_loader = tqdm(
                     dataloader,
                     desc=f"Epoch {epoch + 1}/{epochs}",
@@ -335,8 +340,31 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                     loss = criterion(outputs, targets)
                     loss.backward()
                     optimizer.step()
+
+                    batch_size, n_labels = outputs.shape
+
+                    # Build indexes; each sample is a separate query for nDCG
+                    indexes = torch.repeat_interleave(
+                        torch.arange(batch_size, device=outputs.device), n_labels
+                    )
+                    ndcg_metric.update(
+                        outputs.reshape(-1), targets.reshape(-1), indexes=indexes
+                    )
+
+                    # Update loss stats
+                    total_loss += loss.item() * batch_size
+                    total_samples += batch_size
+
+                    # Update progress bar with batch loss
                     tqdm_loader.set_postfix(loss=loss.item())
-                    tqdm_loader.update()
+
+                epoch_loss = total_loss / total_samples
+                epoch_ndcg = ndcg_metric.compute().item()
+                print(
+                    f"Epoch {epoch + 1}/{epochs} "
+                    f"- loss: {epoch_loss:.4f} "
+                    f"- nDCG: {epoch_ndcg:.4f}"
+                )
 
         annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)
 
