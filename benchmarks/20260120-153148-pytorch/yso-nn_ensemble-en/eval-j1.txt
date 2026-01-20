@@ -1,0 +1,59 @@
+/scratch/Annif-benchmarking/Annif/.venv/lib64/python3.11/site-packages/sklearn/base.py:442: InconsistentVersionWarning: Trying to unpickle estimator TfidfTransformer from version 1.4.2 when using version 1.7.2. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+/scratch/Annif-benchmarking/Annif/.venv/lib64/python3.11/site-packages/sklearn/base.py:442: InconsistentVersionWarning: Trying to unpickle estimator TfidfVectorizer from version 1.4.2 when using version 1.7.2. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+2026-01-20T14:28:44.386Z INFO  [omikuji::model] Loading model from data/projects/yso-omikuji-parabel-en/omikuji-model...
+2026-01-20T14:28:44.386Z INFO  [omikuji::model] Loading model settings from data/projects/yso-omikuji-parabel-en/omikuji-model/settings.json...
+2026-01-20T14:28:44.386Z INFO  [omikuji::model] Loaded model settings Settings { n_features: 198852, classifier_loss_type: Hinge }...
+2026-01-20T14:28:44.386Z INFO  [omikuji::model] Loading tree from data/projects/yso-omikuji-parabel-en/omikuji-model/tree2.cbor...
+2026-01-20T14:28:45.964Z INFO  [omikuji::model] Loading tree from data/projects/yso-omikuji-parabel-en/omikuji-model/tree0.cbor...
+2026-01-20T14:28:47.519Z INFO  [omikuji::model] Loading tree from data/projects/yso-omikuji-parabel-en/omikuji-model/tree1.cbor...
+2026-01-20T14:28:49.076Z INFO  [omikuji::model] Loaded model with 3 trees; it took 4.69s
+Precision (doc avg):          	0.0000
+Recall (doc avg):             	0.0000
+F1 score (doc avg):           	0.0000
+Precision (subj avg):         	0.0000
+Recall (subj avg):            	0.0000
+F1 score (subj avg):          	0.0000
+Precision (weighted subj avg):	0.0000
+Recall (weighted subj avg):   	0.0000
+F1 score (weighted subj avg): 	0.0000
+Precision (microavg):         	0.0000
+Recall (microavg):            	0.0000
+F1 score (microavg):          	0.0000
+F1@5:                         	0.0000
+NDCG:                         	0.0000
+NDCG@5:                       	0.0000
+NDCG@10:                      	0.0000
+Precision@1:                  	0.0000
+Precision@3:                  	0.0000
+Precision@5:                  	0.0000
+True positives:               	0
+False positives:              	0
+False negatives:              	2054
+Documents evaluated:          	300
+	Command being timed: "annif eval -j1 yso-nn_ensemble-en ../Annif-tutorial/data-sets/yso-nlf/docs/test/"
+	User time (seconds): 471.89
+	System time (seconds): 2.96
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 7:55.08
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2217416
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 741611
+	Voluntary context switches: 4353
+	Involuntary context switches: 3703
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 24
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
