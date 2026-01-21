@@ -103,6 +103,13 @@ class NNEnsembleModel(nn.Module):
         self.hidden = nn.Linear(input_dim, hidden_dim)
         self.dropout2 = nn.Dropout(dropout_rate)
         self.delta_layer = nn.Linear(hidden_dim, output_dim)
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        nn.init.xavier_uniform_(self.hidden.weight)
+        nn.init.zeros_(self.hidden.bias)
+        nn.init.zeros_(self.delta_layer.weight)
+        nn.init.zeros_(self.delta_layer.bias)
 
     def forward(self, inputs):
         mean = torch.mean(inputs, dim=1)
@@ -147,7 +154,6 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     DEFAULT_PARAMETERS = {
         "nodes": 100,
         "dropout_rate": 0.2,
-        "optimizer": "adam",
         "lr": 0.001,
         "epochs": 10,
         "learn-epochs": 1,
@@ -315,13 +321,16 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
             # Training loop
             optimizer = torch.optim.Adam(
-                self._model.parameters(), lr=float(self.params["lr"]), weight_decay=0
+                self._model.parameters(),
+                lr=float(self.params["lr"]),
+                weight_decay=0,
+                eps=1e-08,
             )
             criterion = nn.BCEWithLogitsLoss()
             ndcg_metric = RetrievalNormalizedDCG(top_k=None)
 
-            self._model.train()
             for epoch in range(epochs):
+                self._model.train()
                 ndcg_metric.reset()
                 total_loss = 0.0
                 total_samples = 0
