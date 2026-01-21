@@ -231,7 +231,7 @@ def test_nn_ensemble_default_params(app_project):
     )
 
     expected_default_params = {
-        "optimizer": "adam",
+        "lr": 0.001,
         "limit": 100,
     }
     actual_params = nn_ensemble.params
