@@ -58,11 +58,11 @@ class EbmBackend(backend.AnnifBackend):
         "xgb_jobs": 1,
         "duckdb_threads": 1,
         "use_altLabels": True,
-        "embedding_model_name": "BAAI/bge-m3",
-        "embedding_model_deployment": "offline-inference",
-        "embedding_model_args": {"device": "cpu", "trust_remote_code": False},
-        "encode_args_vocab": {"batch_size": 32, "show_progress_bar": True},
-        "encode_args_documents": {"batch_size": 32, "show_progress_bar": True},
+        "embedding_model_name": None,
+        "embedding_model_deployment": "mock",
+        "embedding_model_args": None,
+        "encode_args_vocab": None,
+        "encode_args_documents": None,
     }
 
     DB_FILE = "ebm-duck.db"
