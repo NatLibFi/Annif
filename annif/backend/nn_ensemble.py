@@ -118,7 +118,8 @@ class NNEnsembleModel(nn.Module):
         x = F.relu(self.hidden(x))
         x = self.dropout2(x)
         delta = self.delta_layer(x)
-        return mean + delta
+        corrected = mean + delta
+        return torch.clamp(corrected, min=0.0, max=1.0)
 
     def save(self, filepath):
         torch.save(
@@ -326,7 +327,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 weight_decay=0,
                 eps=1e-08,
             )
-            criterion = nn.BCEWithLogitsLoss()
+            criterion = nn.BCELoss()
             ndcg_metric = RetrievalNormalizedDCG(top_k=None)
 
             for epoch in range(epochs):
