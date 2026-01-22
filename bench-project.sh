@@ -27,8 +27,8 @@ SUGGEST_EVAL_DATA_PATTERN="$3"
 OPERATIONS=("train" "eval")
 JOBS=("1" "6")
 
-TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
-OUTDIR="benchmarks/$TIMESTAMP/$PROJECT"
+TIMESTAMP=$(date +"%Y%m%d-%H%M")
+OUTDIR="benchmarks/${TIMESTAMP}_${PROJECT}"
 mkdir -p "$OUTDIR"
 
 echo "=== Benchmarking project: $PROJECT ==="
