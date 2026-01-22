@@ -2,14 +2,14 @@
 set -euo pipefail
 
 #
-# Benchmark Annif operations (train/suggest/eval) for ONE project.
+# Benchmark Annif operations (train -> eval) for ONE project, per job count.
 #
 # Usage:
 #   ./bench_project.sh <project-id> <train-data> <suggest-eval-data>
 #
 # Example:
-#   ./bench-project.sh yso-tfidf-en \
-#     ../Annif-tutorial/data-sets/yso-nlf/yso-finna.tsv.gz
+#   ./bench_project.sh yso-tfidf-en \
+#     ../Annif-tutorial/data-sets/yso-nlf/yso-finna.tsv.gz \
 #     ../Annif-tutorial/data-sets/yso-nlf/docs/test/
 #
 
@@ -18,14 +18,14 @@ if [[ $# -lt 3 ]]; then
   exit 1
 fi
 
+# Activate Annif virtual environment
 source Annif/.venv/bin/activate
 
 PROJECT="$1"
 TRAIN_DATA_PATTERN="$2"
 SUGGEST_EVAL_DATA_PATTERN="$3"
 
-OPERATIONS=("train" "eval")
-JOBS=("1" "6")
+JOBS=("6" "1")
 
 TIMESTAMP=$(date +"%Y%m%d-%H%M")
 OUTDIR="benchmarks/${TIMESTAMP}_${PROJECT}"
@@ -40,41 +40,44 @@ echo
 # Determine Annif model directory
 MODEL_DIR="data/projects/$PROJECT"
 
-for op in "${OPERATIONS[@]}"; do
-  for j in "${JOBS[@]}"; do
+for j in "${JOBS[@]}"; do
+  echo "=== Job setting: -j$j ==="
 
-    OUTFILE="$OUTDIR/${op}-j${j}.txt"
+  # ----- TRAIN -----
+  TRAIN_OUTFILE="$OUTDIR/train-j${j}.txt"
+  echo "Running: annif train -j$j $PROJECT $TRAIN_DATA_PATTERN"
+  echo "Writing to: $TRAIN_OUTFILE"
 
-    # Choose correct dataset per operation
-    if [[ "$op" == "train" ]]; then
-      DATA="$TRAIN_DATA_PATTERN"
-    else
-      DATA="$SUGGEST_EVAL_DATA_PATTERN"
-    fi
+  /usr/bin/time -v annif train -j"$j" "$PROJECT" $TRAIN_DATA_PATTERN \
+    &> "$TRAIN_OUTFILE"
 
-    echo "Running: annif $op -j$j $PROJECT $DATA"
-    echo "Writing to: $OUTFILE"
+  # After training, compute model size
+  if [[ -d "$MODEL_DIR" ]]; then
+    MODEL_SIZE_BYTES=$(du -sb "$MODEL_DIR" | awk '{print $1}')
+    {
+      echo ""
+      echo "=== Model size after training ==="
+      echo "Model directory: $MODEL_DIR"
+      echo "Model size (bytes): $MODEL_SIZE_BYTES"
+    } >> "$TRAIN_OUTFILE"
+    echo "✔ Recorded model size"
+  else
+    echo "Warning: model directory not found: $MODEL_DIR" | tee -a "$TRAIN_OUTFILE"
+  fi
 
-    /usr/bin/time -v annif "$op" -j"$j" "$PROJECT" $DATA \
-      &> "$OUTFILE"
+  echo "✔ Completed train -j$j"
+  echo
 
-    # After training, compute model size
-    if [[ "$op" == "train" ]]; then
-      if [[ -d "$MODEL_DIR" ]]; then
-        MODEL_SIZE_BYTES=$(du -sb "$MODEL_DIR" | awk '{print $1}')
-        echo "" >> "$OUTFILE"
-        echo "=== Model size after training ===" >> "$OUTFILE"
-        echo "Model directory: $MODEL_DIR" >> "$OUTFILE"
-        echo "Model size (bytes): $MODEL_SIZE_BYTES" >> "$OUTFILE"
-        echo "✔ Recorded model size"
-      else
-        echo "Warning: model directory not found: $MODEL_DIR" | tee -a "$OUTFILE"
-      fi
-    fi
+  # ----- EVAL -----
+  EVAL_OUTFILE="$OUTDIR/eval-j${j}.txt"
+  echo "Running: annif eval -j$j $PROJECT $SUGGEST_EVAL_DATA_PATTERN"
+  echo "Writing to: $EVAL_OUTFILE"
 
-    echo "✔ Completed $op -j$j"
-    echo
-  done
+  /usr/bin/time -v annif eval -j"$j" "$PROJECT" $SUGGEST_EVAL_DATA_PATTERN \
+    &> "$EVAL_OUTFILE"
+
+  echo "✔ Completed eval -j$j"
+  echo
 done
 
 echo "=== All benchmarks complete ==="
