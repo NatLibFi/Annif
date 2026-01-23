@@ -368,7 +368,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                     loss.backward()
                     optimizer.step()
 
-                    batch_size, n_labels = outputs.shape
+                    batch_size = outputs.shape[0]
 
                     batch_ndcg = ndcg_batch(outputs, targets)
 
