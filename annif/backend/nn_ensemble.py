@@ -105,8 +105,6 @@ class NNEnsembleModel(nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
-        nn.init.xavier_uniform_(self.hidden.weight)
-        nn.init.zeros_(self.hidden.bias)
         nn.init.zeros_(self.delta_layer.weight)
         nn.init.zeros_(self.delta_layer.bias)
 
@@ -161,7 +159,7 @@ def ndcg_batch(preds: torch.Tensor, targets: torch.Tensor):
 
     dcg = (sorted_targets * discounts).sum(dim=1)
 
-    ideal_sorted = torch.sort(targets, dim=1, descending=True)
+    ideal_sorted = torch.sort(targets, dim=1, descending=True).values[:, :L]
     idcg = (ideal_sorted * discounts).sum(dim=1)
 
     ndcg = dcg / torch.clamp(idcg, min=1e-8)
