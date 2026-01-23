@@ -88,28 +88,36 @@ class LMDBDataset(Dataset):
 
 class NNEnsembleModel(nn.Module):
     def __init__(
-        self, input_dim: int, hidden_dim: int, output_dim: int, dropout_rate: float
+        self,
+        source_dim: int,
+        input_dim: int,
+        hidden_dim: int,
+        output_dim: int,
+        dropout_rate: float,
     ):
         super().__init__()
         self.model_config = {
+            "source_dim": source_dim,
             "input_dim": input_dim,
             "hidden_dim": hidden_dim,
             "output_dim": output_dim,
             "dropout_rate": dropout_rate,
         }
+        self.conv = nn.Conv1d(source_dim, 1, 1, bias=False)
         self.flatten = nn.Flatten()
         self.dropout1 = nn.Dropout(dropout_rate)
-        self.hidden = nn.Linear(input_dim, hidden_dim)
+        self.hidden = nn.Linear(input_dim * source_dim, hidden_dim)
         self.dropout2 = nn.Dropout(dropout_rate)
         self.delta_layer = nn.Linear(hidden_dim, output_dim)
         self.reset_parameters()
 
     def reset_parameters(self):
+        self.conv.weight.data.fill_(1 / self.model_config["source_dim"])
         nn.init.zeros_(self.delta_layer.weight)
         nn.init.zeros_(self.delta_layer.bias)
 
     def forward(self, inputs):
-        mean = torch.mean(inputs, dim=1)
+        mean = self.conv(inputs)[:, 0, :]
         x = self.flatten(inputs)
         x = self.dropout1(x)
         x = F.relu(self.hidden(x))
@@ -244,12 +252,14 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         self.info("creating NN ensemble model")
 
         # Create PyTorch model
-        input_dim = len(self.project.subjects) * len(sources)
+        source_dim = len(sources)
+        input_dim = len(self.project.subjects)
         hidden_dim = int(self.params["nodes"])
         output_dim = len(self.project.subjects)
         dropout_rate = float(self.params["dropout_rate"])
 
         self._model = NNEnsembleModel(
+            source_dim=source_dim,
             input_dim=input_dim,
             hidden_dim=hidden_dim,
             output_dim=output_dim,
