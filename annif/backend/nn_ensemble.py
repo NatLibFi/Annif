@@ -148,8 +148,6 @@ def ndcg_batch(preds: torch.Tensor, targets: torch.Tensor):
 
     Returns: mean nDCG across the batch
     """
-    B, N = preds.shape
-
     sorted_idx = torch.argsort(preds, dim=1, descending=True)
     sorted_targets = torch.gather(targets, 1, sorted_idx)
 
