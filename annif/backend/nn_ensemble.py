@@ -345,10 +345,10 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             dataloader = DataLoader(dataset, batch_size=32, shuffle=True, num_workers=0)
 
             # Training loop
-            optimizer = torch.optim.Adam(
+            optimizer = torch.optim.AdamW(
                 self._model.parameters(),
                 lr=float(self.params["lr"]),
-                weight_decay=0,
+                weight_decay=0.01,
                 eps=1e-08,
             )
             criterion = nn.BCELoss()
