@@ -17,7 +17,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from scipy.sparse import csc_matrix, csr_matrix
 from torch.utils.data import DataLoader, Dataset
-from torchmetrics.retrieval import RetrievalNormalizedDCG
 from tqdm import tqdm
 
 import annif.corpus
@@ -141,6 +140,33 @@ class NNEnsembleModel(nn.Module):
         model.load_state_dict(checkpoint["model_state_dict"])
         model.eval()
         return model
+
+
+@torch.no_grad()
+def ndcg_batch(preds: torch.Tensor, targets: torch.Tensor):
+    """
+    preds:   (B, N) float
+    targets: (B, N) {0,1}
+
+    Returns: mean nDCG across the batch
+    """
+    B, N = preds.shape
+
+    sorted_idx = torch.argsort(preds, dim=1, descending=True)
+    sorted_targets = torch.gather(targets, 1, sorted_idx)
+
+    L = sorted_targets.size(1)
+    ranks = torch.arange(1, L + 1, device=preds.device)
+    discounts = 1.0 / torch.log2(ranks + 1)
+
+    dcg = (sorted_targets * discounts).sum(dim=1)
+
+    ideal_sorted = torch.sort(targets, dim=1, descending=True)
+    idcg = (ideal_sorted * discounts).sum(dim=1)
+
+    ndcg = dcg / torch.clamp(idcg, min=1e-8)
+
+    return ndcg.mean()
 
 
 class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBackend):
@@ -328,12 +354,11 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 eps=1e-08,
             )
             criterion = nn.BCELoss()
-            ndcg_metric = RetrievalNormalizedDCG(top_k=None)
 
             for epoch in range(epochs):
                 self._model.train()
-                ndcg_metric.reset()
                 total_loss = 0.0
+                total_ndcg = 0.0
                 total_samples = 0
                 tqdm_loader = tqdm(
                     dataloader,
@@ -349,23 +374,18 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
                     batch_size, n_labels = outputs.shape
 
-                    # Build indexes; each sample is a separate query for nDCG
-                    indexes = torch.repeat_interleave(
-                        torch.arange(batch_size, device=outputs.device), n_labels
-                    )
-                    ndcg_metric.update(
-                        outputs.reshape(-1), targets.reshape(-1), indexes=indexes
-                    )
+                    batch_ndcg = ndcg_batch(outputs, targets)
 
-                    # Update loss stats
+                    # Update stats
                     total_loss += loss.item() * batch_size
+                    total_ndcg += batch_ndcg.item() * batch_size
                     total_samples += batch_size
 
                     # Update progress bar with batch loss
                     tqdm_loader.set_postfix(loss=loss.item())
 
                 epoch_loss = total_loss / total_samples
-                epoch_ndcg = ndcg_metric.compute().item()
+                epoch_ndcg = total_ndcg / total_samples
                 print(
                     f"Epoch {epoch + 1}/{epochs} "
                     f"- loss: {epoch_loss:.4f} "
