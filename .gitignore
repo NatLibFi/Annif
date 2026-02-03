@@ -9,7 +9,7 @@ __pycache__
 *.pyc
 data
 docs/_build/
-poetry.lock
+uv.lock
 projects.cfg
 venv/
 .hypothesis/

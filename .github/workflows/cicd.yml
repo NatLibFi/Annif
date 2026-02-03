@@ -10,7 +10,7 @@ on:
 env:
   PIPX_HOME: "/home/runner/.cache/pipx"
   PIPX_BIN_DIR: "/home/runner/.local/bin"
-  POETRY_VERSION: "2.*"
+  UV_VERSION: "0.9.*"
 permissions:
   contents: read
 jobs:
@@ -20,51 +20,51 @@ jobs:
     name: lint with isort, Black & flake8
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
       with:
         egress-policy: audit
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-    - name: "Prepare: restore caches, install Poetry, set up Python"
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+    - name: "Prepare: restore caches, install uv, set up Python"
       uses: ./.github/actions/prepare
       with:
         python-version: "3.12"
-        poetry-version: ${{ env.POETRY_VERSION }}
+        uv-version: ${{ env.UV_VERSION }}
     - name: Install Python dev dependencies
       run: |
-        poetry install --only dev
+        uv sync --only-dev
     - name: Lint with isort
       run: |
-        poetry run isort . --check-only --diff
+        uv run isort . --check-only --diff
     - name: Lint with Black
       run: |
-        poetry run black . --check --diff
+        uv run black . --check --diff
     - name: Lint with flake8
       run: |
-        poetry run flake8
+        uv run flake8
 
   time-startup:
     runs-on: ubuntu-22.04
     name: check CLI startup time
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
       with:
         egress-policy: audit
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-    - name: "Prepare: restore caches, install Poetry, set up Python"
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+    - name: "Prepare: restore caches, install uv, set up Python"
       id: prepare
       uses: ./.github/actions/prepare
       with:
         python-version: "3.11"
-        poetry-version: ${{ env.POETRY_VERSION }}
+        uv-version: ${{ env.UV_VERSION }}
     - name: Install Python dependencies
       run: |
-        poetry install
+        uv sync
     - name: Check startup time
       run: |
-        poetry run tests/time-startup.sh
+        uv run tests/time-startup.sh
 
   test:
     runs-on: ubuntu-22.04
@@ -75,68 +75,58 @@ jobs:
     name: test on Python ${{ matrix.python-version }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
       with:
         egress-policy: audit
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
     - name: Install system packages
       run: |
         sudo apt-get install \
           libvoikko1 \
           voikko-fi
-    - name: "Prepare: restore caches, install Poetry, set up Python"
+    - name: "Prepare: restore caches, install uv, set up Python"
       id: prepare
       uses: ./.github/actions/prepare
       with:
         python-version: ${{ matrix.python-version }}
-        poetry-version: ${{ env.POETRY_VERSION }}
+        uv-version: ${{ env.UV_VERSION }}
     - name: Install Python dependencies
       run: |
         # Selectively install the optional dependencies for some Python versions
         # For Python 3.10:
         if [[ ${{ matrix.python-version }} == '3.10' ]]; then
-          poetry install -E "nn omikuji yake voikko stwfsa";
+          uv sync --extra nn --extra omikuji --extra yake --extra voikko --extra stwfsa;
         fi
         # For Python 3.11:
         if [[ ${{ matrix.python-version }} == '3.11' ]]; then
-          poetry install -E "fasttext spacy estnltk";
+          uv sync --extra fasttext --extra spacy --extra estnltk;
           # download the small English pretrained spaCy model needed by spacy analyzer
-          poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+          uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
         # For Python 3.12:
         if [[ ${{ matrix.python-version }} == '3.12' ]]; then
-          poetry install -E "nn fasttext yake stwfsa voikko spacy";
+          uv sync --extra nn --extra fasttext --extra yake --extra stwfsa --extra voikko --extra spacy;
           # download the small English pretrained spaCy model needed by spacy analyzer
-          poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+          uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
         # For Python 3.13:
         if [[ ${{ matrix.python-version }} == '3.13' ]]; then
-          poetry install -E "fasttext yake voikko spacy";
+          uv sync --extra fasttext --extra yake --extra voikko --extra spacy;
           # download the small English pretrained spaCy model needed by spacy analyzer
-          poetry run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+          uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
-        poetry run python -m nltk.downloader punkt_tab
+        uv run python -m nltk.downloader punkt_tab
     - name: Test with pytest
       run: |
-        poetry run pytest --cov=./ --cov-report xml
+        uv run pytest --cov=./ --cov-report xml
         if [[ ${{ matrix.python-version }} == '3.11' ]]; then
-          poetry run pytest --cov=./ --cov-report xml --cov-append -m slow
+          uv run pytest --cov=./ --cov-report xml --cov-append -m slow
         fi
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7  # v5.5.1
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    - name: Save cache
-      if: steps.prepare.outputs.cache-matched-key != format('poetry-installation-and-cache-{0}-{1}-{2}', matrix.python-version, env.POETRY_VERSION, hashFiles('**/poetry.lock'))
-      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-      with:
-        path: |
-          ~/.cache/pipx/venvs
-          ~/.local/bin
-          ~/.cache/pypoetry/
-        # A new key is created to update the cache if some dependency has been updated
-        key:  poetry-installation-and-cache-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}
 
   test-docker-image:
     name: "test Docker image"
@@ -144,7 +134,7 @@ jobs:
     timeout-minutes: 15
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
       with:
         egress-policy: audit
 
@@ -165,7 +155,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
       with:
         egress-policy: audit
 
@@ -177,7 +167,7 @@ jobs:
         password: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_PASSWORD }}
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f  # v5.8.0
+      uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051  # v5.10.0
       with:
         images: quay.io/natlibfi/annif
         tags: |
@@ -201,19 +191,19 @@ jobs:
       id-token: write
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
       with:
         egress-policy: audit
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-    - name: "Prepare: restore caches, install Poetry, set up Python"
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+    - name: "Prepare: restore caches, install uv, set up Python"
       uses: ./.github/actions/prepare
       with:
         python-version: '3.11'
-        poetry-version: ${{ env.POETRY_VERSION }}
+        uv-version: ${{ env.UV_VERSION }}
     - name: Build distributions
       run: |
-        poetry build
+        uv build
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e  # v1.13.0
 
@@ -225,7 +215,7 @@ jobs:
         password: ${{ secrets.YHTEENTOIMIVUUSPALVELUT_QUAY_IO_PASSWORD }}
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f  # v5.8.0
+      uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051  # v5.10.0
       with:
         images: quay.io/natlibfi/annif
         tags: |
