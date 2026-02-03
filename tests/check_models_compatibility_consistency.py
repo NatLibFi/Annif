@@ -11,6 +11,9 @@ CORPORA_DIR = "tests/corpora/archaeology/fulltext/"
 THRESHOLD_COMPATIBILITY = 0.01
 THRESHOLD_CONSISTENCY = 0.03
 
+# Explicit list of metrics to compare to avoid silent regressions
+METRICS = ["F1@5", "NDCG"]
+
 
 def get_project_ids(cfg_path):
     fpaths = glob(os.path.join(cfg_path, "*.cfg"))
@@ -90,11 +93,9 @@ def eval_model(project_id, result_file):
         CORPORA_DIR,
         "--metrics-file",
         result_file,
-        "--metric",
-        "F1@5",
-        "--metric",
-        "NDCG",
     ]
+    for metric in METRICS:
+        cmd.extend(["--metric", metric])
     run_cmd(cmd)
 
 
@@ -124,22 +125,26 @@ def load_metrics(metrics_path):
 
 def compare_metrics(metrics1, metrics2, threshold):
     diffs = {}
-    for key in metrics1:
-        if (
-            key in metrics2
-            and isinstance(metrics1[key], (int, float))
-            and isinstance(metrics2[key], (int, float))
-        ):
-            v1, v2 = metrics1[key], metrics2[key]
-            if v1 == 0:
-                if v2 == 0:
-                    rel_diff = 0.0
-                else:
-                    rel_diff = 1.0
-            else:
-                rel_diff = abs(v1 - v2) / abs(v1)
-            if rel_diff > threshold:
-                diffs[key] = (v1, v2, rel_diff)
+
+    for metric in METRICS:
+        if metric not in metrics1 or metric not in metrics2:
+            raise KeyError(
+                f"Required metric '{metric}' missing "
+                f"(prev={metric in metrics1}, curr={metric in metrics2})"
+            )
+
+        v1, v2 = metrics1[metric], metrics2[metric]
+        if not isinstance(v1, (int, float)) or not isinstance(v2, (int, float)):
+            raise TypeError(f"Metric '{metric}' must be numeric (got {type(v1)}, {type(v2)})")
+
+        if v1 == 0:
+            rel_diff = 0.0 if v2 == 0 else 1.0
+        else:
+            rel_diff = abs(v1 - v2) / abs(v1)
+
+        if rel_diff > threshold:
+            diffs[metric] = (v1, v2, rel_diff)
+
     return diffs
 
 
