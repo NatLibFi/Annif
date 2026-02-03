@@ -101,7 +101,7 @@ def eval_model(project_id, result_file):
     # Wrap raw metrics with metadata for reproducibility
     raw = load_metrics(result_file)
     if raw is not None:
-        save_metrics(result_file, raw["metrics"])
+        save_metrics(result_file, raw)
 
 
 def train_model(project_id):
