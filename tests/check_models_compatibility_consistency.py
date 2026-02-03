@@ -98,6 +98,11 @@ def eval_model(project_id, result_file):
         cmd.extend(["--metric", metric])
     run_cmd(cmd)
 
+    # Wrap raw metrics with metadata for reproducibility
+    raw = load_metrics(result_file)
+    if raw is not None:
+        save_metrics(result_file, raw["metrics"])
+
 
 def train_model(project_id):
     cmd = ["annif", "train", project_id, CORPORA_DIR]
@@ -115,25 +120,55 @@ def load_vocab():
     run_cmd(cmd, check=False)
 
 
+def get_env_metadata():
+    annif_version = "unknown"
+    try:
+        res = subprocess.run(
+            ["annif", "--version"], capture_output=True, text=True, check=False
+        )
+        if res.stdout:
+            annif_version = res.stdout.strip()
+    except Exception:
+        pass
+
+    return {
+        "annif_version": annif_version,
+        "python_version": sys.version.split()[0],
+    }
+
+
 def load_metrics(metrics_path):
     try:
         with open(metrics_path) as f:
-            return json.load(f)
+            data = json.load(f)
+            return data
     except FileNotFoundError:
         return None
+
+
+def save_metrics(metrics_path, metrics):
+    payload = {
+        "metrics": metrics,
+        "meta": get_env_metadata(),
+    }
+    with open(metrics_path, "w") as f:
+        json.dump(payload, f, indent=2, sort_keys=True)
 
 
 def compare_metrics(metrics1, metrics2, threshold):
     diffs = {}
 
+    m1 = metrics1["metrics"]
+    m2 = metrics2["metrics"]
+
     for metric in METRICS:
-        if metric not in metrics1 or metric not in metrics2:
+        if metric not in m1 or metric not in m2:
             raise KeyError(
                 f"Required metric '{metric}' missing "
-                f"(prev={metric in metrics1}, curr={metric in metrics2})"
+                f"(prev={metric in m1}, curr={metric in m2})"
             )
 
-        v1, v2 = metrics1[metric], metrics2[metric]
+        v1, v2 = m1[metric], m2[metric]
         if not isinstance(v1, (int, float)) or not isinstance(v2, (int, float)):
             raise TypeError(f"Metric '{metric}' must be numeric (got {type(v1)}, {type(v2)})")
 
