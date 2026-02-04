@@ -42,7 +42,7 @@ def run_cmd(cmd, check=True, silent=False):
 
 def download_models(hf_repo):
     cmd = ["annif", "download", "*", hf_repo, "-f", "--trust-repo"]
-    run_cmd(cmd, check=False)
+    run_cmd(cmd, check=True)
 
 
 def download_metrics(hf_repo):
