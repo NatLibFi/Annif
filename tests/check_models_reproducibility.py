@@ -8,15 +8,15 @@ from glob import glob
 import click
 
 CORPORA_DIR = "tests/corpora/archaeology/fulltext/"
-THRESHOLD_COMPATIBILITY = 0.01
-THRESHOLD_CONSISTENCY = 0.03
+THRESHOLD_EVAL_REPRO = 0.01
+THRESHOLD_TRAIN_REPRO = 0.03
 
 # Explicit list of metrics to compare to avoid silent regressions
 METRICS = ["F1@5", "NDCG"]
 
 
-def get_project_ids(cfg_path):
-    fpaths = glob(os.path.join(cfg_path, "*.cfg"))
+def get_project_ids(projects_cfg_dir):
+    fpaths = glob(os.path.join(projects_cfg_dir, "*.cfg"))
     ids = []
     for fpath in sorted(fpaths):
         with open(fpath) as f:
@@ -53,7 +53,7 @@ def download_metrics(hf_repo):
         "--include",
         "metrics/*",
         "--local-dir",
-        PREV_RESULTS_DIR,
+        PREV_METRICS_DIR,
     ]
     try:
         run_cmd(cmd, check=False, silent=True)
@@ -61,10 +61,10 @@ def download_metrics(hf_repo):
         print(f"Download failed: {e}")
         raise
     # Move downloaded metrics to PREV_RESULTS_DIR/metrics
-    downloaded_metrics_dir = os.path.join(PREV_RESULTS_DIR, "metrics")
+    downloaded_metrics_dir = os.path.join(PREV_METRICS_DIR, "metrics")
     for filename in os.listdir(downloaded_metrics_dir):
         src_path = os.path.join(downloaded_metrics_dir, filename)
-        dest_path = os.path.join(PREV_RESULTS_DIR, filename)
+        dest_path = os.path.join(PREV_METRICS_DIR, filename)
         os.rename(src_path, dest_path)
     os.rmdir(downloaded_metrics_dir)
 
@@ -78,30 +78,30 @@ def upload_models(hf_repo):
 
 
 def upload_metrics(hf_repo):
-    cmd = ["hf", "upload", hf_repo, CURR_RESULTS_DIR, "metrics/"]
+    cmd = ["hf", "upload", hf_repo, CURR_METRICS_DIR, "metrics/"]
     try:
         run_cmd(cmd, check=False)
     except Exception as e:
         print(f"Upload failed: {e}")
 
 
-def eval_model(project_id, result_file):
+def eval_model(project_id, metrics_path):
     cmd = [
         "annif",
         "eval",
         project_id,
         CORPORA_DIR,
         "--metrics-file",
-        result_file,
+        metrics_path,
     ]
     for metric in METRICS:
         cmd.extend(["--metric", metric])
     run_cmd(cmd)
 
     # Wrap raw metrics with metadata for reproducibility
-    raw = load_metrics(result_file)
+    raw = load_metrics(metrics_path)
     if raw is not None:
-        save_metrics(result_file, raw)
+        save_metrics(metrics_path, raw)
 
 
 def train_model(project_id):
@@ -170,7 +170,8 @@ def compare_metrics(metrics1, metrics2, threshold):
 
         v1, v2 = m1[metric], m2[metric]
         if not isinstance(v1, (int, float)) or not isinstance(v2, (int, float)):
-            raise TypeError(f"Metric '{metric}' must be numeric (got {type(v1)}, {type(v2)})")
+            raise TypeError(
+                f"Metric '{metric}' must be numeric (got {type(v1)}, {type(v2)})")
 
         if v1 == 0:
             rel_diff = 0.0 if v2 == 0 else 1.0
@@ -186,7 +187,7 @@ def compare_metrics(metrics1, metrics2, threshold):
 def check_project_metrics(
     ci, threshold, significant_diffs, project_id, prev_metrics, check_type
 ):
-    curr_metrics_path = os.path.join(CURR_RESULTS_DIR, f"{project_id}.json")
+    curr_metrics_path = os.path.join(CURR_METRICS_DIR, f"{project_id}.json")
     try:
         eval_model(project_id, curr_metrics_path)
         curr_metrics = load_metrics(curr_metrics_path)
@@ -211,19 +212,19 @@ def check_project_metrics(
 
 
 def check_projects(check_type, ci, train=False):
-    if check_type == "compatibility":
-        projects_cfg_name = f"tests/projects-all"
-        threshold = THRESHOLD_COMPATIBILITY
+    if check_type == "eval_repro":
+        projects_cfg_dir = f"tests/projects-all"
+        threshold = THRESHOLD_EVAL_REPRO
     else:
-        projects_cfg_name = f"tests/projects-trainable"
-        threshold = THRESHOLD_CONSISTENCY
+        projects_cfg_dir = f"tests/projects-trainable"
+        threshold = THRESHOLD_TRAIN_REPRO
 
-    project_ids = get_project_ids(projects_cfg_name)
-    os.environ["ANNIF_PROJECTS"] = projects_cfg_name
+    project_ids = get_project_ids(projects_cfg_dir)
+    os.environ["ANNIF_PROJECTS"] = projects_cfg_dir
     significant_diffs = []
     for project_id in sorted(project_ids):
         print(f"=== Checking {check_type} of project {project_id} ===")
-        prev_metrics_path = os.path.join(PREV_RESULTS_DIR, f"{project_id}.json")
+        prev_metrics_path = os.path.join(PREV_METRICS_DIR, f"{project_id}.json")
         prev_metrics = load_metrics(prev_metrics_path)
         if prev_metrics is not None:
             if train:
@@ -243,22 +244,22 @@ def cli():
     pass
 
 
-@cli.command("compatibility")
+@cli.command("eval_repro")
 @click.option("--ci", is_flag=True, help="Enable CI mode for GitHub Actions")
 @click.option("--hf_repo", required=True, envvar="HF_REPO")
-def run_compatibility_checks(ci, hf_repo):
+def run_eval_repro_checks(ci, hf_repo):
     download_models(hf_repo)
     download_metrics(hf_repo)
-    check_projects("compatibility", ci)
+    check_projects("eval_repro", ci)
 
 
-@cli.command("consistency")
+@cli.command("train_repro")
 @click.option("--ci", is_flag=True, help="Enable CI mode for GitHub Actions")
 @click.option("--hf_repo", required=True, envvar="HF_REPO")
-def run_consistency_checks(ci, hf_repo):
+def run_train_repro_checks(ci, hf_repo):
     download_models(hf_repo)
     download_metrics(hf_repo)
-    check_projects("consistency", ci, train=True)
+    check_projects("train_repro", ci, train=True)
 
 
 @cli.command("upload")
@@ -281,7 +282,7 @@ def run_upload(hf_repo):
 
     for project_id in all_project_ids:
         print(f"=== Evaluating project {project_id} ===")
-        curr_metrics_path = os.path.join(CURR_RESULTS_DIR, f"{project_id}.json")
+        curr_metrics_path = os.path.join(CURR_METRICS_DIR, f"{project_id}.json")
         eval_model(project_id, curr_metrics_path)
 
     print("Uploading new models and metrics to Hugging Face Hub.")
@@ -291,9 +292,9 @@ def run_upload(hf_repo):
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory() as temp_dir:
-        CURR_RESULTS_DIR = os.path.join(temp_dir, "curr_metrics")
-        PREV_RESULTS_DIR = os.path.join(temp_dir, "prev_metrics")
-        os.makedirs(CURR_RESULTS_DIR)
-        os.makedirs(PREV_RESULTS_DIR)
+        CURR_METRICS_DIR = os.path.join(temp_dir, "curr_metrics")
+        PREV_METRICS_DIR = os.path.join(temp_dir, "prev_metrics")
+        os.makedirs(CURR_METRICS_DIR)
+        os.makedirs(PREV_METRICS_DIR)
         os.environ["ANNIF_DATADIR"] = os.path.join(temp_dir, "data")
         cli()
