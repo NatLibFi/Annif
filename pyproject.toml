@@ -47,8 +47,8 @@ dependencies = [
 
 [project.optional-dependencies]
 fasttext = ["fasttext-numpy2==0.10.4"]
-ebm-api= ["ebm4subjects==0.5.5"]
-ebm-in-process = ["ebm4subjects[in-process]==0.5.5"]
+ebm-api= ["ebm4subjects==0.5.6"]
+ebm-in-process = ["ebm4subjects[in-process]==0.5.6"]
 estnltk = ["estnltk==1.7.4"]
 nn = [
     "tensorflow-cpu~=2.20.0",
