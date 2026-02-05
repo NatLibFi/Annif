@@ -211,12 +211,13 @@ def check_project_metrics(
 
 
 def check_projects(check_type, ci, train=False):
-    projects_cfg_name = f"tests/projects-{check_type}"
-    threshold = (
-        THRESHOLD_COMPATIBILITY
-        if check_type == "compatibility"
-        else THRESHOLD_CONSISTENCY
-    )
+    if check_type == "compatibility":
+        projects_cfg_name = f"tests/projects-all"
+        threshold = THRESHOLD_COMPATIBILITY
+    else:
+        projects_cfg_name = f"tests/projects-trainable"
+        threshold = THRESHOLD_CONSISTENCY
+
     project_ids = get_project_ids(projects_cfg_name)
     os.environ["ANNIF_PROJECTS"] = projects_cfg_name
     significant_diffs = []
@@ -263,26 +264,20 @@ def run_consistency_checks(ci, hf_repo):
 @cli.command("upload")
 @click.option("--hf_repo", required=True, envvar="HF_REPO")
 def run_upload(hf_repo):
-    # 1) Train trainable projects (projects-consistency)
-    print("Training new models.")
-    projects_cfg_name = "tests/projects-consistency"
-    train_project_ids = get_project_ids(projects_cfg_name)
+    # 1) Train and evaluate trainable projects
+    projects_cfg_name = "tests/projects-trainable"
+    trainable_project_ids = get_project_ids(projects_cfg_name)
     os.environ["ANNIF_PROJECTS"] = projects_cfg_name
 
     load_vocab()
-    for project_id in train_project_ids:
+    for project_id in trainable_project_ids:
         print(f"=== Training project {project_id} ===")
         train_model(project_id)
 
-    # 2) Evaluate metrics for all projects (projects-consistency + projects-compatibility)
-    print("Evaluating metrics.")
-    compatibility_cfg_name = "tests/projects-compatibility"
-    compatibility_project_ids = get_project_ids(compatibility_cfg_name)
-
-    # de-duplicate while preserving order: consistency first, then compatibility-only
-    all_project_ids = train_project_ids + [
-        pid for pid in compatibility_project_ids if pid not in set(train_project_ids)
-    ]
+    # 2) Evaluate all projects
+    projects_cfg_name = "tests/projects-all"
+    os.environ["ANNIF_PROJECTS"] = projects_cfg_name
+    all_project_ids = get_project_ids(projects_cfg_name)
 
     for project_id in all_project_ids:
         print(f"=== Evaluating project {project_id} ===")
