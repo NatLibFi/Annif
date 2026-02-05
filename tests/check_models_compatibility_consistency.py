@@ -263,15 +263,29 @@ def run_consistency_checks(ci, hf_repo):
 @cli.command("upload")
 @click.option("--hf_repo", required=True, envvar="HF_REPO")
 def run_upload(hf_repo):
-    print("Training new models and evaluating metrics.")
+    # 1) Train trainable projects (projects-consistency)
+    print("Training new models.")
     projects_cfg_name = "tests/projects-consistency"
-    project_ids = get_project_ids(projects_cfg_name)
+    train_project_ids = get_project_ids(projects_cfg_name)
     os.environ["ANNIF_PROJECTS"] = projects_cfg_name
 
     load_vocab()
-    for project_id in project_ids:
-        print(f"=== Project {project_id} ===")
+    for project_id in train_project_ids:
+        print(f"=== Training project {project_id} ===")
         train_model(project_id)
+
+    # 2) Evaluate metrics for all projects (projects-consistency + projects-compatibility)
+    print("Evaluating metrics.")
+    compatibility_cfg_name = "tests/projects-compatibility"
+    compatibility_project_ids = get_project_ids(compatibility_cfg_name)
+
+    # de-duplicate while preserving order: consistency first, then compatibility-only
+    all_project_ids = train_project_ids + [
+        pid for pid in compatibility_project_ids if pid not in set(train_project_ids)
+    ]
+
+    for project_id in all_project_ids:
+        print(f"=== Evaluating project {project_id} ===")
         curr_metrics_path = os.path.join(CURR_RESULTS_DIR, f"{project_id}.json")
         eval_model(project_id, curr_metrics_path)
 
