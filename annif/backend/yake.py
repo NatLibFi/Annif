@@ -136,7 +136,7 @@ class YakeBackend(backend.AnnifBackend):
             SubjectSuggestion(subject_id=self.project.subjects.by_uri(uri), score=score)
             for uri, score in suggestions[:limit]
             if score > 0.0
-            if (subj_id := self.project.subjects.by_uri(uri)) is not None
+            if (self.project.subjects.by_uri(uri)) is not None
         ]
         return subject_suggestions
 
