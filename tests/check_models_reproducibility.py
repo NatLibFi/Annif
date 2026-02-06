@@ -128,8 +128,9 @@ def get_env_metadata():
         )
         if res.stdout:
             annif_version = res.stdout.strip()
-    except Exception:
-        pass
+    except Exception as e:
+        # Best-effort: if fetching Annif version fails, keep "unknown" but log the error.
+        print(f"Warning: failed to retrieve Annif version: {e}")
 
     return {
         "annif_version": annif_version,
