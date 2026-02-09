@@ -164,9 +164,10 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     LMDB_FILE = "nn-train.mdb"
 
     DEFAULT_PARAMETERS = {
-        "lr": 0.001,
-        "epochs": 10,
+        "lr": 0.003,
+        "max-epochs": 20,
         "learn-epochs": 1,
+        "batch-size": 256,
         "lmdb_map_size": 1024 * 1024 * 1024,
     }
 
@@ -243,7 +244,9 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         self._create_model(sources)
         self._fit_model(
             corpus,
-            epochs=int(params["epochs"]),
+            max_epochs=int(params["max-epochs"]),
+            batch_size=int(params["batch-size"]),
+            lr=float(params["lr"]),
             lmdb_map_size=int(params["lmdb_map_size"]),
             n_jobs=jobs,
         )
@@ -294,7 +297,9 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     def _fit_model(
         self,
         corpus: DocumentCorpus,
-        epochs: int,
+        max_epochs: int,
+        batch_size: int,
+        lr: float,
         lmdb_map_size: int,
         n_jobs: int = 1,
     ) -> None:
@@ -311,29 +316,32 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             self.info("Reusing cached training data from previous run.")
 
         # fit the model using a read-only view of the LMDB
-        self.info("Training neural network model...")
+        self.info("Training model...")
         with env.begin(buffers=True) as txn:
             dataset = LMDBDataset(txn)
-            dataloader = DataLoader(dataset, batch_size=32, shuffle=True, num_workers=0)
+            dataloader = DataLoader(
+                dataset, batch_size=batch_size, shuffle=True, num_workers=0
+            )
+            # Evaluation batch, used for early stopping
+            eval_dataloader = DataLoader(
+                dataset, batch_size=512, shuffle=True, num_workers=0
+            )
+            eval_inputs, eval_targets = next(iter(eval_dataloader))
 
             # Training loop
             optimizer = torch.optim.AdamW(
                 self._model.parameters(),
-                lr=float(self.params["lr"]),
-                weight_decay=0.01,
+                lr=lr,
+                weight_decay=0.0,
                 eps=1e-08,
             )
             criterion = nn.BCEWithLogitsLoss()
 
-            for epoch in range(epochs):
+            for epoch in range(max_epochs):
                 self._model.train()
-                total_loss = 0.0
-                total_ndcg = 0.0
-                total_samples = 0
                 tqdm_loader = tqdm(
                     dataloader,
-                    desc=f"Epoch {epoch + 1}/{epochs}",
-                    postfix={"loss": "0.000"},
+                    desc=f"Epoch {epoch + 1}/{max_epochs}",
                 )
                 for inputs, targets in tqdm_loader:
                     optimizer.zero_grad()
@@ -341,26 +349,11 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                     loss = criterion(outputs, targets)
                     loss.backward()
                     optimizer.step()
-
-                    batch_size = outputs.shape[0]
-
-                    batch_ndcg = ndcg_batch(outputs, targets)
-
-                    # Update stats
-                    total_loss += loss.item() * batch_size
-                    total_ndcg += batch_ndcg.item() * batch_size
-                    total_samples += batch_size
-
-                    # Update progress bar with batch loss
-                    tqdm_loader.set_postfix(loss=loss.item())
-
-                epoch_loss = total_loss / total_samples
-                epoch_ndcg = total_ndcg / total_samples
-                print(
-                    f"Epoch {epoch + 1}/{epochs} "
-                    f"- loss: {epoch_loss:.4f} "
-                    f"- nDCG: {epoch_ndcg:.4f}"
-                )
+                # evaluate for early stopping
+                with torch.no_grad():
+                    outputs = self._model(eval_inputs)
+                    ndcg = ndcg_batch(outputs, eval_targets)
+                print(f"Epoch {epoch + 1}/{max_epochs} " f"- nDCG: {ndcg:.4f}")
 
         annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)
 
@@ -371,5 +364,9 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     ) -> None:
         self.initialize()
         self._fit_model(
-            corpus, int(params["learn-epochs"]), int(params["lmdb_map_size"])
+            corpus,
+            max_epochs=int(params["learn-epochs"]),
+            batch_size=int(params["batch-size"]),
+            lr=float(params["lr"]),
+            lmdb_map_size=int(params["lmdb_map_size"]),
         )

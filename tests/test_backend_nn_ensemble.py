@@ -62,7 +62,7 @@ def test_set_lmdb_map_size(registry, tmpdir):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id="nn_ensemble",
-        config_params={"sources": "dummy-en", "epochs": 1, "lmdb_map_size": 1},
+        config_params={"sources": "dummy-en", "max-epochs": 1, "lmdb_map_size": 1},
         project=project,
     )
     tmpfile = tmpdir.join("document.tsv")
@@ -82,7 +82,7 @@ def test_nn_ensemble_train_and_learn(registry, tmpdir):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id="nn_ensemble",
-        config_params={"sources": "dummy-en", "epochs": 1},
+        config_params={"sources": "dummy-en", "max-epochs": 1},
         project=project,
     )
 
@@ -132,7 +132,7 @@ def test_nn_ensemble_train_cached(registry):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id="nn_ensemble",
-        config_params={"sources": "dummy-en", "epochs": 2},
+        config_params={"sources": "dummy-en", "max-epochs": 2},
         project=project,
     )
 
@@ -147,7 +147,7 @@ def test_nn_ensemble_train_and_learn_params(registry, tmpdir, capfd):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id="nn_ensemble",
-        config_params={"sources": "dummy-en", "epochs": 3},
+        config_params={"sources": "dummy-en", "max-epochs": 3},
         project=project,
     )
 
@@ -159,7 +159,7 @@ def test_nn_ensemble_train_and_learn_params(registry, tmpdir, capfd):
     )
     document_corpus = DocumentFileTSV(str(tmpfile), project.subjects)
 
-    train_params = {"epochs": 3}
+    train_params = {"max-epochs": 3}
     nn_ensemble.train(document_corpus, train_params)
     _, err = capfd.readouterr()
     assert "Epoch 3/3" in err
@@ -231,7 +231,7 @@ def test_nn_ensemble_default_params(app_project):
     )
 
     expected_default_params = {
-        "lr": 0.001,
+        "lr": 0.003,
         "limit": 100,
     }
     actual_params = nn_ensemble.params
