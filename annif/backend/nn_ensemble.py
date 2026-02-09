@@ -77,7 +77,7 @@ class LMDBDataset(Dataset):
         cursor.set_key(idx_to_key(idx))
         value = cursor.value()
         input_csr, target_csr = joblib.load(BytesIO(value))
-        input_tensor = torch.from_numpy(input_csr.toarray())
+        input_tensor = torch.log1p(torch.from_numpy(input_csr.toarray()))
         target_tensor = torch.from_numpy(target_csr.toarray()[0]).float()
         return input_tensor, target_tensor
 
@@ -227,23 +227,20 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         src_weight = dict(sources)
         score_vectors = np.array(
             [
-                [
-                    np.sqrt(suggestions.as_vector())
-                    * src_weight[project_id]
-                    * len(batch_by_source)
-                    for suggestions in batch
-                ]
+                [suggestions.as_vector() for suggestions in batch]
                 for project_id, batch in batch_by_source.items()
             ],
             dtype=np.float32,
         )
-        score_vector_tensor = torch.from_numpy(score_vectors.swapaxes(0, 1))
+        score_vector_tensor = torch.log1p(
+            torch.from_numpy(score_vectors.swapaxes(0, 1))
+        )
         with torch.no_grad():
             prediction = self._model(score_vector_tensor)
         return SuggestionBatch.from_sequence(
             [
                 vector_to_suggestions(row, limit=int(params["limit"]))
-                for row in prediction
+                for row in prediction.detach().numpy()
             ],
             self.project.subjects,
         )
@@ -311,13 +308,10 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             for hits, subject_set in pool.imap_unordered(
                 psmap.suggest, corpus.documents
             ):
-                doc_scores = []
-                for project_id, p_hits in hits.items():
-                    vector = p_hits.as_vector()
-                    doc_scores.append(
-                        np.sqrt(vector) * sources[project_id] * len(sources)
-                    )
-                score_vector = np.array(doc_scores, dtype=np.float32)
+                score_vector = np.array(
+                    [p_hits.as_vector() for project_id, p_hits in hits.items()],
+                    dtype=np.float32,
+                )
                 true_vector = subject_set.as_vector(len(self.project.subjects))
                 seq.add_sample(score_vector, true_vector)
 
