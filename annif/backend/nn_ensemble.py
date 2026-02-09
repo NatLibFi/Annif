@@ -89,42 +89,23 @@ class LMDBDataset(Dataset):
 class NNEnsembleModel(nn.Module):
     def __init__(
         self,
-        source_dim: int,
-        input_dim: int,
-        hidden_dim: int,
-        output_dim: int,
-        dropout_rate: float,
+        n_sources: int,
+        n_subjects: int,
     ):
         super().__init__()
         self.model_config = {
-            "source_dim": source_dim,
-            "input_dim": input_dim,
-            "hidden_dim": hidden_dim,
-            "output_dim": output_dim,
-            "dropout_rate": dropout_rate,
+            "n_sources": n_sources,
+            "n_subjects": n_subjects,
         }
-        self.conv = nn.Conv1d(source_dim, 1, 1, bias=False)
-        self.flatten = nn.Flatten()
-        self.dropout1 = nn.Dropout(dropout_rate)
-        self.hidden = nn.Linear(input_dim * source_dim, hidden_dim)
-        self.dropout2 = nn.Dropout(dropout_rate)
-        self.delta_layer = nn.Linear(hidden_dim, output_dim)
-        self.reset_parameters()
+        # per-concept/source weights
+        init_weights = torch.full((n_sources,), 1.0 / n_sources, dtype=torch.float32)
+        self.weights = nn.Parameter(init_weights[:, None].repeat(1, n_subjects))
+        # per-concept bias
+        self.bias = nn.Parameter(torch.zeros(n_subjects))
 
-    def reset_parameters(self):
-        self.conv.weight.data.fill_(1 / self.model_config["source_dim"])
-        nn.init.zeros_(self.delta_layer.weight)
-        nn.init.zeros_(self.delta_layer.bias)
-
-    def forward(self, inputs):
-        mean = self.conv(inputs)[:, 0, :]
-        x = self.flatten(inputs)
-        x = self.dropout1(x)
-        x = F.relu(self.hidden(x))
-        x = self.dropout2(x)
-        delta = self.delta_layer(x)
-        corrected = mean + delta
-        return torch.clamp(corrected, min=0.0, max=1.0)
+    def forward(self, inputs: torch.Tensor):
+        weighted = inputs * self.weights.unsqueeze(0)
+        return weighted.sum(1) + self.bias
 
     def save(self, filepath):
         torch.save(
@@ -183,8 +164,6 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     LMDB_FILE = "nn-train.mdb"
 
     DEFAULT_PARAMETERS = {
-        "nodes": 100,
-        "dropout_rate": 0.2,
         "lr": 0.001,
         "epochs": 10,
         "learn-epochs": 1,
@@ -249,18 +228,9 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         self.info("creating NN ensemble model")
 
         # Create PyTorch model
-        source_dim = len(sources)
-        input_dim = len(self.project.subjects)
-        hidden_dim = int(self.params["nodes"])
-        output_dim = len(self.project.subjects)
-        dropout_rate = float(self.params["dropout_rate"])
 
         self._model = NNEnsembleModel(
-            source_dim=source_dim,
-            input_dim=input_dim,
-            hidden_dim=hidden_dim,
-            output_dim=output_dim,
-            dropout_rate=dropout_rate,
+            n_sources=len(sources), n_subjects=len(self.project.subjects)
         )
 
     def _train(
