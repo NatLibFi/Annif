@@ -215,7 +215,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             torch.from_numpy(score_vectors.swapaxes(0, 1))
         )
         with torch.no_grad():
-            prediction = self._model(score_vector_tensor)
+            prediction = torch.sigmoid(self._model(score_vector_tensor))
         return SuggestionBatch.from_sequence(
             [
                 vector_to_suggestions(row, limit=int(params["limit"]))
@@ -323,7 +323,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 weight_decay=0.01,
                 eps=1e-08,
             )
-            criterion = nn.BCELoss()
+            criterion = nn.BCEWithLogitsLoss()
 
             for epoch in range(epochs):
                 self._model.train()
