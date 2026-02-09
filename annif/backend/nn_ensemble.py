@@ -130,24 +130,27 @@ class NNEnsembleModel(nn.Module):
 
 
 @torch.no_grad()
-def ndcg_batch(preds: torch.Tensor, targets: torch.Tensor):
+def ndcg_batch(preds: torch.Tensor, targets: torch.Tensor, k: int = 1000):
     """
     preds:   (B, N) float
     targets: (B, N) {0,1}
+    k:       int, cutoff for nDCG@k
 
-    Returns: mean nDCG across the batch
+    Returns: mean nDCG@K across the batch
     """
     sorted_idx = torch.argsort(preds, dim=1, descending=True)
     sorted_targets = torch.gather(targets, 1, sorted_idx)
+    sorted_targets_k = sorted_targets[:, :k]
 
-    L = sorted_targets.size(1)
+    L = min(k, sorted_targets.size(1))
     ranks = torch.arange(1, L + 1, device=preds.device)
     discounts = 1.0 / torch.log2(ranks + 1)
 
-    dcg = (sorted_targets * discounts).sum(dim=1)
+    dcg = (sorted_targets_k * discounts).sum(dim=1)
 
-    ideal_sorted = torch.sort(targets, dim=1, descending=True).values[:, :L]
-    idcg = (ideal_sorted * discounts).sum(dim=1)
+    ideal_sorted = torch.sort(targets, dim=1, descending=True).values
+    ideal_sorted_k = ideal_sorted[:, :k]
+    idcg = (ideal_sorted_k * discounts).sum(dim=1)
 
     ndcg = dcg / torch.clamp(idcg, min=1e-8)
 
@@ -204,7 +207,6 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         sources: list[tuple[str, float]],
         params: dict[str, Any],
     ) -> SuggestionBatch:
-        src_weight = dict(sources)
         score_vectors = np.array(
             [
                 [suggestions.as_vector() for suggestions in batch]
@@ -353,7 +355,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 with torch.no_grad():
                     outputs = self._model(eval_inputs)
                     ndcg = ndcg_batch(outputs, eval_targets)
-                print(f"Epoch {epoch + 1}/{max_epochs} " f"- nDCG: {ndcg:.4f}")
+                print(f"Epoch {epoch + 1}/{max_epochs} " f"- nDCG@1000: {ndcg:.4f}")
 
         annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)
 
