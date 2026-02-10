@@ -87,19 +87,17 @@ class LMDBDataset(Dataset):
 
 
 class NNEnsembleModel(nn.Module):
-    def __init__(
-        self,
-        n_sources: int,
-        n_subjects: int,
-    ):
+    def __init__(self, n_sources: int, n_subjects: int, source_weights: list[int]):
         super().__init__()
         self.model_config = {
             "n_sources": n_sources,
             "n_subjects": n_subjects,
+            "source_weights": source_weights,
         }
         # per-concept/source weights
-        init_weights = torch.full((n_sources,), 1.0 / n_sources, dtype=torch.float32)
-        self.weights = nn.Parameter(init_weights[:, None].repeat(1, n_subjects))
+        init_weights = torch.tensor(source_weights, dtype=torch.float32)
+        init_weights = init_weights / init_weights.sum()
+        self.weights = nn.Parameter(init_weights[:, None].expand(-1, n_subjects).contiguous())
         # per-concept bias
         self.bias = nn.Parameter(torch.zeros(n_subjects))
 
@@ -257,7 +255,9 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         # Create PyTorch model
 
         self._model = NNEnsembleModel(
-            n_sources=len(sources), n_subjects=len(self.project.subjects)
+            n_sources=len(sources),
+            n_subjects=len(self.project.subjects),
+            source_weights=[src[1] for src in sources],
         )
 
     def _train(
