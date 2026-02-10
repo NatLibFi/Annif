@@ -87,7 +87,7 @@ class LMDBDataset(Dataset):
 
 
 class NNEnsembleModel(nn.Module):
-    def __init__(self, n_sources: int, n_subjects: int, source_weights: list[int]):
+    def __init__(self, n_sources: int, n_subjects: int, source_weights: list[float]):
         super().__init__()
         self.model_config = {
             "n_sources": n_sources,
@@ -97,7 +97,9 @@ class NNEnsembleModel(nn.Module):
         # per-concept/source weights
         init_weights = torch.tensor(source_weights, dtype=torch.float32)
         init_weights = init_weights / init_weights.sum()
-        self.weights = nn.Parameter(init_weights[:, None].expand(-1, n_subjects).contiguous())
+        self.weights = nn.Parameter(
+            init_weights[:, None].expand(-1, n_subjects).contiguous()
+        )
         # per-concept bias
         self.bias = nn.Parameter(torch.zeros(n_subjects))
 
