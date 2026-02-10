@@ -187,6 +187,9 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     MODEL_FILE = "nn-model.pt"
     LMDB_FILE = "nn-train.mdb"
 
+    EVAL_BATCH_SIZE = 512
+    EARLY_STOPPING_PATIENCE = 2
+
     DEFAULT_PARAMETERS = {
         "lr": 0.003,
         "max-epochs": 20,
@@ -347,7 +350,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             )
             # Evaluation batch, used for early stopping
             eval_dataloader = DataLoader(
-                dataset, batch_size=512, shuffle=True, num_workers=0
+                dataset, batch_size=self.EVAL_BATCH_SIZE, shuffle=True, num_workers=0
             )
             eval_inputs, eval_targets = next(iter(eval_dataloader))
 
@@ -359,7 +362,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 eps=1e-08,
             )
             criterion = nn.BCEWithLogitsLoss()
-            early_stopping = EarlyStopping(patience=2)
+            early_stopping = EarlyStopping(patience=self.EARLY_STOPPING_PATIENCE)
 
             for epoch in range(max_epochs):
                 self._model.train()
