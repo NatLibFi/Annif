@@ -78,7 +78,7 @@ class LMDBDataset(Dataset):
         value = cursor.value()
         input_csr, target_csr = joblib.load(BytesIO(value))
         input_tensor = torch.log1p(torch.from_numpy(input_csr.toarray()))
-        target_tensor = torch.from_numpy(target_csr.toarray()[0]).float()
+        target_tensor = torch.log1p(torch.from_numpy(target_csr.toarray()[0]).float())
         return input_tensor, target_tensor
 
     def __len__(self) -> int:
