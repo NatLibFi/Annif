@@ -14,7 +14,6 @@ import lmdb
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from scipy.sparse import csc_matrix, csr_matrix
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
@@ -355,7 +354,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 with torch.no_grad():
                     outputs = self._model(eval_inputs)
                     ndcg = ndcg_batch(outputs, eval_targets)
-                print(f"Epoch {epoch + 1}/{max_epochs} " f"- nDCG@1000: {ndcg:.4f}")
+                print(f"Epoch {epoch + 1}/{max_epochs} - nDCG@1000: {ndcg:.4f}")
 
         annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)
 
