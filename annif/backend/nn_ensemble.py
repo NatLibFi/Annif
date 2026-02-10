@@ -3,6 +3,7 @@ projects."""
 
 from __future__ import annotations
 
+import copy
 import os.path
 import shutil
 import sys
@@ -126,6 +127,27 @@ class NNEnsembleModel(nn.Module):
         model.load_state_dict(checkpoint["model_state_dict"])
         model.eval()
         return model
+
+
+class EarlyStopping:
+    def __init__(self, patience: int):
+        self._patience = patience
+        self._best_metric = None
+        self._no_improvement_count = 0
+        self._stop_early = False
+        self.best_state = None
+
+    def __call__(self, model, metric):
+        if self._best_metric is None or metric > self._best_metric:
+            self._best_metric = metric
+            self._no_improvement_count = 0
+            self.best_state = copy.deepcopy(model.state_dict())
+        else:
+            self._no_improvement_count += 1
+            if self._no_improvement_count > self._patience:
+                self._stop_early = True
+
+        return self._stop_early
 
 
 @torch.no_grad()
@@ -337,6 +359,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 eps=1e-08,
             )
             criterion = nn.BCEWithLogitsLoss()
+            early_stopping = EarlyStopping(patience=2)
 
             for epoch in range(max_epochs):
                 self._model.train()
@@ -355,6 +378,12 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                     outputs = self._model(eval_inputs)
                     ndcg = ndcg_batch(outputs, eval_targets)
                 print(f"Epoch {epoch + 1}/{max_epochs} - nDCG@1000: {ndcg:.4f}")
+                if early_stopping(self._model, ndcg):
+                    print("Model no longer improving, stopping training.")
+                    break
+
+            # Restore best model weights
+            self._model.load_state_dict(early_stopping.best_state)
 
         annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)
 
