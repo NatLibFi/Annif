@@ -186,6 +186,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
     EVAL_BATCH_SIZE = 512
     EARLY_STOPPING_PATIENCE = 2
+    PRED_SCALE = 20
 
     DEFAULT_PARAMETERS = {
         "lr": 0.003,
@@ -239,11 +240,13 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             torch.from_numpy(score_vectors.swapaxes(0, 1))
         )
         with torch.no_grad():
-            prediction = torch.sigmoid(self._model(score_vector_tensor))
+            prediction = self._model(score_vector_tensor)
+        # use sigmoid to ensure [0..1] range, scaled to spread out values
+        scaled_pred = torch.sigmoid(prediction * self.PRED_SCALE)
         return SuggestionBatch.from_sequence(
             [
                 vector_to_suggestions(row, limit=int(params["limit"]))
-                for row in prediction.detach().numpy()
+                for row in scaled_pred.detach().numpy()
             ],
             self.project.subjects,
         )
