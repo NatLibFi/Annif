@@ -190,7 +190,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
     DEFAULT_PARAMETERS = {
         "lr": 0.003,
-        "max-epochs": 20,
+        "max-epochs": 50,
         "learn-epochs": 1,
         "batch-size": 256,
         "lmdb_map_size": 1024 * 1024 * 1024,
