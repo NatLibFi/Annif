@@ -132,7 +132,7 @@ def test_nn_ensemble_train_cached(registry):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id="nn_ensemble",
-        config_params={"sources": "dummy-en", "max-epochs": 2},
+        config_params={"sources": "dummy-en"},
         project=project,
     )
 
