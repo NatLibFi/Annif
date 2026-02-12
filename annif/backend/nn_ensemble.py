@@ -136,12 +136,14 @@ class EarlyStopping:
         self._no_improvement_count = 0
         self._stop_early = False
         self.best_state = None
+        self.best_epoch = 0
 
-    def __call__(self, model, metric):
+    def __call__(self, model, metric, epoch):
         if self._best_metric is None or metric > self._best_metric:
             self._best_metric = metric
             self._no_improvement_count = 0
             self.best_state = copy.deepcopy(model.state_dict())
+            self.best_epoch = epoch
         else:
             self._no_improvement_count += 1
             if self._no_improvement_count > self._patience:
@@ -156,7 +158,7 @@ def ndcg_batch(preds: torch.Tensor, targets: torch.Tensor):
     preds:   (B, N) float
     targets: (B, N) {0,1}
 
-    Returns: mean nDCG across the batch
+    Returns: mean NDCG across the batch
     """
     sorted_idx = torch.argsort(preds, dim=1, descending=True)
     sorted_targets = torch.gather(targets, 1, sorted_idx)
@@ -381,10 +383,11 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 # evaluate for early stopping
                 with torch.no_grad():
                     outputs = self._model(eval_inputs)
-                    ndcg = ndcg_batch(outputs, eval_targets)
-                print(f"Epoch {epoch + 1}/{max_epochs} - nDCG: {ndcg:.4f}")
-                if early_stopping(self._model, ndcg):
-                    print("Model no longer improving, stopping training.")
+                ndcg = ndcg_batch(outputs, eval_targets)
+                self.info(f"Epoch {epoch + 1}/{max_epochs}: NDCG={ndcg:.4f}")
+                if early_stopping(self._model, ndcg, epoch):
+                    best = early_stopping.best_epoch + 1
+                    self.info(f"Model no longer improving, using best epoch {best}.")
                     break
 
             # Restore best model weights
