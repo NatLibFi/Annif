@@ -49,7 +49,7 @@ dependencies = [
 fasttext = ["fasttext-numpy2==0.10.4"]
 estnltk = ["estnltk==1.7.4"]
 nn = [
-    "torch~=2.9.1",
+    "torch~=2.10.0",
     "lmdb~=1.7.3",
 ]
 torch-cpu = ["torch"]
