@@ -1,0 +1,89 @@
+Backend nn_ensemble: creating NN ensemble model
+Backend nn_ensemble: Initializing source projects: yso-tfidf-en, yso-mllm-en, yso-omikuji-parabel-en
+/scratch/Annif-benchmarking/Annif/.venv/lib64/python3.11/site-packages/sklearn/base.py:442: InconsistentVersionWarning: Trying to unpickle estimator TfidfTransformer from version 1.4.2 when using version 1.7.2. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+/scratch/Annif-benchmarking/Annif/.venv/lib64/python3.11/site-packages/sklearn/base.py:442: InconsistentVersionWarning: Trying to unpickle estimator TfidfVectorizer from version 1.4.2 when using version 1.7.2. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+2026-02-12T08:52:25.470Z INFO  [omikuji::model] Loading model from data/projects/yso-omikuji-parabel-en/omikuji-model...
+2026-02-12T08:52:25.470Z INFO  [omikuji::model] Loading model settings from data/projects/yso-omikuji-parabel-en/omikuji-model/settings.json...
+2026-02-12T08:52:25.473Z INFO  [omikuji::model] Loaded model settings Settings { n_features: 198852, classifier_loss_type: Hinge }...
+2026-02-12T08:52:25.473Z INFO  [omikuji::model] Loading tree from data/projects/yso-omikuji-parabel-en/omikuji-model/tree2.cbor...
+2026-02-12T08:52:27.251Z INFO  [omikuji::model] Loading tree from data/projects/yso-omikuji-parabel-en/omikuji-model/tree0.cbor...
+2026-02-12T08:52:28.926Z INFO  [omikuji::model] Loading tree from data/projects/yso-omikuji-parabel-en/omikuji-model/tree1.cbor...
+2026-02-12T08:52:30.560Z INFO  [omikuji::model] Loaded model with 3 trees; it took 5.09s
+Backend nn_ensemble: Processing training documents...
+Backend nn_ensemble: Training model...
+Epoch 1/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 1/50:  17%|█▋        | 1/6 [00:00<00:02,  2.05it/s]Epoch 1/50:  33%|███▎      | 2/6 [00:00<00:01,  2.33it/s]Epoch 1/50:  50%|█████     | 3/6 [00:01<00:01,  2.43it/s]Epoch 1/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.49it/s]Epoch 1/50:  83%|████████▎ | 5/6 [00:02<00:00,  2.50it/s]Epoch 1/50: 100%|██████████| 6/6 [00:02<00:00,  3.05it/s]Epoch 1/50: 100%|██████████| 6/6 [00:02<00:00,  2.68it/s]
+Epoch 1/50 - nDCG: 0.6735
+Epoch 2/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 2/50:  17%|█▋        | 1/6 [00:00<00:02,  2.41it/s]Epoch 2/50:  33%|███▎      | 2/6 [00:00<00:01,  2.41it/s]Epoch 2/50:  50%|█████     | 3/6 [00:01<00:01,  2.45it/s]Epoch 2/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.42it/s]Epoch 2/50:  83%|████████▎ | 5/6 [00:02<00:00,  2.46it/s]Epoch 2/50: 100%|██████████| 6/6 [00:02<00:00,  2.98it/s]Epoch 2/50: 100%|██████████| 6/6 [00:02<00:00,  2.67it/s]
+Epoch 2/50 - nDCG: 0.6829
+Epoch 3/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 3/50:  17%|█▋        | 1/6 [00:00<00:02,  2.41it/s]Epoch 3/50:  33%|███▎      | 2/6 [00:00<00:01,  2.42it/s]Epoch 3/50:  50%|█████     | 3/6 [00:01<00:01,  2.47it/s]Epoch 3/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.45it/s]Epoch 3/50:  83%|████████▎ | 5/6 [00:02<00:00,  2.47it/s]Epoch 3/50: 100%|██████████| 6/6 [00:02<00:00,  2.94it/s]Epoch 3/50: 100%|██████████| 6/6 [00:02<00:00,  2.67it/s]
+Epoch 3/50 - nDCG: 0.6885
+Epoch 4/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 4/50:  17%|█▋        | 1/6 [00:00<00:02,  2.30it/s]Epoch 4/50:  33%|███▎      | 2/6 [00:00<00:01,  2.45it/s]Epoch 4/50:  50%|█████     | 3/6 [00:01<00:01,  2.42it/s]Epoch 4/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.40it/s]Epoch 4/50:  83%|████████▎ | 5/6 [00:02<00:00,  2.42it/s]Epoch 4/50: 100%|██████████| 6/6 [00:02<00:00,  2.62it/s]Epoch 4/50: 100%|██████████| 6/6 [00:02<00:00,  2.50it/s]
+Epoch 4/50 - nDCG: 0.6943
+Epoch 5/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 5/50:  17%|█▋        | 1/6 [00:00<00:02,  2.36it/s]Epoch 5/50:  33%|███▎      | 2/6 [00:00<00:01,  2.49it/s]Epoch 5/50:  50%|█████     | 3/6 [00:01<00:01,  2.55it/s]Epoch 5/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.56it/s]Epoch 5/50:  83%|████████▎ | 5/6 [00:01<00:00,  2.59it/s]Epoch 5/50: 100%|██████████| 6/6 [00:02<00:00,  3.17it/s]Epoch 5/50: 100%|██████████| 6/6 [00:02<00:00,  2.81it/s]
+Epoch 5/50 - nDCG: 0.7017
+Epoch 6/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 6/50:  17%|█▋        | 1/6 [00:00<00:02,  2.44it/s]Epoch 6/50:  33%|███▎      | 2/6 [00:00<00:01,  2.50it/s]Epoch 6/50:  50%|█████     | 3/6 [00:01<00:01,  2.54it/s]Epoch 6/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.58it/s]Epoch 6/50:  83%|████████▎ | 5/6 [00:01<00:00,  2.52it/s]Epoch 6/50: 100%|██████████| 6/6 [00:02<00:00,  3.09it/s]Epoch 6/50: 100%|██████████| 6/6 [00:02<00:00,  2.77it/s]
+Epoch 6/50 - nDCG: 0.7074
+Epoch 7/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 7/50:  17%|█▋        | 1/6 [00:00<00:01,  2.50it/s]Epoch 7/50:  33%|███▎      | 2/6 [00:00<00:01,  2.41it/s]Epoch 7/50:  50%|█████     | 3/6 [00:01<00:01,  2.48it/s]Epoch 7/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.52it/s]Epoch 7/50:  83%|████████▎ | 5/6 [00:01<00:00,  2.56it/s]Epoch 7/50: 100%|██████████| 6/6 [00:02<00:00,  3.13it/s]Epoch 7/50: 100%|██████████| 6/6 [00:02<00:00,  2.77it/s]
+Epoch 7/50 - nDCG: 0.7121
+Epoch 8/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 8/50:  17%|█▋        | 1/6 [00:00<00:01,  2.53it/s]Epoch 8/50:  33%|███▎      | 2/6 [00:00<00:01,  2.44it/s]Epoch 8/50:  50%|█████     | 3/6 [00:01<00:01,  2.48it/s]Epoch 8/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.52it/s]Epoch 8/50:  83%|████████▎ | 5/6 [00:02<00:00,  2.35it/s]Epoch 8/50: 100%|██████████| 6/6 [00:02<00:00,  2.92it/s]Epoch 8/50: 100%|██████████| 6/6 [00:02<00:00,  2.66it/s]
+Epoch 8/50 - nDCG: 0.7188
+Epoch 9/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 9/50:  17%|█▋        | 1/6 [00:00<00:01,  2.65it/s]Epoch 9/50:  33%|███▎      | 2/6 [00:00<00:01,  2.63it/s]Epoch 9/50:  50%|█████     | 3/6 [00:01<00:01,  2.57it/s]Epoch 9/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.51it/s]Epoch 9/50:  83%|████████▎ | 5/6 [00:01<00:00,  2.59it/s]Epoch 9/50: 100%|██████████| 6/6 [00:02<00:00,  3.17it/s]Epoch 9/50: 100%|██████████| 6/6 [00:02<00:00,  2.83it/s]
+Epoch 9/50 - nDCG: 0.7242
+Epoch 10/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 10/50:  17%|█▋        | 1/6 [00:00<00:01,  2.69it/s]Epoch 10/50:  33%|███▎      | 2/6 [00:00<00:01,  2.64it/s]Epoch 10/50:  50%|█████     | 3/6 [00:01<00:01,  2.60it/s]Epoch 10/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.61it/s]Epoch 10/50:  83%|████████▎ | 5/6 [00:01<00:00,  2.61it/s]Epoch 10/50: 100%|██████████| 6/6 [00:02<00:00,  3.14it/s]Epoch 10/50: 100%|██████████| 6/6 [00:02<00:00,  2.85it/s]
+Epoch 10/50 - nDCG: 0.7290
+Epoch 11/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 11/50:  17%|█▋        | 1/6 [00:00<00:01,  2.70it/s]Epoch 11/50:  33%|███▎      | 2/6 [00:00<00:01,  2.67it/s]Epoch 11/50:  50%|█████     | 3/6 [00:01<00:01,  2.67it/s]Epoch 11/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.66it/s]Epoch 11/50:  83%|████████▎ | 5/6 [00:01<00:00,  2.62it/s]Epoch 11/50: 100%|██████████| 6/6 [00:02<00:00,  3.19it/s]Epoch 11/50: 100%|██████████| 6/6 [00:02<00:00,  2.89it/s]
+Epoch 11/50 - nDCG: 0.7357
+Epoch 12/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 12/50:  17%|█▋        | 1/6 [00:00<00:01,  2.55it/s]Epoch 12/50:  33%|███▎      | 2/6 [00:00<00:01,  2.54it/s]Epoch 12/50:  50%|█████     | 3/6 [00:01<00:01,  2.58it/s]Epoch 12/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.60it/s]Epoch 12/50:  83%|████████▎ | 5/6 [00:02<00:00,  2.38it/s]Epoch 12/50: 100%|██████████| 6/6 [00:02<00:00,  2.97it/s]Epoch 12/50: 100%|██████████| 6/6 [00:02<00:00,  2.72it/s]
+Epoch 12/50 - nDCG: 0.7400
+Epoch 13/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 13/50:  17%|█▋        | 1/6 [00:00<00:01,  2.56it/s]Epoch 13/50:  33%|███▎      | 2/6 [00:00<00:01,  2.64it/s]Epoch 13/50:  50%|█████     | 3/6 [00:01<00:01,  2.66it/s]Epoch 13/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.67it/s]Epoch 13/50:  83%|████████▎ | 5/6 [00:01<00:00,  2.67it/s]Epoch 13/50: 100%|██████████| 6/6 [00:02<00:00,  3.25it/s]Epoch 13/50: 100%|██████████| 6/6 [00:02<00:00,  2.91it/s]
+Epoch 13/50 - nDCG: 0.7435
+Epoch 14/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 14/50:  17%|█▋        | 1/6 [00:00<00:01,  2.56it/s]Epoch 14/50:  33%|███▎      | 2/6 [00:00<00:01,  2.52it/s]Epoch 14/50:  50%|█████     | 3/6 [00:01<00:01,  2.48it/s]Epoch 14/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.52it/s]Epoch 14/50:  83%|████████▎ | 5/6 [00:01<00:00,  2.56it/s]Epoch 14/50: 100%|██████████| 6/6 [00:02<00:00,  3.08it/s]Epoch 14/50: 100%|██████████| 6/6 [00:02<00:00,  2.77it/s]
+Epoch 14/50 - nDCG: 0.7471
+Epoch 15/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 15/50:  17%|█▋        | 1/6 [00:00<00:01,  2.59it/s]Epoch 15/50:  33%|███▎      | 2/6 [00:00<00:01,  2.61it/s]Epoch 15/50:  50%|█████     | 3/6 [00:01<00:01,  2.61it/s]Epoch 15/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.58it/s]Epoch 15/50:  83%|████████▎ | 5/6 [00:01<00:00,  2.61it/s]Epoch 15/50: 100%|██████████| 6/6 [00:02<00:00,  3.19it/s]Epoch 15/50: 100%|██████████| 6/6 [00:02<00:00,  2.86it/s]
+Epoch 15/50 - nDCG: 0.7511
+Epoch 16/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 16/50:  17%|█▋        | 1/6 [00:00<00:01,  2.63it/s]Epoch 16/50:  33%|███▎      | 2/6 [00:00<00:01,  2.64it/s]Epoch 16/50:  50%|█████     | 3/6 [00:01<00:01,  2.63it/s]Epoch 16/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.62it/s]Epoch 16/50:  83%|████████▎ | 5/6 [00:02<00:00,  2.37it/s]Epoch 16/50: 100%|██████████| 6/6 [00:02<00:00,  2.89it/s]Epoch 16/50: 100%|██████████| 6/6 [00:02<00:00,  2.71it/s]
+Epoch 16/50 - nDCG: 0.7552
+Epoch 17/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 17/50:  17%|█▋        | 1/6 [00:00<00:01,  2.59it/s]Epoch 17/50:  33%|███▎      | 2/6 [00:00<00:01,  2.62it/s]Epoch 17/50:  50%|█████     | 3/6 [00:01<00:01,  2.57it/s]Epoch 17/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.55it/s]Epoch 17/50:  83%|████████▎ | 5/6 [00:01<00:00,  2.54it/s]Epoch 17/50: 100%|██████████| 6/6 [00:02<00:00,  3.04it/s]Epoch 17/50: 100%|██████████| 6/6 [00:02<00:00,  2.78it/s]
+Epoch 17/50 - nDCG: 0.7585
+Epoch 18/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 18/50:  17%|█▋        | 1/6 [00:00<00:01,  2.63it/s]Epoch 18/50:  33%|███▎      | 2/6 [00:00<00:01,  2.63it/s]Epoch 18/50:  50%|█████     | 3/6 [00:01<00:01,  2.56it/s]Epoch 18/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.52it/s]Epoch 18/50:  83%|████████▎ | 5/6 [00:01<00:00,  2.57it/s]Epoch 18/50: 100%|██████████| 6/6 [00:02<00:00,  3.08it/s]Epoch 18/50: 100%|██████████| 6/6 [00:02<00:00,  2.80it/s]
+Epoch 18/50 - nDCG: 0.7604
+Epoch 19/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 19/50:  17%|█▋        | 1/6 [00:00<00:01,  2.54it/s]Epoch 19/50:  33%|███▎      | 2/6 [00:00<00:01,  2.57it/s]Epoch 19/50:  50%|█████     | 3/6 [00:01<00:01,  2.59it/s]Epoch 19/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.61it/s]Epoch 19/50:  83%|████████▎ | 5/6 [00:01<00:00,  2.55it/s]Epoch 19/50: 100%|██████████| 6/6 [00:02<00:00,  3.14it/s]Epoch 19/50: 100%|██████████| 6/6 [00:02<00:00,  2.82it/s]
+Epoch 19/50 - nDCG: 0.7624
+Epoch 20/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 20/50:  17%|█▋        | 1/6 [00:00<00:01,  2.66it/s]Epoch 20/50:  33%|███▎      | 2/6 [00:00<00:01,  2.54it/s]Epoch 20/50:  50%|█████     | 3/6 [00:01<00:01,  2.54it/s]Epoch 20/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.27it/s]Epoch 20/50:  83%|████████▎ | 5/6 [00:02<00:00,  2.40it/s]Epoch 20/50: 100%|██████████| 6/6 [00:02<00:00,  2.92it/s]Epoch 20/50: 100%|██████████| 6/6 [00:02<00:00,  2.65it/s]
+Epoch 20/50 - nDCG: 0.7619
+Epoch 21/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 21/50:  17%|█▋        | 1/6 [00:00<00:01,  2.58it/s]Epoch 21/50:  33%|███▎      | 2/6 [00:00<00:01,  2.58it/s]Epoch 21/50:  50%|█████     | 3/6 [00:01<00:01,  2.59it/s]Epoch 21/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.57it/s]Epoch 21/50:  83%|████████▎ | 5/6 [00:01<00:00,  2.57it/s]Epoch 21/50: 100%|██████████| 6/6 [00:02<00:00,  3.09it/s]Epoch 21/50: 100%|██████████| 6/6 [00:02<00:00,  2.81it/s]
+Epoch 21/50 - nDCG: 0.7544
+Epoch 22/50:   0%|          | 0/6 [00:00<?, ?it/s]Epoch 22/50:  17%|█▋        | 1/6 [00:00<00:01,  2.50it/s]Epoch 22/50:  33%|███▎      | 2/6 [00:00<00:01,  2.54it/s]Epoch 22/50:  50%|█████     | 3/6 [00:01<00:01,  2.57it/s]Epoch 22/50:  67%|██████▋   | 4/6 [00:01<00:00,  2.54it/s]Epoch 22/50:  83%|████████▎ | 5/6 [00:01<00:00,  2.53it/s]Epoch 22/50: 100%|██████████| 6/6 [00:02<00:00,  3.09it/s]Epoch 22/50: 100%|██████████| 6/6 [00:02<00:00,  2.78it/s]
+Epoch 22/50 - nDCG: 0.7427
+Model no longer improving, stopping training.
+	Command being timed: "annif train -j6 yso-nn_ensemble-en ../Annif-tutorial/data-sets/yso-nlf/docs/train/"
+	User time (seconds): 2992.71
+	System time (seconds): 83.23
+	Percent of CPU this job got: 573%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 8:56.57
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3064212
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 2398
+	Minor (reclaiming a frame) page faults: 5566410
+	Voluntary context switches: 50196
+	Involuntary context switches: 235344
+	Swaps: 0
+	File system inputs: 2553368
+	File system outputs: 518208
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+=== Model size after training ===
+Model directory: data/projects/yso-nn_ensemble-en
+Model size (bytes): 1247592202
