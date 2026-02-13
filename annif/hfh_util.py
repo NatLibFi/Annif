@@ -109,7 +109,7 @@ def _prepare_config_commit(project: AnnifProject) -> tuple[io.BytesIO, Any]:
     return fobj, operation
 
 
-def _is_train_path(path: str) -> bool:
+def _is_train_path(path: pathlib.Path) -> bool:
     # Detect if the path includes a training data pattern
     train_path_patterns = ("-train", "tmp-")
     for pat in train_path_patterns:
