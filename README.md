@@ -96,7 +96,7 @@ Create a virtual environment and install dependencies:
 
     uv sync
 
-By default development dependencies are included. Use option `--extra` to install dependencies for selected optional features (`--extra "extra1 extra2"` for multiple extras), or install all of them with `--all-extras`. By default the virtual environment directory is `.venv` under the project directory.
+By default development dependencies are included. Use option `--extra` to install dependencies for selected optional features (`--extra extra1 --extra extra2` for multiple extras), or install all of them with `--all-extras`. By default the virtual environment directory is `.venv` under the project directory.
 
 You can run Annif in one of two ways:
 
