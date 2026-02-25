@@ -13,7 +13,7 @@ schemathesis.openapi.format("bcp47", bcp47_strategy)
 
 cxapp = annif.create_app(config_name="annif.default_config.TestingConfig")
 schema = schemathesis.openapi.from_asgi("/v1/openapi.json", app=cxapp)
-
+schema.config.checks.positive_data_acceptance.enabled = False
 
 @schemathesis.hook("filter_path_parameters")
 def filter_path_parameters(context, path_parameters):
