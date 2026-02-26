@@ -32,7 +32,7 @@ def test_fasttext_train(document_corpus, project, datadir):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id="fasttext",
-        config_params={"limit": 50, "dim": 100, "lr": 0.25, "epoch": 20, "loss": "hs"},
+        config_params={"limit": 50, "dim": 200, "lr": 0.25, "epoch": 20, "loss": "hs"},
         project=project,
     )
 
@@ -48,7 +48,7 @@ def test_fasttext_train_cached_jobs(project, datadir):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id="fasttext",
-        config_params={"limit": 50, "dim": 100, "lr": 0.25, "epoch": 20, "loss": "hs"},
+        config_params={"limit": 50, "dim": 200, "lr": 0.25, "epoch": 20, "loss": "hs"},
         project=project,
     )
 
@@ -62,7 +62,7 @@ def test_fasttext_train_unknown_subject(tmpdir, datadir, project):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id="fasttext",
-        config_params={"limit": 50, "dim": 100, "lr": 0.25, "epoch": 20, "loss": "hs"},
+        config_params={"limit": 50, "dim": 200, "lr": 0.25, "epoch": 20, "loss": "hs"},
         project=project,
     )
 
@@ -83,7 +83,7 @@ def test_fasttext_train_nodocuments(project, empty_corpus):
     fasttext_type = annif.backend.get_backend("fasttext")
     fasttext = fasttext_type(
         backend_id="fasttext",
-        config_params={"limit": 50, "dim": 100, "lr": 0.25, "epoch": 20, "loss": "hs"},
+        config_params={"limit": 50, "dim": 200, "lr": 0.25, "epoch": 20, "loss": "hs"},
         project=project,
     )
 
@@ -126,7 +126,7 @@ def test_fasttext_train_pretrained(
         backend_id="fasttext",
         config_params={
             "limit": 50,
-            "dim": 100,
+            "dim": 200,
             "lr": 0.25,
             "epoch": 20,
             "loss": "hs",
@@ -173,7 +173,7 @@ def test_fasttext_suggest(project):
         config_params={
             "limit": 50,
             "chunksize": 1,
-            "dim": 100,
+            "dim": 200,
             "lr": 0.25,
             "epoch": 20,
             "loss": "hs",
@@ -206,7 +206,7 @@ def test_fasttext_suggest_empty_chunks(project):
         config_params={
             "limit": 50,
             "chunksize": 1,
-            "dim": 100,
+            "dim": 200,
             "lr": 0.25,
             "epoch": 20,
             "loss": "hs",

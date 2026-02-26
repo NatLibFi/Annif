@@ -1,8 +1,11 @@
 """Unit tests for the TF-IDF backend in Annif"""
 
+import pytest
+
 import annif
 import annif.backend
 from annif.corpus import Document
+from annif.exception import NotInitializedException, OperationFailedException
 
 
 def test_tfidf_default_params(project):
@@ -20,9 +23,9 @@ def test_tfidf_train(datadir, document_corpus, project):
     tfidf = tfidf_type(backend_id="tfidf", config_params={"limit": 10}, project=project)
 
     tfidf.train(document_corpus)
-    assert len(tfidf._index) > 0
-    assert datadir.join("tfidf-index").exists()
-    assert datadir.join("tfidf-index").size() > 0
+    assert tfidf._tfidf_matrix.shape[0] > 0
+    assert datadir.join("tfidf-matrix.npz").exists()
+    assert datadir.join("tfidf-matrix.npz").size() > 0
 
 
 def test_tfidf_suggest(project):
@@ -75,3 +78,33 @@ def test_tfidf_suggest_unknown(project):
     results = tfidf.suggest([Document(text="abcdefghijk")])[0]  # unknown word
 
     assert len(results) == 0
+
+
+def test_tfidf_suggest_old_model_error(datadir, project):
+    tfidf_type = annif.backend.get_backend("tfidf")
+    tfidf = tfidf_type(backend_id="tfidf", config_params={"limit": 10}, project=project)
+
+    datadir.join("tfidf-matrix.npz").remove()
+    datadir.join("tfidf-index").ensure()
+
+    with pytest.raises(OperationFailedException) as excinfo:
+        tfidf.suggest([Document(text="abcdefghijk")])
+
+    assert (
+        "TFIDF models trained on Annif versions older than 1.4 cannot be loaded"
+        in str(excinfo.value)
+    )
+
+
+def test_tfidf_suggest_no_model_error(datadir, project):
+    tfidf_type = annif.backend.get_backend("tfidf")
+    tfidf = tfidf_type(backend_id="tfidf", config_params={"limit": 10}, project=project)
+
+    datadir.join("tfidf-index").remove()
+
+    with pytest.raises(NotInitializedException) as excinfo:
+        tfidf.suggest([Document(text="abcdefghijk")])
+
+    assert f"tf-idf matrix {datadir.join('tfidf-matrix.npz')} not found" in str(
+        excinfo.value
+    )

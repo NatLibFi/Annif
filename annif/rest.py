@@ -13,12 +13,12 @@ import annif.simplemma_util
 from annif.corpus import Document, DocumentList, SubjectSet
 from annif.exception import AnnifException, NotEnabledException
 from annif.project import Access
+from annif.util import suggestion_results_to_list
 
 if TYPE_CHECKING:
     from connexion.lifecycle import ConnexionResponse
 
     from annif.corpus.subject import SubjectIndex
-    from annif.suggestion import SubjectSuggestion, SuggestionResults
 
 
 def project_not_found_error(project_id: str) -> ConnexionResponse:
@@ -129,27 +129,6 @@ def detect_language(body: dict[str, Any]):
     return result, 200, {"Content-Type": "application/json"}
 
 
-def _suggestion_to_dict(
-    suggestion: SubjectSuggestion, subject_index: SubjectIndex, language: str
-) -> dict[str, str | float | None]:
-    subject = subject_index[suggestion.subject_id]
-    return {
-        "uri": subject.uri,
-        "label": subject.labels[language],
-        "notation": subject.notation,
-        "score": suggestion.score,
-    }
-
-
-def _hit_sets_to_list(
-    hit_sets: SuggestionResults, subjects: SubjectIndex, lang: str
-) -> list[dict[str, list]]:
-    return [
-        {"results": [_suggestion_to_dict(hit, subjects, lang) for hit in hits]}
-        for hits in hit_sets
-    ]
-
-
 def _is_error(result: list[dict[str, list]] | ConnexionResponse) -> bool:
     return (
         isinstance(result, connexion.lifecycle.ConnexionResponse)
@@ -220,11 +199,11 @@ def _suggest(
     threshold = parameters.get("threshold", 0.0)
 
     try:
-        hit_sets = project.suggest_corpus(corpus).filter(limit, threshold)
+        suggestion_results = project.suggest_corpus(corpus).filter(limit, threshold)
     except AnnifException as err:
         return server_error(err)
 
-    return _hit_sets_to_list(hit_sets, project.subjects, lang)
+    return suggestion_results_to_list(suggestion_results, project.subjects, lang)
 
 
 def _documents_to_corpus(

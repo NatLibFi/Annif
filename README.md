@@ -6,9 +6,7 @@
 [![CI/CD](https://github.com/NatLibFi/Annif/actions/workflows/cicd.yml/badge.svg)](https://github.com/NatLibFi/Annif/actions/workflows/cicd.yml)
 [![codecov](https://codecov.io/gh/NatLibFi/Annif/branch/main/graph/badge.svg)](https://codecov.io/gh/NatLibFi/Annif)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/NatLibFi/Annif/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/NatLibFi/Annif/?branch=main)
-[![Code Climate](https://codeclimate.com/github/NatLibFi/Annif/badges/gpa.svg)](https://codeclimate.com/github/NatLibFi/Annif)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/NatLibFi/Annif/badge)](https://securityscorecards.dev/viewer/?uri=github.com/NatLibFi/Annif)
-[![codebeat badge](https://codebeat.co/badges/7a8ef539-0094-48b8-84c2-c413b4a50d57)](https://codebeat.co/projects/github-com-natlibfi-annif-main)
 [![CodeQL](https://github.com/NatLibFi/Annif/actions/workflows/codeql.yml/badge.svg)](https://github.com/NatLibFi/Annif/actions/workflows/codeql.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=NatLibFi_Annif&metric=alert_status)](https://sonarcloud.io/dashboard?id=NatLibFi_Annif)
 [![docs](https://readthedocs.org/projects/annif/badge/?version=latest)](https://annif.readthedocs.io/en/latest/index.html)
@@ -31,7 +29,7 @@ This repository contains a rewritten production version of Annif based on the
 
 Annif is developed and tested on Linux. If you want to run Annif on Windows or Mac OS, the recommended way is to use Docker (see below) or a Linux virtual machine.
 
-You will need Python 3.10-3.12 to install Annif.
+You will need Python 3.10-3.13 to install Annif.
 
 The recommended way is to install Annif from
 [PyPI](https://pypi.org/project/annif/) into a virtual environment.
@@ -73,7 +71,7 @@ Annif can be tried out in the [GitHub Codespaces](https://docs.github.com/en/cod
 
 A development version of Annif can be installed by cloning the [GitHub
 repository](https://github.com/NatLibFi/Annif).
-[Poetry](https://python-poetry.org/) is used for managing dependencies and virtual environment for the development version.
+[uv](https://docs.astral.sh/uv/) is used for managing dependencies and virtual environment for the development version.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for information on [unit tests](CONTRIBUTING.md#unit-tests), [code style](CONTRIBUTING.md#code-style), [development flow](CONTRIBUTING.md#development-flow) etc. details that are useful when participating in Annif development.
 
@@ -83,26 +81,34 @@ Clone the repository.
 
 Switch into the repository directory.
 
-Install [pipx](https://pypa.github.io/pipx/) and Poetry if you don't have them. First pipx:
+Install [pipx](https://pypa.github.io/pipx/) and uv if you don't have them. First pipx:
 
     python3 -m pip install --user pipx
     python3 -m pipx ensurepath
 
-Open a new shell, and then install Poetry:
+Open a new shell, and then install uv:
 
-    pipx install poetry
+    pipx install uv
 
-Poetry can be installed also without pipx: check the [Poetry documentation](https://python-poetry.org/docs/master/#installation).
+uv can be installed also without pipx: check the [uv documentation](https://docs.astral.sh/uv/getting-started/installation/).
 
 Create a virtual environment and install dependencies:
 
-    poetry install
+    uv sync
 
-By default development dependencies are included. Use option `-E` to install dependencies for selected optional features (`-E "extra1 extra2"` for multiple extras), or install all of them with `--all-extras`. By default the virtual environment directory is not under the project directory, but there is a [setting for selecting this](https://python-poetry.org/docs/configuration/#virtualenvsin-project).
+By default development dependencies are included. Use option `--extra` to install dependencies for selected optional features (`--extra extra1 --extra extra2` for multiple extras), or install all of them with `--all-extras`. By default the virtual environment directory is `.venv` under the project directory.
+
+You can run Annif in one of two ways:
+
+### 1. One-off using `uv run`
+
+    uv run annif
+
+### 2. Activating the virtual environment
 
 Enter the virtual environment:
 
-    eval $(poetry env activate)
+    source .venv/bin/activate
 
 Start up the application:
 
@@ -132,19 +138,50 @@ See "Cite this repository" in the details of the repository.
 <ul>
 <li>
 Suominen, O; Inkinen, J.; Lehtinen, M. 2025.
-Annif at SemEval-2025 Task 5: Traditional XMTC augmented by LLMs, pre-print.
-https://arxiv.org/abs/2504.19675
+Annif at the GermEval-2025 LLMs4Subjects Task: Traditional XMTC Augmented by Efficient LLMs, pre-print.
+https://arxiv.org/abs/2508.15877
 <details>
 <summary>See BibTex</summary>
 
-    @misc{suominen2025annifsemeval2025task5,
-      title={Annif at SemEval-2025 Task 5: Traditional XMTC augmented by LLMs}, 
+    @misc{suominen2025annifgermeval2025,
+      title={https://arxiv.org/abs/2508.15877},
       author={Osma Suominen and Juho Inkinen and Mona Lehtinen},
       year={2025},
-      eprint={2504.19675},
+      eprint={2508.15877},
       archivePrefix={arXiv},
       primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2504.19675}, 
+      url={https://arxiv.org/abs/2508.15877},
+    }
+</details>
+</li>
+<li>
+Suominen, O; Inkinen, J.; Lehtinen, M. 2025.
+Annif at SemEval-2025 Task 5: Traditional XMTC augmented by LLMs.
+In Proceedings of the 19th International Workshop on Semantic Evaluation (SemEval-2025), pp. 2424–2431, Vienna, Austria. Association for Computational Linguistics.
+https://aclanthology.org/2025.semeval-1.315/
+https://arxiv.org/abs/2504.19675
+<details>
+<summary>See BibTex</summary>
+    
+    @misc{suominen2025annifsemeval2025task5,
+      title={Annif at SemEval-2025 Task 5: Traditional XMTC augmented by LLMs},
+      title = "Annif at {S}em{E}val-2025 Task 5: Traditional {XMTC} augmented by {LLM}s",
+      author = "Suominen, Osma and Inkinen, Juho and Lehtinen, Mona",
+      editor = "Rosenthal, Sara  and  Ros{\'a}, Aiala  and  Ghosh, Debanjan  and  Zampieri, Marcos",
+      booktitle = "Proceedings of the 19th International Workshop on Semantic Evaluation (SemEval-2025)",
+      month = jul,
+      year = "2025",
+      address = "Vienna, Austria",
+      publisher = "Association for Computational Linguistics",
+      url = "https://aclanthology.org/2025.semeval-1.315/",
+      pages = "2424--2431",
+      ISBN = "979-8-89176-273-2",
+      # ArXiv 
+      # year={2025},
+      # eprint={2504.19675},
+      # archivePrefix={arXiv},
+      # primaryClass={cs.CL},
+      # url={https://arxiv.org/abs/2504.19675},
     }
 </details>
 </li>

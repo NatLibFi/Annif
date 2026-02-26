@@ -94,7 +94,7 @@ def prepare_commits(
 def _prepare_datadir_commit(data_dir: str) -> tuple[io.BufferedRandom, Any]:
     from huggingface_hub import CommitOperationAdd
 
-    zip_repo_path = data_dir.split(os.path.sep, 1)[1] + ".zip"
+    zip_repo_path = os.path.join(*data_dir.rsplit(os.path.sep, 2)[1:3]) + ".zip"
     fobj = _archive_dir(data_dir)
     operation = CommitOperationAdd(path_in_repo=zip_repo_path, path_or_fileobj=fobj)
     return fobj, operation
@@ -119,16 +119,19 @@ def _is_train_file(fname: str) -> bool:
 
 def _archive_dir(data_dir: str) -> io.BufferedRandom:
     fp = tempfile.TemporaryFile()
-    path = pathlib.Path(data_dir)
-    fpaths = [fpath for fpath in path.glob("**/*") if not _is_train_file(fpath.name)]
+    data_dir_path = pathlib.Path(data_dir)  # <projectid> or <vocabid> directory
+    fpaths = [p for p in data_dir_path.glob("**/*") if not _is_train_file(p.name)]
+    # Strip projects/<projectid> or vocabs/<vocabid>:
+    root_datadir = data_dir_path.parent.parent
+
     with zipfile.ZipFile(fp, mode="w") as zfile:
         zfile.comment = bytes(
             f"Archived by Annif {importlib.metadata.version('annif')}",
             encoding="utf-8",
         )
         for fpath in fpaths:
-            logger.debug(f"Adding {fpath}")
-            arcname = os.path.join(*fpath.parts[1:])
+            arcname = fpath.relative_to(root_datadir)
+            logger.debug(f"Adding {fpath} to zip archive as member {arcname}")
             zfile.write(fpath, arcname=arcname)
     fp.seek(0)
     return fp

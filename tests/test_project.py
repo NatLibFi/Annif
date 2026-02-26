@@ -79,6 +79,8 @@ def test_get_project_fi_dump(registry):
         "vocab": {
             "vocab_id": "dummy",
             "languages": ["en", "fi"],
+            "size": 2,
+            "loaded": True,
         },
         "vocab_language": "fi",
         "is_trained": True,
@@ -117,21 +119,6 @@ def test_get_project_noname(registry):
 def test_get_project_default_params_tfidf(registry):
     project = registry.get_project("noparams-tfidf-fi")
     expected_default_params = {"limit": 100}  # From AnnifBackend class
-    actual_params = project.backend.params
-    for param, val in expected_default_params.items():
-        assert param in actual_params and actual_params[param] == val
-
-
-def test_get_project_default_params_fasttext(registry):
-    pytest.importorskip("annif.backend.fasttext")
-    project = registry.get_project("noparams-fasttext-fi")
-    expected_default_params = {
-        "limit": 100,  # From AnnifBackend class
-        "dim": 100,  # Rest from FastTextBackend class
-        "lr": 0.25,
-        "epoch": 5,
-        "loss": "hs",
-    }
     actual_params = project.backend.params
     for param, val in expected_default_params.items():
         assert param in actual_params and actual_params[param] == val
@@ -189,8 +176,8 @@ def test_project_tfidf_modification_time_prepared_only(registry, testdatadir):
 def test_project_train_tfidf(registry, document_corpus, testdatadir):
     project = registry.get_project("tfidf-fi")
     project.train(document_corpus)
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").exists()
-    assert testdatadir.join("projects/tfidf-fi/tfidf-index").size() > 0
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").exists()
+    assert testdatadir.join("projects/tfidf-fi/tfidf-matrix.npz").size() > 0
 
 
 def test_project_tfidf_is_trained(registry):
@@ -238,22 +225,6 @@ def test_project_learn_not_supported(registry, tmpdir):
     docdir = annif.corpus.DocumentDirectory(str(tmpdir), project.subjects, "en")
     with pytest.raises(NotSupportedException):
         project.learn(docdir)
-
-
-def test_project_load_vocabulary_fasttext(registry, subject_file, testdatadir):
-    pytest.importorskip("annif.backend.fasttext")
-    project = registry.get_project("fasttext-fi")
-    project.vocab.load_vocabulary(subject_file)
-    assert testdatadir.join("vocabs/yso/subjects.csv").exists()
-    assert testdatadir.join("vocabs/yso/subjects.csv").size() > 0
-
-
-def test_project_train_fasttext(registry, document_corpus, testdatadir):
-    pytest.importorskip("annif.backend.fasttext")
-    project = registry.get_project("fasttext-fi")
-    project.train(document_corpus)
-    assert testdatadir.join("projects/fasttext-fi/fasttext-model").exists()
-    assert testdatadir.join("projects/fasttext-fi/fasttext-model").size() > 0
 
 
 def test_project_suggest(registry):
@@ -353,6 +324,6 @@ def test_project_file_toml():
 def test_project_directory():
     cxapp = annif.create_app(config_name="annif.default_config.TestingDirectoryConfig")
     with cxapp.app.app_context():
-        assert len(annif.registry.get_projects()) == 20 + 2
+        assert len(annif.registry.get_projects()) == 17 + 2
         assert annif.registry.get_project("dummy-fi").project_id == "dummy-fi"
         assert annif.registry.get_project("dummy-fi-toml").project_id == "dummy-fi-toml"
