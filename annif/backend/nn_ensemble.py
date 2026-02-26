@@ -15,7 +15,7 @@ import lmdb
 import numpy as np
 import torch
 import torch.nn as nn
-from scipy.sparse import csc_matrix, csr_matrix
+from scipy.sparse import csr_matrix
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
@@ -65,7 +65,7 @@ class LMDBDataset(Dataset):
         key = idx_to_key(self._counter)
         self._counter += 1
         # convert the sample into a sparse matrix and serialize it as bytes
-        sample = (csc_matrix(inputs), csr_matrix(targets))
+        sample = (csr_matrix(inputs), csr_matrix(targets))
         buf = BytesIO()
         joblib.dump(sample, buf)
         buf.seek(0)
