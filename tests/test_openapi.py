@@ -16,9 +16,24 @@ schema = schemathesis.openapi.from_asgi("/v1/openapi.json", app=cxapp)
 schema.config.checks.positive_data_acceptance.enabled = False
 schema.config.generation.allow_extra_parameters = False
 
+
+@schemathesis.hook("filter_body")
+def filter_body(context, body):
+    # Exclude body containing non-utf8 content to avoid crashing Connexion:
+    # https://github.com/spec-first/connexion/issues/1860
+    if body is None or isinstance(body, (dict, list, str, int, float, bool)):
+        return True
+    elif isinstance(body, (bytes, bytearray)):
+        try:
+            _ = body.decode("utf-8")
+        except UnicodeDecodeError:
+            return False
+    return True
+
+
 @schemathesis.hook("filter_path_parameters")
 def filter_path_parameters(context, path_parameters):
-    # Exclude path parameters containing newline which crashes application
+    # Exclude path parameters containing newline to avoid crashing Connexion:
     # https://github.com/spec-first/connexion/issues/1908
     if path_parameters is not None and "project_id" in path_parameters:
         return "%0A" not in path_parameters["project_id"]
