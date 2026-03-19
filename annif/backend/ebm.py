@@ -32,7 +32,7 @@ class EbmBackend(backend.AnnifBackend):
         "xgb_subsample": float,
         "xgb_rounds": int,
         "xgb_jobs": int,
-        "duck_db_threads": int,
+        "duckdb_threads": int,
         "use_altLabels": bool,
         "embedding_model_name": str,
         "embedding_model_deployment": str,
@@ -79,7 +79,12 @@ class EbmBackend(backend.AnnifBackend):
 
             self.debug(f"loading model from {path}")
             if os.path.exists(path):
-                self._model = EbmModel.load(path)
+                params = {key: self.params[key] for key in self.EBM_PARAMETERS}
+                params["db_path"] = os.path.join(self.datadir, self.DB_FILE)
+                params["chunk_tokenizer"] = self._analyzer
+
+                self._model = EbmModel(**params)
+                self._model.load(path)
                 self._model.init_logger(logger=self)
                 self.debug("loaded model")
             else:
@@ -100,17 +105,17 @@ class EbmBackend(backend.AnnifBackend):
             chunk_tokenizer=self._analyzer,
             max_chunk_count=params["max_chunk_count"],
             max_chunk_length=params["max_chunk_length"],
-            chunking_jobs=params["chunking_jobs"],
+            chunking_jobs=jobs if jobs else params["chunking_jobs"],
             max_sentence_count=params["max_sentence_count"],
             hnsw_index_params=params["hnsw_index_params"],
             candidates_per_chunk=params["candidates_per_chunk"],
             candidates_per_doc=params["candidates_per_doc"],
-            query_jobs=params["query_jobs"],
+            query_jobs=jobs if jobs else params["query_jobs"],
             xgb_shrinkage=params["xgb_shrinkage"],
             xgb_interaction_depth=params["xgb_interaction_depth"],
             xgb_subsample=params["xgb_subsample"],
             xgb_rounds=params["xgb_rounds"],
-            xgb_jobs=params["xgb_jobs"],
+            xgb_jobs=jobs if jobs else params["xgb_jobs"],
             duckdb_threads=jobs if jobs else params["duckdb_threads"],
             use_altLabels=params["use_altLabels"],
             embedding_model_name=params["embedding_model_name"],
@@ -151,7 +156,7 @@ class EbmBackend(backend.AnnifBackend):
                 doc_ids=doc_ids,
                 label_ids=label_ids,
                 texts=texts,
-                n_jobs=jobs,
+                params=params,
             )
 
             atomic_save(
@@ -188,6 +193,7 @@ class EbmBackend(backend.AnnifBackend):
         candidates = self._model.generate_candidates_batch(
             texts=[doc.text for doc in documents],
             doc_ids=[i for i in range(len(documents))],
+            params=params,
         )
 
         predictions = self._model.predict(candidates)
