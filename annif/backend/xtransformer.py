@@ -1,7 +1,9 @@
 """Annif backend using the transformer variant of pecos."""
 
 import logging
+import os
 import os.path as osp
+import shutil
 import sys
 from typing import Any
 
@@ -79,6 +81,7 @@ class XTransformerBackend(mixins.PecosTfidfVectorizerMixin, backend.AnnifBackend
         "max_active_matching_labels": int,
         "max_num_labels_in_gpu": int,
         "use_gpu": boolean,
+        "checkpoint_dir": str,
         "bootstrap_model": str
     }
 
@@ -123,6 +126,7 @@ class XTransformerBackend(mixins.PecosTfidfVectorizerMixin, backend.AnnifBackend
         "max_active_matching_labels": None,
         "max_num_labels_in_gpu": 65536,
         "use_gpu": True,
+        "checkpoint_dir": ".",
         "bootstrap_model": "linear"
     }
 
@@ -144,6 +148,12 @@ class XTransformerBackend(mixins.PecosTfidfVectorizerMixin, backend.AnnifBackend
     def default_params(self):
         params = backend.AnnifBackend.DEFAULT_PARAMETERS.copy()
         params.update(self.DEFAULT_PARAMETERS)
+        if params.get("checkpoint_dir") == ".":
+            checkpoint_dir = osp.join(self.datadir, "tmp", "checkpoints")
+            params["checkpoint_dir"] = checkpoint_dir
+            if not osp.exists(checkpoint_dir):
+                os.makedirs(checkpoint_dir, exist_ok=True)
+
         return params
 
     def _create_train_files(self, veccorpus, corpus):
@@ -182,6 +192,7 @@ class XTransformerBackend(mixins.PecosTfidfVectorizerMixin, backend.AnnifBackend
         )
 
     def _create_model(self, params, jobs):
+        tmp_dir = osp.join(self.datadir, "tmp")
         train_txts = Preprocessor.load_data_from_file(
             osp.join(self.datadir, self.train_txt_file),
             label_text_path=None,
@@ -212,10 +223,16 @@ class XTransformerBackend(mixins.PecosTfidfVectorizerMixin, backend.AnnifBackend
             train_params=train_params,
             pred_params=pred_params,
             beam_size=int(params["beam_size"]),
+            saved_trn_pt=osp.join(tmp_dir, "X_trn.pt"),
+            saved_val_pt=osp.join(tmp_dir, "X_val.pt"),
             steps_scale=None,
             label_feat=None,
         )
         atomic_save_folder(self._model, model_path)
+        # Clean up temporary files
+        if osp.exists(tmp_dir):
+            shutil.rmtree(tmp_dir)
+
 
     def _train(
         self,
