@@ -2,17 +2,38 @@
 
 import pytest
 import schemathesis
-from hypothesis import settings
+from hypothesis import HealthCheck, settings, strategies
+from simplemma.strategies.dictionaries.dictionary_factory import SUPPORTED_LANGUAGES
 
 import annif
 
+bcp47_strategy = strategies.sampled_from(SUPPORTED_LANGUAGES)
+schemathesis.openapi.format("bcp47", bcp47_strategy)
+
+
 cxapp = annif.create_app(config_name="annif.default_config.TestingConfig")
-schema = schemathesis.from_path("annif/openapi/annif.yaml", app=cxapp)
+schema = schemathesis.openapi.from_asgi("/v1/openapi.json", app=cxapp)
+schema.config.checks.positive_data_acceptance.enabled = False
+schema.config.generation.allow_extra_parameters = False
+
+
+@schemathesis.hook("filter_body")
+def filter_body(context, body):
+    # Exclude body containing non-utf8 content to avoid crashing Connexion:
+    # https://github.com/spec-first/connexion/issues/1860
+    if body is None or isinstance(body, (dict, list, str, int, float, bool)):
+        return True
+    elif isinstance(body, (bytes, bytearray)):
+        try:
+            _ = body.decode("utf-8")
+        except UnicodeDecodeError:
+            return False
+    return True
 
 
 @schemathesis.hook("filter_path_parameters")
 def filter_path_parameters(context, path_parameters):
-    # Exclude path parameters containing newline which crashes application
+    # Exclude path parameters containing newline to avoid crashing Connexion:
     # https://github.com/spec-first/connexion/issues/1908
     if path_parameters is not None and "project_id" in path_parameters:
         return "%0A" not in path_parameters["project_id"]
@@ -20,14 +41,14 @@ def filter_path_parameters(context, path_parameters):
 
 
 @schema.parametrize()
-@settings(max_examples=10)
+@settings(max_examples=10, suppress_health_check=[HealthCheck.filter_too_much])
 def test_openapi_fuzzy(case):
     case.call_and_validate()
 
 
 @pytest.mark.slow
-@schema.include(path_regex="/v1/projects/{project_id}").parametrize()
-@settings(max_examples=50)
+@schema.include(path_regex="projects/{project_id}").parametrize()
+@settings(max_examples=50, suppress_health_check=[HealthCheck.filter_too_much])
 def test_openapi_fuzzy_target_dummy_fi(case):
     case.path_parameters = {"project_id": "dummy-fi"}
     case.call_and_validate()

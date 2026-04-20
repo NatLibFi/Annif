@@ -80,7 +80,7 @@ dev = [
     "bumpversion",
     "black==25.*",
     "isort",
-    "schemathesis==3.*",
+    "schemathesis==4.11.*",
 ]
 
 [tool.isort]
