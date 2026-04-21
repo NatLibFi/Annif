@@ -109,18 +109,24 @@ def _prepare_config_commit(project: AnnifProject) -> tuple[io.BytesIO, Any]:
     return fobj, operation
 
 
-def _is_train_file(fname: str) -> bool:
-    train_file_patterns = ("-train", "tmp-")
-    for pat in train_file_patterns:
-        if pat in fname:
-            return True
+def _is_train_path(path: pathlib.Path) -> bool:
+    # Detect if the path includes a training data pattern
+    train_path_patterns = ("-train", "tmp-")
+    for pat in train_path_patterns:
+        for part in path.parts:
+            if pat in part:
+                return True
     return False
 
 
 def _archive_dir(data_dir: str) -> io.BufferedRandom:
     fp = tempfile.TemporaryFile()
     data_dir_path = pathlib.Path(data_dir)  # <projectid> or <vocabid> directory
-    fpaths = [p for p in data_dir_path.glob("**/*") if not _is_train_file(p.name)]
+    fpaths = [
+        path
+        for path in data_dir_path.glob("**/*")
+        if not _is_train_path(path.relative_to(data_dir_path))
+    ]
     # Strip projects/<projectid> or vocabs/<vocabid>:
     root_datadir = data_dir_path.parent.parent
 
