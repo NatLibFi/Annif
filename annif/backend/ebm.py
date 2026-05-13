@@ -39,6 +39,7 @@ class EbmBackend(backend.AnnifBackend):
         "embedding_model_args": dict[str, Any],
         "encode_args_vocab": dict[str, Any],
         "encode_args_documents": dict[str, Any],
+        "embedding_cache_url": str,
     }
 
     DEFAULT_PARAMETERS = {
@@ -63,6 +64,7 @@ class EbmBackend(backend.AnnifBackend):
         "embedding_model_args": None,
         "encode_args_vocab": None,
         "encode_args_documents": None,
+        "embedding_cache_url": "",
     }
 
     DB_FILE = "ebm-duck.db"
@@ -123,6 +125,7 @@ class EbmBackend(backend.AnnifBackend):
             embedding_model_args=params["embedding_model_args"],
             encode_args_vocab=params["encode_args_vocab"],
             encode_args_documents=params["encode_args_documents"],
+            cache_url=params["embedding_cache_url"],
             logger=self,
         )
 
