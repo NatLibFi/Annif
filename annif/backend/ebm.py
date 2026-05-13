@@ -125,7 +125,7 @@ class EbmBackend(backend.AnnifBackend):
             embedding_model_args=params["embedding_model_args"],
             encode_args_vocab=params["encode_args_vocab"],
             encode_args_documents=params["encode_args_documents"],
-            cache_url=params["embedding_cache_url"],
+            embedding_cache_url=params["embedding_cache_url"],
             logger=self,
         )
 
