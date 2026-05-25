@@ -100,12 +100,13 @@ class NNEnsembleModel(nn.Module):
         self.weights = nn.Parameter(
             init_weights[:, None].expand(-1, n_subjects).contiguous()
         )
-        # per-concept bias
-        self.bias = nn.Parameter(torch.zeros(n_subjects))
+        # bias decomposition: global + per-label delta
+        self.bias_global = nn.Parameter(torch.tensor(0.0, dtype=torch.float32))
+        self.bias_delta = nn.Parameter(torch.zeros(n_subjects, dtype=torch.float32))
 
     def forward(self, inputs: torch.Tensor):
         weighted = inputs * self.weights.unsqueeze(0)
-        return weighted.sum(1) + self.bias
+        return weighted.sum(1) + self.bias_global + self.bias_delta
 
     def save(self, filepath):
         torch.save(
