@@ -83,7 +83,21 @@ class EbmBackend(backend.AnnifBackend):
 
             self.debug(f"loading model from {path}")
             if os.path.exists(path):
-                params = {key: self.params[key] for key in self.EBM_PARAMETERS}
+                # parse parameters with type-hints
+                params = {}
+                for key, type_hint in self.EBM_PARAMETERS.items():
+                    value = self.params.get(key)
+                    if value is None:
+                        params[key] = value
+                    elif type_hint in (int, float, str, bool):
+                        try:
+                            params[key] = type_hint(value)
+                        except (ValueError, TypeError):
+                            # keep original value, if conversion fails
+                            params[key] = value
+                    else:
+                        # For complex types like dict, just use the value as-is
+                        params[key] = value
                 params["db_path"] = os.path.join(self.datadir, self.DB_FILE)
                 params["chunk_tokenizer"] = self._analyzer
 
