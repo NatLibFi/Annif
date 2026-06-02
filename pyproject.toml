@@ -49,11 +49,13 @@ dependencies = [
 fasttext = ["fasttext-numpy2==0.10.4"]
 estnltk = ["estnltk==1.7.4"]
 nn = [
-    "torch~=2.10.0",
-    "lmdb~=1.7.3",
+    "torch~=2.12.0",
+    "tqdm~=4.67.3",
+    "lmdb~=2.2.0",
 ]
 torch-cpu = ["torch"]
-torch-cu128 = ["torch"]
+torch-cu126 = ["torch"]
+torch-cu130 = ["torch"]
 omikuji = ["omikuji==0.5.*"]
 spacy = [
     "spacy~=3.8.4",
@@ -99,14 +101,16 @@ addopts = "-m 'not slow'"
 conflicts = [
   [
     { extra = "torch-cpu" },
-    { extra = "torch-cu128" },
+    { extra = "torch-cu126" },
+    { extra = "torch-cu130" },
   ],
 ]
 
 [tool.uv.sources]
 torch = [
   { index = "pytorch-cpu",    extra = "torch-cpu" },
-  { index = "pytorch-cu128",  extra = "torch-cu128" },
+  { index = "pytorch-cu126",  extra = "torch-cu126" },
+  { index = "pytorch-cu130",  extra = "torch-cu130" },
 ]
 
 [[tool.uv.index]]
@@ -115,8 +119,13 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [[tool.uv.index]]
-name = "pytorch-cu128"
-url = "https://download.pytorch.org/whl/cu128"
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
 explicit = true
 
 [build-system]
