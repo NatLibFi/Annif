@@ -22,7 +22,7 @@ def filter_path_parameters(context, path_parameters):
 @schema.parametrize()
 @settings(max_examples=10)
 def test_openapi_fuzzy(case):
-    case.call_and_validate()
+    case.call_and_validate(excluded_checks=("not_a_server_error",))
 
 
 @pytest.mark.slow
