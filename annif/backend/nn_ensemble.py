@@ -172,7 +172,7 @@ class EarlyStopping:
 def ndcg_batch(preds: torch.Tensor, targets: torch.Tensor) -> float:
     """
     preds:   (B, N) float
-    targets: (B, N) {0,1}
+    targets: (B, N) binary {0, 1} relevance labels
 
     Returns: mean NDCG across the batch (float)
     """
@@ -402,7 +402,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 # evaluate for early stopping
                 with torch.no_grad():
                     outputs = self._model(eval_inputs)
-                ndcg = ndcg_batch(outputs, eval_targets)
+                ndcg = ndcg_batch(outputs, eval_targets.round())
                 self.info(f"Epoch {epoch + 1}/{max_epochs}: NDCG={ndcg:.4f}")
                 if early_stopping(self._model, ndcg, epoch):
                     best = early_stopping.best_epoch + 1
