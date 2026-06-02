@@ -81,6 +81,20 @@ class LMDBDataset(Dataset):
         target_tensor = torch.log1p(torch.from_numpy(target_csr.toarray()[0]).float())
         return input_tensor, target_tensor
 
+    def get_subset(self, indices: list[int]) -> tuple[np.ndarray, np.ndarray]:
+        """Fetch a fixed set of samples by index and stack into batch tensors.
+
+        Returns (inputs, targets) where inputs is (B, M, N) and targets is (B, N).
+        """
+        inputs_list, targets_list = [], []
+        for idx in indices:
+            inp, tgt = self[idx]
+            inputs_list.append(inp)
+            targets_list.append(tgt)
+        inputs = torch.stack(inputs_list, dim=0)
+        targets = torch.stack(targets_list, dim=0)
+        return inputs, targets
+
     def __len__(self) -> int:
         """return the number of available samples"""
         return self._counter
@@ -189,6 +203,8 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
     EVAL_BATCH_SIZE = 512
     EARLY_STOPPING_PATIENCE = 2
+    EARLY_STOP_EVAL_ROWS = 512
+    EARLY_STOP_SEED = 1337
     PRED_SCALE = 20
 
     DEFAULT_PARAMETERS = {
@@ -353,11 +369,12 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             dataloader = DataLoader(
                 dataset, batch_size=batch_size, shuffle=True, num_workers=0
             )
-            # Evaluation batch, used for early stopping
-            eval_dataloader = DataLoader(
-                dataset, batch_size=self.EVAL_BATCH_SIZE, shuffle=True, num_workers=0
-            )
-            eval_inputs, eval_targets = next(iter(eval_dataloader))
+            # Deterministic eval subset for early stopping
+            rng = np.random.default_rng(self.EARLY_STOP_SEED)
+            n_samples = len(dataset)
+            n_eval = min(self.EARLY_STOP_EVAL_ROWS, n_samples)
+            eval_indices = rng.choice(n_samples, size=n_eval, replace=False)
+            eval_inputs, eval_targets = dataset.get_subset(eval_indices.tolist())
 
             # Training loop
             optimizer = torch.optim.AdamW(
