@@ -202,7 +202,6 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     MODEL_FILE = "nn-model.pt"
     LMDB_FILE = "nn-train.mdb"
 
-    EVAL_BATCH_SIZE = 512
     EARLY_STOPPING_PATIENCE = 2
     EARLY_STOP_EVAL_ROWS = 512
     EARLY_STOP_SEED = 1337
