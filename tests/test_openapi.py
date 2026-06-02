@@ -3,6 +3,7 @@
 import pytest
 import schemathesis
 from hypothesis import settings
+from hypothesis import strategies as st
 
 import annif
 
@@ -10,13 +11,20 @@ cxapp = annif.create_app(config_name="annif.default_config.TestingConfig")
 schema = schemathesis.from_path("annif/openapi/annif.yaml", app=cxapp)
 
 
-@schemathesis.hook("filter_path_parameters")
-def filter_path_parameters(context, path_parameters):
-    # Exclude path parameters containing newline which crashes application
-    # https://github.com/spec-first/connexion/issues/1908
-    if path_parameters is not None and "project_id" in path_parameters:
-        return "%0A" not in path_parameters["project_id"]
-    return True
+# Whitelist of project IDs that are valid for OpenAPI fuzzy testing
+# Only projects that work without training (dummy backend) are included
+PROJECTS_TO_TEST = (
+    "dummy-fi",
+    "dummy-en",
+)
+
+
+@schemathesis.hook("before_generate_path_parameters")
+def before_generate_path_parameters(context, strategy):
+    """Replace the path parameter generation strategy with a whitelist."""
+    if context.operation and "project_id" in context.operation.path:
+        return st.fixed_dictionaries({"project_id": st.sampled_from(PROJECTS_TO_TEST)})
+    return strategy
 
 
 @schema.parametrize()
