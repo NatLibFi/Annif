@@ -168,12 +168,12 @@ class EarlyStopping:
 
 
 @torch.no_grad()
-def ndcg_batch(preds: torch.Tensor, targets: torch.Tensor):
+def ndcg_batch(preds: torch.Tensor, targets: torch.Tensor) -> float:
     """
     preds:   (B, N) float
     targets: (B, N) {0,1}
 
-    Returns: mean NDCG across the batch
+    Returns: mean NDCG across the batch (float)
     """
     sorted_idx = torch.argsort(preds, dim=1, descending=True)
     sorted_targets = torch.gather(targets, 1, sorted_idx)
@@ -189,7 +189,7 @@ def ndcg_batch(preds: torch.Tensor, targets: torch.Tensor):
 
     ndcg = dcg / torch.clamp(idcg, min=1e-8)
 
-    return ndcg.mean()
+    return ndcg.mean().item()
 
 
 class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBackend):
