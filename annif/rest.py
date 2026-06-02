@@ -200,10 +200,9 @@ def _suggest(
 
     try:
         suggestion_results = project.suggest_corpus(corpus).filter(limit, threshold)
+        return suggestion_results_to_list(suggestion_results, project.subjects, lang)
     except AnnifException as err:
         return server_error(err)
-
-    return suggestion_results_to_list(suggestion_results, project.subjects, lang)
 
 
 def _documents_to_corpus(
