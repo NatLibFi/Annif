@@ -14,7 +14,7 @@ from unittest import mock
 import pytest
 from click.shell_completion import ShellComplete
 from click.testing import CliRunner
-from huggingface_hub.utils import HFValidationError
+from huggingface_hub.utils import HfHubHTTPError, HFValidationError
 
 import annif.cli
 import annif.cli_util
@@ -1597,7 +1597,11 @@ def test_upload_no_modelcard_upsert(
     assert upsert_modelcard.call_count == 0
 
 
-def test_upload_nonexistent_repo():
+@mock.patch(
+    "huggingface_hub.preupload_lfs_files",
+    side_effect=HfHubHTTPError("Repository Not Found for url:"),
+)
+def test_upload_nonexistent_repo(mock_preupload_lfs_files):
     failed_result = runner.invoke(annif.cli.cli, ["upload", "dummy-fi", "nonexistent"])
     assert failed_result.exception
     assert failed_result.exit_code != 0
