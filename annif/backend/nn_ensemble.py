@@ -162,7 +162,7 @@ class EarlyStopping:
             self.best_epoch = epoch
         else:
             self._no_improvement_count += 1
-            if self._no_improvement_count > self._patience:
+            if self._no_improvement_count >= self._patience:
                 self._stop_early = True
 
         return self._stop_early
