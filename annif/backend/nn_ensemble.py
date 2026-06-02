@@ -71,7 +71,7 @@ class LMDBDataset(Dataset):
         buf.seek(0)
         self._txn.put(key, buf.read())
 
-    def __getitem__(self, idx: int) -> tuple[np.ndarray, np.ndarray]:
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         """get a particular sample"""
         cursor = self._txn.cursor()
         cursor.set_key(idx_to_key(idx))
@@ -81,10 +81,11 @@ class LMDBDataset(Dataset):
         target_tensor = torch.log1p(torch.from_numpy(target_csr.toarray()[0]).float())
         return input_tensor, target_tensor
 
-    def get_subset(self, indices: list[int]) -> tuple[np.ndarray, np.ndarray]:
+    def get_subset(self, indices: list[int]) -> tuple[torch.Tensor, torch.Tensor]:
         """Fetch a fixed set of samples by index and stack into batch tensors.
 
-        Returns (inputs, targets) where inputs is (B, M, N) and targets is (B, N).
+        Returns (inputs, targets) where inputs is ``torch.Tensor`` of shape (B, M, N)
+        and targets is ``torch.Tensor`` of shape (B, N).
         """
         inputs_list, targets_list = [], []
         for idx in indices:
