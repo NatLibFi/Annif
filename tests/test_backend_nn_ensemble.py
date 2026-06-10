@@ -1,7 +1,5 @@
 """Unit tests for the nn_ensemble backend in Annif"""
 
-import importlib
-import os.path
 import time
 from datetime import datetime, timedelta, timezone
 from unittest import mock
@@ -59,24 +57,12 @@ def test_nn_ensemble_is_not_trained(app_project):
     assert not nn_ensemble.is_trained
 
 
-def test_nn_ensemble_can_set_lr(registry):
-    project = registry.get_project("dummy-en")
-    nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
-    nn_ensemble = nn_ensemble_type(
-        backend_id="nn_ensemble",
-        config_params={"epochs": 1, "lr": 0.002},
-        project=project,
-    )
-    nn_ensemble._create_model(["dummy-en"])
-    assert nn_ensemble._model.optimizer.learning_rate.value == 0.002
-
-
 def test_set_lmdb_map_size(registry, tmpdir):
     project = registry.get_project("dummy-en")
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id="nn_ensemble",
-        config_params={"sources": "dummy-en", "epochs": 1, "lmdb_map_size": 1},
+        config_params={"sources": "dummy-en", "max-epochs": 1, "lmdb_map_size": 1},
         project=project,
     )
     tmpfile = tmpdir.join("document.tsv")
@@ -96,7 +82,7 @@ def test_nn_ensemble_train_and_learn(registry, tmpdir):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id="nn_ensemble",
-        config_params={"sources": "dummy-en", "epochs": 1},
+        config_params={"sources": "dummy-en", "max-epochs": 1},
         project=project,
     )
 
@@ -117,14 +103,11 @@ def test_nn_ensemble_train_and_learn(registry, tmpdir):
         assert datadir.join("nn-train.mdb/data.mdb").exists()
         assert datadir.join("nn-train.mdb/data.mdb").stat().mode & 0o777 == 0o660
 
-    # check adam default learning_rate:
-    assert nn_ensemble._model.optimizer.learning_rate.value == 0.001
-
-    assert datadir.join("nn-model.keras").exists()
-    assert datadir.join("nn-model.keras").size() > 0
+    assert datadir.join("nn-model.pt").exists()
+    assert datadir.join("nn-model.pt").size() > 0
 
     # test online learning
-    modelfile = datadir.join("nn-model.keras")
+    modelfile = datadir.join("nn-model.pt")
 
     old_size = modelfile.size()
     old_mtime = modelfile.mtime()
@@ -144,19 +127,19 @@ def test_nn_ensemble_train_cached(registry):
     datadir = py.path.local(project.datadir)
     assert datadir.join("nn-train.mdb").exists()
 
-    datadir.join("nn-model.keras").remove()
+    datadir.join("nn-model.pt").remove()
 
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id="nn_ensemble",
-        config_params={"sources": "dummy-en", "epochs": 2},
+        config_params={"sources": "dummy-en"},
         project=project,
     )
 
     nn_ensemble.train("cached")
 
-    assert datadir.join("nn-model.keras").exists()
-    assert datadir.join("nn-model.keras").size() > 0
+    assert datadir.join("nn-model.pt").exists()
+    assert datadir.join("nn-model.pt").size() > 0
 
 
 def test_nn_ensemble_train_and_learn_params(registry, tmpdir, capfd):
@@ -164,7 +147,7 @@ def test_nn_ensemble_train_and_learn_params(registry, tmpdir, capfd):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id="nn_ensemble",
-        config_params={"sources": "dummy-en", "epochs": 3},
+        config_params={"sources": "dummy-en", "max-epochs": 3},
         project=project,
     )
 
@@ -176,15 +159,15 @@ def test_nn_ensemble_train_and_learn_params(registry, tmpdir, capfd):
     )
     document_corpus = DocumentFileTSV(str(tmpfile), project.subjects)
 
-    train_params = {"epochs": 3}
+    train_params = {"max-epochs": 3}
     nn_ensemble.train(document_corpus, train_params)
-    out, _ = capfd.readouterr()
-    assert "Epoch 3/3" in out
+    _, err = capfd.readouterr()
+    assert "Epoch 3/3" in err
 
     learn_params = {"learn-epochs": 2}
     nn_ensemble.learn(document_corpus, learn_params)
-    out, _ = capfd.readouterr()
-    assert "Epoch 2/2" in out
+    _, err = capfd.readouterr()
+    assert "Epoch 2/2" in err
 
 
 def test_nn_ensemble_is_trained(app_project):
@@ -207,43 +190,8 @@ def test_nn_ensemble_modification_time(app_project):
     assert datetime.now(timezone.utc) - nn_ensemble.modification_time < timedelta(1)
 
 
-def test_nn_ensemble_get_model_metadata(app_project):
-    nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
-    nn_ensemble = nn_ensemble_type(
-        backend_id="nn_ensemble",
-        config_params={"sources": "dummy-en"},
-        project=app_project,
-    )
-    model_filename = os.path.join(nn_ensemble.datadir, nn_ensemble.MODEL_FILE)
-
-    expected_version = importlib.metadata.version("keras")
-    expected_date_saved = datetime.now(timezone.utc)
-    actual_metadata = nn_ensemble.get_model_metadata(model_filename)
-
-    assert actual_metadata["keras_version"] == expected_version
-    datetime_format = "%Y-%m-%d@%H:%M:%S"
-    actual_datetime = datetime.strptime(actual_metadata["date_saved"], datetime_format)
-    assert expected_date_saved - actual_datetime.astimezone(
-        tz=timezone.utc
-    ) < timedelta(1)
-
-
-def test_nn_ensemble_get_model_metadata_nonexistent_file(app_project):
-    nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
-    nn_ensemble = nn_ensemble_type(
-        backend_id="nn_ensemble",
-        config_params={"sources": "dummy-en"},
-        project=app_project,
-    )
-    nonexistent_model_file = "nonexistent.zip"
-    model_filename = os.path.join(nn_ensemble.datadir, nonexistent_model_file)
-
-    actual_metadata = nn_ensemble.get_model_metadata(model_filename)
-    assert actual_metadata is None
-
-
-@mock.patch("annif.backend.nn_ensemble.load_model", side_effect=Exception)
-def test_nn_ensemble_initialize_error(load_model, app_project):
+@mock.patch("annif.backend.nn_ensemble.NNEnsembleModel.load", side_effect=Exception)
+def test_nn_ensemble_initialize_error(load, app_project):
     nn_ensemble_type = annif.backend.get_backend("nn_ensemble")
     nn_ensemble = nn_ensemble_type(
         backend_id="nn_ensemble",
@@ -253,10 +201,10 @@ def test_nn_ensemble_initialize_error(load_model, app_project):
     assert nn_ensemble._model is None
     with pytest.raises(
         OperationFailedException,
-        match=r"loading Keras model from .*; model metadata: .*",
+        match=r"loading model from .*; original error message: .*",
     ):
         nn_ensemble.initialize()
-    assert load_model.called
+    assert load.called
 
 
 def test_nn_ensemble_initialize(app_project):
@@ -283,7 +231,7 @@ def test_nn_ensemble_default_params(app_project):
     )
 
     expected_default_params = {
-        "optimizer": "adam",
+        "lr": 0.003,
         "limit": 100,
     }
     actual_params = nn_ensemble.params

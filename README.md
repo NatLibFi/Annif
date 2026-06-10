@@ -96,7 +96,9 @@ Create a virtual environment and install dependencies:
 
     uv sync
 
-By default development dependencies are included. Use option `--extra` to install dependencies for selected optional features (`--extra extra1 --extra extra2` for multiple extras), or install all of them with `--all-extras`. By default the virtual environment directory is `.venv` under the project directory.
+By default development dependencies are included. Use the option `--extra` to install dependencies for selected optional features (`--extra foo --extra bar` for multiple extras or `--group all` for all extras). There are also special extras for selecting the PyTorch backend for those optional features (`nn`) that depend on PyTorch: `--extra torch-cpu` will use the CPU backend, `--extra torch-cu126` will use the CUDA 12.6 backend and `--extra torch-cu130` will use the CUDA 13.0 backend. For a full set of extras with CPU-only PyTorch, use `uv sync --group all --extra torch-cpu`.
+
+By default the virtual environment directory is `.venv` under the project directory.
 
 You can run Annif in one of two ways:
 

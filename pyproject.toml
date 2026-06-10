@@ -49,9 +49,13 @@ dependencies = [
 fasttext = ["fasttext-numpy2==0.10.4"]
 estnltk = ["estnltk==1.7.4"]
 nn = [
-    "tensorflow-cpu~=2.20.0",
-    "lmdb~=1.7.3",
+    "torch~=2.12.0",
+    "tqdm~=4.67.3",
+    "lmdb~=2.2.0",
 ]
+torch-cpu = ["torch"]
+torch-cu126 = ["torch"]
+torch-cu130 = ["torch"]
 omikuji = ["omikuji==0.5.*"]
 spacy = [
     "spacy~=3.8.4",
@@ -82,6 +86,7 @@ dev = [
     "isort",
     "schemathesis==3.*",
 ]
+all = ["annif[fasttext,estnltk,nn,omikuji,spacy,stwfsa,voikko,yake]"]
 
 [tool.isort]
 profile = "black"
@@ -91,6 +96,37 @@ skip_gitignore = true
 [tool.pytest.ini_options]
 markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
 addopts = "-m 'not slow'"
+
+[tool.uv]
+conflicts = [
+  [
+    { extra = "torch-cpu" },
+    { extra = "torch-cu126" },
+    { extra = "torch-cu130" },
+  ],
+]
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cpu",    extra = "torch-cpu" },
+  { index = "pytorch-cu126",  extra = "torch-cu126" },
+  { index = "pytorch-cu130",  extra = "torch-cu130" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
 
 [build-system]
 requires = ["hatchling"]

@@ -66,13 +66,13 @@ def test_get_backend_fasttext_not_installed():
 
 
 @pytest.mark.skipif(
-    importlib.util.find_spec("tensorflow") is not None,
-    reason="test requires that TensorFlow is NOT installed",
+    importlib.util.find_spec("torch") is not None,
+    reason="test requires that PyTorch is NOT installed",
 )
 def test_get_backend_nn_ensemble_not_installed():
     with pytest.raises(ValueError) as excinfo:
         annif.backend.get_backend("nn_ensemble")
-    assert "TensorFlow not available" in str(excinfo.value)
+    assert "PyTorch not available" in str(excinfo.value)
 
 
 @pytest.mark.skipif(
