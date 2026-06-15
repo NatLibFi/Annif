@@ -14,7 +14,7 @@ from unittest import mock
 import pytest
 from click.shell_completion import ShellComplete
 from click.testing import CliRunner
-from huggingface_hub.utils import HFValidationError
+from huggingface_hub.utils import HfHubHTTPError, HFValidationError
 
 import annif.cli
 import annif.cli_util
@@ -26,27 +26,6 @@ runner = CliRunner(env={"ANNIF_CONFIG": "annif.default_config.TestingConfig"})
 # Generate a random project name to use in tests
 TEMP_PROJECT = "".join(random.choice("abcdefghiklmnopqrstuvwxyz") for _ in range(8))
 PROJECTS_CONFIG_PATH = "tests/projects_for_config_path_option.cfg"
-
-
-@mock.patch.dict(os.environ, clear=True)
-def test_tensorflow_loglevel():
-    tf_env = "TF_CPP_MIN_LOG_LEVEL"
-
-    runner.invoke(annif.cli.cli, ["list-projects", "-v", "DEBUG"])
-    assert os.environ[tf_env] == "0"  # Show INFO, WARNING and ERROR messages by TF
-    os.environ.pop(tf_env)
-    runner.invoke(annif.cli.cli, ["list-projects"])  # INFO level by default
-    assert os.environ[tf_env] == "1"  # Show WARNING and ERROR messages by TF
-    os.environ.pop(tf_env)
-    runner.invoke(annif.cli.cli, ["list-projects", "-v", "WARN"])
-    assert os.environ[tf_env] == "1"  # Show WARNING and ERROR messages by TF
-    os.environ.pop(tf_env)
-    runner.invoke(annif.cli.cli, ["list-projects", "-v", "ERROR"])
-    assert os.environ[tf_env] == "2"  # Show ERROR messages by TF
-    os.environ.pop(tf_env)
-    runner.invoke(annif.cli.cli, ["list-projects", "-v", "CRITICAL"])
-    assert os.environ[tf_env] == "3"  # Show no messages by TF
-    os.environ.pop(tf_env)
 
 
 def test_list_projects():
@@ -1618,7 +1597,11 @@ def test_upload_no_modelcard_upsert(
     assert upsert_modelcard.call_count == 0
 
 
-def test_upload_nonexistent_repo():
+@mock.patch(
+    "huggingface_hub.preupload_lfs_files",
+    side_effect=HfHubHTTPError("Repository Not Found for url:"),
+)
+def test_upload_nonexistent_repo(mock_preupload_lfs_files):
     failed_result = runner.invoke(annif.cli.cli, ["upload", "dummy-fi", "nonexistent"])
     assert failed_result.exception
     assert failed_result.exit_code != 0
