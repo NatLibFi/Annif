@@ -88,7 +88,7 @@ dev = [
     "isort",
     "schemathesis==3.*",
 ]
-all = ["annif[fasttext,estnltk,nn,omikuji,spacy,stwfsa,voikko,yake]"]
+all = ["annif[ebm-in-process,estnltk,fasttext,nn,omikuji,spacy,stwfsa,voikko,yake]"]
 
 [tool.isort]
 profile = "black"
