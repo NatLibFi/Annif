@@ -22,7 +22,7 @@ from annif.exception import (
     NotInitializedException,
     NotSupportedException,
 )
-from annif.util import parse_args
+from annif.util import parse_args, parse_sources
 from annif.vocab import SubjectIndexFilter, kwargs_to_exclude_uris
 
 if TYPE_CHECKING:
@@ -326,7 +326,45 @@ class AnnifProject(DatadirMixin):
             project_id=self.project_id,
         )
 
-    def dump(self) -> dict[str, str | dict | bool | datetime | None]:
+    def _select_fields(self) -> list[str]:
+        """return the metadata field names that this project's own transform
+        chain selects via select(...) transforms, in configured order"""
+
+        try:
+            transforms = self.transform.transforms
+        except ConfigurationException:
+            return []
+        fields: list[str] = []
+        for trans in transforms:
+            if isinstance(trans, annif.transform.select.SelectTransform):
+                fields.extend(trans.fields)
+        return fields
+
+    def metadata_fields(self) -> list[str]:
+        """return the metadata fields this project uses during suggest. For
+        ensemble projects, the fields of the source projects are gathered in
+        addition to the project's own fields. The result is a flat, order-
+        preserving, de-duplicated list."""
+
+        fields = list(self._select_fields())
+
+        sources_spec = self.config.get("sources")
+        if sources_spec:
+            try:
+                sources = parse_sources(sources_spec)
+            except (ValueError, ZeroDivisionError):
+                sources = []
+            for source_id, _ in sources:
+                try:
+                    source = self.registry.get_project(source_id)
+                except ValueError:
+                    continue  # source project not loadable - skip best-effort
+                fields.extend(source._select_fields())
+
+        # de-duplicate while preserving first-seen order
+        return list(dict.fromkeys(fields))
+
+    def dump(self) -> dict[str, str | list | dict | bool | datetime | None]:
         """return this project as a dict"""
 
         try:
@@ -345,6 +383,7 @@ class AnnifProject(DatadirMixin):
             "vocab_language": vocab_lang,
             "is_trained": self.is_trained,
             "modification_time": self.modification_time,
+            "metadata": self.metadata_fields(),
         }
 
     def remove_model_data(self) -> None:

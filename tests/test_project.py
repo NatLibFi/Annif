@@ -85,7 +85,44 @@ def test_get_project_fi_dump(registry):
         "vocab_language": "fi",
         "is_trained": True,
         "modification_time": None,
+        "metadata": [],
     }
+
+
+def test_get_project_metadata_fields_select(registry):
+    # a project with a select(...) transform exposes its fields, in order
+    project = registry.get_project("select-meta")
+    assert project.dump()["metadata"] == ["title", "description", "text"]
+
+
+def test_get_project_metadata_fields_none(registry):
+    # a project without a select transform has no metadata fields
+    project = registry.get_project("dummy-fi")
+    assert project.metadata_fields() == []
+
+
+def test_get_project_metadata_fields_ensemble_union(registry):
+    # an ensemble gathers source fields in addition to its own, de-duplicated
+    # and order-preserving: own select(description) first, then the source
+    # select-meta's (title, description, text); dummy-en has no select fields
+    project = registry.get_project("ensemble-meta")
+    assert project.dump()["metadata"] == ["description", "title", "text"]
+
+
+def test_get_project_metadata_fields_skips_unloadable_source(registry, monkeypatch):
+    # a source project that cannot be loaded is skipped best-effort, mirroring
+    # the graceful degradation already used for vocab in dump()
+    project = registry.get_project("ensemble-meta")
+    real_get_project = project.registry.get_project
+
+    def fake_get_project(project_id, *args, **kwargs):
+        if project_id == "select-meta":
+            raise ValueError("source not loadable")
+        return real_get_project(project_id, *args, **kwargs)
+
+    monkeypatch.setattr(project.registry, "get_project", fake_get_project)
+    # only the ensemble's own select(description) field remains
+    assert project.metadata_fields() == ["description"]
 
 
 def test_get_project_nonexistent(registry):
@@ -324,6 +361,6 @@ def test_project_file_toml():
 def test_project_directory():
     cxapp = annif.create_app(config_name="annif.default_config.TestingDirectoryConfig")
     with cxapp.app.app_context():
-        assert len(annif.registry.get_projects()) == 17 + 2
+        assert len(annif.registry.get_projects()) == 19 + 2
         assert annif.registry.get_project("dummy-fi").project_id == "dummy-fi"
         assert annif.registry.get_project("dummy-fi-toml").project_id == "dummy-fi-toml"
