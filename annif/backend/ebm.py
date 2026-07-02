@@ -222,7 +222,8 @@ class EbmBackend(backend.AnnifBackend):
         for doc_predictions in predictions:
             vector = np.zeros(len(self.project.subjects), dtype=np.float32)
             for row in doc_predictions.iter_rows(named=True):
-                position = self.project.subjects._uri_idx.get(row["label_id"], 0)
+                position = self.project.subjects.by_uri(row["label_id"])
+                position = position if position else 0
                 vector[position] = row["score"]
             suggestions.append(vector_to_suggestions(vector, int(params["limit"])))
 
