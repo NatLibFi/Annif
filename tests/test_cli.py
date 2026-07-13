@@ -1883,6 +1883,8 @@ def test_completion_show_project_project_ids_all():
         "pav",
         "tfidf-fi",
         "tfidf-en",
+        "select-meta",
+        "ensemble-meta",
     ]
 
 
