@@ -125,6 +125,32 @@ def test_get_project_metadata_fields_skips_unloadable_source(registry, monkeypat
     assert project.metadata_fields() == ["description"]
 
 
+def test_get_project_metadata_fields_transform_error(registry, monkeypatch):
+    # if the transform chain cannot be resolved (misconfiguration), the project
+    # degrades to no metadata fields rather than raising
+    project = registry.get_project("dummy-fi")
+
+    class BrokenTransform:
+        @property
+        def transforms(self):
+            raise ConfigurationException("broken transform")
+
+    monkeypatch.setattr(project, "_transform", BrokenTransform())
+    assert project.metadata_fields() == []
+
+
+def test_get_project_metadata_fields_malformed_sources(registry, monkeypatch):
+    # if the sources spec cannot be parsed, source-field gathering is skipped
+    # best-effort and only the ensemble's own select(description) field remains
+    project = registry.get_project("ensemble-meta")
+
+    def broken_parse_sources(sources_spec):
+        raise ValueError("malformed sources spec")
+
+    monkeypatch.setattr(annif.project, "parse_sources", broken_parse_sources)
+    assert project.metadata_fields() == ["description"]
+
+
 def test_get_project_nonexistent(registry):
     with pytest.raises(ValueError):
         registry.get_project("nonexistent")
