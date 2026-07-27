@@ -137,6 +137,7 @@ yso:p8993
     """  # missing closing period -> invalid Turtle
     )
 
+    tmpfile_path = str(tmpfile)
     with pytest.raises(OperationFailedException) as excinfo:
-        VocabFileSKOS(str(tmpfile))
+        VocabFileSKOS(tmpfile_path)
     assert "Cannot parse vocabulary file" in str(excinfo.value)
