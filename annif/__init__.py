@@ -39,6 +39,7 @@ def create_cx_app(config_name: str | None = None) -> FlaskApp:
     from starlette.middleware.cors import CORSMiddleware
 
     import annif.registry
+    from annif.bodylimit import BodyLimitMiddleware
     from annif.openapi.validation import CustomRequestBodyValidator
 
     specdir = os.path.join(os.path.dirname(__file__), "openapi")
@@ -47,6 +48,18 @@ def create_cx_app(config_name: str | None = None) -> FlaskApp:
     logger.debug(f"creating connexion app with configuration {config_name}")
     cxapp.app.config.from_object(config_name)
     cxapp.app.config.from_envvar("ANNIF_SETTINGS", silent=True)
+
+    # Get MAX_CONTENT_LENGTH from Flask config
+    max_content_length = cxapp.app.config.get("MAX_CONTENT_LENGTH", 0)
+
+    # Add body limit middleware at the ASGI level (before Connexion's body parsing)
+    # This middleware checks Content-Length BEFORE Starlette buffers the body into memory
+    if max_content_length > 0:
+        cxapp.add_middleware(
+            BodyLimitMiddleware,
+            position=MiddlewarePosition.BEFORE_VALIDATION,
+            max_content_length=max_content_length,
+        )
 
     validator_map = {
         "body": MediaTypeDict(
