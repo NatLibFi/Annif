@@ -5,7 +5,7 @@
 The [most recent Annif major/minor release](https://github.com/NatLibFi/Annif/releases)
 is considered supported,
 in the sense that if a serious bug or vulnerability is encountered in it,
-we relase a patch to fix the issue.
+we release a patch to fix the issue.
 
 Generally, we aim to update all dependencies to their latest versions on each Annif major/minor release.
 However, note that most of the [dependencies of a given Annif release](https://github.com/NatLibFi/Annif/blob/main/pyproject.toml)
@@ -33,7 +33,11 @@ do not apply to Annif use.
 ## Reporting a Vulnerability
 
 We value your findings, and we would be grateful if you report
-any concerns or vulnerabilities by email to **`finto-posti@helsinki.fi`**.
+any concerns or vulnerabilities either by
+
+1. using GitHub's private reporting feature via [this link](https://github.com/NatLibFi/Annif/security/advisories/new), or
+2. sending email to **`finto-posti@helsinki.fi`**.
+
 _Do not create a GitHub issue for security vulnerabilities_.
 Note that Annif team is a part of the larger Finto team,
 which has resources for the contact service throughout the year.
