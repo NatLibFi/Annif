@@ -34,6 +34,7 @@ class TestingConfig(Config):
     TESTING = True
     PROJECTS_CONFIG_PATH = "tests/projects.cfg"
     DATADIR = "tests/data"
+    MAX_CONTENT_LENGTH = int(os.environ.get("ANNIF_MAX_CONTENT_LENGTH", default=1_000))
 
 
 class TestingInitializeConfig(TestingConfig):

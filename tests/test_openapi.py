@@ -150,7 +150,8 @@ def test_rest_detect_language_too_many_candidates(app_client):
 
 
 def test_rest_suggest_payload_exceeds_max_content_length(app_client):
-    large_text = "A" * 21_000_000
+    # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
+    large_text = "A" * 2_000
     data = {"text": large_text}
     req = app_client.post(
         "http://localhost:8000/v1/projects/dummy-fi/suggest",
@@ -160,8 +161,8 @@ def test_rest_suggest_payload_exceeds_max_content_length(app_client):
 
 
 def test_rest_suggest_batch_payload_exceeds_max_content_length(app_client):
-    # Create a payload that exceeds the MAX_CONTENT_LENGTH limit (21 MB)
-    large_text = "A" * 21_000_000
+    # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
+    large_text = "A" * 2_000
     data = {"documents": [{"text": large_text}]}
     req = app_client.post(
         "http://localhost:8000/v1/projects/dummy-fi/suggest-batch",
@@ -171,8 +172,8 @@ def test_rest_suggest_batch_payload_exceeds_max_content_length(app_client):
 
 
 def test_rest_suggest_payload_within_max_content_length(app_client):
-    # Create a payload well within the 20 MB limit (5 MB)
-    moderate_text = "A" * 5_000_000
+    # Create a payload well within the limit
+    moderate_text = "A" * 500
     data = {"text": moderate_text}
     req = app_client.post(
         "http://localhost:8000/v1/projects/dummy-fi/suggest",
@@ -183,8 +184,8 @@ def test_rest_suggest_payload_within_max_content_length(app_client):
 
 
 def test_rest_detect_language_payload_exceeds_max_content_length(app_client):
-    # Create a payload that exceeds the MAX_CONTENT_LENGTH limit (21 MB)
-    large_text = "A" * 21_000_000
+    # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
+    large_text = "A" * 2_000
     data = {"text": large_text, "languages": ["en", "fi"]}
     req = app_client.post(
         "http://localhost:8000/v1/detect-language",
@@ -194,7 +195,7 @@ def test_rest_detect_language_payload_exceeds_max_content_length(app_client):
 
 
 def test_rest_detect_language_payload_within_max_content_length(app_client):
-    small_text = "A" * 5_000
+    small_text = "A" * 500
     data = {"text": small_text, "languages": ["en", "fi"]}
     req = app_client.post(
         "http://localhost:8000/v1/detect-language",
