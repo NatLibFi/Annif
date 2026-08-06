@@ -151,7 +151,7 @@ def test_rest_detect_language_too_many_candidates(app_client):
 
 def test_rest_suggest_payload_exceeds_max_content_length(app_client):
     # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
-    large_text = "A" * 2_000
+    large_text = "A" * 3_000
     data = {"text": large_text}
     req = app_client.post(
         "http://localhost:8000/v1/projects/dummy-fi/suggest",
@@ -162,7 +162,7 @@ def test_rest_suggest_payload_exceeds_max_content_length(app_client):
 
 def test_rest_suggest_batch_payload_exceeds_max_content_length(app_client):
     # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
-    large_text = "A" * 2_000
+    large_text = "A" * 3_000
     data = {"documents": [{"text": large_text}]}
     req = app_client.post(
         "http://localhost:8000/v1/projects/dummy-fi/suggest-batch",
@@ -185,7 +185,7 @@ def test_rest_suggest_payload_within_max_content_length(app_client):
 
 def test_rest_detect_language_payload_exceeds_max_content_length(app_client):
     # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
-    large_text = "A" * 2_000
+    large_text = "A" * 3_000
     data = {"text": large_text, "languages": ["en", "fi"]}
     req = app_client.post(
         "http://localhost:8000/v1/detect-language",
