@@ -14,8 +14,12 @@ class Config(object):
     PROJECTS_CONFIG_PATH = os.environ.get("ANNIF_PROJECTS", default="")
     DATADIR = os.environ.get("ANNIF_DATADIR", default="data")
     INITIALIZE_PROJECTS = False
-    MAX_FORM_MEMORY_SIZE = int(os.environ.get("ANNIF_MAX_FORM_MEMORY_SIZE", default=20_000_000))
-    MAX_CONTENT_LENGTH = int(os.environ.get("ANNIF_MAX_CONTENT_LENGTH", default=20_000_000))
+    MAX_FORM_MEMORY_SIZE = int(
+        os.environ.get("ANNIF_MAX_FORM_MEMORY_SIZE", default=20_000_000)
+    )
+    MAX_CONTENT_LENGTH = int(
+        os.environ.get("ANNIF_MAX_CONTENT_LENGTH", default=20_000_000)
+    )
 
 
 class ProductionConfig(Config):

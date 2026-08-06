@@ -150,7 +150,6 @@ def test_rest_detect_language_too_many_candidates(app_client):
 
 
 def test_rest_suggest_payload_exceeds_max_content_length(app_client):
-    """Test that requests exceeding MAX_CONTENT_LENGTH are rejected."""
     large_text = "A" * 21_000_000
     data = {"text": large_text}
     req = app_client.post(
@@ -161,7 +160,6 @@ def test_rest_suggest_payload_exceeds_max_content_length(app_client):
 
 
 def test_rest_suggest_batch_payload_exceeds_max_content_length(app_client):
-    """Test that batch requests exceeding MAX_CONTENT_LENGTH are rejected."""
     # Create a payload that exceeds the MAX_CONTENT_LENGTH limit (21 MB)
     large_text = "A" * 21_000_000
     data = {"documents": [{"text": large_text}]}
@@ -173,7 +171,6 @@ def test_rest_suggest_batch_payload_exceeds_max_content_length(app_client):
 
 
 def test_rest_suggest_payload_within_max_content_length(app_client):
-    """Test that requests within MAX_CONTENT_LENGTH limit are accepted."""
     # Create a payload well within the 20 MB limit (5 MB)
     moderate_text = "A" * 5_000_000
     data = {"text": moderate_text}
@@ -186,7 +183,6 @@ def test_rest_suggest_payload_within_max_content_length(app_client):
 
 
 def test_rest_detect_language_payload_exceeds_max_content_length(app_client):
-    """Test that detect-language requests exceeding MAX_CONTENT_LENGTH are rejected."""
     # Create a payload that exceeds the MAX_CONTENT_LENGTH limit (21 MB)
     large_text = "A" * 21_000_000
     data = {"text": large_text, "languages": ["en", "fi"]}
@@ -198,7 +194,6 @@ def test_rest_detect_language_payload_exceeds_max_content_length(app_client):
 
 
 def test_rest_detect_language_payload_within_max_content_length(app_client):
-    """Test that detect-language requests within MAX_CONTENT_LENGTH limit are accepted."""
     small_text = "A" * 5_000
     data = {"text": small_text, "languages": ["en", "fi"]}
     req = app_client.post(
