@@ -20,6 +20,10 @@ def _ensemble() -> Type[AnnifBackend]:
 
     return ensemble.EnsembleBackend
 
+def _moe_ensemble() -> Type[AnnifBackend]:
+    from . import moe_ensemble
+
+    return moe_ensemble.MoEEnsembleBackend
 
 def _fasttext() -> Type[AnnifBackend]:
     try:
@@ -100,6 +104,7 @@ def _yake() -> Type[AnnifBackend]:
 _backend_fns = {
     "dummy": _dummy,
     "ensemble": _ensemble,
+    "moe_ensemble": _moe_ensemble,
     "fasttext": _fasttext,
     "http": _http,
     "mllm": _mllm,
