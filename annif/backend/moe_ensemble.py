@@ -15,7 +15,7 @@ class MoEEnsembleBackend(EnsembleBackend):
 
     def _merge_source_batches(
         self,
-        batch_by_source: Dict[str, List[SuggestionResult]],
+        batch_by_source: Dict[str, SuggestionBatch],
         sources: List[Tuple[str, float]],
         params: Dict[str, Any],
     ) -> SuggestionBatch:
@@ -25,29 +25,24 @@ class MoEEnsembleBackend(EnsembleBackend):
         with a top score below a given threshold value."""
 
         activated = []
-        for (project_id, weight), batch in zip(sources, batch_by_source.values()):
+        for project_id, batch in batch_by_source.items():
             if not batch:
                 continue
-            # Access the first document's suggestions in the batch
-            first_doc_suggestions = batch[0]
-            # Check if the suggestions are empty
-            if not first_doc_suggestions:
+
+            # Iterate over the first document's suggestions in the batch
+            first_doc = next(iter(batch), None)
+            if not first_doc:
                 continue
+
             # Get the top score from the first document's suggestions
-            try:
-                top_score = max(score for _, score in first_doc_suggestions)
-            except ValueError:
-                # Skip if no scores are available
-                continue
+            top_score = max(score for _, score in first_doc) if first_doc else 0.0
+
             if top_score > self.threshold:
                 activated.append((batch, top_score))
 
         if not activated:
-            # Return a SuggestionBatch with empty suggestions for each document
-            sample_batch = next(iter(batch_by_source.values()))
-            num_docs = len(sample_batch)
-            empty_matrix = csr_array((num_docs, 0), dtype=float)
-            return SuggestionBatch(empty_matrix)
+            # Return an empty SuggestionBatch with an empty csr_array
+            return SuggestionBatch(csr_array((0, 0)))
 
         total_weight = sum(score for _, score in activated)
         weighted_batches = []
@@ -57,6 +52,6 @@ class MoEEnsembleBackend(EnsembleBackend):
             weighted_batches.append(batch)
             weights.append(weight_factor)
 
-        return SuggestionBatch.from_averaged(weighted_batches, weights).filter(
-            limit=int(params["limit"])
-        )
+        # Combine batches using weighted averaging
+        averaged_batch = SuggestionBatch.from_averaged(weighted_batches, weights)
+        return averaged_batch.filter(limit=int(params.get("limit", 10)))
