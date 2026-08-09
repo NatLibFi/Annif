@@ -55,18 +55,11 @@ class TestMoEEnsembleBackend:
 
         # For subject1 with score 0.4 and subject2 with score 0.3
         data = np.array([0.4, 0.3])
-        indices = np.array([0, 1])
-        indptr = np.array([0, 2])
-        csr = csr_array((data, indices, indptr), shape=(1, 2))
 
-        batch1 = SuggestionBatch(csr)
-        batch2 = SuggestionBatch(csr)
+        csr = csr_array((data, np.array([0, 1]), np.array([0, 2])), shape=(1, 2))
+        batch_by_source = {"source1": SuggestionBatch(csr), "source2": SuggestionBatch(csr)}
+        result = backend._merge_source_batches(batch_by_source, [("source1", 1.0), ("source2", 1.0)], {"limit": 10})
 
-        batch_by_source = {"source1": batch1, "source2": batch2}
-        sources = [("source1", 1.0), ("source2", 1.0)]
-        params = {"limit": 10}
-
-        result = backend._merge_source_batches(batch_by_source, sources, params)
         assert isinstance(result, SuggestionBatch)
         assert len(result) == 0
 
@@ -80,18 +73,11 @@ class TestMoEEnsembleBackend:
 
         # For subject1 with score 0.6 and subject2 with score 0.8
         data = np.array([0.6, 0.8])
-        indices = np.array([0, 1])
-        indptr = np.array([0, 2])
-        csr = csr_array((data, indices, indptr), shape=(1, 2))
 
-        batch1 = SuggestionBatch(csr)
-        batch2 = SuggestionBatch(csr)
+        csr = csr_array((data, np.array([0, 1]), np.array([0, 2])), shape=(1, 2))
+        batch_by_source = {"source1": SuggestionBatch(csr), "source2": SuggestionBatch(csr)}
+        result = backend._merge_source_batches(batch_by_source, [("source1", 1.0), ("source2", 1.0)], {"limit": 10})
 
-        batch_by_source = {"source1": batch1, "source2": batch2}
-        sources = [("source1", 1.0), ("source2", 1.0)]
-        params = {"limit": 10}
-
-        result = backend._merge_source_batches(batch_by_source, sources, params)
         assert isinstance(result, SuggestionBatch)
         assert len(result) > 0
         
@@ -120,14 +106,9 @@ class TestMoEEnsembleBackend:
         indptr2 = np.array([0, 1])
         csr2 = csr_array((data2, indices2, indptr2), shape=(1, 1))
 
-        batch1 = SuggestionBatch(csr1)
-        batch2 = SuggestionBatch(csr2)
+        batch_by_source = {"source1": SuggestionBatch(csr1), "source2": SuggestionBatch(csr2)}
+        result = backend._merge_source_batches(batch_by_source, [("source1", 1.0), ("source2", 1.0)], {"limit": 10})
 
-        batch_by_source = {"source1": batch1, "source2": batch2}
-        sources = [("source1", 1.0), ("source2", 1.0)]
-        params = {"limit": 10}
-
-        result = backend._merge_source_batches(batch_by_source, sources, params)
         assert isinstance(result, SuggestionBatch)
         assert len(result) > 0
 
