@@ -1,9 +1,10 @@
 """Unit tests for the MoEEnsembleBackend in Annif"""
 
 import pytest
+import numpy as np
 from scipy.sparse import csr_array
 from annif.suggestion import SuggestionBatch, SuggestionResult
-from annif.backend.moe_ensemble import MoEEnsembleBackend  # Updated import
+from annif.backend.moe_ensemble import MoEEnsembleBackend
 from annif.exception import NotSupportedException
 
 class TestMoEEnsembleBackend:
@@ -32,13 +33,17 @@ class TestMoEEnsembleBackend:
             config_params={"sources": "dummy"},
             project=project,
         )
-        batch_by_source = {"source1": [], "source2": []}
+        empty_csr = csr_array((0, 0))
+        batch_by_source = {
+            "source1": SuggestionBatch(empty_csr),
+            "source2": SuggestionBatch(empty_csr),
+        }
         sources = [("source1", 1.0), ("source2", 1.0)]
         params = {"limit": 10}
 
         result = backend._merge_source_batches(batch_by_source, sources, params)
         assert isinstance(result, SuggestionBatch)
-        assert len(result) == 0  # Check if the batch is empty
+        assert len(result) == 0
 
     def test_merge_source_batches_below_threshold(self, project):
         """Test merging batches where all scores are below the threshold."""
@@ -47,16 +52,23 @@ class TestMoEEnsembleBackend:
             config_params={"sources": "dummy", "threshold": 0.5},
             project=project,
         )
-        # Create batches with scores below threshold
-        batch1 = [SuggestionResult(0, [("subject1", 0.4)])]  # Added idx=0
-        batch2 = [SuggestionResult(0, [("subject2", 0.3)])]  # Added idx=0
+
+        # For subject1 with score 0.4 and subject2 with score 0.3
+        data = np.array([0.4, 0.3])
+        indices = np.array([0, 1])
+        indptr = np.array([0, 2])
+        csr = csr_array((data, indices, indptr), shape=(1, 2))
+
+        batch1 = SuggestionBatch(csr)
+        batch2 = SuggestionBatch(csr)
+
         batch_by_source = {"source1": batch1, "source2": batch2}
         sources = [("source1", 1.0), ("source2", 1.0)]
         params = {"limit": 10}
 
         result = backend._merge_source_batches(batch_by_source, sources, params)
         assert isinstance(result, SuggestionBatch)
-        assert len(result) == 0  # Check if the batch is empty
+        assert len(result) == 0
 
     def test_merge_source_batches_above_threshold(self, project):
         """Test merging batches where scores are above the threshold."""
@@ -65,16 +77,23 @@ class TestMoEEnsembleBackend:
             config_params={"sources": "dummy", "threshold": 0.5},
             project=project,
         )
-        # Create batches with scores above threshold
-        batch1 = [SuggestionResult(0, [("subject1", 0.6)])]  # Added idx=0
-        batch2 = [SuggestionResult(0, [("subject2", 0.8)])]  # Added idx=0
+
+        # For subject1 with score 0.6 and subject2 with score 0.8
+        data = np.array([0.6, 0.8])
+        indices = np.array([0, 1])
+        indptr = np.array([0, 2])
+        csr = csr_array((data, indices, indptr), shape=(1, 2))
+
+        batch1 = SuggestionBatch(csr)
+        batch2 = SuggestionBatch(csr)
+
         batch_by_source = {"source1": batch1, "source2": batch2}
         sources = [("source1", 1.0), ("source2", 1.0)]
         params = {"limit": 10}
 
         result = backend._merge_source_batches(batch_by_source, sources, params)
         assert isinstance(result, SuggestionBatch)
-        assert len(result) > 0  # Check if the batch is non-empty
+        assert len(result) > 0
 
     def test_merge_source_batches_weighted_average(self, project):
         """Test that the weighted average is computed correctly."""
@@ -83,16 +102,23 @@ class TestMoEEnsembleBackend:
             config_params={"sources": "dummy", "threshold": 0.5},
             project=project,
         )
-        # Create batches with known scores
-        batch1 = [SuggestionResult(0, [("subject1", 0.9)])]  # Added idx=0
-        batch2 = [SuggestionResult(0, [("subject2", 0.7)])]  # Added idx=0
+
+        # For subject1 with score 0.9 and subject2 with score 0.7
+        data = np.array([0.9, 0.7])
+        indices = np.array([0, 1])
+        indptr = np.array([0, 2])
+        csr = csr_array((data, indices, indptr), shape=(1, 2))
+
+        batch1 = SuggestionBatch(csr)
+        batch2 = SuggestionBatch(csr)
+
         batch_by_source = {"source1": batch1, "source2": batch2}
         sources = [("source1", 1.0), ("source2", 1.0)]
         params = {"limit": 10}
 
         result = backend._merge_source_batches(batch_by_source, sources, params)
         assert isinstance(result, SuggestionBatch)
-        assert len(result) > 0  # Check if the batch is non-empty
+        assert len(result) > 0
 
     def test_train_not_supported(self, project, document_corpus):
         """Test that training is not supported."""
