@@ -94,6 +94,11 @@ class TestMoEEnsembleBackend:
         result = backend._merge_source_batches(batch_by_source, sources, params)
         assert isinstance(result, SuggestionBatch)
         assert len(result) > 0
+        
+        # Extract the first SuggestionResult and its top suggestion
+        first_result = next(iter(result))
+        top_suggestion = next(iter(first_result))
+        assert top_suggestion.score == pytest.approx(0.8)  # Highest score in the input
 
     def test_merge_source_batches_weighted_average(self, project):
         """Test that the weighted average is computed correctly."""
@@ -103,14 +108,20 @@ class TestMoEEnsembleBackend:
             project=project,
         )
 
-        # For subject1 with score 0.9 and subject2 with score 0.7
-        data = np.array([0.9, 0.7])
-        indices = np.array([0, 1])
-        indptr = np.array([0, 2])
-        csr = csr_array((data, indices, indptr), shape=(1, 2))
+        # Create a csr_array for batch1 with subject1 (score 0.9)
+        data1 = np.array([0.9])
+        indices1 = np.array([0])
+        indptr1 = np.array([0, 1])
+        csr1 = csr_array((data1, indices1, indptr1), shape=(1, 1))
 
-        batch1 = SuggestionBatch(csr)
-        batch2 = SuggestionBatch(csr)
+        # Create a csr_array for batch2 with subject2 (score 0.6)
+        data2 = np.array([0.6])
+        indices2 = np.array([0])
+        indptr2 = np.array([0, 1])
+        csr2 = csr_array((data2, indices2, indptr2), shape=(1, 1))
+
+        batch1 = SuggestionBatch(csr1)
+        batch2 = SuggestionBatch(csr2)
 
         batch_by_source = {"source1": batch1, "source2": batch2}
         sources = [("source1", 1.0), ("source2", 1.0)]
@@ -119,6 +130,13 @@ class TestMoEEnsembleBackend:
         result = backend._merge_source_batches(batch_by_source, sources, params)
         assert isinstance(result, SuggestionBatch)
         assert len(result) > 0
+
+        # Extract the first SuggestionResult and its top suggestion
+        first_result = next(iter(result))
+        top_suggestion = next(iter(first_result))
+
+        # Weighted average: (0.9 * (0.9 / 1.5)) + (0.6 * (0.6 / 1.5)) = 0.78
+        assert top_suggestion.score == pytest.approx(0.78)
 
     def test_train_not_supported(self, project, document_corpus):
         """Test that training is not supported."""
