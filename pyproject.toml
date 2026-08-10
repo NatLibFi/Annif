@@ -69,7 +69,7 @@ flake8 = "*"
 bumpversion = "*"
 black = "25.*"
 isort = "*"
-schemathesis = "3.*.*"
+#  schemathesis = "3.*.*"  # Temporarily removed due to pinning "starlette>=0.13,<1"
 
 [project.urls]
 homepage = "https://annif.org"

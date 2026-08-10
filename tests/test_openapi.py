@@ -1,44 +1,44 @@
 """Unit tests for Annif REST API / OpenAPI spec"""
 
-import pytest
-import schemathesis
-from hypothesis import settings
-from hypothesis import strategies as st
+# import pytest
+# import schemathesis
+# from hypothesis import settings
+# from hypothesis import strategies as st
 
-import annif
+# import annif
 
-cxapp = annif.create_app(config_name="annif.default_config.TestingConfig")
-schema = schemathesis.from_path("annif/openapi/annif.yaml", app=cxapp)
-
-
-# Whitelist of project IDs that are valid for OpenAPI fuzzy testing
-# Only projects that work without training (dummy backend) are included
-PROJECTS_TO_TEST = (
-    "dummy-fi",
-    "dummy-en",
-)
+# cxapp = annif.create_app(config_name="annif.default_config.TestingConfig")
+# schema = schemathesis.from_path("annif/openapi/annif.yaml", app=cxapp)
 
 
-@schemathesis.hook("before_generate_path_parameters")
-def before_generate_path_parameters(context, strategy):
-    """Replace the path parameter generation strategy with a whitelist."""
-    if context.operation and "project_id" in context.operation.path:
-        return st.fixed_dictionaries({"project_id": st.sampled_from(PROJECTS_TO_TEST)})
-    return strategy
+# # Whitelist of project IDs that are valid for OpenAPI fuzzy testing
+# # Only projects that work without training (dummy backend) are included
+# PROJECTS_TO_TEST = (
+#     "dummy-fi",
+#     "dummy-en",
+# )
 
 
-@schema.parametrize()
-@settings(max_examples=10)
-def test_openapi_fuzzy(case):
-    case.call_and_validate()
+# @schemathesis.hook("before_generate_path_parameters")
+# def before_generate_path_parameters(context, strategy):
+#     """Replace the path parameter generation strategy with a whitelist."""
+#     if context.operation and "project_id" in context.operation.path:
+#         return st.fixed_dictionaries({"project_id": st.sampled_from(PROJECTS_TO_TEST)})
+#     return strategy
 
 
-@pytest.mark.slow
-@schema.include(path_regex="/v1/projects/{project_id}").parametrize()
-@settings(max_examples=50)
-def test_openapi_fuzzy_target_dummy_fi(case):
-    case.path_parameters = {"project_id": "dummy-fi"}
-    case.call_and_validate()
+# @schema.parametrize()
+# @settings(max_examples=10)
+# def test_openapi_fuzzy(case):
+#     case.call_and_validate()
+
+
+# @pytest.mark.slow
+# @schema.include(path_regex="/v1/projects/{project_id}").parametrize()
+# @settings(max_examples=50)
+# def test_openapi_fuzzy_target_dummy_fi(case):
+#     case.path_parameters = {"project_id": "dummy-fi"}
+#     case.call_and_validate()
 
 
 def test_openapi_cors(app_client):
