@@ -20,10 +20,6 @@ def _ensemble() -> Type[AnnifBackend]:
 
     return ensemble.EnsembleBackend
 
-def _moe_ensemble() -> Type[AnnifBackend]:
-    from . import moe_ensemble
-
-    return moe_ensemble.MoEEnsembleBackend
 
 def _fasttext() -> Type[AnnifBackend]:
     try:
@@ -44,6 +40,12 @@ def _mllm() -> Type[AnnifBackend]:
     from . import mllm
 
     return mllm.MLLMBackend
+
+
+def _moe_ensemble() -> Type[AnnifBackend]:
+    from . import moe_ensemble
+
+    return moe_ensemble.MoEEnsembleBackend
 
 
 def _nn_ensemble() -> Type[AnnifBackend]:
@@ -104,10 +106,10 @@ def _yake() -> Type[AnnifBackend]:
 _backend_fns = {
     "dummy": _dummy,
     "ensemble": _ensemble,
-    "moe_ensemble": _moe_ensemble,
     "fasttext": _fasttext,
     "http": _http,
     "mllm": _mllm,
+    "moe_ensemble": _moe_ensemble,
     "nn_ensemble": _nn_ensemble,
     "omikuji": _omikuji,
     "pav": _pav,
