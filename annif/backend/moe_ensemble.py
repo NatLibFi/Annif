@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Tuple
 from scipy.sparse import csr_array
 
 from annif.backend.ensemble import EnsembleBackend
-from annif.suggestion import SuggestionBatch, SuggestionResult
+from annif.suggestion import SuggestionBatch
 
 
 class MoEEnsembleBackend(EnsembleBackend):
@@ -34,8 +34,6 @@ class MoEEnsembleBackend(EnsembleBackend):
 
             # Iterate over the first document's suggestions in the batch
             first_doc = next(iter(batch), None)
-            if not first_doc:
-                continue
 
             # Get the top score from the first document's suggestions
             top_score = max(score for _, score in first_doc) if first_doc else 0.0
