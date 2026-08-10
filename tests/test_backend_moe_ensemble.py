@@ -1,11 +1,13 @@
 """Unit tests for the MoEEnsembleBackend in Annif"""
 
-import pytest
 import numpy as np
+import pytest
 from scipy.sparse import csr_array
-from annif.suggestion import SuggestionBatch, SuggestionResult
+
 from annif.backend.moe_ensemble import MoEEnsembleBackend
 from annif.exception import NotSupportedException
+from annif.suggestion import SuggestionBatch
+
 
 class TestMoEEnsembleBackend:
     def test_init_default_threshold(self, project):

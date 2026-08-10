@@ -1,7 +1,10 @@
-from typing import Any, Dict, Tuple, List
-from annif.backend.ensemble import EnsembleBackend
+from typing import Any, Dict, List, Tuple
+
 from scipy.sparse import csr_array
+
+from annif.backend.ensemble import EnsembleBackend
 from annif.suggestion import SuggestionBatch, SuggestionResult
+
 
 class MoEEnsembleBackend(EnsembleBackend):
     def __init__(
