@@ -76,7 +76,7 @@ annif = "annif.cli:cli"
 [dependency-groups]
 dev = [
     "py",
-    "pytest==8.*",
+    "pytest==9.*",
     "pytest-cov",
     "pytest-watch",
     "pytest-flask",
