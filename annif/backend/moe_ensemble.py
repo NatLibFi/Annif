@@ -42,8 +42,9 @@ class MoEEnsembleBackend(EnsembleBackend):
                 activated.append((batch, top_score))
 
         if not activated:
-            # Return an empty SuggestionBatch with an empty csr_array
-            return SuggestionBatch(csr_array((0, 0)))
+            # Return an empty SuggestionBatch with the same shape as the input batch
+            n_docs = len(next(iter(batch_by_source.values())))
+            return SuggestionBatch(csr_array((n_docs, len(self.project.subjects)), dtype='float32'))
 
         total_weight = sum(score for _, score in activated)
         weighted_batches = []

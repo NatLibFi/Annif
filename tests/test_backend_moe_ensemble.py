@@ -63,7 +63,8 @@ class TestMoEEnsembleBackend:
         result = backend._merge_source_batches(batch_by_source, [("source1", 1.0), ("source2", 1.0)], {"limit": 10})
 
         assert isinstance(result, SuggestionBatch)
-        assert len(result) == 0
+        assert len(result) == 1  # One document in the batch
+        assert result.array.shape == (1, len(project.subjects))  # Correct shape: (n_docs, n_subjects)
 
     def test_merge_source_batches_above_threshold(self, project):
         """Test merging batches where scores are above the threshold."""
