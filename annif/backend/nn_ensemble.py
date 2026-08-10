@@ -3,23 +3,21 @@ projects."""
 
 from __future__ import annotations
 
-import importlib
-import json
+import copy
 import os.path
 import shutil
-import zipfile
+import sys
 from io import BytesIO
 from typing import TYPE_CHECKING, Any
 
 import joblib
-import keras
 import lmdb
 import numpy as np
-from keras.layers import Add, Dense, Dropout, Flatten, Input, Layer
-from keras.models import Model
-from keras.saving import load_model
-from keras.utils import Sequence
-from scipy.sparse import csc_matrix, csr_matrix
+import torch
+import torch.nn as nn
+from scipy.sparse import csr_matrix
+from torch.utils.data import DataLoader, Dataset
+from tqdm import tqdm
 
 import annif.corpus
 import annif.parallel
@@ -34,8 +32,6 @@ from annif.suggestion import SuggestionBatch, vector_to_suggestions
 from . import backend, ensemble
 
 if TYPE_CHECKING:
-    from tensorflow.python.framework.ops import EagerTensor
-
     from annif.corpus.document import DocumentCorpus
 
 logger = annif.logger
@@ -51,10 +47,10 @@ def key_to_idx(key: memoryview | bytes) -> int:
     return int(key)
 
 
-class LMDBSequence(Sequence):
+class LMDBDataset(Dataset):
     """A sequence of samples stored in a LMDB database."""
 
-    def __init__(self, txn, batch_size):
+    def __init__(self, txn):
         super().__init__()
         self._txn = txn
         cursor = txn.cursor()
@@ -63,44 +59,138 @@ class LMDBSequence(Sequence):
             self._counter = key_to_idx(cursor.key()) + 1
         else:  # empty database
             self._counter = 0
-        self._batch_size = batch_size
 
     def add_sample(self, inputs: np.ndarray, targets: np.ndarray) -> None:
         # use zero-padded 8-digit key
         key = idx_to_key(self._counter)
         self._counter += 1
         # convert the sample into a sparse matrix and serialize it as bytes
-        sample = (csc_matrix(inputs), csr_matrix(targets))
+        sample = (csr_matrix(inputs), csr_matrix(targets))
         buf = BytesIO()
         joblib.dump(sample, buf)
         buf.seek(0)
         self._txn.put(key, buf.read())
 
-    def __getitem__(self, idx: int) -> tuple[np.ndarray, np.ndarray]:
-        """get a particular batch of samples"""
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+        """get a particular sample"""
         cursor = self._txn.cursor()
-        first_key = idx * self._batch_size
-        cursor.set_key(idx_to_key(first_key))
-        input_arrays = []
-        target_arrays = []
-        for key, value in cursor.iternext():
-            if key_to_idx(key) >= (first_key + self._batch_size):
-                break
-            input_csr, target_csr = joblib.load(BytesIO(value))
-            input_arrays.append(input_csr.toarray())
-            target_arrays.append(target_csr.toarray().flatten())
-        return np.array(input_arrays), np.array(target_arrays)
+        cursor.set_key(idx_to_key(idx))
+        value = cursor.value()
+        input_csr, target_csr = joblib.load(BytesIO(value))
+        input_tensor = torch.log1p(torch.from_numpy(input_csr.toarray()))
+        target_tensor = torch.log1p(torch.from_numpy(target_csr.toarray()[0]).float())
+        return input_tensor, target_tensor
+
+    def get_subset(self, indices: list[int]) -> tuple[torch.Tensor, torch.Tensor]:
+        """Fetch a fixed set of samples by index and stack into batch tensors.
+
+        Returns (inputs, targets) where inputs is ``torch.Tensor`` of shape (B, M, N)
+        and targets is ``torch.Tensor`` of shape (B, N).
+        """
+        inputs_list, targets_list = [], []
+        for idx in indices:
+            inp, tgt = self[idx]
+            inputs_list.append(inp)
+            targets_list.append(tgt)
+        inputs = torch.stack(inputs_list, dim=0)
+        targets = torch.stack(targets_list, dim=0)
+        return inputs, targets
 
     def __len__(self) -> int:
-        """return the number of available batches"""
-        return int(np.ceil(self._counter / self._batch_size))
+        """return the number of available samples"""
+        return self._counter
 
 
-class MeanLayer(Layer):
-    """Custom Keras layer that calculates mean values along the 2nd axis."""
+class NNEnsembleModel(nn.Module):
+    def __init__(self, n_sources: int, n_subjects: int, source_weights: list[float]):
+        super().__init__()
+        self.model_config = {
+            "n_sources": n_sources,
+            "n_subjects": n_subjects,
+            "source_weights": source_weights,
+        }
+        # per-concept/source weights
+        init_weights = torch.tensor(source_weights, dtype=torch.float32)
+        init_weights = init_weights / init_weights.sum()
+        self.weights = nn.Parameter(
+            init_weights[:, None].expand(-1, n_subjects).contiguous()
+        )
+        # bias decomposition: global + per-label delta
+        self.bias_global = nn.Parameter(torch.tensor(0.0, dtype=torch.float32))
+        self.bias_delta = nn.Parameter(torch.zeros(n_subjects, dtype=torch.float32))
 
-    def call(self, inputs: EagerTensor) -> EagerTensor:
-        return keras.ops.mean(inputs, axis=2)
+    def forward(self, inputs: torch.Tensor):
+        weighted = inputs * self.weights.unsqueeze(0)
+        return weighted.sum(1) + self.bias_global + self.bias_delta
+
+    def save(self, filepath):
+        torch.save(
+            {
+                "model_state_dict": self.state_dict(),
+                "model_class": self.__class__.__name__,
+                "model_config": self.model_config,
+                "pytorch_version": str(torch.__version__),
+                "python_version": sys.version,
+            },
+            filepath,
+        )
+
+    @classmethod
+    def load(cls, filepath, map_location="cpu"):
+        checkpoint = torch.load(filepath, map_location=map_location, weights_only=True)
+        config = checkpoint["model_config"]
+        model = cls(**config)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        model.eval()
+        return model
+
+
+class EarlyStopping:
+    def __init__(self, patience: int):
+        self._patience = patience
+        self._best_metric = None
+        self._no_improvement_count = 0
+        self._stop_early = False
+        self.best_state = None
+        self.best_epoch = 0
+
+    def __call__(self, model, metric, epoch):
+        if self._best_metric is None or metric > self._best_metric:
+            self._best_metric = metric
+            self._no_improvement_count = 0
+            self.best_state = copy.deepcopy(model.state_dict())
+            self.best_epoch = epoch
+        else:
+            self._no_improvement_count += 1
+            if self._no_improvement_count >= self._patience:
+                self._stop_early = True
+
+        return self._stop_early
+
+
+@torch.no_grad()
+def ndcg_batch(preds: torch.Tensor, targets: torch.Tensor) -> float:
+    """
+    preds:   (B, N) float
+    targets: (B, N) binary {0, 1} relevance labels
+
+    Returns: mean NDCG across the batch (float)
+    """
+    sorted_idx = torch.argsort(preds, dim=1, descending=True)
+    sorted_targets = torch.gather(targets, 1, sorted_idx)
+
+    L = sorted_targets.size(1)
+    ranks = torch.arange(1, L + 1, device=preds.device)
+    discounts = 1.0 / torch.log2(ranks + 1)
+
+    dcg = (sorted_targets * discounts).sum(dim=1)
+
+    ideal_sorted = torch.sort(targets, dim=1, descending=True).values[:, :L]
+    idcg = (ideal_sorted * discounts).sum(dim=1)
+
+    ndcg = dcg / torch.clamp(idcg, min=1e-8)
+
+    return ndcg.mean().item()
 
 
 class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBackend):
@@ -109,15 +199,19 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
 
     name = "nn_ensemble"
 
-    MODEL_FILE = "nn-model.keras"
+    MODEL_FILE = "nn-model.pt"
     LMDB_FILE = "nn-train.mdb"
 
+    EARLY_STOPPING_PATIENCE = 2
+    EARLY_STOP_EVAL_ROWS = 512
+    EARLY_STOP_SEED = 1337
+    PRED_SCALE = 20
+
     DEFAULT_PARAMETERS = {
-        "nodes": 100,
-        "dropout_rate": 0.2,
-        "optimizer": "adam",
-        "epochs": 10,
+        "lr": 0.003,
+        "max-epochs": 50,
         "learn-epochs": 1,
+        "batch-size": 256,
         "lmdb_map_size": 1024 * 1024 * 1024,
     }
 
@@ -129,7 +223,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         if self._model is not None:
             return  # already initialized
         if parallel:
-            # Don't load TF model just before parallel execution,
+            # Don't load model just before parallel execution,
             # since it won't work after forking worker processes
             return
         model_filename = os.path.join(self.datadir, self.MODEL_FILE)
@@ -138,19 +232,13 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 "model file {} not found".format(model_filename),
                 backend_id=self.backend_id,
             )
-        self.debug("loading Keras model from {}".format(model_filename))
+        self.debug("loading model from {}".format(model_filename))
         try:
-            self._model = load_model(
-                model_filename, custom_objects={"MeanLayer": MeanLayer}
-            )
+            self._model = NNEnsembleModel.load(model_filename)
         except Exception as err:
-            metadata = self.get_model_metadata(model_filename)
-            keras_version = importlib.metadata.version("keras")
             message = (
-                f"loading Keras model from {model_filename}; "
-                f"model metadata: {metadata}; "
-                f"you have Keras version {keras_version}. "
-                f'Original error message: "{err}"'
+                f"loading model from {model_filename}; "
+                f'original error message: "{err}"'
             )
             raise OperationFailedException(message, backend_id=self.backend_id)
 
@@ -160,24 +248,24 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         sources: list[tuple[str, float]],
         params: dict[str, Any],
     ) -> SuggestionBatch:
-        src_weight = dict(sources)
         score_vectors = np.array(
             [
-                [
-                    np.sqrt(suggestions.as_vector())
-                    * src_weight[project_id]
-                    * len(batch_by_source)
-                    for suggestions in batch
-                ]
+                [suggestions.as_vector() for suggestions in batch]
                 for project_id, batch in batch_by_source.items()
             ],
             dtype=np.float32,
-        ).transpose(1, 2, 0)
-        prediction = self._model(score_vectors).numpy()
+        )
+        score_vector_tensor = torch.log1p(
+            torch.from_numpy(score_vectors.swapaxes(0, 1))
+        )
+        with torch.no_grad():
+            prediction = self._model(score_vector_tensor)
+        # use sigmoid to ensure [0..1] range, scaled to spread out values
+        scaled_pred = torch.sigmoid(prediction * self.PRED_SCALE)
         return SuggestionBatch.from_sequence(
             [
                 vector_to_suggestions(row, limit=int(params["limit"]))
-                for row in prediction
+                for row in scaled_pred.detach().numpy()
             ],
             self.project.subjects,
         )
@@ -185,34 +273,13 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     def _create_model(self, sources: list[tuple[str, float]]) -> None:
         self.info("creating NN ensemble model")
 
-        inputs = Input(shape=(len(self.project.subjects), len(sources)))
+        # Create PyTorch model
 
-        flat_input = Flatten()(inputs)
-        drop_input = Dropout(rate=float(self.params["dropout_rate"]))(flat_input)
-        hidden = Dense(int(self.params["nodes"]), activation="relu")(drop_input)
-        drop_hidden = Dropout(rate=float(self.params["dropout_rate"]))(hidden)
-        delta = Dense(
-            len(self.project.subjects),
-            kernel_initializer="zeros",
-            bias_initializer="zeros",
-        )(drop_hidden)
-
-        mean = MeanLayer()(inputs)
-
-        predictions = Add()([mean, delta])
-
-        self._model = Model(inputs=inputs, outputs=predictions)
-        self._model.compile(
-            optimizer=self.params["optimizer"],
-            loss="binary_crossentropy",
-            metrics=["top_k_categorical_accuracy"],
+        self._model = NNEnsembleModel(
+            n_sources=len(sources),
+            n_subjects=len(self.project.subjects),
+            source_weights=[src[1] for src in sources],
         )
-        if "lr" in self.params:
-            self._model.optimizer.learning_rate.assign(float(self.params["lr"]))
-
-        summary = []
-        self._model.summary(print_fn=summary.append)
-        self.debug("Created model: \n" + "\n".join(summary))
 
     def _train(
         self,
@@ -224,7 +291,9 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         self._create_model(sources)
         self._fit_model(
             corpus,
-            epochs=int(params["epochs"]),
+            max_epochs=int(params["max-epochs"]),
+            batch_size=int(params["batch-size"]),
+            lr=float(params["lr"]),
             lmdb_map_size=int(params["lmdb_map_size"]),
             n_jobs=jobs,
         )
@@ -232,7 +301,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     def _corpus_to_vectors(
         self,
         corpus: DocumentCorpus,
-        seq: LMDBSequence,
+        seq: LMDBDataset,
         n_jobs: int,
     ) -> None:
         # pass corpus through all source projects
@@ -259,13 +328,10 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             for hits, subject_set in pool.imap_unordered(
                 psmap.suggest, corpus.documents
             ):
-                doc_scores = []
-                for project_id, p_hits in hits.items():
-                    vector = p_hits.as_vector()
-                    doc_scores.append(
-                        np.sqrt(vector) * sources[project_id] * len(sources)
-                    )
-                score_vector = np.array(doc_scores, dtype=np.float32).transpose()
+                score_vector = np.array(
+                    [p_hits.as_vector() for project_id, p_hits in hits.items()],
+                    dtype=np.float32,
+                )
                 true_vector = subject_set.as_vector(len(self.project.subjects))
                 seq.add_sample(score_vector, true_vector)
 
@@ -278,7 +344,9 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     def _fit_model(
         self,
         corpus: DocumentCorpus,
-        epochs: int,
+        max_epochs: int,
+        batch_size: int,
+        lr: float,
         lmdb_map_size: int,
         n_jobs: int = 1,
     ) -> None:
@@ -289,15 +357,59 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                     "Cannot train nn_ensemble project with no documents"
                 )
             with env.begin(write=True, buffers=True) as txn:
-                seq = LMDBSequence(txn, batch_size=32)
+                seq = LMDBDataset(txn)
                 self._corpus_to_vectors(corpus, seq, n_jobs)
         else:
             self.info("Reusing cached training data from previous run.")
+
         # fit the model using a read-only view of the LMDB
-        self.info("Training neural network model...")
+        self.info("Training model...")
         with env.begin(buffers=True) as txn:
-            seq = LMDBSequence(txn, batch_size=32)
-            self._model.fit(seq, verbose=True, epochs=epochs)
+            dataset = LMDBDataset(txn)
+            dataloader = DataLoader(
+                dataset, batch_size=batch_size, shuffle=True, num_workers=0
+            )
+            # Deterministic eval subset for early stopping
+            rng = np.random.default_rng(self.EARLY_STOP_SEED)
+            n_samples = len(dataset)
+            n_eval = min(self.EARLY_STOP_EVAL_ROWS, n_samples)
+            eval_indices = rng.choice(n_samples, size=n_eval, replace=False)
+            eval_inputs, eval_targets = dataset.get_subset(eval_indices.tolist())
+
+            # Training loop
+            optimizer = torch.optim.AdamW(
+                self._model.parameters(),
+                lr=lr,
+                weight_decay=0.0,
+                eps=1e-08,
+            )
+            criterion = nn.BCEWithLogitsLoss()
+            early_stopping = EarlyStopping(patience=self.EARLY_STOPPING_PATIENCE)
+
+            for epoch in range(max_epochs):
+                self._model.train()
+                tqdm_loader = tqdm(
+                    dataloader,
+                    desc=f"Epoch {epoch + 1}/{max_epochs}",
+                )
+                for inputs, targets in tqdm_loader:
+                    optimizer.zero_grad()
+                    outputs = self._model(inputs)
+                    loss = criterion(outputs, targets)
+                    loss.backward()
+                    optimizer.step()
+                # evaluate for early stopping
+                with torch.no_grad():
+                    outputs = self._model(eval_inputs)
+                ndcg = ndcg_batch(outputs, eval_targets.round())
+                self.info(f"Epoch {epoch + 1}/{max_epochs}: NDCG={ndcg:.4f}")
+                if early_stopping(self._model, ndcg, epoch):
+                    best = early_stopping.best_epoch + 1
+                    self.info(f"Model no longer improving, using best epoch {best}.")
+                    break
+
+            # Restore best model weights
+            self._model.load_state_dict(early_stopping.best_state)
 
         annif.util.atomic_save(self._model, self.datadir, self.MODEL_FILE)
 
@@ -308,18 +420,9 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
     ) -> None:
         self.initialize()
         self._fit_model(
-            corpus, int(params["learn-epochs"]), int(params["lmdb_map_size"])
+            corpus,
+            max_epochs=int(params["learn-epochs"]),
+            batch_size=int(params["batch-size"]),
+            lr=float(params["lr"]),
+            lmdb_map_size=int(params["lmdb_map_size"]),
         )
-
-    def get_model_metadata(self, model_filename: str) -> dict | None:
-        """Read metadata from Keras model files."""
-
-        try:
-            with zipfile.ZipFile(model_filename, "r") as zip:
-                with zip.open("metadata.json") as metadata_file:
-                    metadata_str = metadata_file.read().decode("utf-8")
-                    metadata = json.loads(metadata_str)
-                    return metadata
-        except Exception:
-            self.warning(f"Failed to read metadata from {model_filename}")
-            return None

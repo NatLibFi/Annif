@@ -48,9 +48,7 @@ def _nn_ensemble() -> Type[AnnifBackend]:
 
         return nn_ensemble.NNEnsembleBackend
     except ImportError:
-        raise ValueError(
-            "Keras and TensorFlow not available, cannot use " + "nn_ensemble backend"
-        )
+        raise ValueError("PyTorch not available, cannot use nn_ensemble backend")
 
 
 def _omikuji() -> Type[AnnifBackend]:

@@ -115,6 +115,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         "404":
           $ref: '#/components/responses/NotFound'
+        "413":
+          $ref: '#/components/responses/PayloadTooLarge'
         "503":
           $ref: '#/components/responses/ServiceUnavailable'
   /projects/{project_id}/suggest-batch:
@@ -175,6 +177,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         "404":
           $ref: '#/components/responses/NotFound'
+        "413":
+          $ref: '#/components/responses/PayloadTooLarge'
         "503":
           $ref: '#/components/responses/ServiceUnavailable'
       x-codegen-request-body-name: documents
@@ -207,6 +211,8 @@ paths:
           $ref: '#/components/responses/NotAllowed'
         "404":
           $ref: '#/components/responses/NotFound'
+        "413":
+          $ref: '#/components/responses/PayloadTooLarge'
         "503":
           $ref: '#/components/responses/ServiceUnavailable'
       x-codegen-request-body-name: documents
@@ -250,6 +256,12 @@ paths:
                 $ref: '#/components/schemas/DetectedLanguages'
         400:
           description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        413:
+          description: Payload Too Large
           content:
             application/problem+json:
               schema:
@@ -518,6 +530,12 @@ components:
             $ref: '#/components/schemas/Problem'
     ServiceUnavailable:
       description: Service Unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    PayloadTooLarge:
+      description: Payload Too Large
       content:
         application/problem+json:
           schema:

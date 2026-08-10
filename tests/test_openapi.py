@@ -4,6 +4,7 @@ import pytest
 import schemathesis
 from hypothesis import HealthCheck, settings, strategies
 from simplemma.strategies.dictionaries.dictionary_factory import SUPPORTED_LANGUAGES
+from hypothesis import strategies as st
 
 import annif
 
@@ -38,6 +39,21 @@ def filter_path_parameters(context, path_parameters):
     if path_parameters is not None and "project_id" in path_parameters:
         return "%0A" not in path_parameters["project_id"]
     return True
+
+# Whitelist of project IDs that are valid for OpenAPI fuzzy testing
+# Only projects that work without training (dummy backend) are included
+PROJECTS_TO_TEST = (
+    "dummy-fi",
+    "dummy-en",
+)
+
+
+@schemathesis.hook("before_generate_path_parameters")
+def before_generate_path_parameters(context, strategy):
+    """Replace the path parameter generation strategy with a whitelist."""
+    if context.operation and "project_id" in context.operation.path:
+        return st.fixed_dictionaries({"project_id": st.sampled_from(PROJECTS_TO_TEST)})
+    return strategy
 
 
 @schema.parametrize()
@@ -160,3 +176,59 @@ def test_rest_detect_language_too_many_candidates(app_client):
     data = {"text": "example text", "languages": ["en", "fr", "de", "it", "es", "nl"]}
     req = app_client.post("http://localhost:8000/v1/detect-language", json=data)
     assert req.status_code == 400
+
+
+def test_rest_suggest_payload_exceeds_max_content_length(app_client):
+    # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
+    large_text = "A" * 3_000
+    data = {"text": large_text}
+    req = app_client.post(
+        "http://localhost:8000/v1/projects/dummy-fi/suggest",
+        data=data,
+    )
+    assert req.status_code == 413  # Request Entity Too Large
+
+
+def test_rest_suggest_batch_payload_exceeds_max_content_length(app_client):
+    # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
+    large_text = "A" * 3_000
+    data = {"documents": [{"text": large_text}]}
+    req = app_client.post(
+        "http://localhost:8000/v1/projects/dummy-fi/suggest-batch",
+        json=data,
+    )
+    assert req.status_code == 413  # Request Entity Too Large
+
+
+def test_rest_suggest_payload_within_max_content_length(app_client):
+    # Create a payload well within the limit
+    moderate_text = "A" * 500
+    data = {"text": moderate_text}
+    req = app_client.post(
+        "http://localhost:8000/v1/projects/dummy-fi/suggest",
+        data=data,
+    )
+    assert req.status_code == 200
+    assert "results" in req.json()
+
+
+def test_rest_detect_language_payload_exceeds_max_content_length(app_client):
+    # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
+    large_text = "A" * 3_000
+    data = {"text": large_text, "languages": ["en", "fi"]}
+    req = app_client.post(
+        "http://localhost:8000/v1/detect-language",
+        json=data,
+    )
+    assert req.status_code == 413  # Request Entity Too Large
+
+
+def test_rest_detect_language_payload_within_max_content_length(app_client):
+    small_text = "A" * 500
+    data = {"text": small_text, "languages": ["en", "fi"]}
+    req = app_client.post(
+        "http://localhost:8000/v1/detect-language",
+        json=data,
+    )
+    assert req.status_code == 200
+    assert "results" in req.json()
