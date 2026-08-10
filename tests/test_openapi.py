@@ -2,9 +2,10 @@
 
 import pytest
 import schemathesis
-from hypothesis import HealthCheck, settings, strategies
-from simplemma.strategies.dictionaries.dictionary_factory import SUPPORTED_LANGUAGES
+from hypothesis import HealthCheck, settings
+from hypothesis import strategies
 from hypothesis import strategies as st
+from simplemma.strategies.dictionaries.dictionary_factory import SUPPORTED_LANGUAGES
 
 import annif
 
@@ -16,6 +17,27 @@ cxapp = annif.create_app(config_name="annif.default_config.TestingConfig")
 schema = schemathesis.openapi.from_asgi("/v1/openapi.json", app=cxapp)
 schema.config.checks.positive_data_acceptance.enabled = False
 schema.config.generation.allow_extra_parameters = False
+
+
+INT32_MAX = 2147483647
+
+
+@schemathesis.hook("filter_case")
+def filter_case_limit(context, case):
+    # Exclude cases where limit exceeds int32 max, since Connexion does not
+    # enforce int32 range bounds from format: int32 alone.
+    limit = None
+    if case.query is not None and "limit" in case.query:
+        limit = case.query["limit"]
+    elif isinstance(case.body, dict) and "limit" in case.body:
+        limit = case.body["limit"]
+    if limit is not None:
+        try:
+            if int(limit) > INT32_MAX:
+                return False
+        except (TypeError, ValueError):
+            pass
+    return True
 
 
 @schemathesis.hook("filter_body")
@@ -39,6 +61,7 @@ def filter_path_parameters(context, path_parameters):
     if path_parameters is not None and "project_id" in path_parameters:
         return "%0A" not in path_parameters["project_id"]
     return True
+
 
 # Whitelist of project IDs that are valid for OpenAPI fuzzy testing
 # Only projects that work without training (dummy backend) are included
