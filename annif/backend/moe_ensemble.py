@@ -13,7 +13,7 @@ class MoEEnsembleBackend(EnsembleBackend):
         config_params: Dict[str, Any],
         project: "AnnifProject",
     ):
-        self.threshold = float(config_params.get('threshold', 0.5))
+        self.threshold = float(config_params.get("threshold", 0.5))
         super().__init__(backend_id, config_params, project)
 
     def _merge_source_batches(
@@ -44,7 +44,9 @@ class MoEEnsembleBackend(EnsembleBackend):
         if not activated:
             # Return an empty SuggestionBatch with the same shape as the input batch
             n_docs = len(next(iter(batch_by_source.values())))
-            return SuggestionBatch(csr_array((n_docs, len(self.project.subjects)), dtype='float32'))
+            return SuggestionBatch(
+                csr_array((n_docs, len(self.project.subjects)), dtype="float32")
+            )
 
         total_weight = sum(score for _, score in activated)
         weighted_batches = []

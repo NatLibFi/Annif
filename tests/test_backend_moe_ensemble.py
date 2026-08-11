@@ -59,12 +59,20 @@ class TestMoEEnsembleBackend:
         data = np.array([0.4, 0.3])
 
         csr = csr_array((data, np.array([0, 1]), np.array([0, 2])), shape=(1, 2))
-        batch_by_source = {"source1": SuggestionBatch(csr), "source2": SuggestionBatch(csr)}
-        result = backend._merge_source_batches(batch_by_source, [("source1", 1.0), ("source2", 1.0)], {"limit": 10})
+        batch_by_source = {
+            "source1": SuggestionBatch(csr),
+            "source2": SuggestionBatch(csr),
+        }
+        result = backend._merge_source_batches(
+            batch_by_source, [("source1", 1.0), ("source2", 1.0)], {"limit": 10}
+        )
 
         assert isinstance(result, SuggestionBatch)
         assert len(result) == 1  # One document in the batch
-        assert result.array.shape == (1, len(project.subjects))  # Correct shape: (n_docs, n_subjects)
+        assert result.array.shape == (
+            1,
+            len(project.subjects),
+        )  # Correct shape: (n_docs, n_subjects)
 
     def test_merge_source_batches_above_threshold(self, project):
         """Test merging batches where scores are above the threshold."""
@@ -78,12 +86,17 @@ class TestMoEEnsembleBackend:
         data = np.array([0.6, 0.8])
 
         csr = csr_array((data, np.array([0, 1]), np.array([0, 2])), shape=(1, 2))
-        batch_by_source = {"source1": SuggestionBatch(csr), "source2": SuggestionBatch(csr)}
-        result = backend._merge_source_batches(batch_by_source, [("source1", 1.0), ("source2", 1.0)], {"limit": 10})
+        batch_by_source = {
+            "source1": SuggestionBatch(csr),
+            "source2": SuggestionBatch(csr),
+        }
+        result = backend._merge_source_batches(
+            batch_by_source, [("source1", 1.0), ("source2", 1.0)], {"limit": 10}
+        )
 
         assert isinstance(result, SuggestionBatch)
         assert len(result) > 0
-        
+
         # Extract the first SuggestionResult and its top suggestion
         first_result = next(iter(result))
         top_suggestion = next(iter(first_result))
@@ -109,8 +122,13 @@ class TestMoEEnsembleBackend:
         indptr2 = np.array([0, 1])
         csr2 = csr_array((data2, indices2, indptr2), shape=(1, 1))
 
-        batch_by_source = {"source1": SuggestionBatch(csr1), "source2": SuggestionBatch(csr2)}
-        result = backend._merge_source_batches(batch_by_source, [("source1", 1.0), ("source2", 1.0)], {"limit": 10})
+        batch_by_source = {
+            "source1": SuggestionBatch(csr1),
+            "source2": SuggestionBatch(csr2),
+        }
+        result = backend._merge_source_batches(
+            batch_by_source, [("source1", 1.0), ("source2", 1.0)], {"limit": 10}
+        )
 
         assert isinstance(result, SuggestionBatch)
         assert len(result) > 0
