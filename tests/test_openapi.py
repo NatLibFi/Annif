@@ -2,7 +2,7 @@
 
 import pytest
 import schemathesis
-from hypothesis import HealthCheck, settings
+from hypothesis import settings
 from hypothesis import strategies as st
 
 import annif
@@ -74,14 +74,14 @@ def before_generate_path_parameters(context, strategy):
 
 
 @schema.parametrize()
-@settings(max_examples=10, suppress_health_check=[HealthCheck.filter_too_much])
+@settings(max_examples=10)
 def test_openapi_fuzzy(case):
     case.call_and_validate()
 
 
 @pytest.mark.slow
 @schema.include(path_regex="projects/{project_id}").parametrize()
-@settings(max_examples=50, suppress_health_check=[HealthCheck.filter_too_much])
+@settings(max_examples=50)
 def test_openapi_fuzzy_target_dummy_fi(case):
     case.path_parameters = {"project_id": "dummy-fi"}
     case.call_and_validate()
