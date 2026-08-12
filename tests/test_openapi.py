@@ -30,7 +30,9 @@ def filter_case_limit(context, case):
             if int(limit) > INT32_MAX:
                 return False
         except (TypeError, ValueError):
-            pass
+            # If limit is not parseable as an integer, do not filter it here.
+            # Let downstream API/schema validation handle invalid values.
+            return True
     return True
 
 
