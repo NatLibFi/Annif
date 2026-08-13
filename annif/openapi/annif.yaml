@@ -262,9 +262,9 @@ paths:
         413:
           description: Payload Too Large
           content:
-            application/problem+json:
+            text/plain:
               schema:
-                $ref: '#/components/schemas/Problem'
+                type: string
 components:
   schemas:
     ApiInfo:
@@ -536,6 +536,6 @@ components:
     PayloadTooLarge:
       description: Payload Too Large
       content:
-        application/problem+json:
+        text/plain:
           schema:
-            $ref: '#/components/schemas/Problem'
+            type: string
