@@ -42,12 +42,6 @@ def _mllm() -> Type[AnnifBackend]:
     return mllm.MLLMBackend
 
 
-def _moe_ensemble() -> Type[AnnifBackend]:
-    from . import moe_ensemble
-
-    return moe_ensemble.MoEEnsembleBackend
-
-
 def _nn_ensemble() -> Type[AnnifBackend]:
     try:
         from . import nn_ensemble
@@ -93,6 +87,12 @@ def _tfidf() -> Type[AnnifBackend]:
     return tfidf.TFIDFBackend
 
 
+def _threshold_ensemble() -> Type[AnnifBackend]:
+    from . import threshold_ensemble
+
+    return threshold_ensemble.ThresholdEnsembleBackend
+
+
 def _yake() -> Type[AnnifBackend]:
     try:
         from . import yake
@@ -109,13 +109,13 @@ _backend_fns = {
     "fasttext": _fasttext,
     "http": _http,
     "mllm": _mllm,
-    "moe_ensemble": _moe_ensemble,
     "nn_ensemble": _nn_ensemble,
     "omikuji": _omikuji,
     "pav": _pav,
     "stwfsa": _stwfsa,
     "svc": _svc,
     "tfidf": _tfidf,
+    "threshold_ensemble": _threshold_ensemble,
     "yake": _yake,
 }
 
