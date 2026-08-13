@@ -8,7 +8,55 @@ from hypothesis import strategies as st
 import annif
 
 cxapp = annif.create_app(config_name="annif.default_config.TestingConfig")
-schema = schemathesis.from_path("annif/openapi/annif.yaml", app=cxapp)
+schema = schemathesis.openapi.from_asgi("/v1/openapi.json", app=cxapp)
+schema.config.checks.positive_data_acceptance.enabled = False
+schema.config.generation.allow_extra_parameters = False
+
+
+INT32_MAX = 2147483647
+
+
+@schemathesis.hook("filter_case")
+def filter_case_limit(context, case):
+    # Exclude cases where limit exceeds int32 max, since Connexion does not
+    # enforce int32 range bounds from format: int32 alone.
+    limit = None
+    if case.query is not None and "limit" in case.query:
+        limit = case.query["limit"]
+    elif isinstance(case.body, dict) and "limit" in case.body:
+        limit = case.body["limit"]
+    if limit is not None:
+        try:
+            if int(limit) > INT32_MAX:
+                return False
+        except (TypeError, ValueError):
+            # If limit is not parseable as an integer, do not filter it here.
+            # Let downstream API/schema validation handle invalid values.
+            return True
+    return True
+
+
+@schemathesis.hook("filter_body")
+def filter_body(context, body):
+    # Exclude body containing non-utf8 content to avoid crashing Connexion:
+    # https://github.com/spec-first/connexion/issues/1860
+    if body is None or isinstance(body, (dict, list, str, int, float, bool)):
+        return True
+    elif isinstance(body, (bytes, bytearray)):
+        try:
+            _ = body.decode("utf-8")
+        except UnicodeDecodeError:
+            return False
+    return True
+
+
+@schemathesis.hook("filter_path_parameters")
+def filter_path_parameters(context, path_parameters):
+    # Exclude path parameters containing newline to avoid crashing Connexion:
+    # https://github.com/spec-first/connexion/issues/1908
+    if path_parameters is not None and "project_id" in path_parameters:
+        return "%0A" not in path_parameters["project_id"]
+    return True
 
 
 # Whitelist of project IDs that are valid for OpenAPI fuzzy testing
@@ -34,7 +82,7 @@ def test_openapi_fuzzy(case):
 
 
 @pytest.mark.slow
-@schema.include(path_regex="/v1/projects/{project_id}").parametrize()
+@schema.include(path_regex="projects/{project_id}").parametrize()
 @settings(max_examples=50)
 def test_openapi_fuzzy_target_dummy_fi(case):
     case.path_parameters = {"project_id": "dummy-fi"}

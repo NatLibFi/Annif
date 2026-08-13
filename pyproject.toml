@@ -76,7 +76,7 @@ annif = "annif.cli:cli"
 [dependency-groups]
 dev = [
     "py",
-    "pytest==8.*",
+    "pytest==9.*",
     "pytest-cov",
     "pytest-watch",
     "pytest-flask",
@@ -84,7 +84,7 @@ dev = [
     "bumpversion",
     "black==25.*",
     "isort",
-    "schemathesis==3.*",
+    "schemathesis~=4.24.3",
 ]
 all = ["annif[fasttext,estnltk,nn,omikuji,spacy,stwfsa,voikko,yake]"]
 
