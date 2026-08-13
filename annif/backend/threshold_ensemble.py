@@ -35,6 +35,14 @@ class ThresholdEnsembleBackend(EnsembleBackend):
         first_batch = next(iter(batch_by_source.values()))
         n_docs, n_subjects = first_batch.array.shape
 
+        # If there is only one source, then apply a hard filter; ie. only
+        # output scores that are above the threshold, remove others entirely.
+        if len(sources) == 1:
+            return first_batch.filter(
+                threshold=self.threshold,
+                limit=int(params.get("limit", 10)),
+            )
+
         # Accumulate the weighted predictions for every document.
         weighted_sum = csr_array(
             (n_docs, n_subjects),

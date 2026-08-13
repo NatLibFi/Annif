@@ -404,3 +404,87 @@ class TestThresholdEnsembleBackend:
 
         with pytest.raises(NotSupportedException):
             backend.train(document_corpus)
+
+    def test_merge_source_batches_single_source_filters_below_threshold(self, project):
+        """Test that a single source filters low scores from the final output."""
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={"sources": "dummy", "threshold": 0.5},
+            project=project,
+        )
+
+        # The source is activated because it has a score >= 0.5.
+        # With a single source, low-scoring predictions should be removed
+        # from the final result.
+        csr = csr_array(
+            (
+                np.array([0.9, 0.2, 0.1, 0.3]),
+                np.array([0, 1, 2, 3]),
+                np.array([0, 4]),
+            ),
+            shape=(1, 4),
+        )
+
+        batch_by_source = {
+            "source1": SuggestionBatch(csr),
+        }
+
+        result = backend._merge_source_batches(
+            batch_by_source,
+            [("source1", 1.0)],
+            {"limit": 10},
+        )
+
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            np.array([[0.9, 0.0, 0.0, 0.0]]),
+        )
+
+    def test_merge_source_batches_multiple_sources_keep_below_threshold_predictions(
+        self, project
+    ):
+        """Test that multiple sources retain the existing behavior."""
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={"sources": "dummy", "threshold": 0.5},
+            project=project,
+        )
+
+        # Both sources are activated because each has a prediction >= 0.5.
+        # Low-scoring predictions are still included in the averaging.
+        csr1 = csr_array(
+            (
+                np.array([0.9, 0.2]),
+                np.array([0, 1]),
+                np.array([0, 2]),
+            ),
+            shape=(1, 2),
+        )
+        csr2 = csr_array(
+            (
+                np.array([0.8, 0.4]),
+                np.array([0, 1]),
+                np.array([0, 2]),
+            ),
+            shape=(1, 2),
+        )
+
+        batch_by_source = {
+            "source1": SuggestionBatch(csr1),
+            "source2": SuggestionBatch(csr2),
+        }
+
+        result = backend._merge_source_batches(
+            batch_by_source,
+            [("source1", 1.0), ("source2", 1.0)],
+            {"limit": 10},
+        )
+
+        # Existing multi-source behavior:
+        #
+        # subject 0: (0.9 + 0.8) / 2 = 0.85
+        # subject 1: (0.2 + 0.4) / 2 = 0.30
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            np.array([[0.85, 0.30]]),
+        )
