@@ -36,6 +36,7 @@ def create_cx_app(config_name: str | None = None) -> FlaskApp:
     from connexion.datastructures import MediaTypeDict
     from connexion.middleware import MiddlewarePosition
     from connexion.validators import FormDataValidator, MultiPartFormDataValidator
+    from starlette.middleware.body_limit import RequestBodyLimitMiddleware
     from starlette.middleware.cors import CORSMiddleware
 
     import annif.registry
@@ -64,6 +65,11 @@ def create_cx_app(config_name: str | None = None) -> FlaskApp:
         CORSMiddleware,
         position=MiddlewarePosition.BEFORE_EXCEPTION,
         allow_origins=["*"],
+    )
+    cxapp.add_middleware(
+        RequestBodyLimitMiddleware,
+        position=MiddlewarePosition.BEFORE_EXCEPTION,
+        max_body_size=cxapp.app.config["MAX_CONTENT_LENGTH"],
     )
 
     if cxapp.app.config["INITIALIZE_PROJECTS"]:
