@@ -63,6 +63,10 @@ def test_archive_dir(testdatadir):
     open(os.path.join(str(dirpath), "foo.txt"), "a").close()
     open(os.path.join(str(dirpath), "-train.txt"), "a").close()
 
+    traindirpath = os.path.join(dirpath, "my-train-dir")
+    os.makedirs(traindirpath, exist_ok=True)
+    open(os.path.join(str(traindirpath), "bar.mdb"), "a").close()
+
     fobj = annif.hfh_util._archive_dir(dirpath)
     assert isinstance(fobj, io.BufferedRandom)
 
