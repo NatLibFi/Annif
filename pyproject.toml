@@ -99,7 +99,7 @@ markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
 addopts = "-m 'not slow'"
 
 [tool.uv]
-exclude-newer = "1 week"
+exclude-newer = "5 days"
 conflicts = [
   [
     { extra = "torch-cpu" },
