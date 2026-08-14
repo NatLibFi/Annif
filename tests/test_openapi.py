@@ -23,7 +23,8 @@
 # def before_generate_path_parameters(context, strategy):
 #     """Replace the path parameter generation strategy with a whitelist."""
 #     if context.operation and "project_id" in context.operation.path:
-#         return st.fixed_dictionaries({"project_id": st.sampled_from(PROJECTS_TO_TEST)})
+#         return st.fixed_dictionaries(
+# {"project_id": st.sampled_from(PROJECTS_TO_TEST)})
 #     return strategy
 
 
