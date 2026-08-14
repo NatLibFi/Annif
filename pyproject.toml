@@ -1,6 +1,6 @@
 [project]
 name = "annif"
-version = "1.4.1"
+version = "1.4.2"
 description = "Automated subject indexing and classification tool"
 license = "Apache-2.0"
 readme = "README.md"
