@@ -64,20 +64,8 @@ class ThresholdEnsembleOptimizer(EnsembleOptimizer):
         corpus: DocumentCorpus,
         metric: str,
     ) -> None:
-        hyperopt.HyperparameterOptimizer.__init__(
-            self,
-            backend,
-            corpus,
-            metric,
-            ThresholdEnsembleHPObjective,
-        )
-
-        self._sources = [
-            project_id
-            for project_id, _ in annif.util.parse_sources(
-                backend.config_params["sources"]
-            )
-        ]
+        super().__init__(backend, corpus, metric)
+        self._objective = ThresholdEnsembleHPObjective
 
     def _prepare(self, n_jobs: int = 1):
         args = super()._prepare(n_jobs)
