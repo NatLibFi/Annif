@@ -35,40 +35,40 @@ class ThresholdEnsembleHPObjective(hyperopt.HPObjective):
             args["gold_batches"],
             args["source_batches"],
         ):
-            first_batch = next(iter(source_batches.values()))
-            n_docs, n_subjects = first_batch.array.shape
-
             # Single source: apply hard threshold directly
-            if len(args["sources"]) == 1:
+            is_single = len(args["sources"]) == 1
+            if is_single:
                 project_id = args["sources"][0]
-                batch = source_batches[project_id]
+                batch = source_batches.get(project_id)
                 if batch:
-                    merged_batch = batch.filter(
-                        threshold=threshold, limit=int(args["limit"])
+                    eval_batch.evaluate_many(
+                        batch.filter(threshold=threshold, limit=int(args["limit"])),
+                        gold_batch,
                     )
-                    eval_batch.evaluate_many(merged_batch, gold_batch)
                 continue
 
             # Multi-source: threshold-based activation with weighted averaging
+            first_batch = next(iter(source_batches.values()))
+            n_docs, n_subjects = first_batch.array.shape
             weighted_sum = csr_array((n_docs, n_subjects), dtype="float32")
             weight_sum = np.zeros(n_docs, dtype="float64")
 
             for project_id, source_weight in args["sources"]:
-                batch = source_batches[project_id]
+                batch = source_batches.get(project_id)
                 if not batch:
                     continue
                 filtered_batch = batch.filter(threshold=threshold)
                 active = np.diff(filtered_batch.array.indptr) > 0
-                if not np.any(active):
-                    continue
-                weight_sum[active] += source_weight
-                weighted_sum += batch.array.multiply(
-                    active[:, None] * source_weight
-                ).tocsr()
+                if np.any(active):
+                    weight_sum[active] += source_weight
+                    weighted_sum += batch.array.multiply(
+                        active[:, None] * source_weight
+                    ).tocsr()
 
             active_documents = weight_sum > 0
-            if np.any(active_documents):
-                inverse_weight_sum = np.zeros_like(weight_sum)
+            has_active = np.any(active_documents)
+            inverse_weight_sum = np.zeros_like(weight_sum)
+            if has_active:
                 inverse_weight_sum[active_documents] = (
                     1.0 / weight_sum[active_documents]
                 )
@@ -78,10 +78,10 @@ class ThresholdEnsembleHPObjective(hyperopt.HPObjective):
             else:
                 averaged_array = csr_array(weighted_sum.shape, dtype="float32")
 
-            merged_batch = SuggestionBatch(averaged_array).filter(
-                limit=int(args["limit"])
+            eval_batch.evaluate_many(
+                SuggestionBatch(averaged_array).filter(limit=int(args["limit"])),
+                gold_batch,
             )
-            eval_batch.evaluate_many(merged_batch, gold_batch)
 
         results = eval_batch.results(metrics=[args["metric"]])
         return results[args["metric"]]
