@@ -565,7 +565,7 @@ class TestThresholdEnsembleBackend:
         )
 
     def test_hp_objective_uses_trial_threshold(self, monkeypatch):
-        """Test that the Optuna threshold controls source activation."""
+        """Test that the Optuna threshold is passed to the backend."""
 
         class FakeTrial:
             def suggest_float(self, name, low, high, log=False):
@@ -589,30 +589,28 @@ class TestThresholdEnsembleBackend:
                 assert metrics == ["F1@5"]
                 return {"F1@5": 0.42}
 
+        class FakeBackend:
+            def __init__(self):
+                self.calls = []
+
+            def _merge_source_batches(self, source_batches, sources, params):
+                self.calls.append((source_batches, sources, params))
+                return "merged"
+
         monkeypatch.setattr(
             annif.eval,
             "EvaluationBatch",
             FakeEvaluationBatch,
         )
 
-        source1 = SuggestionBatch(csr_array(np.array([[0.2]])))
-        source2 = SuggestionBatch(csr_array(np.array([[0.1]])))
+        backend = FakeBackend()
 
         args = {
-            "gold_batches": [
-                SuggestionBatch(csr_array(np.array([[1.0]]))),
-            ],
-            "source_batches": [
-                {
-                    "source1": source1,
-                    "source2": source2,
-                },
-            ],
+            "backend": backend,
+            "gold_batches": ["gold"],
+            "source_batches": ["sources"],
             "subject_index": "subjects",
-            "sources": [
-                ("source1", 1.0),
-                ("source2", 1.0),
-            ],
+            "sources": ["source1", "source2"],
             "limit": 100,
             "metric": "F1@5",
         }
@@ -622,11 +620,17 @@ class TestThresholdEnsembleBackend:
             args,
         )
 
-        assert result == pytest.approx(0.42)
-
-        merged_batch, _ = FakeEvaluationBatch.instance.calls[0]
-
-        assert next(iter(next(iter(merged_batch)))).score == pytest.approx(0.2)
+        assert result == 0.42
+        assert backend.calls == [
+            (
+                "sources",
+                ["source1", "source2"],
+                {
+                    "limit": 100,
+                    "threshold": 0.123,
+                },
+            )
+        ]
 
     def test_hp_objective_threshold_is_used_for_single_source(self, project):
         backend = ThresholdEnsembleBackend(

@@ -28,60 +28,28 @@ class ThresholdEnsembleHPObjective(hyperopt.HPObjective):
 
     @classmethod
     def objective(cls, trial, args) -> float:
-        threshold = trial.suggest_float("threshold", 0.001, 0.5, log=True)
+        threshold = trial.suggest_float(
+            "threshold",
+            0.001,
+            0.5,
+            log=True,
+        )
+
         eval_batch = annif.eval.EvaluationBatch(args["subject_index"])
 
         for gold_batch, source_batches in zip(
             args["gold_batches"],
             args["source_batches"],
         ):
-            # Single source: apply hard threshold directly
-            is_single = len(args["sources"]) == 1
-            if is_single:
-                project_id = args["sources"][0]
-                batch = source_batches.get(project_id)
-                if batch:
-                    eval_batch.evaluate_many(
-                        batch.filter(threshold=threshold, limit=int(args["limit"])),
-                        gold_batch,
-                    )
-                continue
-
-            # Multi-source: threshold-based activation with weighted averaging
-            first_batch = next(iter(source_batches.values()))
-            n_docs, n_subjects = first_batch.array.shape
-            weighted_sum = csr_array((n_docs, n_subjects), dtype="float32")
-            weight_sum = np.zeros(n_docs, dtype="float64")
-
-            for project_id, source_weight in args["sources"]:
-                batch = source_batches.get(project_id)
-                if not batch:
-                    continue
-                filtered_batch = batch.filter(threshold=threshold)
-                active = np.diff(filtered_batch.array.indptr) > 0
-                if np.any(active):
-                    weight_sum[active] += source_weight
-                    weighted_sum += batch.array.multiply(
-                        active[:, None] * source_weight
-                    ).tocsr()
-
-            active_documents = weight_sum > 0
-            has_active = np.any(active_documents)
-            inverse_weight_sum = np.zeros_like(weight_sum)
-            if has_active:
-                inverse_weight_sum[active_documents] = (
-                    1.0 / weight_sum[active_documents]
-                )
-                averaged_array = weighted_sum.multiply(
-                    inverse_weight_sum[:, None]
-                ).tocsr()
-            else:
-                averaged_array = csr_array(weighted_sum.shape, dtype="float32")
-
-            eval_batch.evaluate_many(
-                SuggestionBatch(averaged_array).filter(limit=int(args["limit"])),
-                gold_batch,
+            merged_batch = args["backend"]._merge_source_batches(
+                source_batches,
+                args["sources"],
+                {
+                    "limit": args["limit"],
+                    "threshold": threshold,
+                },
             )
+            eval_batch.evaluate_many(merged_batch, gold_batch)
 
         results = eval_batch.results(metrics=[args["metric"]])
         return results[args["metric"]]
@@ -110,6 +78,11 @@ class ThresholdEnsembleOptimizer(EnsembleOptimizer):
                 backend.config_params["sources"]
             )
         ]
+
+    def _prepare(self, n_jobs):
+        args = super()._prepare(n_jobs)
+        args["backend"] = self._backend
+        return args
 
     def _postprocess(self, study: Study) -> HPRecommendation:
         line = f"threshold={study.best_params['threshold']:.4f}"
