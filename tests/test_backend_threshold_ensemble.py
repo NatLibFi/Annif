@@ -4,7 +4,12 @@ import numpy as np
 import pytest
 from scipy.sparse import csr_array
 
-from annif.backend.threshold_ensemble import ThresholdEnsembleBackend
+import annif.eval
+from annif.backend.threshold_ensemble import (
+    ThresholdEnsembleBackend,
+    ThresholdEnsembleHPObjective,
+    ThresholdEnsembleOptimizer,
+)
 from annif.exception import NotSupportedException
 from annif.suggestion import SuggestionBatch
 
@@ -487,4 +492,376 @@ class TestThresholdEnsembleBackend:
         np.testing.assert_allclose(
             result.array.toarray(),
             np.array([[0.85, 0.30]]),
+        )
+
+    def test_merge_source_batches_uses_parameter_threshold(self, project):
+        """Test that an optimizer-supplied threshold overrides the backend threshold."""
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={"sources": "dummy", "threshold": 0.5},
+            project=project,
+        )
+
+        data = np.array([0.2, 0.8])
+        indices = np.array([0, 1])
+        indptr = np.array([0, 2])
+
+        csr = csr_array(
+            (data, indices, indptr),
+            shape=(1, 2),
+        )
+
+        batch = SuggestionBatch(csr)
+
+        result = backend._merge_source_batches(
+            {"source1": batch, "source2": batch},
+            [("source1", 1.0), ("source2", 1.0)],
+            {
+                "threshold": 0.1,
+                "limit": 10,
+            },
+        )
+
+        assert len(result) == 1
+
+        result_array = result.array.toarray()
+
+        # Both sources are active at threshold 0.1, so their original
+        # predictions are averaged. The 0.2 prediction is retained.
+        np.testing.assert_allclose(
+            result_array,
+            [[0.2, 0.8]],
+        )
+
+    def test_single_source_uses_parameter_threshold(self, project):
+        """Test that the supplied threshold is used for a single source."""
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={"sources": "dummy", "threshold": 0.5},
+            project=project,
+        )
+
+        data = np.array([0.2, 0.8])
+        indices = np.array([0, 1])
+        indptr = np.array([0, 2])
+
+        csr = csr_array(
+            (data, indices, indptr),
+            shape=(1, 2),
+        )
+
+        result = backend._merge_source_batches(
+            {"source1": SuggestionBatch(csr)},
+            [("source1", 1.0)],
+            {
+                "threshold": 0.7,
+                "limit": 10,
+            },
+        )
+
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            [[0.0, 0.8]],
+        )
+
+    def test_hp_objective_uses_trial_threshold(self, monkeypatch):
+        """Test that the Optuna threshold controls source activation."""
+
+        class FakeTrial:
+            def suggest_float(self, name, low, high, log=False):
+                assert name == "threshold"
+                assert low == 0.001
+                assert high == 0.5
+                assert log is True
+                return 0.123
+
+        class FakeEvaluationBatch:
+            instance = None
+
+            def __init__(self, subject_index):
+                self.calls = []
+                FakeEvaluationBatch.instance = self
+
+            def evaluate_many(self, merged_batch, gold_batch):
+                self.calls.append((merged_batch, gold_batch))
+
+            def results(self, metrics):
+                assert metrics == ["F1@5"]
+                return {"F1@5": 0.42}
+
+        monkeypatch.setattr(
+            annif.eval,
+            "EvaluationBatch",
+            FakeEvaluationBatch,
+        )
+
+        source1 = SuggestionBatch(csr_array(np.array([[0.2]])))
+        source2 = SuggestionBatch(csr_array(np.array([[0.1]])))
+
+        args = {
+            "gold_batches": [
+                SuggestionBatch(csr_array(np.array([[1.0]]))),
+            ],
+            "source_batches": [
+                {
+                    "source1": source1,
+                    "source2": source2,
+                },
+            ],
+            "subject_index": "subjects",
+            "sources": [
+                ("source1", 1.0),
+                ("source2", 1.0),
+            ],
+            "limit": 100,
+            "metric": "F1@5",
+        }
+
+        result = ThresholdEnsembleHPObjective.objective(
+            FakeTrial(),
+            args,
+        )
+
+        assert result == pytest.approx(0.42)
+
+        merged_batch, _ = FakeEvaluationBatch.instance.calls[0]
+
+        assert next(iter(next(iter(merged_batch)))).score == pytest.approx(0.2)
+
+    def test_hp_objective_threshold_is_used_for_single_source(self, project):
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={
+                "sources": "source1",
+                "threshold": 0.1,
+            },
+            project=project,
+        )
+
+        csr = csr_array(
+            (
+                np.array([0.08, 0.12]),
+                np.array([0, 1]),
+                np.array([0, 2]),
+            ),
+            shape=(1, 2),
+        )
+
+        batch = SuggestionBatch(csr)
+
+        result = backend._merge_source_batches(
+            {"source1": batch},
+            [("source1", 1.0)],
+            {"threshold": 0.05, "limit": 10},
+        )
+
+        # The trial threshold (0.05), not the configured threshold (0.1),
+        # should be used.
+        assert result.array.nnz == 2
+
+    def test_merge_source_batches_empty_sources(self, project):
+        """Test merging with an empty sources list."""
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={"sources": "dummy"},
+            project=project,
+        )
+
+        # Create non-empty batches
+        csr = csr_array(
+            (np.array([0.6, 0.8]), np.array([0, 1]), np.array([0, 2])),
+            shape=(1, 2),
+        )
+
+        batch_by_source = {
+            "source1": SuggestionBatch(csr),
+        }
+
+        # Empty sources list
+        result = backend._merge_source_batches(
+            batch_by_source,
+            [],  # Empty sources
+            {"limit": 10},
+        )
+
+        # Should return a batch with same shape as input but no suggestions
+        assert isinstance(result, SuggestionBatch)
+        assert len(result) == 1  # Same number of documents as input
+        assert result.array.nnz == 0  # But no active suggestions
+
+    def test_merge_source_batches_threshold_zero(self, project):
+        """Test that threshold=0.0 activates all sources."""
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={"sources": "dummy", "threshold": 0.0},
+            project=project,
+        )
+
+        # Even very low scores should activate sources
+        data = np.array([0.01, 0.02])
+        csr = csr_array(
+            (data, np.array([0, 1]), np.array([0, 2])),
+            shape=(1, 2),
+        )
+
+        batch_by_source = {
+            "source1": SuggestionBatch(csr),
+            "source2": SuggestionBatch(csr),
+        }
+
+        result = backend._merge_source_batches(
+            batch_by_source,
+            [("source1", 1.0), ("source2", 1.0)],
+            {"limit": 10},
+        )
+
+        # Both sources should be activated
+        assert len(result) == 1
+        result_list = list(result)
+        assert len(result_list) > 0
+        first_suggestions = list(result_list[0])
+        # Should have averaged predictions
+        assert len(first_suggestions) == 2
+
+    def test_merge_source_batches_threshold_very_high(self, project):
+        """Test that a very high threshold deactivates all sources."""
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={"sources": "dummy", "threshold": 10.0},
+            project=project,
+        )
+
+        # Scores are all below 10.0
+        data = np.array([0.5, 0.8])
+        csr = csr_array(
+            (data, np.array([0, 1]), np.array([0, 2])),
+            shape=(1, 2),
+        )
+
+        batch_by_source = {
+            "source1": SuggestionBatch(csr),
+            "source2": SuggestionBatch(csr),
+        }
+
+        result = backend._merge_source_batches(
+            batch_by_source,
+            [("source1", 1.0), ("source2", 1.0)],
+            {"limit": 10},
+        )
+
+        # No sources should be activated, result should be empty
+        assert isinstance(result, SuggestionBatch)
+        assert result.array.nnz == 0
+
+    def test_merge_source_batches_limit_zero(self, project):
+        """Test that limit=0 returns an empty batch."""
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={"sources": "dummy", "threshold": 0.1},
+            project=project,
+        )
+
+        data = np.array([0.6, 0.8])
+        indices = np.array([0, 1])
+        indptr = np.array([0, 2])
+
+        csr = csr_array(
+            (data, indices, indptr),
+            shape=(1, 2),
+        )
+
+        batch_by_source = {
+            "source1": SuggestionBatch(csr),
+            "source2": SuggestionBatch(csr),
+        }
+
+        result = backend._merge_source_batches(
+            batch_by_source,
+            [("source1", 1.0), ("source2", 1.0)],
+            {"limit": 0},
+        )
+
+        # Should return empty batch
+        assert isinstance(result, SuggestionBatch)
+        assert result.array.nnz == 0
+
+    def test_merge_source_batches_single_source_high_threshold(self, project):
+        """Test single source with high threshold filters all predictions."""
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={"sources": "dummy", "threshold": 0.9},
+            project=project,
+        )
+
+        # All scores below 0.9
+        csr = csr_array(
+            (np.array([0.5, 0.6, 0.7]), np.array([0, 1, 2]), np.array([0, 3])),
+            shape=(1, 3),
+        )
+
+        batch_by_source = {
+            "source1": SuggestionBatch(csr),
+        }
+
+        result = backend._merge_source_batches(
+            batch_by_source,
+            [("source1", 1.0)],
+            {"limit": 10},
+        )
+
+        # All predictions should be filtered out
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            np.array([[0.0, 0.0, 0.0]]),
+        )
+
+    def test_get_hp_optimizer(self, project, document_corpus):
+        """Test that get_hp_optimizer returns the correct optimizer type."""
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={"sources": "dummy"},
+            project=project,
+        )
+
+        optimizer = backend.get_hp_optimizer(document_corpus, "F1@5")
+
+        assert isinstance(optimizer, ThresholdEnsembleOptimizer)
+        assert optimizer._backend is backend
+        assert optimizer._corpus is document_corpus
+        assert optimizer._metric == "F1@5"
+
+    def test_merge_source_batches_uses_config_threshold_when_param_missing(
+        self, project
+    ):
+        """Test that config threshold is used when param doesn't specify threshold."""
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={"sources": "dummy", "threshold": 0.3},
+            project=project,
+        )
+
+        data = np.array([0.2, 0.8])
+        indices = np.array([0, 1])
+        indptr = np.array([0, 2])
+
+        csr = csr_array(
+            (data, indices, indptr),
+            shape=(1, 2),
+        )
+
+        batch = SuggestionBatch(csr)
+
+        result = backend._merge_source_batches(
+            {"source1": batch, "source2": batch},
+            [("source1", 1.0), ("source2", 1.0)],
+            {"limit": 10},  # No threshold in params
+        )
+
+        # With threshold 0.3 from config, both sources should be activated
+        # because 0.8 > 0.3 (even though 0.2 < 0.3, the source is activated
+        # if ANY prediction >= threshold)
+        # The averaged result should be [0.2, 0.8] from original arrays
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            [[0.2, 0.8]],  # Both sources activated, original scores averaged
         )

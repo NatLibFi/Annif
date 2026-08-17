@@ -1,49 +1,173 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple
+"""Threshold-based ensemble that activates sources based on a score threshold."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.sparse import csr_array
 
-from annif.backend.ensemble import EnsembleBackend
+import annif.eval
+import annif.parallel
+import annif.util
 from annif.suggestion import SuggestionBatch
 
+from . import hyperopt
+from .ensemble import EnsembleBackend, EnsembleOptimizer
+
 if TYPE_CHECKING:
+    from optuna.study import Study
+
+    from annif.backend.hyperopt import HPRecommendation
+    from annif.corpus.document import DocumentCorpus
     from annif.project import AnnifProject
 
 
+class ThresholdEnsembleHPObjective(hyperopt.HPObjective):
+    """Objective function of the threshold ensemble hyperparameter optimizer."""
+
+    @classmethod
+    def objective(cls, trial, args) -> float:
+        threshold = trial.suggest_float("threshold", 0.001, 0.5, log=True)
+        eval_batch = annif.eval.EvaluationBatch(args["subject_index"])
+
+        for gold_batch, source_batches in zip(
+            args["gold_batches"],
+            args["source_batches"],
+        ):
+            first_batch = next(iter(source_batches.values()))
+            n_docs, n_subjects = first_batch.array.shape
+
+            # Single source: apply hard threshold directly
+            if len(args["sources"]) == 1:
+                project_id = args["sources"][0]
+                batch = source_batches[project_id]
+                if batch:
+                    merged_batch = batch.filter(
+                        threshold=threshold, limit=int(args["limit"])
+                    )
+                    eval_batch.evaluate_many(merged_batch, gold_batch)
+                continue
+
+            # Multi-source: threshold-based activation with weighted averaging
+            weighted_sum = csr_array((n_docs, n_subjects), dtype="float32")
+            weight_sum = np.zeros(n_docs, dtype="float64")
+
+            for project_id, source_weight in args["sources"]:
+                batch = source_batches[project_id]
+                if not batch:
+                    continue
+                filtered_batch = batch.filter(threshold=threshold)
+                active = np.diff(filtered_batch.array.indptr) > 0
+                if not np.any(active):
+                    continue
+                weight_sum[active] += source_weight
+                weighted_sum += batch.array.multiply(
+                    active[:, None] * source_weight
+                ).tocsr()
+
+            active_documents = weight_sum > 0
+            if np.any(active_documents):
+                inverse_weight_sum = np.zeros_like(weight_sum)
+                inverse_weight_sum[active_documents] = (
+                    1.0 / weight_sum[active_documents]
+                )
+                averaged_array = weighted_sum.multiply(
+                    inverse_weight_sum[:, None]
+                ).tocsr()
+            else:
+                averaged_array = csr_array(weighted_sum.shape, dtype="float32")
+
+            merged_batch = SuggestionBatch(averaged_array).filter(
+                limit=int(args["limit"])
+            )
+            eval_batch.evaluate_many(merged_batch, gold_batch)
+
+        results = eval_batch.results(metrics=[args["metric"]])
+        return results[args["metric"]]
+
+
+class ThresholdEnsembleOptimizer(EnsembleOptimizer):
+    """Hyperparameter optimizer for the threshold ensemble."""
+
+    def __init__(
+        self,
+        backend: ThresholdEnsembleBackend,
+        corpus: DocumentCorpus,
+        metric: str,
+    ) -> None:
+        hyperopt.HyperparameterOptimizer.__init__(
+            self,
+            backend,
+            corpus,
+            metric,
+            ThresholdEnsembleHPObjective,
+        )
+
+        self._sources = [
+            project_id
+            for project_id, _ in annif.util.parse_sources(
+                backend.config_params["sources"]
+            )
+        ]
+
+    def _postprocess(self, study: Study) -> HPRecommendation:
+        line = f"threshold={study.best_params['threshold']:.4f}"
+
+        return hyperopt.HPRecommendation(
+            lines=[line],
+            score=study.best_value,
+        )
+
+
 class ThresholdEnsembleBackend(EnsembleBackend):
+    """Ensemble backend that activates sources based on a score threshold."""
+
+    name = "threshold_ensemble"
+
     def __init__(
         self,
         backend_id: str,
-        config_params: Dict[str, Any],
+        config_params: dict[str, Any],
         project: "AnnifProject",
     ):
         self.threshold = float(config_params.get("threshold", 0.1))
         super().__init__(backend_id, config_params, project)
 
+    def get_hp_optimizer(
+        self,
+        corpus: DocumentCorpus,
+        metric: str,
+    ) -> ThresholdEnsembleOptimizer:
+        return ThresholdEnsembleOptimizer(self, corpus, metric)
+
     def _merge_source_batches(
         self,
-        batch_by_source: Dict[str, SuggestionBatch],
-        sources: List[Tuple[str, float]],
-        params: Dict[str, Any],
+        batch_by_source: dict[str, SuggestionBatch],
+        sources: list[tuple[str, float]],
+        params: dict[str, Any],
     ) -> SuggestionBatch:
         """Merge the given SuggestionBatches from each source into a single
         SuggestionBatch. In this implementation, a source is activated for
         a document only if it has at least one suggestion at or above the
-        threshold. Among the activated sources, their configured project
-        weights determine the weighted average."""
+        configured threshold. Among activated sources, their configured weights
+        determine the weighted average. When there is only one source, scores
+        below the threshold are removed entirely rather than merely being
+        used for source activation."""
 
+        threshold = float(params.get("threshold", self.threshold))
+        limit = int(params.get("limit", 10))
         first_batch = next(iter(batch_by_source.values()))
-        n_docs, n_subjects = first_batch.array.shape
 
-        # If there is only one source, then apply a hard filter; ie. only
-        # output scores that are above the threshold, remove others entirely.
+        # With a single source, apply a hard threshold directly.
         if len(sources) == 1:
             return first_batch.filter(
-                threshold=self.threshold,
-                limit=int(params.get("limit", 10)),
+                threshold=threshold,
+                limit=limit,
             )
 
         # Accumulate the weighted predictions for every document.
+        n_docs, n_subjects = first_batch.array.shape
         weighted_sum = csr_array(
             (n_docs, n_subjects),
             dtype="float32",
@@ -59,9 +183,9 @@ class ThresholdEnsembleBackend(EnsembleBackend):
             if not batch:
                 continue
 
-            # Determine which documents have an activated source.
             # The filtered batch is used ONLY for the activation decision.
-            filtered_batch = batch.filter(threshold=self.threshold)
+            # The original batch.array is still used for the weighted sum.
+            filtered_batch = batch.filter(threshold=threshold)
 
             # This gives us one boolean value per document without iterating
             # over SuggestionResult objects in Python.
@@ -97,7 +221,6 @@ class ThresholdEnsembleBackend(EnsembleBackend):
         inverse_weight_sum[active_documents] = 1.0 / weight_sum[active_documents]
 
         averaged_array = weighted_sum.multiply(inverse_weight_sum[:, None]).tocsr()
-
         averaged_batch = SuggestionBatch(averaged_array)
 
-        return averaged_batch.filter(limit=int(params.get("limit", 10)))
+        return averaged_batch.filter(limit=limit)
