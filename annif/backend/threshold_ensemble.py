@@ -120,23 +120,18 @@ class ThresholdEnsembleBackend(EnsembleBackend):
         limit = int(params.get("limit", 10))
         first_batch = next(iter(batch_by_source.values()))
 
-        # With a single source, apply a hard threshold directly.
         if len(sources) == 1:
             return first_batch.filter(
                 threshold=threshold,
                 limit=limit,
             )
 
-        # Accumulate the weighted predictions for every document.
         n_docs, n_subjects = first_batch.array.shape
+        weight_sum = np.zeros(n_docs, dtype="float32")
         weighted_sum = csr_array(
             (n_docs, n_subjects),
             dtype="float32",
         )
-
-        # For each document, accumulate the weights of the sources that
-        # are actually active for that document.
-        weight_sum = np.zeros(n_docs, dtype="float64")
 
         for project_id, source_weight in sources:
             batch = batch_by_source[project_id]
@@ -144,40 +139,21 @@ class ThresholdEnsembleBackend(EnsembleBackend):
             if not batch:
                 continue
 
-            # The filtered batch is used ONLY for the activation decision.
-            # The original batch.array is still used for the weighted sum.
             filtered_batch = batch.filter(threshold=threshold)
-
-            # This gives us one boolean value per document without iterating
-            # over SuggestionResult objects in Python.
             active = np.diff(filtered_batch.array.indptr) > 0
 
             if not np.any(active):
                 continue
 
-            # Add this source's configured weight to the denominator for
-            # every document for which this source is active.
             weight_sum[active] += source_weight
-
-            # Add this source's original prediction matrix to the numerator,
-            # but only for active documents.
             weighted_sum += batch.array.multiply(
-                # `active[:, None]` gives one multiplier (0/1) per document:
-                active[:, None]
-                * source_weight
+                active[:, None] * source_weight
             ).tocsr()
 
-        # If no source was activated for any document, return an empty
-        # SuggestionBatch with the same shape as the source batches.
         if not np.any(weight_sum):
             return SuggestionBatch(csr_array((n_docs, n_subjects), dtype="float32"))
 
-        # Avoid division by zero for documents where no source was active.
         inverse_weight_sum = np.zeros_like(weight_sum)
-
-        # Dividing each row by its corresponding weight_sum gives the same
-        # weighted-average calculation as SuggestionBatch.from_averaged(),
-        # but with a different set of active sources for each document.
         active_documents = weight_sum > 0
         inverse_weight_sum[active_documents] = 1.0 / weight_sum[active_documents]
 
