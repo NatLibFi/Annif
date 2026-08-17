@@ -79,7 +79,7 @@ class ThresholdEnsembleOptimizer(EnsembleOptimizer):
             )
         ]
 
-    def _prepare(self, n_jobs):
+    def _prepare(self, n_jobs: int = 1):
         args = super()._prepare(n_jobs)
         args["backend"] = self._backend
         return args
