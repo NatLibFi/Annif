@@ -49,7 +49,7 @@ class ThresholdEnsembleHPObjective(hyperopt.HPObjective):
                     "threshold": threshold,
                 },
             )
-            eval_batch.evaluate_many(merged_batch, gold_batch)
+        eval_batch.evaluate_many(merged_batch, gold_batch)
 
         results = eval_batch.results(metrics=[args["metric"]])
         return results[args["metric"]]
@@ -70,15 +70,48 @@ class ThresholdEnsembleOptimizer(EnsembleOptimizer):
     def _prepare(self, n_jobs: int = 1):
         args = super()._prepare(n_jobs)
         args["backend"] = self._backend
+        args["sources"] = annif.util.parse_sources(
+            self._backend.config_params["sources"]
+        )
         return args
 
     def _postprocess(self, study: Study) -> HPRecommendation:
         line = f"threshold={study.best_params['threshold']:.4f}"
 
+        isoelastic_x, isoelastic_y = self.calculate_isoelastic_point(study)
+
+        print(f"Found isoelastic point with score {isoelastic_y:.4f} with:")
+        print("---")
+        print(f"threshold={isoelastic_x:.4f}")
+        print("---")
+
         return hyperopt.HPRecommendation(
             lines=[line],
             score=study.best_value,
         )
+
+    def calculate_isoelastic_point(self, study):
+        """Calculate the isoelastic point assuming the optimization curve
+        follows a logarithmic relationship: y = a + b * ln(x)
+        The isoelastic point is where dy/dx = 1, which occurs at x = b.
+        """
+        trials = [
+            trial
+            for trial in study.get_trials()
+            if trial.value is not None
+            and "threshold" in trial.params
+            and trial.params["threshold"] > 0
+        ]
+
+        x = np.array([t.params["threshold"] for t in trials])
+        y = np.array([t.value for t in trials])
+
+        b, a = np.polyfit(np.log(x), y, 1)
+
+        isoelastic_x = b
+        isoelastic_y = a + b * np.log(isoelastic_x)
+
+        return isoelastic_x, isoelastic_y
 
 
 class ThresholdEnsembleBackend(EnsembleBackend):
@@ -146,7 +179,7 @@ class ThresholdEnsembleBackend(EnsembleBackend):
                 continue
 
             weight_sum[active] += source_weight
-            weighted_sum += batch.array.multiply(
+            weighted_sum += filtered_batch.array.multiply(
                 active[:, None] * source_weight
             ).tocsr()
 
