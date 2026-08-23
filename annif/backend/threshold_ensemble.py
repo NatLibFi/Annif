@@ -17,6 +17,7 @@ from .ensemble import EnsembleBackend, EnsembleOptimizer
 
 if TYPE_CHECKING:
     from optuna.study import Study
+
     from annif.backend.hyperopt import HPRecommendation
     from annif.corpus.document import DocumentCorpus
     from annif.project import AnnifProject
@@ -125,6 +126,7 @@ class ThresholdEnsembleBackend(EnsembleBackend):
         project: "AnnifProject",
     ):
         self.threshold = float(config_params.get("threshold", 0.1))
+        self.filter = bool(config_params.get("filter", False))
         super().__init__(backend_id, config_params, project)
 
     def get_hp_optimizer(
@@ -140,9 +142,7 @@ class ThresholdEnsembleBackend(EnsembleBackend):
         source_project_id: str,
     ) -> SuggestionBatch:
         """Align a compact source batch with the ensemble vocabulary."""
-        source_subjects = self.project.registry.get_project(
-            source_project_id
-        ).subjects
+        source_subjects = self.project.registry.get_project(source_project_id).subjects
         target_subjects = self.project.subjects
 
         if batch.array.shape[1] == len(target_subjects):
@@ -189,6 +189,7 @@ class ThresholdEnsembleBackend(EnsembleBackend):
         used for source activation."""
 
         threshold = float(params.get("threshold", self.threshold))
+        filter_b = bool(params.get("filter", self.filter))
         limit = int(params.get("limit", 10))
         first_batch = next(iter(batch_by_source.values()))
 
@@ -217,12 +218,11 @@ class ThresholdEnsembleBackend(EnsembleBackend):
 
             weight_sum[active] += source_weight
 
-            # NB: using filtered_batch.array.multiply(
-            # will remove sub-threshold scores entirely
-            # TODO: make this behaviour choice a parameter
-            weighted_sum += batch.array.multiply(
-                active[:, None] * source_weight
-            ).tocsr()
+            weighted_sum += (
+                (filtered_batch.array if filter_b else batch.array)
+                .multiply(active[:, None] * source_weight)
+                .tocsr()
+            )
 
         if not np.any(weight_sum):
             return SuggestionBatch(
