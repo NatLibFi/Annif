@@ -17,7 +17,6 @@ from .ensemble import EnsembleBackend, EnsembleOptimizer
 
 if TYPE_CHECKING:
     from optuna.study import Study
-
     from annif.backend.hyperopt import HPRecommendation
     from annif.corpus.document import DocumentCorpus
     from annif.project import AnnifProject
@@ -49,7 +48,7 @@ class ThresholdEnsembleHPObjective(hyperopt.HPObjective):
                     "threshold": threshold,
                 },
             )
-        eval_batch.evaluate_many(merged_batch, gold_batch)
+            eval_batch.evaluate_many(merged_batch, gold_batch)
 
         results = eval_batch.results(metrics=[args["metric"]])
         return results[args["metric"]]
@@ -135,6 +134,46 @@ class ThresholdEnsembleBackend(EnsembleBackend):
     ) -> ThresholdEnsembleOptimizer:
         return ThresholdEnsembleOptimizer(self, corpus, metric)
 
+    def _align_batch(
+        self,
+        batch: SuggestionBatch,
+        source_project_id: str,
+    ) -> SuggestionBatch:
+        """Align a compact source batch with the ensemble vocabulary."""
+        source_subjects = self.project.registry.get_project(
+            source_project_id
+        ).subjects
+        target_subjects = self.project.subjects
+
+        if batch.array.shape[1] == len(target_subjects):
+            return batch
+
+        source_active = source_subjects.active
+        if batch.array.shape[1] != len(source_active):
+            # TODO: use Annif cli warning machinery
+            raise ValueError(
+                f"Source '{source_project_id}' has {batch.array.shape[1]} "
+                f"columns, but its vocabulary has {len(source_active)} "
+                "active subjects."
+            )
+
+        array = batch.array.tocoo()
+        target_cols = np.empty_like(array.col)
+
+        for source_col in np.unique(array.col):
+            target_cols[array.col == source_col] = target_subjects.by_uri(
+                source_active[source_col][1].uri,
+                warnings=False,
+            )
+
+        return SuggestionBatch(
+            csr_array(
+                (array.data, (array.row, target_cols)),
+                shape=(array.shape[0], len(target_subjects)),
+                dtype=np.float32,
+            )
+        )
+
     def _merge_source_batches(
         self,
         batch_by_source: dict[str, SuggestionBatch],
@@ -153,13 +192,9 @@ class ThresholdEnsembleBackend(EnsembleBackend):
         limit = int(params.get("limit", 10))
         first_batch = next(iter(batch_by_source.values()))
 
-        if len(sources) == 1:
-            return first_batch.filter(
-                threshold=threshold,
-                limit=limit,
-            )
+        n_docs = first_batch.array.shape[0]
+        n_subjects = len(self.project.subjects)
 
-        n_docs, n_subjects = first_batch.array.shape
         weight_sum = np.zeros(n_docs, dtype="float32")
         weighted_sum = csr_array(
             (n_docs, n_subjects),
@@ -172,6 +207,8 @@ class ThresholdEnsembleBackend(EnsembleBackend):
             if not batch:
                 continue
 
+            batch = self._align_batch(batch, project_id)
+
             filtered_batch = batch.filter(threshold=threshold)
             active = np.diff(filtered_batch.array.indptr) > 0
 
@@ -179,12 +216,21 @@ class ThresholdEnsembleBackend(EnsembleBackend):
                 continue
 
             weight_sum[active] += source_weight
-            weighted_sum += filtered_batch.array.multiply(
+
+            # NB: using filtered_batch.array.multiply(
+            # will remove sub-threshold scores entirely
+            # TODO: make this behaviour choice a parameter
+            weighted_sum += batch.array.multiply(
                 active[:, None] * source_weight
             ).tocsr()
 
         if not np.any(weight_sum):
-            return SuggestionBatch(csr_array((n_docs, n_subjects), dtype="float32"))
+            return SuggestionBatch(
+                csr_array(
+                    (n_docs, n_subjects),
+                    dtype="float32",
+                )
+            )
 
         inverse_weight_sum = np.zeros_like(weight_sum)
         active_documents = weight_sum > 0
