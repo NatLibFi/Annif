@@ -16,11 +16,26 @@ from annif.suggestion import SuggestionBatch
 SOURCES = [("source1", 1.0), ("source2", 1.0)]
 DEFAULT_LIMIT = 10
 DEFAULT_THRESHOLD = 0.5
+N_SUBJECTS = 2  # Using dummy vocabulary with 2 subjects
 
 
 def make_batch(scores):
-    """Create a SuggestionBatch from a dense score matrix."""
-    return SuggestionBatch(csr_array(np.asarray(scores, dtype="float32")))
+    """Create a SuggestionBatch from a dense score matrix with N_SUBJECTS columns.
+    
+    If scores has fewer columns than N_SUBJECTS, it will be padded with zeros.
+    """
+    scores_array = np.asarray(scores, dtype="float32")
+    if scores_array.ndim == 1:
+        scores_array = scores_array.reshape(1, -1)
+    
+    # Pad with zeros if needed
+    if scores_array.shape[1] < N_SUBJECTS:
+        padding = np.zeros((scores_array.shape[0], N_SUBJECTS - scores_array.shape[1]), dtype="float32")
+        scores_array = np.hstack([scores_array, padding])
+    elif scores_array.shape[1] > N_SUBJECTS:
+        scores_array = scores_array[:, :N_SUBJECTS]
+    
+    return SuggestionBatch(csr_array(scores_array))
 
 
 def merge(backend, batches, sources=SOURCES, **params):
@@ -39,8 +54,46 @@ def first_score(batch, document=0):
 
 class TestThresholdEnsembleBackend:
     @pytest.fixture
+    def project(self, subject_index):
+        """Override the project fixture to use a mock project with N_SUBJECTS."""
+        from unittest import mock
+        proj = mock.Mock()
+        proj.analyzer = annif.analyzer.get_analyzer("snowball(finnish)")
+        proj.language = "fi"
+        proj.datadir = "/tmp/data"
+        
+        # Create a mock subject index with N_SUBJECTS
+        from annif.vocab import SubjectIndex
+        
+        mock_subjects = mock.Mock(spec=SubjectIndex)
+        # Mock the active subjects to have N_SUBJECTS entries
+        mock_active = [(i, mock.Mock(uri=f"http://example.org/subject{i}")) for i in range(N_SUBJECTS)]
+        mock_subjects.active = mock_active
+        mock_subjects.__len__ = lambda self: N_SUBJECTS
+        mock_subjects.by_uri = lambda uri, warnings=False: 0  # Return index 0 for any URI
+        
+        proj.subjects = mock_subjects
+        proj.vocab = mock.Mock()
+        proj.vocab.subjects = mock_subjects
+        proj.vocab_lang = "fi"
+        
+        # Mock the registry
+        mock_registry = mock.Mock()
+        
+        # Mock get_project to return a project with N_SUBJECTS for any project_id
+        def mock_get_project(project_id, min_access=None):
+            mock_proj = mock.Mock()
+            mock_proj.subjects = mock_subjects
+            return mock_proj
+        
+        mock_registry.get_project = mock_get_project
+        proj.registry = mock_registry
+        
+        return proj
+
+    @pytest.fixture
     def backend(self, project):
-        return ThresholdEnsembleBackend(
+        backend = ThresholdEnsembleBackend(
             backend_id="threshold_ensemble",
             config_params={
                 "sources": "dummy",
@@ -48,6 +101,9 @@ class TestThresholdEnsembleBackend:
             },
             project=project,
         )
+        # Mock _align_batch to return the batch as-is for unit tests
+        backend._align_batch = lambda batch, project_id: batch
+        return backend
 
     def test_init_default_threshold(self, project):
         backend = ThresholdEnsembleBackend(
@@ -71,6 +127,7 @@ class TestThresholdEnsembleBackend:
         assert backend.threshold == 0.7
 
     def test_merge_empty_batches(self, project):
+        """Merging empty batches produces an empty result."""
         backend = ThresholdEnsembleBackend(
             backend_id="threshold_ensemble",
             config_params={"sources": "dummy"},
@@ -87,6 +144,11 @@ class TestThresholdEnsembleBackend:
         assert len(result) == 0
 
     def test_merge_below_threshold_produces_no_suggestions(self, backend):
+        """When all sources have scores below threshold, no sources are activated.
+        
+        Both sources have scores [0.4, 0.3], neither >= 0.5
+        No sources are activated, so result is empty
+        """
         batches = {
             "source1": make_batch([[0.4, 0.3]]),
             "source2": make_batch([[0.4, 0.3]]),
@@ -98,6 +160,13 @@ class TestThresholdEnsembleBackend:
         assert result.array.nnz == 0
 
     def test_merge_above_threshold_activates_sources(self, backend):
+        """When all sources have scores above threshold, all sources are activated.
+        
+        Both sources have scores [0.6, 0.8], both >= 0.5
+        Both sources are activated
+        Weighted average: [(0.6+0.6)/2, (0.8+0.8)/2] = [0.6, 0.8]
+        Highest score is 0.8
+        """
         batches = {
             "source1": make_batch([[0.6, 0.8]]),
             "source2": make_batch([[0.6, 0.8]]),
@@ -108,6 +177,12 @@ class TestThresholdEnsembleBackend:
         assert first_score(result) == pytest.approx(0.8)
 
     def test_merge_uses_configured_weights(self, backend):
+        """Sources with different weights are weighted accordingly.
+        
+        source1 (weight=2.0): [0.9]
+        source2 (weight=1.0): [0.6]
+        Weighted average: (0.9*2 + 0.6*1) / (2+1) = 0.8
+        """
         batches = {
             "source1": make_batch([[0.9]]),
             "source2": make_batch([[0.6]]),
@@ -122,6 +197,12 @@ class TestThresholdEnsembleBackend:
         assert first_score(result) == pytest.approx(0.8)
 
     def test_merge_single_active_source(self, backend):
+        """When only one source is activated, its predictions are used directly.
+        
+        source1: [0.8, 0.2] - 0.8 >= 0.5, so activated
+        source2: [0.1, 0.2] - neither score >= 0.5, so NOT activated
+        Result: only source1's predictions: [0.8, 0.2]
+        """
         batches = {
             "source1": make_batch([[0.8, 0.2]]),
             "source2": make_batch([[0.1, 0.2]]),
@@ -135,19 +216,60 @@ class TestThresholdEnsembleBackend:
         )
 
     def test_merge_preserves_below_threshold_predictions(self, backend):
+        """With filter=False (default), below-threshold scores from activated sources
+        are preserved in the weighted average.
+        
+        Both sources are activated (each has at least one score >= 0.5).
+        source1: [0.8, 0.2] - 0.8 >= 0.5, so activated
+        source2: [0.1, 0.6] - 0.6 >= 0.5, so activated
+        Weighted average with filter=False: [(0.8+0.1)/2, (0.2+0.6)/2] = [0.45, 0.40]
+        """
         batches = {
             "source1": make_batch([[0.8, 0.2]]),
             "source2": make_batch([[0.1, 0.6]]),
         }
 
-        result = merge(backend, batches)
+        result = merge(backend, batches, filter=False)
 
         np.testing.assert_allclose(
             result.array.toarray(),
             [[0.45, 0.40]],
         )
 
+    def test_merge_filters_below_threshold_predictions(self, backend):
+        """With filter=True, below-threshold scores are removed from activated sources
+        before weighted averaging.
+        
+        Both sources are activated (each has at least one score >= 0.5).
+        source1: [0.8, 0.2] -> filtered: [0.8, 0.0]
+        source2: [0.1, 0.6] -> filtered: [0.0, 0.6]
+        Weighted average: [(0.8+0.0)/2, (0.0+0.6)/2] = [0.4, 0.3]
+        """
+        batches = {
+            "source1": make_batch([[0.8, 0.2]]),
+            "source2": make_batch([[0.1, 0.6]]),
+        }
+
+        result = merge(backend, batches, filter=True)
+
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            [[0.4, 0.3]],
+        )
+
     def test_merge_applies_threshold_per_document(self, backend):
+        """Threshold is applied independently for each document.
+        
+        Document 0:
+          source1: [0.4] - 0.4 < 0.5, NOT activated
+          source2: [0.8] - 0.8 >= 0.5, activated
+          Result: [0.8]
+        
+        Document 1:
+          source1: [0.9] - 0.9 >= 0.5, activated
+          source2: [0.3] - 0.3 < 0.5, NOT activated
+          Result: [0.9]
+        """
         batches = {
             "source1": make_batch([[0.4], [0.9]]),
             "source2": make_batch([[0.8], [0.3]]),
@@ -160,6 +282,18 @@ class TestThresholdEnsembleBackend:
         assert first_score(result, document=1) == pytest.approx(0.9)
 
     def test_merge_recalculates_weights_per_document(self, backend):
+        """Weights are recalculated per document based on which sources are active.
+        
+        Document 0:
+          source1 (weight=2.0): [0.9] - activated
+          source2 (weight=1.0): [0.6] - activated
+          Weighted average: (0.9*2 + 0.6*1) / (2+1) = 0.8
+        
+        Document 1:
+          source1 (weight=2.0): [0.4] - NOT activated
+          source2 (weight=1.0): [0.8] - activated
+          Only source2 is active, so result is [0.8]
+        """
         batches = {
             "source1": make_batch([[0.9], [0.4]]),
             "source2": make_batch([[0.6], [0.8]]),
@@ -191,32 +325,67 @@ class TestThresholdEnsembleBackend:
         with pytest.raises(NotSupportedException):
             backend.train(document_corpus)
 
-    def test_single_source_filters_below_threshold(self, backend):
+    def test_single_source_with_filter_true_removes_below_threshold(self, backend):
+        """With a single source and filter=True, below-threshold scores are removed.
+        
+        source1: [0.9, 0.2] -> filtered: [0.9, 0.0]
+        Result: [0.9, 0.0]
+        """
         batches = {
-            "source1": make_batch([[0.9, 0.2, 0.1, 0.3]]),
+            "source1": make_batch([[0.9, 0.2]]),
         }
 
         result = merge(
             backend,
             batches,
             sources=[("source1", 1.0)],
+            filter=True,
         )
 
         np.testing.assert_allclose(
             result.array.toarray(),
-            [[0.9, 0.0, 0.0, 0.0]],
+            [[0.9, 0.0]],
         )
 
-    def test_multiple_sources_keep_below_threshold_predictions(
+    def test_single_source_with_filter_false_preserves_below_threshold(self, backend):
+        """With a single source and filter=False, below-threshold scores are preserved.
+        
+        source1: [0.9, 0.2] - source is activated (0.9 >= 0.5)
+        With filter=False, all scores are kept: [0.9, 0.2]
+        """
+        batches = {
+            "source1": make_batch([[0.9, 0.2]]),
+        }
+
+        result = merge(
+            backend,
+            batches,
+            sources=[("source1", 1.0)],
+            filter=False,
+        )
+
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            [[0.9, 0.2]],
+        )
+
+    def test_multiple_sources_with_filter_false_keep_below_threshold(
         self,
         backend,
     ):
+        """With multiple sources and filter=False (default), below-threshold scores
+        from activated sources are preserved.
+        
+        Both sources are activated (each has at least one score >= 0.5).
+        With filter=False, all scores are kept for averaging.
+        Weighted average: [(0.9+0.8)/2, (0.2+0.4)/2] = [0.85, 0.30]
+        """
         batches = {
             "source1": make_batch([[0.9, 0.2]]),
             "source2": make_batch([[0.8, 0.4]]),
         }
 
-        result = merge(backend, batches)
+        result = merge(backend, batches, filter=False)
 
         np.testing.assert_allclose(
             result.array.toarray(),
@@ -227,6 +396,13 @@ class TestThresholdEnsembleBackend:
         self,
         backend,
     ):
+        """Parameter threshold overrides the backend's configured threshold.
+        
+        Backend has threshold=0.5, but parameter threshold=0.1
+        Both sources have scores >= 0.1, so both are activated
+        With filter=False (default), all scores are kept
+        Weighted average: [(0.2+0.2)/2, (0.8+0.8)/2] = [0.2, 0.8]
+        """
         batches = {
             "source1": make_batch([[0.2, 0.8]]),
             "source2": make_batch([[0.2, 0.8]]),
@@ -243,7 +419,14 @@ class TestThresholdEnsembleBackend:
             [[0.2, 0.8]],
         )
 
-    def test_single_source_uses_parameter_threshold(self, backend):
+    def test_single_source_with_parameter_threshold_and_filter(self, backend):
+        """Single source with custom threshold and filter=True removes below-threshold scores.
+        
+        source1: [0.2, 0.8] with threshold=0.7
+        Source is activated (0.8 >= 0.7)
+        With filter=True: [0.2, 0.8] -> filtered: [0.0, 0.8]
+        Result: [0.0, 0.8]
+        """
         batches = {
             "source1": make_batch([[0.2, 0.8]]),
         }
@@ -253,6 +436,7 @@ class TestThresholdEnsembleBackend:
             batches,
             sources=[("source1", 1.0)],
             threshold=0.7,
+            filter=True,
         )
 
         np.testing.assert_allclose(
@@ -423,12 +607,15 @@ class TestThresholdEnsembleBackend:
         assert isinstance(result, SuggestionBatch)
         assert result.array.nnz == 0
 
-    def test_single_source_high_threshold_filters_all_predictions(
-        self,
-        backend,
-    ):
+    def test_single_source_high_threshold_with_filter_filters_all(self, backend):
+        """With a very high threshold and filter=True, all scores may be removed.
+        
+        source1: [0.5, 0.6] with threshold=0.9
+        Neither score >= 0.9, so source is NOT activated
+        Result: empty batch (no predictions)
+        """
         batches = {
-            "source1": make_batch([[0.5, 0.6, 0.7]]),
+            "source1": make_batch([[0.5, 0.6]]),
         }
 
         result = merge(
@@ -436,12 +623,34 @@ class TestThresholdEnsembleBackend:
             batches,
             sources=[("source1", 1.0)],
             threshold=0.9,
+            filter=True,
         )
 
         np.testing.assert_allclose(
             result.array.toarray(),
-            [[0.0, 0.0, 0.0]],
+            [[0.0, 0.0]],
         )
+
+    def test_single_source_high_threshold_without_filter_preserves_scores(self, backend):
+        """With a very high threshold and filter=False, source is not activated.
+        
+        source1: [0.5, 0.6] with threshold=0.9
+        Neither score >= 0.9, so source is NOT activated
+        Result: empty batch (no predictions), regardless of filter value
+        """
+        batches = {
+            "source1": make_batch([[0.5, 0.6]]),
+        }
+
+        result = merge(
+            backend,
+            batches,
+            sources=[("source1", 1.0)],
+            threshold=0.9,
+            filter=False,
+        )
+
+        assert result.array.nnz == 0
 
     def test_get_hp_optimizer(self, backend, document_corpus):
         optimizer = backend.get_hp_optimizer(
@@ -453,3 +662,186 @@ class TestThresholdEnsembleBackend:
         assert optimizer._backend is backend
         assert optimizer._corpus is document_corpus
         assert optimizer._metric == "F1@5"
+
+    def test_init_default_filter(self, project):
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={"sources": "dummy"},
+            project=project,
+        )
+
+        assert backend.filter is False
+
+    def test_init_custom_filter_true(self, project):
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={
+                "sources": "dummy",
+                "filter": True,
+            },
+            project=project,
+        )
+
+        assert backend.filter is True
+
+    def test_merge_with_filter_false_keeps_below_threshold_scores(self, backend):
+        backend.filter = False
+        batches = {
+            "source1": make_batch([[0.9, 0.2]]),
+        }
+
+        result = merge(backend, batches, sources=[("source1", 1.0)], filter=False)
+
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            [[0.9, 0.2]],
+        )
+
+    def test_merge_with_filter_true_removes_below_threshold_scores(self, backend):
+        backend.filter = False
+        batches = {
+            "source1": make_batch([[0.9, 0.2]]),
+        }
+
+        result = merge(backend, batches, sources=[("source1", 1.0)], filter=True)
+
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            [[0.9, 0.0]],
+        )
+
+    def test_merge_with_multiple_sources_filter_false_preserves_below_threshold(self, backend):
+        batches = {
+            "source1": make_batch([[0.9, 0.2]]),
+            "source2": make_batch([[0.8, 0.4]]),
+        }
+
+        result = merge(backend, batches, filter=False)
+
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            [[0.85, 0.30]],
+        )
+
+    def test_merge_with_multiple_sources_filter_true_filters_below_threshold(self, backend):
+        batches = {
+            "source1": make_batch([[0.9, 0.2]]),
+            "source2": make_batch([[0.8, 0.4]]),
+        }
+
+        result = merge(backend, batches, filter=True)
+
+        # With filter=True, both sources have at least one score >= threshold (0.5)
+        # source1: [0.9, 0.2] -> filtered: [0.9, 0.0]
+        # source2: [0.8, 0.4] -> filtered: [0.8, 0.0]
+        # Weighted average: [(0.9 + 0.8) / 2, (0.0 + 0.0) / 2] = [0.85, 0.0]
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            [[0.85, 0.0]],
+        )
+
+    def test_filter_parameter_overrides_backend_config(self, backend):
+        backend.filter = False
+        batches = {
+            "source1": make_batch([[0.9, 0.2]]),
+        }
+
+        # Parameter filter=True should override backend.filter=False
+        result = merge(backend, batches, sources=[("source1", 1.0)], filter=True)
+
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            [[0.9, 0.0]],
+        )
+
+    def test_backend_config_filter_used_when_parameter_missing(self, backend):
+        backend.filter = True
+        batches = {
+            "source1": make_batch([[0.9, 0.2]]),
+        }
+
+        # Should use backend.filter=True since parameter is not provided
+        result = merge(backend, batches, sources=[("source1", 1.0)])
+
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            [[0.9, 0.0]],
+        )
+
+    def test_weighted_sources_with_filter_true(self, backend):
+        """Test that weighted averaging works correctly with filter=True.
+        
+        source1 (weight=2.0): [0.9, 0.2] -> filtered: [0.9, 0.0]
+        source2 (weight=1.0): [0.8, 0.4] -> filtered: [0.8, 0.0]
+        Weighted average: [(0.9*2 + 0.8*1)/(2+1), (0.0*2 + 0.0*1)/(2+1)] = [0.866..., 0.0]
+        """
+        batches = {
+            "source1": make_batch([[0.9, 0.2]]),
+            "source2": make_batch([[0.8, 0.4]]),
+        }
+
+        result = merge(
+            backend,
+            batches,
+            sources=[("source1", 2.0), ("source2", 1.0)],
+            filter=True,
+        )
+
+        expected_weighted_avg = (0.9 * 2 + 0.8 * 1) / (2 + 1)
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            [[expected_weighted_avg, 0.0]],
+        )
+
+    def test_threshold_exact_match(self, backend):
+        """Test that scores exactly equal to the threshold are kept.
+        
+        With threshold=0.5, a score of exactly 0.5 should activate the source.
+        """
+        batches = {
+            "source1": make_batch([[0.5, 0.2]]),
+        }
+
+        # Score of 0.5 should be >= threshold, so source is activated
+        result = merge(
+            backend,
+            batches,
+            sources=[("source1", 1.0)],
+            filter=True,
+        )
+
+        # With filter=True, 0.5 is kept (>= threshold), 0.2 is removed
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            [[0.5, 0.0]],
+        )
+
+    def test_all_scores_below_threshold(self, backend):
+        """Test that when all scores are below threshold, no source is activated."""
+        batches = {
+            "source1": make_batch([[0.4, 0.3]]),
+            "source2": make_batch([[0.2, 0.1]]),
+        }
+
+        result = merge(backend, batches, filter=False)
+
+        # No source has any score >= 0.5, so no sources are activated
+        assert result.array.nnz == 0
+
+    def test_make_batch_padding(self):
+        """Test that make_batch correctly pads scores to N_SUBJECTS columns."""
+        # Test with 1 column (should be padded to 2)
+        batch = make_batch([[0.9]])
+        assert batch.array.shape == (1, N_SUBJECTS)
+        np.testing.assert_allclose(
+            batch.array.toarray(),
+            [[0.9, 0.0]],
+        )
+
+        # Test with 3 columns (should be truncated to 2)
+        batch = make_batch([[0.9, 0.8, 0.7]])
+        assert batch.array.shape == (1, N_SUBJECTS)
+        np.testing.assert_allclose(
+            batch.array.toarray(),
+            [[0.9, 0.8]],
+        )
