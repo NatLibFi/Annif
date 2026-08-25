@@ -21,20 +21,22 @@ N_SUBJECTS = 2  # Using dummy vocabulary with 2 subjects
 
 def make_batch(scores):
     """Create a SuggestionBatch from a dense score matrix with N_SUBJECTS columns.
-    
+
     If scores has fewer columns than N_SUBJECTS, it will be padded with zeros.
     """
     scores_array = np.asarray(scores, dtype="float32")
     if scores_array.ndim == 1:
         scores_array = scores_array.reshape(1, -1)
-    
+
     # Pad with zeros if needed
     if scores_array.shape[1] < N_SUBJECTS:
-        padding = np.zeros((scores_array.shape[0], N_SUBJECTS - scores_array.shape[1]), dtype="float32")
+        padding = np.zeros(
+            (scores_array.shape[0], N_SUBJECTS - scores_array.shape[1]), dtype="float32"
+        )
         scores_array = np.hstack([scores_array, padding])
     elif scores_array.shape[1] > N_SUBJECTS:
         scores_array = scores_array[:, :N_SUBJECTS]
-    
+
     return SuggestionBatch(csr_array(scores_array))
 
 
@@ -57,38 +59,44 @@ class TestThresholdEnsembleBackend:
     def project(self, subject_index):
         """Override the project fixture to use a mock project with N_SUBJECTS."""
         from unittest import mock
+
         proj = mock.Mock()
         proj.analyzer = annif.analyzer.get_analyzer("snowball(finnish)")
         proj.language = "fi"
         proj.datadir = "/tmp/data"
-        
+
         # Create a mock subject index with N_SUBJECTS
         from annif.vocab import SubjectIndex
-        
+
         mock_subjects = mock.Mock(spec=SubjectIndex)
         # Mock the active subjects to have N_SUBJECTS entries
-        mock_active = [(i, mock.Mock(uri=f"http://example.org/subject{i}")) for i in range(N_SUBJECTS)]
+        mock_active = [
+            (i, mock.Mock(uri=f"http://example.org/subject{i}"))
+            for i in range(N_SUBJECTS)
+        ]
         mock_subjects.active = mock_active
         mock_subjects.__len__ = lambda self: N_SUBJECTS
-        mock_subjects.by_uri = lambda uri, warnings=False: 0  # Return index 0 for any URI
-        
+        mock_subjects.by_uri = (
+            lambda uri, warnings=False: 0
+        )  # Return index 0 for any URI
+
         proj.subjects = mock_subjects
         proj.vocab = mock.Mock()
         proj.vocab.subjects = mock_subjects
         proj.vocab_lang = "fi"
-        
+
         # Mock the registry
         mock_registry = mock.Mock()
-        
+
         # Mock get_project to return a project with N_SUBJECTS for any project_id
         def mock_get_project(project_id, min_access=None):
             mock_proj = mock.Mock()
             mock_proj.subjects = mock_subjects
             return mock_proj
-        
+
         mock_registry.get_project = mock_get_project
         proj.registry = mock_registry
-        
+
         return proj
 
     @pytest.fixture
@@ -145,7 +153,7 @@ class TestThresholdEnsembleBackend:
 
     def test_merge_below_threshold_produces_no_suggestions(self, backend):
         """When all sources have scores below threshold, no sources are activated.
-        
+
         Both sources have scores [0.4, 0.3], neither >= 0.5
         No sources are activated, so result is empty
         """
@@ -161,7 +169,7 @@ class TestThresholdEnsembleBackend:
 
     def test_merge_above_threshold_activates_sources(self, backend):
         """When all sources have scores above threshold, all sources are activated.
-        
+
         Both sources have scores [0.6, 0.8], both >= 0.5
         Both sources are activated
         Weighted average: [(0.6+0.6)/2, (0.8+0.8)/2] = [0.6, 0.8]
@@ -178,7 +186,7 @@ class TestThresholdEnsembleBackend:
 
     def test_merge_uses_configured_weights(self, backend):
         """Sources with different weights are weighted accordingly.
-        
+
         source1 (weight=2.0): [0.9]
         source2 (weight=1.0): [0.6]
         Weighted average: (0.9*2 + 0.6*1) / (2+1) = 0.8
@@ -198,7 +206,7 @@ class TestThresholdEnsembleBackend:
 
     def test_merge_single_active_source(self, backend):
         """When only one source is activated, its predictions are used directly.
-        
+
         source1: [0.8, 0.2] - 0.8 >= 0.5, so activated
         source2: [0.1, 0.2] - neither score >= 0.5, so NOT activated
         Result: only source1's predictions: [0.8, 0.2]
@@ -218,7 +226,7 @@ class TestThresholdEnsembleBackend:
     def test_merge_preserves_below_threshold_predictions(self, backend):
         """With filter=False (default), below-threshold scores from activated sources
         are preserved in the weighted average.
-        
+
         Both sources are activated (each has at least one score >= 0.5).
         source1: [0.8, 0.2] - 0.8 >= 0.5, so activated
         source2: [0.1, 0.6] - 0.6 >= 0.5, so activated
@@ -239,7 +247,7 @@ class TestThresholdEnsembleBackend:
     def test_merge_filters_below_threshold_predictions(self, backend):
         """With filter=True, below-threshold scores are removed from activated sources
         before weighted averaging.
-        
+
         Both sources are activated (each has at least one score >= 0.5).
         source1: [0.8, 0.2] -> filtered: [0.8, 0.0]
         source2: [0.1, 0.6] -> filtered: [0.0, 0.6]
@@ -259,12 +267,12 @@ class TestThresholdEnsembleBackend:
 
     def test_merge_applies_threshold_per_document(self, backend):
         """Threshold is applied independently for each document.
-        
+
         Document 0:
           source1: [0.4] - 0.4 < 0.5, NOT activated
           source2: [0.8] - 0.8 >= 0.5, activated
           Result: [0.8]
-        
+
         Document 1:
           source1: [0.9] - 0.9 >= 0.5, activated
           source2: [0.3] - 0.3 < 0.5, NOT activated
@@ -283,12 +291,12 @@ class TestThresholdEnsembleBackend:
 
     def test_merge_recalculates_weights_per_document(self, backend):
         """Weights are recalculated per document based on which sources are active.
-        
+
         Document 0:
           source1 (weight=2.0): [0.9] - activated
           source2 (weight=1.0): [0.6] - activated
           Weighted average: (0.9*2 + 0.6*1) / (2+1) = 0.8
-        
+
         Document 1:
           source1 (weight=2.0): [0.4] - NOT activated
           source2 (weight=1.0): [0.8] - activated
@@ -327,7 +335,7 @@ class TestThresholdEnsembleBackend:
 
     def test_single_source_with_filter_true_removes_below_threshold(self, backend):
         """With a single source and filter=True, below-threshold scores are removed.
-        
+
         source1: [0.9, 0.2] -> filtered: [0.9, 0.0]
         Result: [0.9, 0.0]
         """
@@ -349,7 +357,7 @@ class TestThresholdEnsembleBackend:
 
     def test_single_source_with_filter_false_preserves_below_threshold(self, backend):
         """With a single source and filter=False, below-threshold scores are preserved.
-        
+
         source1: [0.9, 0.2] - source is activated (0.9 >= 0.5)
         With filter=False, all scores are kept: [0.9, 0.2]
         """
@@ -375,7 +383,7 @@ class TestThresholdEnsembleBackend:
     ):
         """With multiple sources and filter=False (default), below-threshold scores
         from activated sources are preserved.
-        
+
         Both sources are activated (each has at least one score >= 0.5).
         With filter=False, all scores are kept for averaging.
         Weighted average: [(0.9+0.8)/2, (0.2+0.4)/2] = [0.85, 0.30]
@@ -397,7 +405,7 @@ class TestThresholdEnsembleBackend:
         backend,
     ):
         """Parameter threshold overrides the backend's configured threshold.
-        
+
         Backend has threshold=0.5, but parameter threshold=0.1
         Both sources have scores >= 0.1, so both are activated
         With filter=False (default), all scores are kept
@@ -421,7 +429,7 @@ class TestThresholdEnsembleBackend:
 
     def test_single_source_with_parameter_threshold_and_filter(self, backend):
         """Single source with custom threshold and filter=True removes below-threshold scores.
-        
+
         source1: [0.2, 0.8] with threshold=0.7
         Source is activated (0.8 >= 0.7)
         With filter=True: [0.2, 0.8] -> filtered: [0.0, 0.8]
@@ -609,7 +617,7 @@ class TestThresholdEnsembleBackend:
 
     def test_single_source_high_threshold_with_filter_filters_all(self, backend):
         """With a very high threshold and filter=True, all scores may be removed.
-        
+
         source1: [0.5, 0.6] with threshold=0.9
         Neither score >= 0.9, so source is NOT activated
         Result: empty batch (no predictions)
@@ -631,9 +639,11 @@ class TestThresholdEnsembleBackend:
             [[0.0, 0.0]],
         )
 
-    def test_single_source_high_threshold_without_filter_preserves_scores(self, backend):
+    def test_single_source_high_threshold_without_filter_preserves_scores(
+        self, backend
+    ):
         """With a very high threshold and filter=False, source is not activated.
-        
+
         source1: [0.5, 0.6] with threshold=0.9
         Neither score >= 0.9, so source is NOT activated
         Result: empty batch (no predictions), regardless of filter value
@@ -710,7 +720,9 @@ class TestThresholdEnsembleBackend:
             [[0.9, 0.0]],
         )
 
-    def test_merge_with_multiple_sources_filter_false_preserves_below_threshold(self, backend):
+    def test_merge_with_multiple_sources_filter_false_preserves_below_threshold(
+        self, backend
+    ):
         batches = {
             "source1": make_batch([[0.9, 0.2]]),
             "source2": make_batch([[0.8, 0.4]]),
@@ -723,7 +735,9 @@ class TestThresholdEnsembleBackend:
             [[0.85, 0.30]],
         )
 
-    def test_merge_with_multiple_sources_filter_true_filters_below_threshold(self, backend):
+    def test_merge_with_multiple_sources_filter_true_filters_below_threshold(
+        self, backend
+    ):
         batches = {
             "source1": make_batch([[0.9, 0.2]]),
             "source2": make_batch([[0.8, 0.4]]),
@@ -770,7 +784,7 @@ class TestThresholdEnsembleBackend:
 
     def test_weighted_sources_with_filter_true(self, backend):
         """Test that weighted averaging works correctly with filter=True.
-        
+
         source1 (weight=2.0): [0.9, 0.2] -> filtered: [0.9, 0.0]
         source2 (weight=1.0): [0.8, 0.4] -> filtered: [0.8, 0.0]
         Weighted average: [(0.9*2 + 0.8*1)/(2+1), (0.0*2 + 0.0*1)/(2+1)] = [0.866..., 0.0]
@@ -795,7 +809,7 @@ class TestThresholdEnsembleBackend:
 
     def test_threshold_exact_match(self, backend):
         """Test that scores exactly equal to the threshold are kept.
-        
+
         With threshold=0.5, a score of exactly 0.5 should activate the source.
         """
         batches = {
