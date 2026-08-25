@@ -428,7 +428,8 @@ class TestThresholdEnsembleBackend:
         )
 
     def test_single_source_with_parameter_threshold_and_filter(self, backend):
-        """Single source with custom threshold and filter=True removes below-threshold scores.
+        """Single source with custom threshold and filter=True
+        removes below-threshold scores.
 
         source1: [0.2, 0.8] with threshold=0.7
         Source is activated (0.8 >= 0.7)
@@ -662,6 +663,70 @@ class TestThresholdEnsembleBackend:
 
         assert result.array.nnz == 0
 
+    def test_align_batch_returns_batch_when_vocabularies_match(self, project):
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={"sources": "dummy"},
+            project=project,
+        )
+        batch = make_batch([[0.9, 0.8]])
+
+        result = ThresholdEnsembleBackend._align_batch(
+            backend,
+            batch,
+            "source1",
+        )
+
+        assert result is batch
+
+    def test_align_batch_expands_compact_source_vocabulary(self, project):
+        from unittest import mock
+
+        source_subjects = mock.Mock()
+        source_subjects.active = [
+            (0, mock.Mock(uri="http://example.org/subject0")),
+        ]
+
+        project.registry.get_project = lambda project_id: mock.Mock(
+            subjects=source_subjects,
+        )
+
+        backend = ThresholdEnsembleBackend(
+            backend_id="threshold_ensemble",
+            config_params={"sources": "dummy"},
+            project=project,
+        )
+        batch = SuggestionBatch(
+            csr_array([[0.9]]),
+        )
+
+        result = ThresholdEnsembleBackend._align_batch(
+            backend,
+            batch,
+            "source1",
+        )
+
+        assert result.array.shape == (1, N_SUBJECTS)
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            [[0.9, 0.0]],
+        )
+
+    def test_merge_skips_empty_source_batch(self, backend):
+        batches = {
+            "source1": SuggestionBatch(
+                csr_array((1, N_SUBJECTS)),
+            ),
+            "source2": make_batch([[0.8, 0.2]]),
+        }
+
+        result = merge(backend, batches)
+
+        np.testing.assert_allclose(
+            result.array.toarray(),
+            [[0.8, 0.2]],
+        )
+
     def test_get_hp_optimizer(self, backend, document_corpus):
         optimizer = backend.get_hp_optimizer(
             document_corpus,
@@ -672,6 +737,122 @@ class TestThresholdEnsembleBackend:
         assert optimizer._backend is backend
         assert optimizer._corpus is document_corpus
         assert optimizer._metric == "F1@5"
+
+    def test_optimizer_prepare_adds_backend_and_sources(
+        self,
+        backend,
+        document_corpus,
+        monkeypatch,
+    ):
+        from annif.backend import ensemble
+
+        prepared = {"existing": "value"}
+
+        monkeypatch.setattr(
+            ensemble.EnsembleOptimizer,
+            "_prepare",
+            lambda self, n_jobs=1: prepared,
+        )
+        monkeypatch.setattr(
+            annif.util,
+            "parse_sources",
+            lambda sources: [("source1", 1.0), ("source2", 2.0)],
+        )
+
+        optimizer = ThresholdEnsembleOptimizer(
+            backend,
+            document_corpus,
+            "F1@5",
+        )
+
+        result = optimizer._prepare(n_jobs=3)
+
+        assert result == {
+            "existing": "value",
+            "backend": backend,
+            "sources": [("source1", 1.0), ("source2", 2.0)],
+        }
+
+    def test_optimizer_postprocess_returns_best_threshold(
+        self,
+        backend,
+        document_corpus,
+        capsys,
+    ):
+        class FakeStudy:
+            best_params = {"threshold": 0.123456}
+            best_value = 0.87
+
+            def get_trials(self):
+                return [
+                    type(
+                        "Trial",
+                        (),
+                        {"value": 0.5, "params": {"threshold": 0.1}},
+                    )(),
+                    type(
+                        "Trial",
+                        (),
+                        {"value": 0.7, "params": {"threshold": 0.2}},
+                    )(),
+                    type(
+                        "Trial",
+                        (),
+                        {"value": None, "params": {"threshold": 0.3}},
+                    )(),
+                    type(
+                        "Trial",
+                        (),
+                        {"value": 0.9, "params": {"other": 1.0}},
+                    )(),
+                    type(
+                        "Trial",
+                        (),
+                        {"value": 0.2, "params": {"threshold": 0.0}},
+                    )(),
+                ]
+
+        optimizer = ThresholdEnsembleOptimizer(
+            backend,
+            document_corpus,
+            "F1@5",
+        )
+
+        recommendation = optimizer._postprocess(FakeStudy())
+
+        assert recommendation.lines == ["threshold=0.1235"]
+        assert recommendation.score == 0.87
+
+        output = capsys.readouterr().out
+        assert "Found isoelastic point with score" in output
+        assert "threshold=" in output
+
+    def test_calculate_isoelastic_point(self, backend, document_corpus):
+        class FakeTrial:
+            def __init__(self, threshold, value):
+                self.params = {"threshold": threshold}
+                self.value = value
+
+        class FakeStudy:
+            def get_trials(self):
+                return [
+                    FakeTrial(0.1, 0.5),
+                    FakeTrial(0.2, 0.7),
+                    FakeTrial(0.4, 0.9),
+                ]
+
+        optimizer = ThresholdEnsembleOptimizer(
+            backend,
+            document_corpus,
+            "F1@5",
+        )
+
+        isoelastic_x, isoelastic_y = optimizer.calculate_isoelastic_point(
+            FakeStudy(),
+        )
+
+        assert isoelastic_x == pytest.approx(0.2885390082)
+        assert isoelastic_y == pytest.approx(0.8057532746)
 
     def test_init_default_filter(self, project):
         backend = ThresholdEnsembleBackend(
@@ -787,7 +968,8 @@ class TestThresholdEnsembleBackend:
 
         source1 (weight=2.0): [0.9, 0.2] -> filtered: [0.9, 0.0]
         source2 (weight=1.0): [0.8, 0.4] -> filtered: [0.8, 0.0]
-        Weighted average: [(0.9*2 + 0.8*1)/(2+1), (0.0*2 + 0.0*1)/(2+1)] = [0.866..., 0.0]
+        Weighted average: [(0.9*2 + 0.8*1)/(2+1),
+                          (0.0*2 + 0.0*1)/(2+1)] = [0.866..., 0.0]
         """
         batches = {
             "source1": make_batch([[0.9, 0.2]]),
