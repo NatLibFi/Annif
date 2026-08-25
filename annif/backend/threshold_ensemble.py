@@ -150,7 +150,6 @@ class ThresholdEnsembleBackend(EnsembleBackend):
 
         source_active = source_subjects.active
         if batch.array.shape[1] != len(source_active):
-            # TODO: use Annif cli warning machinery
             raise ValueError(
                 f"Source '{source_project_id}' has {batch.array.shape[1]} "
                 f"columns, but its vocabulary has {len(source_active)} "
