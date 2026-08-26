@@ -1885,6 +1885,7 @@ def test_completion_show_project_project_ids_all():
         "tfidf-en",
         "select-meta",
         "ensemble-meta",
+        "ensemble-meta-nested",
     ]
 
 

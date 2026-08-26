@@ -340,11 +340,15 @@ class AnnifProject(DatadirMixin):
                 fields.extend(trans.fields)
         return fields
 
-    def metadata_fields(self) -> list[str]:
-        """return the metadata fields this project uses during suggest. For
-        ensemble projects, the fields of the source projects are gathered in
-        addition to the project's own fields. The result is a flat, order-
-        preserving, de-duplicated list."""
+    def _gather_metadata_fields(self, seen: set[str]) -> list[str]:
+        """collect the select(...) fields of this project and, recursively, of
+        its source projects. The recursion mirrors suggest(), which delegates
+        to each source project's own suggest(). `seen` guards against cyclic
+        sources configurations, which are not rejected elsewhere."""
+
+        if self.project_id in seen:
+            return []
+        seen.add(self.project_id)
 
         fields = list(self._select_fields())
 
@@ -359,10 +363,18 @@ class AnnifProject(DatadirMixin):
                     source = self.registry.get_project(source_id)
                 except ValueError:
                     continue  # source project not loadable - skip best-effort
-                fields.extend(source._select_fields())
+                fields.extend(source._gather_metadata_fields(seen))
+
+        return fields
+
+    def metadata_fields(self) -> list[str]:
+        """return the metadata fields this project uses during suggest. For
+        ensemble projects, the fields of the source projects are gathered
+        recursively, in addition to the project's own fields. The result is a
+        flat, order-preserving, de-duplicated list."""
 
         # de-duplicate while preserving first-seen order
-        return list(dict.fromkeys(fields))
+        return list(dict.fromkeys(self._gather_metadata_fields(set())))
 
     def dump(self) -> dict[str, str | list | dict | bool | datetime | None]:
         """return this project as a dict"""

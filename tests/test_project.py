@@ -109,6 +109,33 @@ def test_get_project_metadata_fields_ensemble_union(registry):
     assert project.dump()["metadata"] == ["description", "title", "text"]
 
 
+def test_get_project_metadata_fields_nested_ensemble(registry):
+    # gathering is recursive: an ensemble whose source is itself an ensemble
+    # must also pick up the fields of that source's own sources, because
+    # suggest() recurses the same way. Own select(subtitle), then
+    # ensemble-meta's select(description), then select-meta's
+    # (title, description, text); dummy-en contributes none.
+    project = registry.get_project("ensemble-meta-nested")
+    assert project.dump()["metadata"] == ["subtitle", "description", "title", "text"]
+
+
+def test_get_project_metadata_fields_source_cycle(registry, monkeypatch):
+    # a cyclic sources configuration must not cause unbounded recursion;
+    # each project is visited at most once
+    project = registry.get_project("ensemble-meta")
+    source = project.registry.get_project("select-meta")
+    real_get = source.config.get
+
+    def cyclic_get(key, *args, **kwargs):
+        if key == "sources":
+            return "ensemble-meta"
+        return real_get(key, *args, **kwargs)
+
+    monkeypatch.setattr(source.config, "get", cyclic_get)
+    # terminates, and still yields each field once
+    assert project.metadata_fields() == ["description", "title", "text"]
+
+
 def test_get_project_metadata_fields_skips_unloadable_source(registry, monkeypatch):
     # a source project that cannot be loaded is skipped best-effort, mirroring
     # the graceful degradation already used for vocab in dump()
@@ -387,6 +414,6 @@ def test_project_file_toml():
 def test_project_directory():
     cxapp = annif.create_app(config_name="annif.default_config.TestingDirectoryConfig")
     with cxapp.app.app_context():
-        assert len(annif.registry.get_projects()) == 19 + 2
+        assert len(annif.registry.get_projects()) == 20 + 2
         assert annif.registry.get_project("dummy-fi").project_id == "dummy-fi"
         assert annif.registry.get_project("dummy-fi-toml").project_id == "dummy-fi-toml"
