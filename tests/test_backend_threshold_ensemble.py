@@ -19,6 +19,13 @@ DEFAULT_THRESHOLD = 0.5
 N_SUBJECTS = 2  # Using dummy vocabulary with 2 subjects
 
 
+def test_get_backend_threshold_ensemble():
+    from annif.backend import get_backend
+    from annif.backend.threshold_ensemble import ThresholdEnsembleBackend
+
+    assert get_backend("threshold_ensemble") is ThresholdEnsembleBackend
+
+
 def make_batch(scores):
     """Create a SuggestionBatch from a dense score matrix with N_SUBJECTS columns.
 
@@ -52,6 +59,26 @@ def merge(backend, batches, sources=SOURCES, **params):
 def first_score(batch, document=0):
     """Return the highest-scoring suggestion for a document."""
     return next(iter(list(batch)[document])).score
+
+
+def test_make_batch_normalizes_score_shapes():
+    one_dimensional = make_batch([0.9])
+    np.testing.assert_allclose(
+        one_dimensional.array.toarray(),
+        [[0.9, 0.0]],
+    )
+
+    padded = make_batch([[0.9]])
+    np.testing.assert_allclose(
+        padded.array.toarray(),
+        [[0.9, 0.0]],
+    )
+
+    truncated = make_batch([[0.9, 0.8, 0.7]])
+    np.testing.assert_allclose(
+        truncated.array.toarray(),
+        [[0.9, 0.8]],
+    )
 
 
 class TestThresholdEnsembleBackend:
@@ -685,31 +712,43 @@ class TestThresholdEnsembleBackend:
         source_subjects = mock.Mock()
         source_subjects.active = [
             (0, mock.Mock(uri="http://example.org/subject0")),
+            (1, mock.Mock(uri="http://example.org/subject1")),
         ]
 
         project.registry.get_project = lambda project_id: mock.Mock(
             subjects=source_subjects,
         )
 
+        target_subjects = mock.Mock()
+        target_subjects.__len__ = mock.Mock(return_value=3)
+
+        def by_uri(uri, warnings=False):
+            return {
+                "http://example.org/subject0": 1,
+                "http://example.org/subject1": 0,
+            }[uri]
+
+        target_subjects.by_uri = by_uri
+        project.subjects = target_subjects
+
         backend = ThresholdEnsembleBackend(
             backend_id="threshold_ensemble",
             config_params={"sources": "dummy"},
             project=project,
         )
+
         batch = SuggestionBatch(
-            csr_array([[0.9]]),
+            csr_array([[0.9, 0.8]]),
         )
 
-        result = ThresholdEnsembleBackend._align_batch(
-            backend,
+        result = backend._align_batch(
             batch,
             "source1",
         )
 
-        assert result.array.shape == (1, N_SUBJECTS)
         np.testing.assert_allclose(
             result.array.toarray(),
-            [[0.9, 0.0]],
+            [[0.8, 0.9, 0.0]],
         )
 
     def test_merge_skips_empty_source_batch(self, backend):
