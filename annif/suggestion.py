@@ -117,13 +117,22 @@ class SuggestionBatch:
 
     @classmethod
     def from_averaged(
-        cls, batches: list[SuggestionBatch], weights: list[float]
+        cls,
+        batches: list[SuggestionBatch],
+        weights: list[float],
+        exponents: list[float] | None = None,
     ) -> SuggestionBatch:
         """Create a new SuggestionBatch where the subject scores are the
-        weighted average of scores in several SuggestionBatches"""
+        weighted average of (optionally) exponentiated scores in several
+        SuggestionBatches"""
 
+        if exponents is None:
+            exponents = [1.0] * len(weights)
         avg_array = sum(
-            [batch.array * weight for batch, weight in zip(batches, weights)]
+            [
+                batch.array**exp * weight
+                for batch, weight, exp in zip(batches, weights, exponents)
+            ]
         ) / sum(weights)
         return SuggestionBatch(avg_array)
 
