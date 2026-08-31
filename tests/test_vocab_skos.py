@@ -141,3 +141,4 @@ yso:p8993
     with pytest.raises(OperationFailedException) as excinfo:
         VocabFileSKOS(tmpfile_path)
     assert "Cannot parse vocabulary file" in str(excinfo.value)
+    assert tmpfile_path in str(excinfo.value)
