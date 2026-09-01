@@ -8,8 +8,6 @@ on:
   pull_request:
   workflow_dispatch:
 env:
-  PIPX_HOME: "/home/runner/.cache/pipx"
-  PIPX_BIN_DIR: "/home/runner/.local/bin"
   UV_VERSION: "0.9.*"
 permissions:
   contents: read
