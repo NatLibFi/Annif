@@ -12,6 +12,7 @@ import rdflib.util
 from rdflib.namespace import OWL, RDF, RDFS, SKOS
 
 import annif.util
+from annif.exception import OperationFailedException
 
 from .types import Subject, VocabSource
 
@@ -67,7 +68,12 @@ class VocabFileSKOS(VocabSource):
             self.graph = joblib.load(path)
         else:
             self.graph = rdflib.Graph()
-            self.graph.parse(self.path, format=rdflib.util.guess_format(self.path))
+            try:
+                self.graph.parse(self.path, format=rdflib.util.guess_format(self.path))
+            except Exception as err:
+                raise OperationFailedException(
+                    f"Cannot parse vocabulary file {self.path}: {err}"
+                ) from err
 
     @property
     def languages(self) -> set[str]:
