@@ -22,7 +22,7 @@ from annif.exception import (
     NotInitializedException,
     NotSupportedException,
 )
-from annif.util import parse_args
+from annif.util import parse_args, parse_sources
 from annif.vocab import SubjectIndexFilter, kwargs_to_exclude_uris
 
 if TYPE_CHECKING:
@@ -326,7 +326,57 @@ class AnnifProject(DatadirMixin):
             project_id=self.project_id,
         )
 
-    def dump(self) -> dict[str, str | dict | bool | datetime | None]:
+    def _select_fields(self) -> list[str]:
+        """return the metadata field names that this project's own transform
+        chain selects via select(...) transforms, in configured order"""
+
+        try:
+            transforms = self.transform.transforms
+        except ConfigurationException:
+            return []
+        fields: list[str] = []
+        for trans in transforms:
+            if isinstance(trans, annif.transform.select.SelectTransform):
+                fields.extend(trans.fields)
+        return fields
+
+    def _gather_metadata_fields(self, seen: set[str]) -> list[str]:
+        """collect the select(...) fields of this project and, recursively, of
+        its source projects. The recursion mirrors suggest(), which delegates
+        to each source project's own suggest(). `seen` guards against cyclic
+        sources configurations, which are not rejected elsewhere."""
+
+        if self.project_id in seen:
+            return []
+        seen.add(self.project_id)
+
+        fields = list(self._select_fields())
+
+        sources_spec = self.config.get("sources")
+        if sources_spec:
+            try:
+                sources = parse_sources(sources_spec)
+            except (ValueError, ZeroDivisionError):
+                sources = []
+            for source_id, _ in sources:
+                try:
+                    source = self.registry.get_project(source_id)
+                except ValueError:
+                    continue  # source project not loadable - skip best-effort
+                fields.extend(source._gather_metadata_fields(seen))
+
+        return fields
+
+    def metadata_fields(self) -> list[str]:
+        """return the metadata fields this project uses during suggest. For
+        ensemble projects, the fields of the source projects are gathered
+        recursively, in addition to the project's own fields. The result is a
+        flat, order-preserving, de-duplicated list."""
+
+        # de-duplicate while preserving first-seen order
+        return list(dict.fromkeys(self._gather_metadata_fields(set())))
+
+    def dump(self) -> dict[str, str | list | dict | bool | datetime | None]:
         """return this project as a dict"""
 
         try:
@@ -345,6 +395,7 @@ class AnnifProject(DatadirMixin):
             "vocab_language": vocab_lang,
             "is_trained": self.is_trained,
             "modification_time": self.modification_time,
+            "metadata": self.metadata_fields(),
         }
 
     def remove_model_data(self) -> None:
