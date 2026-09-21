@@ -63,7 +63,7 @@ spacy = [
 ]
 stwfsa = ["stwfsapy~=0.6.1"]
 voikko = ["voikko==0.5.*"]
-yake = ["yake~=0.6.0"]
+yake = ["yake~=0.7.3"]
 
 [project.urls]
 homepage = "https://annif.org"
