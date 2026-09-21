@@ -3,7 +3,7 @@ name = "annif"
 version = "1.5.0-dev"
 description = "Automated subject indexing and classification tool"
 authors = [{ name = "National Library of Finland", email = "finto-posti@helsinki.fi" }]
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.11,<3.15"
 readme = "README.md"
 license = "Apache-2.0"
 maintainers = [
