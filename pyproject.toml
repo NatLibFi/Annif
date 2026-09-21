@@ -39,7 +39,7 @@ dependencies = [
     "python-dateutil==2.9.*",
     "simplemma~=2.0.0",
     "scikit-learn~=1.7.1",
-    "scipy~=1.15.3",
+    "scipy~=1.17.1",
     "starlette~=1.6.0",
     "requests~=2.34.2",
     "rdflib~=7.6.0",
