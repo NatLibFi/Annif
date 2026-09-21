@@ -37,7 +37,7 @@ dependencies = [
     "numpy~=2.2.6",
     "optuna~=5.0.0",
     "python-dateutil==2.9.*",
-    "simplemma~=1.1.1",
+    "simplemma~=2.0.0",
     "scikit-learn~=1.7.1",
     "scipy~=1.15.3",
     "starlette~=1.6.0",
