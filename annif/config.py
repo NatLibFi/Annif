@@ -4,12 +4,8 @@ from __future__ import annotations
 
 import configparser
 import os.path
+import tomllib
 from glob import glob
-
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib
 
 import annif
 import annif.util
