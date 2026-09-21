@@ -35,7 +35,7 @@ dependencies = [
     "jsonschema~=4.26.0",
     "nltk~=3.10.3",
     "numpy~=2.2.6",
-    "optuna~=4.5.0",
+    "optuna~=5.0.0",
     "python-dateutil==2.9.*",
     "simplemma~=1.1.1",
     "scikit-learn~=1.7.1",
