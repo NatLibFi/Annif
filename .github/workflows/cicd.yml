@@ -26,7 +26,7 @@ jobs:
     - name: "Prepare: restore caches, install uv, set up Python"
       uses: ./.github/actions/prepare
       with:
-        python-version: "3.12"
+        python-version: "3.13"
         uv-version: ${{ env.UV_VERSION }}
     - name: Install Python dev dependencies
       run: |
@@ -55,7 +55,7 @@ jobs:
       id: prepare
       uses: ./.github/actions/prepare
       with:
-        python-version: "3.11"
+        python-version: "3.12"
         uv-version: ${{ env.UV_VERSION }}
     - name: Install Python dependencies
       run: |
@@ -69,7 +69,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13"]
     name: test on Python ${{ matrix.python-version }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -92,33 +92,33 @@ jobs:
     - name: Install Python dependencies
       run: |
         # Selectively install the optional dependencies for some Python versions
-        # For Python 3.10:
-        if [[ ${{ matrix.python-version }} == '3.10' ]]; then
-          uv sync --extra nn --extra torch-cpu --extra omikuji --extra yake --extra voikko --extra stwfsa;
-        fi
         # For Python 3.11:
         if [[ ${{ matrix.python-version }} == '3.11' ]]; then
-          uv sync --extra fasttext --extra spacy --extra estnltk;
-          # download the small English pretrained spaCy model needed by spacy analyzer
-          uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+          uv sync --extra nn --extra torch-cpu --extra omikuji --extra yake --extra voikko --extra stwfsa;
         fi
         # For Python 3.12:
         if [[ ${{ matrix.python-version }} == '3.12' ]]; then
-          uv sync --extra nn --extra torch-cpu --extra fasttext --extra yake --extra stwfsa --extra voikko --extra spacy;
+          uv sync --extra fasttext --extra spacy --extra estnltk;
           # download the small English pretrained spaCy model needed by spacy analyzer
           uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
         # For Python 3.13:
         if [[ ${{ matrix.python-version }} == '3.13' ]]; then
-          uv sync --extra fasttext --extra yake --extra voikko --extra spacy;
+          uv sync --extra nn --extra torch-cpu --extra fasttext --extra yake --extra stwfsa --extra voikko --extra spacy;
           # download the small English pretrained spaCy model needed by spacy analyzer
           uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
+        # # For Python 3.14:
+        # if [[ ${{ matrix.python-version }} == '3.14' ]]; then
+        #   uv sync --extra fasttext --extra yake --extra voikko --extra spacy;
+        #   # download the small English pretrained spaCy model needed by spacy analyzer
+        #   uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+        # fi
         uv run python -m nltk.downloader punkt_tab
     - name: Test with pytest
       run: |
         uv run pytest --cov=./ --cov-report xml
-        if [[ ${{ matrix.python-version }} == '3.11' ]]; then
+        if [[ ${{ matrix.python-version }} == '3.12' ]]; then
           uv run pytest --cov=./ --cov-report xml --cov-append -m slow
         fi
     - name: Upload coverage to Codecov
@@ -197,7 +197,7 @@ jobs:
     - name: "Prepare: restore caches, install uv, set up Python"
       uses: ./.github/actions/prepare
       with:
-        python-version: '3.11'
+        python-version: '3.12'
         uv-version: ${{ env.UV_VERSION }}
     - name: Build distributions
       run: |

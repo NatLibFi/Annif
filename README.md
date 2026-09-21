@@ -29,7 +29,7 @@ This repository contains a rewritten production version of Annif based on the
 
 Annif is developed and tested on Linux. If you want to run Annif on Windows or Mac OS, the recommended way is to use Docker (see below) or a Linux virtual machine.
 
-You will need Python 3.10-3.13 to install Annif.
+You will need Python 3.11-3.13 to install Annif.
 
 The recommended way is to install Annif from
 [PyPI](https://pypi.org/project/annif/) into a virtual environment.
@@ -178,7 +178,7 @@ https://arxiv.org/abs/2504.19675
       url = "https://aclanthology.org/2025.semeval-1.315/",
       pages = "2424--2431",
       ISBN = "979-8-89176-273-2",
-      # ArXiv 
+      # ArXiv
       # year={2025},
       # eprint={2504.19675},
       # archivePrefix={arXiv},
