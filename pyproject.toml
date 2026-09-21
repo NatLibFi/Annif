@@ -29,7 +29,7 @@ dependencies = [
     "click~=8.5.0",
     "click-log==0.4.*",
     "connexion[flask, uvicorn, swagger-ui]~=3.3.0",
-    "gunicorn~=23.0.0",
+    "gunicorn~=26.2.0",
     "huggingface-hub~=0.34.4",
     "joblib~=1.5.1",
     "jsonschema~=4.25.0",
