@@ -1599,7 +1599,7 @@ def test_upload_no_modelcard_upsert(
 
 @mock.patch(
     "huggingface_hub.preupload_lfs_files",
-    side_effect=HfHubHTTPError("Repository Not Found for url:"),
+    side_effect=HfHubHTTPError("Repository Not Found for url:", response=mock.Mock()),
 )
 def test_upload_nonexistent_repo(mock_preupload_lfs_files):
     failed_result = runner.invoke(annif.cli.cli, ["upload", "dummy-fi", "nonexistent"])
