@@ -51,7 +51,7 @@ estnltk = ["estnltk==1.7.5"]
 nn = [
     "torch~=2.14.0",
     "tqdm~=4.70.1",
-    "lmdb~=2.2.0",
+    "lmdb~=2.3.0",
 ]
 torch-cpu = ["torch"]
 torch-cu126 = ["torch"]
