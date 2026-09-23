@@ -46,7 +46,7 @@ class EbmBackend(backend.AnnifBackend):
     DEFAULT_PARAMETERS = {
         "embedding_dimensions": 1024,
         "max_chunk_count": 100,
-        "max_chunk_length": 50,
+        "max_chunk_length": 250,
         "chunking_jobs": 1,
         "max_sentence_count": 100,
         "hnsw_index_params": {"M": 32, "ef_construction": 256, "ef_search": 256},
