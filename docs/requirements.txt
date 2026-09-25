@@ -1,5 +1,5 @@
-sphinx==7.2.*
+sphinx==9.1.*
 sphinx-rtd-theme
-sphinxcontrib-apidoc==0.5.*
+sphinxcontrib-apidoc
 sphinx-click
-docutils==0.20.*
+docutils==0.22.*

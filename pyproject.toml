@@ -26,32 +26,32 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
 ]
 dependencies = [
-    "click~=8.2.1",
+    "click~=8.5.0",
     "click-log==0.4.*",
-    "connexion[flask, uvicorn, swagger-ui]~=3.1.0",
-    "gunicorn~=23.0.0",
-    "huggingface-hub~=0.34.4",
-    "joblib~=1.5.1",
-    "jsonschema~=4.25.0",
-    "nltk~=3.9.1",
-    "numpy~=2.2.6",
-    "optuna~=4.5.0",
+    "connexion[flask, uvicorn, swagger-ui]~=3.3.0",
+    "gunicorn~=26.2.0",
+    "huggingface-hub~=1.32.0",
+    "joblib~=1.6.0",
+    "jsonschema~=4.26.0",
+    "nltk~=3.10.3",
+    "numpy~=2.4.6",
+    "optuna~=5.0.0",
     "python-dateutil==2.9.*",
-    "simplemma~=1.1.1",
-    "scikit-learn~=1.7.1",
-    "scipy~=1.15.3",
+    "simplemma~=2.0.0",
+    "scikit-learn~=1.9.1",
+    "scipy~=1.17.1",
     "starlette~=1.6.0",
-    "requests~=2.32.3",
-    "rdflib~=7.1.3",
+    "requests~=2.34.2",
+    "rdflib~=7.6.0",
 ]
 
 [project.optional-dependencies]
 fasttext = ["fasttext-numpy2==0.10.4"]
-estnltk = ["estnltk==1.7.4"]
+estnltk = ["estnltk==1.7.5"]
 nn = [
-    "torch~=2.12.0",
-    "tqdm~=4.67.3",
-    "lmdb~=2.2.0",
+    "torch~=2.14.0",
+    "tqdm~=4.70.1",
+    "lmdb~=2.3.0",
 ]
 torch-cpu = ["torch"]
 torch-cu126 = ["torch"]
@@ -63,7 +63,7 @@ spacy = [
 ]
 stwfsa = ["stwfsapy~=0.6.1"]
 voikko = ["voikko==0.5.*"]
-yake = ["yake~=0.6.0"]
+yake = ["yake~=0.7.3"]
 
 [project.urls]
 homepage = "https://annif.org"
@@ -84,7 +84,7 @@ dev = [
     "bumpversion",
     "black==25.*",
     "isort",
-    "schemathesis~=4.25.2",
+    "schemathesis~=4.27.2",
 ]
 all = ["annif[fasttext,estnltk,nn,omikuji,spacy,stwfsa,voikko,yake]"]
 
