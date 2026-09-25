@@ -353,6 +353,14 @@ components:
           format: date-time
           example: 2020-05-19T16:42:42Z
           nullable: true
+        metadata:
+          type: array
+          items:
+            type: string
+          example:
+          - title
+          - description
+          - text
       description: A project definition
     ProjectList:
       type: object
