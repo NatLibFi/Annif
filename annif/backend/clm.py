@@ -101,10 +101,26 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
         threshold = float(params["threshold"])
         valid_ids = set()
         answers = response.get("answers", {})
+        scores = []
         for subject_id_str, answer in answers.items():
             score = answer.get("noul")
-            if score is not None and score >= threshold:
+            if score is None:
+                continue
+            scores.append(score)
+            if score >= threshold:
                 valid_ids.add(int(subject_id_str))
+        if scores:
+            self.info(
+                "CLM noul scores: min {:.3f}, mean {:.3f}, max {:.3f} "
+                "({} of {} candidates >= threshold {:.2f})".format(
+                    min(scores),
+                    sum(scores) / len(scores),
+                    max(scores),
+                    len(valid_ids),
+                    len(scores),
+                    threshold,
+                )
+            )
 
         return [
             suggestion
