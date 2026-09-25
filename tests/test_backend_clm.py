@@ -8,7 +8,7 @@ import requests.exceptions
 import annif.backend
 from annif.corpus import Document
 from annif.exception import NotSupportedException, OperationFailedException
-from annif.suggestion import SuggestionBatch, SubjectSuggestion
+from annif.suggestion import SubjectSuggestion, SuggestionBatch
 from annif.vocab import Subject
 
 
