@@ -69,7 +69,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     name: test on Python ${{ matrix.python-version }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -108,12 +108,12 @@ jobs:
           # download the small English pretrained spaCy model needed by spacy analyzer
           uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
         fi
-        # # For Python 3.14:
-        # if [[ ${{ matrix.python-version }} == '3.14' ]]; then
-        #   uv sync --extra fasttext --extra yake --extra voikko --extra spacy;
-        #   # download the small English pretrained spaCy model needed by spacy analyzer
-        #   uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
-        # fi
+        # For Python 3.14:
+        if [[ ${{ matrix.python-version }} == '3.14' ]]; then
+          uv sync --extra fasttext --extra yake --extra voikko --extra spacy;
+          # download the small English pretrained spaCy model needed by spacy analyzer
+          uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+        fi
         uv run python -m nltk.downloader punkt_tab
     - name: Test with pytest
       run: |
