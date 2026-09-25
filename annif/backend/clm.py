@@ -3,8 +3,10 @@ score candidate subjects against a document. For each candidate subject
 from the source projects, the backend asks the CLM service how likely the
 proposition "This document is about {label}." is to be true (a noul-type
 question). Depending on the mode, the candidates are then either filtered
-(drop candidates whose score is below the threshold) or reranked (keep all
+(drop candidates whose score is below the threshold), reranked (keep all
 candidates, re-score them by multiplying the source score with the noul
+score), or blended (keep all candidates, re-score them as a linear
+combination of the per-document min-max normalized source score and noul
 score)."""
 
 from __future__ import annotations
@@ -36,8 +38,8 @@ if TYPE_CHECKING:
 
 
 class CLMBackend(ensemble.BaseEnsembleBackend):
-    """Ensemble-style backend that filters or reranks source candidates
-    with a CLM service using noul-type true/false questions."""
+    """Ensemble-style backend that filters, reranks or blends source
+    candidates with a CLM service using noul-type true/false questions."""
 
     name = "clm"
 
@@ -46,6 +48,7 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
         "model": "clm-latest",
         "threshold": 0.6,
         "mode": "filter",
+        "blend-alpha": 0.85,
         "retries": 2,
         "instruction": "This document is about {label}.",
         "info": "",
@@ -338,6 +341,17 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
             )
             return kept
 
+        if params["mode"] == "blend":
+            alpha = float(params["blend-alpha"])
+            return self._blend(suggestions, noul_scores, alpha)
+
+        if params["mode"] != "rerank":
+            raise ConfigurationException(
+                "unknown mode {!r} (expected filter, rerank or blend)".format(
+                    params["mode"]
+                )
+            )
+
         # rerank mode: keep all candidates, re-score by source score * noul
         reranked = []
         for suggestion in suggestions:
@@ -354,6 +368,47 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
         # the new order differs from the source order, so sort explicitly
         reranked.sort(key=lambda s: s.score, reverse=True)
         return reranked
+
+    @staticmethod
+    def _blend(
+        suggestions: list[SubjectSuggestion],
+        noul_scores: dict[int, float],
+        alpha: float,
+    ) -> list[SubjectSuggestion]:
+        """Blend the source and noul scores, keeping all candidates.
+
+        Both score sets are min-max normalized per document (a degenerate
+        set maps to 0.5), then the new score is
+        alpha * source_norm + (1 - alpha) * noul_norm. A candidate without
+        a noul score (no label, question not asked) is treated as 0.0."""
+        if not suggestions:
+            return []
+
+        src_min = min(s.score for s in suggestions)
+        src_max = max(s.score for s in suggestions)
+        # candidates without a noul score count as 0.0
+        noul_values = [
+            noul_scores.get(suggestion.subject_id, 0.0) for suggestion in suggestions
+        ]
+        noul_min = min(noul_values)
+        noul_max = max(noul_values)
+
+        def norm(value: float, lo: float, hi: float) -> float:
+            if hi == lo:
+                return 0.5
+            return (value - lo) / (hi - lo)
+
+        blended = [
+            SubjectSuggestion(
+                subject_id=suggestion.subject_id,
+                score=alpha * norm(suggestion.score, src_min, src_max)
+                + (1 - alpha) * norm(noul, noul_min, noul_max),
+            )
+            for suggestion, noul in zip(suggestions, noul_values)
+        ]
+        # the new order differs from the source order, so sort explicitly
+        blended.sort(key=lambda s: s.score, reverse=True)
+        return blended
 
     def _suggest_batch(
         self, documents: list[Document], params: dict[str, Any]

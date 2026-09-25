@@ -215,6 +215,118 @@ def test_clm_rerank_threshold_ignored(app_project):
     assert suggestions[0].score == pytest.approx(0.09)
 
 
+def test_clm_blend_scores(app_project):
+    """In blend mode the score is a min-max normalized linear combination
+    of the source and noul scores. A candidate that is worst in both
+    source and noul scores gets exactly 0.0 and is dropped by the
+    SuggestionBatch, like in rerank mode."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {
+                "0": {"type": "noul", "noul": 0.9},
+                "1": {"type": "noul", "noul": 0.1},
+            }
+        }
+        mock_request.return_value = mock_response
+
+        clm = _make_backend(app_project, mode="blend", **{"blend-alpha": 0.5})
+        with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
+            result = clm.suggest([Document(text="test document")])
+
+    suggestions = list(result[0])
+    # subject 1 scores 0.5*0.0 + 0.5*0.0 = 0.0 -> dropped
+    assert [int(s.subject_id) for s in suggestions] == [0]
+    assert suggestions[0].score == pytest.approx(0.5 * 1.0 + 0.5 * 1.0)
+
+
+def test_clm_blend_reorders(app_project):
+    """A low source score with a high noul score can move above a
+    higher source score with a low noul score."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {
+                "0": {"type": "noul", "noul": 0.1},
+                "1": {"type": "noul", "noul": 0.9},
+            }
+        }
+        mock_request.return_value = mock_response
+
+        clm = _make_backend(app_project, mode="blend", **{"blend-alpha": 0.4})
+        with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
+            result = clm.suggest([Document(text="test document")])
+
+    suggestions = list(result[0])
+    assert len(suggestions) == 2
+    by_id = {int(s.subject_id): s.score for s in suggestions}
+    # source norms: 0: 1.0, 1: 0.0; noul norms: 0: 0.0, 1: 1.0
+    assert by_id[0] == pytest.approx(0.4 * 1.0 + 0.6 * 0.0)  # 0.4
+    assert by_id[1] == pytest.approx(0.4 * 0.0 + 0.6 * 1.0)  # 0.6
+    # subject 1 (lower source, higher noul) moves above subject 0
+    assert [int(s.subject_id) for s in suggestions] == [1, 0]
+
+
+def test_clm_blend_missing_noul(app_project):
+    """A candidate without a noul score counts as 0.0 in the blend."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {"0": {"type": "noul", "noul": 0.9}}
+        }
+        mock_request.return_value = mock_response
+
+        clm = _make_backend(app_project, mode="blend", **{"blend-alpha": 0.5})
+        with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
+            result = clm.suggest([Document(text="test document")])
+
+    suggestions = list(result[0])
+    # subject 1: 0.5*0.0 + 0.5*0.0 = 0.0 -> dropped by SuggestionBatch
+    assert [int(s.subject_id) for s in suggestions] == [0]
+    assert suggestions[0].score == pytest.approx(1.0)
+
+
+def test_clm_blend_alpha_extremes(app_project):
+    """alpha=1.0 is pure source order, alpha=0.0 pure noul order (the
+    losing candidate scores 0.0 and is dropped)."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {
+                "0": {"type": "noul", "noul": 0.1},
+                "1": {"type": "noul", "noul": 0.9},
+            }
+        }
+        mock_request.return_value = mock_response
+
+        # alpha = 1.0: source best (0) wins, subject 1 scores 0.0 -> dropped
+        clm = _make_backend(app_project, mode="blend", **{"blend-alpha": 1.0})
+        with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
+            result = clm.suggest([Document(text="test document")])
+        assert [int(s.subject_id) for s in list(result[0])] == [0]
+
+        # alpha = 0.0: noul best (1) wins, subject 0 scores 0.0 -> dropped
+        clm = _make_backend(app_project, mode="blend", **{"blend-alpha": 0.0})
+        with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
+            result = clm.suggest([Document(text="test document")])
+        assert [int(s.subject_id) for s in list(result[0])] == [1]
+
+
+def test_clm_unknown_mode(app_project):
+    """An unknown mode raises ConfigurationException."""
+    from annif.exception import ConfigurationException
+
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        clm = _make_backend(app_project, mode="bogus")
+        with _mock_source(app_project, [(0, 0.9)]):
+            with pytest.raises(ConfigurationException):
+                clm.suggest([Document(text="test document")])
+
+
 def test_clm_suggest_request_error(app_project):
     """A failed CLM request raises OperationFailedException after all
     retries have been exhausted."""
