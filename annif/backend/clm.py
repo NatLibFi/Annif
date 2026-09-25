@@ -1,8 +1,11 @@
-"""CLM backend that validates candidate subjects against a document using
-a Contrastive Language Model (CLM) service. For each candidate subject from
-the source projects, the backend asks the CLM service how likely the
-proposition "This document is about {label}." is to be true, and keeps only
-the candidates whose probability is at least the configured threshold."""
+"""CLM backend that uses a Contrastive Language Model (CLM) service to
+score candidate subjects against a document. For each candidate subject
+from the source projects, the backend asks the CLM service how likely the
+proposition "This document is about {label}." is to be true (a noul-type
+question). Depending on the mode, the candidates are then either filtered
+(drop candidates whose score is below the threshold) or reranked (keep all
+candidates, re-score them by multiplying the source score with the noul
+score)."""
 
 from __future__ import annotations
 
@@ -20,8 +23,8 @@ if TYPE_CHECKING:
 
 
 class CLMBackend(ensemble.BaseEnsembleBackend):
-    """Ensemble-style backend that filters source candidates with a CLM
-    service using noul-type true/false questions."""
+    """Ensemble-style backend that filters or reranks source candidates
+    with a CLM service using noul-type true/false questions."""
 
     name = "clm"
 
@@ -29,6 +32,7 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
         "endpoint": "http://127.0.0.1:8700",
         "model": "clm-latest",
         "threshold": 0.6,
+        "mode": "filter",
     }
 
     @property
@@ -58,18 +62,19 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
             return subject.notation
         return None
 
-    def _validate_document(
+    def _query_clm(
         self, doc: Document, suggestions: list[SubjectSuggestion], params
-    ) -> list[SubjectSuggestion]:
-        """Ask the CLM service which of the candidate subjects are valid for
-        the given document, and return the subset that pass the threshold."""
+    ) -> dict[int, float]:
+        """Ask the CLM service for a noul score for every candidate subject
+        that has a label, and return a mapping subject_id -> noul score.
+        Candidates without a label are not included in the mapping."""
         questions = {}
         for suggestion in suggestions:
             label = self._label_for_subject(suggestion.subject_id)
             if label is None:
                 self.debug(
                     f"no label found for subject {suggestion.subject_id}, "
-                    "excluding it"
+                    "skipping the question"
                 )
                 continue
             # questions must have unique IDs; use the subject ID as the key
@@ -78,7 +83,7 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
                 "instructions": f"This document is about {label}.",
             }
         if not questions:
-            return []
+            return {}
 
         payload = {
             "state": doc.text,
@@ -98,35 +103,62 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
             msg = f"CLM response JSON decode failed: {err}"
             raise OperationFailedException(msg) from err
 
-        threshold = float(params["threshold"])
-        valid_ids = set()
-        answers = response.get("answers", {})
-        scores = []
-        for subject_id_str, answer in answers.items():
+        noul_scores = {}
+        for subject_id_str, answer in response.get("answers", {}).items():
             score = answer.get("noul")
-            if score is None:
-                continue
-            scores.append(score)
-            if score >= threshold:
-                valid_ids.add(int(subject_id_str))
-        if scores:
+            if score is not None:
+                noul_scores[int(subject_id_str)] = score
+
+        if noul_scores:
+            values = list(noul_scores.values())
             self.info(
                 "CLM noul scores: min {:.3f}, mean {:.3f}, max {:.3f} "
-                "({} of {} candidates >= threshold {:.2f})".format(
-                    min(scores),
-                    sum(scores) / len(scores),
-                    max(scores),
-                    len(valid_ids),
-                    len(scores),
-                    threshold,
+                "for {} candidates".format(
+                    min(values),
+                    sum(values) / len(values),
+                    max(values),
+                    len(values),
                 )
             )
 
-        return [
-            suggestion
-            for suggestion in suggestions
-            if suggestion.subject_id in valid_ids
-        ]
+        return noul_scores
+
+    def _process_document(
+        self, doc: Document, suggestions: list[SubjectSuggestion], params
+    ) -> list[SubjectSuggestion]:
+        """Process the candidate subjects of one document according to the
+        configured mode and return the resulting suggestions."""
+        noul_scores = self._query_clm(doc, suggestions, params)
+
+        if params["mode"] == "filter":
+            threshold = float(params["threshold"])
+            kept = [
+                suggestion
+                for suggestion in suggestions
+                if noul_scores.get(suggestion.subject_id, -1.0) >= threshold
+            ]
+            self.debug(
+                f"CLM filtered {len(kept)} of {len(suggestions)} "
+                f"candidate subjects (threshold {threshold})"
+            )
+            return kept
+
+        # rerank mode: keep all candidates, re-score by source score * noul
+        reranked = []
+        for suggestion in suggestions:
+            noul = noul_scores.get(suggestion.subject_id)
+            if noul is None:  # no label, question not asked
+                reranked.append(suggestion)
+                continue
+            reranked.append(
+                SubjectSuggestion(
+                    subject_id=suggestion.subject_id,
+                    score=suggestion.score * noul,
+                )
+            )
+        # the new order differs from the source order, so sort explicitly
+        reranked.sort(key=lambda s: s.score, reverse=True)
+        return reranked
 
     def _suggest_batch(
         self, documents: list[Document], params: dict[str, Any]
@@ -135,15 +167,11 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
         merged = super()._suggest_batch(documents, params)
         limit = int(params["limit"])
 
-        validated = []
-        for idx, doc in enumerate(documents):
-            suggestions = list(merged[idx])
-            kept = self._validate_document(doc, suggestions, params)
-            self.debug(
-                f"CLM validated {len(kept)} of {len(suggestions)} " "candidate subjects"
-            )
-            validated.append(kept)
+        processed = [
+            self._process_document(doc, list(merged[idx]), params)
+            for idx, doc in enumerate(documents)
+        ]
 
         return SuggestionBatch.from_sequence(
-            validated, self.project.subjects, limit=limit
+            processed, self.project.subjects, limit=limit
         )

@@ -141,6 +141,76 @@ def test_clm_suggest_all_dropped(app_project):
     assert list(result[0]) == []
 
 
+def test_clm_rerank_keeps_all(app_project):
+    """In rerank mode, no candidate is dropped regardless of the noul score."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {
+                "0": {"type": "noul", "noul": 0.9},
+                "1": {"type": "noul", "noul": 0.1},
+            }
+        }
+        mock_request.return_value = mock_response
+
+        clm = _make_backend(app_project, mode="rerank")
+        with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
+            result = clm.suggest([Document(text="test document")])
+
+    suggestions = list(result[0])
+    # both candidates survive
+    assert len(suggestions) == 2
+    # scores are rescaled by the noul score
+    by_id = {int(s.subject_id): s.score for s in suggestions}
+    assert by_id[0] == pytest.approx(0.9 * 0.9)
+    assert by_id[1] == pytest.approx(0.8 * 0.1)
+    # the reranked order is by the new score
+    assert [int(s.subject_id) for s in suggestions] == [0, 1]
+
+
+def test_clm_rerank_reorders(app_project):
+    """A low source score with a high noul score can move above a
+    higher source score with a low noul score."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {
+                "0": {"type": "noul", "noul": 0.2},
+                "1": {"type": "noul", "noul": 0.9},
+            }
+        }
+        mock_request.return_value = mock_response
+
+        clm = _make_backend(app_project, mode="rerank")
+        # subject 0 has the higher source score, subject 1 the lower
+        with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
+            result = clm.suggest([Document(text="test document")])
+
+    suggestions = list(result[0])
+    # 0.9*0.2=0.18 vs 0.8*0.9=0.72 -> subject 1 comes first
+    assert [int(s.subject_id) for s in suggestions] == [1, 0]
+    assert suggestions[0].score == pytest.approx(0.72)
+    assert suggestions[1].score == pytest.approx(0.18)
+
+
+def test_clm_rerank_threshold_ignored(app_project):
+    """In rerank mode the threshold parameter does not drop candidates."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {"0": {"type": "noul", "noul": 0.1}}
+        }
+        mock_request.return_value = mock_response
+
+        clm = _make_backend(app_project, mode="rerank", threshold=0.6)
+        with _mock_source(app_project, [(0, 0.9)]):
+            result = clm.suggest([Document(text="test document")])
+
+    suggestions = list(result[0])
+    assert len(suggestions) == 1
+    assert suggestions[0].score == pytest.approx(0.09)
+
+
 def test_clm_suggest_request_error(app_project):
     """A failed CLM request raises OperationFailedException."""
     with unittest.mock.patch("requests.post") as mock_request:
