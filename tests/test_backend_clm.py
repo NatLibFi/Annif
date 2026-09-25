@@ -7,7 +7,11 @@ import requests.exceptions
 
 import annif.backend
 from annif.corpus import Document
-from annif.exception import NotSupportedException, OperationFailedException
+from annif.exception import (
+    ConfigurationException,
+    NotSupportedException,
+    OperationFailedException,
+)
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
 from annif.vocab import Subject
 
@@ -285,6 +289,42 @@ def test_clm_suggest_json_error(app_project):
         with _mock_source(app_project, [(0, 0.9)]):
             with pytest.raises(OperationFailedException):
                 clm.suggest([Document(text="test document")])
+
+
+def test_clm_custom_instruction(app_project):
+    """A custom instruction template replaces the default proposition."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {"0": {"type": "noul", "noul": 0.9}}
+        }
+        mock_request.return_value = mock_response
+
+        clm = _make_backend(
+            app_project,
+            instruction="Does this document relate to {label}?",
+        )
+        with _mock_source(app_project, [(0, 0.9)]):
+            result = clm.suggest([Document(text="test document")])
+
+    payload = mock_request.call_args.kwargs["json"]
+    assert payload["questions"]["0"]["instructions"] == (
+        "Does this document relate to dummy?"
+    )
+    assert [int(s.subject_id) for s in result[0]] == [0]
+
+
+def test_clm_instruction_missing_placeholder(app_project):
+    """An instruction without the {label} placeholder is rejected."""
+    with (
+        unittest.mock.patch("requests.post") as mock_request,
+        _mock_source(app_project, [(0, 0.9)]),
+    ):
+        clm = _make_backend(app_project, instruction="No label here")
+        with pytest.raises(ConfigurationException):
+            clm.suggest([Document(text="test document")])
+
+    mock_request.assert_not_called()
 
 
 def test_clm_train_not_supported(app_project):

@@ -14,7 +14,11 @@ from typing import TYPE_CHECKING, Any
 
 import requests
 
-from annif.exception import NotSupportedException, OperationFailedException
+from annif.exception import (
+    ConfigurationException,
+    NotSupportedException,
+    OperationFailedException,
+)
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
 
 from . import ensemble
@@ -35,6 +39,7 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
         "threshold": 0.6,
         "mode": "filter",
         "retries": 2,
+        "instruction": "This document is about {label}.",
     }
 
     @property
@@ -70,6 +75,11 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
         """Ask the CLM service for a noul score for every candidate subject
         that has a label, and return a mapping subject_id -> noul score.
         Candidates without a label are not included in the mapping."""
+        instruction = params["instruction"]
+        if "{label}" not in instruction:
+            raise ConfigurationException(
+                "instruction parameter must contain a {label} placeholder"
+            )
         questions = {}
         for suggestion in suggestions:
             label = self._label_for_subject(suggestion.subject_id)
@@ -82,7 +92,7 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
             # questions must have unique IDs; use the subject ID as the key
             questions[str(suggestion.subject_id)] = {
                 "type": "noul",
-                "instructions": f"This document is about {label}.",
+                "instructions": instruction.format(label=label),
             }
         if not questions:
             return {}
