@@ -2,12 +2,9 @@
 score candidate subjects against a document. For each candidate subject
 from the source projects, the backend asks the CLM service how likely the
 proposition "This document is about {label}." is to be true (a noul-type
-question). Depending on the mode, the candidates are then either filtered
-(drop candidates whose score is below the threshold), reranked (keep all
-candidates, re-score them by multiplying the source score with the noul
-score), or blended (keep all candidates, re-score them as a linear
-combination of the per-document min-max normalized source score and noul
-score)."""
+question). The candidates are then re-scored as a linear combination of
+the per-document min-max normalized source score and noul score,
+weighted by the blend-alpha parameter."""
 
 from __future__ import annotations
 
@@ -38,16 +35,14 @@ if TYPE_CHECKING:
 
 
 class CLMBackend(ensemble.BaseEnsembleBackend):
-    """Ensemble-style backend that filters, reranks or blends source
-    candidates with a CLM service using noul-type true/false questions."""
+    """Ensemble-style backend that blends source candidates with noul
+    scores from a CLM service (noul-type true/false questions)."""
 
     name = "clm"
 
     DEFAULT_PARAMETERS = {
         "endpoint": "http://127.0.0.1:8700",
         "model": "clm-latest",
-        "threshold": 0.6,
-        "mode": "filter",
         "blend-alpha": 0.85,
         "retries": 2,
         "instruction": "This document is about {label}.",
@@ -324,50 +319,11 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
     def _process_document(
         self, doc: Document, suggestions: list[SubjectSuggestion], params
     ) -> list[SubjectSuggestion]:
-        """Process the candidate subjects of one document according to the
-        configured mode and return the resulting suggestions."""
+        """Re-score the candidate subjects of one document as a blend of
+        the source score and the noul score from the CLM service."""
         noul_scores = self._query_clm(doc, suggestions, params)
-
-        if params["mode"] == "filter":
-            threshold = float(params["threshold"])
-            kept = [
-                suggestion
-                for suggestion in suggestions
-                if noul_scores.get(suggestion.subject_id, -1.0) >= threshold
-            ]
-            self.debug(
-                f"CLM filtered {len(kept)} of {len(suggestions)} "
-                f"candidate subjects (threshold {threshold})"
-            )
-            return kept
-
-        if params["mode"] == "blend":
-            alpha = float(params["blend-alpha"])
-            return self._blend(suggestions, noul_scores, alpha)
-
-        if params["mode"] != "rerank":
-            raise ConfigurationException(
-                "unknown mode {!r} (expected filter, rerank or blend)".format(
-                    params["mode"]
-                )
-            )
-
-        # rerank mode: keep all candidates, re-score by source score * noul
-        reranked = []
-        for suggestion in suggestions:
-            noul = noul_scores.get(suggestion.subject_id)
-            if noul is None:  # no label, question not asked
-                reranked.append(suggestion)
-                continue
-            reranked.append(
-                SubjectSuggestion(
-                    subject_id=suggestion.subject_id,
-                    score=suggestion.score * noul,
-                )
-            )
-        # the new order differs from the source order, so sort explicitly
-        reranked.sort(key=lambda s: s.score, reverse=True)
-        return reranked
+        alpha = float(params["blend-alpha"])
+        return self._blend(suggestions, noul_scores, alpha)
 
     @staticmethod
     def _blend(
