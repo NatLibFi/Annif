@@ -9,6 +9,12 @@ if TYPE_CHECKING:
 
 
 # define functions for lazily importing each backend (alphabetical order)
+def _clm() -> Type[AnnifBackend]:
+    from . import clm
+
+    return clm.CLMBackend
+
+
 def _dummy() -> Type[AnnifBackend]:
     from . import dummy
 
@@ -98,6 +104,7 @@ def _yake() -> Type[AnnifBackend]:
 
 # registry of the above functions
 _backend_fns = {
+    "clm": _clm,
     "dummy": _dummy,
     "ensemble": _ensemble,
     "fasttext": _fasttext,
