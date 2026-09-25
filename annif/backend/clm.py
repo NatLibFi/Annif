@@ -9,6 +9,7 @@ score)."""
 
 from __future__ import annotations
 
+import time
 from typing import TYPE_CHECKING, Any
 
 import requests
@@ -33,6 +34,7 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
         "model": "clm-latest",
         "threshold": 0.6,
         "mode": "filter",
+        "retries": 2,
     }
 
     @property
@@ -91,12 +93,28 @@ class CLMBackend(ensemble.BaseEnsembleBackend):
             "questions": questions,
         }
         endpoint = params["endpoint"].rstrip("/") + "/v1/systemone"
-        try:
-            req = requests.post(endpoint, json=payload)
-            req.raise_for_status()
-        except requests.exceptions.RequestException as err:
-            msg = f"CLM request to {endpoint} failed: {err}"
-            raise OperationFailedException(msg) from err
+        retries = int(params["retries"])
+        attempt = 0
+        while True:
+            try:
+                req = requests.post(endpoint, json=payload)
+                req.raise_for_status()
+                break
+            except requests.exceptions.RequestException as err:
+                attempt += 1
+                if attempt > retries:
+                    msg = "CLM request to {} failed after {} attempts: {}".format(
+                        endpoint, retries + 1, err
+                    )
+                    raise OperationFailedException(msg) from err
+                delay = 2**attempt
+                self.warning(
+                    "CLM request failed ({err}); retrying in {delay}s "
+                    "({attempt}/{retries})".format(
+                        err=err, delay=delay, attempt=attempt, retries=retries
+                    )
+                )
+                time.sleep(delay)
         try:
             response = req.json()
         except ValueError as err:

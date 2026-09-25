@@ -212,16 +212,66 @@ def test_clm_rerank_threshold_ignored(app_project):
 
 
 def test_clm_suggest_request_error(app_project):
-    """A failed CLM request raises OperationFailedException."""
-    with unittest.mock.patch("requests.post") as mock_request:
+    """A failed CLM request raises OperationFailedException after all
+    retries have been exhausted."""
+    with (
+        unittest.mock.patch("requests.post") as mock_request,
+        unittest.mock.patch("time.sleep"),
+    ):
         mock_request.side_effect = requests.exceptions.ConnectionError(
             "Connection failed"
         )
 
-        clm = _make_backend(app_project)
+        clm = _make_backend(app_project, retries=1)
         with _mock_source(app_project, [(0, 0.9)]):
             with pytest.raises(OperationFailedException):
                 clm.suggest([Document(text="test document")])
+
+        # 1 initial attempt + 1 retry
+        assert mock_request.call_count == 2
+
+
+def test_clm_suggest_retries_on_failure(app_project):
+    """A transient failure is retried and a later success is returned."""
+    with (
+        unittest.mock.patch("requests.post") as mock_request,
+        unittest.mock.patch("time.sleep") as mock_sleep,
+    ):
+        good_response = unittest.mock.Mock()
+        good_response.json.return_value = {
+            "answers": {"0": {"type": "noul", "noul": 0.9}}
+        }
+        mock_request.side_effect = [
+            requests.exceptions.ConnectionError("transient"),
+            good_response,
+        ]
+
+        clm = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            result = clm.suggest([Document(text="test document")])
+
+    assert mock_request.call_count == 2
+    mock_sleep.assert_called_once()
+    suggestions = list(result[0])
+    assert [int(s.subject_id) for s in suggestions] == [0]
+
+
+def test_clm_suggest_no_retries(app_project):
+    """With retries=0 a single failure raises immediately."""
+    with (
+        unittest.mock.patch("requests.post") as mock_request,
+        unittest.mock.patch("time.sleep"),
+    ):
+        mock_request.side_effect = requests.exceptions.ConnectionError(
+            "Connection failed"
+        )
+
+        clm = _make_backend(app_project, retries=0)
+        with _mock_source(app_project, [(0, 0.9)]):
+            with pytest.raises(OperationFailedException):
+                clm.suggest([Document(text="test document")])
+
+    assert mock_request.call_count == 1
 
 
 def test_clm_suggest_json_error(app_project):
