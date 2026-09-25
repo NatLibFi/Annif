@@ -1,5 +1,5 @@
 import os
-from typing import Any
+from typing import Any, ClassVar
 
 import joblib
 import numpy as np
@@ -17,7 +17,7 @@ from . import backend
 class EbmBackend(backend.AnnifBackend):
     name = "ebm"
 
-    EBM_PARAMETERS = {
+    EBM_PARAMETERS: ClassVar[dict[str, Any]] = {
         "embedding_dimensions": int,
         "max_chunk_count": int,
         "max_chunk_length": int,
@@ -43,7 +43,7 @@ class EbmBackend(backend.AnnifBackend):
         "embedding_cache_ttl": int,
     }
 
-    DEFAULT_PARAMETERS = {
+    DEFAULT_PARAMETERS: ClassVar[dict[str, Any]] = {
         "embedding_dimensions": 1024,
         "max_chunk_count": 100,
         "max_chunk_length": 250,
@@ -89,7 +89,9 @@ class EbmBackend(backend.AnnifBackend):
                     value = self.params.get(key)
                     if value is None:
                         params[key] = value
-                    elif type_hint in (int, float, str, bool):
+                    elif type_hint is bool:
+                        params[key] = str(value).lower() in ("1", "yes", "true", "on")
+                    elif type_hint in (int, float, str):
                         try:
                             params[key] = type_hint(value)
                         except (ValueError, TypeError):
@@ -165,11 +167,9 @@ class EbmBackend(backend.AnnifBackend):
             texts = []
             label_ids = []
             for doc_id, doc in enumerate(corpus.documents):
-                for subject_id in [
-                    subject_id for subject_id in getattr(doc, "subject_set")
-                ]:
+                for subject_id in [subject_id for subject_id in doc.subject_set]:
                     doc_ids.append(doc_id)
-                    texts.append(getattr(doc, "text"))
+                    texts.append(doc.text)
                     label_ids.append(self.project.subjects[subject_id].uri)
 
             train_data = self._model.prepare_train(
@@ -210,6 +210,13 @@ class EbmBackend(backend.AnnifBackend):
     def _suggest_batch(
         self, documents: list[Document], params: dict[str, Any]
     ) -> SuggestionBatch:
+        if not documents or not any(doc.text.strip() for doc in documents):
+            return SuggestionBatch.from_sequence(
+                [[] for _ in documents],
+                self.project.subjects,
+                limit=int(params["limit"]),
+            )
+
         candidates = self._model.generate_candidates_batch(
             texts=[doc.text for doc in documents],
             doc_ids=[i for i in range(len(documents))],
@@ -223,7 +230,9 @@ class EbmBackend(backend.AnnifBackend):
             vector = np.zeros(len(self.project.subjects), dtype=np.float32)
             for row in doc_predictions.iter_rows(named=True):
                 position = self.project.subjects.by_uri(row["label_id"])
-                position = position if position else 0
+                if position is None:
+                    continue
+
                 vector[position] = row["score"]
             suggestions.append(vector_to_suggestions(vector, int(params["limit"])))
 

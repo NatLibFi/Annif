@@ -47,12 +47,13 @@ dependencies = [
 
 [project.optional-dependencies]
 fasttext = ["fasttext-numpy2==0.10.4"]
-ebm-api= ["ebm4subjects==0.8.0"]
-ebm-in-process = ["ebm4subjects[in-process]==0.8.0"]
-estnltk = ["estnltk==1.7.5"]nn = [
-    "torch~=2.14.0",
-    "tqdm~=4.70.1",
-    "lmdb~=2.3.0",
+ebm-api= ["ebm4subjects==0.9.0"]
+ebm-in-process = ["ebm4subjects[in-process]==0.9.0"]
+estnltk = ["estnltk==1.7.5"]
+nn = [
+    "torch~=2.12.0",
+    "tqdm~=4.67.3",
+    "lmdb~=2.2.0",
 ]
 torch-cpu = ["torch"]
 torch-cu126 = ["torch"]
