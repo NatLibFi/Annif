@@ -87,6 +87,12 @@ def _tfidf() -> Type[AnnifBackend]:
     return tfidf.TFIDFBackend
 
 
+def _threshold_ensemble() -> Type[AnnifBackend]:
+    from . import threshold_ensemble
+
+    return threshold_ensemble.ThresholdEnsembleBackend
+
+
 def _yake() -> Type[AnnifBackend]:
     try:
         from . import yake
@@ -109,6 +115,7 @@ _backend_fns = {
     "stwfsa": _stwfsa,
     "svc": _svc,
     "tfidf": _tfidf,
+    "threshold_ensemble": _threshold_ensemble,
     "yake": _yake,
 }
 
