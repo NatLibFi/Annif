@@ -10,6 +10,7 @@ import numpy as np
 
 import annif.eval
 import annif.util
+import annif.parallel
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.lexical.mllm import (
     MLLMModel,
@@ -72,6 +73,17 @@ class MLLMHPObjective(hyperopt.HPObjective):
         return results[args["metric"]]
 
 
+class MLLMCandidateGenerator(annif.parallel.BaseWorker):
+    """Worker class for generating candidates in parallel"""
+
+    @classmethod
+    def generate_for_doc(cls, doc) -> tuple[list, Any]:
+        """Generate candidates for a single document"""
+        backend = cls.args["backend"]
+        candidates = backend._generate_candidates(doc.text)
+        return (candidates, doc.subject_set)
+
+
 class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
     """Hyperparameter optimizer for the MLLM backend"""
 
@@ -81,11 +93,27 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
         all_candidates = []
         gold_subjects = []
 
-        # TODO parallelize generation of candidates
-        for doc in self._corpus.documents:
-            candidates = self._backend._generate_candidates(doc.text)
+        # Parallelize generation of candidates
+        n_jobs, pool_constructor = annif.parallel.get_pool(n_jobs)
+
+        # Create a list of documents to process
+        documents = list(self._corpus.documents)
+
+        # Generate candidates in parallel
+        with pool_constructor(
+            n_jobs,
+            initializer=MLLMCandidateGenerator.init,
+            initargs=({"backend": self._backend},),
+        ) as pool:
+            candidate_subject_pairs = pool.map(
+                MLLMCandidateGenerator.generate_for_doc,
+                documents,
+            )
+
+        # Unpack the results
+        for candidates, subject_set in candidate_subject_pairs:
             all_candidates.append(candidates)
-            gold_subjects.append(doc.subject_set)
+            gold_subjects.append(subject_set)
 
         return {
             "train_x": train_x,
