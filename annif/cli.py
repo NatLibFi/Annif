@@ -567,8 +567,6 @@ def run_optimize(project_id, paths, jobs, docs_limit, backend_param):
     backend_params = cli_util.parse_backend_params(backend_param, project)
     filter_params = cli_util.generate_filter_params(FILTER_BATCH_MAX_LIMIT)
 
-    import annif.eval
-
     corpus = cli_util.open_documents(
         paths, project.subjects, project.vocab_lang, docs_limit
     )
@@ -605,27 +603,35 @@ def run_optimize(project_id, paths, jobs, docs_limit, backend_param):
     best_params = {}
 
     template = "{:d}\t{:.02f}\t{:.04f}\t{:.04f}\t{:.04f}"
-    import annif.eval
 
-    for limit, threshold in filter_params:
-        eval_batch = annif.eval.EvaluationBatch(project.subjects)
-        filtered_results = orig_suggestion_results.filter(limit, threshold)
-        for batch, subject_sets in zip(filtered_results.batches, subject_set_batches):
-            eval_batch.evaluate_many(batch, subject_sets)
-        results = eval_batch.results(metrics=OPTIMIZE_METRICS)
-        for metric, score in results.items():
-            if score >= best_scores[metric] and limit > 1:
-                best_scores[metric] = score
-                best_params[metric] = (limit, threshold)
-        click.echo(
-            template.format(
-                limit,
-                threshold,
-                results["Precision (doc avg)"],
-                results["Recall (doc avg)"],
-                results["F1 score (doc avg)"],
+    optimizer = annif.parallel.OptimizeEvaluator(
+        project.registry,
+        project_id,
+        orig_suggestion_results,
+        subject_set_batches,
+        OPTIMIZE_METRICS,
+    )
+
+    with pool_class(
+        jobs, initializer=annif.parallel.OptimizeEvaluator.init, initargs=(optimizer,)
+    ) as pool:
+        for limit, threshold, results in pool.imap(
+            annif.parallel.OptimizeEvaluator.evaluate_combination, filter_params
+        ):
+            for metric in OPTIMIZE_METRICS:
+                score = results[metric]
+                if score >= best_scores[metric] and limit > 1:
+                    best_scores[metric] = score
+                    best_params[metric] = (limit, threshold)
+            click.echo(
+                template.format(
+                    limit,
+                    threshold,
+                    results["Precision (doc avg)"],
+                    results["Recall (doc avg)"],
+                    results["F1 score (doc avg)"],
+                )
             )
-        )
 
     click.echo()
     template2 = "Best {:>19}: {:.04f}\tLimit: {:d}\tThreshold: {:.02f}"
