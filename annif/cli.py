@@ -614,7 +614,7 @@ def run_optimize(project_id, paths, jobs, docs_limit, backend_param):
             eval_batch.evaluate_many(batch, subject_sets)
         results = eval_batch.results(metrics=OPTIMIZE_METRICS)
         for metric, score in results.items():
-            if score >= best_scores[metric]:
+            if score >= best_scores[metric] and limit > 1:
                 best_scores[metric] = score
                 best_params[metric] = (limit, threshold)
         click.echo(
