@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 from typing import TYPE_CHECKING, Dict, Tuple, Union
 
 if TYPE_CHECKING:
@@ -10,6 +11,7 @@ if TYPE_CHECKING:
 LANG_CACHE_SIZE = 5  # How many language dictionaries to keep in memory at once (max)
 
 
+@functools.lru_cache(maxsize=1)
 def _strategy():
     from simplemma.strategies import DefaultStrategy
     from simplemma.strategies.dictionaries import DefaultDictionaryFactory
