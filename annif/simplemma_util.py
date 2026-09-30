@@ -1,20 +1,35 @@
 """Wrapper code for using Simplemma functionality in Annif"""
 
-from typing import Dict, Tuple, Union
+from __future__ import annotations
 
-from simplemma import LanguageDetector, Lemmatizer
-from simplemma.strategies import DefaultStrategy
-from simplemma.strategies.dictionaries import DefaultDictionaryFactory
+from typing import TYPE_CHECKING, Dict, Tuple, Union
+
+if TYPE_CHECKING:
+    from simplemma import LanguageDetector, Lemmatizer
 
 LANG_CACHE_SIZE = 5  # How many language dictionaries to keep in memory at once (max)
 
-_dictionary_factory = DefaultDictionaryFactory(cache_max_size=LANG_CACHE_SIZE)
-_lemmatization_strategy = DefaultStrategy(dictionary_factory=_dictionary_factory)
-lemmatizer = Lemmatizer(lemmatization_strategy=_lemmatization_strategy)
+
+def _strategy():
+    from simplemma.strategies import DefaultStrategy
+    from simplemma.strategies.dictionaries import DefaultDictionaryFactory
+
+    factory = DefaultDictionaryFactory(cache_max_size=LANG_CACHE_SIZE)
+    return DefaultStrategy(dictionary_factory=factory)
+
+
+def get_lemmatizer() -> Lemmatizer:
+    """Create a new simplemma lemmatizer instance."""
+    from simplemma import Lemmatizer
+
+    return Lemmatizer(lemmatization_strategy=_strategy())
 
 
 def get_language_detector(lang: Union[str, Tuple[str, ...]]) -> LanguageDetector:
-    return LanguageDetector(lang, lemmatization_strategy=_lemmatization_strategy)
+    """Create a new simplemma language detector for the given language(s)."""
+    from simplemma import LanguageDetector
+
+    return LanguageDetector(lang, lemmatization_strategy=_strategy())
 
 
 def detect_language(text: str, languages: Tuple[str, ...]) -> Dict[str, float]:
