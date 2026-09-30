@@ -634,7 +634,7 @@ def run_optimize(project_id, paths, jobs, docs_limit, backend_param):
             )
 
     click.echo()
-    template2 = "Best {:>19}: {:.04f}\tLimit: {:d}\tThreshold: {:.02f}"
+    template2 = "Best {:>19}: {:.04f}\tLimit: {:d}\tThreshold: {:.04f}"
     for metric in OPTIMIZE_METRICS:
         click.echo(
             template2.format(
