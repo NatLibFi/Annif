@@ -2,7 +2,11 @@
 
 import pytest
 
-from annif.simplemma_util import detect_language, get_language_detector
+from annif.simplemma_util import (
+    detect_language,
+    get_language_detector,
+    get_lemmatizer,
+)
 
 
 def test_get_language_detector():
@@ -17,6 +21,12 @@ def test_get_language_detector_many():
     text = "She said 'au revoir' and left"
     proportion = detector.proportion_in_target_languages(text)
     assert proportion == pytest.approx(1.0)
+
+
+def test_get_lemmatizer():
+    lemmatizer = get_lemmatizer()
+    assert lemmatizer.lemmatize("vanhat", lang="fi") == "vanha"
+    assert lemmatizer.lemmatize("koirien", lang="fi") == "koira"
 
 
 def test_detect_language():
