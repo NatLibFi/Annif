@@ -6,6 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import annif
+import annif.simplemma_util
 
 from . import transform
 
@@ -25,8 +26,6 @@ class LangFilter(transform.BaseTransform):
         sentence_min_length: int | str = 50,
         min_ratio: float = 0.5,
     ) -> None:
-        import annif.simplemma_util
-
         super().__init__(project)
         self.text_min_length = int(text_min_length)
         self.sentence_min_length = int(sentence_min_length)

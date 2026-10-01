@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import annif.simplemma_util
+
 from . import analyzer
 
 
@@ -15,9 +17,7 @@ class SimplemmaAnalyzer(analyzer.Analyzer):
 
     def _normalize_word(self, word: str) -> str:
         if self._lemmatizer is None:
-            from annif.simplemma_util import get_lemmatizer
-
-            self._lemmatizer = get_lemmatizer()
+            self._lemmatizer = annif.simplemma_util.get_lemmatizer()
         return self._lemmatizer.lemmatize(word, lang=self.lang)
 
     def __getstate__(self) -> dict:

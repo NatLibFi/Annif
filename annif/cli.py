@@ -24,6 +24,7 @@ from annif.exception import (
     OperationFailedException,
 )
 from annif.project import Access
+from annif.simplemma_util import detect_language
 from annif.util import metric_code, suggestion_to_dict
 
 logger = annif.logger
@@ -854,7 +855,6 @@ def run_detect_language(languages, paths):
     Detect the language of a single text document from standard input or for one or more
     document file(s) given its/their path(s).
     """
-    from annif.simplemma_util import detect_language
 
     langs = tuple(languages.split(","))
 
