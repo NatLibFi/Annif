@@ -2,6 +2,9 @@
 
 import os.path
 
+import pytest
+
+from annif.exception import OperationFailedException
 from annif.vocab import VocabFileSKOS
 
 
@@ -119,3 +122,23 @@ def test_load_turtle_get_languages(testdatadir):
     assert "fi" in langs
     assert "sv" in langs
     assert "en" in langs
+
+
+def test_load_vocab_corrupt(tmpdir):
+    tmpfile = tmpdir.join("subjects.ttl")
+    tmpfile.write(
+        """
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix yso: <http://www.yso.fi/onto/yso/> .
+
+yso:p8993
+    a skos:Concept ;
+    skos:prefLabel "hylyt"@fi
+    """  # missing closing period -> invalid Turtle
+    )
+
+    tmpfile_path = str(tmpfile)
+    with pytest.raises(OperationFailedException) as excinfo:
+        VocabFileSKOS(tmpfile_path)
+    assert "Cannot parse vocabulary file" in str(excinfo.value)
+    assert tmpfile_path in str(excinfo.value)
