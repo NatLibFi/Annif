@@ -1,7 +1,6 @@
 """Definitions for command-line (Click) commands for invoking Annif
 operations and printing the results to console."""
 
-import collections
 import importlib
 import json
 import os.path
@@ -566,7 +565,8 @@ def run_optimize(project_id, paths, jobs, steps, docs_limit, backend_param):
     This command will use different limit (maximum number of subjects) and
     score threshold values when assigning subjects to each document given by
     ``PATHS`` and compare the results against the gold standard subjects in the
-    documents. The output is a list of parameter combinations and their scores.
+    documents. The output is a list of parameter combinations and their scores,
+    followed by the Pareto front and the best combination by F1 score (doc avg).
     From the output, you can determine the optimum limit and threshold
     parameters depending on which measure you want to target.
     """
@@ -606,8 +606,9 @@ def run_optimize(project_id, paths, jobs, steps, docs_limit, backend_param):
 
     click.echo("\t".join(("Limit", "Thresh.", "Prec.", "Rec.", "F1")))
 
-    best_scores = collections.defaultdict(float)
-    best_params = {}
+    best_score = None
+    best_params = None
+    all_results = []
 
     template = "{:d}\t{:.02f}\t{:.04f}\t{:.04f}\t{:.04f}"
 
@@ -625,11 +626,11 @@ def run_optimize(project_id, paths, jobs, steps, docs_limit, backend_param):
         for limit, threshold, results in pool.imap(
             annif.parallel.OptimizeEvaluator.evaluate_combination, filter_params
         ):
-            for metric in OPTIMIZE_METRICS:
-                score = results[metric]
-                if score >= best_scores[metric] and limit > 1:
-                    best_scores[metric] = score
-                    best_params[metric] = (limit, threshold)
+            all_results.append((limit, threshold, results))
+            f_measure = results["F1 score (doc avg)"]
+            if best_score is None or f_measure > best_score:
+                best_score = f_measure
+                best_params = (limit, threshold)
             click.echo(
                 template.format(
                     limit,
@@ -641,16 +642,14 @@ def run_optimize(project_id, paths, jobs, steps, docs_limit, backend_param):
             )
 
     click.echo()
+    click.echo("Pareto front: best precision at each recall level")
+    click.echo("\t".join(("Limit", "Thresh.", "Prec.", "Rec.", "F1")))
+    for params in cli_util.pareto_front(all_results):
+        click.echo(template.format(*params))
+
+    click.echo()
     template2 = "Best {:>19}: {:.04f}\tLimit: {:d}\tThreshold: {:.04f}"
-    for metric in OPTIMIZE_METRICS:
-        click.echo(
-            template2.format(
-                metric,
-                best_scores[metric],
-                best_params[metric][0],
-                best_params[metric][1],
-            )
-        )
+    click.echo(template2.format("F1 score (doc avg)", best_score, *best_params))
     click.echo("Documents evaluated:\t{}".format(ndocs))
 
 

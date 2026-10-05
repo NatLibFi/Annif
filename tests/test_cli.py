@@ -1411,10 +1411,17 @@ def test_optimize_dir(tmpdir):
     assert not result.exception
     assert result.exit_code == 0
 
-    precision = re.search(r"Best\s+Precision .*?doc.*?:\s+(\d.\d+)", result.output)
-    assert float(precision.group(1)) == pytest.approx(0.5)
-    recall = re.search(r"Best\s+Recall .*?doc.*?:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == pytest.approx(0.5)
+    front = re.search(
+        r"Pareto front: best precision at each recall level\n"
+        r"Limit\tThresh\.\tPrec\.\tRec\.\tF1\n"
+        r"\d+\t0\.\d+\t(\d\.\d+)\t(\d\.\d+)\t(\d\.\d+)$",
+        result.output,
+        re.MULTILINE,
+    )
+    assert front is not None
+    assert float(front.group(1)) == pytest.approx(0.5)
+    assert float(front.group(2)) == pytest.approx(0.5)
+    assert float(front.group(3)) == pytest.approx(0.5)
     f_measure = re.search(r"Best\s+F1 score .*?doc.*?:\s+(\d.\d+)", result.output)
     assert float(f_measure.group(1)) == pytest.approx(0.5)
     ndocs = re.search(r"Documents evaluated:\s+(\d)", result.output)
