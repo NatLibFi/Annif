@@ -555,10 +555,19 @@ OPTIMIZE_METRICS = ["Precision (doc avg)", "Recall (doc avg)", "F1 score (doc av
     type=click.FloatRange(0.0, 1.0, min_open=True),
     help="Step size between threshold values tested",
 )
+@click.option(
+    "--results-file",
+    "-r",
+    type=click.File("w", encoding="utf-8", errors="ignore", lazy=True),
+    help="""Specify file path to write results as TSV.
+    File directory must exist, existing file will be overwritten.""",
+)
 @cli_util.docs_limit_option
 @cli_util.backend_param_option
 @cli_util.common_options
-def run_optimize(project_id, paths, jobs, steps, docs_limit, backend_param):
+def run_optimize(
+    project_id, paths, jobs, steps, results_file, docs_limit, backend_param
+):
     """
     Suggest subjects for documents, testing multiple limits and thresholds.
     \f
@@ -567,12 +576,27 @@ def run_optimize(project_id, paths, jobs, steps, docs_limit, backend_param):
     ``PATHS`` and compare the results against the gold standard subjects in the
     documents. The output is a list of parameter combinations and their scores,
     followed by the Pareto front and the best combination by F1 score (doc avg).
-    From the output, you can determine the optimum limit and threshold
+    If ``--results-file <FILENAME>`` is given, the results are written to the
+    given file in TSV format, one row per parameter combination. From the
+    output, you can determine the optimum limit and threshold
     parameters depending on which measure you want to target.
     """
     project = cli_util.get_project(project_id)
     backend_params = cli_util.parse_backend_params(backend_param, project)
     filter_params = cli_util.generate_filter_params(FILTER_BATCH_MAX_LIMIT, steps)
+
+    if results_file:
+        try:
+            print("", end="", file=results_file)
+            click.echo(
+                "Writing parameter combination results to {!s}".format(
+                    results_file.name
+                )
+            )
+        except Exception as e:
+            raise NotSupportedException(
+                "cannot open results-file for writing: " + str(e)
+            )
 
     corpus = cli_util.open_documents(
         paths, project.subjects, project.vocab_lang, docs_limit
@@ -641,11 +665,43 @@ def run_optimize(project_id, paths, jobs, steps, docs_limit, backend_param):
                 )
             )
 
+    front = cli_util.pareto_front(all_results)
+
     click.echo()
     click.echo("Pareto front: best precision at each recall level")
     click.echo("\t".join(("Limit", "Thresh.", "Prec.", "Rec.", "F1")))
-    for params in cli_util.pareto_front(all_results):
+    for params in front:
         click.echo(template.format(*params))
+
+    if results_file:
+        front_params = {(limit, threshold) for limit, threshold, *_ in front}
+        print(
+            "\t".join(
+                (
+                    "Limit",
+                    "Threshold",
+                    "Precision (doc avg)",
+                    "Recall (doc avg)",
+                    "F1 score (doc avg)",
+                    "Pareto front",
+                )
+            ),
+            file=results_file,
+        )
+        for limit, threshold, results in all_results:
+            print(
+                "\t".join(
+                    (
+                        str(limit),
+                        f"{threshold:g}",
+                        f"{results['Precision (doc avg)']:.6f}",
+                        f"{results['Recall (doc avg)']:.6f}",
+                        f"{results['F1 score (doc avg)']:.6f}",
+                        "1" if (limit, threshold) in front_params else "0",
+                    )
+                ),
+                file=results_file,
+            )
 
     click.echo()
     template2 = "Best {:>19}: {:.04f}\tLimit: {:d}\tThreshold: {:.04f}"

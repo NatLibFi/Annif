@@ -1453,6 +1453,45 @@ def test_optimize_nonexistent_path():
     )
 
 
+def test_optimize_resultsfile(tmpdir):
+    tmpdir.join("doc1.txt").write("doc1")
+    tmpdir.join("doc1.key").write("dummy")
+    tmpdir.join("doc2.txt").write("doc2")
+    tmpdir.join("doc2.key").write("none")
+    resultfile = tmpdir.join("results.tsv")
+
+    result = runner.invoke(
+        annif.cli.cli, ["optimize", "-r", str(resultfile), "dummy-en", str(tmpdir)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+    with resultfile.open() as f:
+        header = next(f)
+        assert header.strip("\n") == "\t".join(
+            [
+                "Limit",
+                "Threshold",
+                "Precision (doc avg)",
+                "Recall (doc avg)",
+                "F1 score (doc avg)",
+                "Pareto front",
+            ]
+        )
+        first = next(f)
+        assert first.strip("\n") == "1\t0\t0.500000\t0.500000\t0.500000\t1"
+        nlines = 1
+        pareto_rows = 1
+        for line in f:
+            parts = line.strip("\n").split("\t")
+            assert len(parts) == 6
+            nlines += 1
+            if parts[5] == "1":
+                pareto_rows += 1
+        assert nlines == 15 * 20  # all limit and threshold combinations
+        assert pareto_rows == 1
+
+
 def test_hyperopt_ensemble(tmpdir):
     tmpdir.join("doc1.txt").write("doc1")
     tmpdir.join("doc1.key").write("dummy")
