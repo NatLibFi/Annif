@@ -85,7 +85,97 @@ def test_get_project_fi_dump(registry):
         "vocab_language": "fi",
         "is_trained": True,
         "modification_time": None,
+        "metadata": [],
     }
+
+
+def test_get_project_metadata_fields_select(registry):
+    # a project with a select(...) transform exposes its fields, in order
+    project = registry.get_project("select-meta")
+    assert project.dump()["metadata"] == ["title", "description", "text"]
+
+
+def test_get_project_metadata_fields_none(registry):
+    # a project without a select transform has no metadata fields
+    project = registry.get_project("dummy-fi")
+    assert project.metadata_fields() == []
+
+
+def test_get_project_metadata_fields_ensemble_union(registry):
+    # an ensemble gathers source fields in addition to its own, de-duplicated
+    # and order-preserving: own select(description) first, then the source
+    # select-meta's (title, description, text); dummy-en has no select fields
+    project = registry.get_project("ensemble-meta")
+    assert project.dump()["metadata"] == ["description", "title", "text"]
+
+
+def test_get_project_metadata_fields_nested_ensemble(registry):
+    # gathering is recursive: an ensemble whose source is itself an ensemble
+    # must also pick up the fields of that source's own sources, because
+    # suggest() recurses the same way. Own select(subtitle), then
+    # ensemble-meta's select(description), then select-meta's
+    # (title, description, text); dummy-en contributes none.
+    project = registry.get_project("ensemble-meta-nested")
+    assert project.dump()["metadata"] == ["subtitle", "description", "title", "text"]
+
+
+def test_get_project_metadata_fields_source_cycle(registry, monkeypatch):
+    # a cyclic sources configuration must not cause unbounded recursion;
+    # each project is visited at most once
+    project = registry.get_project("ensemble-meta")
+    source = project.registry.get_project("select-meta")
+    real_get = source.config.get
+
+    def cyclic_get(key, *args, **kwargs):
+        if key == "sources":
+            return "ensemble-meta"
+        return real_get(key, *args, **kwargs)
+
+    monkeypatch.setattr(source.config, "get", cyclic_get)
+    # terminates, and still yields each field once
+    assert project.metadata_fields() == ["description", "title", "text"]
+
+
+def test_get_project_metadata_fields_skips_unloadable_source(registry, monkeypatch):
+    # a source project that cannot be loaded is skipped best-effort, mirroring
+    # the graceful degradation already used for vocab in dump()
+    project = registry.get_project("ensemble-meta")
+    real_get_project = project.registry.get_project
+
+    def fake_get_project(project_id, *args, **kwargs):
+        if project_id == "select-meta":
+            raise ValueError("source not loadable")
+        return real_get_project(project_id, *args, **kwargs)
+
+    monkeypatch.setattr(project.registry, "get_project", fake_get_project)
+    # only the ensemble's own select(description) field remains
+    assert project.metadata_fields() == ["description"]
+
+
+def test_get_project_metadata_fields_transform_error(registry, monkeypatch):
+    # if the transform chain cannot be resolved (misconfiguration), the project
+    # degrades to no metadata fields rather than raising
+    project = registry.get_project("dummy-fi")
+
+    class BrokenTransform:
+        @property
+        def transforms(self):
+            raise ConfigurationException("broken transform")
+
+    monkeypatch.setattr(project, "_transform", BrokenTransform())
+    assert project.metadata_fields() == []
+
+
+def test_get_project_metadata_fields_malformed_sources(registry, monkeypatch):
+    # if the sources spec cannot be parsed, source-field gathering is skipped
+    # best-effort and only the ensemble's own select(description) field remains
+    project = registry.get_project("ensemble-meta")
+
+    def broken_parse_sources(sources_spec):
+        raise ValueError("malformed sources spec")
+
+    monkeypatch.setattr(annif.project, "parse_sources", broken_parse_sources)
+    assert project.metadata_fields() == ["description"]
 
 
 def test_get_project_nonexistent(registry):
@@ -324,6 +414,6 @@ def test_project_file_toml():
 def test_project_directory():
     cxapp = annif.create_app(config_name="annif.default_config.TestingDirectoryConfig")
     with cxapp.app.app_context():
-        assert len(annif.registry.get_projects()) == 17 + 2
+        assert len(annif.registry.get_projects()) == 20 + 2
         assert annif.registry.get_project("dummy-fi").project_id == "dummy-fi"
         assert annif.registry.get_project("dummy-fi-toml").project_id == "dummy-fi-toml"
