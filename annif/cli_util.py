@@ -275,9 +275,11 @@ def parse_metadata(metadata: tuple[str, ...] | tuple[()]) -> dict[str, str]:
     return metadata_dict
 
 
-def generate_filter_params(filter_batch_max_limit: int) -> list[tuple[int, float]]:
+def generate_filter_params(
+    filter_batch_max_limit: int, steps: float = 0.05
+) -> list[tuple[int, float]]:
     limits = range(1, filter_batch_max_limit + 1)
-    thresholds = [i * 0.02 for i in range(50)]
+    thresholds = [i * steps for i in range(round(1 / steps))]
     return list(itertools.product(limits, thresholds))
 
 
