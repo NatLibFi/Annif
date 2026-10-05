@@ -17,9 +17,8 @@ if TYPE_CHECKING:
 
 
 # Start method for processes created by the multiprocessing module.
-# A value of None means using the platform-specific default.
 # Intended to be overridden in unit tests.
-MP_START_METHOD = None
+MP_START_METHOD = "fork"
 
 
 class BaseWorker:
