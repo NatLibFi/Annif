@@ -549,13 +549,6 @@ OPTIMIZE_METRICS = ["Precision (doc avg)", "Recall (doc avg)", "F1 score (doc av
     "--jobs", "-j", default=1, help="Number of parallel jobs (0 means all CPUs)"
 )
 @click.option(
-    "--steps",
-    "-s",
-    default=0.05,
-    type=click.FloatRange(0.0, 1.0, min_open=True),
-    help="Step size between threshold values tested",
-)
-@click.option(
     "--results-file",
     "-r",
     type=click.File("w", encoding="utf-8", errors="ignore", lazy=True),
@@ -565,9 +558,7 @@ OPTIMIZE_METRICS = ["Precision (doc avg)", "Recall (doc avg)", "F1 score (doc av
 @cli_util.docs_limit_option
 @cli_util.backend_param_option
 @cli_util.common_options
-def run_optimize(
-    project_id, paths, jobs, steps, results_file, docs_limit, backend_param
-):
+def run_optimize(project_id, paths, jobs, results_file, docs_limit, backend_param):
     """
     Suggest subjects for documents, testing multiple limits and thresholds.
     \f
@@ -583,7 +574,7 @@ def run_optimize(
     """
     project = cli_util.get_project(project_id)
     backend_params = cli_util.parse_backend_params(backend_param, project)
-    filter_params = cli_util.generate_filter_params(FILTER_BATCH_MAX_LIMIT, steps)
+    filter_params = cli_util.generate_filter_params(FILTER_BATCH_MAX_LIMIT)
 
     if results_file:
         try:

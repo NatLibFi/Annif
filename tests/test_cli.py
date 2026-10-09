@@ -1492,6 +1492,57 @@ def test_optimize_resultsfile(tmpdir):
         assert pareto_rows == 1
 
 
+def test_optimize_two_jobs(tmpdir):
+    tmpdir.join("doc1.txt").write("doc1")
+    tmpdir.join("doc1.key").write("dummy")
+    tmpdir.join("doc2.txt").write("doc2")
+    tmpdir.join("doc2.key").write("none")
+    tmpdir.join("doc3.txt").write("doc3")
+
+    result = runner.invoke(
+        annif.cli.cli, ["optimize", "--jobs", "2", "dummy-en", str(tmpdir)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+
+def test_optimize_two_jobs_spawn(tmpdir, monkeypatch):
+    tmpdir.join("doc1.txt").write("doc1")
+    tmpdir.join("doc1.key").write("dummy")
+    tmpdir.join("doc2.txt").write("doc2")
+    tmpdir.join("doc2.key").write("none")
+    tmpdir.join("doc3.txt").write("doc3")
+
+    # use spawn method for starting multiprocessing worker processes
+    monkeypatch.setattr(annif.parallel, "MP_START_METHOD", "spawn")
+    result = runner.invoke(
+        annif.cli.cli, ["optimize", "--jobs", "2", "dummy-en", str(tmpdir)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+
+def test_optimize_badresultsfile(tmpdir):
+    tmpdir.join("doc1.txt").write("doc1")
+    tmpdir.join("doc1.key").write("dummy")
+    tmpdir.join("doc2.txt").write("doc2")
+    tmpdir.join("doc2.key").write("none")
+    tmpdir.join("doc3.txt").write("doc3")
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        [
+            "optimize",
+            "--results-file",
+            "newdir/test_file.txt",
+            "dummy-en",
+            str(tmpdir),
+        ],
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "cannot open results-file for writing" in failed_result.output
+
+
 def test_hyperopt_ensemble(tmpdir):
     tmpdir.join("doc1.txt").write("doc1")
     tmpdir.join("doc1.key").write("dummy")
