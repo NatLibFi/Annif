@@ -1481,15 +1481,12 @@ def test_optimize_resultsfile(tmpdir):
         first = next(f)
         assert first.strip("\n") == "1\t0\t0.500000\t0.500000\t0.500000\t1"
         nlines = 1
-        pareto_rows = 1
         for line in f:
             parts = line.strip("\n").split("\t")
             assert len(parts) == 6
             nlines += 1
-            if parts[5] == "1":
-                pareto_rows += 1
+            assert parts[5] == "0"  # only the first row is on the Pareto front
         assert nlines == 15 * 20  # all limit and threshold combinations
-        assert pareto_rows == 1
 
 
 def test_optimize_two_jobs(tmpdir):
