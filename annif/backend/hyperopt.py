@@ -91,30 +91,6 @@ class HPObjective(annif.parallel.BaseWorker):
         }
 
 
-class _FixedParamsTrial:
-    """A minimal Trial stand-in for evaluating fixed hyperparameter
-    combinations outside of Optuna's trial loop: the suggest_* methods
-    return the given values and record the distributions so the trial
-    can be registered in the study."""
-
-    def __init__(self, params: dict[str, float]) -> None:
-        self._params = params
-        self.distributions: dict[str, Any] = {}
-
-    def suggest_float(
-        self,
-        name: str,
-        low: float | None = None,
-        high: float | None = None,
-        step: float | None = None,
-        log: bool = False,
-    ) -> float:
-        self.distributions[name] = optuna.distributions.FloatDistribution(
-            low, high, step=step, log=log
-        )
-        return self._params[name]
-
-
 class HyperparameterOptimizer:
     """Base class for hyperparameter optimizers"""
 
@@ -129,13 +105,6 @@ class HyperparameterOptimizer:
         self._corpus = corpus
         self._metric = metric
         self._objective = objective
-
-    def _initial_trials(self) -> list[dict[str, float]]:
-        """Return a list of hyperparameter combinations to evaluate first,
-        before the sampler starts proposing its own. Intended to be
-        overridden by subclasses when necessary. The default is to have no
-        initial trials."""
-        return []
 
     def _prepare(self, n_jobs: int = 1):
         """Prepare the optimizer for hyperparameter evaluation.  Up to
@@ -170,36 +139,6 @@ class HyperparameterOptimizer:
         storage_url = f"sqlite:///{temp_db.name}"
 
         study = optuna.create_study(direction="maximize", storage=storage_url)
-
-        # evaluate the fixed initial trials first so that the sampler
-        # conditions on them from its first iteration; these are useful
-        # for covering regions of the search space that the sampler's
-        # random startup phase would rarely visit on its own
-        best_index = None
-        best_value = None
-        for index, params in enumerate(self._initial_trials(), start=1):
-            fixed_trial = _FixedParamsTrial(params)
-            value = self._objective.objective(fixed_trial, objective_args)
-            trial = optuna.trial.create_trial(
-                value=value, params=params, distributions=fixed_trial.distributions
-            )
-            study.add_trial(trial)
-            if best_value is None or value > best_value:
-                best_value = value
-                best_index = index
-            self._backend.info(
-                f"initial trial {index} finished with value: {value} and "
-                f"parameters: {params}. Best so far is initial trial "
-                f"{best_index} with value: {best_value}."
-            )
-            if write_callback:
-                write_callback(
-                    {
-                        "number": trial.number,
-                        "value": trial.value,
-                        "params": trial.params,
-                    }
-                )
 
         jobs, pool_class = annif.parallel.get_pool(n_jobs)
         with pool_class(jobs) as pool:

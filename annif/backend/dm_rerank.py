@@ -334,31 +334,10 @@ class DMRerankOptimizer(hyperopt.HyperparameterOptimizer):
     over the cached scores with TPE. The search space is model-strength
     in [0, 1] and gate-threshold in [-1.0, 0.5]; the point
     (model-strength=0, gate-threshold=-1.0) reproduces the pure source
-    order exactly, so the optimizer can always fall back to the source
-    ranking if the noul scores carry no useful signal. Because the
-    source-dominant 'nudge' region just above that point is a narrow
-    strip that the sampler's random startup rarely visits, a ladder of
-    fixed points from the pure-source point up to full model strength
-    (plus a few stronger-gate points) is evaluated first, so the search
-    conditions on the nudge region explicitly."""
-
-    def _initial_trials(self) -> list[dict[str, float]]:
-        """Fixed points evaluated first: a ladder of increasingly strong
-        model influence with a near-identity gate (gate-threshold -1.0,
-        where the sigmoid is >= 0.99995 for all noul), starting from the
-        exact pure-source point, plus a few points with stronger gates
-        for contrast. This makes the optimizer inspect the
-        source-dominant 'nudge' region explicitly, where the best blend
-        often lives when the decision model adds only a small correction
-        on top of the source scores."""
-        return [
-            {"model-strength": b, "gate-threshold": -1.0}
-            for b in (0.0, 0.05, 0.1, 0.2, 0.3, 0.5, 0.75, 1.0)
-        ] + [
-            # the same ladder with progressively stronger gates
-            {"model-strength": b, "gate-threshold": tau}
-            for b, tau in ((0.0, -0.25), (0.2, -0.25), (0.2, 0.25), (0.5, 0.5))
-        ]
+    order exactly, so the search can fall back to the source ranking
+    if the noul scores carry no useful signal, and the region just
+    above it is the source-dominant 'nudge' where the model adds a
+    small correction on top of the source scores."""
 
     def _prepare(self, n_jobs: int = 1) -> dict[str, Any]:
         sources = annif.util.parse_sources(self._backend.params["sources"])
