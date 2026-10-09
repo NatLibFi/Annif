@@ -163,11 +163,17 @@ def test_dm_rerank_state_prefix_overrides_state_rules(app_project):
     assert not payload["state"].startswith(STATE_RULES)
 
 
+def _sigmoid(value, threshold):
+    """The same sigmoid gate as in the backend, for test expectations."""
+    import math
+
+    return 1.0 / (1.0 + math.exp(-(value - threshold) / 0.1))
+
+
 def test_dm_rerank_blend_scores(app_project):
-    """In blend mode the score is a min-max normalized linear combination
-    of the source and noul scores. A candidate that is worst in both
-    source and noul scores gets exactly 0.0 and is dropped by the
-    SuggestionBatch, like in rerank mode."""
+    """The blended score is source * noul^model-strength * gate, where the
+    gate is a sigmoid on the raw noul score and the source score is used
+    as returned (no per-document normalization)."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {
@@ -178,19 +184,42 @@ def test_dm_rerank_blend_scores(app_project):
         }
         mock_request.return_value = mock_response
 
-        dm_rerank = _make_backend(app_project, **{"blend-alpha": 0.5})
+        dm_rerank = _make_backend(app_project)
         with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
             result = dm_rerank.suggest([Document(text="test document")])
 
     suggestions = list(result[0])
-    # subject 1 scores 0.5*0.0 + 0.5*0.0 = 0.0 -> dropped
-    assert [int(s.subject_id) for s in suggestions] == [0]
-    assert suggestions[0].score == pytest.approx(0.5 * 1.0 + 0.5 * 1.0)
+    by_id = {int(s.subject_id): s.score for s in suggestions}
+    # default model-strength=0.5, gate-threshold=-0.25
+    assert by_id[0] == pytest.approx(0.9 * 0.9**0.5 * _sigmoid(0.9, -0.25))
+    assert by_id[1] == pytest.approx(0.8 * 0.1**0.5 * _sigmoid(0.1, -0.25))
+    assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
 
 def test_dm_rerank_blend_reorders(app_project):
-    """A low source score with a high noul score can move above a
-    higher source score with a low noul score."""
+    """The noul score can reorder candidates: a low source score with a
+    high noul score moves above a high source score with a low noul
+    score."""
+    dm_rerank_type = annif.backend.get_backend("dm_rerank")
+    suggestions = [
+        SubjectSuggestion(0, 0.9),
+        SubjectSuggestion(1, 0.8),
+        SubjectSuggestion(2, 0.7),
+    ]
+    noul_scores = {0: 0.01, 1: 0.99, 2: 0.5}
+    blended = dm_rerank_type._blend(suggestions, noul_scores, 1.0, -0.25)
+    by_id = {s.subject_id: s.score for s in blended}
+    assert by_id[0] == pytest.approx(0.9 * 0.01 * _sigmoid(0.01, -0.25))
+    assert by_id[1] == pytest.approx(0.8 * 0.99 * _sigmoid(0.99, -0.25))
+    assert by_id[2] == pytest.approx(0.7 * 0.5 * _sigmoid(0.5, -0.25))
+    # subject 1 (2nd by source) moves to the top
+    assert [s.subject_id for s in blended] == [1, 2, 0]
+
+
+def test_dm_rerank_blend_gate(app_project):
+    """With model-strength=0 and a positive gate threshold the noul score
+    acts as a precision gate: a low-noul candidate is demoted below a
+    high-noul one despite the better source score."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {
@@ -201,22 +230,25 @@ def test_dm_rerank_blend_reorders(app_project):
         }
         mock_request.return_value = mock_response
 
-        dm_rerank = _make_backend(app_project, **{"blend-alpha": 0.4})
+        dm_rerank = _make_backend(
+            app_project, **{"model-strength": 0.0, "gate-threshold": 0.4}
+        )
         with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
             result = dm_rerank.suggest([Document(text="test document")])
 
     suggestions = list(result[0])
-    assert len(suggestions) == 2
     by_id = {int(s.subject_id): s.score for s in suggestions}
-    # source norms: 0: 1.0, 1: 0.0; noul norms: 0: 0.0, 1: 1.0
-    assert by_id[0] == pytest.approx(0.4 * 1.0 + 0.6 * 0.0)  # 0.4
-    assert by_id[1] == pytest.approx(0.4 * 0.0 + 0.6 * 1.0)  # 0.6
-    # subject 1 (lower source, higher noul) moves above subject 0
+    # subject 0: the sigmoid gate is nearly closed
+    # (sigmoid((0.1 - 0.4) / 0.1) ~= 0.047), so it is demoted
+    assert by_id[0] == pytest.approx(0.9 * _sigmoid(0.1, 0.4))
+    assert by_id[1] == pytest.approx(0.8 * _sigmoid(0.9, 0.4))
     assert [int(s.subject_id) for s in suggestions] == [1, 0]
+    assert by_id[0] < 0.05
 
 
 def test_dm_rerank_blend_missing_noul(app_project):
-    """A candidate without a noul score counts as 0.0 in the blend."""
+    """A candidate without a noul score keeps its plain source score, so a
+    missing decision model degrades to the source ranking."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {
@@ -224,40 +256,42 @@ def test_dm_rerank_blend_missing_noul(app_project):
         }
         mock_request.return_value = mock_response
 
-        dm_rerank = _make_backend(app_project, **{"blend-alpha": 0.5})
+        dm_rerank = _make_backend(app_project)
         with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
             result = dm_rerank.suggest([Document(text="test document")])
 
     suggestions = list(result[0])
-    # subject 1: 0.5*0.0 + 0.5*0.0 = 0.0 -> dropped by SuggestionBatch
-    assert [int(s.subject_id) for s in suggestions] == [0]
-    assert suggestions[0].score == pytest.approx(1.0)
+    by_id = {int(s.subject_id): s.score for s in suggestions}
+    # subject 1 has no noul score -> plain source score
+    assert by_id[1] == pytest.approx(0.8)
+    assert by_id[0] == pytest.approx(0.9 * 0.9**0.5 * _sigmoid(0.9, -0.25))
+    assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
 
-def test_dm_rerank_blend_alpha_extremes(app_project):
-    """alpha=1.0 is pure source order, alpha=0.0 pure noul order (the
-    losing candidate scores 0.0 and is dropped)."""
+def test_dm_rerank_blend_pure_source(app_project):
+    """With model-strength=0 and the default negative gate threshold the
+    blend approximates the pure source order (the floor of the search
+    space)."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {
             "answers": {
-                "0": {"type": "noul", "noul": 0.1},
+                "0": {"type": "noul", "noul": 0.05},
                 "1": {"type": "noul", "noul": 0.9},
             }
         }
         mock_request.return_value = mock_response
 
-        # alpha = 1.0: source best (0) wins, subject 1 scores 0.0 -> dropped
-        dm_rerank = _make_backend(app_project, **{"blend-alpha": 1.0})
+        dm_rerank = _make_backend(app_project, **{"model-strength": 0.0})
         with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
             result = dm_rerank.suggest([Document(text="test document")])
-        assert [int(s.subject_id) for s in list(result[0])] == [0]
 
-        # alpha = 0.0: noul best (1) wins, subject 0 scores 0.0 -> dropped
-        dm_rerank = _make_backend(app_project, **{"blend-alpha": 0.0})
-        with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
-            result = dm_rerank.suggest([Document(text="test document")])
-        assert [int(s.subject_id) for s in list(result[0])] == [1]
+    suggestions = list(result[0])
+    by_id = {int(s.subject_id): s.score for s in suggestions}
+    # both gates are near 1.0 (default threshold -0.25 is far below both
+    # noul scores), so the scores are essentially the source scores
+    assert by_id[0] == pytest.approx(0.9, abs=0.05)
+    assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
 
 def test_dm_rerank_suggest_request_error(app_project):

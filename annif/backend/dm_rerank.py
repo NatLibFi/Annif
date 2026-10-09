@@ -5,12 +5,23 @@ question about the subject and the document. The default proposition is a
 centrality ("sharp") question, "Is '{label}' a central subject of this
 document ... not merely a passing or incidental mention?", which can be
 replaced with any custom template via the 'instruction' parameter. The
-candidates are then re-scored as a linear combination of the per-document
-min-max normalized source score and noul score, weighted by the
-blend-alpha parameter."""
+candidates are then re-scored as
+
+    score = source * noul^model-strength
+            * sigmoid((noul - gate-threshold) / 0.1)
+
+where source is the (unmodified) source score and noul is the raw
+yes-probability returned by the service. The two
+parameters cover the whole family of blends found useful in the
+prototype experiments: model-strength=0 with gate-threshold=-0.25 gives
+the pure source order (the floor), model-strength>0 with a negative
+threshold gives the soft product/geometric blends, and model-strength=0
+with a positive threshold approximates a hard precision gate on the noul
+score."""
 
 from __future__ import annotations
 
+import math
 import time
 from typing import TYPE_CHECKING, Any
 
@@ -59,7 +70,15 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend):
     DEFAULT_PARAMETERS = {
         "endpoint": "http://127.0.0.1:8700",
         "model": "",
-        "blend-alpha": 0.85,
+        # how strongly the decision model's yes-probability influences the
+        # final score: 0.0 ignores the model entirely (pure source order),
+        # larger values trust it more; 0.5 is the fixed production default
+        # found in the prototype blend experiments
+        "model-strength": 0.5,
+        # gate threshold for the noul score: a negative value (the default)
+        # turns the gate off, a positive value (e.g. 0.3-0.4) keeps only
+        # confident "yes" answers, useful with calibrated/bimodal models
+        "gate-threshold": -0.25,
         "retries": 2,
         "timeout": 60,
         "state-rules": False,
@@ -210,49 +229,49 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend):
     def _process_document(
         self, doc: Document, suggestions: list[SubjectSuggestion], params
     ) -> list[SubjectSuggestion]:
-        """Re-score the candidate subjects of one document as a blend of
-        the source score and the noul score from the reranking service."""
+        """Re-score the candidate subjects of one document using the noul
+        scores from the reranking service and the model-strength /
+        gate-threshold parameters."""
         noul_scores = self._query_dm_rerank(doc, suggestions, params)
-        alpha = float(params["blend-alpha"])
-        return self._blend(suggestions, noul_scores, alpha)
+        b = float(params["model-strength"])
+        gate_threshold = float(params["gate-threshold"])
+        return self._blend(suggestions, noul_scores, b, gate_threshold)
 
     @staticmethod
     def _blend(
         suggestions: list[SubjectSuggestion],
         noul_scores: dict[int, float],
-        alpha: float,
+        b: float,
+        gate_threshold: float,
     ) -> list[SubjectSuggestion]:
         """Blend the source and noul scores, keeping all candidates.
 
-        Both score sets are min-max normalized per document (a degenerate
-        set maps to 0.5), then the new score is
-        alpha * source_norm + (1 - alpha) * noul_norm. A candidate without
-        a noul score (no label, question not asked) is treated as 0.0."""
+        Each candidate with a noul score is re-scored as
+
+            score = source_score * noul**b * sigmoid((noul - tau) / 0.1)
+
+        where both source_score and noul are used as returned (the noul
+        yes-probability is already on a [0, 1] scale) and tau is the gate
+        threshold. b=0 with a negative tau (the default) reproduces the
+        pure source order; b=0 with a positive tau approximates a hard
+        gate that keeps only confident "yes" answers in source order. A
+        candidate without a noul score (no label, question not asked)
+        keeps its source score, so a missing or failed decision model
+        degrades to the source ranking."""
         if not suggestions:
             return []
 
-        src_min = min(s.score for s in suggestions)
-        src_max = max(s.score for s in suggestions)
-        # candidates without a noul score count as 0.0
-        noul_values = [
-            noul_scores.get(suggestion.subject_id, 0.0) for suggestion in suggestions
-        ]
-        noul_min = min(noul_values)
-        noul_max = max(noul_values)
-
-        def norm(value: float, lo: float, hi: float) -> float:
-            if hi == lo:
-                return 0.5
-            return (value - lo) / (hi - lo)
-
-        blended = [
-            SubjectSuggestion(
-                subject_id=suggestion.subject_id,
-                score=alpha * norm(suggestion.score, src_min, src_max)
-                + (1 - alpha) * norm(noul, noul_min, noul_max),
+        blended = []
+        for suggestion in suggestions:
+            noul = noul_scores.get(suggestion.subject_id)
+            if noul is None:
+                score = suggestion.score
+            else:
+                gate = 1.0 / (1.0 + math.exp(-(noul - gate_threshold) / 0.1))
+                score = suggestion.score * noul**b * gate
+            blended.append(
+                SubjectSuggestion(subject_id=suggestion.subject_id, score=score)
             )
-            for suggestion, noul in zip(suggestions, noul_values)
-        ]
         # the new order differs from the source order, so sort explicitly
         blended.sort(key=lambda s: s.score, reverse=True)
         return blended
