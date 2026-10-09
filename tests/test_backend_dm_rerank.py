@@ -490,3 +490,56 @@ def test_dm_rerank_label_project_language(app_project):
     assert dm_rerank._label_for_subject(1) == "42.42"
     # subject 3 has neither -> None (candidate skipped)
     assert dm_rerank._label_for_subject(3) is None
+
+
+def test_dm_rerank_hyperopt(app_project):
+    """The hyperparameter optimizer queries the decision model once per
+    document and searches the model-strength / gate-threshold blend
+    parameters over the cached scores."""
+    from annif.corpus import DocumentList
+
+    corpus = DocumentList(
+        [
+            Document(text="a test document about dummies"),
+            Document(text="another test document"),
+        ]
+    )
+
+    def mock_suggest(documents, params=None):
+        # the mock source returns the same suggestions for every document
+        rows = [
+            [SubjectSuggestion(0, 0.9), SubjectSuggestion(1, 0.8)] for _ in documents
+        ]
+        return SuggestionBatch.from_sequence(rows, app_project.subjects, limit=100)
+
+    with (
+        unittest.mock.patch("requests.post") as mock_request,
+        unittest.mock.patch.object(
+            app_project.registry,
+            "get_project",
+            return_value=unittest.mock.Mock(
+                is_trained=True,
+                suggest=mock_suggest,
+                initialize=unittest.mock.Mock(),
+            ),
+        ),
+    ):
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {
+                "0": {"type": "noul", "noul": 0.9},
+                "1": {"type": "noul", "noul": 0.5},
+            }
+        }
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        optimizer = dm_rerank.get_hp_optimizer(corpus, metric="NDCG")
+        recommendation = optimizer.optimize(n_trials=3, n_jobs=1, results_file=None)
+
+    # the decision model is queried once per document in the corpus
+    assert mock_request.call_count == 2
+    # the recommendation contains both blend parameters and a score
+    assert "model-strength=" in recommendation.lines[0]
+    assert "gate-threshold=" in recommendation.lines[1]
+    assert recommendation.score is not None

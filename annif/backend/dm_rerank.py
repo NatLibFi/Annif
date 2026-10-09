@@ -7,8 +7,11 @@ import math
 import time
 from typing import TYPE_CHECKING, Any
 
+import optuna
 import requests
 
+import annif.parallel
+import annif.util
 from annif.exception import (
     ConfigurationException,
     NotSupportedException,
@@ -17,11 +20,15 @@ from annif.exception import (
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
 from annif.util import boolean
 
-from . import ensemble
+from . import ensemble, hyperopt
 
 if TYPE_CHECKING:
     from configparser import SectionProxy
 
+    from optuna.study.study import Study
+    from optuna.trial import Trial
+
+    from annif.backend.hyperopt import HPRecommendation
     from annif.corpus.document import Document, DocumentCorpus
     from annif.project import AnnifProject
 
@@ -38,7 +45,7 @@ STATE_RULES = (
 )
 
 
-class DMRerankBackend(ensemble.BaseEnsembleBackend):
+class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBackend):
     """Ensemble-style backend that blends source candidates with noul
     scores from a decision model reranking service (noul-type true/false
     questions)."""
@@ -220,12 +227,14 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend):
 
         where both source_score and noul are used as returned (the noul
         yes-probability is already on a [0, 1] scale) and tau is the gate
-        threshold. b=0 with a negative tau (the default) reproduces the
-        pure source order; b=0 with a positive tau approximates a hard
-        gate that keeps only confident "yes" answers in source order. A
-        candidate without a noul score (no label, question not asked)
-        keeps its source score, so a missing or failed decision model
-        degrades to the source ranking."""
+        threshold. b=0 with a sufficiently negative tau (e.g. -1.0, where
+        the sigmoid is >= 0.99995 for all noul) reproduces the pure
+        source order, so the pair (0, -1.0) is the exact no-op point; a
+        positive tau approximates a hard gate that keeps only confident
+        "yes" answers in source order. A candidate without a noul score
+        (no label, question not asked) keeps its source score, so a
+        missing or failed decision model degrades to the source
+        ranking."""
         if not suggestions:
             return []
 
@@ -268,3 +277,167 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend):
         return SuggestionBatch.from_sequence(
             processed, self.project.subjects, limit=limit
         )
+
+    def get_hp_optimizer(
+        self, corpus: DocumentCorpus, metric: str
+    ) -> DMRerankOptimizer:
+        return DMRerankOptimizer(self, corpus, metric, DMRerankHPObjective)
+
+
+class DMRerankHPObjective(hyperopt.HPObjective):
+    """Objective function of the dm_rerank hyperparameter optimizer. Sweeps
+    the model-strength and gate-threshold blend parameters over the cached
+    source and noul score batches; the expensive decision-model calls have
+    already been made during _prepare, so each trial is a pure re-blend of
+    the same per-document scores."""
+
+    @classmethod
+    def objective(cls, trial: Trial, args) -> float:
+        import annif.eval
+
+        b = trial.suggest_float("model-strength", 0.0, 1.0)
+        # the low end -1.0 makes (b=0, tau=-1.0) the exact pure-source
+        # reference point (the sigmoid is >= 0.99995 there for all
+        # noul in [0, 1]), so the optimizer can represent "don't use
+        # the model" and a genuine source-dominant nudge (small b with
+        # a near-identity gate)
+        tau = trial.suggest_float("gate-threshold", -1.0, 0.5)
+        eval_batch = annif.eval.EvaluationBatch(args["subject_index"])
+        blended_lists = [
+            DMRerankBackend._blend(source, noul, b, tau)
+            for source, noul in zip(args["source_suggestions"], args["noul_scores"])
+        ]
+        eval_batch.evaluate_many(blended_lists, args["gold_batches"])
+        results = eval_batch.results(metrics=[args["metric"]])
+        return results[args["metric"]]
+
+
+class DMRerankOptimizer(hyperopt.HyperparameterOptimizer):
+    """Hyperparameter optimizer for the dm_rerank backend. The decision
+    model is queried once per document (in _prepare) and the
+    model-strength / gate-threshold blend parameters are then searched
+    over the cached scores with TPE. The search space is model-strength
+    in [0, 1] and gate-threshold in [-1.0, 0.5]; the point
+    (model-strength=0, gate-threshold=-1.0) reproduces the pure source
+    order exactly, so the optimizer can always fall back to the source
+    ranking if the noul scores carry no useful signal, and the region
+    just above it is the source-dominant 'nudge' where the model adds a
+    small correction on top of the source scores. Because that region
+    is a narrow strip that TPE's default random startup rarely visits,
+    the optimizer uses a larger random startup and evaluates a ladder
+    of fixed points from the pure-source point up to full model
+    strength (plus a few stronger-gate points) first, so the search
+    conditions on the nudge region explicitly."""
+
+    def __init__(
+        self,
+        backend: DMRerankBackend,
+        corpus: DocumentCorpus,
+        metric: str,
+        objective: type[hyperopt.HPObjective],
+    ) -> None:
+        super().__init__(backend, corpus, metric, objective)
+        # the source-dominant part of the search space (low model-strength)
+        # is a narrow strip that the default random startup phase rarely
+        # visits, so use a TPE sampler with a larger random startup to
+        # cover it (and the hard-filter corner) more evenly
+        self.sampler = optuna.samplers.TPESampler(n_startup_trials=50)
+
+    def _initial_trials(self) -> list[dict[str, float]]:
+        """Fixed points evaluated first: a ladder of increasingly strong
+        model influence with a near-identity gate (gate-threshold -1.0,
+        where the sigmoid is >= 0.99995 for all noul), starting from the
+        exact pure-source point, plus a few points with stronger gates
+        for contrast. This makes the optimizer inspect the
+        source-dominant 'nudge' region explicitly, where the best blend
+        often lives when the decision model adds only a small correction
+        on top of the source scores."""
+        return [
+            {"model-strength": b, "gate-threshold": -1.0}
+            for b in (0.0, 0.05, 0.1, 0.2, 0.3, 0.5, 0.75, 1.0)
+        ] + [
+            # the same ladder with progressively stronger gates
+            {"model-strength": b, "gate-threshold": tau}
+            for b, tau in ((0.0, -0.25), (0.2, -0.25), (0.2, 0.25), (0.5, 0.5))
+        ]
+
+    def _prepare(self, n_jobs: int = 1) -> dict[str, Any]:
+        sources = annif.util.parse_sources(self._backend.params["sources"])
+        source_ids = [project_id for project_id, _ in sources]
+        weights = [weight for _, weight in sources]
+        limit = int(self._backend.params["limit"])
+        max_candidates = int(self._backend.params["max-candidates"])
+
+        psmap = annif.parallel.ProjectSuggestMap(
+            self._backend.project.registry,
+            source_ids,
+            backend_params=None,
+            limit=None,
+            threshold=0.0,
+        )
+
+        jobs, pool_class = annif.parallel.get_pool(n_jobs)
+
+        # materialize the corpus once: doc_batches is a one-shot generator
+        # and the documents are needed again for the model queries below;
+        # apply the project transform (e.g. transform=limit(5000)) so the
+        # source suggestions and the decision model queries match the
+        # suggest path
+        transform = self._backend.project.transform
+        doc_batches = [
+            [transform.transform_doc(doc) for doc in batch]
+            for batch in self._corpus.doc_batches
+        ]
+        documents = [doc for batch in doc_batches for doc in batch]
+
+        self._backend.info(
+            "generating source suggestions for {} documents".format(len(documents))
+        )
+        source_suggestions = []
+        gold_batches = []
+        with pool_class(jobs) as pool:
+            results = pool.map(psmap.suggest_batch, doc_batches)
+
+        for batch, (suggestions_by_source, subject_sets) in zip(doc_batches, results):
+            # merge the per-source batches the same way as the suggest
+            # path
+            merged = SuggestionBatch.from_averaged(
+                [suggestions_by_source[project_id] for project_id in source_ids],
+                weights,
+            ).filter(limit=limit)
+            for idx in range(len(batch)):
+                candidates = list(merged[idx])
+                if max_candidates > 0:
+                    candidates = candidates[:max_candidates]
+                source_suggestions.append(candidates)
+                gold_batches.append(subject_sets[idx])
+
+        # query the decision model once per document: this is the
+        # expensive part, but it is only done once, since the blend
+        # parameters are searched over these cached scores afterwards
+        self._backend.info(
+            "querying the decision model reranking service for {} "
+            "documents".format(len(documents))
+        )
+        noul_scores = [
+            self._backend._query_dm_rerank(
+                doc, source_suggestions[idx], self._backend.params
+            )
+            for idx, doc in enumerate(documents)
+        ]
+
+        return {
+            "source_suggestions": source_suggestions,
+            "noul_scores": noul_scores,
+            "gold_batches": gold_batches,
+            "subject_index": self._backend.project.subjects,
+            "metric": self._metric,
+        }
+
+    def _postprocess(self, study: Study) -> HPRecommendation:
+        best = study.best_params
+        lines = [
+            f"model-strength={best['model-strength']:.4f}",
+            f"gate-threshold={best['gate-threshold']:.4f}",
+        ]
+        return hyperopt.HPRecommendation(lines=lines, score=study.best_value)
