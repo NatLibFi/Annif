@@ -1411,10 +1411,17 @@ def test_optimize_dir(tmpdir):
     assert not result.exception
     assert result.exit_code == 0
 
-    precision = re.search(r"Best\s+Precision .*?doc.*?:\s+(\d.\d+)", result.output)
-    assert float(precision.group(1)) == pytest.approx(0.5)
-    recall = re.search(r"Best\s+Recall .*?doc.*?:\s+(\d.\d+)", result.output)
-    assert float(recall.group(1)) == pytest.approx(0.5)
+    front = re.search(
+        r"Pareto front: best precision at each recall level\n"
+        r"Limit\tThresh\.\tPrec\.\tRec\.\tF1\n"
+        r"\d+\t0\.\d+\t(\d\.\d+)\t(\d\.\d+)\t(\d\.\d+)$",
+        result.output,
+        re.MULTILINE,
+    )
+    assert front is not None
+    assert float(front.group(1)) == pytest.approx(0.5)
+    assert float(front.group(2)) == pytest.approx(0.5)
+    assert float(front.group(3)) == pytest.approx(0.5)
     f_measure = re.search(r"Best\s+F1 score .*?doc.*?:\s+(\d.\d+)", result.output)
     assert float(f_measure.group(1)) == pytest.approx(0.5)
     ndocs = re.search(r"Documents evaluated:\s+(\d)", result.output)
@@ -1444,6 +1451,93 @@ def test_optimize_nonexistent_path():
         "Invalid value for '[PATHS]...': "
         "Path 'nonexistent_path' does not exist." in failed_result.output
     )
+
+
+def test_optimize_resultsfile(tmpdir):
+    tmpdir.join("doc1.txt").write("doc1")
+    tmpdir.join("doc1.key").write("dummy")
+    tmpdir.join("doc2.txt").write("doc2")
+    tmpdir.join("doc2.key").write("none")
+    resultfile = tmpdir.join("results.tsv")
+
+    result = runner.invoke(
+        annif.cli.cli, ["optimize", "-r", str(resultfile), "dummy-en", str(tmpdir)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+    with resultfile.open() as f:
+        header = next(f)
+        assert header.strip("\n") == "\t".join(
+            [
+                "Limit",
+                "Threshold",
+                "Precision (doc avg)",
+                "Recall (doc avg)",
+                "F1 score (doc avg)",
+                "Pareto front",
+            ]
+        )
+        first = next(f)
+        assert first.strip("\n") == "1\t0\t0.500000\t0.500000\t0.500000\t1"
+        nlines = 1
+        for line in f:
+            parts = line.strip("\n").split("\t")
+            assert len(parts) == 6
+            nlines += 1
+            assert parts[5] == "0"  # only the first row is on the Pareto front
+        assert nlines == 15 * 20  # all limit and threshold combinations
+
+
+def test_optimize_two_jobs(tmpdir):
+    tmpdir.join("doc1.txt").write("doc1")
+    tmpdir.join("doc1.key").write("dummy")
+    tmpdir.join("doc2.txt").write("doc2")
+    tmpdir.join("doc2.key").write("none")
+    tmpdir.join("doc3.txt").write("doc3")
+
+    result = runner.invoke(
+        annif.cli.cli, ["optimize", "--jobs", "2", "dummy-en", str(tmpdir)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+
+def test_optimize_two_jobs_spawn(tmpdir, monkeypatch):
+    tmpdir.join("doc1.txt").write("doc1")
+    tmpdir.join("doc1.key").write("dummy")
+    tmpdir.join("doc2.txt").write("doc2")
+    tmpdir.join("doc2.key").write("none")
+    tmpdir.join("doc3.txt").write("doc3")
+
+    # use spawn method for starting multiprocessing worker processes
+    monkeypatch.setattr(annif.parallel, "MP_START_METHOD", "spawn")
+    result = runner.invoke(
+        annif.cli.cli, ["optimize", "--jobs", "2", "dummy-en", str(tmpdir)]
+    )
+    assert not result.exception
+    assert result.exit_code == 0
+
+
+def test_optimize_badresultsfile(tmpdir):
+    tmpdir.join("doc1.txt").write("doc1")
+    tmpdir.join("doc1.key").write("dummy")
+    tmpdir.join("doc2.txt").write("doc2")
+    tmpdir.join("doc2.key").write("none")
+    tmpdir.join("doc3.txt").write("doc3")
+    failed_result = runner.invoke(
+        annif.cli.cli,
+        [
+            "optimize",
+            "--results-file",
+            "newdir/test_file.txt",
+            "dummy-en",
+            str(tmpdir),
+        ],
+    )
+    assert failed_result.exception
+    assert failed_result.exit_code != 0
+    assert "cannot open results-file for writing" in failed_result.output
 
 
 def test_hyperopt_ensemble(tmpdir):

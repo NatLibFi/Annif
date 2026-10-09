@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
     from annif.corpus import Document, SubjectSet
     from annif.registry import AnnifRegistry
-    from annif.suggestion import SuggestionBatch, SuggestionResult
+    from annif.suggestion import SuggestionBatch, SuggestionResult, SuggestionResults
 
 
 # Start method for processes created by the multiprocessing module.
@@ -96,3 +96,48 @@ def get_pool(n_jobs: int) -> tuple[int | None, Callable]:
         pool_constructor = ctx.Pool
 
     return n_jobs, pool_constructor
+
+
+class OptimizeEvaluator(BaseWorker):
+    """A utility class that can be used to evaluate different limit and
+    threshold parameter combinations of stored suggestion results against
+    gold standard subjects. The evaluator instance is passed to the worker
+    processes once, as pool initializer arguments (see BaseWorker), instead
+    of being marshalled with every combination. Intended to be used with the
+    multiprocessing module."""
+
+    def __init__(
+        self,
+        registry: AnnifRegistry,
+        project_id: str,
+        suggestion_results: SuggestionResults,
+        subject_set_batches: list[list[SubjectSet]],
+        metrics_to_optimize: list[str],
+    ) -> None:
+        self.registry = registry
+        self.project_id = project_id
+        self.suggestion_results = suggestion_results
+        self.subject_set_batches = subject_set_batches
+        self.metrics_to_optimize = metrics_to_optimize
+
+    @classmethod
+    def evaluate_combination(
+        cls, limit_threshold: tuple[int, float]
+    ) -> tuple[int, float, dict[str, float]]:
+        import annif.eval
+
+        limit, threshold = limit_threshold
+        self = cls.args
+
+        project = self.registry.get_project(self.project_id)
+        eval_batch = annif.eval.EvaluationBatch(project.subjects)
+
+        filtered_results = self.suggestion_results.filter(limit, threshold)
+        for batch, subject_sets in zip(
+            filtered_results.batches, self.subject_set_batches
+        ):
+            eval_batch.evaluate_many(batch, subject_sets)
+
+        results = eval_batch.results(metrics=self.metrics_to_optimize)
+
+        return (limit, threshold, results)
