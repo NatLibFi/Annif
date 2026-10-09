@@ -7,7 +7,6 @@ import math
 import time
 from typing import TYPE_CHECKING, Any
 
-import optuna
 import requests
 
 import annif.parallel
@@ -336,28 +335,12 @@ class DMRerankOptimizer(hyperopt.HyperparameterOptimizer):
     in [0, 1] and gate-threshold in [-1.0, 0.5]; the point
     (model-strength=0, gate-threshold=-1.0) reproduces the pure source
     order exactly, so the optimizer can always fall back to the source
-    ranking if the noul scores carry no useful signal, and the region
-    just above it is the source-dominant 'nudge' where the model adds a
-    small correction on top of the source scores. Because that region
-    is a narrow strip that TPE's default random startup rarely visits,
-    the optimizer uses a larger random startup and evaluates a ladder
-    of fixed points from the pure-source point up to full model
-    strength (plus a few stronger-gate points) first, so the search
+    ranking if the noul scores carry no useful signal. Because the
+    source-dominant 'nudge' region just above that point is a narrow
+    strip that the sampler's random startup rarely visits, a ladder of
+    fixed points from the pure-source point up to full model strength
+    (plus a few stronger-gate points) is evaluated first, so the search
     conditions on the nudge region explicitly."""
-
-    def __init__(
-        self,
-        backend: DMRerankBackend,
-        corpus: DocumentCorpus,
-        metric: str,
-        objective: type[hyperopt.HPObjective],
-    ) -> None:
-        super().__init__(backend, corpus, metric, objective)
-        # the source-dominant part of the search space (low model-strength)
-        # is a narrow strip that the default random startup phase rarely
-        # visits, so use a TPE sampler with a larger random startup to
-        # cover it (and the hard-filter corner) more evenly
-        self.sampler = optuna.samplers.TPESampler(n_startup_trials=50)
 
     def _initial_trials(self) -> list[dict[str, float]]:
         """Fixed points evaluated first: a ladder of increasingly strong

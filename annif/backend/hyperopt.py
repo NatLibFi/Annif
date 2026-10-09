@@ -129,8 +129,6 @@ class HyperparameterOptimizer:
         self._corpus = corpus
         self._metric = metric
         self._objective = objective
-        # optional custom sampler; None means Optuna's default
-        self.sampler = None
 
     def _initial_trials(self) -> list[dict[str, float]]:
         """Return a list of hyperparameter combinations to evaluate first,
@@ -171,9 +169,7 @@ class HyperparameterOptimizer:
         temp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
         storage_url = f"sqlite:///{temp_db.name}"
 
-        study = optuna.create_study(
-            direction="maximize", storage=storage_url, sampler=self.sampler
-        )
+        study = optuna.create_study(direction="maximize", storage=storage_url)
 
         # evaluate the fixed initial trials first so that the sampler
         # conditions on them from its first iteration; these are useful
