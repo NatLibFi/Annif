@@ -61,6 +61,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend):
         "model": "",
         "blend-alpha": 0.85,
         "retries": 2,
+        "timeout": 60,
         "state-rules": False,
         "state-prefix": "",
         # the "sharp" centrality predicate: makes the model judge whether
@@ -158,10 +159,11 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend):
             payload["model"] = model
         endpoint = params["endpoint"].rstrip("/") + "/v1/systemone"
         retries = int(params["retries"])
+        timeout = float(params["timeout"])
         attempt = 0
         while True:
             try:
-                req = requests.post(endpoint, json=payload)
+                req = requests.post(endpoint, json=payload, timeout=timeout)
                 req.raise_for_status()
                 break
             except requests.exceptions.RequestException as err:

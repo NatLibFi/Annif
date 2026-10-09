@@ -42,6 +42,24 @@ def _mock_source(app_project, subject_ids_and_scores, is_trained=True):
     )
 
 
+def test_dm_rerank_suggest_request_timeout(app_project):
+    """The request uses the timeout parameter (default 60 seconds)."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            dm_rerank.suggest([Document(text="test document")])
+        assert mock_request.call_args.kwargs["timeout"] == 60.0
+
+        dm_rerank = _make_backend(app_project, timeout=5)
+        with _mock_source(app_project, [(0, 0.9)]):
+            dm_rerank.suggest([Document(text="test document")])
+        assert mock_request.call_args.kwargs["timeout"] == 5.0
+
+
 def test_dm_rerank_suggest_request_shape(app_project):
     """The request payload sent to the reranking service has the expected
     shape."""
