@@ -11,14 +11,13 @@ import requests
 
 import annif.parallel
 import annif.transform
-import annif.util
 from annif.exception import (
     ConfigurationException,
     NotSupportedException,
     OperationFailedException,
 )
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
-from annif.util import boolean
+from annif.util import boolean, parse_sources
 
 from . import ensemble, hyperopt
 
@@ -340,7 +339,7 @@ class DMRerankOptimizer(hyperopt.HyperparameterOptimizer):
     small correction on top of the source scores."""
 
     def _prepare(self, n_jobs: int = 1) -> dict[str, Any]:
-        sources = annif.util.parse_sources(self._backend.params["sources"])
+        sources = parse_sources(self._backend.params["sources"])
         source_ids = [project_id for project_id, _ in sources]
         weights = [weight for _, weight in sources]
         limit = int(self._backend.params["limit"])
