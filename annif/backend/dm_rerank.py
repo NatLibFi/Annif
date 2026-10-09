@@ -53,10 +53,10 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
     name = "dm_rerank"
 
     DEFAULT_PARAMETERS = {
-        "endpoint": "http://127.0.0.1:8700",
+        "endpoint": "http://localhost:8080/v1/systemone",
         "model": "",
         "model-strength": 0.5,
-        "gate-threshold": -0.25,
+        "gate-threshold": -1.0,
         "retries": 2,
         "timeout": 60,
         "state-rules": False,
@@ -166,7 +166,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         model = params["model"]
         if model:
             payload["model"] = model
-        endpoint = params["endpoint"].rstrip("/") + "/v1/systemone"
+        endpoint = params["endpoint"].rstrip("/")
         retries = int(params["retries"])
         timeout = float(params["timeout"])
         attempt = 0

@@ -19,7 +19,6 @@ from annif.vocab import Subject
 def _make_backend(project, **params):
     base = {
         "sources": "dummy-en",
-        "endpoint": "http://127.0.0.1:8700",
     }
     base.update(params)
     dm_rerank_type = annif.backend.get_backend("dm_rerank")
@@ -91,8 +90,8 @@ def test_dm_rerank_suggest_request_shape(app_project):
     )
     assert payload["questions"]["0"]["instructions"] == expected.format(label="dummy")
     assert payload["questions"]["1"]["instructions"] == expected.format(label="none")
-    # the endpoint parameter is used as the base URL for /v1/systemone
-    assert mock_request.call_args.args[0] == "http://127.0.0.1:8700/v1/systemone"
+    # the endpoint parameter is the full URL of the /v1/systemone endpoint
+    assert mock_request.call_args.args[0] == "http://localhost:8080/v1/systemone"
 
 
 def test_dm_rerank_suggest_model_included_when_set(app_project):
@@ -207,9 +206,9 @@ def test_dm_rerank_blend_scores(app_project):
 
     suggestions = list(result[0])
     by_id = {int(s.subject_id): s.score for s in suggestions}
-    # default model-strength=0.5, gate-threshold=-0.25
-    assert by_id[0] == pytest.approx(0.9 * 0.9**0.5 * _sigmoid(0.9, -0.25))
-    assert by_id[1] == pytest.approx(0.8 * 0.1**0.5 * _sigmoid(0.1, -0.25))
+    # default model-strength=0.5, gate-threshold=-1.0
+    assert by_id[0] == pytest.approx(0.9 * 0.9**0.5 * _sigmoid(0.9, -1.0))
+    assert by_id[1] == pytest.approx(0.8 * 0.1**0.5 * _sigmoid(0.1, -1.0))
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
 
@@ -281,7 +280,7 @@ def test_dm_rerank_blend_missing_noul(app_project):
     by_id = {int(s.subject_id): s.score for s in suggestions}
     # subject 1 has no noul score -> plain source score
     assert by_id[1] == pytest.approx(0.8)
-    assert by_id[0] == pytest.approx(0.9 * 0.9**0.5 * _sigmoid(0.9, -0.25))
+    assert by_id[0] == pytest.approx(0.9 * 0.9**0.5 * _sigmoid(0.9, -1.0))
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
 
@@ -348,7 +347,7 @@ def test_dm_rerank_blend_pure_source(app_project):
 
     suggestions = list(result[0])
     by_id = {int(s.subject_id): s.score for s in suggestions}
-    # both gates are near 1.0 (default threshold -0.25 is far below both
+    # both gates are near 1.0 (default threshold -1.0 is far below both
     # noul scores), so the scores are essentially the source scores
     assert by_id[0] == pytest.approx(0.9, abs=0.05)
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
