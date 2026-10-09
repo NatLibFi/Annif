@@ -139,6 +139,11 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
             raise ConfigurationException(
                 "instruction parameter must contain a {label} placeholder"
             )
+        try:
+            instruction.format(label="test")
+        except (KeyError, IndexError, ValueError) as err:
+            msg = f"invalid instruction template: {err}"
+            raise ConfigurationException(msg) from err
         questions = {}
         for suggestion in suggestions:
             label = self._label_for_subject(suggestion.subject_id)

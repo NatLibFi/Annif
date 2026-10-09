@@ -465,6 +465,26 @@ def test_dm_rerank_instruction_missing_placeholder(app_project):
     mock_request.assert_not_called()
 
 
+def test_dm_rerank_instruction_invalid_template(app_project):
+    """An instruction with an unknown placeholder or malformed braces is
+    rejected with a ConfigurationException instead of leaking a KeyError
+    or ValueError from str.format during suggestion."""
+    for bad in (
+        "Is {label} about {unknown}?",
+        "Is {label} a {subject}?",
+        "Is {label} about {0}?",
+    ):
+        with (
+            unittest.mock.patch("requests.post") as mock_request,
+            _mock_source(app_project, [(0, 0.9)]),
+        ):
+            dm_rerank = _make_backend(app_project, instruction=bad)
+            with pytest.raises(ConfigurationException):
+                dm_rerank.suggest([Document(text="test document")])
+
+        mock_request.assert_not_called()
+
+
 def test_dm_rerank_train_not_supported(app_project):
     """Training the dm_rerank backend raises NotSupportedException."""
     dm_rerank = _make_backend(app_project)
