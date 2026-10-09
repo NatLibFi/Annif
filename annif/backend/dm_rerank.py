@@ -1,23 +1,5 @@
 """dm_rerank backend that uses a decision model reranking service to score
-candidate subjects against a document. For each candidate subject from the
-source projects, the backend asks the service a noul-type (true/false)
-question about the subject and the document. The default proposition is a
-centrality ("sharp") question, "Is '{label}' a central subject of this
-document ... not merely a passing or incidental mention?", which can be
-replaced with any custom template via the 'instruction' parameter. The
-candidates are then re-scored as
-
-    score = source * noul^model-strength
-            * sigmoid((noul - gate-threshold) / 0.1)
-
-where source is the (unmodified) source score and noul is the raw
-yes-probability returned by the service. The two
-parameters cover the whole family of blends found useful in the
-prototype experiments: model-strength=0 with gate-threshold=-0.25 gives
-the pure source order (the floor), model-strength>0 with a negative
-threshold gives the soft product/geometric blends, and model-strength=0
-with a positive threshold approximates a hard precision gate on the noul
-score."""
+candidate subjects against a document."""
 
 from __future__ import annotations
 
@@ -45,11 +27,7 @@ if TYPE_CHECKING:
 
 
 # Built-in indexing-policy rules prepended to the document state when
-# 'state-rules' is enabled: the format/genre rule. Tested in the prototype
-# to reduce "instance-vs-category" false positives (a recipe book scored
-# as 'food recipes') with a clear gain for some models (e.g. +0.03…0.05
-# NDCG for 9B–27B decision models, both languages) and no measurable
-# effect for others, so it is opt-in.
+# 'state-rules' is enabled: the format/genre rule.
 STATE_RULES = (
     "You are a librarian performing topical subject indexing. "
     "A document can have several central subjects. "
@@ -70,23 +48,12 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend):
     DEFAULT_PARAMETERS = {
         "endpoint": "http://127.0.0.1:8700",
         "model": "",
-        # how strongly the decision model's yes-probability influences the
-        # final score: 0.0 ignores the model entirely (pure source order),
-        # larger values trust it more; 0.5 is the fixed production default
-        # found in the prototype blend experiments
         "model-strength": 0.5,
-        # gate threshold for the noul score: a negative value (the default)
-        # turns the gate off, a positive value (e.g. 0.3-0.4) keeps only
-        # confident "yes" answers, useful with calibrated/bimodal models
         "gate-threshold": -0.25,
         "retries": 2,
         "timeout": 60,
         "state-rules": False,
         "state-prefix": "",
-        # the "sharp" centrality predicate: makes the model judge whether
-        # the subject is a central one (a primary heading), not merely
-        # mentioned in passing; tested to outperform a plain "is about"
-        # proposition on the prototype test sets
         "instruction": (
             "Is '{label}' a central subject of this document - one a "
             "librarian would assign as a primary heading - not merely a "
