@@ -92,6 +92,59 @@ def test_dm_rerank_suggest_model_included_when_set(app_project):
     assert payload["model"] == "some-model"
 
 
+def test_dm_rerank_state_rules_prefix(app_project):
+    """With state-rules enabled the built-in indexing-policy rules are
+    prepended to the document state."""
+    from annif.backend.dm_rerank import STATE_RULES
+
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project, **{"state-rules": "true"})
+        with _mock_source(app_project, [(0, 0.9)]):
+            dm_rerank.suggest([Document(text="test document")])
+
+    payload = mock_request.call_args.kwargs["json"]
+    assert payload["state"] == STATE_RULES + "test document"
+
+
+def test_dm_rerank_state_prefix(app_project):
+    """A custom state-prefix is prepended to the document state."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project, **{"state-prefix": "Custom rule. "})
+        with _mock_source(app_project, [(0, 0.9)]):
+            dm_rerank.suggest([Document(text="test document")])
+
+    payload = mock_request.call_args.kwargs["json"]
+    assert payload["state"] == "Custom rule. test document"
+
+
+def test_dm_rerank_state_prefix_overrides_state_rules(app_project):
+    """state-prefix takes precedence when state-rules is also enabled."""
+    from annif.backend.dm_rerank import STATE_RULES
+
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(
+            app_project, **{"state-rules": "true", "state-prefix": "Custom rule. "}
+        )
+        with _mock_source(app_project, [(0, 0.9)]):
+            dm_rerank.suggest([Document(text="test document")])
+
+    payload = mock_request.call_args.kwargs["json"]
+    assert payload["state"] == "Custom rule. test document"
+    assert not payload["state"].startswith(STATE_RULES)
+
+
 def test_dm_rerank_blend_scores(app_project):
     """In blend mode the score is a min-max normalized linear combination
     of the source and noul scores. A candidate that is worst in both

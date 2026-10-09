@@ -22,6 +22,7 @@ from annif.exception import (
     OperationFailedException,
 )
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
+from annif.util import boolean
 
 from . import ensemble
 
@@ -30,6 +31,22 @@ if TYPE_CHECKING:
 
     from annif.corpus.document import Document, DocumentCorpus
     from annif.project import AnnifProject
+
+
+# Built-in indexing-policy rules prepended to the document state when
+# 'state-rules' is enabled: the format/genre rule. Tested in the prototype
+# to reduce "instance-vs-category" false positives (a recipe book scored
+# as 'food recipes') with a clear gain for some models (e.g. +0.03…0.05
+# NDCG for 9B–27B decision models, both languages) and no measurable
+# effect for others, so it is opt-in.
+STATE_RULES = (
+    "You are a librarian performing topical subject indexing. "
+    "A document can have several central subjects. "
+    "Do NOT assign the document's own format or genre as a subject "
+    "(a book of recipes is not about 'cookbooks', a pattern book is not "
+    "about 'handicraft patterns', a travel book is not about "
+    "'travelogues').\n\nDocument to be indexed:\n"
+)
 
 
 class DMRerankBackend(ensemble.BaseEnsembleBackend):
@@ -44,6 +61,8 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend):
         "model": "",
         "blend-alpha": 0.85,
         "retries": 2,
+        "state-rules": False,
+        "state-prefix": "",
         # the "sharp" centrality predicate: makes the model judge whether
         # the subject is a central one (a primary heading), not merely
         # mentioned in passing; tested to outperform a plain "is about"
@@ -90,6 +109,17 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend):
             return subject.notation
         return None
 
+    def _state_prefix(self, params: dict[str, Any]) -> str:
+        """Return the text to prepend to the document state: the custom
+        'state-prefix' when set, the built-in indexing-policy rules when
+        'state-rules' is enabled, otherwise an empty string."""
+        custom = str(params["state-prefix"])
+        if custom:
+            return custom
+        if boolean(params["state-rules"]):
+            return STATE_RULES
+        return ""
+
     def _query_dm_rerank(
         self, doc: Document, suggestions: list[SubjectSuggestion], params
     ) -> dict[int, float]:
@@ -118,8 +148,9 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend):
         if not questions:
             return {}
 
+        state_prefix = self._state_prefix(params)
         payload = {
-            "state": doc.text,
+            "state": state_prefix + doc.text,
             "questions": questions,
         }
         model = params["model"]
