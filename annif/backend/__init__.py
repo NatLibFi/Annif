@@ -9,6 +9,12 @@ if TYPE_CHECKING:
 
 
 # define functions for lazily importing each backend (alphabetical order)
+def _dm_rerank() -> Type[AnnifBackend]:
+    from . import dm_rerank
+
+    return dm_rerank.DMRerankBackend
+
+
 def _dummy() -> Type[AnnifBackend]:
     from . import dummy
 
@@ -98,6 +104,7 @@ def _yake() -> Type[AnnifBackend]:
 
 # registry of the above functions
 _backend_fns = {
+    "dm_rerank": _dm_rerank,
     "dummy": _dummy,
     "ensemble": _ensemble,
     "fasttext": _fasttext,
