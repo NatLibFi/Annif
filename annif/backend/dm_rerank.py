@@ -182,7 +182,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend):
 
         if noul_scores:
             values = list(noul_scores.values())
-            self.info(
+            self.debug(
                 "dm_rerank noul scores: min {:.3f}, mean {:.3f}, max {:.3f} "
                 "for {} candidates".format(
                     min(values),
