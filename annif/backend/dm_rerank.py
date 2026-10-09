@@ -11,6 +11,7 @@ import optuna
 import requests
 
 import annif.parallel
+import annif.transform
 import annif.util
 from annif.exception import (
     ConfigurationException,
@@ -61,6 +62,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         "timeout": 60,
         "state-rules": False,
         "state-prefix": "",
+        "state-transform": "pass",
         "max-candidates": 0,
         "instruction": (
             "Is '{label}' a central subject of this document - one a "
@@ -76,6 +78,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         project: AnnifProject,
     ) -> None:
         super().__init__(backend_id, config_params, project)
+        self._state_transform = None
 
     @property
     def is_trained(self) -> bool:
@@ -83,6 +86,18 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         projects to be trained."""
         sources_trained = self._get_sources_attribute("is_trained")
         return all(sources_trained)
+
+    @property
+    def state_transform(self):
+        """The transform applied to the document text before it is sent
+        to the reranking service as the question state, on top of the
+        project transform. Defaults to pass (no extra transformation).
+        Useful for keeping the state within the model's context length
+        while the source projects run on the full text."""
+        if self._state_transform is None:
+            spec = str(self.params["state-transform"])
+            self._state_transform = annif.transform.get_transform(spec, project=None)
+        return self._state_transform
 
     def _train(
         self, corpus: DocumentCorpus, params: dict[str, Any], jobs: int = 0
@@ -144,8 +159,9 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
             return {}
 
         state_prefix = self._state_prefix(params)
+        state = self.state_transform.transform_doc(doc).text
         payload = {
-            "state": state_prefix + doc.text,
+            "state": state_prefix + state,
             "questions": questions,
         }
         model = params["model"]

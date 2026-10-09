@@ -163,6 +163,23 @@ def test_dm_rerank_state_prefix_overrides_state_rules(app_project):
     assert not payload["state"].startswith(STATE_RULES)
 
 
+def test_dm_rerank_state_transform(app_project):
+    """The state-transform parameter is applied to the document text
+    before it is sent to the reranking service."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project, **{"state-transform": "limit(10)"})
+        with _mock_source(app_project, [(0, 0.9)]):
+            dm_rerank.suggest([Document(text="test document")])
+
+    payload = mock_request.call_args.kwargs["json"]
+    # the state is truncated to 10 characters
+    assert payload["state"] == "test docum"
+
+
 def _sigmoid(value, threshold):
     """The same sigmoid gate as in the backend, for test expectations."""
     import math

@@ -179,17 +179,22 @@ class HyperparameterOptimizer:
         # conditions on them from its first iteration; these are useful
         # for covering regions of the search space that the sampler's
         # random startup phase would rarely visit on its own
-        for params in self._initial_trials():
+        best_index = None
+        best_value = None
+        for index, params in enumerate(self._initial_trials(), start=1):
             fixed_trial = _FixedParamsTrial(params)
             value = self._objective.objective(fixed_trial, objective_args)
             trial = optuna.trial.create_trial(
                 value=value, params=params, distributions=fixed_trial.distributions
             )
             study.add_trial(trial)
+            if best_value is None or value > best_value:
+                best_value = value
+                best_index = index
             self._backend.info(
-                f"initial trial {trial.number} finished with value: {value} and "
-                f"parameters: {params}. Best so far is trial "
-                f"{study.best_trial.number} with value: {study.best_trial.value}."
+                f"initial trial {index} finished with value: {value} and "
+                f"parameters: {params}. Best so far is initial trial "
+                f"{best_index} with value: {best_value}."
             )
             if write_callback:
                 write_callback(
