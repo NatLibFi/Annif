@@ -1,10 +1,13 @@
 """dm_rerank backend that uses a decision model reranking service to score
 candidate subjects against a document. For each candidate subject from the
-source projects, the backend asks the service how likely the proposition
-"This document is about {label}." is to be true (a noul-type question).
-The candidates are then re-scored as a linear combination of the
-per-document min-max normalized source score and noul score, weighted by
-the blend-alpha parameter."""
+source projects, the backend asks the service a noul-type (true/false)
+question about the subject and the document. The default proposition is a
+centrality ("sharp") question, "Is '{label}' a central subject of this
+document ... not merely a passing or incidental mention?", which can be
+replaced with any custom template via the 'instruction' parameter. The
+candidates are then re-scored as a linear combination of the per-document
+min-max normalized source score and noul score, weighted by the
+blend-alpha parameter."""
 
 from __future__ import annotations
 
@@ -41,7 +44,15 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend):
         "model": "",
         "blend-alpha": 0.85,
         "retries": 2,
-        "instruction": "This document is about {label}.",
+        # the "sharp" centrality predicate: makes the model judge whether
+        # the subject is a central one (a primary heading), not merely
+        # mentioned in passing; tested to outperform a plain "is about"
+        # proposition on the prototype test sets
+        "instruction": (
+            "Is '{label}' a central subject of this document - one a "
+            "librarian would assign as a primary heading - not merely a "
+            "passing or incidental mention?"
+        ),
     }
 
     def __init__(

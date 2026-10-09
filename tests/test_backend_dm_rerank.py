@@ -65,8 +65,14 @@ def test_dm_rerank_suggest_request_shape(app_project):
     # the model parameter defaults to empty and is then omitted from the
     # payload
     assert "model" not in payload
-    assert payload["questions"]["0"]["instructions"] == "This document is about dummy."
-    assert payload["questions"]["1"]["instructions"] == "This document is about none."
+    # the default instruction is the "sharp" centrality predicate
+    expected = (
+        "Is '{label}' a central subject of this document - one a "
+        "librarian would assign as a primary heading - not merely a "
+        "passing or incidental mention?"
+    )
+    assert payload["questions"]["0"]["instructions"] == expected.format(label="dummy")
+    assert payload["questions"]["1"]["instructions"] == expected.format(label="none")
     # the endpoint parameter is used as the base URL for /v1/systemone
     assert mock_request.call_args.args[0] == "http://127.0.0.1:8700/v1/systemone"
 
