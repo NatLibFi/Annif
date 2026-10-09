@@ -297,7 +297,8 @@ def pareto_front(
         recall = results["Recall (doc avg)"]
         if (precision, recall) in seen:
             continue
-        dominated = any(
+        seen.add((precision, recall))
+        if not any(
             other["Precision (doc avg)"] >= precision
             and other["Recall (doc avg)"] >= recall
             and (
@@ -305,9 +306,7 @@ def pareto_front(
                 or other["Recall (doc avg)"] > recall
             )
             for _, _, other in combinations
-        )
-        if not dominated:
-            seen.add((precision, recall))
+        ):
             front.append(
                 (limit, threshold, precision, recall, results["F1 score (doc avg)"])
             )
