@@ -268,6 +268,49 @@ def test_dm_rerank_blend_missing_noul(app_project):
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
 
+def test_dm_rerank_max_candidates(app_project):
+    """With max-candidates only the top N candidates are sent to the
+    decision model; the rest are excluded from the output."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {
+                "0": {"type": "noul", "noul": 0.9},
+            }
+        }
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project, **{"max-candidates": 1})
+        with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
+            result = dm_rerank.suggest([Document(text="test document")])
+
+    payload = mock_request.call_args.kwargs["json"]
+    # only the top candidate is asked
+    assert set(payload["questions"]) == {"0"}
+    # the other candidate is dropped from the output
+    assert sorted(int(s.subject_id) for s in result[0]) == [0]
+
+
+def test_dm_rerank_max_candidates_zero_scores_all(app_project):
+    """The default max-candidates=0 sends all candidates to the model."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {
+                "0": {"type": "noul", "noul": 0.9},
+                "1": {"type": "noul", "noul": 0.8},
+            }
+        }
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
+            dm_rerank.suggest([Document(text="test document")])
+
+    payload = mock_request.call_args.kwargs["json"]
+    assert set(payload["questions"]) == {"0", "1"}
+
+
 def test_dm_rerank_blend_pure_source(app_project):
     """With model-strength=0 and the default negative gate threshold the
     blend approximates the pure source order (the floor of the search

@@ -54,6 +54,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend):
         "timeout": 60,
         "state-rules": False,
         "state-prefix": "",
+        "max-candidates": 0,
         "instruction": (
             "Is '{label}' a central subject of this document - one a "
             "librarian would assign as a primary heading - not merely a "
@@ -249,9 +250,18 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend):
         # merge the source suggestions with the regular weighted average
         merged = super()._suggest_batch(documents, params)
         limit = int(params["limit"])
+        # optionally restrict how many of the top candidates the decision
+        # model scores; candidates beyond max-candidates are dropped
+        max_candidates = int(params["max-candidates"])
+
+        def candidates(idx: int) -> list[SubjectSuggestion]:
+            suggestions = list(merged[idx])
+            if max_candidates > 0:
+                return suggestions[:max_candidates]
+            return suggestions
 
         processed = [
-            self._process_document(doc, list(merged[idx]), params)
+            self._process_document(doc, candidates(idx), params)
             for idx, doc in enumerate(documents)
         ]
 
