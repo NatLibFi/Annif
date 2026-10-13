@@ -65,8 +65,7 @@ jobs:
         uv run tests/time-startup.sh
 
   test:
-    runs-on:
-      group: github-hosted-large-runners
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
       matrix:
