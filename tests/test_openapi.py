@@ -16,29 +16,6 @@ schema.config.checks.negative_data_rejection.expected_statuses.append("413")
 schema.config.generation.allow_extra_parameters = False
 
 
-INT32_MAX = 2147483647
-
-
-@schemathesis.hook("filter_case")
-def filter_case_limit(context, case):
-    # Exclude cases where limit exceeds int32 max, since Connexion does not
-    # enforce int32 range bounds from format: int32 alone.
-    limit = None
-    if case.query is not None and "limit" in case.query:
-        limit = case.query["limit"]
-    elif isinstance(case.body, dict) and "limit" in case.body:
-        limit = case.body["limit"]
-    if limit is not None:
-        try:
-            if int(limit) > INT32_MAX:
-                return False
-        except (TypeError, ValueError):
-            # If limit is not parseable as an integer, do not filter it here.
-            # Let downstream API/schema validation handle invalid values.
-            return True
-    return True
-
-
 @schemathesis.hook("filter_body")
 def filter_body(context, body):
     # Exclude body containing non-utf8 content to avoid crashing Connexion:

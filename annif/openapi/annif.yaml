@@ -90,6 +90,7 @@ paths:
                   format: int32
                   default: 10
                   minimum: 0
+                  maximum: 2147483647
                 threshold:
                   type: number
                   description: minimum score threshold, below which results will not
@@ -138,6 +139,7 @@ paths:
           format: int32
           default: 10
           minimum: 0
+          maximum: 2147483647
         description: maximum number of results to return
       - in: query
         name: threshold
