@@ -13,7 +13,6 @@ schema.config.checks.positive_data_acceptance.enabled = False
 # Allow 413 as a valid rejection — oversized invalid payloads hit
 # MAX_CONTENT_LENGTH before Connexion can validate the schema.
 schema.config.checks.negative_data_rejection.expected_statuses.append("413")
-schema.config.generation.allow_extra_parameters = False
 
 
 @schemathesis.hook("filter_body")
