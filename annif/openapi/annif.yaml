@@ -101,6 +101,7 @@ paths:
                 language:
                   type: string
                   description: language of subject labels
+                  format: supported_languages
               additionalProperties:
                 type: string
                 description: Additional metadata properties, starting with 'metadata_'
@@ -153,6 +154,7 @@ paths:
         name: language
         schema:
           type: string
+          format: supported_languages
         description: language of subject labels
       requestBody:
         content:
@@ -245,6 +247,7 @@ paths:
                     maxLength: 3
                     minLength: 2
                     example: en
+                    format: bcp47
                   minItems: 1
                   maxItems: 5
         required: true

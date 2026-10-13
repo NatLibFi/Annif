@@ -2,8 +2,8 @@
 
 import pytest
 import schemathesis
-from hypothesis import settings
-from hypothesis import strategies as st
+from hypothesis import settings, strategies
+from simplemma.strategies.dictionaries.dictionary_factory import SUPPORTED_LANGUAGES
 
 import annif
 
@@ -13,6 +13,12 @@ schema.config.checks.positive_data_acceptance.enabled = False
 # Allow 413 as a valid rejection — oversized invalid payloads hit
 # MAX_CONTENT_LENGTH before Connexion can validate the schema.
 schema.config.checks.negative_data_rejection.expected_statuses.append("413")
+
+
+bcp47_strategy = strategies.sampled_from(sorted(SUPPORTED_LANGUAGES))
+schemathesis.openapi.format("bcp47", bcp47_strategy)
+supported_langs_strategy = strategies.sampled_from(["fi"])
+schemathesis.openapi.format("supported_languages", supported_langs_strategy)
 
 
 @schemathesis.hook("filter_body")
@@ -36,22 +42,6 @@ def filter_path_parameters(context, path_parameters):
     if path_parameters is not None and "project_id" in path_parameters:
         return "%0A" not in path_parameters["project_id"]
     return True
-
-
-# Whitelist of project IDs that are valid for OpenAPI fuzzy testing
-# Only projects that work without training (dummy backend) are included
-PROJECTS_TO_TEST = (
-    "dummy-fi",
-    "dummy-en",
-)
-
-
-@schemathesis.hook("before_generate_path_parameters")
-def before_generate_path_parameters(context, strategy):
-    """Replace the path parameter generation strategy with a whitelist."""
-    if context.operation and "project_id" in context.operation.path:
-        return st.fixed_dictionaries({"project_id": st.sampled_from(PROJECTS_TO_TEST)})
-    return strategy
 
 
 @schema.parametrize()
