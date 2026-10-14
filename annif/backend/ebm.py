@@ -73,6 +73,14 @@ class EbmBackend(backend.AnnifBackend):
     MODEL_FILE = "ebm-model.gz"
     TRAIN_FILE = "ebm-train.gz"
 
+    @property
+    def _model_file_paths(self) -> list[str]:
+        paths = [
+            os.path.join(self.datadir, self.DB_FILE),
+            os.path.join(self.datadir, self.MODEL_FILE),
+        ]
+        return paths if all(os.path.isfile(path) for path in paths) else []
+
     _analyzer = Analyzer()
 
     _model = None
