@@ -84,7 +84,7 @@ dev = [
     "bumpversion",
     "black==25.*",
     "isort",
-    "schemathesis~=4.27.2",
+    "schemathesis~=4.29.4",
 ]
 all = ["annif[fasttext,estnltk,nn,omikuji,spacy,stwfsa,voikko,yake]"]
 
