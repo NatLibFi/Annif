@@ -17,8 +17,10 @@ schema.config.checks.negative_data_rejection.expected_statuses.append("413")
 
 bcp47_strategy = strategies.sampled_from(sorted(SUPPORTED_LANGUAGES))
 schemathesis.openapi.format("bcp47", bcp47_strategy)
-supported_langs_strategy = strategies.sampled_from(["fi"])
-schemathesis.openapi.format("supported_languages", supported_langs_strategy)
+vocab_langs_strategy = strategies.sampled_from(
+    ["fi", "en"]
+)  # Langs supported by the dummy vocab
+schemathesis.openapi.format("vocab_languages", vocab_langs_strategy)
 
 
 @schemathesis.hook("filter_body")

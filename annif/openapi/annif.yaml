@@ -101,7 +101,7 @@ paths:
                 language:
                   type: string
                   description: language of subject labels
-                  format: supported_languages
+                  format: vocab_languages
               additionalProperties:
                 type: string
                 description: Additional metadata properties, starting with 'metadata_'
@@ -154,7 +154,7 @@ paths:
         name: language
         schema:
           type: string
-          format: supported_languages
+          format: vocab_languages
         description: language of subject labels
       requestBody:
         content:
