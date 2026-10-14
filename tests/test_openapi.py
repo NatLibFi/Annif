@@ -2,41 +2,25 @@
 
 import pytest
 import schemathesis
-from hypothesis import settings
-from hypothesis import strategies as st
+from hypothesis import settings, strategies
+from simplemma.strategies.dictionaries.dictionary_factory import SUPPORTED_LANGUAGES
 
 import annif
 
 cxapp = annif.create_app(config_name="annif.default_config.TestingConfig")
 schema = schemathesis.openapi.from_asgi("/v1/openapi.json", app=cxapp)
-schema.config.checks.positive_data_acceptance.enabled = False
-# Allow 413 as a valid rejection — oversized invalid payloads hit
+# Allow 413 as a valid outcome — oversized payloads (valid or invalid) hit
 # MAX_CONTENT_LENGTH before Connexion can validate the schema.
+schema.config.checks.positive_data_acceptance.expected_statuses.append("413")
 schema.config.checks.negative_data_rejection.expected_statuses.append("413")
-schema.config.generation.allow_extra_parameters = False
 
 
-INT32_MAX = 2147483647
-
-
-@schemathesis.hook("filter_case")
-def filter_case_limit(context, case):
-    # Exclude cases where limit exceeds int32 max, since Connexion does not
-    # enforce int32 range bounds from format: int32 alone.
-    limit = None
-    if case.query is not None and "limit" in case.query:
-        limit = case.query["limit"]
-    elif isinstance(case.body, dict) and "limit" in case.body:
-        limit = case.body["limit"]
-    if limit is not None:
-        try:
-            if int(limit) > INT32_MAX:
-                return False
-        except (TypeError, ValueError):
-            # If limit is not parseable as an integer, do not filter it here.
-            # Let downstream API/schema validation handle invalid values.
-            return True
-    return True
+bcp47_strategy = strategies.sampled_from(sorted(SUPPORTED_LANGUAGES))
+schemathesis.openapi.format("bcp47", bcp47_strategy)
+vocab_langs_strategy = strategies.sampled_from(
+    ["fi", "en"]
+)  # Langs supported by the dummy vocab
+schemathesis.openapi.format("vocab_languages", vocab_langs_strategy)
 
 
 @schemathesis.hook("filter_body")
@@ -60,22 +44,6 @@ def filter_path_parameters(context, path_parameters):
     if path_parameters is not None and "project_id" in path_parameters:
         return "%0A" not in path_parameters["project_id"]
     return True
-
-
-# Whitelist of project IDs that are valid for OpenAPI fuzzy testing
-# Only projects that work without training (dummy backend) are included
-PROJECTS_TO_TEST = (
-    "dummy-fi",
-    "dummy-en",
-)
-
-
-@schemathesis.hook("before_generate_path_parameters")
-def before_generate_path_parameters(context, strategy):
-    """Replace the path parameter generation strategy with a whitelist."""
-    if context.operation and "project_id" in context.operation.path:
-        return st.fixed_dictionaries({"project_id": st.sampled_from(PROJECTS_TO_TEST)})
-    return strategy
 
 
 @schema.parametrize()
