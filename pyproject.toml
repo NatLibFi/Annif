@@ -48,6 +48,7 @@ dependencies = [
 [project.optional-dependencies]
 fasttext = ["fasttext-numpy2==0.10.4"]
 estnltk = ["estnltk==1.7.5"]
+jieba = ["jieba==0.42.*"]
 nn = [
     "torch~=2.14.0",
     "tqdm~=4.70.1",
@@ -86,7 +87,7 @@ dev = [
     "isort",
     "schemathesis~=4.29.4",
 ]
-all = ["annif[fasttext,estnltk,nn,omikuji,spacy,stwfsa,voikko,yake]"]
+all = ["annif[fasttext,estnltk,jieba,nn,omikuji,spacy,stwfsa,voikko,yake]"]
 
 [tool.isort]
 profile = "black"
