@@ -9,9 +9,9 @@ import annif
 
 cxapp = annif.create_app(config_name="annif.default_config.TestingConfig")
 schema = schemathesis.openapi.from_asgi("/v1/openapi.json", app=cxapp)
-schema.config.checks.positive_data_acceptance.enabled = False
-# Allow 413 as a valid rejection — oversized invalid payloads hit
+# Allow 413 as a valid outcome — oversized payloads (valid or invalid) hit
 # MAX_CONTENT_LENGTH before Connexion can validate the schema.
+schema.config.checks.positive_data_acceptance.expected_statuses.append("413")
 schema.config.checks.negative_data_rejection.expected_statuses.append("413")
 
 
