@@ -8,6 +8,7 @@ on:
   pull_request:
   workflow_dispatch:
 env:
+  PYTHON_VERSION: "3.13"
   UV_VERSION: "0.13.*"
 permissions:
   contents: read
@@ -26,7 +27,7 @@ jobs:
     - name: "Prepare: restore caches, install uv, set up Python"
       uses: ./.github/actions/prepare
       with:
-        python-version: "3.13"
+        python-version: ${{ env.PYTHON_VERSION }}
         uv-version: ${{ env.UV_VERSION }}
     - name: Install Python dev dependencies
       run: |
@@ -55,7 +56,7 @@ jobs:
       id: prepare
       uses: ./.github/actions/prepare
       with:
-        python-version: "3.12"
+        python-version: ${{ env.PYTHON_VERSION }}
         uv-version: ${{ env.UV_VERSION }}
     - name: Install Python dependencies
       run: |
@@ -197,7 +198,7 @@ jobs:
     - name: "Prepare: restore caches, install uv, set up Python"
       uses: ./.github/actions/prepare
       with:
-        python-version: '3.12'
+        python-version: ${{ env.PYTHON_VERSION }}
         uv-version: ${{ env.UV_VERSION }}
     - name: Build distributions
       run: |
