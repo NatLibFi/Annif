@@ -281,6 +281,39 @@ def generate_filter_params(filter_batch_max_limit: int) -> list[tuple[int, float
     return list(itertools.product(limits, thresholds))
 
 
+def pareto_front(
+    combinations: list[tuple[int, float, dict[str, float]]],
+) -> list[tuple[int, float, float, float, float]]:
+    """Return the Pareto-optimal subset of the given (limit, threshold, results)
+    combinations as (limit, threshold, precision, recall, F1 score) tuples,
+    sorted by recall. A combination is on the front when no other combination
+    has both precision and recall greater than or equal to it, with at least one
+    strictly greater. Combinations with identical precision and recall are
+    deduplicated, keeping the first one."""
+    front = []
+    seen = set()
+    for limit, threshold, results in combinations:
+        precision = results["Precision (doc avg)"]
+        recall = results["Recall (doc avg)"]
+        if (precision, recall) in seen:
+            continue
+        seen.add((precision, recall))
+        if not any(
+            other["Precision (doc avg)"] >= precision
+            and other["Recall (doc avg)"] >= recall
+            and (
+                other["Precision (doc avg)"] > precision
+                or other["Recall (doc avg)"] > recall
+            )
+            for _, _, other in combinations
+        ):
+            front.append(
+                (limit, threshold, precision, recall, results["F1 score (doc avg)"])
+            )
+    front.sort(key=lambda row: row[3])
+    return front
+
+
 def _get_completion_choices(
     param: Argument,
 ) -> dict[str, AnnifVocabulary] | dict[str, AnnifProject] | list:
