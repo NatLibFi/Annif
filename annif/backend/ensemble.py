@@ -48,6 +48,45 @@ class BaseEnsembleBackend(backend.AnnifBackend):
             for project_id, _ in sources
         }
 
+    def _align_batch(
+        self,
+        batch: SuggestionBatch,
+        source_project_id: str,
+    ) -> SuggestionBatch:
+        """Align a compact source batch with the ensemble vocabulary."""
+        from annif.suggestion import csr_array, np
+
+        source_subjects = self.project.registry.get_project(source_project_id).subjects
+        target_subjects = self.project.subjects
+
+        if batch.array.shape[1] == len(target_subjects):
+            return batch
+
+        source_active = source_subjects.active
+        if batch.array.shape[1] != len(source_active):
+            raise ValueError(
+                f"Source '{source_project_id}' has {batch.array.shape[1]} "
+                f"columns, but its vocabulary has {len(source_active)} "
+                "active subjects."
+            )
+
+        array = batch.array.tocoo()
+        target_cols = np.empty_like(array.col)
+
+        for source_col in np.unique(array.col):
+            target_cols[array.col == source_col] = target_subjects.by_uri(
+                source_active[source_col][1].uri,
+                warnings=False,
+            )
+
+        return SuggestionBatch(
+            csr_array(
+                (array.data, (array.row, target_cols)),
+                shape=(array.shape[0], len(target_subjects)),
+                dtype=np.float32,
+            )
+        )
+
     def _merge_source_batches(
         self,
         batch_by_source: dict[str, SuggestionBatch],
@@ -59,7 +98,10 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         average based on the weights given in the sources tuple. Intended
         to be overridden in subclasses."""
 
-        batches = [batch_by_source[project_id] for project_id, _ in sources]
+        batches = [
+            self._align_batch(batch_by_source[project_id], project_id)
+            for project_id, _ in sources
+        ]
         weights = [weight for _, weight in sources]
         return SuggestionBatch.from_averaged(batches, weights).filter(
             limit=int(params["limit"])
@@ -83,10 +125,14 @@ class EnsembleHPObjective(hyperopt.HPObjective):
             project_id: trial.suggest_float(project_id, 0.0, 1.0)
             for project_id in args["sources"]
         }
+        backend = args["backend"]
         for gold_batch, src_batches in zip(
             args["gold_batches"], args["source_batches"]
         ):
-            batches = [src_batches[project_id] for project_id in args["sources"]]
+            batches = [
+                backend._align_batch(src_batches[project_id], project_id)
+                for project_id in args["sources"]
+            ]
             weights = [proj_weights[project_id] for project_id in args["sources"]]
             avg_batch = SuggestionBatch.from_averaged(batches, weights).filter(
                 limit=int(args["limit"])
@@ -136,6 +182,7 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                 gold_batches.append(gold_batch)
 
         return {
+            "backend": self._backend,
             "gold_batches": gold_batches,
             "source_batches": source_batches,
             "subject_index": self._backend.project.subjects,
