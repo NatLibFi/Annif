@@ -121,6 +121,22 @@ def test_mllm_hyperopt(project, fulltext_corpus):
     optimizer.optimize(n_trials=3, n_jobs=1, results_file=None)
 
 
+def test_mllm_hyperopt_parallel_n_jobs_2(project, fulltext_corpus):
+    """Test MLLM hyperopt with n_jobs=2 (parallel processing with 2 workers)"""
+    mllm_type = annif.backend.get_backend("mllm")
+    mllm = mllm_type(
+        backend_id="mllm",
+        config_params={"limit": 10, "language": "fi"},
+        project=project,
+    )
+
+    optimizer = mllm.get_hp_optimizer(fulltext_corpus, metric="NDCG")
+    result = optimizer.optimize(n_trials=3, n_jobs=2, results_file=None)
+
+    # Verify result is a valid HPRecommendation with expected structure
+    assert len(result.lines) == 3
+
+
 def test_mllm_train_cached_no_data(datadir, project):
     modelfile = datadir.join("mllm-model.gz")
     assert modelfile.exists()
