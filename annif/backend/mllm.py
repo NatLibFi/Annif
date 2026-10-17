@@ -9,8 +9,8 @@ import joblib
 import numpy as np
 
 import annif.eval
-import annif.util
 import annif.parallel
+import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.lexical.mllm import (
     MLLMModel,
