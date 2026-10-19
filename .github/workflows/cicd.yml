@@ -8,13 +8,14 @@ on:
   pull_request:
   workflow_dispatch:
 env:
-  UV_VERSION: "0.9.*"
+  PYTHON_VERSION: "3.13"
+  UV_VERSION: "0.13.*"
 permissions:
   contents: read
 jobs:
 
   lint:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: lint with isort, Black & flake8
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -26,7 +27,7 @@ jobs:
     - name: "Prepare: restore caches, install uv, set up Python"
       uses: ./.github/actions/prepare
       with:
-        python-version: "3.13"
+        python-version: ${{ env.PYTHON_VERSION }}
         uv-version: ${{ env.UV_VERSION }}
     - name: Install Python dev dependencies
       run: |
@@ -42,7 +43,7 @@ jobs:
         uv run flake8
 
   time-startup:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: check CLI startup time
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -55,7 +56,7 @@ jobs:
       id: prepare
       uses: ./.github/actions/prepare
       with:
-        python-version: "3.12"
+        python-version: ${{ env.PYTHON_VERSION }}
         uv-version: ${{ env.UV_VERSION }}
     - name: Install Python dependencies
       run: |
@@ -65,7 +66,7 @@ jobs:
         uv run tests/time-startup.sh
 
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       matrix:
@@ -128,7 +129,7 @@ jobs:
 
   test-docker-image:
     name: "test Docker image"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -148,7 +149,7 @@ jobs:
   publish-docker-latest:
     name: publish latest Docker image
     needs: [lint, test, test-docker-image]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
@@ -180,7 +181,7 @@ jobs:
   publish-release:
     name: publish release
     needs: [lint, test, test-docker-image]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     environment:
       name: pypi
@@ -197,7 +198,7 @@ jobs:
     - name: "Prepare: restore caches, install uv, set up Python"
       uses: ./.github/actions/prepare
       with:
-        python-version: '3.12'
+        python-version: ${{ env.PYTHON_VERSION }}
         uv-version: ${{ env.UV_VERSION }}
     - name: Build distributions
       run: |
