@@ -106,6 +106,7 @@ conflicts = [
   ],
 ]
 no-build = true
+no-binary-package = ["fasttext-numpy2"]
 
 [tool.uv.sources]
 torch = [
