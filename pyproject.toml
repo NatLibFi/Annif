@@ -106,6 +106,7 @@ conflicts = [
     { extra = "torch-cu130" },
   ],
 ]
+no-build = true
 
 [tool.uv.sources]
 torch = [
