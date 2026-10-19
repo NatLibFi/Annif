@@ -78,7 +78,6 @@ dev = [
     "py",
     "pytest==9.*",
     "pytest-cov",
-    "pytest-watch",
     "pytest-flask",
     "flake8",
     "bumpversion",
