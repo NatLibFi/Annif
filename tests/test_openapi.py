@@ -69,6 +69,12 @@ def test_openapi_cors(app_client):
     assert req.headers["access-control-allow-origin"] == "*"
 
 
+def test_openapi_swagger_ui(app_client):
+    req = app_client.get("http://localhost:8000/v1/ui/")
+    assert req.status_code == 200
+    assert "swagger-ui" in req.text
+
+
 def test_openapi_list_projects(app_client):
     req = app_client.get("http://localhost:8000/v1/projects")
     assert req.status_code == 200
