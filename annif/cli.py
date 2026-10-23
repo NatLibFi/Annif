@@ -1,7 +1,6 @@
 """Definitions for command-line (Click) commands for invoking Annif
 operations and printing the results to console."""
 
-import collections
 import importlib
 import json
 import os.path
@@ -549,25 +548,46 @@ OPTIMIZE_METRICS = ["Precision (doc avg)", "Recall (doc avg)", "F1 score (doc av
 @click.option(
     "--jobs", "-j", default=1, help="Number of parallel jobs (0 means all CPUs)"
 )
+@click.option(
+    "--results-file",
+    "-r",
+    type=click.File("w", encoding="utf-8", errors="ignore", lazy=True),
+    help="""Specify file path to write results as TSV.
+    File directory must exist, existing file will be overwritten.""",
+)
 @cli_util.docs_limit_option
 @cli_util.backend_param_option
 @cli_util.common_options
-def run_optimize(project_id, paths, jobs, docs_limit, backend_param):
+def run_optimize(project_id, paths, jobs, results_file, docs_limit, backend_param):
     """
     Suggest subjects for documents, testing multiple limits and thresholds.
     \f
     This command will use different limit (maximum number of subjects) and
     score threshold values when assigning subjects to each document given by
     ``PATHS`` and compare the results against the gold standard subjects in the
-    documents. The output is a list of parameter combinations and their scores.
-    From the output, you can determine the optimum limit and threshold
+    documents. The output is a list of parameter combinations and their scores,
+    followed by the Pareto front and the best combination by F1 score (doc avg).
+    If ``--results-file <FILENAME>`` is given, the results are written to the
+    given file in TSV format, one row per parameter combination. From the
+    output, you can determine the optimum limit and threshold
     parameters depending on which measure you want to target.
     """
     project = cli_util.get_project(project_id)
     backend_params = cli_util.parse_backend_params(backend_param, project)
     filter_params = cli_util.generate_filter_params(FILTER_BATCH_MAX_LIMIT)
 
-    import annif.eval
+    if results_file:
+        try:
+            print("", end="", file=results_file)
+            click.echo(
+                "Writing parameter combination results to {!s}".format(
+                    results_file.name
+                )
+            )
+        except Exception as e:
+            raise NotSupportedException(
+                "cannot open results-file for writing: " + str(e)
+            )
 
     corpus = cli_util.open_documents(
         paths, project.subjects, project.vocab_lang, docs_limit
@@ -601,43 +621,82 @@ def run_optimize(project_id, paths, jobs, docs_limit, backend_param):
 
     click.echo("\t".join(("Limit", "Thresh.", "Prec.", "Rec.", "F1")))
 
-    best_scores = collections.defaultdict(float)
-    best_params = {}
+    best_score = None
+    best_params = None
+    all_results = []
 
     template = "{:d}\t{:.02f}\t{:.04f}\t{:.04f}\t{:.04f}"
-    import annif.eval
 
-    for limit, threshold in filter_params:
-        eval_batch = annif.eval.EvaluationBatch(project.subjects)
-        filtered_results = orig_suggestion_results.filter(limit, threshold)
-        for batch, subject_sets in zip(filtered_results.batches, subject_set_batches):
-            eval_batch.evaluate_many(batch, subject_sets)
-        results = eval_batch.results(metrics=OPTIMIZE_METRICS)
-        for metric, score in results.items():
-            if score >= best_scores[metric]:
-                best_scores[metric] = score
-                best_params[metric] = (limit, threshold)
-        click.echo(
-            template.format(
-                limit,
-                threshold,
-                results["Precision (doc avg)"],
-                results["Recall (doc avg)"],
-                results["F1 score (doc avg)"],
+    optimizer = annif.parallel.OptimizeEvaluator(
+        project.registry,
+        project_id,
+        orig_suggestion_results,
+        subject_set_batches,
+        OPTIMIZE_METRICS,
+    )
+
+    with pool_class(
+        jobs, initializer=annif.parallel.OptimizeEvaluator.init, initargs=(optimizer,)
+    ) as pool:
+        for limit, threshold, results in pool.imap(
+            annif.parallel.OptimizeEvaluator.evaluate_combination, filter_params
+        ):
+            all_results.append((limit, threshold, results))
+            f_measure = results["F1 score (doc avg)"]
+            if best_score is None or f_measure > best_score:
+                best_score = f_measure
+                best_params = (limit, threshold)
+            click.echo(
+                template.format(
+                    limit,
+                    threshold,
+                    results["Precision (doc avg)"],
+                    results["Recall (doc avg)"],
+                    results["F1 score (doc avg)"],
+                )
             )
-        )
+
+    front = cli_util.pareto_front(all_results)
 
     click.echo()
-    template2 = "Best {:>19}: {:.04f}\tLimit: {:d}\tThreshold: {:.02f}"
-    for metric in OPTIMIZE_METRICS:
-        click.echo(
-            template2.format(
-                metric,
-                best_scores[metric],
-                best_params[metric][0],
-                best_params[metric][1],
-            )
+    click.echo("Pareto front: best precision at each recall level")
+    click.echo("\t".join(("Limit", "Thresh.", "Prec.", "Rec.", "F1")))
+    for params in front:
+        click.echo(template.format(*params))
+
+    if results_file:
+        front_params = {(limit, threshold) for limit, threshold, *_ in front}
+        print(
+            "\t".join(
+                (
+                    "Limit",
+                    "Threshold",
+                    "Precision (doc avg)",
+                    "Recall (doc avg)",
+                    "F1 score (doc avg)",
+                    "Pareto front",
+                )
+            ),
+            file=results_file,
         )
+        for limit, threshold, results in all_results:
+            print(
+                "\t".join(
+                    (
+                        str(limit),
+                        f"{threshold:g}",
+                        f"{results['Precision (doc avg)']:.6f}",
+                        f"{results['Recall (doc avg)']:.6f}",
+                        f"{results['F1 score (doc avg)']:.6f}",
+                        "1" if (limit, threshold) in front_params else "0",
+                    )
+                ),
+                file=results_file,
+            )
+
+    click.echo()
+    template2 = "Best {:>19}: {:.04f}\tLimit: {:d}\tThreshold: {:.04f}"
+    click.echo(template2.format("F1 score (doc avg)", best_score, *best_params))
     click.echo("Documents evaluated:\t{}".format(ndocs))
 
 
