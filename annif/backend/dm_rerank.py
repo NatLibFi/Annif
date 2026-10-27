@@ -257,15 +257,14 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
                   * ((noul + eps) / (1 - noul + eps))**b
                   * sigmoid((noul - tau) / 0.1)
 
-        where eps = 0.01, b is the model-strength, and tau is the gate-threshold.
+        where eps = 0.01, b is the model-strength, and tau is the
+        gate-threshold; a candidate without a noul score passes its plain
+        source score through unmodified.
 
-        The raw scores are then squashed into [0, 1)."""
+        All raw scores are mapped into [0, 1) with the monotonic squash."""
         if not suggestions:
             return []
 
-        # squash only when the model actually scored at least one
-        # candidate; then all candidates are mapped to the same scale
-        squash = any(s.subject_id in noul_scores for s in suggestions)
         blended = []
         for suggestion in suggestions:
             noul = noul_scores.get(suggestion.subject_id)
@@ -275,7 +274,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
                 gate = 1.0 / (1.0 + math.exp(-(noul - gate_threshold) / 0.1))
                 odds = (noul + ODDS_EPS) / (1.0 - noul + ODDS_EPS)
                 raw = suggestion.score * odds**b * gate
-            score = _squash(raw) if squash else raw
+            score = _squash(raw)
             blended.append(
                 SubjectSuggestion(subject_id=suggestion.subject_id, score=score)
             )

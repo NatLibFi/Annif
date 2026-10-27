@@ -319,8 +319,9 @@ def test_dm_rerank_blend_gate(app_project):
 
 
 def test_dm_rerank_blend_missing_noul(app_project):
-    """A candidate without a noul score keeps its plain source score, so a
-    missing decision model degrades to the source ranking."""
+    """A candidate without a noul score gets its source score on the same
+    squashed scale as the scored candidates, so a missing decision model
+    degrades to the source ranking on a stable scale."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {
@@ -340,6 +341,28 @@ def test_dm_rerank_blend_missing_noul(app_project):
     assert by_id[0] == pytest.approx(
         _squash(0.9 * _odds(0.9) ** 0.3 * _sigmoid(0.9, -1.0))
     )
+    assert [int(s.subject_id) for s in suggestions] == [0, 1]
+
+
+def test_dm_rerank_blend_no_noul_scores(app_project):
+    """When no candidate has a noul score (empty answers), every score is
+    the source score mapped through the same squash as the scored
+    candidates: a missing model answer equals neutral model evidence and
+    the scores stay on a stable scale."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
+            result = dm_rerank.suggest([Document(text="test document")])
+
+    suggestions = list(result[0])
+    by_id = {int(s.subject_id): s.score for s in suggestions}
+    assert by_id[0] == pytest.approx(_squash(0.9))
+    assert by_id[1] == pytest.approx(_squash(0.8))
+    # the squash is monotonic, so the source order is preserved
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
 
