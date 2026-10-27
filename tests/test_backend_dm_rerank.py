@@ -639,6 +639,133 @@ def test_dm_rerank_suggest_no_retries(app_project):
     assert mock_request.call_count == 1
 
 
+def _http_error(status_code):
+    """Return an HTTPError for a deterministic non-success response."""
+    response = unittest.mock.Mock()
+    response.status_code = status_code
+    return requests.exceptions.HTTPError(f"{status_code} error", response=response)
+
+
+def test_dm_rerank_suggest_no_retry_on_4xx(app_project):
+    """A non-retryable 4xx (deterministic client error) fails fast without
+    any retry."""
+    with (
+        unittest.mock.patch("requests.post") as mock_request,
+        unittest.mock.patch("time.sleep") as mock_sleep,
+    ):
+        mock_request.side_effect = _http_error(400)
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            with pytest.raises(OperationFailedException):
+                dm_rerank.suggest([Document(text="test document")])
+
+    assert mock_request.call_count == 1
+    mock_sleep.assert_not_called()
+
+
+def test_dm_rerank_suggest_retry_on_429_and_5xx(app_project):
+    """429 and 5xx responses are treated as transient and retried."""
+    with (
+        unittest.mock.patch("requests.post") as mock_request,
+        unittest.mock.patch("time.sleep"),
+    ):
+        mock_request.side_effect = [_http_error(429), _http_error(503)]
+
+        dm_rerank = _make_backend(app_project, retries=1)
+        with _mock_source(app_project, [(0, 0.9)]):
+            with pytest.raises(OperationFailedException):
+                dm_rerank.suggest([Document(text="test document")])
+
+    assert mock_request.call_count == 2
+
+
+def test_dm_rerank_suggest_backoff_starts_at_one_second(app_project):
+    """The retry backoff sleeps are 1s, 2s, 4s, ... (not 2s, 4s, 8s)."""
+    with (
+        unittest.mock.patch("requests.post") as mock_request,
+        unittest.mock.patch("time.sleep") as mock_sleep,
+    ):
+        mock_request.side_effect = requests.exceptions.Timeout("timeout")
+
+        dm_rerank = _make_backend(app_project, retries=2)
+        with _mock_source(app_project, [(0, 0.9)]):
+            with pytest.raises(OperationFailedException):
+                dm_rerank.suggest([Document(text="test document")])
+
+    assert [call.args[0] for call in mock_sleep.call_args_list] == [1, 2]
+
+
+def test_dm_rerank_suggest_invalid_answers(app_project):
+    """A response whose 'answers' is not an object raises
+    OperationFailedException instead of an uncaught AttributeError."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": None}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            with pytest.raises(OperationFailedException):
+                dm_rerank.suggest([Document(text="test document")])
+
+
+def test_dm_rerank_suggest_invalid_answer_entry(app_project):
+    """A response whose answer entry is not an object raises
+    OperationFailedException."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {"0": "noul 0.9"}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            with pytest.raises(OperationFailedException):
+                dm_rerank.suggest([Document(text="test document")])
+
+
+def test_dm_rerank_suggest_invalid_answer_key(app_project):
+    """A response whose answer key is not a subject ID raises
+    OperationFailedException."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {"not-a-number": {"noul": 0.9}}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            with pytest.raises(OperationFailedException):
+                dm_rerank.suggest([Document(text="test document")])
+
+
+def test_dm_rerank_suggest_nonnumeric_noul(app_project):
+    """A response with a nonnumeric noul score raises
+    OperationFailedException."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {"0": {"noul": "0.9"}}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            with pytest.raises(OperationFailedException):
+                dm_rerank.suggest([Document(text="test document")])
+
+
+def test_dm_rerank_suggest_out_of_range_noul(app_project):
+    """A response with a noul score outside [0, 1] raises
+    OperationFailedException."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {"0": {"noul": 1.5}}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            with pytest.raises(OperationFailedException):
+                dm_rerank.suggest([Document(text="test document")])
+
+
 def test_dm_rerank_suggest_json_error(app_project):
     """A non-JSON reranking response raises OperationFailedException."""
     with unittest.mock.patch("requests.post") as mock_request:

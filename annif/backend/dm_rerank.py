@@ -202,13 +202,22 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
                 req.raise_for_status()
                 break
             except requests.exceptions.RequestException as err:
+                if isinstance(err, requests.exceptions.HTTPError):
+                    response = err.response
+                    status = response.status_code if response is not None else None
+                    if status is None or (status < 500 and status not in (408, 429)):
+                        # a deterministic 4xx (invalid payload, unauthorized
+                        # endpoint, ...) will not succeed on retry, so fail fast
+                        msg = f"dm_rerank request to {endpoint} failed: {err}"
+                        raise OperationFailedException(msg) from err
                 attempt += 1
                 if attempt > retries:
                     msg = (
                         "dm_rerank request to {} failed after {} attempts: {}"
                     ).format(endpoint, retries + 1, err)
                     raise OperationFailedException(msg) from err
-                delay = 2**attempt
+                # exponential backoff starting from 1 second: 1s, 2s, 4s, ...
+                delay = 2 ** (attempt - 1)
                 self.warning(
                     "dm_rerank request failed ({err}); retrying in {delay}s "
                     "({attempt}/{retries})".format(
@@ -222,11 +231,39 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
             msg = f"dm_rerank response JSON decode failed: {err}"
             raise OperationFailedException(msg) from err
 
+        answers = response.get("answers") if isinstance(response, dict) else None
+        if not isinstance(answers, dict):
+            msg = "dm_rerank response does not contain a valid 'answers' object"
+            raise OperationFailedException(msg)
         noul_scores = {}
-        for subject_id_str, answer in response.get("answers", {}).items():
+        for subject_id_str, answer in answers.items():
+            if not isinstance(answer, dict):
+                msg = (
+                    f"dm_rerank answer for subject {subject_id_str!r} "
+                    "is not an object"
+                )
+                raise OperationFailedException(msg)
             score = answer.get("noul")
-            if score is not None:
-                noul_scores[int(subject_id_str)] = score
+            if score is None:
+                continue
+            if isinstance(score, bool) or not isinstance(score, (int, float)):
+                msg = (
+                    f"dm_rerank noul score for subject {subject_id_str!r} "
+                    f"is not a number: {score!r}"
+                )
+                raise OperationFailedException(msg)
+            if not 0.0 <= score <= 1.0:
+                msg = (
+                    f"dm_rerank noul score for subject {subject_id_str!r} "
+                    f"is outside [0, 1]: {score!r}"
+                )
+                raise OperationFailedException(msg)
+            try:
+                subject_id = int(subject_id_str)
+            except (TypeError, ValueError) as err:
+                msg = f"dm_rerank answer key {subject_id_str!r} is not a subject ID"
+                raise OperationFailedException(msg) from err
+            noul_scores[subject_id] = float(score)
 
         if noul_scores:
             values = list(noul_scores.values())
