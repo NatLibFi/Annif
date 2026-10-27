@@ -198,6 +198,23 @@ def _squash(raw):
     return raw / (1.0 + raw)
 
 
+def test_dm_rerank_squash():
+    """The backend squash maps raw scores into [0, 1): positive values
+    are squashed monotonically, zero and any negative value (possible
+    only with a malformed noul score from the service) are clamped to
+    0.0."""
+    from annif.backend.dm_rerank import _squash as backend_squash
+
+    assert backend_squash(0.0) == 0.0
+    # defensive clamp for pathological negative input
+    assert backend_squash(-0.5) == 0.0
+    assert backend_squash(-100.0) == 0.0
+    assert backend_squash(1.0) == pytest.approx(0.5)
+    assert backend_squash(0.25) == pytest.approx(0.2)
+    # the squash stays in [0, 1) even for very large raw scores
+    assert 0.0 <= backend_squash(10000.0) < 1.0
+
+
 def test_dm_rerank_blend_scores(app_project):
     """The blended score is the monotonic squash of
     source * odds(noul)^model-strength * gate, where the odds term is
