@@ -124,7 +124,7 @@ class HyperparameterOptimizer:
         return hps
 
     def _enqueue_trials(self, study: Study) -> None:
-        """Enqueue fixed trials to be run in addition to the randomly
+        """Enqueue fixed trials to be evaluated before the randomly
         sampled ones. Intended to be overridden by subclasses that want to
         guarantee that specific hyperparameter combinations (such as a
         baseline configuration) are evaluated. The default is a no-op."""
@@ -134,8 +134,10 @@ class HyperparameterOptimizer:
     def optimize(
         self, n_trials: int, n_jobs: int, results_file: LazyFile | None
     ) -> HPRecommendation:
-        """Find the optimal hyperparameters by testing up to the given number
-        of hyperparameter combinations"""
+        """Find the optimal hyperparameters by testing up to the given
+        number of hyperparameter combinations. Enqueued trials (see
+        ``_enqueue_trials``) are evaluated first and count towards
+        ``n_trials``."""
 
         objective_args = self._prepare(n_jobs)
         self._objective.init(objective_args)

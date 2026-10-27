@@ -928,8 +928,8 @@ def test_dm_rerank_hyperopt_pool_not_truncated(app_project):
 
 def test_dm_rerank_hyperopt_enqueues_source_baseline(app_project):
     """The pure-source configuration (model-strength=0.0,
-    gate-threshold=-1.0) is enqueued as a fixed baseline trial, in
-    addition to the sampled trials."""
+    gate-threshold=-1.0) is enqueued as a fixed baseline trial,
+    counting towards the requested number of trials."""
     import optuna
 
     corpus = unittest.mock.Mock()
@@ -995,7 +995,7 @@ def test_dm_rerank_hyperopt_recovers_source_ranking(app_project):
         optimizer = dm_rerank.get_hp_optimizer(corpus, metric="NDCG")
         recommendation = optimizer.optimize(n_trials=1, n_jobs=1, results_file=None)
 
-    # the baseline trial is evaluated in addition to the sampled trial
+    # with n_trials=1 the enqueued baseline is the only trial run
     assert recommendation.lines == [
         "model-strength=0.0000",
         "gate-threshold=-1.0000",
