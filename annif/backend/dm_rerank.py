@@ -156,7 +156,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         """Ask the reranking service for a noul score for every candidate
         subject that has a label, and return a mapping subject_id -> noul
         score. Candidates without a label are not included in the mapping."""
-        instruction = params["instruction"]
+        instruction = str(params["instruction"])
         if "{label}" not in instruction:
             raise ConfigurationException(
                 "instruction parameter must contain a {label} placeholder"

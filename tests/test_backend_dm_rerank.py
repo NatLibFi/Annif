@@ -823,6 +823,8 @@ def test_dm_rerank_instruction_invalid_template(app_project):
         "Is {label} about {unknown}?",
         "Is {label} a {subject}?",
         "Is {label} about {0}?",
+        123,
+        None,
     ):
         with (
             unittest.mock.patch("requests.post") as mock_request,
