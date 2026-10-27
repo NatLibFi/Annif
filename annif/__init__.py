@@ -52,7 +52,7 @@ def create_cx_app(config_name: str | None = None) -> FlaskApp:
     cxapp.app.config.from_object(config_name)
     cxapp.app.config.from_envvar("ANNIF_SETTINGS", silent=True)
 
-    # form fields may use up to the configured maximum form memory size
+    # the limit is process-global, which matches the process-wide configuration
     max_form_memory_size = int(cxapp.app.config["MAX_FORM_MEMORY_SIZE"])
     CustomFormDataValidator.max_part_size = max_form_memory_size
     CustomMultiPartFormDataValidator.max_part_size = max_form_memory_size

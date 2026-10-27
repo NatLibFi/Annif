@@ -50,22 +50,13 @@ class CustomFormDataValidator(FormDataValidator):
     """Form data validator for application/x-www-form-urlencoded requests
     that uses a configurable maximum part size. Starlette's form parsers
     default to a hard-coded 1 MB limit per form field, which is lower than
-    Annif's overall content limit and would reject otherwise valid requests
-    with a 500 error. The limit is set on the class-level ``max_part_size``
-    attribute when the Connexion app is created, and exceeding it results in
-    a 413 Payload Too Large response instead of an unhandled
-    MultiPartException."""
+    Annif's overall content limit."""
 
-    #: maximum size (in bytes) of a single form field, set by
-    #: ``annif.create_cx_app()`` from the app configuration; ``None`` means
-    #: fall back to Starlette's default limit
     max_part_size: int | None = None
 
     @property
     def _form_parser_cls(self) -> type:
-        # resolve the parser class from the concrete subclass (FormParser for
-        # application/x-www-form-urlencoded, MultiPartParser for
-        # multipart/form-data) and wrap it to pass the maximum part size
+        # override the form parser class to pass the maximum part size
         base_cls = super()._form_parser_cls
         max_part_size = type(self).max_part_size
         if max_part_size is None:
