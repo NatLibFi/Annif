@@ -381,6 +381,74 @@ def test_dm_rerank_blend_gate(app_project):
     assert by_id[0] < 0.05
 
 
+@pytest.mark.parametrize("threshold", [100, 2.0, -2.0, float("nan"), float("inf")])
+def test_dm_rerank_gate_threshold_out_of_range(app_project, threshold):
+    """A gate-threshold outside [-1.0, 1.0] (including non-finite
+    values) is rejected: noul scores are in [0, 1], so such a threshold
+    is meaningless, and a sufficiently large positive one would overflow
+    the sigmoid's math.exp instead of producing a near-zero gate."""
+    dm_rerank = _make_backend(app_project, **{"gate-threshold": threshold})
+    with _mock_source(app_project, [(0, 0.9)]):
+        with pytest.raises(ConfigurationException):
+            dm_rerank.suggest([Document(text="test document")])
+
+
+@pytest.mark.parametrize("threshold", ["not-a-number", None])
+def test_dm_rerank_gate_threshold_not_a_number(app_project, threshold):
+    """A gate-threshold that cannot be parsed as a number is rejected
+    with a configuration error rather than a raw TypeError."""
+    dm_rerank = _make_backend(app_project, **{"gate-threshold": threshold})
+    with _mock_source(app_project, [(0, 0.9)]):
+        with pytest.raises(ConfigurationException):
+            dm_rerank.suggest([Document(text="test document")])
+
+
+def test_dm_rerank_gate_threshold_override_out_of_range(app_project):
+    """Per-call parameter overrides are validated as well: a valid
+    configured threshold does not shield an out-of-range override
+    passed to suggest() (the dynamic override path)."""
+    dm_rerank = _make_backend(app_project, **{"gate-threshold": 0.4})
+    with _mock_source(app_project, [(0, 0.9)]):
+        with pytest.raises(ConfigurationException):
+            dm_rerank.suggest([Document(text="test document")], {"gate-threshold": 100})
+
+
+@pytest.mark.parametrize("threshold", [-1.0, 0.0, 0.5, 1.0])
+def test_dm_rerank_gate_threshold_boundary(app_project, threshold):
+    """Gate thresholds at and inside the validated boundary of
+    [-1.0, 1.0] are accepted and do not overflow the sigmoid."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {
+                "0": {"type": "noul", "noul": 0.9},
+                "1": {"type": "noul", "noul": 0.1},
+            }
+        }
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project, **{"gate-threshold": threshold})
+        with _mock_source(app_project, [(0, 0.9), (1, 0.1)]):
+            result = dm_rerank.suggest([Document(text="test document")])
+    suggestions = list(result[0])
+    assert [int(s.subject_id) for s in suggestions] in ([0, 1], [1, 0])
+    for suggestion in suggestions:
+        assert 0.0 <= suggestion.score < 1.0
+
+
+def test_dm_rerank_blend_extreme_threshold_no_overflow():
+    """_blend itself stays safe for thresholds within the validated
+    range even at the noul boundary (the pre-validation guarantees the
+    sigmoid argument stays bounded)."""
+    dm_rerank_type = annif.backend.get_backend("dm_rerank")
+    suggestions = [SubjectSuggestion(0, 0.5)]
+    # threshold 1.0, noul 0.0: the largest (in magnitude-safe) argument
+    # within the validated range
+    blended = dm_rerank_type._blend(suggestions, {0: 0.0}, 1.0, 1.0)
+    assert len(blended) == 1
+    assert 0.0 <= blended[0].score < 1.0
+
+
 def test_dm_rerank_blend_missing_noul(app_project):
     """A candidate without a noul score gets its source score on the same
     squashed scale as the scored candidates, so a missing decision model

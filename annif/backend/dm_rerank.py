@@ -279,6 +279,23 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
 
         return noul_scores
 
+    def _validate_params(self, params: dict[str, Any]) -> None:
+        """Validate the effective parameters before use."""
+        raw = params["gate-threshold"]
+        try:
+            gate_threshold = float(raw)
+        except (TypeError, ValueError) as err:
+            msg = f"invalid gate-threshold parameter: {raw!r}"
+            raise ConfigurationException(msg, backend_id=self.backend_id) from err
+        if not math.isfinite(gate_threshold) or not -1.0 <= gate_threshold <= 1.0:
+            msg = (
+                f"gate-threshold {gate_threshold!r} is outside the valid "
+                "range [-1.0, 1.0]; noul scores are in [0, 1], so a "
+                "threshold <= -1.0 turns the gate fully off and a "
+                "threshold >= 1.0 demotes every candidate"
+            )
+            raise ConfigurationException(msg, backend_id=self.backend_id)
+
     def _process_document(
         self, doc: Document, suggestions: list[SubjectSuggestion], params
     ) -> list[SubjectSuggestion]:
@@ -339,6 +356,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
     def _suggest_batch(
         self, documents: list[Document], params: dict[str, Any]
     ) -> SuggestionBatch:
+        self._validate_params(params)
         # merge the source suggestions with the regular weighted average,
         # without applying the output limit yet: the reranking may promote
         # candidates beyond the limit
