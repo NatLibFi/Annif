@@ -978,16 +978,15 @@ def test_dm_rerank_hyperopt(app_project):
         ]
         return SuggestionBatch.from_sequence(rows, app_project.subjects, limit=100)
 
+    mock_source = unittest.mock.Mock(
+        is_trained=True,
+        suggest=mock_suggest,
+        initialize=unittest.mock.Mock(),
+    )
     with (
         unittest.mock.patch("requests.post") as mock_request,
         unittest.mock.patch.object(
-            app_project.registry,
-            "get_project",
-            return_value=unittest.mock.Mock(
-                is_trained=True,
-                suggest=mock_suggest,
-                initialize=unittest.mock.Mock(),
-            ),
+            app_project.registry, "get_project", return_value=mock_source
         ),
     ):
         mock_response = unittest.mock.Mock()
@@ -1003,6 +1002,8 @@ def test_dm_rerank_hyperopt(app_project):
         optimizer = dm_rerank.get_hp_optimizer(corpus, metric="NDCG")
         recommendation = optimizer.optimize(n_trials=3, n_jobs=1, results_file=None)
 
+    # the source project is initialized before it is used for suggestions
+    mock_source.initialize.assert_called_once()
     # the decision model is queried once per document in the corpus
     assert mock_request.call_count == 2
     # with max-candidates=1 only the top candidate is sent to the model

@@ -433,6 +433,10 @@ class DMRerankOptimizer(hyperopt.HyperparameterOptimizer):
         limit = int(self._backend.params["limit"])
         max_candidates = int(self._backend.params["max-candidates"])
 
+        for project_id in source_ids:
+            project = self._backend.project.registry.get_project(project_id)
+            project.initialize()
+
         psmap = annif.parallel.ProjectSuggestMap(
             self._backend.project.registry,
             source_ids,
