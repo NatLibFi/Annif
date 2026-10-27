@@ -23,6 +23,7 @@ from . import ensemble, hyperopt
 
 if TYPE_CHECKING:
     from configparser import SectionProxy
+    from datetime import datetime
 
     from optuna.study.study import Study
     from optuna.trial import Trial
@@ -95,6 +96,13 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         projects to be trained."""
         sources_trained = self._get_sources_attribute("is_trained")
         return all(sources_trained)
+
+    @property
+    def modification_time(self) -> datetime | None:
+        """The backend has no model files of its own, so the most recent
+        modification time of the source projects is reported."""
+        mtimes = self._get_sources_attribute("modification_time")
+        return max(filter(None, mtimes), default=None)
 
     def _get_state_transform(self, params: dict[str, Any]):
         """The transform applied to the document text before it is sent

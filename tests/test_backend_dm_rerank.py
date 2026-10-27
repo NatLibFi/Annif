@@ -2,6 +2,7 @@
 
 import math
 import unittest.mock
+from datetime import datetime, timezone
 
 import pytest
 import requests.exceptions
@@ -26,7 +27,12 @@ def _make_backend(project, **params):
     return dm_rerank_type(backend_id="dm_rerank", config_params=base, project=project)
 
 
-def _mock_source(app_project, subject_ids_and_scores, is_trained=True):
+def _mock_source(
+    app_project,
+    subject_ids_and_scores,
+    is_trained=True,
+    modification_time=None,
+):
     """Return a context manager mocking registry.get_project to serve a source
     project whose suggest() returns a real SuggestionBatch."""
     src_batch = SuggestionBatch.from_sequence(
@@ -36,6 +42,7 @@ def _mock_source(app_project, subject_ids_and_scores, is_trained=True):
     )
     mock_proj = unittest.mock.Mock()
     mock_proj.is_trained = is_trained
+    mock_proj.modification_time = modification_time
     mock_proj.suggest.return_value = src_batch
     return unittest.mock.patch.object(
         app_project.registry, "get_project", return_value=mock_proj
@@ -716,6 +723,18 @@ def test_dm_rerank_is_trained(app_project):
         assert dm_rerank.is_trained is True
     with _mock_source(app_project, [], is_trained=False):
         assert dm_rerank.is_trained is False
+
+
+def test_dm_rerank_modification_time(app_project):
+    """The backend has no model files of its own, so it reports the
+    source project's modification time, or None when the source does
+    not have one."""
+    dm_rerank = _make_backend(app_project)
+    mtime = datetime(2026, 10, 1, 12, 0, 0, tzinfo=timezone.utc)
+    with _mock_source(app_project, [], modification_time=mtime):
+        assert dm_rerank.modification_time == mtime
+    with _mock_source(app_project, [], modification_time=None):
+        assert dm_rerank.modification_time is None
 
 
 def test_dm_rerank_label_project_language(app_project):
