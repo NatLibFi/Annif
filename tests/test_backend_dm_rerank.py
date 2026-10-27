@@ -92,7 +92,7 @@ def test_dm_rerank_suggest_request_shape(app_project):
     assert payload["questions"]["0"]["instructions"] == expected.format(label="dummy")
     assert payload["questions"]["1"]["instructions"] == expected.format(label="none")
     # the endpoint parameter is the full URL of the /v1/systemone endpoint
-    assert mock_request.call_args.args[0] == "http://localhost:8080/v1/systemone"
+    assert mock_request.call_args.args[0] == "http://localhost:9931/v1/systemone"
 
 
 def test_dm_rerank_suggest_model_included_when_set(app_project):
