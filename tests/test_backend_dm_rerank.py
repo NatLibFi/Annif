@@ -661,7 +661,8 @@ def test_dm_rerank_deprecated_subjects_skipped(app_project):
 def test_dm_rerank_hyperopt(app_project):
     """The hyperparameter optimizer queries the decision model once per
     document and searches the model-strength / gate-threshold blend
-    parameters over the cached scores."""
+    parameters over the cached scores. With max-candidates set, only the
+    top candidates are sent to the decision model in _prepare."""
     from annif.corpus import DocumentList
 
     corpus = DocumentList(
@@ -699,12 +700,15 @@ def test_dm_rerank_hyperopt(app_project):
         }
         mock_request.return_value = mock_response
 
-        dm_rerank = _make_backend(app_project)
+        dm_rerank = _make_backend(app_project, **{"max-candidates": 1})
         optimizer = dm_rerank.get_hp_optimizer(corpus, metric="NDCG")
         recommendation = optimizer.optimize(n_trials=3, n_jobs=1, results_file=None)
 
     # the decision model is queried once per document in the corpus
     assert mock_request.call_count == 2
+    # with max-candidates=1 only the top candidate is sent to the model
+    payload = mock_request.call_args.kwargs["json"]
+    assert set(payload["questions"]) == {"0"}
     # the recommendation contains both blend parameters and a score
     assert "model-strength=" in recommendation.lines[0]
     assert "gate-threshold=" in recommendation.lines[1]
