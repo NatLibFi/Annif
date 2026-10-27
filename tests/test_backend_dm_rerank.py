@@ -14,7 +14,7 @@ from annif.exception import (
     OperationFailedException,
 )
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
-from annif.vocab import Subject
+from annif.vocab import Subject, SubjectIndexFile
 
 
 def _make_backend(project, **params):
@@ -591,16 +591,20 @@ def test_dm_rerank_is_trained(app_project):
 
 def test_dm_rerank_label_project_language(app_project):
     """Label selection prefers the project language, then any label, then
-    notation."""
+    notation; deprecated subjects (labels is None) yield None."""
+    subjects = SubjectIndexFile()
+    subjects.append(Subject(uri="u0", labels={"en": "Alpha"}, notation=None))
+    subjects.append(Subject(uri="u1", labels={}, notation="42.42"))
+    subjects.append(
+        Subject(uri="u2", labels={"fi": "beta-fi", "en": "Beta"}, notation=None)
+    )
+    # a deprecated subject has labels set to None
+    subjects.append(Subject(uri="u3", labels=None, notation=None))
+
     proj = unittest.mock.Mock()
     proj.language = "fi"
     proj.datadir = "/tmp"
-    proj.subjects = {
-        0: Subject(uri="u0", labels={"en": "Alpha"}, notation=None),
-        1: Subject(uri="u1", labels=None, notation="42.42"),
-        2: Subject(uri="u2", labels={"fi": "beta-fi", "en": "Beta"}, notation=None),
-        3: Subject(uri="u3", labels=None, notation=None),
-    }
+    proj.subjects = subjects
     dm_rerank = annif.backend.get_backend("dm_rerank")(
         backend_id="dm_rerank", config_params={"sources": "dummy-en"}, project=proj
     )
@@ -611,8 +615,47 @@ def test_dm_rerank_label_project_language(app_project):
     assert dm_rerank._label_for_subject(0) == "Alpha"
     # subject 1 has no labels -> fall back to notation
     assert dm_rerank._label_for_subject(1) == "42.42"
-    # subject 3 has neither -> None (candidate skipped)
+    # subject 3 is deprecated -> None (candidate skipped)
     assert dm_rerank._label_for_subject(3) is None
+
+
+def test_dm_rerank_deprecated_subjects_skipped(app_project):
+    """Deprecated subjects (no labels) are skipped by the reranking service
+    query: when all candidates are deprecated no request is sent at all,
+    and when only some are, they are excluded from the request payload."""
+    subjects = SubjectIndexFile()
+    subjects.append(Subject(uri="u0", labels={"fi": "dummy"}, notation=None))
+    # a deprecated subject has labels set to None
+    subjects.append(Subject(uri="u1", labels=None, notation=None))
+
+    proj = unittest.mock.Mock()
+    proj.language = "fi"
+    proj.datadir = "/tmp"
+    proj.subjects = subjects
+
+    dm_rerank = _make_backend(proj)
+    doc = Document(text="test document")
+
+    # all candidates deprecated -> no questions, and therefore no request
+    with unittest.mock.patch("requests.post") as mock_request:
+        suggestions = [SubjectSuggestion(1, 0.9)]
+        result = dm_rerank._query_dm_rerank(doc, suggestions, dm_rerank.params)
+        assert result == {}
+        mock_request.assert_not_called()
+
+    # mixed candidates -> the deprecated one is not sent to the service
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {"0": {"type": "noul", "noul": 0.9}}
+        }
+        mock_request.return_value = mock_response
+        suggestions = [SubjectSuggestion(0, 0.9), SubjectSuggestion(1, 0.8)]
+        result = dm_rerank._query_dm_rerank(doc, suggestions, dm_rerank.params)
+
+    assert result == {0: 0.9}
+    payload = mock_request.call_args.kwargs["json"]
+    assert set(payload["questions"]) == {"0"}
 
 
 def test_dm_rerank_hyperopt(app_project):
