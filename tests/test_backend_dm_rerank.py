@@ -293,6 +293,12 @@ def test_dm_rerank_blend_scores(app_project):
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
 
+def test_dm_rerank_blend_empty_suggestions():
+    """Blending an empty candidate list returns an empty list."""
+    dm_rerank_type = annif.backend.get_backend("dm_rerank")
+    assert dm_rerank_type._blend([], {}, 1.0, -0.25) == []
+
+
 def test_dm_rerank_blend_reorders(app_project):
     """The noul score can reorder candidates: a low source score with a
     high noul score moves above a high source score with a low noul
@@ -663,7 +669,8 @@ def test_dm_rerank_is_trained(app_project):
 
 def test_dm_rerank_label_project_language(app_project):
     """Label selection prefers the project language, then any label, then
-    notation; deprecated subjects (labels is None) yield None."""
+    notation; a subject without labels and notation, and a deprecated
+    subject (labels is None), yield None."""
     subjects = SubjectIndexFile()
     subjects.append(Subject(uri="u0", labels={"en": "Alpha"}, notation=None))
     subjects.append(Subject(uri="u1", labels={}, notation="42.42"))
@@ -672,6 +679,8 @@ def test_dm_rerank_label_project_language(app_project):
     )
     # a deprecated subject has labels set to None
     subjects.append(Subject(uri="u3", labels=None, notation=None))
+    # a subject with no labels and no notation yields no label
+    subjects.append(Subject(uri="u4", labels={}, notation=None))
 
     proj = unittest.mock.Mock()
     proj.language = "fi"
@@ -689,6 +698,8 @@ def test_dm_rerank_label_project_language(app_project):
     assert dm_rerank._label_for_subject(1) == "42.42"
     # subject 3 is deprecated -> None (candidate skipped)
     assert dm_rerank._label_for_subject(3) is None
+    # subject 4 has neither labels nor notation -> None (candidate skipped)
+    assert dm_rerank._label_for_subject(4) is None
 
 
 def test_dm_rerank_deprecated_subjects_skipped(app_project):
