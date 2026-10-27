@@ -377,52 +377,54 @@ class DMRerankOptimizer(hyperopt.HyperparameterOptimizer):
 
         jobs, pool_class = annif.parallel.get_pool(n_jobs)
 
-        # materialize the corpus once: doc_batches is a one-shot generator
-        # and the documents are needed again for the model queries below;
-        # apply the project transform (e.g. transform=limit(5000)) so the
-        # source suggestions and the decision model queries match the
-        # suggest path
+        # process the corpus incrementally, batch by batch: apply the
+        # project transform (e.g. transform=limit(5000)), generate the
+        # source suggestions, and query the decision model once per
+        # document, retaining only the per-document source scores, noul
+        # scores, and gold labels that the trials need; each batch's
+        # documents can be garbage-collected as soon as it is done, so
+        # the full text of the whole corpus never has to fit in memory
         transform = self._backend.project.transform
-        doc_batches = [
-            [transform.transform_doc(doc) for doc in batch]
-            for batch in self._corpus.doc_batches
-        ]
-        documents = [doc for batch in doc_batches for doc in batch]
-
-        self._backend.info(
-            "generating source suggestions for {} documents".format(len(documents))
-        )
         source_suggestions = []
+        noul_scores = []
         gold_batches = []
+        n_documents = 0
         with pool_class(jobs) as pool:
-            results = pool.map(psmap.suggest_batch, doc_batches)
+            for batch in self._corpus.doc_batches:
+                docs = [transform.transform_doc(doc) for doc in batch]
 
-        for batch, (suggestions_by_source, subject_sets) in zip(doc_batches, results):
-            # merge the per-source batches the same way as the suggest path
-            merged = SuggestionBatch.from_averaged(
-                [suggestions_by_source[project_id] for project_id in source_ids],
-                weights,
-            )
-            for idx in range(len(batch)):
-                candidates = list(merged[idx])
-                if max_candidates > 0:
-                    candidates = candidates[:max_candidates]
-                source_suggestions.append(candidates)
-                gold_batches.append(subject_sets[idx])
+                # generate the source suggestions for this batch
+                ((suggestions_by_source, subject_sets),) = pool.map(
+                    psmap.suggest_batch, [docs]
+                )
 
-        # query the decision model once per document: this is the
-        # expensive part, but it is only done once, since the blend
-        # parameters are searched over these cached scores afterwards
-        self._backend.info(
-            "querying the decision model reranking service for {} "
-            "documents".format(len(documents))
-        )
-        noul_scores = [
-            self._backend._query_dm_rerank(
-                doc, source_suggestions[idx], self._backend.params
+                # merge the per-source batch the same way as the suggest
+                # path and query the decision model once per document:
+                # this is the expensive part, but it is only done once,
+                # since the blend parameters are searched over these
+                # cached scores afterwards
+                merged = SuggestionBatch.from_averaged(
+                    [suggestions_by_source[project_id] for project_id in source_ids],
+                    weights,
+                )
+                for idx in range(len(docs)):
+                    candidates = list(merged[idx])
+                    if max_candidates > 0:
+                        candidates = candidates[:max_candidates]
+                    source_suggestions.append(candidates)
+                    gold_batches.append(subject_sets[idx])
+                    noul_scores.append(
+                        self._backend._query_dm_rerank(
+                            docs[idx], candidates, self._backend.params
+                        )
+                    )
+                n_documents += len(docs)
+
+        if n_documents:
+            self._backend.info(
+                "queried the decision model reranking service for {} "
+                "documents".format(n_documents)
             )
-            for idx, doc in enumerate(documents)
-        ]
 
         return {
             "source_suggestions": source_suggestions,
