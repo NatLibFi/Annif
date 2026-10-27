@@ -63,9 +63,9 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
     name = "dm_rerank"
 
     DEFAULT_PARAMETERS = {
-        "endpoint": "http://localhost:8080/v1/systemone",
+        "endpoint": "http://localhost:9931/v1/systemone",
         "model": "",
-        "model-strength": 0.5,
+        "model-strength": 0.3,
         "gate-threshold": -1.0,
         "retries": 2,
         "timeout": 60,

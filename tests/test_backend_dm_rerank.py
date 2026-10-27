@@ -219,9 +219,9 @@ def test_dm_rerank_blend_scores(app_project):
 
     suggestions = list(result[0])
     by_id = {int(s.subject_id): s.score for s in suggestions}
-    # default model-strength=0.5, gate-threshold=-1.0
-    raw0 = 0.9 * _odds(0.9) ** 0.5 * _sigmoid(0.9, -1.0)
-    raw1 = 0.8 * _odds(0.1) ** 0.5 * _sigmoid(0.1, -1.0)
+    # default model-strength=0.3, gate-threshold=-1.0
+    raw0 = 0.9 * _odds(0.9) ** 0.3 * _sigmoid(0.9, -1.0)
+    raw1 = 0.8 * _odds(0.1) ** 0.3 * _sigmoid(0.1, -1.0)
     assert by_id[0] == pytest.approx(_squash(raw0))
     assert by_id[1] == pytest.approx(_squash(raw1))
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
@@ -321,7 +321,7 @@ def test_dm_rerank_blend_missing_noul(app_project):
     # the same squash so both candidates are on one scale
     assert by_id[1] == pytest.approx(_squash(0.8))
     assert by_id[0] == pytest.approx(
-        _squash(0.9 * _odds(0.9) ** 0.5 * _sigmoid(0.9, -1.0))
+        _squash(0.9 * _odds(0.9) ** 0.3 * _sigmoid(0.9, -1.0))
     )
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
