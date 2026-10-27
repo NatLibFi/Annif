@@ -286,8 +286,15 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
     def _suggest_batch(
         self, documents: list[Document], params: dict[str, Any]
     ) -> SuggestionBatch:
-        # merge the source suggestions with the regular weighted average
-        merged = super()._suggest_batch(documents, params)
+        # merge the source suggestions with the regular weighted average,
+        # without applying the output limit yet: the reranking may promote
+        # candidates beyond the limit
+        sources = parse_sources(params["sources"])
+        batch_by_source = self._suggest_with_sources(documents, sources)
+        merged = SuggestionBatch.from_averaged(
+            [batch_by_source[project_id] for project_id, _ in sources],
+            [weight for _, weight in sources],
+        )
         limit = int(params["limit"])
         # optionally restrict how many of the top candidates the decision
         # model scores; candidates beyond max-candidates are dropped
@@ -335,8 +342,9 @@ class DMRerankHPObjective(hyperopt.HPObjective):
         # a near-identity gate)
         tau = trial.suggest_float("gate-threshold", -1.0, 0.5)
         eval_batch = annif.eval.EvaluationBatch(args["subject_index"])
+        limit = int(args["limit"])
         blended_lists = [
-            DMRerankBackend._blend(source, noul, b, tau)
+            DMRerankBackend._blend(source, noul, b, tau)[:limit]
             for source, noul in zip(args["source_suggestions"], args["noul_scores"])
         ]
         eval_batch.evaluate_many(blended_lists, args["gold_batches"])
@@ -388,12 +396,11 @@ class DMRerankOptimizer(hyperopt.HyperparameterOptimizer):
             results = pool.map(psmap.suggest_batch, doc_batches)
 
         for batch, (suggestions_by_source, subject_sets) in zip(doc_batches, results):
-            # merge the per-source batches the same way as the suggest
-            # path
+            # merge the per-source batches the same way as the suggest path
             merged = SuggestionBatch.from_averaged(
                 [suggestions_by_source[project_id] for project_id in source_ids],
                 weights,
-            ).filter(limit=limit)
+            )
             for idx in range(len(batch)):
                 candidates = list(merged[idx])
                 if max_candidates > 0:
@@ -419,6 +426,7 @@ class DMRerankOptimizer(hyperopt.HyperparameterOptimizer):
             "source_suggestions": source_suggestions,
             "noul_scores": noul_scores,
             "gold_batches": gold_batches,
+            "limit": limit,
             "subject_index": self._backend.project.subjects,
             "metric": self._metric,
         }

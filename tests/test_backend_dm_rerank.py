@@ -369,6 +369,33 @@ def test_dm_rerank_max_candidates_zero_scores_all(app_project):
     assert set(payload["questions"]) == {"0", "1"}
 
 
+def test_dm_rerank_reranking_promotes_beyond_limit(app_project):
+    """When the output limit is smaller than the merged candidate pool, a
+    low-ranked source candidate that the decision model endorses can still
+    be promoted into the output: the limit is applied only after
+    reranking, not during the source merge."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {
+                "0": {"type": "noul", "noul": 0.01},
+                "1": {"type": "noul", "noul": 0.99},
+            }
+        }
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project, limit=1)
+        with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
+            result = dm_rerank.suggest([Document(text="test document")])
+
+    payload = mock_request.call_args.kwargs["json"]
+    # both candidates, including the one beyond the output limit, are sent
+    # to the decision model
+    assert set(payload["questions"]) == {"0", "1"}
+    # the endorsed candidate 1 is promoted into the top-1 output
+    assert [int(s.subject_id) for s in result[0]] == [1]
+
+
 def test_dm_rerank_blend_pure_source(app_project):
     """With model-strength=0 and the default negative gate threshold the
     blend approximates the pure source order (the floor of the search
@@ -622,3 +649,44 @@ def test_dm_rerank_hyperopt(app_project):
     assert "model-strength=" in recommendation.lines[0]
     assert "gate-threshold=" in recommendation.lines[1]
     assert recommendation.score is not None
+
+
+def test_dm_rerank_hyperopt_pool_not_truncated(app_project):
+    """The hyperopt optimization pool is not truncated to the output limit:
+    candidates beyond the limit are also sent to the decision model in
+    _prepare, so the searched blend parameters reflect the production
+    behavior."""
+    from annif.corpus import DocumentList
+
+    corpus = DocumentList([Document(text="a test document")])
+
+    def mock_suggest(documents, params=None):
+        # the mock source returns the same suggestions for every document
+        rows = [
+            [SubjectSuggestion(0, 0.9), SubjectSuggestion(1, 0.8)] for _ in documents
+        ]
+        return SuggestionBatch.from_sequence(rows, app_project.subjects, limit=100)
+
+    with (
+        unittest.mock.patch("requests.post") as mock_request,
+        unittest.mock.patch.object(
+            app_project.registry,
+            "get_project",
+            return_value=unittest.mock.Mock(
+                is_trained=True,
+                suggest=mock_suggest,
+                initialize=unittest.mock.Mock(),
+            ),
+        ),
+    ):
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project, limit=1)
+        optimizer = dm_rerank.get_hp_optimizer(corpus, metric="NDCG")
+        optimizer.optimize(n_trials=2, n_jobs=1, results_file=None)
+
+    # the candidate beyond the output limit is also queried
+    payload = mock_request.call_args.kwargs["json"]
+    assert set(payload["questions"]) == {"0", "1"}
