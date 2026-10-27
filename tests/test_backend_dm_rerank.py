@@ -449,6 +449,38 @@ def test_dm_rerank_blend_extreme_threshold_no_overflow():
     assert 0.0 <= blended[0].score < 1.0
 
 
+@pytest.mark.parametrize("strength", [float("nan"), float("inf")])
+def test_dm_rerank_model_strength_not_finite(app_project, strength):
+    """A non-finite model-strength is rejected: it would propagate
+    through the odds-ratio term and the squash, producing NaN or
+    non-finite suggestion scores instead of a configuration error."""
+    dm_rerank = _make_backend(app_project, **{"model-strength": strength})
+    with _mock_source(app_project, [(0, 0.9)]):
+        with pytest.raises(ConfigurationException):
+            dm_rerank.suggest([Document(text="test document")])
+
+
+@pytest.mark.parametrize("strength", ["not-a-number", None])
+def test_dm_rerank_model_strength_not_a_number(app_project, strength):
+    """A model-strength that cannot be parsed as a number is rejected
+    with a configuration error rather than a raw TypeError."""
+    dm_rerank = _make_backend(app_project, **{"model-strength": strength})
+    with _mock_source(app_project, [(0, 0.9)]):
+        with pytest.raises(ConfigurationException):
+            dm_rerank.suggest([Document(text="test document")])
+
+
+def test_dm_rerank_model_strength_override_not_finite(app_project):
+    """Per-call parameter overrides of model-strength are validated as
+    well, not just the configured value."""
+    dm_rerank = _make_backend(app_project, **{"model-strength": 0.3})
+    with _mock_source(app_project, [(0, 0.9)]):
+        with pytest.raises(ConfigurationException):
+            dm_rerank.suggest(
+                [Document(text="test document")], {"model-strength": float("nan")}
+            )
+
+
 def test_dm_rerank_blend_missing_noul(app_project):
     """A candidate without a noul score gets its source score on the same
     squashed scale as the scored candidates, so a missing decision model

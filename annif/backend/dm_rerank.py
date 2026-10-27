@@ -280,7 +280,20 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         return noul_scores
 
     def _validate_params(self, params: dict[str, Any]) -> None:
-        """Validate the effective parameters before use."""
+        """Validate the effective parameters to avoid numerical issues."""
+        raw = params["model-strength"]
+        try:
+            model_strength = float(raw)
+        except (TypeError, ValueError) as err:
+            msg = f"invalid model-strength parameter: {raw!r}"
+            raise ConfigurationException(msg, backend_id=self.backend_id) from err
+        if not math.isfinite(model_strength):
+            msg = (
+                f"model-strength {model_strength!r} is not a finite "
+                "number; it would produce non-finite suggestion scores"
+            )
+            raise ConfigurationException(msg, backend_id=self.backend_id)
+
         raw = params["gate-threshold"]
         try:
             gate_threshold = float(raw)
@@ -328,6 +341,11 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
 
         A sufficiently negative gate-threshold (<= -1.0) makes the gate
         exactly 1.0 for all noul scores in [0, 1], turning it fully off.
+
+        The model-strength and gate-threshold are validated in
+        _validate_params before blending: the model-strength is finite,
+        and the gate-threshold is within [-1.0, 1.0], so the gate is
+        bounded and the sigmoid cannot overflow.
 
         All raw scores are mapped into [0, 1) with the monotonic squash."""
         if not suggestions:
