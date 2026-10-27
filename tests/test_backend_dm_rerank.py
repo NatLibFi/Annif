@@ -285,9 +285,10 @@ def test_dm_rerank_blend_scores(app_project):
 
     suggestions = list(result[0])
     by_id = {int(s.subject_id): s.score for s in suggestions}
-    # default model-strength=0.3, gate-threshold=-1.0
-    raw0 = 0.9 * _odds(0.9) ** 0.3 * _sigmoid(0.9, -1.0)
-    raw1 = 0.8 * _odds(0.1) ** 0.3 * _sigmoid(0.1, -1.0)
+    # default model-strength=0.3, gate-threshold=-1.0: the gate is exactly
+    # 1.0 (fully off) at that threshold, so only the odds-ratio term applies
+    raw0 = 0.9 * _odds(0.9) ** 0.3
+    raw1 = 0.8 * _odds(0.1) ** 0.3
     assert by_id[0] == pytest.approx(_squash(raw0))
     assert by_id[1] == pytest.approx(_squash(raw1))
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
@@ -330,10 +331,10 @@ def test_dm_rerank_blend_boosts(app_project):
     noul_scores = {0: 0.9, 1: 0.1}
     blended = dm_rerank_type._blend(suggestions, noul_scores, 1.5, -1.0)
     by_id = {s.subject_id: s.score for s in blended}
-    # near-identity gate (threshold -1.0), pure odds-ratio effect,
+    # exactly-off gate (threshold -1.0), pure odds-ratio effect,
     # squashed into [0, 1)
-    raw0 = 0.4 * _odds(0.9) ** 1.5 * _sigmoid(0.9, -1.0)
-    raw1 = 0.3 * _odds(0.1) ** 1.5 * _sigmoid(0.1, -1.0)
+    raw0 = 0.4 * _odds(0.9) ** 1.5
+    raw1 = 0.3 * _odds(0.1) ** 1.5
     assert by_id[0] == pytest.approx(_squash(raw0))
     assert by_id[1] == pytest.approx(_squash(raw1))
     # the raw boost exceeds 1.0 but the squash keeps the output in [0, 1)
@@ -391,11 +392,10 @@ def test_dm_rerank_blend_missing_noul(app_project):
     suggestions = list(result[0])
     by_id = {int(s.subject_id): s.score for s in suggestions}
     # subject 1 has no noul score: its raw source score is mapped through
-    # the same squash so both candidates are on one scale
+    # the same squash so both candidates are on one scale; the gate is
+    # exactly off at the default threshold -1.0
     assert by_id[1] == pytest.approx(_squash(0.8))
-    assert by_id[0] == pytest.approx(
-        _squash(0.9 * _odds(0.9) ** 0.3 * _sigmoid(0.9, -1.0))
-    )
+    assert by_id[0] == pytest.approx(_squash(0.9 * _odds(0.9) ** 0.3))
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
 
@@ -493,8 +493,8 @@ def test_dm_rerank_reranking_promotes_beyond_limit(app_project):
 
 def test_dm_rerank_blend_pure_source(app_project):
     """With model-strength=0 and the default negative gate threshold the
-    blend approximates the pure source order (the floor of the search
-    space); the scores are still mapped through the squash."""
+    blend exactly reproduces the pure source order (the floor of the
+    search space); the scores are still mapped through the squash."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {
@@ -511,10 +511,61 @@ def test_dm_rerank_blend_pure_source(app_project):
 
     suggestions = list(result[0])
     by_id = {int(s.subject_id): s.score for s in suggestions}
-    # both gates are near 1.0 (default threshold -1.0 is far below both
-    # noul scores), so the raw scores are essentially the source scores,
-    # mapped through the squash
-    assert by_id[0] == pytest.approx(_squash(0.9 * _sigmoid(0.05, -1.0)))
+    # the gate is exactly 1.0 at the default threshold -1.0 and the odds
+    # term is a no-op with model-strength 0, so the raw scores are
+    # exactly the source scores, mapped through the squash
+    assert by_id[0] == pytest.approx(_squash(0.9))
+    assert by_id[1] == pytest.approx(_squash(0.8))
+    assert [int(s.subject_id) for s in suggestions] == [0, 1]
+
+
+def test_dm_rerank_blend_pure_source_preserves_closely_spaced_order(app_project):
+    """Regression: the pure-source point (model-strength=0,
+    gate-threshold=-1) must not let the model answer change the ranking,
+    even for closely spaced source scores and opposite noul scores."""
+    dm_rerank_type = annif.backend.get_backend("dm_rerank")
+    suggestions = [
+        SubjectSuggestion(0, 0.5),
+        SubjectSuggestion(1, 0.499999),
+    ]
+    # the worst-case contrast: the lower source score has the highest
+    # noul score and vice versa
+    noul_scores = {0: 0.0, 1: 1.0}
+    blended = dm_rerank_type._blend(suggestions, noul_scores, 0.0, -1.0)
+    by_id = {s.subject_id: s.score for s in blended}
+    # the gate is exactly off and the odds term is a no-op, so the
+    # scores are exactly the squashed source scores
+    assert by_id[0] == pytest.approx(_squash(0.5), abs=0.0)
+    assert by_id[1] == pytest.approx(_squash(0.499999), abs=0.0)
+    # the source order is preserved exactly
+    assert [s.subject_id for s in blended] == [0, 1]
+
+
+def test_dm_rerank_suggest_pure_source_preserves_order(app_project):
+    """Regression: through the full suggest pipeline (including the
+    float32 conversion of the suggestion batch) the pure-source point
+    still preserves closely spaced source scores in their source order,
+    regardless of the noul scores."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {
+                "0": {"type": "noul", "noul": 0.0},
+                "1": {"type": "noul", "noul": 1.0},
+            }
+        }
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(
+            app_project, **{"model-strength": 0.0, "gate-threshold": -1.0}
+        )
+        with _mock_source(app_project, [(0, 0.5), (1, 0.499999)]):
+            result = dm_rerank.suggest([Document(text="test document")])
+
+    suggestions = list(result[0])
+    by_id = {int(s.subject_id): s.score for s in suggestions}
+    assert by_id[0] == pytest.approx(_squash(0.5))
+    assert by_id[1] == pytest.approx(_squash(0.499999))
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
 

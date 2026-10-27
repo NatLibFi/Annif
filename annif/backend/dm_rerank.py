@@ -264,6 +264,9 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         gate-threshold; a candidate without a noul score passes its plain
         source score through unmodified.
 
+        A sufficiently negative gate-threshold (<= -1.0) makes the gate
+        exactly 1.0 for all noul scores in [0, 1], turning it fully off.
+
         All raw scores are mapped into [0, 1) with the monotonic squash."""
         if not suggestions:
             return []
@@ -274,7 +277,10 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
             if noul is None:
                 raw = suggestion.score
             else:
-                gate = 1.0 / (1.0 + math.exp(-(noul - gate_threshold) / 0.1))
+                if gate_threshold <= -1.0:
+                    gate = 1.0
+                else:
+                    gate = 1.0 / (1.0 + math.exp(-(noul - gate_threshold) / 0.1))
                 odds = (noul + ODDS_EPS) / (1.0 - noul + ODDS_EPS)
                 raw = suggestion.score * odds**b * gate
             score = _squash(raw)
