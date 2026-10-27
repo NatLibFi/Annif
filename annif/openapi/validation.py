@@ -14,7 +14,7 @@ from connexion.validators import (
     MultiPartFormDataValidator,
 )
 from jsonschema.exceptions import ValidationError
-from starlette.formparsers import FormParser, MultiPartException, MultiPartParser
+from starlette.formparsers import MultiPartException
 from starlette.types import Scope
 
 logger = logging.getLogger("openapi.validation")
@@ -46,31 +46,34 @@ class CustomRequestBodyValidator(JSONRequestBodyValidator):
             raise BadRequestProblem(detail=f"{exception.message}{error_path_msg}")
 
 
-class _MaxPartSizeFormDataValidator(FormDataValidator):
-    """Base class for form data validators that use a configurable maximum
-    part size. Starlette's form parsers default to a hard-coded 1 MB limit
-    per form field, which is lower than Annif's overall content limit and
-    would reject otherwise valid requests with a 500 error. The limit is
-    provided via the ``max_part_size`` constructor argument, and exceeding
-    it results in a 413 Payload Too Large response instead of an unhandled
+class CustomFormDataValidator(FormDataValidator):
+    """Form data validator for application/x-www-form-urlencoded requests
+    that uses a configurable maximum part size. Starlette's form parsers
+    default to a hard-coded 1 MB limit per form field, which is lower than
+    Annif's overall content limit and would reject otherwise valid requests
+    with a 500 error. The limit is set on the class-level ``max_part_size``
+    attribute when the Connexion app is created, and exceeding it results in
+    a 413 Payload Too Large response instead of an unhandled
     MultiPartException."""
 
-    #: the Starlette parser class used by the concrete subclasses
-    _parser_cls: type = FormParser
-
-    def __init__(self, *, max_part_size: int | None = None, **kwargs) -> None:
-        super().__init__(**kwargs)
-        self._max_part_size = max_part_size
+    #: maximum size (in bytes) of a single form field, set by
+    #: ``annif.create_cx_app()`` from the app configuration; ``None`` means
+    #: fall back to Starlette's default limit
+    max_part_size: int | None = None
 
     @property
     def _form_parser_cls(self) -> type:
-        base_cls = self._parser_cls
-        max_part_size = self._max_part_size
+        # resolve the parser class from the concrete subclass (FormParser for
+        # application/x-www-form-urlencoded, MultiPartParser for
+        # multipart/form-data) and wrap it to pass the maximum part size
+        base_cls = super()._form_parser_cls
+        max_part_size = type(self).max_part_size
+        if max_part_size is None:
+            return base_cls
 
         class LimitedParser(base_cls):  # type: ignore[valid-type,misc]
             def __init__(self, headers, stream, **parser_kwargs):
-                if max_part_size is not None:
-                    parser_kwargs["max_part_size"] = max_part_size
+                parser_kwargs["max_part_size"] = max_part_size
                 super().__init__(headers, stream, **parser_kwargs)
 
         return LimitedParser
@@ -86,17 +89,9 @@ class _MaxPartSizeFormDataValidator(FormDataValidator):
             ) from err
 
 
-class CustomFormDataValidator(_MaxPartSizeFormDataValidator):
-    """Form data validator for application/x-www-form-urlencoded requests with
-    a configurable maximum part size."""
-
-    _parser_cls = FormParser
-
-
 class CustomMultiPartFormDataValidator(
-    _MaxPartSizeFormDataValidator, MultiPartFormDataValidator
+    CustomFormDataValidator, MultiPartFormDataValidator
 ):
     """Form data validator for multipart/form-data requests with a
-    configurable maximum part size."""
-
-    _parser_cls = MultiPartParser
+    configurable maximum part size. Inherits from MultiPartFormDataValidator
+    so that the correct (multipart) parser class is selected."""

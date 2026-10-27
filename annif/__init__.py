@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import os
 import os.path
-from functools import partial
 from typing import TYPE_CHECKING
 
 from flask import Flask
@@ -55,17 +54,15 @@ def create_cx_app(config_name: str | None = None) -> FlaskApp:
 
     # form fields may use up to the configured maximum form memory size
     max_form_memory_size = int(cxapp.app.config["MAX_FORM_MEMORY_SIZE"])
+    CustomFormDataValidator.max_part_size = max_form_memory_size
+    CustomMultiPartFormDataValidator.max_part_size = max_form_memory_size
 
     validator_map = {
         "body": MediaTypeDict(
             {
                 "*/*json": CustomRequestBodyValidator,
-                "application/x-www-form-urlencoded": partial(
-                    CustomFormDataValidator, max_part_size=max_form_memory_size
-                ),
-                "multipart/form-data": partial(
-                    CustomMultiPartFormDataValidator, max_part_size=max_form_memory_size
-                ),
+                "application/x-www-form-urlencoded": CustomFormDataValidator,
+                "multipart/form-data": CustomMultiPartFormDataValidator,
             }
         ),
     }
