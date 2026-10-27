@@ -345,9 +345,11 @@ class DMRerankHPObjective(hyperopt.HPObjective):
         # source score
         b = trial.suggest_float("model-strength", 0.0, 2.0)
         # the low end -1.0 makes (b=0, tau=-1.0) the exact pure-source
-        # reference point, so the optimizer can represent "don't use
-        # the model" and a genuine source-dominant nudge (small b with
-        # a near-identity gate)
+        # reference point, so the search space can represent a genuine
+        # source-dominant nudge (small b with a near-identity gate); the
+        # pure-source configuration itself is evaluated separately as an
+        # enqueued baseline trial, so the recommendation is never worse
+        # than the source ranking
         tau = trial.suggest_float("gate-threshold", -1.0, 0.5)
         eval_batch = annif.eval.EvaluationBatch(args["subject_index"])
         limit = int(args["limit"])
@@ -364,7 +366,21 @@ class DMRerankOptimizer(hyperopt.HyperparameterOptimizer):
     """Hyperparameter optimizer for the dm_rerank backend. The decision
     model is queried once per document (in _prepare) and the
     model-strength / gate-threshold blend parameters are then searched
-    over the cached scores with TPE."""
+    over the cached scores with TPE. In addition to the requested number
+    of sampled trials, the pure-source configuration
+    (model-strength=0.0, gate-threshold=-1.0) is always evaluated as an
+    enqueued baseline trial, so the recommendation can never be worse
+    than the source ranking."""
+
+    def _enqueue_trials(self, study: Study) -> None:
+        # explicitly evaluate the pure-source fallback point: with
+        # continuous ranges the optimizer would never sample it, and a
+        # positive model strength or active gate breaks ties in the
+        # source scores, so every sampled configuration can perform
+        # worse than the original source ranking
+        study.enqueue_trial(
+            {"model-strength": 0.0, "gate-threshold": -1.0},
+        )
 
     def _prepare(self, n_jobs: int = 1) -> dict[str, Any]:
         sources = parse_sources(self._backend.params["sources"])

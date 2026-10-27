@@ -123,6 +123,14 @@ class HyperparameterOptimizer:
         by subclasses when necessary. The default is to keep them as-is."""
         return hps
 
+    def _enqueue_trials(self, study: Study) -> None:
+        """Enqueue fixed trials to be run in addition to the randomly
+        sampled ones. Intended to be overridden by subclasses that want to
+        guarantee that specific hyperparameter combinations (such as a
+        baseline configuration) are evaluated. The default is a no-op."""
+
+        pass  # pragma: no cover
+
     def optimize(
         self, n_trials: int, n_jobs: int, results_file: LazyFile | None
     ) -> HPRecommendation:
@@ -139,6 +147,7 @@ class HyperparameterOptimizer:
         storage_url = f"sqlite:///{temp_db.name}"
 
         study = optuna.create_study(direction="maximize", storage=storage_url)
+        self._enqueue_trials(study)
 
         jobs, pool_class = annif.parallel.get_pool(n_jobs)
         with pool_class(jobs) as pool:

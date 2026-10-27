@@ -7,7 +7,7 @@ import pytest
 import requests.exceptions
 
 import annif.backend
-from annif.corpus import Document
+from annif.corpus import Document, SubjectSet
 from annif.exception import (
     ConfigurationException,
     NotSupportedException,
@@ -905,3 +905,81 @@ def test_dm_rerank_hyperopt_pool_not_truncated(app_project):
     # the candidate beyond the output limit is also queried
     payload = mock_request.call_args.kwargs["json"]
     assert set(payload["questions"]) == {"0", "1"}
+
+
+def test_dm_rerank_hyperopt_enqueues_source_baseline(app_project):
+    """The pure-source configuration (model-strength=0.0,
+    gate-threshold=-1.0) is enqueued as a fixed baseline trial, in
+    addition to the sampled trials."""
+    import optuna
+
+    corpus = unittest.mock.Mock()
+    dm_rerank = _make_backend(app_project)
+    optimizer = dm_rerank.get_hp_optimizer(corpus, metric="NDCG")
+
+    study = optuna.create_study(direction="maximize")
+    optimizer._enqueue_trials(study)
+    assert len(study.get_trials(states=(optuna.trial.TrialState.WAITING,))) == 1
+    (trial,) = study.get_trials(states=(optuna.trial.TrialState.WAITING,))
+    # enqueued (fixed) trials carry their parameters in a system attribute
+    assert trial.system_attrs["fixed_params"] == {
+        "model-strength": 0.0,
+        "gate-threshold": -1.0,
+    }
+
+
+def test_dm_rerank_hyperopt_recovers_source_ranking(app_project):
+    """When the noul scores carry no signal (here they actively invert
+    the source order) the optimizer still recommends the pure-source
+    configuration, because it is evaluated as an enqueued baseline
+    trial: the recommendation must never be worse than the source
+    ranking."""
+    from annif.corpus import DocumentList
+
+    # gold labels match the source order exactly, so the pure-source
+    # configuration achieves NDCG 1.0, while any configuration with a
+    # positive model strength or an active gate swaps the two candidates
+    # and scores 0.5
+    corpus = DocumentList(
+        [Document(text="a test document", subject_set=SubjectSet([0]))]
+    )
+
+    def mock_suggest(documents, params=None):
+        rows = [
+            [SubjectSuggestion(0, 0.9), SubjectSuggestion(1, 0.8)] for _ in documents
+        ]
+        return SuggestionBatch.from_sequence(rows, app_project.subjects, limit=100)
+
+    with (
+        unittest.mock.patch("requests.post") as mock_request,
+        unittest.mock.patch.object(
+            app_project.registry,
+            "get_project",
+            return_value=unittest.mock.Mock(
+                is_trained=True,
+                suggest=mock_suggest,
+                initialize=unittest.mock.Mock(),
+            ),
+        ),
+    ):
+        mock_response = unittest.mock.Mock()
+        # the decision model is confidently wrong: it inverts the source order
+        mock_response.json.return_value = {
+            "answers": {
+                "0": {"type": "noul", "noul": 0.1},
+                "1": {"type": "noul", "noul": 0.9},
+            }
+        }
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        optimizer = dm_rerank.get_hp_optimizer(corpus, metric="NDCG")
+        recommendation = optimizer.optimize(n_trials=1, n_jobs=1, results_file=None)
+
+    # the baseline trial is evaluated in addition to the sampled trial
+    assert recommendation.lines == [
+        "model-strength=0.0000",
+        "gate-threshold=-1.0000",
+    ]
+    # the pure-source configuration recovers the source ranking
+    assert recommendation.score == 1.0
