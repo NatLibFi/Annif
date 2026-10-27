@@ -449,11 +449,15 @@ def test_dm_rerank_blend_extreme_threshold_no_overflow():
     assert 0.0 <= blended[0].score < 1.0
 
 
-@pytest.mark.parametrize("strength", [float("nan"), float("inf")])
-def test_dm_rerank_model_strength_not_finite(app_project, strength):
-    """A non-finite model-strength is rejected: it would propagate
-    through the odds-ratio term and the squash, producing NaN or
-    non-finite suggestion scores instead of a configuration error."""
+@pytest.mark.parametrize(
+    "strength", [float("nan"), float("inf"), 1e308, 100.0, 2.1, -1.0, -100.0]
+)
+def test_dm_rerank_model_strength_out_of_range(app_project, strength):
+    """A model-strength outside [0.0, 2.0] (including non-finite values)
+    is rejected with a configuration error. A sufficiently large finite
+    value (e.g. 1e308 with a noul score of 1.0) would otherwise raise
+    OverflowError in the odds exponentiation, and a negative value would
+    invert the model's verdict."""
     dm_rerank = _make_backend(app_project, **{"model-strength": strength})
     with _mock_source(app_project, [(0, 0.9)]):
         with pytest.raises(ConfigurationException):
@@ -470,7 +474,7 @@ def test_dm_rerank_model_strength_not_a_number(app_project, strength):
             dm_rerank.suggest([Document(text="test document")])
 
 
-def test_dm_rerank_model_strength_override_not_finite(app_project):
+def test_dm_rerank_model_strength_override_out_of_range(app_project):
     """Per-call parameter overrides of model-strength are validated as
     well, not just the configured value."""
     dm_rerank = _make_backend(app_project, **{"model-strength": 0.3})
@@ -479,6 +483,33 @@ def test_dm_rerank_model_strength_override_not_finite(app_project):
             dm_rerank.suggest(
                 [Document(text="test document")], {"model-strength": float("nan")}
             )
+        with pytest.raises(ConfigurationException):
+            dm_rerank.suggest(
+                [Document(text="test document")], {"model-strength": 1e308}
+            )
+
+
+@pytest.mark.parametrize("strength", [0.0, 0.3, 1.45, 2.0])
+def test_dm_rerank_model_strength_in_range(app_project, strength):
+    """Model strengths at and inside the validated boundary of [0.0, 2.0]
+    are accepted and do not overflow the odds exponentiation."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {
+            "answers": {
+                "0": {"type": "noul", "noul": 1.0},
+                "1": {"type": "noul", "noul": 0.1},
+            }
+        }
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project, **{"model-strength": strength})
+        with _mock_source(app_project, [(0, 0.9), (1, 0.8)]):
+            result = dm_rerank.suggest([Document(text="test document")])
+    suggestions = list(result[0])
+    for suggestion in suggestions:
+        assert 0.0 <= suggestion.score < 1.0
+        assert math.isfinite(suggestion.score)
 
 
 def test_dm_rerank_blend_missing_noul(app_project):

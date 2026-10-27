@@ -287,10 +287,10 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         except (TypeError, ValueError) as err:
             msg = f"invalid model-strength parameter: {raw!r}"
             raise ConfigurationException(msg, backend_id=self.backend_id) from err
-        if not math.isfinite(model_strength):
+        if not math.isfinite(model_strength) or not 0.0 <= model_strength <= 2.0:
             msg = (
-                f"model-strength {model_strength!r} is not a finite "
-                "number; it would produce non-finite suggestion scores"
+                f"model-strength {model_strength!r} is outside the valid "
+                "range [0.0, 2.0]"
             )
             raise ConfigurationException(msg, backend_id=self.backend_id)
 
@@ -303,9 +303,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         if not math.isfinite(gate_threshold) or not -1.0 <= gate_threshold <= 1.0:
             msg = (
                 f"gate-threshold {gate_threshold!r} is outside the valid "
-                "range [-1.0, 1.0]; noul scores are in [0, 1], so a "
-                "threshold <= -1.0 turns the gate fully off and a "
-                "threshold >= 1.0 demotes every candidate"
+                "range [-1.0, 1.0]"
             )
             raise ConfigurationException(msg, backend_id=self.backend_id)
 
@@ -343,9 +341,10 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         exactly 1.0 for all noul scores in [0, 1], turning it fully off.
 
         The model-strength and gate-threshold are validated in
-        _validate_params before blending: the model-strength is finite,
-        and the gate-threshold is within [-1.0, 1.0], so the gate is
-        bounded and the sigmoid cannot overflow.
+        _validate_params before blending: the model-strength is within
+        [0.0, 2.0], bounding the exponent of the odds term so the
+        exponentiation cannot overflow, and the gate-threshold is within
+        [-1.0, 1.0], so the sigmoid gate is bounded and cannot overflow.
 
         All raw scores are mapped into [0, 1) with the monotonic squash."""
         if not suggestions:
