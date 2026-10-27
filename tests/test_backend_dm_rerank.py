@@ -1,5 +1,6 @@
 """Unit tests for the dm_rerank backend in Annif"""
 
+import math
 import unittest.mock
 
 import pytest
@@ -181,15 +182,27 @@ def test_dm_rerank_state_transform(app_project):
 
 def _sigmoid(value, threshold):
     """The same sigmoid gate as in the backend, for test expectations."""
-    import math
-
     return 1.0 / (1.0 + math.exp(-(value - threshold) / 0.1))
 
 
+def _odds(value, eps=0.01):
+    """The same odds-ratio term as in the backend, for test expectations."""
+    return (value + eps) / (1.0 - value + eps)
+
+
+def _squash(raw):
+    """The same monotonic [0, 1) squash as in the backend, for test
+    expectations."""
+    if raw <= 0.0:
+        return 0.0
+    return raw / (1.0 + raw)
+
+
 def test_dm_rerank_blend_scores(app_project):
-    """The blended score is source * noul^model-strength * gate, where the
-    gate is a sigmoid on the raw noul score and the source score is used
-    as returned (no per-document normalization)."""
+    """The blended score is the monotonic squash of
+    source * odds(noul)^model-strength * gate, where the odds term is
+    (noul + eps) / (1 - noul + eps) and the gate is a sigmoid on the raw
+    noul score."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {
@@ -207,8 +220,10 @@ def test_dm_rerank_blend_scores(app_project):
     suggestions = list(result[0])
     by_id = {int(s.subject_id): s.score for s in suggestions}
     # default model-strength=0.5, gate-threshold=-1.0
-    assert by_id[0] == pytest.approx(0.9 * 0.9**0.5 * _sigmoid(0.9, -1.0))
-    assert by_id[1] == pytest.approx(0.8 * 0.1**0.5 * _sigmoid(0.1, -1.0))
+    raw0 = 0.9 * _odds(0.9) ** 0.5 * _sigmoid(0.9, -1.0)
+    raw1 = 0.8 * _odds(0.1) ** 0.5 * _sigmoid(0.1, -1.0)
+    assert by_id[0] == pytest.approx(_squash(raw0))
+    assert by_id[1] == pytest.approx(_squash(raw1))
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
 
@@ -225,11 +240,35 @@ def test_dm_rerank_blend_reorders(app_project):
     noul_scores = {0: 0.01, 1: 0.99, 2: 0.5}
     blended = dm_rerank_type._blend(suggestions, noul_scores, 1.0, -0.25)
     by_id = {s.subject_id: s.score for s in blended}
-    assert by_id[0] == pytest.approx(0.9 * 0.01 * _sigmoid(0.01, -0.25))
-    assert by_id[1] == pytest.approx(0.8 * 0.99 * _sigmoid(0.99, -0.25))
-    assert by_id[2] == pytest.approx(0.7 * 0.5 * _sigmoid(0.5, -0.25))
+    assert by_id[0] == pytest.approx(_squash(0.9 * _odds(0.01) * _sigmoid(0.01, -0.25)))
+    assert by_id[1] == pytest.approx(_squash(0.8 * _odds(0.99) * _sigmoid(0.99, -0.25)))
+    assert by_id[2] == pytest.approx(_squash(0.7 * _odds(0.5) * _sigmoid(0.5, -0.25)))
     # subject 1 (2nd by source) moves to the top
     assert [s.subject_id for s in blended] == [1, 2, 0]
+
+
+def test_dm_rerank_blend_boosts(app_project):
+    """With model-strength > 1 the decision model boosts a confident 'yes'
+    candidate above the rest and demotes a confident 'no' candidate."""
+    dm_rerank_type = annif.backend.get_backend("dm_rerank")
+    suggestions = [
+        SubjectSuggestion(0, 0.4),
+        SubjectSuggestion(1, 0.3),
+    ]
+    noul_scores = {0: 0.9, 1: 0.1}
+    blended = dm_rerank_type._blend(suggestions, noul_scores, 1.5, -1.0)
+    by_id = {s.subject_id: s.score for s in blended}
+    # near-identity gate (threshold -1.0), pure odds-ratio effect,
+    # squashed into [0, 1)
+    raw0 = 0.4 * _odds(0.9) ** 1.5 * _sigmoid(0.9, -1.0)
+    raw1 = 0.3 * _odds(0.1) ** 1.5 * _sigmoid(0.1, -1.0)
+    assert by_id[0] == pytest.approx(_squash(raw0))
+    assert by_id[1] == pytest.approx(_squash(raw1))
+    # the raw boost exceeds 1.0 but the squash keeps the output in [0, 1)
+    assert raw0 > 1.0
+    assert 0.0 <= by_id[1] < by_id[0] < 1.0
+    # the boost reorders the candidates: the 'yes' above the 'no'
+    assert [s.subject_id for s in blended] == [0, 1]
 
 
 def test_dm_rerank_blend_gate(app_project):
@@ -256,8 +295,8 @@ def test_dm_rerank_blend_gate(app_project):
     by_id = {int(s.subject_id): s.score for s in suggestions}
     # subject 0: the sigmoid gate is nearly closed
     # (sigmoid((0.1 - 0.4) / 0.1) ~= 0.047), so it is demoted
-    assert by_id[0] == pytest.approx(0.9 * _sigmoid(0.1, 0.4))
-    assert by_id[1] == pytest.approx(0.8 * _sigmoid(0.9, 0.4))
+    assert by_id[0] == pytest.approx(_squash(0.9 * _sigmoid(0.1, 0.4)))
+    assert by_id[1] == pytest.approx(_squash(0.8 * _sigmoid(0.9, 0.4)))
     assert [int(s.subject_id) for s in suggestions] == [1, 0]
     assert by_id[0] < 0.05
 
@@ -278,9 +317,12 @@ def test_dm_rerank_blend_missing_noul(app_project):
 
     suggestions = list(result[0])
     by_id = {int(s.subject_id): s.score for s in suggestions}
-    # subject 1 has no noul score -> plain source score
-    assert by_id[1] == pytest.approx(0.8)
-    assert by_id[0] == pytest.approx(0.9 * 0.9**0.5 * _sigmoid(0.9, -1.0))
+    # subject 1 has no noul score: its raw source score is mapped through
+    # the same squash so both candidates are on one scale
+    assert by_id[1] == pytest.approx(_squash(0.8))
+    assert by_id[0] == pytest.approx(
+        _squash(0.9 * _odds(0.9) ** 0.5 * _sigmoid(0.9, -1.0))
+    )
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
 
@@ -330,7 +372,7 @@ def test_dm_rerank_max_candidates_zero_scores_all(app_project):
 def test_dm_rerank_blend_pure_source(app_project):
     """With model-strength=0 and the default negative gate threshold the
     blend approximates the pure source order (the floor of the search
-    space)."""
+    space); the scores are still mapped through the squash."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {
@@ -348,8 +390,9 @@ def test_dm_rerank_blend_pure_source(app_project):
     suggestions = list(result[0])
     by_id = {int(s.subject_id): s.score for s in suggestions}
     # both gates are near 1.0 (default threshold -1.0 is far below both
-    # noul scores), so the scores are essentially the source scores
-    assert by_id[0] == pytest.approx(0.9, abs=0.05)
+    # noul scores), so the raw scores are essentially the source scores,
+    # mapped through the squash
+    assert by_id[0] == pytest.approx(_squash(0.9 * _sigmoid(0.05, -1.0)))
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
 

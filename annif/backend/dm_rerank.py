@@ -32,6 +32,9 @@ if TYPE_CHECKING:
     from annif.project import AnnifProject
 
 
+# Damping for the odds-ratio term of the blend
+ODDS_EPS = 0.01
+
 # Built-in indexing-policy rules prepended to the document state when
 # 'state-rules' is enabled: the format/genre rule.
 STATE_RULES = (
@@ -42,6 +45,14 @@ STATE_RULES = (
     "about 'handicraft patterns', a travel book is not about "
     "'travelogues').\n\nDocument to be indexed:\n"
 )
+
+
+def _squash(raw: float) -> float:
+    """Map an unbounded raw blend score into [0, 1) with a sigmoid-like
+    monotonic squash: f(x) = x / (1 + x) for x >= 0."""
+    if raw <= 0.0:
+        return 0.0
+    return raw / (1.0 + raw)
 
 
 class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBackend):
@@ -242,29 +253,29 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
 
         Each candidate with a noul score is re-scored as
 
-            score = source_score * noul**b * sigmoid((noul - tau) / 0.1)
+            raw = source_score
+                  * ((noul + eps) / (1 - noul + eps))**b
+                  * sigmoid((noul - tau) / 0.1)
 
-        where both source_score and noul are used as returned (the noul
-        yes-probability is already on a [0, 1] scale) and tau is the gate
-        threshold. b=0 with a sufficiently negative tau (e.g. -1.0, where
-        the sigmoid is >= 0.99995 for all noul) reproduces the pure
-        source order, so the pair (0, -1.0) is the exact no-op point; a
-        positive tau approximates a hard gate that keeps only confident
-        "yes" answers in source order. A candidate without a noul score
-        (no label, question not asked) keeps its source score, so a
-        missing or failed decision model degrades to the source
-        ranking."""
+        where eps = 0.01, b is the model-strength, and tau is the gate-threshold.
+
+        The raw scores are then squashed into [0, 1)."""
         if not suggestions:
             return []
 
+        # squash only when the model actually scored at least one
+        # candidate; then all candidates are mapped to the same scale
+        squash = any(s.subject_id in noul_scores for s in suggestions)
         blended = []
         for suggestion in suggestions:
             noul = noul_scores.get(suggestion.subject_id)
             if noul is None:
-                score = suggestion.score
+                raw = suggestion.score
             else:
                 gate = 1.0 / (1.0 + math.exp(-(noul - gate_threshold) / 0.1))
-                score = suggestion.score * noul**b * gate
+                odds = (noul + ODDS_EPS) / (1.0 - noul + ODDS_EPS)
+                raw = suggestion.score * odds**b * gate
+            score = _squash(raw) if squash else raw
             blended.append(
                 SubjectSuggestion(subject_id=suggestion.subject_id, score=score)
             )
@@ -314,10 +325,12 @@ class DMRerankHPObjective(hyperopt.HPObjective):
     def objective(cls, trial: Trial, args) -> float:
         import annif.eval
 
-        b = trial.suggest_float("model-strength", 0.0, 1.0)
+        # the odds-ratio blend can both boost and demote: b > 1 lets the
+        # decision model lift confident "yes" candidates above their
+        # source score
+        b = trial.suggest_float("model-strength", 0.0, 2.0)
         # the low end -1.0 makes (b=0, tau=-1.0) the exact pure-source
-        # reference point (the sigmoid is >= 0.99995 there for all
-        # noul in [0, 1]), so the optimizer can represent "don't use
+        # reference point, so the optimizer can represent "don't use
         # the model" and a genuine source-dominant nudge (small b with
         # a near-identity gate)
         tau = trial.suggest_float("gate-threshold", -1.0, 0.5)
@@ -335,13 +348,7 @@ class DMRerankOptimizer(hyperopt.HyperparameterOptimizer):
     """Hyperparameter optimizer for the dm_rerank backend. The decision
     model is queried once per document (in _prepare) and the
     model-strength / gate-threshold blend parameters are then searched
-    over the cached scores with TPE. The search space is model-strength
-    in [0, 1] and gate-threshold in [-1.0, 0.5]; the point
-    (model-strength=0, gate-threshold=-1.0) reproduces the pure source
-    order exactly, so the search can fall back to the source ranking
-    if the noul scores carry no useful signal, and the region just
-    above it is the source-dominant 'nudge' where the model adds a
-    small correction on top of the source scores."""
+    over the cached scores with TPE."""
 
     def _prepare(self, n_jobs: int = 1) -> dict[str, Any]:
         sources = parse_sources(self._backend.params["sources"])
