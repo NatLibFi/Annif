@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import os.path
+from functools import partial
 from typing import TYPE_CHECKING
 
 from flask import Flask
@@ -35,12 +36,15 @@ def create_cx_app(config_name: str | None = None) -> FlaskApp:
     import connexion
     from connexion.datastructures import MediaTypeDict
     from connexion.middleware import MiddlewarePosition
-    from connexion.validators import FormDataValidator, MultiPartFormDataValidator
     from starlette.middleware.body_limit import RequestBodyLimitMiddleware
     from starlette.middleware.cors import CORSMiddleware
 
     import annif.registry
-    from annif.openapi.validation import CustomRequestBodyValidator
+    from annif.openapi.validation import (
+        CustomFormDataValidator,
+        CustomMultiPartFormDataValidator,
+        CustomRequestBodyValidator,
+    )
 
     specdir = os.path.join(os.path.dirname(__file__), "openapi")
     cxapp = connexion.FlaskApp(__name__, specification_dir=specdir)
@@ -49,12 +53,19 @@ def create_cx_app(config_name: str | None = None) -> FlaskApp:
     cxapp.app.config.from_object(config_name)
     cxapp.app.config.from_envvar("ANNIF_SETTINGS", silent=True)
 
+    # form fields may use up to the configured maximum form memory size
+    max_form_memory_size = int(cxapp.app.config["MAX_FORM_MEMORY_SIZE"])
+
     validator_map = {
         "body": MediaTypeDict(
             {
                 "*/*json": CustomRequestBodyValidator,
-                "application/x-www-form-urlencoded": FormDataValidator,
-                "multipart/form-data": MultiPartFormDataValidator,
+                "application/x-www-form-urlencoded": partial(
+                    CustomFormDataValidator, max_part_size=max_form_memory_size
+                ),
+                "multipart/form-data": partial(
+                    CustomMultiPartFormDataValidator, max_part_size=max_form_memory_size
+                ),
             }
         ),
     }
