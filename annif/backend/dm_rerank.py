@@ -117,19 +117,19 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         raise NotSupportedException("Training the dm_rerank backend is not possible.")
 
     def _label_for_subject(self, subject_id: int) -> str | None:
-        """Return the label of the given subject in the project language,
-        falling back to any available label, then the notation, then None."""
+        """Return a usable label for the subject: the project-language label
+        when it is nonempty, otherwise the first nonempty label in any
+        language, else None (the candidate is skipped)."""
         try:
             subject = self.project.subjects[subject_id]
         except IndexError:  # deprecated subject
             return None
-        if subject.labels:
-            if self.project.language in subject.labels:
-                return subject.labels[self.project.language]
-            return next(iter(subject.labels.values()))
-        if subject.notation:
-            return subject.notation
-        return None
+        if not subject.labels:
+            return None
+        preferred = subject.labels.get(self.project.language)
+        if preferred:
+            return preferred
+        return next((label for label in subject.labels.values() if label), None)
 
     def _state_prefix(self, params: dict[str, Any]) -> str:
         """Return the text to prepend to the document state: the custom

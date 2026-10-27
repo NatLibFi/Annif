@@ -668,9 +668,10 @@ def test_dm_rerank_is_trained(app_project):
 
 
 def test_dm_rerank_label_project_language(app_project):
-    """Label selection prefers the project language, then any label, then
-    notation; a subject without labels and notation, and a deprecated
-    subject (labels is None), yield None."""
+    """Label selection prefers a nonempty project-language label, then the
+    first nonempty label in any language; a subject whose labels are all
+    missing, and a deprecated subject (labels is None), yield None so the
+    candidate is skipped."""
     subjects = SubjectIndexFile()
     subjects.append(Subject(uri="u0", labels={"en": "Alpha"}, notation=None))
     subjects.append(Subject(uri="u1", labels={}, notation="42.42"))
@@ -681,6 +682,16 @@ def test_dm_rerank_label_project_language(app_project):
     subjects.append(Subject(uri="u3", labels=None, notation=None))
     # a subject with no labels and no notation yields no label
     subjects.append(Subject(uri="u4", labels={}, notation=None))
+    # CSV vocabularies store missing translations as None
+    subjects.append(
+        Subject(uri="u5", labels={"fi": None, "en": "Gamma"}, notation=None)
+    )
+    # the project-language entry and the first entry are both missing
+    subjects.append(
+        Subject(uri="u6", labels={"fi": None, "en": None, "sv": "Delta"}, notation=None)
+    )
+    # all translations missing -> no usable label
+    subjects.append(Subject(uri="u7", labels={"fi": None, "en": None}, notation=None))
 
     proj = unittest.mock.Mock()
     proj.language = "fi"
@@ -694,12 +705,18 @@ def test_dm_rerank_label_project_language(app_project):
     assert dm_rerank._label_for_subject(2) == "beta-fi"
     # subject 0 only has en -> fall back to that
     assert dm_rerank._label_for_subject(0) == "Alpha"
-    # subject 1 has no labels -> fall back to notation
-    assert dm_rerank._label_for_subject(1) == "42.42"
+    # subject 1 has no labels -> None (candidate skipped)
+    assert dm_rerank._label_for_subject(1) is None
     # subject 3 is deprecated -> None (candidate skipped)
     assert dm_rerank._label_for_subject(3) is None
     # subject 4 has neither labels nor notation -> None (candidate skipped)
     assert dm_rerank._label_for_subject(4) is None
+    # subject 5: fi label missing, en label usable -> use it
+    assert dm_rerank._label_for_subject(5) == "Gamma"
+    # subject 6: preferred and first entries missing -> first nonempty one
+    assert dm_rerank._label_for_subject(6) == "Delta"
+    # subject 7: all translations missing -> None (candidate skipped)
+    assert dm_rerank._label_for_subject(7) is None
 
 
 def test_dm_rerank_deprecated_subjects_skipped(app_project):
