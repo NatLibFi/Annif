@@ -82,11 +82,13 @@ class CustomFormDataValidator(FormDataValidator):
         try:
             return await super()._parse(stream, scope)
         except MultiPartException as err:
-            raise ClientProblem(
-                status=413,
-                title="Payload Too Large",
-                detail=f"Form field exceeded maximum size: {err.message}",
-            ) from err
+            if "maximum size" in err.message:
+                raise ClientProblem(
+                    status=413,
+                    title="Payload Too Large",
+                    detail=f"Form field exceeded maximum size: {err.message}",
+                ) from err
+            raise
 
 
 class CustomMultiPartFormDataValidator(
