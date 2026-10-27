@@ -87,7 +87,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         project: AnnifProject,
     ) -> None:
         super().__init__(backend_id, config_params, project)
-        self._state_transform = None
+        self._state_transforms: dict[str, Any] = {}
 
     @property
     def is_trained(self) -> bool:
@@ -96,17 +96,20 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         sources_trained = self._get_sources_attribute("is_trained")
         return all(sources_trained)
 
-    @property
-    def state_transform(self):
+    def _get_state_transform(self, params: dict[str, Any]):
         """The transform applied to the document text before it is sent
         to the reranking service as the question state, on top of the
         project transform. Defaults to pass (no extra transformation).
         Useful for keeping the state within the model's context length
-        while the source projects run on the full text."""
-        if self._state_transform is None:
-            spec = str(self.params["state-transform"])
-            self._state_transform = annif.transform.get_transform(spec, project=None)
-        return self._state_transform
+        while the source projects run on the full text. Resolved from the
+        effective parameters, so per-call overrides are honored; the
+        built transform is cached per specification."""
+        spec = str(params["state-transform"])
+        if spec not in self._state_transforms:
+            self._state_transforms[spec] = annif.transform.get_transform(
+                spec, project=self.project
+            )
+        return self._state_transforms[spec]
 
     def _train(
         self, corpus: DocumentCorpus, params: dict[str, Any], jobs: int = 0
@@ -173,7 +176,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
             return {}
 
         state_prefix = self._state_prefix(params)
-        state = self.state_transform.transform_doc(doc).text
+        state = self._get_state_transform(params).transform_doc(doc).text
         payload = {
             "state": state_prefix + state,
             "questions": questions,

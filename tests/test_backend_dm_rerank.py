@@ -180,6 +180,55 @@ def test_dm_rerank_state_transform(app_project):
     assert payload["state"] == "test docum"
 
 
+def test_dm_rerank_state_transform_gets_project(app_project):
+    """The backend's project is passed to the state transform, so that
+    project-dependent transforms such as filter_lang can use its language
+    and analyzer."""
+    dm_rerank = _make_backend(app_project, **{"state-transform": "pass"})
+    transform = dm_rerank._get_state_transform(dm_rerank.params)
+    assert transform.project is app_project
+
+
+def test_dm_rerank_state_transform_per_call_override(app_project):
+    """A per-call state-transform override is honored, even when the
+    configured parameter is pass (the default)."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            dm_rerank.suggest(
+                [Document(text="test document")], {"state-transform": "limit(10)"}
+            )
+
+    payload = mock_request.call_args.kwargs["json"]
+    # the override truncates the state to 10 characters
+    assert payload["state"] == "test docum"
+
+
+def test_dm_rerank_state_transform_override_does_not_poison_cache(app_project):
+    """A per-call override does not affect subsequent calls, which keep
+    using the configured transform."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            dm_rerank.suggest(
+                [Document(text="test document")], {"state-transform": "limit(10)"}
+            )
+            # regular call afterwards: the configured transform (pass)
+            # applies again
+            dm_rerank.suggest([Document(text="test document")])
+
+    payload = mock_request.call_args.kwargs["json"]
+    assert payload["state"] == "test document"
+
+
 def _sigmoid(value, threshold):
     """The same sigmoid gate as in the backend, for test expectations."""
     return 1.0 / (1.0 + math.exp(-(value - threshold) / 0.1))
