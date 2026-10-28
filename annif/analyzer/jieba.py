@@ -7,7 +7,6 @@ import re
 import unicodedata
 
 import annif.util
-from annif.exception import OperationFailedException
 
 from . import analyzer
 
@@ -41,6 +40,7 @@ class JiebaAnalyzer(analyzer.Analyzer):
         self.param = param
         # a custom dictionary may be given as the positional parameter or
         # as userdict=path; it uses the jieba format: word [freq] [tag]
+        # (loaded with Jieba.add_word, which requires rjieba 0.2.2 or newer)
         self.userdict = kwargs.pop(_KEY_USERDICT, None) or param
         self.hmm = annif.util.boolean(kwargs.pop(_KEY_HMM, True))
         self._tokenizer = None
@@ -77,11 +77,6 @@ class JiebaAnalyzer(analyzer.Analyzer):
 
             tokenizer = rjieba.Jieba()
             if self.userdict:
-                if not hasattr(tokenizer, "add_word"):
-                    raise OperationFailedException(
-                        "Custom dictionaries for the jieba analyzer require "
-                        "rjieba 0.2.2 or newer"
-                    )
                 self._load_userdict(tokenizer, self.userdict)
             self._tokenizer = tokenizer
         return self._tokenizer
