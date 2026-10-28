@@ -17,9 +17,9 @@ _KEY_HMM = "hmm"
 # and ASCII sentence-final punctuation and on line breaks instead. An ASCII
 # full stop only ends a sentence after a Chinese character or a full-width
 # closing bracket or quote, so decimals (3.5) and abbreviations (U.S.) stay intact.
-_SENTENCE_END_RE = re.compile(
-    r"[。！？；!?;\n]+|(?<=[\u3400-\u4dbf\u4e00-\u9fff）」』”’])\.+"
-)
+# Kept as a string so that it is compiled (and cached by re) on first use rather
+# than at import time, to keep CLI startup fast.
+_SENTENCE_END_RE = r"[。！？；!?;\n]+|(?<=[\u3400-\u4dbf\u4e00-\u9fff）」』”’])\.+"
 
 
 class JiebaAnalyzer(analyzer.Analyzer):
@@ -82,7 +82,7 @@ class JiebaAnalyzer(analyzer.Analyzer):
         return self._tokenizer
 
     def tokenize_sentences(self, text: str) -> list[str]:
-        sentences = (s.strip() for s in _SENTENCE_END_RE.split(text))
+        sentences = (s.strip() for s in re.split(_SENTENCE_END_RE, text))
         return [s for s in sentences if s]
 
     def tokenize_words(self, text: str, filter: bool = True) -> list[str]:
