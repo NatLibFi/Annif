@@ -15,8 +15,12 @@ _KEY_USERDICT = "userdict"
 _KEY_HMM = "hmm"
 
 # Chinese text is not split into sentences by NLTK, so split on full-width
-# and ASCII sentence-final punctuation and on line breaks instead
-_SENTENCE_END_RE = re.compile(r"[。！？；!?;\n]+")
+# and ASCII sentence-final punctuation and on line breaks instead. An ASCII
+# full stop only ends a sentence after a Chinese character or a full-width
+# closing bracket or quote, so decimals (3.5) and abbreviations (U.S.) stay intact.
+_SENTENCE_END_RE = re.compile(
+    r"[。！？；!?;\n]+|(?<=[\u3400-\u4dbf\u4e00-\u9fff）」』”’])\.+"
+)
 
 
 class JiebaAnalyzer(analyzer.Analyzer):
@@ -59,7 +63,12 @@ class JiebaAnalyzer(analyzer.Analyzer):
                     continue
                 freq = int(rest[0]) if rest and rest[0].isdigit() else None
                 tag = rest[-1] if rest and not rest[-1].isdigit() else None
-                tokenizer.add_word(word, freq, tag)
+                # Input text is NFKC-normalized before segmentation, and some
+                # backends (e.g. via scikit-learn vectorizers) lowercase it
+                # first, so add each entry in normalized and lowercased form
+                word = unicodedata.normalize("NFKC", word)
+                for form in dict.fromkeys((word, word.lower())):
+                    tokenizer.add_word(form, freq, tag)
 
     @property
     def tokenizer(self):

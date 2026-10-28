@@ -89,6 +89,21 @@ def test_jieba_userdict_freq_and_tag(tmp_path):
     assert "大气环流" in words
 
 
+@needs_add_word
+@pytest.mark.parametrize(
+    "text",
+    ["B超检查和DNA甲基化", "Ｂ超检查和ＤＮＡ甲基化", "b超检查和dna甲基化"],
+)
+def test_jieba_userdict_normalized_entries(tmp_path, text):
+    userdict = tmp_path / "userdict.txt"
+    # a full-width entry and a mixed-case entry
+    userdict.write_text("Ｂ超检查\nDNA甲基化\n", encoding="utf-8")
+    analyzer = annif.analyzer.get_analyzer(f"jieba(userdict={userdict})")
+    words = analyzer.tokenize_words(text)
+    assert "b超检查" in words
+    assert "dna甲基化" in words
+
+
 def test_jieba_userdict_requires_add_word(tmp_path, monkeypatch):
     class OldJieba:  # mimics rjieba < 0.2.2, which has no add_word
         def cut(self, text, hmm=True):
@@ -120,6 +135,20 @@ def test_jieba_tokenize_sentences():
         "南海夏季风爆发前后大气环流的演变",
         "利用NCEP再分析资料，研究了季风爆发",
     ]
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("第一句.第二句.", ["第一句", "第二句"]),
+        ("增长了3.5倍.结论如下", ["增长了3.5倍", "结论如下"]),
+        ("美国(U.S.)经济", ["美国(U.S.)经济"]),
+        ("（见附录）.下一句", ["（见附录）", "下一句"]),
+    ],
+)
+def test_jieba_tokenize_sentences_ascii_full_stop(text, expected):
+    analyzer = annif.analyzer.get_analyzer("jieba")
+    assert analyzer.tokenize_sentences(text) == expected
 
 
 def test_jieba_pickle():
