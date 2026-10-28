@@ -6,10 +6,18 @@ import pytest
 
 import annif.analyzer
 import annif.analyzer.jieba
+from annif.exception import OperationFailedException
 
 pytestmark = pytest.mark.skipif(
     not annif.analyzer.jieba.JiebaAnalyzer.is_available(),
-    reason="jieba is required",
+    reason="rjieba is required",
+)
+
+# Custom dictionaries need Jieba.add_word, which was added in rjieba 0.2.2
+needs_add_word = pytest.mark.skipif(
+    not annif.analyzer.jieba.JiebaAnalyzer.is_available()
+    or not hasattr(__import__("rjieba").Jieba(), "add_word"),
+    reason="rjieba 0.2.2 or newer is required for custom dictionaries",
 )
 
 TEXT = "南海夏季风爆发前后大气环流的演变。利用NCEP再分析资料，研究了季风爆发！"
@@ -52,6 +60,7 @@ def test_jieba_token_min_length():
     assert words == ["大气", "环流", "演变"]
 
 
+@needs_add_word
 def test_jieba_userdict(tmp_path):
     userdict = tmp_path / "userdict.txt"
     userdict.write_text("夏季风\n大气环流\n", encoding="utf-8")
@@ -62,11 +71,41 @@ def test_jieba_userdict(tmp_path):
     assert "夏季" not in words
 
 
+@needs_add_word
 def test_jieba_userdict_positional(tmp_path):
     userdict = tmp_path / "userdict.txt"
     userdict.write_text("夏季风\n", encoding="utf-8")
     analyzer = annif.analyzer.get_analyzer(f"jieba({userdict})")
     assert "夏季风" in analyzer.tokenize_words(TEXT)
+
+
+@needs_add_word
+def test_jieba_userdict_freq_and_tag(tmp_path):
+    userdict = tmp_path / "userdict.txt"
+    userdict.write_text("夏季风 5 n\n\n大气环流 nz\n", encoding="utf-8")
+    analyzer = annif.analyzer.get_analyzer(f"jieba(userdict={userdict})")
+    words = analyzer.tokenize_words(TEXT)
+    assert "夏季风" in words
+    assert "大气环流" in words
+
+
+def test_jieba_userdict_requires_add_word(tmp_path, monkeypatch):
+    class OldJieba:  # mimics rjieba < 0.2.2, which has no add_word
+        def cut(self, text, hmm=True):
+            return [text]
+
+    monkeypatch.setattr("rjieba.Jieba", OldJieba)
+    userdict = tmp_path / "userdict.txt"
+    userdict.write_text("夏季风\n", encoding="utf-8")
+    analyzer = annif.analyzer.get_analyzer(f"jieba(userdict={userdict})")
+    with pytest.raises(OperationFailedException):
+        analyzer.tokenize_words(TEXT)
+
+
+def test_jieba_hmm_disabled():
+    analyzer = annif.analyzer.get_analyzer("jieba(hmm=0)")
+    assert analyzer.hmm is False
+    assert analyzer.tokenize_words("大气环流的演变") == ["大气", "环流", "的", "演变"]
 
 
 def test_jieba_fullwidth_normalized():
