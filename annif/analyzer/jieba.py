@@ -56,7 +56,7 @@ class JiebaAnalyzer(analyzer.Analyzer):
 
     @staticmethod
     def _load_userdict(tokenizer, path: str) -> None:
-        with open(path, encoding="utf-8") as userdict:
+        with open(path, encoding="utf-8-sig") as userdict:
             for line in userdict:
                 word, *rest = line.split() or [None]
                 if word is None:

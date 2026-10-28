@@ -62,6 +62,15 @@ def test_jieba_userdict(tmp_path):
     assert "夏季" not in words
 
 
+def test_jieba_userdict_bom(tmp_path):
+    userdict = tmp_path / "userdict.txt"
+    userdict.write_text("夏季风\n大气环流\n", encoding="utf-8-sig")
+    analyzer = annif.analyzer.get_analyzer(f"jieba(userdict={userdict})")
+    words = analyzer.tokenize_words(TEXT)
+    assert "夏季风" in words
+    assert "大气环流" in words
+
+
 def test_jieba_userdict_positional(tmp_path):
     userdict = tmp_path / "userdict.txt"
     userdict.write_text("夏季风\n", encoding="utf-8")
