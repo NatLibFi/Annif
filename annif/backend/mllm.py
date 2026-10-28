@@ -77,11 +77,12 @@ class MLLMCandidateGenerator(annif.parallel.BaseWorker):
     """Worker class for generating candidates in parallel"""
 
     @classmethod
-    def generate_for_doc(cls, doc) -> tuple[list, Any]:
-        """Generate candidates for a single document"""
+    def generate_for_doc_batch(cls, doc_batch) -> tuple[list, list]:
+        """Generate candidates for a batch of documents"""
         backend = cls.args["backend"]
-        candidates = backend._generate_candidates(doc.text)
-        return (candidates, doc.subject_set)
+        candidates = [backend._generate_candidates(doc.text) for doc in doc_batch]
+        subject_sets = [doc.subject_set for doc in doc_batch]
+        return (candidates, subject_sets)
 
 
 class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
@@ -96,24 +97,19 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
         # Parallelize generation of candidates
         n_jobs, pool_constructor = annif.parallel.get_pool(n_jobs)
 
-        # Create a list of documents to process
-        documents = list(self._corpus.documents)
-
-        # Generate candidates in parallel
+        # Generate candidates in parallel, processing bounded document
+        # batches instead of loading the whole corpus at once
         with pool_constructor(
             n_jobs,
             initializer=MLLMCandidateGenerator.init,
             initargs=({"backend": self._backend},),
         ) as pool:
-            candidate_subject_pairs = pool.map(
-                MLLMCandidateGenerator.generate_for_doc,
-                documents,
-            )
-
-        # Unpack the results
-        for candidates, subject_set in candidate_subject_pairs:
-            all_candidates.append(candidates)
-            gold_subjects.append(subject_set)
+            for candidates, subject_sets in pool.imap_unordered(
+                MLLMCandidateGenerator.generate_for_doc_batch,
+                self._corpus.doc_batches,
+            ):
+                all_candidates.extend(candidates)
+                gold_subjects.extend(subject_sets)
 
         return {
             "train_x": train_x,
