@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
+from scipy.sparse import csr_array
+
 import annif.eval
 import annif.parallel
 import annif.util
@@ -53,35 +56,51 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         batch: SuggestionBatch,
         source_project_id: str,
     ) -> SuggestionBatch:
-        """Align a compact source batch with the ensemble vocabulary."""
-        from annif.suggestion import csr_array, np
+        """Align a source batch with the ensemble vocabulary."""
 
         source_subjects = self.project.registry.get_project(source_project_id).subjects
         target_subjects = self.project.subjects
 
-        if batch.array.shape[1] == len(target_subjects):
+        if (
+            batch.array.shape[1] == len(target_subjects)
+            and source_subjects is target_subjects
+        ):
             return batch
 
         source_active = source_subjects.active
-        if batch.array.shape[1] != len(source_active):
+        if batch.array.shape[1] == len(source_active):
+            col_uris = {
+                position: subject.uri
+                for position, (_, subject) in enumerate(source_active)
+            }
+        elif batch.array.shape[1] == len(source_subjects):
+            col_uris = {
+                subject_id: subject.uri for subject_id, subject in source_active
+            }
+        else:
             raise ValueError(
                 f"Source '{source_project_id}' has {batch.array.shape[1]} "
-                f"columns, but its vocabulary has {len(source_active)} "
-                "active subjects."
+                f"columns, but its vocabulary has {len(source_subjects)} subjects"
+                f"({len(source_active)} active)."
             )
 
         array = batch.array.tocoo()
-        target_cols = np.empty_like(array.col)
 
-        for source_col in np.unique(array.col):
-            target_cols[array.col == source_col] = target_subjects.by_uri(
-                source_active[source_col][1].uri,
+        source_cols, inverse = np.unique(array.col, return_inverse=True)
+        mapped_cols = np.full(len(source_cols), -1, dtype=np.int64)
+        for idx, source_col in enumerate(source_cols):
+            target_id = target_subjects.by_uri(
+                col_uris.get(source_col),
                 warnings=False,
             )
+            if target_id is not None:
+                mapped_cols[idx] = target_id
 
+        target_cols = mapped_cols[inverse]
+        keep = target_cols >= 0
         return SuggestionBatch(
             csr_array(
-                (array.data, (array.row, target_cols)),
+                (array.data[keep], (array.row[keep], target_cols[keep])),
                 shape=(array.shape[0], len(target_subjects)),
                 dtype=np.float32,
             )
