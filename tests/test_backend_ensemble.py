@@ -8,7 +8,7 @@ from scipy.sparse import csr_array
 
 import annif.backend
 import annif.registry
-from annif.backend.ensemble import EnsembleHPObjective, EnsembleOptimizer
+from annif.backend.ensemble import EnsembleOptimizer
 from annif.corpus import Document
 from annif.exception import NotSupportedException
 from annif.suggestion import SuggestionBatch
@@ -86,32 +86,54 @@ def test_ensemble_train(project, document_corpus):
         ensemble.train(document_corpus)
 
 
-def test_align_batch_same_vocabulary_is_noop():
-    # source and ensemble share the same subject index object, so a
-    # full-width batch is already aligned and must be returned unchanged
-    subjects = make_subject_index([(URI_A, "A"), (URI_B, "B")])
+def test_align_batch_ensemble_width_batch_is_noop():
+    # a batch that is already as wide as the ensemble vocabulary is
+    # returned unchanged when the vocabularies are identical: this
+    # covers sources sharing the ensemble vocabulary and subclasses like
+    # PAV that rebuild batches at ensemble width
+    subjects = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
     backend = make_ensemble_backend(subjects, {"src": subjects})
-    batch = make_batch([0, 0, 1], [0, 1, 1], [0.4, 0.8, 1.0], 2, len(subjects))
+    batch = make_batch([0, 0], [0, 1], [0.7, 0.3], 1, len(subjects))
 
     assert backend._align_batch(batch, "src") is batch
 
 
-def test_align_batch_same_vocabulary_compact_batch():
-    # even with the same subject index object, a compact batch (columns
-    # numbered by active subjects only) must be expanded and aligned
-    subjects = make_subject_index([(URI_A, "A"), (URI_B, None), (URI_C, "C")])
-    assert len(subjects.active) == 2
-    backend = make_ensemble_backend(subjects, {"src": subjects})
-    # compact columns: 0 = A, 1 = C; B is deprecated and not addressable
-    batch = make_batch([0, 0], [0, 1], [0.5, 1.0], 1, len(subjects.active))
+def test_align_batch_same_size_different_vocab_is_mapped():
+    # a source vocabulary of the same size but with different URIs must
+    # not be passed through unaligned, but mapped via URI
+    target = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
+    source = make_subject_index([(URI_D, "D"), (URI_B, "B"), (URI_A, "A")])
+    backend = make_ensemble_backend(target, {"src": source})
+    # source cols: 1 = B, 2 = A; D is not in the target vocabulary
+    batch = make_batch([0, 0], [1, 2], [0.7, 0.3], 1, len(source))
 
     aligned = backend._align_batch(batch, "src")
 
     assert aligned.array.shape == (1, 3)
     expected = np.zeros((1, 3), dtype=np.float32)
-    expected[0, 0] = 0.5  # A
-    expected[0, 2] = 1.0  # C
+    expected[0, 1] = 0.7  # B
+    expected[0, 0] = 0.3  # A
     np.testing.assert_array_equal(aligned.array.toarray(), expected)
+
+
+def test_same_vocabulary_checks_by_uri():
+    # vocabularies are the same when they have the same active subjects
+    # with the same subject IDs, determined by URI
+    target = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
+    backend = make_ensemble_backend(
+        target,
+        {
+            "shared": target,
+            "copy": make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")]),
+            "subset": make_subject_index([(URI_B, "B"), (URI_A, "A")]),
+            "samesize": make_subject_index([(URI_D, "D"), (URI_B, "B"), (URI_A, "A")]),
+        },
+    )
+
+    assert backend._same_vocabulary("shared")
+    assert backend._same_vocabulary("copy")
+    assert not backend._same_vocabulary("subset")
+    assert not backend._same_vocabulary("samesize")
 
 
 def test_align_batch_maps_compact_columns_by_uri():
@@ -133,11 +155,32 @@ def test_align_batch_maps_compact_columns_by_uri():
     np.testing.assert_array_equal(aligned.array.toarray(), expected)
 
 
+def test_align_batch_compact_batch_with_shared_vocabulary():
+    # a compact batch from a source sharing the ensemble vocabulary must
+    # be expanded; deprecated subjects are not addressable by compact
+    # columns and cannot carry scores
+    subjects = make_subject_index([(URI_A, "A"), (URI_B, None), (URI_C, "C")])
+    assert len(subjects.active) == 2
+    backend = make_ensemble_backend(subjects, {"src": subjects})
+    # compact columns: 0 = A, 1 = C
+    batch = make_batch([0, 0], [0, 1], [0.5, 1.0], 1, len(subjects.active))
+
+    aligned = backend._align_batch(batch, "src")
+
+    assert aligned.array.shape == (1, 3)
+    expected = np.zeros((1, 3), dtype=np.float32)
+    expected[0, 0] = 0.5  # A
+    expected[0, 2] = 1.0  # C
+    np.testing.assert_array_equal(aligned.array.toarray(), expected)
+
+
 def test_align_batch_drops_unmappable_uris():
     # subjects that cannot be mapped to the ensemble vocabulary - because
     # their URI is unknown, or maps to a deprecated subject - must be
     # dropped from the aligned batch instead of crashing
-    target = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, None)])
+    target = make_subject_index(
+        [(URI_A, "A"), (URI_B, "B"), (URI_C, None), (URI_X, "X")]
+    )
     source = make_subject_index([(URI_D, "D"), (URI_C, "C"), (URI_A, "A")])
     backend = make_ensemble_backend(target, {"src": source})
     # source cols: 0 = D (unknown URI), 1 = C (deprecated in target), 2 = A
@@ -145,8 +188,8 @@ def test_align_batch_drops_unmappable_uris():
 
     aligned = backend._align_batch(batch, "src")
 
-    assert aligned.array.shape == (1, 3)
-    expected = np.zeros((1, 3), dtype=np.float32)
+    assert aligned.array.shape == (1, 4)
+    expected = np.zeros((1, 4), dtype=np.float32)
     expected[0, 0] = 0.2  # only A survives
     np.testing.assert_array_equal(aligned.array.toarray(), expected)
 
@@ -173,59 +216,28 @@ def test_align_batch_empty_batch():
     assert aligned.array.nnz == 0
 
 
-def test_align_batch_target_width_batch_with_different_vocab():
-    # the batch is as wide as the ensemble vocabulary, but the source
-    # vocabulary is different; it must not be passed through unaligned
-    target = make_subject_index([(URI_A, "A"), (URI_B, "B")])
-    source = make_subject_index([(URI_X, "X"), (URI_A, "A"), (URI_B, None)])
-    assert len(source) != len(target)
-    backend = make_ensemble_backend(target, {"src": source})
-    # active source subjects: X (col 0), A (col 1)
-    batch = make_batch([0, 0], [0, 1], [0.7, 0.3], 1, len(target))
-
-    aligned = backend._align_batch(batch, "src")
-
-    assert aligned.array.shape == (1, 2)
-    expected = np.zeros((1, 2), dtype=np.float32)
-    expected[0, 0] = 0.3  # A survives; X is not in the target vocabulary
-    np.testing.assert_array_equal(aligned.array.toarray(), expected)
-
-
-def test_align_batch_source_width_batch_indexed_by_subject_id():
-    # full-width batch from a different vocabulary with deprecated
-    # subjects: columns are source subject IDs, not active positions
-    target = make_subject_index([(URI_A, "A"), (URI_B, "B")])
-    source = make_subject_index([(URI_A, "A"), (URI_B, None), (URI_C, "C")])
-    assert len(source.active) != len(source)
-    backend = make_ensemble_backend(target, {"src": source})
-    # source subject IDs: 0 = A, 1 = B (deprecated), 2 = C
-    batch = make_batch([0, 0], [0, 2], [0.4, 0.6], 1, len(source))
-
-    aligned = backend._align_batch(batch, "src")
-
-    assert aligned.array.shape == (1, 2)
-    expected = np.zeros((1, 2), dtype=np.float32)
-    expected[0, 0] = 0.4  # A survives; C is not in the target vocabulary
-    np.testing.assert_array_equal(aligned.array.toarray(), expected)
-
-
 def test_merge_source_batches_aligns_and_averages():
-    # one source is compact and needs alignment, the other shares the
-    # ensemble subject index; the merged batch must combine both
+    # both sources need alignment; the merged batch must combine the
+    # aligned scores
     target = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
-    compact_source = make_subject_index([(URI_B, "B"), (URI_A, "A")])
-    backend = make_ensemble_backend(target, {"src": compact_source, "full": target})
-    aligned_batch = make_batch([0], [0], [1.0], 1, len(target))
-    compact_batch = make_batch([0], [0], [0.5], 1, len(compact_source))
+    backend = make_ensemble_backend(
+        target,
+        {
+            "one": make_subject_index([(URI_B, "B"), (URI_A, "A")]),
+            "two": make_subject_index([(URI_A, "A"), (URI_C, "C")]),
+        },
+    )
+    # source "one" scores B=0.5; source "two" scores C=1.0
+    batch_one = make_batch([0], [0], [0.5], 1, 2)
+    batch_two = make_batch([0], [1], [1.0], 1, 2)
 
-    sources = [("src", 1.0), ("full", 1.0)]
-    batch_by_source = {"src": compact_batch, "full": aligned_batch}
+    sources = [("one", 1.0), ("two", 1.0)]
+    batch_by_source = {"one": batch_one, "two": batch_two}
     merged = backend._merge_source_batches(batch_by_source, sources, {"limit": 10})
 
-    # compact source scores B=0.5, aligned source scores A=1.0
     expected = np.zeros((1, 3), dtype=np.float32)
-    expected[0, 0] = 0.5  # A: averaged 1.0 and 0.0
     expected[0, 1] = 0.25  # B: averaged 0.5 and 0.0
+    expected[0, 2] = 0.5  # C: averaged 0.0 and 1.0
     np.testing.assert_allclose(merged.array.toarray(), expected)
 
 
@@ -243,43 +255,27 @@ def test_ensemble_suggest(app):
     assert hits[0].score == pytest.approx(1.0)
 
 
-def test_ensemble_objective():
-    # the objective must align compact source batches before averaging
-    target = make_subject_index([(URI_A, "A"), (URI_B, "B")])
+def test_ensemble_optimizer_prepare_aligns_source_batches():
+    # the optimizer must align the collected source batches once, so
+    # that every objective evaluation can reuse them
+    target = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
     source = make_subject_index([(URI_B, "B"), (URI_A, "A")])
     backend = make_ensemble_backend(target, {"src": source})
-    # compact source batch: col 1 is A with score 1.0
-    batch = make_batch([0], [1], [1.0], 1, len(source))
-    args = {
-        "backend": backend,
-        "gold_batches": [[[0]]],  # gold subject: A
-        "source_batches": [{"src": batch}],
-        "sources": ["src"],
-        "subject_index": target,
-        "limit": "10",
-        "metric": "F1 score (doc avg)",
-    }
-    trial = unittest.mock.Mock()
-    trial.suggest_float.return_value = 0.8
+    source_project = backend.project.registry.get_project("src")
+    # compact source batch: col 0 is B with score 0.5, col 1 is A 1.0
+    source_project.suggest.return_value = make_batch(
+        [0, 0], [0, 1], [0.5, 1.0], 1, len(source)
+    )
+    corpus = unittest.mock.Mock()
+    corpus.doc_batches = [[Document(text="some text")]]
 
-    score = EnsembleHPObjective.objective(trial, args)
+    optimizer = EnsembleOptimizer(backend, corpus, "NDCG")
+    args = optimizer._prepare(n_jobs=1)
 
-    trial.suggest_float.assert_called_with("src", 0.0, 1.0)
-    assert score == pytest.approx(1.0)
-
-
-def test_ensemble_optimizer_prepare(app):
-    with app.app_context():
-        project = annif.registry.get_project("ensemble")
-        corpus = unittest.mock.Mock()
-        corpus.doc_batches = [
-            [Document(text="doc one")],
-            [Document(text="doc two")],
-        ]
-
-        optimizer = EnsembleOptimizer(project.backend, corpus, "NDCG")
-        args = optimizer._prepare(n_jobs=1)
-
-    assert args["backend"] is project.backend
-    assert args["sources"] == ["dummy-en", "dummy-private"]
-    assert len(args["source_batches"]) == 2
+    assert args["sources"] == ["src"]
+    batch = args["source_batches"][0]["src"]
+    assert batch.array.shape == (1, 3)
+    expected = np.zeros((1, 3), dtype=np.float32)
+    expected[0, 0] = 1.0  # A
+    expected[0, 1] = 0.5  # B
+    np.testing.assert_array_equal(batch.array.toarray(), expected)

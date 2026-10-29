@@ -51,6 +51,21 @@ class BaseEnsembleBackend(backend.AnnifBackend):
             for project_id, _ in sources
         }
 
+    def _same_vocabulary(self, source_project_id: str) -> bool:
+        """Check whether the vocabulary of the given source project is
+        the same as the ensemble vocabulary, based on subject URIs."""
+
+        source_subjects = self.project.registry.get_project(source_project_id).subjects
+        target_subjects = self.project.subjects
+        if source_subjects is target_subjects:
+            return True
+
+        source_active = source_subjects.active
+        return len(source_active) == len(target_subjects.active) and all(
+            target_subjects.by_uri(subject.uri, warnings=False) == subject_id
+            for subject_id, subject in source_active
+        )
+
     def _align_batch(
         self,
         batch: SuggestionBatch,
@@ -58,30 +73,20 @@ class BaseEnsembleBackend(backend.AnnifBackend):
     ) -> SuggestionBatch:
         """Align a source batch with the ensemble vocabulary."""
 
-        source_subjects = self.project.registry.get_project(source_project_id).subjects
         target_subjects = self.project.subjects
 
-        if (
-            batch.array.shape[1] == len(target_subjects)
-            and source_subjects is target_subjects
+        if batch.array.shape[1] == len(target_subjects) and self._same_vocabulary(
+            source_project_id
         ):
             return batch
 
+        source_subjects = self.project.registry.get_project(source_project_id).subjects
         source_active = source_subjects.active
-        if batch.array.shape[1] == len(source_active):
-            col_uris = {
-                position: subject.uri
-                for position, (_, subject) in enumerate(source_active)
-            }
-        elif batch.array.shape[1] == len(source_subjects):
-            col_uris = {
-                subject_id: subject.uri for subject_id, subject in source_active
-            }
-        else:
+        if batch.array.shape[1] != len(source_active):
             raise ValueError(
                 f"Source '{source_project_id}' has {batch.array.shape[1]} "
-                f"columns, but its vocabulary has {len(source_subjects)} subjects"
-                f"({len(source_active)} active)."
+                f"columns, but its vocabulary has {len(source_active)} "
+                "active subjects."
             )
 
         array = batch.array.tocoo()
@@ -90,7 +95,7 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         mapped_cols = np.full(len(source_cols), -1, dtype=np.int64)
         for idx, source_col in enumerate(source_cols):
             target_id = target_subjects.by_uri(
-                col_uris.get(source_col),
+                source_active[source_col][1].uri,
                 warnings=False,
             )
             if target_id is not None:
@@ -144,14 +149,10 @@ class EnsembleHPObjective(hyperopt.HPObjective):
             project_id: trial.suggest_float(project_id, 0.0, 1.0)
             for project_id in args["sources"]
         }
-        backend = args["backend"]
         for gold_batch, src_batches in zip(
             args["gold_batches"], args["source_batches"]
         ):
-            batches = [
-                backend._align_batch(src_batches[project_id], project_id)
-                for project_id in args["sources"]
-            ]
+            batches = [src_batches[project_id] for project_id in args["sources"]]
             weights = [proj_weights[project_id] for project_id in args["sources"]]
             avg_batch = SuggestionBatch.from_averaged(batches, weights).filter(
                 limit=int(args["limit"])
@@ -200,8 +201,17 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
                 source_batches.append(suggestions)
                 gold_batches.append(gold_batch)
 
+        # align the collected batches with the ensemble vocabulary once,
+        # so that every objective evaluation can reuse them
+        source_batches = [
+            {
+                project_id: self._backend._align_batch(batch, project_id)
+                for project_id, batch in batch_by_source.items()
+            }
+            for batch_by_source in source_batches
+        ]
+
         return {
-            "backend": self._backend,
             "gold_batches": gold_batches,
             "source_batches": source_batches,
             "subject_index": self._backend.project.subjects,
