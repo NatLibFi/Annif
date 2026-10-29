@@ -34,7 +34,11 @@ class TestingConfig(Config):
     TESTING = True
     PROJECTS_CONFIG_PATH = "tests/projects.cfg"
     DATADIR = "tests/data"
-    MAX_CONTENT_LENGTH = 2_000
+    # keep the form field limit below the body limit so that oversized form
+    # fields are rejected by the form data validator instead of the body
+    # limit middleware
+    MAX_CONTENT_LENGTH = 10_000_000
+    MAX_FORM_MEMORY_SIZE = 2_000_000
 
 
 class TestingInitializeConfig(TestingConfig):

@@ -6,6 +6,8 @@ from hypothesis import settings, strategies
 from simplemma.strategies.dictionaries.dictionary_factory import SUPPORTED_LANGUAGES
 
 import annif
+import annif.registry
+import annif.vocab
 
 cxapp = annif.create_app(config_name="annif.default_config.TestingConfig")
 schema = schemathesis.openapi.from_asgi("/v1/openapi.json", app=cxapp)
@@ -174,9 +176,12 @@ def test_rest_detect_language_too_many_candidates(app_client):
     assert req.status_code == 400
 
 
-def test_rest_suggest_payload_exceeds_max_content_length(app_client):
-    # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
-    large_text = "A" * 3_000
+def test_rest_suggest_form_field_exceeds_max_form_memory_size(app_client):
+    # Create a form field that exceeds MAX_FORM_MEMORY_SIZE but is within
+    # the MAX_CONTENT_LENGTH limit: it must be rejected by the form data
+    # validator, not the body limit middleware (the test config keeps the
+    # form field limit below the body limit for this reason)
+    large_text = "A" * 3_000_000
     data = {"text": large_text}
     req = app_client.post(
         "http://localhost:8000/v1/projects/dummy-fi/suggest",
@@ -187,7 +192,7 @@ def test_rest_suggest_payload_exceeds_max_content_length(app_client):
 
 def test_rest_suggest_batch_payload_exceeds_max_content_length(app_client):
     # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
-    large_text = "A" * 3_000
+    large_text = "A" * 10_000_000
     data = {"documents": [{"text": large_text}]}
     req = app_client.post(
         "http://localhost:8000/v1/projects/dummy-fi/suggest-batch",
@@ -210,7 +215,7 @@ def test_rest_suggest_payload_within_max_content_length(app_client):
 
 def test_rest_detect_language_payload_exceeds_max_content_length(app_client):
     # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
-    large_text = "A" * 3_000
+    large_text = "A" * 10_000_000
     data = {"text": large_text, "languages": ["en", "fi"]}
     req = app_client.post(
         "http://localhost:8000/v1/detect-language",
@@ -225,6 +230,19 @@ def test_rest_detect_language_payload_within_max_content_length(app_client):
     req = app_client.post(
         "http://localhost:8000/v1/detect-language",
         json=data,
+    )
+    assert req.status_code == 200
+    assert "results" in req.json()
+
+
+def test_rest_suggest_large_form_field_within_max_form_memory_size(app_client):
+    """A form field larger than Starlette's 1 MB default but within the
+    configured MAX_FORM_MEMORY_SIZE must succeed end-to-end (was a 500
+    error before Annif used custom form data validators)."""
+    large_text = "A" * 1_500_000
+    req = app_client.post(
+        "http://localhost:8000/v1/projects/dummy-fi/suggest",
+        data={"text": large_text},
     )
     assert req.status_code == 200
     assert "results" in req.json()
