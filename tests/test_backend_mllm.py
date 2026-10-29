@@ -1,9 +1,13 @@
 """Unit tests for the MLLM backend in Annif"""
 
+import multiprocessing.dummy
+
 import pytest
 
 import annif
 import annif.backend
+import annif.parallel
+from annif.backend.mllm import MLLMCandidateGenerator
 from annif.corpus import Document
 from annif.exception import NotInitializedException, NotSupportedException
 
@@ -121,8 +125,35 @@ def test_mllm_hyperopt(project, fulltext_corpus):
     optimizer.optimize(n_trials=3, n_jobs=1, results_file=None)
 
 
-def test_mllm_hyperopt_parallel_n_jobs_2(project, fulltext_corpus):
-    """Test MLLM hyperopt with n_jobs=2 (parallel processing with 2 workers)"""
+def test_mllm_candidate_generator_doc_batch(project, fulltext_corpus):
+    """Test the worker method for generating candidates for a batch of
+    documents, returning candidates and subject sets for each document"""
+    mllm_type = annif.backend.get_backend("mllm")
+    mllm = mllm_type(
+        backend_id="mllm",
+        config_params={"limit": 10, "language": "fi"},
+        project=project,
+    )
+    mllm.initialize()
+    MLLMCandidateGenerator.init({"backend": mllm})
+
+    doc_batch = list(fulltext_corpus.documents)[:4]
+    candidates, subject_sets = MLLMCandidateGenerator.generate_for_doc_batch(doc_batch)
+
+    assert len(candidates) == len(doc_batch)
+    assert len(subject_sets) == len(doc_batch)
+    assert subject_sets == [doc.subject_set for doc in doc_batch]
+    assert all(isinstance(doc_candidates, list) for doc_candidates in candidates)
+    assert any(candidates)
+
+
+def test_mllm_hyperopt_parallel_n_jobs_2(project, fulltext_corpus, monkeypatch):
+    """Test MLLM hyperopt with n_jobs=2, processing the corpus in multiple
+    document batches and accumulating their unordered results"""
+    monkeypatch.setattr(fulltext_corpus, "DOC_BATCH_SIZE", 4)
+    monkeypatch.setattr(
+        annif.parallel, "get_pool", lambda n_jobs: (n_jobs, multiprocessing.dummy.Pool)
+    )
     mllm_type = annif.backend.get_backend("mllm")
     mllm = mllm_type(
         backend_id="mllm",
@@ -133,7 +164,6 @@ def test_mllm_hyperopt_parallel_n_jobs_2(project, fulltext_corpus):
     optimizer = mllm.get_hp_optimizer(fulltext_corpus, metric="NDCG")
     result = optimizer.optimize(n_trials=3, n_jobs=2, results_file=None)
 
-    # Verify result is a valid HPRecommendation with expected structure
     assert len(result.lines) == 3
 
 
