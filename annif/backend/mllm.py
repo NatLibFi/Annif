@@ -94,22 +94,23 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
         all_candidates = []
         gold_subjects = []
 
-        # Parallelize generation of candidates
-        n_jobs, pool_constructor = annif.parallel.get_pool(n_jobs)
-
-        # Generate candidates in parallel, processing bounded document
-        # batches instead of loading the whole corpus at once
-        with pool_constructor(
-            n_jobs,
-            initializer=MLLMCandidateGenerator.init,
-            initargs=({"backend": self._backend},),
-        ) as pool:
-            for candidates, subject_sets in pool.imap_unordered(
-                MLLMCandidateGenerator.generate_for_doc_batch,
-                self._corpus.doc_batches,
-            ):
-                all_candidates.extend(candidates)
-                gold_subjects.extend(subject_sets)
+        if n_jobs == 1:
+            for doc in self._corpus.documents:
+                all_candidates.append(self._backend._generate_candidates(doc.text))
+                gold_subjects.append(doc.subject_set)
+        else:
+            n_jobs, pool_constructor = annif.parallel.get_pool(n_jobs)
+            with pool_constructor(
+                n_jobs,
+                initializer=MLLMCandidateGenerator.init,
+                initargs=({"backend": self._backend},),
+            ) as pool:
+                for candidates, subject_sets in pool.imap_unordered(
+                    MLLMCandidateGenerator.generate_for_doc_batch,
+                    self._corpus.doc_batches,
+                ):
+                    all_candidates.extend(candidates)
+                    gold_subjects.extend(subject_sets)
 
         return {
             "train_x": train_x,
