@@ -65,8 +65,11 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         sources: list[tuple[str, float]],
         params: dict[str, Any],
     ) -> SuggestionBatch:
-        reg_batch_by_source = {}
-        for project_id, batch in batch_by_source.items():
+        reg_batches = []
+        for project_id, _ in sources:
+            # align the source batch with this project's vocabulary, so that
+            # the regression models below can be keyed by its subject IDs
+            batch = self._align_batch(batch_by_source[project_id], project_id)
             reg_models = self._get_model(project_id)
             pav_batch = [
                 [
@@ -84,43 +87,61 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
                 ]
                 for result in batch
             ]
-            reg_batch_by_source[project_id] = SuggestionBatch.from_sequence(
-                pav_batch, self.project.subjects
+            reg_batches.append(
+                SuggestionBatch.from_sequence(pav_batch, self.project.subjects)
             )
 
-        return super()._merge_source_batches(reg_batch_by_source, sources, params)
+        # average the regressed batches directly; they are already aligned
+        # with this project's vocabulary, so super()._merge_source_batches
+        # must not try to align them again
+        weights = [weight for _, weight in sources]
+        return SuggestionBatch.from_averaged(reg_batches, weights).filter(
+            limit=int(params["limit"])
+        )
 
-    @staticmethod
     def _suggest_train_corpus(
-        source_project: AnnifProject, corpus: DocumentCorpus
+        self,
+        source_project: AnnifProject,
+        source_project_id: str,
+        subject_map: np.ndarray | None,
+        corpus: DocumentCorpus,
     ) -> tuple[csc_matrix, csc_matrix]:
         # lists for constructing score matrix
         data, row, col = [], [], []
         # lists for constructing true label matrix
         trow, tcol = [], []
 
+        n_subjects = len(self.project.subjects)
         ndocs = 0
         for docid, doc in enumerate(corpus.documents):
-            hits = source_project.suggest([doc])[0]
-            vector = hits.as_vector()
-            for cid in np.flatnonzero(vector):
-                data.append(vector[cid])
-                row.append(docid)
-                col.append(cid)
-            for cid in np.flatnonzero(
-                doc.subject_set.as_vector(len(source_project.subjects))
-            ):
+            batch = source_project.suggest([doc])
+            self._check_source_width(
+                source_project_id, batch.array.shape[1], len(source_project.subjects)
+            )
+            hits = batch[0]
+            # map the suggested source subject IDs onto ensemble subject IDs
+            for suggestion in hits:
+                subject_id = (
+                    subject_map[suggestion.subject_id]
+                    if subject_map is not None
+                    else suggestion.subject_id
+                )
+                if subject_id >= 0:
+                    data.append(suggestion.score)
+                    row.append(docid)
+                    col.append(subject_id)
+            for subject_id in doc.subject_set:
                 trow.append(docid)
-                tcol.append(cid)
+                tcol.append(subject_id)
             ndocs += 1
         scores = coo_matrix(
             (data, (row, col)),
-            shape=(ndocs, len(source_project.subjects)),
+            shape=(ndocs, n_subjects),
             dtype=np.float32,
         )
         true = coo_matrix(
             (np.ones(len(trow), dtype=bool), (trow, tcol)),
-            shape=(ndocs, len(source_project.subjects)),
+            shape=(ndocs, n_subjects),
             dtype=bool,
         )
         return csc_matrix(scores), csc_matrix(true)
@@ -134,11 +155,20 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
             )
         )
         source_project = self.project.registry.get_project(source_project_id)
-        # suggest subjects for the training corpus
-        scores, true = self._suggest_train_corpus(source_project, corpus)
-        # create the concept-specific PAV regression models
+        # suggest subjects for the training corpus, aligned with this
+        # project's vocabulary
+        subject_map = self._source_subject_map(source_project_id)
+        scores, true = self._suggest_train_corpus(
+            source_project, source_project_id, subject_map, corpus
+        )
+        # create the concept-specific PAV regression models; only concepts
+        # that the source can suggest need a model
         pav_regressions = {}
-        for cid in range(len(source_project.subjects)):
+        if subject_map is None:
+            concept_ids = range(len(self.project.subjects))
+        else:
+            concept_ids = np.unique(subject_map[subject_map >= 0])
+        for cid in concept_ids:
             if true[:, cid].sum() < min_docs:
                 continue  # don't create model b/c of too few examples
             reg = IsotonicRegression(out_of_bounds="clip")

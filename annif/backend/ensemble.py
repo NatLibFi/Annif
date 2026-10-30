@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
+from scipy.sparse import csr_array
+
 import annif.eval
 import annif.parallel
 import annif.util
-from annif.exception import NotSupportedException
+from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import SuggestionBatch
 
 from . import backend, hyperopt
@@ -24,6 +27,9 @@ if TYPE_CHECKING:
 
 class BaseEnsembleBackend(backend.AnnifBackend):
     """Base class for ensemble backends"""
+
+    # cache of subject ID mappings per source project
+    _subject_map_cache = None
 
     def _get_sources_attribute(self, attr: str) -> list[bool | None]:
         params = self._get_backend_params(None)
@@ -48,6 +54,117 @@ class BaseEnsembleBackend(backend.AnnifBackend):
             for project_id, _ in sources
         }
 
+    def _same_vocabulary(self, source_project_id: str) -> bool:
+        """Check whether the vocabulary of the given source project is
+        the same as the ensemble vocabulary, based on subject URIs."""
+
+        source_subjects = self.project.registry.get_project(source_project_id).subjects
+        target_subjects = self.project.subjects
+        if source_subjects is target_subjects:
+            return True
+
+        source_active = source_subjects.active
+        return len(source_active) == len(target_subjects.active) and all(
+            target_subjects.by_uri(subject.uri, warnings=False) == subject_id
+            for subject_id, subject in source_active
+        )
+
+    def _source_subject_map(self, source_project_id: str) -> np.ndarray | None:
+        """Return an array that maps subject IDs of the given source project
+        to subject IDs of the ensemble project, or None when the source
+        vocabulary already matches the ensemble vocabulary."""
+
+        source_subjects = self.project.registry.get_project(source_project_id).subjects
+        target_subjects = self.project.subjects
+
+        if self._subject_map_cache is None:
+            self._subject_map_cache = {}
+        cached = self._subject_map_cache.get(source_project_id)
+        if (
+            cached is not None
+            and cached[0] is source_subjects
+            and cached[1] is target_subjects
+        ):
+            return cached[2]
+
+        if len(source_subjects) == len(target_subjects) and self._same_vocabulary(
+            source_project_id
+        ):
+            subject_map = None
+        else:
+            subject_map = np.full(len(source_subjects), -1, dtype=np.int64)
+            for subject_id, subject in source_subjects.active:
+                target_id = target_subjects.by_uri(subject.uri, warnings=False)
+                if target_id is not None:
+                    subject_map[subject_id] = target_id
+
+        self._subject_map_cache[source_project_id] = (
+            source_subjects,
+            target_subjects,
+            subject_map,
+        )
+        return subject_map
+
+    def _check_source_width(
+        self, source_project_id: str, width: int, expected: int, kind: str = "batch"
+    ) -> None:
+        """Raise NotInitializedException if the width of a source project's
+        output does not match its vocabulary, as happens with an unretrained
+        model after a vocabulary change."""
+
+        if width != expected:
+            raise NotInitializedException(
+                f"Source '{source_project_id}' returned a {kind} with "
+                f"{width} columns, but its vocabulary has {expected} "
+                "subjects. Retrain the source project after vocabulary changes.",
+                backend_id=self.backend_id,
+            )
+
+    def _align_source_vector(
+        self, vector: np.ndarray, subject_map: np.ndarray | None, source_project_id: str
+    ) -> np.ndarray:
+        """Map a dense score vector of a single source project from its own
+        vocabulary space into the ensemble vocabulary space."""
+
+        expected = (
+            len(self.project.subjects) if subject_map is None else len(subject_map)
+        )
+        self._check_source_width(
+            source_project_id, len(vector), expected, "score vector"
+        )
+
+        if subject_map is None:
+            return vector
+        aligned = np.zeros(len(self.project.subjects), dtype=np.float32)
+        keep = subject_map >= 0
+        aligned[subject_map[keep]] = vector[keep]
+        return aligned
+
+    def _align_batch(
+        self,
+        batch: SuggestionBatch,
+        source_project_id: str,
+    ) -> SuggestionBatch:
+        """Align a source batch with the ensemble vocabulary."""
+
+        target_subjects = self.project.subjects
+        subject_map = self._source_subject_map(source_project_id)
+        expected = len(target_subjects) if subject_map is None else len(subject_map)
+        self._check_source_width(source_project_id, batch.array.shape[1], expected)
+
+        if subject_map is None:
+            return batch
+        array = batch.array.tocoo()
+        target_cols = subject_map[array.col]
+        keep = target_cols >= 0
+        return SuggestionBatch(
+            csr_array(
+                (array.data[keep], (array.row[keep], target_cols[keep])),
+                shape=(array.shape[0], len(target_subjects)),
+                dtype=np.float32,
+            )
+        )
+
     def _merge_source_batches(
         self,
         batch_by_source: dict[str, SuggestionBatch],
@@ -59,7 +176,10 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         average based on the weights given in the sources tuple. Intended
         to be overridden in subclasses."""
 
-        batches = [batch_by_source[project_id] for project_id, _ in sources]
+        batches = [
+            self._align_batch(batch_by_source[project_id], project_id)
+            for project_id, _ in sources
+        ]
         weights = [weight for _, weight in sources]
         return SuggestionBatch.from_averaged(batches, weights).filter(
             limit=int(params["limit"])
@@ -122,7 +242,9 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
             self._backend.project.registry,
             self._sources,
             backend_params=None,
-            limit=int(self._backend.params["limit"]),
+            # collect full source batches; the limit is applied after
+            # alignment and averaging in the objective, as at inference time
+            limit=None,
             threshold=0.0,
         )
 
@@ -132,7 +254,13 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
             for suggestions, gold_batch in pool.imap_unordered(
                 psmap.suggest_batch, self._corpus.doc_batches
             ):
-                source_batches.append(suggestions)
+                # align each batch with the ensemble vocabulary as it is received
+                source_batches.append(
+                    {
+                        project_id: self._backend._align_batch(batch, project_id)
+                        for project_id, batch in suggestions.items()
+                    }
+                )
                 gold_batches.append(gold_batch)
 
         return {
