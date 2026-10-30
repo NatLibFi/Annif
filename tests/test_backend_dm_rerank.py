@@ -117,32 +117,32 @@ def test_dm_rerank_suggest_model_included_when_set(app_project):
     assert payload["model"] == "some-model"
 
 
-def test_dm_rerank_state_rules_prefix(app_project):
-    """With state-rules enabled the built-in indexing-policy rules are
-    prepended to the document state."""
-    from annif.backend.dm_rerank import STATE_RULES
+def test_dm_rerank_input_rules_prefix(app_project):
+    """With input-rules enabled the built-in indexing-policy rules are
+    prepended to the document input."""
+    from annif.backend.dm_rerank import INPUT_RULES
 
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {"answers": {}}
         mock_request.return_value = mock_response
 
-        dm_rerank = _make_backend(app_project, **{"state-rules": "true"})
+        dm_rerank = _make_backend(app_project, **{"input-rules": "true"})
         with _mock_source(app_project, [(0, 0.9)]):
             dm_rerank.suggest([Document(text="test document")])
 
     payload = mock_request.call_args.kwargs["json"]
-    assert payload["state"] == STATE_RULES + "test document"
+    assert payload["state"] == INPUT_RULES + "test document"
 
 
-def test_dm_rerank_state_prefix(app_project):
-    """A custom state-prefix is prepended to the document state."""
+def test_dm_rerank_input_prefix(app_project):
+    """A custom input-prefix is prepended to the document input."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {"answers": {}}
         mock_request.return_value = mock_response
 
-        dm_rerank = _make_backend(app_project, **{"state-prefix": "Custom rule. "})
+        dm_rerank = _make_backend(app_project, **{"input-prefix": "Custom rule. "})
         with _mock_source(app_project, [(0, 0.9)]):
             dm_rerank.suggest([Document(text="test document")])
 
@@ -150,9 +150,9 @@ def test_dm_rerank_state_prefix(app_project):
     assert payload["state"] == "Custom rule. test document"
 
 
-def test_dm_rerank_state_prefix_overrides_state_rules(app_project):
-    """state-prefix takes precedence when state-rules is also enabled."""
-    from annif.backend.dm_rerank import STATE_RULES
+def test_dm_rerank_input_prefix_overrides_input_rules(app_project):
+    """input-prefix takes precedence when input-rules is also enabled."""
+    from annif.backend.dm_rerank import INPUT_RULES
 
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
@@ -160,44 +160,44 @@ def test_dm_rerank_state_prefix_overrides_state_rules(app_project):
         mock_request.return_value = mock_response
 
         dm_rerank = _make_backend(
-            app_project, **{"state-rules": "true", "state-prefix": "Custom rule. "}
+            app_project, **{"input-rules": "true", "input-prefix": "Custom rule. "}
         )
         with _mock_source(app_project, [(0, 0.9)]):
             dm_rerank.suggest([Document(text="test document")])
 
     payload = mock_request.call_args.kwargs["json"]
     assert payload["state"] == "Custom rule. test document"
-    assert not payload["state"].startswith(STATE_RULES)
+    assert not payload["state"].startswith(INPUT_RULES)
 
 
-def test_dm_rerank_state_transform(app_project):
-    """The state-transform parameter is applied to the document text
+def test_dm_rerank_input_transform(app_project):
+    """The input-transform parameter is applied to the document text
     before it is sent to the reranking service."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {"answers": {}}
         mock_request.return_value = mock_response
 
-        dm_rerank = _make_backend(app_project, **{"state-transform": "limit(10)"})
+        dm_rerank = _make_backend(app_project, **{"input-transform": "limit(10)"})
         with _mock_source(app_project, [(0, 0.9)]):
             dm_rerank.suggest([Document(text="test document")])
 
     payload = mock_request.call_args.kwargs["json"]
-    # the state is truncated to 10 characters
+    # the input is truncated to 10 characters
     assert payload["state"] == "test docum"
 
 
-def test_dm_rerank_state_transform_gets_project(app_project):
-    """The backend's project is passed to the state transform, so that
+def test_dm_rerank_input_transform_gets_project(app_project):
+    """The backend's project is passed to the input transform, so that
     project-dependent transforms such as filter_lang can use its language
     and analyzer."""
-    dm_rerank = _make_backend(app_project, **{"state-transform": "pass"})
-    transform = dm_rerank._get_state_transform(dm_rerank.params)
+    dm_rerank = _make_backend(app_project, **{"input-transform": "pass"})
+    transform = dm_rerank._get_input_transform(dm_rerank.params)
     assert transform.project is app_project
 
 
-def test_dm_rerank_state_transform_per_call_override(app_project):
-    """A per-call state-transform override is honored, even when the
+def test_dm_rerank_input_transform_per_call_override(app_project):
+    """A per-call input-transform override is honored, even when the
     configured parameter is pass (the default)."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
@@ -207,15 +207,15 @@ def test_dm_rerank_state_transform_per_call_override(app_project):
         dm_rerank = _make_backend(app_project)
         with _mock_source(app_project, [(0, 0.9)]):
             dm_rerank.suggest(
-                [Document(text="test document")], {"state-transform": "limit(10)"}
+                [Document(text="test document")], {"input-transform": "limit(10)"}
             )
 
     payload = mock_request.call_args.kwargs["json"]
-    # the override truncates the state to 10 characters
+    # the override truncates the input to 10 characters
     assert payload["state"] == "test docum"
 
 
-def test_dm_rerank_state_transform_override_does_not_poison_cache(app_project):
+def test_dm_rerank_input_transform_override_does_not_poison_cache(app_project):
     """A per-call override does not affect subsequent calls, which keep
     using the configured transform."""
     with unittest.mock.patch("requests.post") as mock_request:
@@ -226,7 +226,7 @@ def test_dm_rerank_state_transform_override_does_not_poison_cache(app_project):
         dm_rerank = _make_backend(app_project)
         with _mock_source(app_project, [(0, 0.9)]):
             dm_rerank.suggest(
-                [Document(text="test document")], {"state-transform": "limit(10)"}
+                [Document(text="test document")], {"input-transform": "limit(10)"}
             )
             # regular call afterwards: the configured transform (pass)
             # applies again
@@ -257,7 +257,7 @@ def _squash(raw):
 def test_dm_rerank_squash():
     """The backend squash maps raw scores into [0, 1): positive values
     are squashed monotonically, zero and any negative value (possible
-    only with a malformed noul score from the service) are clamped to
+    only with a malformed decision model score from the service) are clamped to
     0.0."""
     from annif.backend.dm_rerank import _squash as backend_squash
 
@@ -273,9 +273,9 @@ def test_dm_rerank_squash():
 
 def test_dm_rerank_blend_scores(app_project):
     """The blended score is the monotonic squash of
-    source * odds(noul)^model-strength * gate, where the odds term is
-    (noul + eps) / (1 - noul + eps) and the gate is a sigmoid on the raw
-    noul score."""
+    source * odds(p)^model-strength * gate, where the odds term is
+    (p + eps) / (1 - p + eps) and the gate is a sigmoid on the raw
+    decision model score."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {
@@ -308,17 +308,17 @@ def test_dm_rerank_blend_empty_suggestions():
 
 
 def test_dm_rerank_blend_reorders(app_project):
-    """The noul score can reorder candidates: a low source score with a
-    high noul score moves above a high source score with a low noul
-    score."""
+    """The decision model score can reorder candidates: a low source score
+    with a high decision model score moves above a high source score with a
+    low decision model score."""
     dm_rerank_type = annif.backend.get_backend("dm_rerank")
     suggestions = [
         SubjectSuggestion(0, 0.9),
         SubjectSuggestion(1, 0.8),
         SubjectSuggestion(2, 0.7),
     ]
-    noul_scores = {0: 0.01, 1: 0.99, 2: 0.5}
-    blended = dm_rerank_type._blend(suggestions, noul_scores, 1.0, -0.25)
+    dm_scores = {0: 0.01, 1: 0.99, 2: 0.5}
+    blended = dm_rerank_type._blend(suggestions, dm_scores, 1.0, -0.25)
     by_id = {s.subject_id: s.score for s in blended}
     assert by_id[0] == pytest.approx(_squash(0.9 * _odds(0.01) * _sigmoid(0.01, -0.25)))
     assert by_id[1] == pytest.approx(_squash(0.8 * _odds(0.99) * _sigmoid(0.99, -0.25)))
@@ -335,8 +335,8 @@ def test_dm_rerank_blend_boosts(app_project):
         SubjectSuggestion(0, 0.4),
         SubjectSuggestion(1, 0.3),
     ]
-    noul_scores = {0: 0.9, 1: 0.1}
-    blended = dm_rerank_type._blend(suggestions, noul_scores, 1.5, -1.0)
+    dm_scores = {0: 0.9, 1: 0.1}
+    blended = dm_rerank_type._blend(suggestions, dm_scores, 1.5, -1.0)
     by_id = {s.subject_id: s.score for s in blended}
     # exactly-off gate (threshold -1.0), pure odds-ratio effect,
     # squashed into [0, 1)
@@ -352,9 +352,9 @@ def test_dm_rerank_blend_boosts(app_project):
 
 
 def test_dm_rerank_blend_gate(app_project):
-    """With model-strength=0 and a positive gate threshold the noul score
-    acts as a precision gate: a low-noul candidate is demoted below a
-    high-noul one despite the better source score."""
+    """With model-strength=0 and a positive gate threshold the decision model score
+    acts as a precision gate: a low-decision-model-score candidate is demoted below a
+    high-decision-model-score one despite the better source score."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {
@@ -384,7 +384,7 @@ def test_dm_rerank_blend_gate(app_project):
 @pytest.mark.parametrize("threshold", [100, 2.0, -2.0, float("nan"), float("inf")])
 def test_dm_rerank_gate_threshold_out_of_range(app_project, threshold):
     """A gate-threshold outside [-1.0, 1.0] (including non-finite
-    values) is rejected: noul scores are in [0, 1], so such a threshold
+    values) is rejected: decision model scores are in [0, 1], so such a threshold
     is meaningless, and a sufficiently large positive one would overflow
     the sigmoid's math.exp instead of producing a near-zero gate."""
     dm_rerank = _make_backend(app_project, **{"gate-threshold": threshold})
@@ -438,11 +438,11 @@ def test_dm_rerank_gate_threshold_boundary(app_project, threshold):
 
 def test_dm_rerank_blend_extreme_threshold_no_overflow():
     """_blend itself stays safe for thresholds within the validated
-    range even at the noul boundary (the pre-validation guarantees the
+    range even at the decision model score boundary (the pre-validation guarantees the
     sigmoid argument stays bounded)."""
     dm_rerank_type = annif.backend.get_backend("dm_rerank")
     suggestions = [SubjectSuggestion(0, 0.5)]
-    # threshold 1.0, noul 0.0: the largest (in magnitude-safe) argument
+    # threshold 1.0, decision model score 0.0: the largest (in magnitude-safe) argument
     # within the validated range
     blended = dm_rerank_type._blend(suggestions, {0: 0.0}, 1.0, 1.0)
     assert len(blended) == 1
@@ -455,7 +455,7 @@ def test_dm_rerank_blend_extreme_threshold_no_overflow():
 def test_dm_rerank_model_strength_out_of_range(app_project, strength):
     """A model-strength outside [0.0, 2.0] (including non-finite values)
     is rejected with a configuration error. A sufficiently large finite
-    value (e.g. 1e308 with a noul score of 1.0) would otherwise raise
+    value (e.g. 1e308 with a decision model score of 1.0) would otherwise raise
     OverflowError in the odds exponentiation, and a negative value would
     invert the model's verdict."""
     dm_rerank = _make_backend(app_project, **{"model-strength": strength})
@@ -512,8 +512,8 @@ def test_dm_rerank_model_strength_in_range(app_project, strength):
         assert math.isfinite(suggestion.score)
 
 
-def test_dm_rerank_blend_missing_noul(app_project):
-    """A candidate without a noul score gets its source score on the same
+def test_dm_rerank_blend_missing_score(app_project):
+    """A candidate without a decision model score gets its source score on the same
     squashed scale as the scored candidates, so a missing decision model
     degrades to the source ranking on a stable scale."""
     with unittest.mock.patch("requests.post") as mock_request:
@@ -529,7 +529,7 @@ def test_dm_rerank_blend_missing_noul(app_project):
 
     suggestions = list(result[0])
     by_id = {int(s.subject_id): s.score for s in suggestions}
-    # subject 1 has no noul score: its raw source score is mapped through
+    # subject 1 has no decision model score: its raw source score is mapped through
     # the same squash so both candidates are on one scale; the gate is
     # exactly off at the default threshold -1.0
     assert by_id[1] == pytest.approx(_squash(0.8))
@@ -537,8 +537,8 @@ def test_dm_rerank_blend_missing_noul(app_project):
     assert [int(s.subject_id) for s in suggestions] == [0, 1]
 
 
-def test_dm_rerank_blend_no_noul_scores(app_project):
-    """When no candidate has a noul score (empty answers), every score is
+def test_dm_rerank_blend_no_scores(app_project):
+    """When no candidate has a decision model score (empty answers), every score is
     the source score mapped through the same squash as the scored
     candidates: a missing model answer equals neutral model evidence and
     the scores stay on a stable scale."""
@@ -660,16 +660,16 @@ def test_dm_rerank_blend_pure_source(app_project):
 def test_dm_rerank_blend_pure_source_preserves_closely_spaced_order(app_project):
     """Regression: the pure-source point (model-strength=0,
     gate-threshold=-1) must not let the model answer change the ranking,
-    even for closely spaced source scores and opposite noul scores."""
+    even for closely spaced source scores and opposite decision model scores."""
     dm_rerank_type = annif.backend.get_backend("dm_rerank")
     suggestions = [
         SubjectSuggestion(0, 0.5),
         SubjectSuggestion(1, 0.499999),
     ]
     # the worst-case contrast: the lower source score has the highest
-    # noul score and vice versa
-    noul_scores = {0: 0.0, 1: 1.0}
-    blended = dm_rerank_type._blend(suggestions, noul_scores, 0.0, -1.0)
+    # decision model score and vice versa
+    dm_scores = {0: 0.0, 1: 1.0}
+    blended = dm_rerank_type._blend(suggestions, dm_scores, 0.0, -1.0)
     by_id = {s.subject_id: s.score for s in blended}
     # the gate is exactly off and the odds term is a no-op, so the
     # scores are exactly the squashed source scores
@@ -683,7 +683,7 @@ def test_dm_rerank_suggest_pure_source_preserves_order(app_project):
     """Regression: through the full suggest pipeline (including the
     float32 conversion of the suggestion batch) the pure-source point
     still preserves closely spaced source scores in their source order,
-    regardless of the noul scores."""
+    regardless of the decision model scores."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
         mock_response.json.return_value = {
@@ -804,11 +804,11 @@ def _ok_response(score: float = 0.9):
     return mock_response
 
 
-def test_dm_rerank_400_retries_with_reduced_state(app_project):
-    """A 400 response is retried with the state reduced to 75% of the
+def test_dm_rerank_400_retries_with_reduced_input(app_project):
+    """A 400 response is retried with the input reduced to 75% of the
     original (and 50% if needed); the reductions are applied to the
-    original state, not cascaded."""
-    long_state = "a" * 1000
+    original input, not cascaded."""
+    long_input = "a" * 1000
     with (
         unittest.mock.patch("requests.post") as mock_request,
         unittest.mock.patch("time.sleep") as mock_sleep,
@@ -821,16 +821,16 @@ def test_dm_rerank_400_retries_with_reduced_state(app_project):
 
         dm_rerank = _make_backend(app_project)
         with _mock_source(app_project, [(0, 0.9)]):
-            result = dm_rerank.suggest([Document(text=long_state)])
+            result = dm_rerank.suggest([Document(text=long_input)])
 
     assert mock_request.call_count == 3
-    # the state (without the empty prefix) must be reduced to 75% then 50%
-    # of the original 1000-char state, not 50% of 75%
-    states = [call.kwargs["json"]["state"] for call in mock_request.call_args_list]
-    assert len(states[0]) == 1000
-    assert len(states[1]) == 750
-    assert len(states[2]) == 500
-    # the successful (reduced) request yields the noul score
+    # the input (without the empty prefix) must be reduced to 75% then 50%
+    # of the original 1000-char input, not 50% of 75%
+    inputs = [call.kwargs["json"]["state"] for call in mock_request.call_args_list]
+    assert len(inputs[0]) == 1000
+    assert len(inputs[1]) == 750
+    assert len(inputs[2]) == 500
+    # the successful (reduced) request yields the decision model score
     suggestions = list(result[0])
     assert [int(s.subject_id) for s in suggestions] == [0]
     # no transient backoff is used for the 400 cascade
@@ -869,30 +869,30 @@ def test_dm_rerank_400_all_retries_fail_keeps_source_scores(app_project):
             result = dm_rerank.suggest([Document(text="a" * 1000)])
 
     assert mock_request.call_count == 3
-    # the source score passes through the blend unmodified by any noul
+    # the source score passes through the blend unmodified by any decision model
     # score (only the usual squash is applied)
     suggestions = list(result[0])
     assert [int(s.subject_id) for s in suggestions] == [0]
     assert suggestions[0].score == pytest.approx(_squash(0.9))
 
 
-def test_dm_rerank_400_preserves_state_prefix_on_retries(app_project):
-    """The state-prefix is kept intact on the 400 retries; only the
-    document state is reduced."""
+def test_dm_rerank_400_preserves_input_prefix_on_retries(app_project):
+    """The input-prefix is kept intact on the 400 retries; only the
+    document input is reduced."""
     with (
         unittest.mock.patch("requests.post") as mock_request,
         unittest.mock.patch("time.sleep"),
     ):
         mock_request.side_effect = [_http_error(400), _ok_response()]
 
-        dm_rerank = _make_backend(app_project, **{"state-prefix": "RULES: "}, limit=100)
+        dm_rerank = _make_backend(app_project, **{"input-prefix": "RULES: "}, limit=100)
         with _mock_source(app_project, [(0, 0.9)]):
             dm_rerank.suggest([Document(text="a" * 1000)])
 
-    states = [call.kwargs["json"]["state"] for call in mock_request.call_args_list]
-    # the prefix is kept on the retry, only the state is reduced
-    assert states[0] == "RULES: " + "a" * 1000
-    assert states[1] == "RULES: " + "a" * 750
+    inputs = [call.kwargs["json"]["state"] for call in mock_request.call_args_list]
+    # the prefix is kept on the retry, only the input is reduced
+    assert inputs[0] == "RULES: " + "a" * 1000
+    assert inputs[1] == "RULES: " + "a" * 750
 
 
 def test_dm_rerank_suggest_retry_on_429_and_5xx(app_project):
@@ -969,8 +969,8 @@ def test_dm_rerank_suggest_invalid_answer_key(app_project):
                 dm_rerank.suggest([Document(text="test document")])
 
 
-def test_dm_rerank_suggest_nonnumeric_noul(app_project):
-    """A response with a nonnumeric noul score raises
+def test_dm_rerank_suggest_nonnumeric_score(app_project):
+    """A response with a nonnumeric decision model score raises
     OperationFailedException."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
@@ -983,8 +983,8 @@ def test_dm_rerank_suggest_nonnumeric_noul(app_project):
                 dm_rerank.suggest([Document(text="test document")])
 
 
-def test_dm_rerank_suggest_out_of_range_noul(app_project):
-    """A response with a noul score outside [0, 1] raises
+def test_dm_rerank_suggest_out_of_range_score(app_project):
+    """A response with a decision model score outside [0, 1] raises
     OperationFailedException."""
     with unittest.mock.patch("requests.post") as mock_request:
         mock_response = unittest.mock.Mock()
@@ -1309,7 +1309,7 @@ def test_dm_rerank_hyperopt_enqueues_source_baseline(app_project):
 
 
 def test_dm_rerank_hyperopt_recovers_source_ranking(app_project):
-    """When the noul scores carry no signal (here they actively invert
+    """When the decision model scores carry no signal (here they actively invert
     the source order) the optimizer still recommends the pure-source
     configuration, because it is evaluated as an enqueued baseline
     trial: the recommendation must never be worse than the source

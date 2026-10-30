@@ -36,9 +36,9 @@ if TYPE_CHECKING:
 # Damping for the odds-ratio term of the blend
 ODDS_EPS = 0.01
 
-# Built-in indexing-policy rules prepended to the document state when
-# 'state-rules' is enabled: the format/genre rule.
-STATE_RULES = (
+# Built-in indexing-policy rules prepended to the document input when
+# 'input-rules' is enabled: the format/genre rule.
+INPUT_RULES = (
     "You are a librarian performing topical subject indexing. "
     "A document can have several central subjects. "
     "Do NOT assign the document's own format or genre as a subject "
@@ -48,8 +48,8 @@ STATE_RULES = (
 )
 
 # When the reranking service rejects a request (HTTP 400), retry it with
-# the state reduced to these fractions of the original, in order.
-STATE_REDUCE_FRACTIONS = (1.0, 0.75, 0.5)
+# the input reduced to these fractions of the original, in order.
+INPUT_REDUCE_FRACTIONS = (1.0, 0.75, 0.5)
 
 
 class _RequestRejected(Exception):
@@ -65,9 +65,9 @@ def _squash(raw: float) -> float:
 
 
 class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBackend):
-    """Ensemble-style backend that blends source candidates with noul
-    scores from a decision model reranking service (noul-type true/false
-    questions)."""
+    """Ensemble-style backend that blends source candidates with scores
+    from a decision model reranking service, which answers a true/false
+    (predicate) question about each candidate."""
 
     name = "dm_rerank"
 
@@ -78,9 +78,9 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         "gate-threshold": -1.0,
         "retries": 2,
         "timeout": 60,
-        "state-rules": False,
-        "state-prefix": "",
-        "state-transform": "pass",
+        "input-rules": False,
+        "input-prefix": "",
+        "input-transform": "pass",
         "max-candidates": 0,
         "instruction": (
             "Is '{label}' a central subject of this document - one a "
@@ -96,7 +96,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         project: AnnifProject,
     ) -> None:
         super().__init__(backend_id, config_params, project)
-        self._state_transforms: dict[str, Any] = {}
+        self._input_transforms: dict[str, Any] = {}
 
     @property
     def is_trained(self) -> bool:
@@ -112,20 +112,20 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         mtimes = self._get_sources_attribute("modification_time")
         return max(filter(None, mtimes), default=None)
 
-    def _get_state_transform(self, params: dict[str, Any]):
+    def _get_input_transform(self, params: dict[str, Any]):
         """The transform applied to the document text before it is sent
-        to the reranking service as the question state, on top of the
+        to the reranking service as the question input, on top of the
         project transform. Defaults to pass (no extra transformation).
-        Useful for keeping the state within the model's context length
+        Useful for keeping the input within the model's context length
         while the source projects run on the full text. Resolved from the
         effective parameters, so per-call overrides are honored; the
         built transform is cached per specification."""
-        spec = str(params["state-transform"])
-        if spec not in self._state_transforms:
-            self._state_transforms[spec] = annif.transform.get_transform(
+        spec = str(params["input-transform"])
+        if spec not in self._input_transforms:
+            self._input_transforms[spec] = annif.transform.get_transform(
                 spec, project=self.project
             )
-        return self._state_transforms[spec]
+        return self._input_transforms[spec]
 
     def _train(
         self, corpus: DocumentCorpus, params: dict[str, Any], jobs: int = 0
@@ -147,15 +147,15 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
             return preferred
         return next((label for label in subject.labels.values() if label), None)
 
-    def _state_prefix(self, params: dict[str, Any]) -> str:
-        """Return the text to prepend to the document state: the custom
-        'state-prefix' when set, the built-in indexing-policy rules when
-        'state-rules' is enabled, otherwise an empty string."""
-        custom = str(params["state-prefix"])
+    def _input_prefix(self, params: dict[str, Any]) -> str:
+        """Return the text to prepend to the document input: the custom
+        'input-prefix' when set, the built-in indexing-policy rules when
+        'input-rules' is enabled, otherwise an empty string."""
+        custom = str(params["input-prefix"])
         if custom:
             return custom
-        if boolean(params["state-rules"]):
-            return STATE_RULES
+        if boolean(params["input-rules"]):
+            return INPUT_RULES
         return ""
 
     def _post_with_transient_retries(
@@ -211,11 +211,13 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
             msg = f"invalid instruction template: {err}"
             raise ConfigurationException(msg) from err
 
-    def _build_questions(
+    def _build_systemone_questions(
         self, suggestions: list[SubjectSuggestion], instruction: str
     ) -> dict[str, dict[str, str]]:
-        """Build the noul question for each candidate subject that has a
-        label, keyed by the subject ID."""
+        """Build the System One true/false question for each candidate
+        subject that has a label, keyed by the subject ID. (The System One
+        dialect names the binary question type 'noul' and carries the
+        questions as a map keyed by question ID.)"""
         questions = {}
         for suggestion in suggestions:
             label = self._label_for_subject(suggestion.subject_id)
@@ -233,29 +235,30 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         return questions
 
     @staticmethod
-    def _reduced_state(state: str, fraction: float) -> str:
-        """Truncate the state to the given fraction of its length."""
+    def _reduced_input(input_text: str, fraction: float) -> str:
+        """Truncate the input to the given fraction of its length."""
         if fraction >= 1.0:
-            return state
-        return state[: max(0, round(len(state) * fraction))]
+            return input_text
+        return input_text[: max(0, round(len(input_text) * fraction))]
 
-    def _send_with_state_reduction(
+    def _send_with_input_reduction(
         self,
         endpoint: str,
-        state_prefix: str,
-        state: str,
+        input_prefix: str,
+        input_text: str,
         questions: dict[str, dict[str, str]],
         model: str,
         retries: int,
         timeout: float,
     ) -> requests.Response | None:
-        """Send the request, retrying on a 400 response with the state
-        reduced to the fractions in STATE_REDUCE_FRACTIONS of the
-        original. Returns None if the request is still rejected after
+        """Send the System One request, retrying on a 400 response with
+        the input reduced to the fractions in INPUT_REDUCE_FRACTIONS of
+        the original. Returns None if the request is still rejected after
         the last fraction."""
-        for fraction_index, fraction in enumerate(STATE_REDUCE_FRACTIONS):
+        for fraction_index, fraction in enumerate(INPUT_REDUCE_FRACTIONS):
+            # the System One dialect names the shared input field 'state'
             payload = {
-                "state": state_prefix + self._reduced_state(state, fraction),
+                "state": input_prefix + self._reduced_input(input_text, fraction),
                 "questions": questions,
             }
             if model:
@@ -265,25 +268,26 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
                     endpoint, payload, timeout, retries
                 )
             except _RequestRejected:
-                if fraction_index + 1 >= len(STATE_REDUCE_FRACTIONS):
+                if fraction_index + 1 >= len(INPUT_REDUCE_FRACTIONS):
                     self.warning(
                         "dm_rerank request to {endpoint} still rejected "
-                        "(400) with the state reduced to {fraction:.0%}; "
+                        "(400) with the input reduced to {fraction:.0%}; "
                         "scoring this document with its source scores "
                         "only".format(endpoint=endpoint, fraction=fraction)
                     )
                     return None
-                next_fraction = STATE_REDUCE_FRACTIONS[fraction_index + 1]
+                next_fraction = INPUT_REDUCE_FRACTIONS[fraction_index + 1]
                 self.warning(
                     "dm_rerank request to {endpoint} rejected (400); "
-                    "retrying with the state reduced to {fraction:.0%} of "
+                    "retrying with the input reduced to {fraction:.0%} of "
                     "the original".format(endpoint=endpoint, fraction=next_fraction)
                 )
         return None
 
-    def _parse_noul_scores(self, req: requests.Response) -> dict[int, float]:
-        """Parse the service response into a mapping subject_id -> noul
-        score."""
+    def _parse_systemone_response(self, req: requests.Response) -> dict[int, float]:
+        """Parse the System One response into a mapping subject_id ->
+        decision model score (the 'noul' value: the probability that the
+        predicate is true)."""
         try:
             response = req.json()
         except ValueError as err:
@@ -294,7 +298,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         if not isinstance(answers, dict):
             msg = "dm_rerank response does not contain a valid 'answers' object"
             raise OperationFailedException(msg)
-        noul_scores = {}
+        dm_scores = {}
         for subject_id_str, answer in answers.items():
             if not isinstance(answer, dict):
                 msg = (
@@ -307,14 +311,14 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
                 continue
             if isinstance(score, bool) or not isinstance(score, (int, float)):
                 msg = (
-                    f"dm_rerank noul score for subject {subject_id_str!r} "
-                    f"is not a number: {score!r}"
+                    f"dm_rerank decision model score for subject "
+                    f"{subject_id_str!r} is not a number: {score!r}"
                 )
                 raise OperationFailedException(msg)
             if not 0.0 <= score <= 1.0:
                 msg = (
-                    f"dm_rerank noul score for subject {subject_id_str!r} "
-                    f"is outside [0, 1]: {score!r}"
+                    f"dm_rerank decision model score for subject "
+                    f"{subject_id_str!r} is outside [0, 1]: {score!r}"
                 )
                 raise OperationFailedException(msg)
             try:
@@ -322,13 +326,13 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
             except (TypeError, ValueError) as err:
                 msg = f"dm_rerank answer key {subject_id_str!r} is not a subject ID"
                 raise OperationFailedException(msg) from err
-            noul_scores[subject_id] = float(score)
+            dm_scores[subject_id] = float(score)
 
-        if noul_scores:
-            values = list(noul_scores.values())
+        if dm_scores:
+            values = list(dm_scores.values())
             self.debug(
-                "dm_rerank noul scores: min {:.3f}, mean {:.3f}, max {:.3f} "
-                "for {} candidates".format(
+                "dm_rerank decision model scores: min {:.3f}, mean {:.3f}, "
+                "max {:.3f} for {} candidates".format(
                     min(values),
                     sum(values) / len(values),
                     max(values),
@@ -336,31 +340,32 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
                 )
             )
 
-        return noul_scores
+        return dm_scores
 
     def _query_dm_rerank(
         self, doc: Document, suggestions: list[SubjectSuggestion], params
     ) -> dict[int, float]:
-        """Ask the reranking service for a noul score for every candidate
-        subject that has a label, and return a mapping subject_id -> noul
-        score. Candidates without a label are not included in the mapping.
+        """Ask the reranking service for a decision model score for every
+        candidate subject that has a label, and return a mapping
+        subject_id -> decision model score. Candidates without a label are
+        not included in the mapping.
 
-        A 400 response is retried with the state reduced to the fractions
-        in STATE_REDUCE_FRACTIONS of the original; if every fraction is
+        A 400 response is retried with the input reduced to the fractions
+        in INPUT_REDUCE_FRACTIONS of the original; if every fraction is
         rejected, an empty mapping is returned so that the document keeps
         its plain source scores and the run is not aborted."""
         instruction = str(params["instruction"])
         self._validate_instruction(instruction)
-        questions = self._build_questions(suggestions, instruction)
+        questions = self._build_systemone_questions(suggestions, instruction)
         if not questions:
             return {}
 
-        state_prefix = self._state_prefix(params)
-        state = self._get_state_transform(params).transform_doc(doc).text
-        req = self._send_with_state_reduction(
+        input_prefix = self._input_prefix(params)
+        input_text = self._get_input_transform(params).transform_doc(doc).text
+        req = self._send_with_input_reduction(
             params["endpoint"].rstrip("/"),
-            state_prefix,
-            state,
+            input_prefix,
+            input_text,
             questions,
             params["model"],
             int(params["retries"]),
@@ -368,7 +373,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         )
         if req is None:
             return {}
-        return self._parse_noul_scores(req)
+        return self._parse_systemone_response(req)
 
     def _validate_params(self, params: dict[str, Any]) -> None:
         """Validate the effective parameters to avoid numerical issues."""
@@ -401,35 +406,38 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
     def _process_document(
         self, doc: Document, suggestions: list[SubjectSuggestion], params
     ) -> list[SubjectSuggestion]:
-        """Re-score the candidate subjects of one document using the noul
-        scores from the reranking service and the model-strength /
-        gate-threshold parameters."""
-        noul_scores = self._query_dm_rerank(doc, suggestions, params)
+        """Re-score the candidate subjects of one document using the
+        decision model scores from the reranking service and the
+        model-strength / gate-threshold parameters."""
+        dm_scores = self._query_dm_rerank(doc, suggestions, params)
         b = float(params["model-strength"])
         gate_threshold = float(params["gate-threshold"])
-        return self._blend(suggestions, noul_scores, b, gate_threshold)
+        return self._blend(suggestions, dm_scores, b, gate_threshold)
 
     @staticmethod
     def _blend(
         suggestions: list[SubjectSuggestion],
-        noul_scores: dict[int, float],
+        dm_scores: dict[int, float],
         b: float,
         gate_threshold: float,
     ) -> list[SubjectSuggestion]:
-        """Blend the source and noul scores, keeping all candidates.
+        """Blend the source and decision model scores, keeping all
+        candidates.
 
-        Each candidate with a noul score is re-scored as
+        Each candidate with a decision model score p (the probability that
+        the predicate is true) is re-scored as
 
             raw = source_score
-                  * ((noul + eps) / (1 - noul + eps))**b
-                  * sigmoid((noul - tau) / 0.1)
+                  * ((p + eps) / (1 - p + eps))**b
+                  * sigmoid((p - tau) / 0.1)
 
         where eps = 0.01, b is the model-strength, and tau is the
-        gate-threshold; a candidate without a noul score passes its plain
-        source score through unmodified.
+        gate-threshold; a candidate without a decision model score passes
+        its plain source score through unmodified.
 
         A sufficiently negative gate-threshold (<= -1.0) makes the gate
-        exactly 1.0 for all noul scores in [0, 1], turning it fully off.
+        exactly 1.0 for all decision model scores in [0, 1], turning it
+        fully off.
 
         The model-strength and gate-threshold are validated in
         _validate_params before blending: the model-strength is within
@@ -443,15 +451,15 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
 
         blended = []
         for suggestion in suggestions:
-            noul = noul_scores.get(suggestion.subject_id)
-            if noul is None:
+            dm_score = dm_scores.get(suggestion.subject_id)
+            if dm_score is None:
                 raw = suggestion.score
             else:
                 if gate_threshold <= -1.0:
                     gate = 1.0
                 else:
-                    gate = 1.0 / (1.0 + math.exp(-(noul - gate_threshold) / 0.1))
-                odds = (noul + ODDS_EPS) / (1.0 - noul + ODDS_EPS)
+                    gate = 1.0 / (1.0 + math.exp(-(dm_score - gate_threshold) / 0.1))
+                odds = (dm_score + ODDS_EPS) / (1.0 - dm_score + ODDS_EPS)
                 raw = suggestion.score * odds**b * gate
             score = _squash(raw)
             blended.append(
@@ -503,9 +511,9 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
 class DMRerankHPObjective(hyperopt.HPObjective):
     """Objective function of the dm_rerank hyperparameter optimizer. Sweeps
     the model-strength and gate-threshold blend parameters over the cached
-    source and noul score batches; the expensive decision-model calls have
-    already been made during _prepare, so each trial is a pure re-blend of
-    the same per-document scores."""
+    source and decision model score batches; the expensive decision-model
+    calls have already been made during _prepare, so each trial is a pure
+    re-blend of the same per-document scores."""
 
     @classmethod
     def objective(cls, trial: Trial, args) -> float:
@@ -525,8 +533,8 @@ class DMRerankHPObjective(hyperopt.HPObjective):
         eval_batch = annif.eval.EvaluationBatch(args["subject_index"])
         limit = int(args["limit"])
         blended_lists = [
-            DMRerankBackend._blend(source, noul, b, tau)[:limit]
-            for source, noul in zip(args["source_suggestions"], args["noul_scores"])
+            DMRerankBackend._blend(source, dm_scores, b, tau)[:limit]
+            for source, dm_scores in zip(args["source_suggestions"], args["dm_scores"])
         ]
         eval_batch.evaluate_many(blended_lists, args["gold_batches"])
         results = eval_batch.results(metrics=[args["metric"]])
@@ -576,13 +584,13 @@ class DMRerankOptimizer(hyperopt.HyperparameterOptimizer):
         # process the corpus incrementally, batch by batch: apply the
         # project transform (e.g. transform=limit(5000)), generate the
         # source suggestions, and query the decision model once per
-        # document, retaining only the per-document source scores, noul
-        # scores, and gold labels that the trials need; each batch's
+        # document, retaining only the per-document source scores, decision
+        # model scores, and gold labels that the trials need; each batch's
         # documents can be garbage-collected as soon as it is done, so
         # the full text of the whole corpus never has to fit in memory
         transform = self._backend.project.transform
         source_suggestions = []
-        noul_scores = []
+        dm_scores = []
         gold_batches = []
         n_documents = 0
         with pool_class(jobs) as pool:
@@ -609,7 +617,7 @@ class DMRerankOptimizer(hyperopt.HyperparameterOptimizer):
                         candidates = candidates[:max_candidates]
                     source_suggestions.append(candidates)
                     gold_batches.append(subject_sets[idx])
-                    noul_scores.append(
+                    dm_scores.append(
                         self._backend._query_dm_rerank(
                             docs[idx], candidates, self._backend.params
                         )
@@ -624,7 +632,7 @@ class DMRerankOptimizer(hyperopt.HyperparameterOptimizer):
 
         return {
             "source_suggestions": source_suggestions,
-            "noul_scores": noul_scores,
+            "dm_scores": dm_scores,
             "gold_batches": gold_batches,
             "limit": limit,
             "subject_index": self._backend.project.subjects,
