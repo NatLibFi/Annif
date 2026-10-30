@@ -1479,7 +1479,7 @@ def test_optimize_resultsfile(tmpdir):
             ]
         )
         first = next(f)
-        assert first.strip("\n") == "1\t0\t0.500000\t0.500000\t0.500000\t1"
+        assert first.strip("\n") == "1\t0.0000\t0.500000\t0.500000\t0.500000\t1"
         nlines = 1
         for line in f:
             parts = line.strip("\n").split("\t")
