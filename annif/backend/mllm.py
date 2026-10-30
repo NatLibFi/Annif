@@ -9,6 +9,7 @@ import joblib
 import numpy as np
 
 import annif.eval
+import annif.parallel
 import annif.util
 from annif.exception import NotInitializedException, NotSupportedException
 from annif.lexical.mllm import (
@@ -72,6 +73,18 @@ class MLLMHPObjective(hyperopt.HPObjective):
         return results[args["metric"]]
 
 
+class MLLMCandidateGenerator(annif.parallel.BaseWorker):
+    """Worker class for generating candidates in parallel"""
+
+    @classmethod
+    def generate_for_doc_batch(cls, doc_batch) -> tuple[list, list]:
+        """Generate candidates for a batch of documents"""
+        backend = cls.args["backend"]
+        candidates = [backend._generate_candidates(doc.text) for doc in doc_batch]
+        subject_sets = [doc.subject_set for doc in doc_batch]
+        return (candidates, subject_sets)
+
+
 class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
     """Hyperparameter optimizer for the MLLM backend"""
 
@@ -81,11 +94,23 @@ class MLLMOptimizer(hyperopt.HyperparameterOptimizer):
         all_candidates = []
         gold_subjects = []
 
-        # TODO parallelize generation of candidates
-        for doc in self._corpus.documents:
-            candidates = self._backend._generate_candidates(doc.text)
-            all_candidates.append(candidates)
-            gold_subjects.append(doc.subject_set)
+        if n_jobs == 1:
+            for doc in self._corpus.documents:
+                all_candidates.append(self._backend._generate_candidates(doc.text))
+                gold_subjects.append(doc.subject_set)
+        else:
+            n_jobs, pool_constructor = annif.parallel.get_pool(n_jobs)
+            with pool_constructor(
+                n_jobs,
+                initializer=MLLMCandidateGenerator.init,
+                initargs=({"backend": self._backend},),
+            ) as pool:
+                for candidates, subject_sets in pool.imap_unordered(
+                    MLLMCandidateGenerator.generate_for_doc_batch,
+                    self._corpus.doc_batches,
+                ):
+                    all_candidates.extend(candidates)
+                    gold_subjects.extend(subject_sets)
 
         return {
             "train_x": train_x,
