@@ -358,3 +358,25 @@ def test_merge_source_batches_rows_follow_sources_order():
 
     # weight 1.0 is on source "one", so A must be the top suggestion
     assert list(merged[0])[0].subject_id == 0
+
+
+def test_corpus_to_vectors_rejects_narrow_source_vectors(tmpdir):
+    # a source model trained on an older, smaller vocabulary emits score
+    # vectors narrower than the source vocabulary; NN training must reject
+    # them loudly instead of broadcasting them over the ensemble vocabulary
+    nn_ensemble, source_project = make_misaligned_source_backend(
+        "nn_ensemble", [(URI_B, "B source"), (URI_X, "X source")]
+    )
+    source_project.suggest = lambda docs, params=None: make_batch(
+        [0], [0], [0.7], len(docs), 1
+    )
+    corpus = make_gold_corpus(tmpdir, nn_ensemble.project.subjects)
+
+    env = lmdb.open(
+        str(tmpdir.mkdir("mdb")), map_size=1024 * 1024, writemap=True, mode=0o775
+    )
+    with env.begin(write=True, buffers=True) as txn:
+        seq = annif.backend.nn_ensemble.LMDBDataset(txn)
+        with pytest.raises(NotInitializedException, match="Retrain"):
+            nn_ensemble._corpus_to_vectors(corpus, seq, 1)
+    env.close()

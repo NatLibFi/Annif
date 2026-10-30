@@ -11,7 +11,7 @@ import pytest
 import annif.backend
 import annif.util
 from annif.corpus import Document, DocumentFileTSV
-from annif.exception import NotSupportedException
+from annif.exception import NotInitializedException, NotSupportedException
 
 from .test_backend_ensemble import (
     URI_A,
@@ -218,7 +218,7 @@ def test_suggest_train_corpus_aligns_source_vocabularies(tmpdir):
     corpus = make_gold_corpus(tmpdir, pav.project.subjects)
 
     subject_map = pav._source_subject_map("src")
-    scores, true = pav._suggest_train_corpus(source_project, subject_map, corpus)
+    scores, true = pav._suggest_train_corpus(source_project, "src", subject_map, corpus)
 
     assert scores.shape == (2, 3)
     expected_scores = np.zeros((2, 3), dtype=np.float32)
@@ -272,3 +272,20 @@ def test_create_pav_model_with_mismatched_source_vocabulary(tmpdir, monkeypatch)
     # gold standard examples; C has gold examples but the source cannot
     # suggest it, so no model is created for it
     assert list(saved.keys()) == [0]
+
+
+def test_suggest_train_corpus_rejects_narrow_source_batch(tmpdir):
+    # a source model trained on an older, smaller vocabulary emits batches
+    # narrower than the source vocabulary; PAV training must reject them
+    # loudly instead of silently misassigning scores
+    pav, source_project = make_misaligned_source_backend(
+        "pav", [(URI_B, "B source"), (URI_X, "X source")]
+    )
+    source_project.suggest = lambda docs, params=None: make_batch(
+        [0], [0], [0.7], len(docs), 1
+    )
+    corpus = make_gold_corpus(tmpdir, pav.project.subjects)
+
+    subject_map = pav._source_subject_map("src")
+    with pytest.raises(NotInitializedException, match="Retrain"):
+        pav._suggest_train_corpus(source_project, "src", subject_map, corpus)

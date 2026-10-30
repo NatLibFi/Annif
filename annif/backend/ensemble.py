@@ -10,7 +10,7 @@ from scipy.sparse import csr_array
 import annif.eval
 import annif.parallel
 import annif.util
-from annif.exception import NotSupportedException
+from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import SuggestionBatch
 
 from . import backend, hyperopt
@@ -105,11 +105,33 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         )
         return subject_map
 
+    def _check_source_width(
+        self, source_project_id: str, width: int, expected: int, kind: str = "batch"
+    ) -> None:
+        """Raise NotInitializedException if the width of a source project's
+        output does not match its vocabulary, as happens with an unretrained
+        model after a vocabulary change."""
+
+        if width != expected:
+            raise NotInitializedException(
+                f"Source '{source_project_id}' returned a {kind} with "
+                f"{width} columns, but its vocabulary has {expected} "
+                "subjects. Retrain the source project after vocabulary changes.",
+                backend_id=self.backend_id,
+            )
+
     def _align_source_vector(
-        self, vector: np.ndarray, subject_map: np.ndarray | None
+        self, vector: np.ndarray, subject_map: np.ndarray | None, source_project_id: str
     ) -> np.ndarray:
         """Map a dense score vector of a single source project from its own
         vocabulary space into the ensemble vocabulary space."""
+
+        expected = (
+            len(self.project.subjects) if subject_map is None else len(subject_map)
+        )
+        self._check_source_width(
+            source_project_id, len(vector), expected, "score vector"
+        )
 
         if subject_map is None:
             return vector
@@ -144,11 +166,7 @@ class BaseEnsembleBackend(backend.AnnifBackend):
             )
 
         expected = len(target_subjects) if subject_map is None else len(subject_map)
-        raise ValueError(
-            f"Source '{source_project_id}' returned a batch with "
-            f"{batch.array.shape[1]} columns, but its vocabulary has "
-            f"{expected} subjects."
-        )
+        self._check_source_width(source_project_id, batch.array.shape[1], expected)
 
     def _merge_source_batches(
         self,
@@ -227,7 +245,9 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
             self._backend.project.registry,
             self._sources,
             backend_params=None,
-            limit=int(self._backend.params["limit"]),
+            # collect full source batches; the limit is applied after
+            # alignment and averaging in the objective, as at inference time
+            limit=None,
             threshold=0.0,
         )
 

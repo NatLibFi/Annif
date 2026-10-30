@@ -10,7 +10,7 @@ import annif.backend
 import annif.registry
 from annif.backend.ensemble import EnsembleOptimizer
 from annif.corpus import Document, DocumentFileTSV
-from annif.exception import NotSupportedException
+from annif.exception import NotInitializedException, NotSupportedException
 from annif.suggestion import SuggestionBatch
 from annif.vocab.subject_index import SubjectIndexFile
 from annif.vocab.types import Subject
@@ -203,7 +203,7 @@ def test_align_batch_rejects_batch_from_stale_model():
     # old model output: columns 0-2 are the subject IDs of [A, B, C]
     batch = make_batch([0, 0, 0], [0, 1, 2], [0.7, 0.8, 0.9], 1, 3)
 
-    with pytest.raises(ValueError, match="3 columns"):
+    with pytest.raises(NotInitializedException, match="3 columns"):
         backend._align_batch(batch, "src")
 
 
@@ -233,7 +233,7 @@ def test_align_batch_raises_on_width_mismatch():
     backend = make_ensemble_backend(target, {"src": source})
     batch = make_batch([0], [0], [0.5], 1, 5)  # matches neither vocabulary
 
-    with pytest.raises(ValueError, match="5 columns"):
+    with pytest.raises(NotInitializedException, match="5 columns"):
         backend._align_batch(batch, "src")
 
 
@@ -333,6 +333,32 @@ def test_ensemble_optimizer_prepare_aligns_source_batches():
     np.testing.assert_array_equal(batch.array.toarray(), expected)
 
 
+def test_ensemble_optimizer_prepare_keeps_full_source_batches():
+    # the limit must be applied only after alignment and averaging (as at
+    # inference time), not to the source batches before alignment; otherwise
+    # an unmappable top hit would hide mappable ones during optimization
+    target = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
+    source = make_subject_index([(URI_X, "X"), (URI_A, "A")])
+    backend = make_ensemble_backend(target, {"src": source})
+    backend.config_params["limit"] = 1
+    source_project = backend.project.registry.get_project("src")
+    # top hit is X (unmappable), second is A
+    source_project.suggest.return_value = make_batch(
+        [0, 0], [0, 1], [1.0, 0.8], 1, len(source)
+    )
+    corpus = unittest.mock.Mock()
+    corpus.doc_batches = [[Document(text="some text")]]
+
+    optimizer = EnsembleOptimizer(backend, corpus, "NDCG")
+    args = optimizer._prepare(n_jobs=1)
+
+    batch = args["source_batches"][0]["src"]
+    assert batch.array.shape == (1, 3)
+    expected = np.zeros((1, 3), dtype=np.float32)
+    expected[0, 0] = 0.8  # A survives alignment; X is dropped
+    np.testing.assert_array_equal(batch.array.toarray(), expected)
+
+
 def test_source_subject_map_same_vocabulary_is_none():
     # when the source vocabulary matches the ensemble vocabulary by URI
     # and size, no mapping is needed
@@ -379,9 +405,28 @@ def test_align_source_vector_maps_scores():
     subject_map = backend._source_subject_map("src")
     vector = np.array([0.4, 0.8], dtype=np.float32)
 
-    aligned = backend._align_source_vector(vector, subject_map)
+    aligned = backend._align_source_vector(vector, subject_map, "src")
 
     expected = np.array([0.8, 0.0, 0.4], dtype=np.float32)
     np.testing.assert_array_equal(aligned, expected)
-    # a None map passes the vector through unchanged
-    assert backend._align_source_vector(vector, None) is vector
+    # a None map (matching vocabularies) passes a full-width vector through
+    full_vector = np.array([0.1, 0.2, 0.3], dtype=np.float32)
+    assert backend._align_source_vector(full_vector, None, "src") is full_vector
+
+
+def test_align_source_vector_rejects_wrong_width():
+    # a source model trained on an older, smaller vocabulary emits vectors
+    # narrower than the source vocabulary; these must be rejected loudly
+    # instead of being passed through or broadcast
+    target = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
+    backend = make_ensemble_backend(
+        target, {"src": make_subject_index([(URI_B, "B source"), (URI_A, "A source")])}
+    )
+    subject_map = backend._source_subject_map("src")
+
+    with pytest.raises(NotInitializedException, match="Retrain"):
+        backend._align_source_vector(np.zeros(1, dtype=np.float32), subject_map, "src")
+    # same check when the vocabularies match (map is None)
+    shared = make_ensemble_backend(target, {"src": target})
+    with pytest.raises(NotInitializedException, match="Retrain"):
+        shared._align_source_vector(np.zeros(1, dtype=np.float32), None, "src")

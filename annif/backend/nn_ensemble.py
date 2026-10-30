@@ -338,7 +338,7 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 score_vector = np.array(
                     [
                         self._align_source_vector(
-                            p_hits.as_vector(), score_maps[project_id]
+                            p_hits.as_vector(), score_maps[project_id], project_id
                         )
                         for project_id, p_hits in hits.items()
                     ],

@@ -102,6 +102,7 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
     def _suggest_train_corpus(
         self,
         source_project: AnnifProject,
+        source_project_id: str,
         subject_map: np.ndarray | None,
         corpus: DocumentCorpus,
     ) -> tuple[csc_matrix, csc_matrix]:
@@ -113,7 +114,11 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         n_subjects = len(self.project.subjects)
         ndocs = 0
         for docid, doc in enumerate(corpus.documents):
-            hits = source_project.suggest([doc])[0]
+            batch = source_project.suggest([doc])
+            self._check_source_width(
+                source_project_id, batch.array.shape[1], len(source_project.subjects)
+            )
+            hits = batch[0]
             # map the suggested source subject IDs onto ensemble subject IDs
             for suggestion in hits:
                 subject_id = (
@@ -153,7 +158,9 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         # suggest subjects for the training corpus, aligned with this
         # project's vocabulary
         subject_map = self._source_subject_map(source_project_id)
-        scores, true = self._suggest_train_corpus(source_project, subject_map, corpus)
+        scores, true = self._suggest_train_corpus(
+            source_project, source_project_id, subject_map, corpus
+        )
         # create the concept-specific PAV regression models; only concepts
         # that the source can suggest need a model
         pav_regressions = {}
