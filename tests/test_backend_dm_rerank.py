@@ -887,7 +887,7 @@ def test_dm_rerank_400_preserves_state_prefix_on_retries(app_project):
 
         dm_rerank = _make_backend(app_project, **{"state-prefix": "RULES: "}, limit=100)
         with _mock_source(app_project, [(0, 0.9)]):
-            result = dm_rerank.suggest([Document(text="a" * 1000)])
+            dm_rerank.suggest([Document(text="a" * 1000)])
 
     states = [call.kwargs["json"]["state"] for call in mock_request.call_args_list]
     # the prefix is kept on the retry, only the state is reduced

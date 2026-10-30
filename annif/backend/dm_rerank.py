@@ -279,6 +279,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
                     "retrying with the state reduced to {fraction:.0%} of "
                     "the original".format(endpoint=endpoint, fraction=next_fraction)
                 )
+        return None
 
     def _parse_noul_scores(self, req: requests.Response) -> dict[int, float]:
         """Parse the service response into a mapping subject_id -> noul
