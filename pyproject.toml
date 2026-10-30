@@ -48,6 +48,7 @@ dependencies = [
 [project.optional-dependencies]
 fasttext = ["fasttext-numpy2==0.10.4"]
 estnltk = ["estnltk==1.7.5"]
+jieba = ["rjieba~=0.2.2"]
 nn = [
     "torch~=2.14.0",
     "tqdm~=4.70.1",
@@ -86,7 +87,7 @@ dev = [
     "isort",
     "schemathesis~=4.29.4",
 ]
-all = ["annif[fasttext,estnltk,nn,omikuji,spacy,stwfsa,voikko,yake]"]
+all = ["annif[fasttext,estnltk,jieba,nn,omikuji,spacy,stwfsa,voikko,yake]"]
 
 [tool.isort]
 profile = "black"
@@ -99,6 +100,8 @@ addopts = "-m 'not slow'"
 
 [tool.uv]
 exclude-newer = "5 days"
+# rjieba 0.2.2 (2026-10-26) adds Jieba.add_word, needed for user dictionaries
+exclude-newer-package = { rjieba = false }
 conflicts = [
   [
     { extra = "torch-cpu" },
