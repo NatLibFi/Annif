@@ -40,7 +40,7 @@ dependencies = [
     "simplemma~=2.0.0",
     "scikit-learn~=1.9.1",
     "scipy~=1.17.1",
-    "starlette~=1.6.0",
+    "starlette~=1.10.0",
     "requests~=2.34.2",
     "rdflib~=7.6.0",
 ]
