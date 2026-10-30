@@ -585,7 +585,7 @@ def run_optimize(project_id, paths, jobs, results_file, docs_limit, backend_para
                 )
             )
         except Exception as e:
-            raise NotSupportedException(
+            raise OperationFailedException(
                 "cannot open results-file for writing: " + str(e)
             )
 
@@ -684,7 +684,7 @@ def run_optimize(project_id, paths, jobs, results_file, docs_limit, backend_para
                 "\t".join(
                     (
                         str(limit),
-                        f"{threshold:g}",
+                        f"{threshold:.4f}",
                         f"{results['Precision (doc avg)']:.6f}",
                         f"{results['Recall (doc avg)']:.6f}",
                         f"{results['F1 score (doc avg)']:.6f}",
