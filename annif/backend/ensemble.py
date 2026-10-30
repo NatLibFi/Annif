@@ -149,24 +149,21 @@ class BaseEnsembleBackend(backend.AnnifBackend):
 
         target_subjects = self.project.subjects
         subject_map = self._source_subject_map(source_project_id)
-
-        if subject_map is None:
-            if batch.array.shape[1] == len(target_subjects):
-                return batch
-        elif batch.array.shape[1] == len(subject_map):
-            array = batch.array.tocoo()
-            target_cols = subject_map[array.col]
-            keep = target_cols >= 0
-            return SuggestionBatch(
-                csr_array(
-                    (array.data[keep], (array.row[keep], target_cols[keep])),
-                    shape=(array.shape[0], len(target_subjects)),
-                    dtype=np.float32,
-                )
-            )
-
         expected = len(target_subjects) if subject_map is None else len(subject_map)
         self._check_source_width(source_project_id, batch.array.shape[1], expected)
+
+        if subject_map is None:
+            return batch
+        array = batch.array.tocoo()
+        target_cols = subject_map[array.col]
+        keep = target_cols >= 0
+        return SuggestionBatch(
+            csr_array(
+                (array.data[keep], (array.row[keep], target_cols[keep])),
+                shape=(array.shape[0], len(target_subjects)),
+                dtype=np.float32,
+            )
+        )
 
     def _merge_source_batches(
         self,
