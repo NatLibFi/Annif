@@ -162,6 +162,19 @@ def test_mllm_hyperopt_parallel_n_jobs_2(project, fulltext_corpus, monkeypatch):
     )
 
     optimizer = mllm.get_hp_optimizer(fulltext_corpus, metric="NDCG")
+    serial_args = optimizer._prepare(n_jobs=1)
+    parallel_args = optimizer._prepare(n_jobs=2)
+
+    def paired_results(args):
+        return sorted(
+            (tuple(candidates), tuple(sorted(subjects)))
+            for candidates, subjects in zip(args["candidates"], args["gold_subjects"])
+        )
+
+    assert len(parallel_args["candidates"]) == len(serial_args["candidates"])
+    assert len(parallel_args["gold_subjects"]) == len(serial_args["gold_subjects"])
+    assert paired_results(parallel_args) == paired_results(serial_args)
+
     result = optimizer.optimize(n_trials=3, n_jobs=2, results_file=None)
 
     assert len(result.lines) == 3
