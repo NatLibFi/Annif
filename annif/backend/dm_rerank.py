@@ -47,6 +47,14 @@ STATE_RULES = (
     "'travelogues').\n\nDocument to be indexed:\n"
 )
 
+# When the reranking service rejects a request (HTTP 400), retry it with
+# the state reduced to these fractions of the original, in order.
+STATE_REDUCE_FRACTIONS = (1.0, 0.75, 0.5)
+
+
+class _RequestRejected(Exception):
+    """Internal signal for a request rejected by the service (HTTP 400)."""
+
 
 def _squash(raw: float) -> float:
     """Map an unbounded raw blend score into [0, 1) with a sigmoid-like
@@ -150,12 +158,57 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
             return STATE_RULES
         return ""
 
+    def _post_with_transient_retries(
+        self, endpoint: str, payload: dict[str, Any], timeout: float, retries: int
+    ) -> requests.Response:
+        """POST the payload, retrying transient failures (5xx, 408, 429,
+        timeouts, connection errors) with exponential backoff. A 400
+        response raises _RequestRejected; other 4xx responses raise
+        OperationFailedException immediately."""
+        attempt = 0
+        while True:
+            try:
+                req = requests.post(endpoint, json=payload, timeout=timeout)
+                req.raise_for_status()
+                return req
+            except requests.exceptions.RequestException as err:
+                if isinstance(err, requests.exceptions.HTTPError):
+                    response = err.response
+                    status = response.status_code if response is not None else None
+                    if status == 400:
+                        raise _RequestRejected() from err
+                    if status is None or (status < 500 and status not in (408, 429)):
+                        # a deterministic 4xx (invalid payload, unauthorized
+                        # endpoint, ...) will not succeed on retry, so fail fast
+                        msg = f"dm_rerank request to {endpoint} failed: {err}"
+                        raise OperationFailedException(msg) from err
+                attempt += 1
+                if attempt > retries:
+                    msg = (
+                        "dm_rerank request to {} failed after {} attempts: {}"
+                    ).format(endpoint, retries + 1, err)
+                    raise OperationFailedException(msg) from err
+                # exponential backoff starting from 1 second: 1s, 2s, 4s, ...
+                delay = 2 ** (attempt - 1)
+                self.warning(
+                    "dm_rerank request failed ({err}); retrying in {delay}s "
+                    "({attempt}/{retries})".format(
+                        err=err, delay=delay, attempt=attempt, retries=retries
+                    )
+                )
+                time.sleep(delay)
+
     def _query_dm_rerank(
         self, doc: Document, suggestions: list[SubjectSuggestion], params
     ) -> dict[int, float]:
         """Ask the reranking service for a noul score for every candidate
         subject that has a label, and return a mapping subject_id -> noul
-        score. Candidates without a label are not included in the mapping."""
+        score. Candidates without a label are not included in the mapping.
+
+        A 400 response is retried with the state reduced to the fractions
+        in STATE_REDUCE_FRACTIONS of the original; if every fraction is
+        rejected, an empty mapping is returned so that the document keeps
+        its plain source scores and the run is not aborted."""
         instruction = str(params["instruction"])
         if "{label}" not in instruction:
             raise ConfigurationException(
@@ -185,46 +238,45 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
 
         state_prefix = self._state_prefix(params)
         state = self._get_state_transform(params).transform_doc(doc).text
-        payload = {
-            "state": state_prefix + state,
-            "questions": questions,
-        }
         model = params["model"]
-        if model:
-            payload["model"] = model
         endpoint = params["endpoint"].rstrip("/")
         retries = int(params["retries"])
         timeout = float(params["timeout"])
-        attempt = 0
+        fraction_index = 0
         while True:
+            fraction = STATE_REDUCE_FRACTIONS[fraction_index]
+            reduced_state = (
+                state
+                if fraction >= 1.0
+                else state[: max(0, round(len(state) * fraction))]
+            )
+            payload = {
+                "state": state_prefix + reduced_state,
+                "questions": questions,
+            }
+            if model:
+                payload["model"] = model
             try:
-                req = requests.post(endpoint, json=payload, timeout=timeout)
-                req.raise_for_status()
-                break
-            except requests.exceptions.RequestException as err:
-                if isinstance(err, requests.exceptions.HTTPError):
-                    response = err.response
-                    status = response.status_code if response is not None else None
-                    if status is None or (status < 500 and status not in (408, 429)):
-                        # a deterministic 4xx (invalid payload, unauthorized
-                        # endpoint, ...) will not succeed on retry, so fail fast
-                        msg = f"dm_rerank request to {endpoint} failed: {err}"
-                        raise OperationFailedException(msg) from err
-                attempt += 1
-                if attempt > retries:
-                    msg = (
-                        "dm_rerank request to {} failed after {} attempts: {}"
-                    ).format(endpoint, retries + 1, err)
-                    raise OperationFailedException(msg) from err
-                # exponential backoff starting from 1 second: 1s, 2s, 4s, ...
-                delay = 2 ** (attempt - 1)
-                self.warning(
-                    "dm_rerank request failed ({err}); retrying in {delay}s "
-                    "({attempt}/{retries})".format(
-                        err=err, delay=delay, attempt=attempt, retries=retries
-                    )
+                req = self._post_with_transient_retries(
+                    endpoint, payload, timeout, retries
                 )
-                time.sleep(delay)
+                break
+            except _RequestRejected:
+                fraction_index += 1
+                if fraction_index >= len(STATE_REDUCE_FRACTIONS):
+                    self.warning(
+                        "dm_rerank request to {endpoint} still rejected "
+                        "(400) with the state reduced to {fraction:.0%}; "
+                        "scoring this document with its source scores "
+                        "only".format(endpoint=endpoint, fraction=fraction)
+                    )
+                    return {}
+                next_fraction = STATE_REDUCE_FRACTIONS[fraction_index]
+                self.warning(
+                    "dm_rerank request to {endpoint} rejected (400); "
+                    "retrying with the state reduced to {fraction:.0%} of "
+                    "the original".format(endpoint=endpoint, fraction=next_fraction)
+                )
         try:
             response = req.json()
         except ValueError as err:

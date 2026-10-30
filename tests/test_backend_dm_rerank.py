@@ -778,13 +778,13 @@ def _http_error(status_code):
 
 
 def test_dm_rerank_suggest_no_retry_on_4xx(app_project):
-    """A non-retryable 4xx (deterministic client error) fails fast without
-    any retry."""
+    """A non-retryable 4xx (deterministic client error, here 404) fails
+    fast without any retry."""
     with (
         unittest.mock.patch("requests.post") as mock_request,
         unittest.mock.patch("time.sleep") as mock_sleep,
     ):
-        mock_request.side_effect = _http_error(400)
+        mock_request.side_effect = _http_error(404)
 
         dm_rerank = _make_backend(app_project)
         with _mock_source(app_project, [(0, 0.9)]):
@@ -793,6 +793,106 @@ def test_dm_rerank_suggest_no_retry_on_4xx(app_project):
 
     assert mock_request.call_count == 1
     mock_sleep.assert_not_called()
+
+
+def _ok_response(score: float = 0.9):
+    """Return a successful reranking response for subject 0."""
+    mock_response = unittest.mock.Mock()
+    mock_response.json.return_value = {
+        "answers": {"0": {"type": "noul", "noul": score}}
+    }
+    return mock_response
+
+
+def test_dm_rerank_400_retries_with_reduced_state(app_project):
+    """A 400 response is retried with the state reduced to 75% of the
+    original (and 50% if needed); the reductions are applied to the
+    original state, not cascaded."""
+    long_state = "a" * 1000
+    with (
+        unittest.mock.patch("requests.post") as mock_request,
+        unittest.mock.patch("time.sleep") as mock_sleep,
+    ):
+        mock_request.side_effect = [
+            _http_error(400),
+            _http_error(400),
+            _ok_response(),
+        ]
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            result = dm_rerank.suggest([Document(text=long_state)])
+
+    assert mock_request.call_count == 3
+    # the state (without the empty prefix) must be reduced to 75% then 50%
+    # of the original 1000-char state, not 50% of 75%
+    states = [call.kwargs["json"]["state"] for call in mock_request.call_args_list]
+    assert len(states[0]) == 1000
+    assert len(states[1]) == 750
+    assert len(states[2]) == 500
+    # the successful (reduced) request yields the noul score
+    suggestions = list(result[0])
+    assert [int(s.subject_id) for s in suggestions] == [0]
+    # no transient backoff is used for the 400 cascade
+    mock_sleep.assert_not_called()
+
+
+def test_dm_rerank_400_first_retry_succeeds(app_project):
+    """If the 75% retry succeeds, no further reduction is attempted."""
+    with (
+        unittest.mock.patch("requests.post") as mock_request,
+        unittest.mock.patch("time.sleep"),
+    ):
+        mock_request.side_effect = [_http_error(400), _ok_response()]
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            result = dm_rerank.suggest([Document(text="a" * 1000)])
+
+    assert mock_request.call_count == 2
+    suggestions = list(result[0])
+    assert [int(s.subject_id) for s in suggestions] == [0]
+
+
+def test_dm_rerank_400_all_retries_fail_keeps_source_scores(app_project):
+    """If the request is still rejected (400) after the last reduction,
+    the document is not aborted: no exception is raised and the document
+    is scored with its plain source score."""
+    with (
+        unittest.mock.patch("requests.post") as mock_request,
+        unittest.mock.patch("time.sleep"),
+    ):
+        mock_request.side_effect = [_http_error(400)] * 3
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            result = dm_rerank.suggest([Document(text="a" * 1000)])
+
+    assert mock_request.call_count == 3
+    # the source score passes through the blend unmodified by any noul
+    # score (only the usual squash is applied)
+    suggestions = list(result[0])
+    assert [int(s.subject_id) for s in suggestions] == [0]
+    assert suggestions[0].score == pytest.approx(_squash(0.9))
+
+
+def test_dm_rerank_400_preserves_state_prefix_on_retries(app_project):
+    """The state-prefix is kept intact on the 400 retries; only the
+    document state is reduced."""
+    with (
+        unittest.mock.patch("requests.post") as mock_request,
+        unittest.mock.patch("time.sleep"),
+    ):
+        mock_request.side_effect = [_http_error(400), _ok_response()]
+
+        dm_rerank = _make_backend(app_project, **{"state-prefix": "RULES: "}, limit=100)
+        with _mock_source(app_project, [(0, 0.9)]):
+            result = dm_rerank.suggest([Document(text="a" * 1000)])
+
+    states = [call.kwargs["json"]["state"] for call in mock_request.call_args_list]
+    # the prefix is kept on the retry, only the state is reduced
+    assert states[0] == "RULES: " + "a" * 1000
+    assert states[1] == "RULES: " + "a" * 750
 
 
 def test_dm_rerank_suggest_retry_on_429_and_5xx(app_project):
