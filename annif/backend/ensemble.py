@@ -28,6 +28,9 @@ if TYPE_CHECKING:
 class BaseEnsembleBackend(backend.AnnifBackend):
     """Base class for ensemble backends"""
 
+    # cache of subject ID mappings per source project
+    _subject_map_cache = None
+
     def _get_sources_attribute(self, attr: str) -> list[bool | None]:
         params = self._get_backend_params(None)
         sources = annif.util.parse_sources(params["sources"])
@@ -69,22 +72,37 @@ class BaseEnsembleBackend(backend.AnnifBackend):
     def _source_subject_map(self, source_project_id: str) -> np.ndarray | None:
         """Return an array that maps subject IDs of the given source project
         to subject IDs of the ensemble project, or None when the source
-        vocabulary already matches the ensemble vocabulary. Source subjects
-        that cannot be mapped - because their URI is unknown in the ensemble
-        vocabulary or it maps to a deprecated subject - get -1."""
+        vocabulary already matches the ensemble vocabulary."""
 
         source_subjects = self.project.registry.get_project(source_project_id).subjects
         target_subjects = self.project.subjects
+
+        if self._subject_map_cache is None:
+            self._subject_map_cache = {}
+        cached = self._subject_map_cache.get(source_project_id)
+        if (
+            cached is not None
+            and cached[0] is source_subjects
+            and cached[1] is target_subjects
+        ):
+            return cached[2]
+
         if len(source_subjects) == len(target_subjects) and self._same_vocabulary(
             source_project_id
         ):
-            return None
+            subject_map = None
+        else:
+            subject_map = np.full(len(source_subjects), -1, dtype=np.int64)
+            for subject_id, subject in source_subjects.active:
+                target_id = target_subjects.by_uri(subject.uri, warnings=False)
+                if target_id is not None:
+                    subject_map[subject_id] = target_id
 
-        subject_map = np.full(len(source_subjects), -1, dtype=np.int64)
-        for subject_id, subject in source_subjects.active:
-            target_id = target_subjects.by_uri(subject.uri, warnings=False)
-            if target_id is not None:
-                subject_map[subject_id] = target_id
+        self._subject_map_cache[source_project_id] = (
+            source_subjects,
+            target_subjects,
+            subject_map,
+        )
         return subject_map
 
     def _align_source_vector(
@@ -108,40 +126,28 @@ class BaseEnsembleBackend(backend.AnnifBackend):
         """Align a source batch with the ensemble vocabulary."""
 
         target_subjects = self.project.subjects
-
-        if batch.array.shape[1] == len(target_subjects) and self._same_vocabulary(
-            source_project_id
-        ):
-            return batch
-
-        source_subjects = self.project.registry.get_project(source_project_id).subjects
-        source_active = source_subjects.active
-        if batch.array.shape[1] not in (len(source_active), len(source_subjects)):
-            raise ValueError(
-                f"Source '{source_project_id}' has {batch.array.shape[1]} "
-                f"columns, but its vocabulary has {len(source_subjects)} "
-                f"subjects ({len(source_active)} active)."
-            )
-
         subject_map = self._source_subject_map(source_project_id)
-        if subject_map is None:
-            # vocabularies match, but compact batches still need expansion
-            subject_map = np.arange(len(source_subjects), dtype=np.int64)
-        if batch.array.shape[1] == len(source_active) and len(source_active) != len(
-            source_subjects
-        ):
-            # compact batch: columns address active subjects in order
-            subject_map = subject_map[[subject_id for subject_id, _ in source_active]]
 
-        array = batch.array.tocoo()
-        target_cols = subject_map[array.col]
-        keep = target_cols >= 0
-        return SuggestionBatch(
-            csr_array(
-                (array.data[keep], (array.row[keep], target_cols[keep])),
-                shape=(array.shape[0], len(target_subjects)),
-                dtype=np.float32,
+        if subject_map is None:
+            if batch.array.shape[1] == len(target_subjects):
+                return batch
+        elif batch.array.shape[1] == len(subject_map):
+            array = batch.array.tocoo()
+            target_cols = subject_map[array.col]
+            keep = target_cols >= 0
+            return SuggestionBatch(
+                csr_array(
+                    (array.data[keep], (array.row[keep], target_cols[keep])),
+                    shape=(array.shape[0], len(target_subjects)),
+                    dtype=np.float32,
+                )
             )
+
+        expected = len(target_subjects) if subject_map is None else len(subject_map)
+        raise ValueError(
+            f"Source '{source_project_id}' returned a batch with "
+            f"{batch.array.shape[1]} columns, but its vocabulary has "
+            f"{expected} subjects."
         )
 
     def _merge_source_batches(
@@ -231,18 +237,14 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
             for suggestions, gold_batch in pool.imap_unordered(
                 psmap.suggest_batch, self._corpus.doc_batches
             ):
-                source_batches.append(suggestions)
+                # align each batch with the ensemble vocabulary as it is received
+                source_batches.append(
+                    {
+                        project_id: self._backend._align_batch(batch, project_id)
+                        for project_id, batch in suggestions.items()
+                    }
+                )
                 gold_batches.append(gold_batch)
-
-        # align the collected batches with the ensemble vocabulary once,
-        # so that every objective evaluation can reuse them
-        source_batches = [
-            {
-                project_id: self._backend._align_batch(batch, project_id)
-                for project_id, batch in batch_by_source.items()
-            }
-            for batch_by_source in source_batches
-        ]
 
         return {
             "gold_batches": gold_batches,

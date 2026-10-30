@@ -114,14 +114,20 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         ndocs = 0
         for docid, doc in enumerate(corpus.documents):
             hits = source_project.suggest([doc])[0]
-            vector = self._align_source_vector(hits.as_vector(), subject_map)
-            for cid in np.flatnonzero(vector):
-                data.append(vector[cid])
-                row.append(docid)
-                col.append(cid)
-            for cid in np.flatnonzero(doc.subject_set.as_vector(n_subjects)):
+            # map the suggested source subject IDs onto ensemble subject IDs
+            for suggestion in hits:
+                subject_id = (
+                    subject_map[suggestion.subject_id]
+                    if subject_map is not None
+                    else suggestion.subject_id
+                )
+                if subject_id >= 0:
+                    data.append(suggestion.score)
+                    row.append(docid)
+                    col.append(subject_id)
+            for subject_id in doc.subject_set:
                 trow.append(docid)
-                tcol.append(cid)
+                tcol.append(subject_id)
             ndocs += 1
         scores = coo_matrix(
             (data, (row, col)),
@@ -148,9 +154,14 @@ class PAVBackend(ensemble.BaseEnsembleBackend):
         # project's vocabulary
         subject_map = self._source_subject_map(source_project_id)
         scores, true = self._suggest_train_corpus(source_project, subject_map, corpus)
-        # create the concept-specific PAV regression models
+        # create the concept-specific PAV regression models; only concepts
+        # that the source can suggest need a model
         pav_regressions = {}
-        for cid in range(len(self.project.subjects)):
+        if subject_map is None:
+            concept_ids = range(len(self.project.subjects))
+        else:
+            concept_ids = np.unique(subject_map[subject_map >= 0])
+        for cid in concept_ids:
             if true[:, cid].sum() < min_docs:
                 continue  # don't create model b/c of too few examples
             reg = IsotonicRegression(out_of_bounds="clip")

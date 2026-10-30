@@ -16,7 +16,17 @@ from annif.exception import (
     OperationFailedException,
 )
 
-from .test_backend_ensemble import make_batch, make_ensemble_backend, make_subject_index
+from .test_backend_ensemble import (
+    URI_A,
+    URI_B,
+    URI_C,
+    URI_X,
+    make_batch,
+    make_ensemble_backend,
+    make_gold_corpus,
+    make_misaligned_source_backend,
+    make_subject_index,
+)
 from .util import umask_context
 
 pytest.importorskip("annif.backend.nn_ensemble")
@@ -275,32 +285,14 @@ def test_nn_ensemble_suggest(app_project):
     assert len(results) > 0
 
 
-URI_A = "http://example.org/a"
-URI_B = "http://example.org/b"
-URI_C = "http://example.org/c"
-URI_X = "http://example.org/x"
-
-
 def test_corpus_to_vectors_aligns_source_vocabularies(tmpdir):
     # regression test: source projects with a different vocabulary than the
     # ensemble project must have their score vectors aligned by subject URI
     # before they are stacked into the training data
-    target_subjects = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
-    source_subjects = make_subject_index([(URI_B, "B source"), (URI_X, "X source")])
-
-    source_project = mock.Mock()
-    source_project.subjects = source_subjects
-    source_project.suggest = lambda docs, params=None: make_batch(
-        [0, 0], [0, 1], [0.7, 0.3], len(docs), len(source_subjects)
+    nn_ensemble, _source_project = make_misaligned_source_backend(
+        "nn_ensemble", [(URI_B, "B source"), (URI_X, "X source")]
     )
-
-    nn_ensemble = make_ensemble_backend(
-        target_subjects, {"src": source_project}, backend_name="nn_ensemble"
-    )
-
-    tmpfile = tmpdir.join("document.tsv")
-    tmpfile.write("dummy\thttp://example.org/a\nanother\thttp://example.org/c\n")
-    corpus = DocumentFileTSV(str(tmpfile), target_subjects)
+    corpus = make_gold_corpus(tmpdir, nn_ensemble.project.subjects)
 
     env = lmdb.open(
         str(tmpdir.mkdir("mdb")), map_size=1024 * 1024, writemap=True, mode=0o775
@@ -325,19 +317,13 @@ def test_corpus_to_vectors_aligns_source_vocabularies(tmpdir):
 
 
 def test_merge_source_batches_aligns_source_vocabularies():
-    target_subjects = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
-    source_subjects = make_subject_index([(URI_B, "B source"), (URI_A, "A source")])
-
-    source_project = mock.Mock()
-    source_project.subjects = source_subjects
-
-    nn_ensemble = make_ensemble_backend(
-        target_subjects, {"src": source_project}, backend_name="nn_ensemble"
+    nn_ensemble, source_project = make_misaligned_source_backend(
+        "nn_ensemble", [(URI_B, "B source"), (URI_A, "A source")]
     )
     nn_ensemble._create_model([("src", 1.0)])
 
     # source scores: B=0.7, A=0.3
-    batch = make_batch([0, 0], [0, 1], [0.7, 0.3], 1, len(source_subjects))
+    batch = make_batch([0, 0], [0, 1], [0.7, 0.3], 1, len(source_project.subjects))
     merged = nn_ensemble._merge_source_batches(
         {"src": batch}, [("src", 1.0)], {"limit": 10}
     )

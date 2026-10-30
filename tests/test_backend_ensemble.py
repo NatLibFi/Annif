@@ -9,7 +9,7 @@ from scipy.sparse import csr_array
 import annif.backend
 import annif.registry
 from annif.backend.ensemble import EnsembleOptimizer
-from annif.corpus import Document
+from annif.corpus import Document, DocumentFileTSV
 from annif.exception import NotSupportedException
 from annif.suggestion import SuggestionBatch
 from annif.vocab.subject_index import SubjectIndexFile
@@ -80,6 +80,36 @@ def make_ensemble_backend(target_subjects, sources, backend_name="ensemble"):
     )
 
 
+def make_misaligned_source_backend(backend_name, source_entries):
+    """Create an ensemble-family backend of the given type whose project
+    uses a three-subject vocabulary (A, B, C) and whose single source
+    project uses the different, two-subject vocabulary given by
+    source_entries. The source scores its subjects 0.7 and 0.3 for every
+    suggested document."""
+
+    target_subjects = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
+    source_subjects = make_subject_index(source_entries)
+    source_project = unittest.mock.Mock()
+    source_project.subjects = source_subjects
+    source_project.suggest = lambda docs, params=None: make_batch(
+        [0, 0], [0, 1], [0.7, 0.3], len(docs), len(source_subjects)
+    )
+    backend = make_ensemble_backend(
+        target_subjects, {"src": source_project}, backend_name=backend_name
+    )
+    return backend, source_project
+
+
+def make_gold_corpus(tmpdir, subject_index):
+    """Create a two-document TSV corpus with gold subjects URI_A (first
+    document) and URI_C (second document), expressed in the given
+    subject index."""
+
+    tmpfile = tmpdir.join("document.tsv")
+    tmpfile.write("dummy\thttp://example.org/a\nanother\thttp://example.org/c\n")
+    return DocumentFileTSV(str(tmpfile), subject_index)
+
+
 def test_ensemble_train(project, document_corpus):
     ensemble_type = annif.backend.get_backend("ensemble")
     ensemble = ensemble_type(
@@ -140,9 +170,9 @@ def test_same_vocabulary_checks_by_uri():
     assert not backend._same_vocabulary("samesize")
 
 
-def test_align_batch_maps_compact_columns_by_uri():
-    # source vocabulary is compact and in a different order than the
-    # ensemble vocabulary; columns must be remapped via URI
+def test_align_batch_maps_reordered_source_columns_by_uri():
+    # source vocabulary is in a different order than the ensemble
+    # vocabulary; columns must be remapped via URI
     target = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
     source = make_subject_index([(URI_B, "B"), (URI_A, "A")])
     backend = make_ensemble_backend(target, {"src": source})
@@ -159,23 +189,22 @@ def test_align_batch_maps_compact_columns_by_uri():
     np.testing.assert_array_equal(aligned.array.toarray(), expected)
 
 
-def test_align_batch_compact_batch_with_shared_vocabulary():
-    # a compact batch from a source sharing the ensemble vocabulary must
-    # be expanded; deprecated subjects are not addressable by compact
-    # columns and cannot carry scores
-    subjects = make_subject_index([(URI_A, "A"), (URI_B, None), (URI_C, "C")])
-    assert len(subjects.active) == 2
+def test_align_batch_rejects_batch_from_stale_model():
+    # a model trained on an older version of the vocabulary (before B was
+    # deprecated and D was added) still emits batches with the old width,
+    # which coincides with the current active subject count; such batches
+    # must be rejected instead of being interpreted as compact batches with
+    # active-ordered columns
+    subjects = make_subject_index(
+        [(URI_A, "A"), (URI_B, None), (URI_C, "C"), (URI_D, "D")]
+    )
+    assert len(subjects.active) == 3
     backend = make_ensemble_backend(subjects, {"src": subjects})
-    # compact columns: 0 = A, 1 = C
-    batch = make_batch([0, 0], [0, 1], [0.5, 1.0], 1, len(subjects.active))
+    # old model output: columns 0-2 are the subject IDs of [A, B, C]
+    batch = make_batch([0, 0, 0], [0, 1, 2], [0.7, 0.8, 0.9], 1, 3)
 
-    aligned = backend._align_batch(batch, "src")
-
-    assert aligned.array.shape == (1, 3)
-    expected = np.zeros((1, 3), dtype=np.float32)
-    expected[0, 0] = 0.5  # A
-    expected[0, 2] = 1.0  # C
-    np.testing.assert_array_equal(aligned.array.toarray(), expected)
+    with pytest.raises(ValueError, match="3 columns"):
+        backend._align_batch(batch, "src")
 
 
 def test_align_batch_drops_unmappable_uris():
@@ -325,6 +354,22 @@ def test_source_subject_map_maps_by_uri_and_drops_unmappable():
     np.testing.assert_array_equal(
         backend._source_subject_map("src"), np.array([-1, -1, 0])
     )
+
+
+def test_source_subject_map_is_cached_until_indexes_change():
+    target = make_subject_index([(URI_A, "A"), (URI_B, "B")])
+    backend = make_ensemble_backend(
+        target, {"src": make_subject_index([(URI_B, "B source"), (URI_A, "A source")])}
+    )
+
+    first = backend._source_subject_map("src")
+    # repeated calls reuse the cached mapping without rescanning
+    assert backend._source_subject_map("src") is first
+
+    # a changed source subject index invalidates the cached mapping
+    source_project = backend.project.registry.get_project("src")
+    source_project.subjects = target
+    assert backend._source_subject_map("src") is None
 
 
 def test_align_source_vector_maps_scores():
