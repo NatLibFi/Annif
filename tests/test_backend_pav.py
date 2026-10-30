@@ -2,13 +2,22 @@
 
 import logging
 from datetime import datetime, timedelta, timezone
+from unittest import mock
 
+import numpy as np
 import py.path
 import pytest
 
 import annif.backend
+import annif.util
 from annif.corpus import Document, DocumentFileTSV
 from annif.exception import NotSupportedException
+
+from .test_backend_ensemble import (
+    make_batch,
+    make_ensemble_backend,
+    make_subject_index,
+)
 
 
 def test_pav_default_params(document_corpus, app_project):
@@ -194,3 +203,103 @@ def test_pav_modification_time(app_project):
         project=app_project,
     )
     assert datetime.now(timezone.utc) - pav.modification_time < timedelta(1)
+
+
+URI_A = "http://example.org/a"
+URI_B = "http://example.org/b"
+URI_C = "http://example.org/c"
+URI_X = "http://example.org/x"
+
+
+def test_suggest_train_corpus_aligns_source_vocabularies(tmpdir):
+    # regression test: source projects with a different vocabulary than the
+    # ensemble project must have their scores aligned by subject URI, and
+    # the gold labels must be kept in the ensemble vocabulary space
+    target_subjects = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
+    source_subjects = make_subject_index([(URI_B, "B source"), (URI_X, "X source")])
+
+    source_project = mock.Mock()
+    source_project.subjects = source_subjects
+    source_project.suggest = lambda docs, params=None: make_batch(
+        [0, 0], [0, 1], [0.7, 0.3], len(docs), len(source_subjects)
+    )
+
+    pav = make_ensemble_backend(
+        target_subjects, {"src": source_project}, backend_name="pav"
+    )
+
+    tmpfile = tmpdir.join("document.tsv")
+    tmpfile.write("dummy\thttp://example.org/a\nanother\thttp://example.org/c\n")
+    corpus = DocumentFileTSV(str(tmpfile), target_subjects)
+
+    subject_map = pav._source_subject_map("src")
+    scores, true = pav._suggest_train_corpus(source_project, subject_map, corpus)
+
+    assert scores.shape == (2, 3)
+    expected_scores = np.zeros((2, 3), dtype=np.float32)
+    expected_scores[:, 1] = 0.7  # URI_B; URI_X cannot be mapped
+    np.testing.assert_array_equal(scores.toarray(), expected_scores)
+
+    expected_true = np.zeros((2, 3), dtype=bool)
+    expected_true[0, 0] = True  # URI_A
+    expected_true[1, 2] = True  # URI_C
+    np.testing.assert_array_equal(true.toarray(), expected_true)
+
+
+def test_merge_source_batches_aligns_source_vocabularies():
+    target_subjects = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
+    source_subjects = make_subject_index([(URI_B, "B source"), (URI_A, "A source")])
+
+    source_project = mock.Mock()
+    source_project.subjects = source_subjects
+
+    pav = make_ensemble_backend(
+        target_subjects, {"src": source_project}, backend_name="pav"
+    )
+    # regression models are keyed by ensemble subject IDs; only B has one
+    reg = mock.Mock()
+    reg.predict = lambda values: [min(1.0, value + 0.1) for value in values]
+    pav._models = {"src": {1: reg}}
+
+    # source scores: B=0.7, A=0.3
+    batch = make_batch([0, 0], [0, 1], [0.7, 0.3], 1, len(source_subjects))
+    merged = pav._merge_source_batches({"src": batch}, [("src", 1.0)], {"limit": 10})
+
+    assert merged.array.shape == (1, 3)
+    hits = list(merged[0])
+    # B (regressed score) ranks before A (kept raw)
+    assert [hit.subject_id for hit in hits] == [1, 0]
+    assert hits[0].score == pytest.approx(0.8)
+    assert hits[1].score == pytest.approx(0.3)
+
+
+def test_create_pav_model_with_mismatched_source_vocabulary(tmpdir, monkeypatch):
+    # models must be keyed by ensemble subject IDs even when the source
+    # vocabulary differs from the ensemble vocabulary
+    target_subjects = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
+    source_subjects = make_subject_index([(URI_B, "B source"), (URI_X, "X source")])
+
+    source_project = mock.Mock()
+    source_project.subjects = source_subjects
+    source_project.suggest = lambda docs, params=None: make_batch(
+        [0, 0], [0, 1], [0.7, 0.3], len(docs), len(source_subjects)
+    )
+
+    pav = make_ensemble_backend(
+        target_subjects, {"src": source_project}, backend_name="pav"
+    )
+
+    tmpfile = tmpdir.join("document.tsv")
+    tmpfile.write("dummy\thttp://example.org/a\nanother\thttp://example.org/c\n")
+    corpus = DocumentFileTSV(str(tmpfile), target_subjects)
+
+    saved = {}
+    monkeypatch.setattr(
+        annif.util, "atomic_save", lambda obj, *args, **kwargs: saved.update(obj)
+    )
+
+    pav._create_pav_model("src", min_docs=1, corpus=corpus)
+
+    # only concepts with gold standard examples (A and C) get models, keyed
+    # by their ensemble subject IDs
+    assert sorted(saved.keys()) == [0, 2]

@@ -66,6 +66,40 @@ class BaseEnsembleBackend(backend.AnnifBackend):
             for subject_id, subject in source_active
         )
 
+    def _source_subject_map(self, source_project_id: str) -> np.ndarray | None:
+        """Return an array that maps subject IDs of the given source project
+        to subject IDs of the ensemble project, or None when the source
+        vocabulary already matches the ensemble vocabulary. Source subjects
+        that cannot be mapped - because their URI is unknown in the ensemble
+        vocabulary or it maps to a deprecated subject - get -1."""
+
+        source_subjects = self.project.registry.get_project(source_project_id).subjects
+        target_subjects = self.project.subjects
+        if len(source_subjects) == len(target_subjects) and self._same_vocabulary(
+            source_project_id
+        ):
+            return None
+
+        subject_map = np.full(len(source_subjects), -1, dtype=np.int64)
+        for subject_id, subject in source_subjects.active:
+            target_id = target_subjects.by_uri(subject.uri, warnings=False)
+            if target_id is not None:
+                subject_map[subject_id] = target_id
+        return subject_map
+
+    def _align_source_vector(
+        self, vector: np.ndarray, subject_map: np.ndarray | None
+    ) -> np.ndarray:
+        """Map a dense score vector of a single source project from its own
+        vocabulary space into the ensemble vocabulary space."""
+
+        if subject_map is None:
+            return vector
+        aligned = np.zeros(len(self.project.subjects), dtype=np.float32)
+        keep = subject_map >= 0
+        aligned[subject_map[keep]] = vector[keep]
+        return aligned
+
     def _align_batch(
         self,
         batch: SuggestionBatch,
@@ -82,26 +116,25 @@ class BaseEnsembleBackend(backend.AnnifBackend):
 
         source_subjects = self.project.registry.get_project(source_project_id).subjects
         source_active = source_subjects.active
-        if batch.array.shape[1] != len(source_active):
+        if batch.array.shape[1] not in (len(source_active), len(source_subjects)):
             raise ValueError(
                 f"Source '{source_project_id}' has {batch.array.shape[1]} "
-                f"columns, but its vocabulary has {len(source_active)} "
-                "active subjects."
+                f"columns, but its vocabulary has {len(source_subjects)} "
+                f"subjects ({len(source_active)} active)."
             )
+
+        subject_map = self._source_subject_map(source_project_id)
+        if subject_map is None:
+            # vocabularies match, but compact batches still need expansion
+            subject_map = np.arange(len(source_subjects), dtype=np.int64)
+        if batch.array.shape[1] == len(source_active) and len(source_active) != len(
+            source_subjects
+        ):
+            # compact batch: columns address active subjects in order
+            subject_map = subject_map[[subject_id for subject_id, _ in source_active]]
 
         array = batch.array.tocoo()
-
-        source_cols, inverse = np.unique(array.col, return_inverse=True)
-        mapped_cols = np.full(len(source_cols), -1, dtype=np.int64)
-        for idx, source_col in enumerate(source_cols):
-            target_id = target_subjects.by_uri(
-                source_active[source_col][1].uri,
-                warnings=False,
-            )
-            if target_id is not None:
-                mapped_cols[idx] = target_id
-
-        target_cols = mapped_cols[inverse]
+        target_cols = subject_map[array.col]
         keep = target_cols >= 0
         return SuggestionBatch(
             csr_array(

@@ -51,16 +51,20 @@ def make_batch(rows, cols, data, n_docs, width):
     )
 
 
-def make_ensemble_backend(target_subjects, sources):
-    """Create an ensemble backend whose project uses target_subjects and
-    whose source projects (a mapping of project_id -> subject index) use
-    the given source vocabularies."""
+def make_ensemble_backend(target_subjects, sources, backend_name="ensemble"):
+    """Create an ensemble backend of the given type whose project uses
+    target_subjects and whose source projects (a mapping of project_id to
+    either a subject index or a ready-made mock project) use the given
+    sources."""
 
     registry = unittest.mock.Mock()
     projects = {}
-    for source_id, subjects in sources.items():
-        source_project = unittest.mock.Mock()
-        source_project.subjects = subjects
+    for source_id, source in sources.items():
+        if isinstance(source, unittest.mock.Mock):
+            source_project = source
+        else:
+            source_project = unittest.mock.Mock()
+            source_project.subjects = source
         projects[source_id] = source_project
     ensemble_project = unittest.mock.Mock()
     ensemble_project.subjects = target_subjects
@@ -68,9 +72,9 @@ def make_ensemble_backend(target_subjects, sources):
     projects["ensemble"] = ensemble_project
     registry.get_project.side_effect = projects.get
 
-    ensemble_type = annif.backend.get_backend("ensemble")
-    return ensemble_type(
-        backend_id="ensemble",
+    backend_type = annif.backend.get_backend(backend_name)
+    return backend_type(
+        backend_id=backend_name,
         config_params={"sources": ",".join(sources)},
         project=ensemble_project,
     )
@@ -204,6 +208,25 @@ def test_align_batch_raises_on_width_mismatch():
         backend._align_batch(batch, "src")
 
 
+def test_align_batch_full_width_batch_with_deprecated_source_subjects():
+    # a full-width batch (columns are subject IDs) from a source vocabulary
+    # containing deprecated subjects is mapped via URI instead of being
+    # rejected; deprecated source subjects cannot carry scores
+    target = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
+    source = make_subject_index([(URI_B, None), (URI_A, "A"), (URI_C, "C")])
+    backend = make_ensemble_backend(target, {"src": source})
+    # full-width: col 0 = B (deprecated), col 1 = A, col 2 = C
+    batch = make_batch([0, 0], [1, 2], [0.7, 0.3], 1, len(source))
+
+    aligned = backend._align_batch(batch, "src")
+
+    assert aligned.array.shape == (1, 3)
+    expected = np.zeros((1, 3), dtype=np.float32)
+    expected[0, 0] = 0.7  # A
+    expected[0, 2] = 0.3  # C
+    np.testing.assert_array_equal(aligned.array.toarray(), expected)
+
+
 def test_align_batch_empty_batch():
     target = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
     source = make_subject_index([(URI_B, "B"), (URI_A, "A")])
@@ -279,3 +302,41 @@ def test_ensemble_optimizer_prepare_aligns_source_batches():
     expected[0, 0] = 1.0  # A
     expected[0, 1] = 0.5  # B
     np.testing.assert_array_equal(batch.array.toarray(), expected)
+
+
+def test_source_subject_map_same_vocabulary_is_none():
+    # when the source vocabulary matches the ensemble vocabulary by URI
+    # and size, no mapping is needed
+    subjects = make_subject_index([(URI_A, "A"), (URI_B, "B")])
+    backend = make_ensemble_backend(subjects, {"src": subjects})
+
+    assert backend._source_subject_map("src") is None
+
+
+def test_source_subject_map_maps_by_uri_and_drops_unmappable():
+    target = make_subject_index(
+        [(URI_A, "A"), (URI_B, "B"), (URI_C, None), (URI_X, "X")]
+    )
+    source = make_subject_index([(URI_D, "D"), (URI_C, "C"), (URI_A, "A")])
+    backend = make_ensemble_backend(target, {"src": source})
+
+    # source col 0 (D) is unknown, col 1 (C) maps to a deprecated subject,
+    # col 2 (A) maps to target subject 0
+    np.testing.assert_array_equal(
+        backend._source_subject_map("src"), np.array([-1, -1, 0])
+    )
+
+
+def test_align_source_vector_maps_scores():
+    target = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
+    source = make_subject_index([(URI_C, "C"), (URI_A, "A")])
+    backend = make_ensemble_backend(target, {"src": source})
+    subject_map = backend._source_subject_map("src")
+    vector = np.array([0.4, 0.8], dtype=np.float32)
+
+    aligned = backend._align_source_vector(vector, subject_map)
+
+    expected = np.array([0.8, 0.0, 0.4], dtype=np.float32)
+    np.testing.assert_array_equal(aligned, expected)
+    # a None map passes the vector through unchanged
+    assert backend._align_source_vector(vector, None) is vector

@@ -4,6 +4,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from unittest import mock
 
+import numpy as np
 import py.path
 import pytest
 
@@ -15,6 +16,7 @@ from annif.exception import (
     OperationFailedException,
 )
 
+from .test_backend_ensemble import make_batch, make_ensemble_backend, make_subject_index
 from .util import umask_context
 
 pytest.importorskip("annif.backend.nn_ensemble")
@@ -271,3 +273,102 @@ def test_nn_ensemble_suggest(app_project):
 
     assert nn_ensemble._model is not None
     assert len(results) > 0
+
+
+URI_A = "http://example.org/a"
+URI_B = "http://example.org/b"
+URI_C = "http://example.org/c"
+URI_X = "http://example.org/x"
+
+
+def test_corpus_to_vectors_aligns_source_vocabularies(tmpdir):
+    # regression test: source projects with a different vocabulary than the
+    # ensemble project must have their score vectors aligned by subject URI
+    # before they are stacked into the training data
+    target_subjects = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
+    source_subjects = make_subject_index([(URI_B, "B source"), (URI_X, "X source")])
+
+    source_project = mock.Mock()
+    source_project.subjects = source_subjects
+    source_project.suggest = lambda docs, params=None: make_batch(
+        [0, 0], [0, 1], [0.7, 0.3], len(docs), len(source_subjects)
+    )
+
+    nn_ensemble = make_ensemble_backend(
+        target_subjects, {"src": source_project}, backend_name="nn_ensemble"
+    )
+
+    tmpfile = tmpdir.join("document.tsv")
+    tmpfile.write("dummy\thttp://example.org/a\nanother\thttp://example.org/c\n")
+    corpus = DocumentFileTSV(str(tmpfile), target_subjects)
+
+    env = lmdb.open(
+        str(tmpdir.mkdir("mdb")), map_size=1024 * 1024, writemap=True, mode=0o775
+    )
+    with env.begin(write=True, buffers=True) as txn:
+        seq = annif.backend.nn_ensemble.LMDBDataset(txn)
+        nn_ensemble._corpus_to_vectors(corpus, seq, 1)
+
+        assert len(seq) == 2
+        inputs, targets = seq[0]
+        assert inputs.shape == (1, 3)
+        # source subject 0 (URI_B) maps to ensemble subject 1; URI_X cannot
+        # be mapped and its score is dropped
+        expected = np.zeros((1, 3), dtype=np.float32)
+        expected[0, 1] = np.log1p(0.7)
+        np.testing.assert_allclose(inputs.numpy(), expected, rtol=1e-6)
+        # gold standard subject for the first document is URI_A
+        expected_target = np.zeros(3, dtype=np.float32)
+        expected_target[0] = np.log1p(1.0)
+        np.testing.assert_allclose(targets.numpy(), expected_target, rtol=1e-6)
+    env.close()
+
+
+def test_merge_source_batches_aligns_source_vocabularies():
+    target_subjects = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
+    source_subjects = make_subject_index([(URI_B, "B source"), (URI_A, "A source")])
+
+    source_project = mock.Mock()
+    source_project.subjects = source_subjects
+
+    nn_ensemble = make_ensemble_backend(
+        target_subjects, {"src": source_project}, backend_name="nn_ensemble"
+    )
+    nn_ensemble._create_model([("src", 1.0)])
+
+    # source scores: B=0.7, A=0.3
+    batch = make_batch([0, 0], [0, 1], [0.7, 0.3], 1, len(source_subjects))
+    merged = nn_ensemble._merge_source_batches(
+        {"src": batch}, [("src", 1.0)], {"limit": 10}
+    )
+
+    assert merged.array.shape == (1, 3)
+    # suggestions are ranked by aligned scores: B before A before unmapped C
+    assert [hit.subject_id for hit in merged[0]] == [1, 0, 2]
+
+
+def test_merge_source_batches_rows_follow_sources_order():
+    # the model weights are indexed by the sources order, so the rows of
+    # the stacked score vectors must follow it even when the batch dict
+    # is ordered differently
+    target_subjects = make_subject_index([(URI_A, "A"), (URI_B, "B"), (URI_C, "C")])
+    source_project = mock.Mock()
+    source_project.subjects = target_subjects
+    nn_ensemble = make_ensemble_backend(
+        target_subjects,
+        {"one": source_project, "two": source_project},
+        backend_name="nn_ensemble",
+    )
+    nn_ensemble._create_model([("one", 1.0), ("two", 0.0)])
+
+    # source "one" scores A, source "two" scores B; dict order is reversed
+    batch_one = make_batch([0], [0], [0.9], 1, len(target_subjects))
+    batch_two = make_batch([0], [1], [0.9], 1, len(target_subjects))
+    merged = nn_ensemble._merge_source_batches(
+        {"two": batch_two, "one": batch_one},
+        [("one", 1.0), ("two", 0.0)],
+        {"limit": 10},
+    )
+
+    # weight 1.0 is on source "one", so A must be the top suggestion
+    assert list(merged[0])[0].subject_id == 0
