@@ -3,7 +3,6 @@ and returns the results"""
 
 from __future__ import annotations
 
-import importlib
 from typing import TYPE_CHECKING, Any
 
 import dateutil.parser
@@ -12,6 +11,7 @@ import requests.exceptions
 
 from annif.exception import OperationFailedException
 from annif.suggestion import SubjectSuggestion
+from annif.util import user_agent_header
 
 from . import backend
 
@@ -23,16 +23,10 @@ if TYPE_CHECKING:
 
 class HTTPBackend(backend.AnnifBackend):
     name = "http"
-    _headers = None
 
     @property
     def headers(self) -> dict[str, str]:
-        if self._headers is None:
-            version = importlib.metadata.version("annif")
-            self._headers = {
-                "User-Agent": f"Annif/{version}",
-            }
-        return self._headers
+        return user_agent_header()
 
     @property
     def is_trained(self) -> bool | None:

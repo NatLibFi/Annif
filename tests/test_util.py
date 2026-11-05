@@ -1,5 +1,7 @@
 """Unit tests for Annif utility functions"""
 
+import importlib.metadata
+
 import pytest
 
 import annif.util
@@ -50,3 +52,12 @@ def test_metric_code():
 
     for input, output in zip(inputs, outputs):
         assert annif.util.metric_code(input) == output
+
+
+def test_user_agent_header():
+    version = importlib.metadata.version("annif")
+    headers = annif.util.user_agent_header()
+    assert headers == {"User-Agent": f"Annif/{version}"}
+    # each call returns a fresh dict, so callers can add their own headers
+    headers["Authorization"] = "Bearer test"
+    assert annif.util.user_agent_header() == {"User-Agent": f"Annif/{version}"}
