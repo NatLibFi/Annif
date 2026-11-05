@@ -372,9 +372,9 @@ def _create_projects_section(configs):
     table = [
         (
             proj_id,
-            configs[proj_id]["name"],
-            configs[proj_id]["vocab"],
-            configs[proj_id]["language"],
+            configs[proj_id].raw_values()["name"],
+            configs[proj_id].raw_values()["vocab"],
+            configs[proj_id].raw_values()["language"],
         )
         for proj_id in configs.project_ids
     ]

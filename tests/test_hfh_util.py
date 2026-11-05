@@ -352,3 +352,22 @@ dummy-fi    Dummy Finnish  dummy          fi      \n```
 """
 
     assert updated_text == text_head + expected_updated_projects + text_tail
+
+
+def test_update_modelcard_projects_section_env_var_placeholder(monkeypatch):
+    # environment variable placeholders in the published configuration are
+    # shown as-is in the model card, and a missing variable must not cause
+    # an error
+    monkeypatch.delenv("ANNIF_TEST_MISSING", raising=False)
+    cfg = AnnifConfigCFG(
+        projstr="""\
+        [dummy-fi]
+        name=Dummy Finnish
+        language=fi
+        vocab=${ANNIF_TEST_MISSING}"""
+    )
+
+    updated_text = annif.hfh_util._update_projects_section("", cfg)
+
+    assert "dummy-fi" in updated_text
+    assert "${ANNIF_TEST_MISSING}" in updated_text
