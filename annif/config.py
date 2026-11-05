@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import collections.abc
 import configparser
-import copy
 import os.path
 import tomllib
 from glob import glob
+from typing import Any
 
 import annif
 import annif.util
@@ -16,13 +17,46 @@ from annif.util import interpolate_env_vars
 logger = annif.logger
 
 
+class InterpolatedMapping(collections.abc.Mapping):
+    """A read-only view of a single project configuration that interpolates
+    ${ENV_VAR} environment variable placeholders in string values lazily,
+    i.e. when the values are read. The underlying mapping is left
+    unchanged."""
+
+    def __init__(self, mapping: Any, project_id: str) -> None:
+        self._mapping = mapping
+        self._project_id = project_id
+
+    def __getitem__(self, key: str) -> Any:
+        value = self._mapping[key]
+        if isinstance(value, str):
+            return interpolate_env_vars(value, self._project_id, key)
+        return value
+
+    def __iter__(self):
+        return iter(self._mapping)
+
+    def __len__(self) -> int:
+        return len(self._mapping)
+
+    def raw_values(self) -> dict[str, Any]:
+        """Return the option values without interpolating environment
+        variable placeholders, as a plain dict."""
+        if isinstance(self._mapping, configparser.SectionProxy):
+            # use the raw values, without any interpolation, so that
+            # templates and escaped percent signs are preserved
+            return {
+                option: self._mapping.get(option, raw=True) for option in self._mapping
+            }
+        return dict(self._mapping)
+
+
 class AnnifConfigCFG:
     """Class for reading configuration in CFG/INI format"""
 
     def __init__(self, filename: str = None, projstr: str = None) -> None:
         self._config = configparser.ConfigParser()
         self._config.optionxform = annif.util.identity
-        self._raw_config = configparser.ConfigParser()
         if filename is not None:
             logger.debug(f"Reading configuration file {filename} in CFG format")
             self._read_config(self._config.read, filename)
@@ -39,47 +73,13 @@ class AnnifConfigCFG:
             configparser.DuplicateSectionError,
         ) as err:
             raise ConfigurationException(err.message)
-        # Keep a copy of the raw configuration, without the environment
-        # variable placeholders expanded, for use when the configuration
-        # is exported (e.g. to a Hugging Face Hub repository), so that
-        # secrets are not included in the exported configuration.
-        self._raw_config = copy.deepcopy(self._config)
-        self._interpolate_env_vars()
-
-    def _interpolate_env_vars(self) -> None:
-        """Replace ${VAR} placeholders in all option values with the value
-        of the corresponding environment variable."""
-        for section in self._config.sections():
-            for option, value in list(self._config[section].items()):
-                resolved = interpolate_env_vars(value, section, option)
-                # Escape percent signs so that ConfigParser's interpolation
-                # does not misinterpret them when the value is read back
-                self._config[section][option] = resolved.replace("%", "%%")
-        # The values in the DEFAULT section may contain ConfigParser
-        # interpolation templates (e.g. '%(language)s'), which are only
-        # valid in the context of a specific section. Therefore, the
-        # environment placeholders are replaced in the raw values, and no
-        # escaping is done, in order to preserve the templates.
-        for option, value in self._config.defaults().items():
-            self._config[configparser.DEFAULTSECT][option] = interpolate_env_vars(
-                value, configparser.DEFAULTSECT, option, escape_percent=True
-            )
 
     @property
     def project_ids(self) -> list[str]:
         return self._config.sections()
 
-    def __getitem__(self, key: str) -> configparser.SectionProxy:
-        return self._config[key]
-
-    def get_raw_config(self, key: str) -> dict[str, str]:
-        """Return the raw configuration of the given project, without
-        environment variable placeholders expanded, as a dict of raw
-        option values."""
-        return {
-            option: self._raw_config[key].get(option, raw=True)
-            for option in self._raw_config[key]
-        }
+    def __getitem__(self, key: str) -> InterpolatedMapping:
+        return InterpolatedMapping(self._config[key], key)
 
 
 class AnnifConfigTOML:
@@ -94,33 +94,13 @@ class AnnifConfigTOML:
                 raise ConfigurationException(
                     f"Parsing TOML file '{filename}' failed: {err}"
                 )
-        # Keep a copy of the raw configuration, without the environment
-        # variable placeholders expanded, for use when the configuration
-        # is exported (e.g. to a Hugging Face Hub repository), so that
-        # secrets are not included in the exported configuration.
-        self._raw_config = copy.deepcopy(self._config)
-        self._interpolate_env_vars()
-
-    def _interpolate_env_vars(self) -> None:
-        """Replace ${VAR} placeholders in all option values with the value
-        of the corresponding environment variable."""
-        for project_id, options in self._config.items():
-            for option, value in options.items():
-                if isinstance(value, str):
-                    options[option] = interpolate_env_vars(value, project_id, option)
 
     @property
     def project_ids(self):
         return self._config.keys()
 
-    def __getitem__(self, key: str) -> dict[str, str]:
-        return self._config[key]
-
-    def get_raw_config(self, key: str) -> dict[str, str]:
-        """Return the raw configuration of the given project, without
-        environment variable placeholders expanded, as a dict of raw
-        option values."""
-        return dict(self._raw_config[key])
+    def __getitem__(self, key: str) -> InterpolatedMapping:
+        return InterpolatedMapping(self._config[key], key)
 
 
 class AnnifConfigDirectory:
@@ -132,13 +112,11 @@ class AnnifConfigDirectory:
         logger.debug(f"Reading configuration files in directory {directory}")
 
         self._config = dict()
-        self._source_configs = dict()
         for file in sorted(files):
             source_config = parse_config(file)
             for proj_id in source_config.project_ids:
                 self._check_duplicate_project_ids(proj_id, file)
                 self._config[proj_id] = source_config[proj_id]
-                self._source_configs[proj_id] = source_config
 
     def _check_duplicate_project_ids(self, proj_id: str, file: str) -> None:
         if proj_id in self._config:
@@ -152,14 +130,8 @@ class AnnifConfigDirectory:
     def project_ids(self):
         return self._config.keys()
 
-    def __getitem__(self, key: str) -> dict[str, str] | configparser.SectionProxy:
+    def __getitem__(self, key: str) -> InterpolatedMapping:
         return self._config[key]
-
-    def get_raw_config(self, key: str) -> dict[str, str]:
-        """Return the raw configuration of the given project, without
-        environment variable placeholders expanded, as a dict of raw
-        option values."""
-        return self._source_configs[key].get_raw_config(key)
 
 
 def check_config(projects_config_path: str) -> str | None:

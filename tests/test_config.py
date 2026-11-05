@@ -110,17 +110,17 @@ def test_interpolate_env_vars_cfg(tmpdir, monkeypatch):
     assert cfg["testproj"]["key"] == "secret123"
     assert cfg["testproj"]["url"] == "http://x/secret123/y"
     # the raw configuration still contains the unexpanded placeholder
-    assert cfg.get_raw_config("testproj")["key"] == "${ANNIF_TEST_KEY}"
+    assert cfg["testproj"].raw_values()["key"] == "${ANNIF_TEST_KEY}"
 
 
-def test_get_raw_config_toml(tmpdir, monkeypatch):
+def test_raw_values_toml(tmpdir, monkeypatch):
     monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
     conffile = tmpdir.join("projects.toml")
     conffile.write('[testproj]\nkey = "${ANNIF_TEST_KEY}"\nnumber = 42\n')
     cfg = annif.config.parse_config(str(conffile))
     assert cfg["testproj"]["key"] == "secret123"
     # the raw configuration still contains the unexpanded placeholder
-    raw = cfg.get_raw_config("testproj")
+    raw = cfg["testproj"].raw_values()
     assert raw == {"key": "${ANNIF_TEST_KEY}", "number": 42}
 
 
@@ -203,8 +203,11 @@ def test_interpolate_env_vars_missing_var_cfg(tmpdir, monkeypatch):
     monkeypatch.delenv("ANNIF_TEST_MISSING", raising=False)
     conffile = tmpdir.join("projects.cfg")
     conffile.write("[testproj]\nkey=${ANNIF_TEST_MISSING}\n")
+    # reading the configuration does not raise; the error is raised when
+    # the value is accessed
+    cfg = annif.config.parse_config(str(conffile))
     with pytest.raises(ConfigurationException) as excinfo:
-        annif.config.parse_config(str(conffile))
+        cfg["testproj"]["key"]
     message = excinfo.value.format_message()
     assert "ANNIF_TEST_MISSING" in message
     assert "'testproj'" in message
@@ -215,8 +218,11 @@ def test_interpolate_env_vars_missing_var_toml(tmpdir, monkeypatch):
     monkeypatch.delenv("ANNIF_TEST_MISSING", raising=False)
     conffile = tmpdir.join("projects.toml")
     conffile.write('[testproj]\nkey = "${ANNIF_TEST_MISSING}"\n')
+    # reading the configuration does not raise; the error is raised when
+    # the value is accessed
+    cfg = annif.config.parse_config(str(conffile))
     with pytest.raises(ConfigurationException) as excinfo:
-        annif.config.parse_config(str(conffile))
+        cfg["testproj"]["key"]
     message = excinfo.value.format_message()
     assert "ANNIF_TEST_MISSING" in message
     assert "'testproj'" in message

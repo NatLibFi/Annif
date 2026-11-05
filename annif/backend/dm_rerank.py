@@ -22,7 +22,7 @@ from annif.util import boolean, parse_sources, user_agent_header
 from . import ensemble, hyperopt
 
 if TYPE_CHECKING:
-    from configparser import SectionProxy
+    from collections.abc import Mapping
     from datetime import datetime
 
     from optuna.study.study import Study
@@ -93,7 +93,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
     def __init__(
         self,
         backend_id: str,
-        config_params: dict[str, Any] | SectionProxy,
+        config_params: Mapping[str, Any],
         project: AnnifProject,
     ) -> None:
         super().__init__(backend_id, config_params, project)

@@ -131,31 +131,23 @@ def identity(x: Any) -> Any:
 _ENV_VAR_PATTERN = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
 
 
-def interpolate_env_vars(
-    value: str, project_id: str, option_name: str, escape_percent: bool = False
-) -> str:
+def interpolate_env_vars(value: str, project_id: str, option_name: str) -> str:
     """Substitute ${VAR} placeholders in the given string with the value of
     the corresponding environment variable. Other uses of the dollar sign are
     left unchanged. If a referenced environment variable is not set, a
-    ConfigurationException is raised. If escape_percent is True, percent
-    signs in the result are escaped (doubled) for writing back to a
-    ConfigParser instance, whose interpolation would otherwise
-    misinterpret them."""
+    ConfigurationException is raised."""
     from annif.exception import ConfigurationException
 
     def _replace(match: re.Match) -> str:
         varname = match.group(1)
         try:
-            env_value = os.environ[varname]
+            return os.environ[varname]
         except KeyError:
             raise ConfigurationException(
                 f"environment variable '{varname}' referenced in option "
                 f"'{option_name}' is not set",
                 project_id=project_id,
             ) from None
-        if escape_percent:
-            env_value = env_value.replace("%", "%%")
-        return env_value
 
     return _ENV_VAR_PATTERN.sub(_replace, value)
 

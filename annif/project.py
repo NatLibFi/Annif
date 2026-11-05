@@ -5,8 +5,9 @@ from __future__ import annotations
 import enum
 import os.path
 import re
+from collections.abc import Mapping
 from shutil import rmtree
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import annif
 import annif.analyzer
@@ -27,7 +28,6 @@ from annif.vocab import SubjectIndexFilter, kwargs_to_exclude_uris
 
 if TYPE_CHECKING:
     from collections import defaultdict
-    from configparser import SectionProxy
     from datetime import datetime
 
     from click.utils import LazyFile
@@ -71,10 +71,9 @@ class AnnifProject(DatadirMixin):
     def __init__(
         self,
         project_id: str,
-        config: dict[str, str] | SectionProxy,
+        config: Mapping[str, Any],
         datadir: str,
         registry: AnnifRegistry,
-        raw_config: dict[str, str] | None = None,
     ) -> None:
         DatadirMixin.__init__(self, datadir, "projects", project_id)
         self.project_id = project_id
@@ -84,11 +83,6 @@ class AnnifProject(DatadirMixin):
         self.transform_spec = config.get("transform", "pass")
         self.vocab_spec = config.get("vocab", None)
         self.config = config
-        # The configuration without environment variable placeholders
-        # expanded, used when the project configuration is exported, so
-        # that secrets are not included in the exported configuration.
-        # If not given, the regular configuration is used instead.
-        self.raw_config = raw_config if raw_config is not None else config
         self._base_datadir = datadir
         self.registry = registry
         self._init_access()

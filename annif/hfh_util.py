@@ -145,11 +145,11 @@ def _archive_dir(data_dir: str) -> io.BufferedRandom:
 
 def _get_project_config(project: AnnifProject) -> io.BytesIO:
     fp = tempfile.TemporaryFile(mode="w+t")
-    # Export the raw configuration, without environment variable
-    # placeholders expanded, so that secrets are not included in the
-    # exported configuration.
+    # Export the configuration without expanding environment variable
+    # placeholders, so that secrets are not included in the exported
+    # configuration.
     config = configparser.ConfigParser(interpolation=None)
-    config[project.project_id] = project.raw_config
+    config[project.project_id] = project.config.raw_values()
     config.write(fp)  # This needs tempfile in text mode
     fp.seek(0)
     # But for upload fobj needs to be in binary mode

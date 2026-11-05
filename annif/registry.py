@@ -60,11 +60,7 @@ class AnnifRegistry:
         projects = dict()
         for project_id in config.project_ids:
             projects[project_id] = AnnifProject(
-                project_id,
-                config[project_id],
-                self._datadir,
-                self,
-                raw_config=config.get_raw_config(project_id),
+                project_id, config[project_id], self._datadir, self
             )
         return projects
 
