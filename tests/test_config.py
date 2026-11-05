@@ -119,6 +119,23 @@ def test_interpolate_env_vars_cfg_default_section(tmpdir, monkeypatch):
     assert cfg["testproj"]["common"] == "secret123"
 
 
+def test_interpolate_env_vars_cfg_escaped_percent_sign(tmpdir):
+    # an escaped percent sign in a CFG value is preserved as-is
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write("[testproj]\nname=100%% ready\n")
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["name"] == "100% ready"
+
+
+def test_interpolate_env_vars_cfg_env_value_with_percent(tmpdir, monkeypatch):
+    # a percent sign in the environment variable value is preserved as-is
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret%123")
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write("[testproj]\nkey=${ANNIF_TEST_KEY}\n")
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["key"] == "secret%123"
+
+
 def test_interpolate_env_vars_toml(tmpdir, monkeypatch):
     monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
     conffile = tmpdir.join("projects.toml")

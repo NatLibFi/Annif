@@ -44,9 +44,10 @@ class AnnifConfigCFG:
         of the corresponding environment variable."""
         for section in self._config.sections() + [configparser.DEFAULTSECT]:
             for option, value in list(self._config[section].items()):
-                self._config[section][option] = interpolate_env_vars(
-                    value, section, option
-                )
+                resolved = interpolate_env_vars(value, section, option)
+                # Escape percent signs so that ConfigParser's interpolation
+                # does not misinterpret them when the value is read back
+                self._config[section][option] = resolved.replace("%", "%%")
 
     @property
     def project_ids(self) -> list[str]:
