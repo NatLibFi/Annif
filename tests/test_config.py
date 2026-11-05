@@ -207,7 +207,7 @@ def test_interpolate_env_vars_missing_var_cfg(tmpdir, monkeypatch):
     # the value is accessed
     cfg = annif.config.parse_config(str(conffile))
     with pytest.raises(ConfigurationException) as excinfo:
-        cfg["testproj"]["key"]
+        _ = cfg["testproj"]["key"]
     message = excinfo.value.format_message()
     assert "ANNIF_TEST_MISSING" in message
     assert "'testproj'" in message
@@ -222,7 +222,7 @@ def test_interpolate_env_vars_missing_var_toml(tmpdir, monkeypatch):
     # the value is accessed
     cfg = annif.config.parse_config(str(conffile))
     with pytest.raises(ConfigurationException) as excinfo:
-        cfg["testproj"]["key"]
+        _ = cfg["testproj"]["key"]
     message = excinfo.value.format_message()
     assert "ANNIF_TEST_MISSING" in message
     assert "'testproj'" in message
