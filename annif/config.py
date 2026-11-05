@@ -42,12 +42,21 @@ class AnnifConfigCFG:
     def _interpolate_env_vars(self) -> None:
         """Replace ${VAR} placeholders in all option values with the value
         of the corresponding environment variable."""
-        for section in self._config.sections() + [configparser.DEFAULTSECT]:
+        for section in self._config.sections():
             for option, value in list(self._config[section].items()):
                 resolved = interpolate_env_vars(value, section, option)
                 # Escape percent signs so that ConfigParser's interpolation
                 # does not misinterpret them when the value is read back
                 self._config[section][option] = resolved.replace("%", "%%")
+        # The values in the DEFAULT section may contain ConfigParser
+        # interpolation templates (e.g. '%(language)s'), which are only
+        # valid in the context of a specific section. Therefore, the
+        # environment placeholders are replaced in the raw values, and no
+        # escaping is done, in order to preserve the templates.
+        for option, value in self._config.defaults().items():
+            self._config[configparser.DEFAULTSECT][option] = interpolate_env_vars(
+                value, configparser.DEFAULTSECT, option, escape_percent=True
+            )
 
     @property
     def project_ids(self) -> list[str]:

@@ -119,6 +119,28 @@ def test_interpolate_env_vars_cfg_default_section(tmpdir, monkeypatch):
     assert cfg["testproj"]["common"] == "secret123"
 
 
+def test_interpolate_env_vars_cfg_default_interpolation_template(tmpdir, monkeypatch):
+    # interpolation templates in the DEFAULT section are preserved and
+    # resolved in the context of each section
+    monkeypatch.setenv("ANNIF_TEST_KEY", "abc")
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write(
+        "[DEFAULT]\nname=%(language)s ${ANNIF_TEST_KEY}\n" "[testproj]\nlanguage=en\n"
+    )
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["name"] == "en abc"
+
+
+def test_interpolate_env_vars_cfg_default_env_value_with_percent(tmpdir, monkeypatch):
+    # a percent sign in the environment variable value in the DEFAULT
+    # section is preserved as-is
+    monkeypatch.setenv("ANNIF_TEST_KEY", "a%b")
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write("[DEFAULT]\nkey=${ANNIF_TEST_KEY}\n[testproj]\nlanguage=en\n")
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["key"] == "a%b"
+
+
 def test_interpolate_env_vars_cfg_escaped_percent_sign(tmpdir):
     # an escaped percent sign in a CFG value is preserved as-is
     conffile = tmpdir.join("projects.cfg")
