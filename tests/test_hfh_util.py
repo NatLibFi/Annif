@@ -13,7 +13,7 @@ from huggingface_hub.utils import EntryNotFoundError
 
 import annif.hfh_util
 from annif.config import AnnifConfigCFG
-from annif.exception import OperationFailedException
+from annif.exception import ConfigurationException, OperationFailedException
 
 
 @mock.patch("annif.hfh_util._is_repo_in_cache", return_value=False)
@@ -133,6 +133,30 @@ def test_get_project_config_preserves_env_var_placeholders_toml(monkeypatch, tmp
     )
     assert "endpoint-api-key = ${ANNIF_TEST_KEY}" in exported
     assert "secret123" not in exported
+
+
+def test_get_vocab_id_from_config_plain(tmp_path):
+    conffile = tmp_path.joinpath("dummy-en.cfg")
+    conffile.write_text("[dummy-en]\nlanguage=en\nvocab=dummy\n")
+    assert annif.hfh_util.get_vocab_id_from_config(str(conffile)) == "dummy"
+
+
+def test_get_vocab_id_from_config_env_var(tmp_path, monkeypatch):
+    # environment variable placeholders in the vocabulary option are
+    # resolved so that the correct vocabulary archive is downloaded
+    monkeypatch.setenv("ANNIF_TEST_VOCAB", "dummy")
+    conffile = tmp_path.joinpath("dummy-en.cfg")
+    conffile.write_text("[dummy-en]\nlanguage=en\nvocab=${ANNIF_TEST_VOCAB}\n")
+    assert annif.hfh_util.get_vocab_id_from_config(str(conffile)) == "dummy"
+
+
+def test_get_vocab_id_from_config_env_var_missing(tmp_path, monkeypatch):
+    # a missing environment variable is an error
+    monkeypatch.delenv("ANNIF_TEST_MISSING", raising=False)
+    conffile = tmp_path.joinpath("dummy-en.cfg")
+    conffile.write_text("[dummy-en]\nlanguage=en\nvocab=${ANNIF_TEST_MISSING}\n")
+    with pytest.raises(ConfigurationException):
+        annif.hfh_util.get_vocab_id_from_config(str(conffile))
 
 
 def test_unzip_archive_initial(testdatadir):

@@ -279,10 +279,11 @@ def _compute_crc32(path: str) -> int:
 
 def get_vocab_id_from_config(config_path: str) -> str:
     """Get the vocabulary ID from a configuration file."""
-    config = configparser.ConfigParser()
-    config.read(config_path)
-    section = config.sections()[0]
-    return config[section]["vocab"]
+    # Read the configuration with Annif's config reader, so that
+    # environment variable placeholders are resolved.
+    config = AnnifConfigCFG(filename=config_path)
+    project_id = config.project_ids[0]
+    return config[project_id]["vocab"]
 
 
 def upsert_modelcard(repo_id, projects, token, revision):
