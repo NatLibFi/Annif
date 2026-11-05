@@ -10,6 +10,7 @@ from glob import glob
 import annif
 import annif.util
 from annif.exception import ConfigurationException
+from annif.util import interpolate_env_vars
 
 logger = annif.logger
 
@@ -36,6 +37,16 @@ class AnnifConfigCFG:
             configparser.DuplicateSectionError,
         ) as err:
             raise ConfigurationException(err.message)
+        self._interpolate_env_vars()
+
+    def _interpolate_env_vars(self) -> None:
+        """Replace ${VAR} placeholders in all option values with the value
+        of the corresponding environment variable."""
+        for section in self._config.sections() + [configparser.DEFAULTSECT]:
+            for option, value in list(self._config[section].items()):
+                self._config[section][option] = interpolate_env_vars(
+                    value, section, option
+                )
 
     @property
     def project_ids(self) -> list[str]:
@@ -57,6 +68,15 @@ class AnnifConfigTOML:
                 raise ConfigurationException(
                     f"Parsing TOML file '{filename}' failed: {err}"
                 )
+        self._interpolate_env_vars()
+
+    def _interpolate_env_vars(self) -> None:
+        """Replace ${VAR} placeholders in all option values with the value
+        of the corresponding environment variable."""
+        for project_id, options in self._config.items():
+            for option, value in options.items():
+                if isinstance(value, str):
+                    options[option] = interpolate_env_vars(value, project_id, option)
 
     @property
     def project_ids(self):

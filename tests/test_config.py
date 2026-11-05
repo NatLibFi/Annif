@@ -98,3 +98,74 @@ def test_parse_config_directory_duplicated_project(tmpdir):
     with pytest.raises(ConfigurationException) as excinfo:
         annif.config.parse_config(str(tmpdir))
     assert 'project ID "duplicated" already exists' in str(excinfo.value)
+
+
+def test_interpolate_env_vars_cfg(tmpdir, monkeypatch):
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write(
+        "[testproj]\nkey=${ANNIF_TEST_KEY}\nurl=http://x/${ANNIF_TEST_KEY}/y\n"
+    )
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["key"] == "secret123"
+    assert cfg["testproj"]["url"] == "http://x/secret123/y"
+
+
+def test_interpolate_env_vars_cfg_default_section(tmpdir, monkeypatch):
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write("[DEFAULT]\ncommon=${ANNIF_TEST_KEY}\n" "[testproj]\nkey=value\n")
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["common"] == "secret123"
+
+
+def test_interpolate_env_vars_toml(tmpdir, monkeypatch):
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
+    conffile = tmpdir.join("projects.toml")
+    conffile.write(
+        "[testproj]\n"
+        'key = "${ANNIF_TEST_KEY}"\n'
+        'embedded = "http://x/${ANNIF_TEST_KEY}/y"\n'
+        "number = 42\n"
+        "flag = false\n"
+    )
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["key"] == "secret123"
+    assert cfg["testproj"]["embedded"] == "http://x/secret123/y"
+    assert cfg["testproj"]["number"] == 42
+    assert cfg["testproj"]["flag"] is False
+
+
+def test_interpolate_env_vars_directory(tmpdir, monkeypatch):
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
+    conffile = tmpdir.join("projects-1.toml")
+    conffile.write('[proj-toml]\nkey = "${ANNIF_TEST_KEY}"\n')
+    conffile = tmpdir.join("projects-2.cfg")
+    conffile.write("[proj-cfg]\nkey=${ANNIF_TEST_KEY}\n")
+    cfg = annif.config.parse_config(str(tmpdir))
+    assert cfg["proj-toml"]["key"] == "secret123"
+    assert cfg["proj-cfg"]["key"] == "secret123"
+
+
+def test_interpolate_env_vars_missing_var_cfg(tmpdir, monkeypatch):
+    monkeypatch.delenv("ANNIF_TEST_MISSING", raising=False)
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write("[testproj]\nkey=${ANNIF_TEST_MISSING}\n")
+    with pytest.raises(ConfigurationException) as excinfo:
+        annif.config.parse_config(str(conffile))
+    message = excinfo.value.format_message()
+    assert "ANNIF_TEST_MISSING" in message
+    assert "'testproj'" in message
+    assert "'key'" in message
+
+
+def test_interpolate_env_vars_missing_var_toml(tmpdir, monkeypatch):
+    monkeypatch.delenv("ANNIF_TEST_MISSING", raising=False)
+    conffile = tmpdir.join("projects.toml")
+    conffile.write('[testproj]\nkey = "${ANNIF_TEST_MISSING}"\n')
+    with pytest.raises(ConfigurationException) as excinfo:
+        annif.config.parse_config(str(conffile))
+    message = excinfo.value.format_message()
+    assert "ANNIF_TEST_MISSING" in message
+    assert "'testproj'" in message
+    assert "'key'" in message
