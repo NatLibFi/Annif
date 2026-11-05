@@ -45,7 +45,7 @@ Start up the application:
 See [Getting Started](https://github.com/NatLibFi/Annif/wiki/Getting-started)
 for basic usage instructions and
 [Optional features and dependencies](https://github.com/NatLibFi/Annif/wiki/Optional-features-and-dependencies)
-for installation instructions for e.g. fastText and Omikuji backends and for Voikko and spaCy analyzers.
+for installation instructions for e.g. fastText and Omikuji backends and for Voikko, spaCy and jieba analyzers.
 
 ## Shell compeletions
 Annif supports tab-key completion in bash, zsh and fish shells for commands and options
