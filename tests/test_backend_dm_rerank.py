@@ -1,5 +1,6 @@
 """Unit tests for the dm_rerank backend in Annif"""
 
+import importlib.metadata
 import math
 import unittest.mock
 from datetime import datetime, timezone
@@ -67,6 +68,27 @@ def test_dm_rerank_suggest_request_timeout(app_project):
         assert mock_request.call_args.kwargs["timeout"] == 5.0
 
 
+def _user_agent() -> str:
+    version = importlib.metadata.version("annif")
+    return f"Annif/{version}"
+
+
+def test_dm_rerank_suggest_request_user_agent_header(app_project):
+    """The request identifies Annif by sending a User-Agent header such as
+    'Annif/1.5.0', like the http backend does."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            dm_rerank.suggest([Document(text="test document")])
+
+    headers = mock_request.call_args.kwargs["headers"]
+    assert headers["User-Agent"] == _user_agent()
+
+
 def test_dm_rerank_suggest_request_no_auth_header_by_default(app_project):
     """Without an endpoint-api-key no Authorization header is sent."""
     with unittest.mock.patch("requests.post") as mock_request:
@@ -79,7 +101,7 @@ def test_dm_rerank_suggest_request_no_auth_header_by_default(app_project):
             dm_rerank.suggest([Document(text="test document")])
 
     headers = mock_request.call_args.kwargs["headers"]
-    assert headers == {}
+    assert headers == {"User-Agent": _user_agent()}
     assert "Authorization" not in headers
 
 
@@ -95,7 +117,10 @@ def test_dm_rerank_suggest_request_auth_header(app_project):
             dm_rerank.suggest([Document(text="test document")])
 
     headers = mock_request.call_args.kwargs["headers"]
-    assert headers == {"Authorization": "Bearer secret-key"}
+    assert headers == {
+        "User-Agent": _user_agent(),
+        "Authorization": "Bearer secret-key",
+    }
 
 
 def test_dm_rerank_suggest_request_auth_header_whitespace_only(app_project):
@@ -111,7 +136,7 @@ def test_dm_rerank_suggest_request_auth_header_whitespace_only(app_project):
             dm_rerank.suggest([Document(text="test document")])
 
     headers = mock_request.call_args.kwargs["headers"]
-    assert headers == {}
+    assert headers == {"User-Agent": _user_agent()}
     assert "Authorization" not in headers
 
 
@@ -131,7 +156,10 @@ def test_dm_rerank_suggest_request_auth_header_override(app_project):
             )
 
     headers = mock_request.call_args.kwargs["headers"]
-    assert headers == {"Authorization": "Bearer override-key"}
+    assert headers == {
+        "User-Agent": _user_agent(),
+        "Authorization": "Bearer override-key",
+    }
 
 
 def test_dm_rerank_suggest_request_shape(app_project):

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import glob
+import importlib.metadata
 import logging
 import os
 import os.path
 import tempfile
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
@@ -62,6 +64,18 @@ def cleanup_uri(uri: str) -> str:
     if uri.startswith("<") and uri.endswith(">"):
         return uri[1:-1]
     return uri
+
+
+@lru_cache
+def annif_version() -> str:
+    """Return the installed Annif version, looked up once and cached."""
+    return importlib.metadata.version("annif")
+
+
+def user_agent_header() -> dict[str, str]:
+    """Return a fresh HTTP headers dict identifying the Annif version,
+    e.g. {'User-Agent': 'Annif/1.5.0'}."""
+    return {"User-Agent": f"Annif/{annif_version()}"}
 
 
 def parse_sources(sourcedef: str) -> list[tuple[str, float]]:

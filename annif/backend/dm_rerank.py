@@ -17,7 +17,7 @@ from annif.exception import (
     OperationFailedException,
 )
 from annif.suggestion import SubjectSuggestion, SuggestionBatch
-from annif.util import boolean, parse_sources
+from annif.util import boolean, parse_sources, user_agent_header
 
 from . import ensemble, hyperopt
 
@@ -351,14 +351,15 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
 
         return dm_scores
 
-    def _auth_headers(self, params: dict[str, Any]) -> dict[str, str]:
-        """Build the request headers: an 'Authorization: Bearer' header
-        carrying the endpoint-api-key when it is set (and not only
-        whitespace), otherwise no headers at all."""
+    def _request_headers(self, params: dict[str, Any]) -> dict[str, str]:
+        """Build the request headers: the User-Agent header identifying the
+        Annif version, plus an 'Authorization: Bearer' header carrying the
+        endpoint-api-key when it is set (and not only whitespace)."""
+        headers = user_agent_header()
         api_key = str(params["endpoint-api-key"]).strip()
         if api_key:
-            return {"Authorization": f"Bearer {api_key}"}
-        return {}
+            headers["Authorization"] = f"Bearer {api_key}"
+        return headers
 
     def _query_dm_rerank(
         self, doc: Document, suggestions: list[SubjectSuggestion], params
@@ -388,7 +389,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
             params["model"],
             int(params["retries"]),
             float(params["timeout"]),
-            self._auth_headers(params),
+            self._request_headers(params),
         )
         if req is None:
             return {}
