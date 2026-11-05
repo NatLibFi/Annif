@@ -128,7 +128,7 @@ def identity(x: Any) -> Any:
     return x
 
 
-_ENV_VAR_PATTERN = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
+_ENV_VAR_PATTERN = re.compile(r"\$\{([A-Za-z_]\w*)\}", re.ASCII)
 
 
 def interpolate_env_vars(value: str, project_id: str, option_name: str) -> str:
