@@ -1,4 +1,5 @@
 import os
+from multiprocessing import current_process
 from typing import Any, ClassVar
 
 import joblib
@@ -218,6 +219,16 @@ class EbmBackend(backend.AnnifBackend):
     def _suggest_batch(
         self, documents: list[Document], params: dict[str, Any]
     ) -> SuggestionBatch:
+        threads: int = -1
+        if current_process().daemon:
+            self.debug(
+                "running in a daemon process. "
+                "setting parameter 'chunking_jobs' and xgboost's 'nthreads' to '1' "
+                "to avoid issues with multiprocessing"
+            )
+            params["chunking_jobs"] = 1
+            threads = 1
+
         if not documents or not any(doc.text.strip() for doc in documents):
             return SuggestionBatch.from_sequence(
                 [[] for _ in documents],
@@ -231,7 +242,7 @@ class EbmBackend(backend.AnnifBackend):
             params=params,
         )
 
-        predictions = self._model.predict(candidates)
+        predictions = self._model.predict(candidates, threads)
 
         suggestions = []
         for doc_predictions in predictions:
