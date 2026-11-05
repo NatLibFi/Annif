@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import configparser
+import copy
 import os.path
 import tomllib
 from glob import glob
@@ -21,6 +22,7 @@ class AnnifConfigCFG:
     def __init__(self, filename: str = None, projstr: str = None) -> None:
         self._config = configparser.ConfigParser()
         self._config.optionxform = annif.util.identity
+        self._raw_config = configparser.ConfigParser()
         if filename is not None:
             logger.debug(f"Reading configuration file {filename} in CFG format")
             self._read_config(self._config.read, filename)
@@ -37,6 +39,11 @@ class AnnifConfigCFG:
             configparser.DuplicateSectionError,
         ) as err:
             raise ConfigurationException(err.message)
+        # Keep a copy of the raw configuration, without the environment
+        # variable placeholders expanded, for use when the configuration
+        # is exported (e.g. to a Hugging Face Hub repository), so that
+        # secrets are not included in the exported configuration.
+        self._raw_config = copy.deepcopy(self._config)
         self._interpolate_env_vars()
 
     def _interpolate_env_vars(self) -> None:
@@ -65,6 +72,15 @@ class AnnifConfigCFG:
     def __getitem__(self, key: str) -> configparser.SectionProxy:
         return self._config[key]
 
+    def get_raw_config(self, key: str) -> dict[str, str]:
+        """Return the raw configuration of the given project, without
+        environment variable placeholders expanded, as a dict of raw
+        option values."""
+        return {
+            option: self._raw_config[key].get(option, raw=True)
+            for option in self._raw_config[key]
+        }
+
 
 class AnnifConfigTOML:
     """Class for reading configuration in TOML format"""
@@ -78,6 +94,11 @@ class AnnifConfigTOML:
                 raise ConfigurationException(
                     f"Parsing TOML file '{filename}' failed: {err}"
                 )
+        # Keep a copy of the raw configuration, without the environment
+        # variable placeholders expanded, for use when the configuration
+        # is exported (e.g. to a Hugging Face Hub repository), so that
+        # secrets are not included in the exported configuration.
+        self._raw_config = copy.deepcopy(self._config)
         self._interpolate_env_vars()
 
     def _interpolate_env_vars(self) -> None:
@@ -95,6 +116,12 @@ class AnnifConfigTOML:
     def __getitem__(self, key: str) -> dict[str, str]:
         return self._config[key]
 
+    def get_raw_config(self, key: str) -> dict[str, str]:
+        """Return the raw configuration of the given project, without
+        environment variable placeholders expanded, as a dict of raw
+        option values."""
+        return dict(self._raw_config[key])
+
 
 class AnnifConfigDirectory:
     """Class for reading configuration from directory"""
@@ -105,11 +132,13 @@ class AnnifConfigDirectory:
         logger.debug(f"Reading configuration files in directory {directory}")
 
         self._config = dict()
+        self._source_configs = dict()
         for file in sorted(files):
             source_config = parse_config(file)
             for proj_id in source_config.project_ids:
                 self._check_duplicate_project_ids(proj_id, file)
                 self._config[proj_id] = source_config[proj_id]
+                self._source_configs[proj_id] = source_config
 
     def _check_duplicate_project_ids(self, proj_id: str, file: str) -> None:
         if proj_id in self._config:
@@ -125,6 +154,12 @@ class AnnifConfigDirectory:
 
     def __getitem__(self, key: str) -> dict[str, str] | configparser.SectionProxy:
         return self._config[key]
+
+    def get_raw_config(self, key: str) -> dict[str, str]:
+        """Return the raw configuration of the given project, without
+        environment variable placeholders expanded, as a dict of raw
+        option values."""
+        return self._source_configs[key].get_raw_config(key)
 
 
 def check_config(projects_config_path: str) -> str | None:

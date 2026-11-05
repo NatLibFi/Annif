@@ -83,6 +83,58 @@ def test_get_project_config(app_project):
     assert "[dummy-en]" in string_result
 
 
+def _export_project_config(projects_content, suffix, monkeypatch, tmp_path):
+    """Write a temporary project configuration, load it into a registry
+    and return the exported configuration string of the single project."""
+    import annif
+    import annif.registry
+
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
+    conffile = tmp_path.joinpath("projects" + suffix)
+    conffile.write_text(projects_content)
+    app = annif.create_flask_app("annif.default_config.TestingConfig")
+    app.config["PROJECTS_CONFIG_PATH"] = str(conffile)
+    with app.app_context():
+        annif.registry.initialize_projects(app)
+        project = annif.registry.get_project("testproj")
+        result = annif.hfh_util._get_project_config(project)
+        return result.read().decode("UTF-8")
+
+
+def test_get_project_config_preserves_env_var_placeholders_cfg(monkeypatch, tmp_path):
+    # environment variable placeholders must not be expanded in the
+    # exported configuration, so that secrets are not exported
+    exported = _export_project_config(
+        "[testproj]\n"
+        "language=en\n"
+        "name=Test\n"
+        "backend=tfidf\n"
+        "endpoint-api-key=${ANNIF_TEST_KEY}\n",
+        ".cfg",
+        monkeypatch,
+        tmp_path,
+    )
+    assert "endpoint-api-key = ${ANNIF_TEST_KEY}" in exported
+    assert "secret123" not in exported
+
+
+def test_get_project_config_preserves_env_var_placeholders_toml(monkeypatch, tmp_path):
+    # environment variable placeholders must not be expanded in the
+    # exported configuration, so that secrets are not exported
+    exported = _export_project_config(
+        "[testproj]\n"
+        'language = "en"\n'
+        'name = "Test"\n'
+        'backend = "tfidf"\n'
+        'endpoint-api-key = "${ANNIF_TEST_KEY}"\n',
+        ".toml",
+        monkeypatch,
+        tmp_path,
+    )
+    assert "endpoint-api-key = ${ANNIF_TEST_KEY}" in exported
+    assert "secret123" not in exported
+
+
 def test_unzip_archive_initial(testdatadir):
     dirpath = os.path.join(str(testdatadir), "projects", "dummy-fi")
     fpath = os.path.join(str(dirpath), "file.txt")

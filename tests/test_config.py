@@ -109,6 +109,19 @@ def test_interpolate_env_vars_cfg(tmpdir, monkeypatch):
     cfg = annif.config.parse_config(str(conffile))
     assert cfg["testproj"]["key"] == "secret123"
     assert cfg["testproj"]["url"] == "http://x/secret123/y"
+    # the raw configuration still contains the unexpanded placeholder
+    assert cfg.get_raw_config("testproj")["key"] == "${ANNIF_TEST_KEY}"
+
+
+def test_get_raw_config_toml(tmpdir, monkeypatch):
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
+    conffile = tmpdir.join("projects.toml")
+    conffile.write('[testproj]\nkey = "${ANNIF_TEST_KEY}"\nnumber = 42\n')
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["key"] == "secret123"
+    # the raw configuration still contains the unexpanded placeholder
+    raw = cfg.get_raw_config("testproj")
+    assert raw == {"key": "${ANNIF_TEST_KEY}", "number": 42}
 
 
 def test_interpolate_env_vars_cfg_default_section(tmpdir, monkeypatch):

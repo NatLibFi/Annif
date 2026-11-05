@@ -74,6 +74,7 @@ class AnnifProject(DatadirMixin):
         config: dict[str, str] | SectionProxy,
         datadir: str,
         registry: AnnifRegistry,
+        raw_config: dict[str, str] | None = None,
     ) -> None:
         DatadirMixin.__init__(self, datadir, "projects", project_id)
         self.project_id = project_id
@@ -83,6 +84,11 @@ class AnnifProject(DatadirMixin):
         self.transform_spec = config.get("transform", "pass")
         self.vocab_spec = config.get("vocab", None)
         self.config = config
+        # The configuration without environment variable placeholders
+        # expanded, used when the project configuration is exported, so
+        # that secrets are not included in the exported configuration.
+        # If not given, the regular configuration is used instead.
+        self.raw_config = raw_config if raw_config is not None else config
         self._base_datadir = datadir
         self.registry = registry
         self._init_access()
