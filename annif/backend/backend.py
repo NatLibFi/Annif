@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import abc
 import os.path
+from collections.abc import Mapping
 from datetime import datetime, timezone
 from glob import glob
 from typing import TYPE_CHECKING, Any
@@ -12,8 +13,6 @@ from annif import logger
 from annif.suggestion import SuggestionBatch
 
 if TYPE_CHECKING:
-    from configparser import SectionProxy
-
     from annif.corpus.document import Document, DocumentCorpus
     from annif.project import AnnifProject
 
@@ -29,7 +28,7 @@ class AnnifBackend(metaclass=abc.ABCMeta):
     def __init__(
         self,
         backend_id: str,
-        config_params: dict[str, Any] | SectionProxy,
+        config_params: Mapping[str, Any],
         project: AnnifProject,
     ) -> None:
         """Initialize backend with specific parameters. The
