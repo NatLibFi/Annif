@@ -110,6 +110,45 @@ def test_http_suggest_post_args(app_project):
         assert requests.post.call_args.kwargs["data"]["metadata_field"] == "value"
 
 
+def test_http_suggest_unknown_uri(project):
+    with unittest.mock.patch("requests.post") as mock_request:
+        # create a mock response whose .json() method returns a list with one
+        # URI that does not exist in the local vocabulary
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = [
+            {
+                "uri": "http://example.org/inexistent",
+                "label": "inexistent",
+                "score": 1.0,
+            },
+            {"uri": "http://example.org/dummy", "label": "dummy", "score": 0.5},
+        ]
+        mock_request.return_value = mock_response
+
+        http_type = annif.backend.get_backend("http")
+        http = http_type(
+            backend_id="http",
+            config_params={
+                "endpoint": "http://api.example.org/analyze",
+                "project": "dummy",
+            },
+            project=project,
+        )
+        http.project.subjects.append(
+            Subject(
+                uri="http://example.org/dummy",
+                labels={"en": "dummy", "fi": "dummy"},
+                notation=None,
+            )
+        )
+
+        result = http.suggest([Document(text="this is some text")])[0]
+        assert len(result) == 1
+        hits = list(result)
+        assert hits[0].subject_id == project.subjects.by_uri("http://example.org/dummy")
+        assert hits[0].score == pytest.approx(0.5)
+
+
 def test_http_suggest_zero_score(project):
     with unittest.mock.patch("requests.post") as mock_request:
         # create a mock response whose .json() method returns the list that we
