@@ -1,5 +1,6 @@
 """Unit tests for configuration handling in Annif"""
 
+import collections.abc
 import logging
 
 import pytest
@@ -169,6 +170,23 @@ def test_interpolate_env_vars_cfg_env_value_with_percent(tmpdir, monkeypatch):
     conffile.write("[testproj]\nkey=${ANNIF_TEST_KEY}\n")
     cfg = annif.config.parse_config(str(conffile))
     assert cfg["testproj"]["key"] == "secret%123"
+
+
+def test_project_config_is_mapping(tmpdir):
+    # the project configuration behaves as a read-only mapping
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write("[testproj]\nkey=value\nother=stuff\n")
+    cfg = annif.config.parse_config(str(conffile))
+    project = cfg["testproj"]
+    assert isinstance(project, collections.abc.Mapping)
+    assert len(project) == 2
+    assert set(project) == {"key", "other"}
+    assert "key" in project
+    assert "missing" not in project
+    assert project.keys() == {"key", "other"}
+    assert project.get("key") == "value"
+    assert project.get("missing", "default") == "default"
+    assert dict(project) == {"key": "value", "other": "stuff"}
 
 
 def test_interpolate_env_vars_toml(tmpdir, monkeypatch):
