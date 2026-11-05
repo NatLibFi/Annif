@@ -73,6 +73,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
 
     DEFAULT_PARAMETERS = {
         "endpoint": "http://localhost:9931/v1/systemone",
+        "endpoint-api-key": "",
         "model": "",
         "model-strength": 0.3,
         "gate-threshold": -1.0,
@@ -159,7 +160,12 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         return ""
 
     def _post_with_transient_retries(
-        self, endpoint: str, payload: dict[str, Any], timeout: float, retries: int
+        self,
+        endpoint: str,
+        payload: dict[str, Any],
+        timeout: float,
+        retries: int,
+        headers: dict[str, str],
     ) -> requests.Response:
         """POST the payload, retrying transient failures (5xx, 408, 429,
         timeouts, connection errors) with exponential backoff. A 400
@@ -168,7 +174,9 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         attempt = 0
         while True:
             try:
-                req = requests.post(endpoint, json=payload, timeout=timeout)
+                req = requests.post(
+                    endpoint, json=payload, timeout=timeout, headers=headers
+                )
                 req.raise_for_status()
                 return req
             except requests.exceptions.RequestException as err:
@@ -250,6 +258,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
         model: str,
         retries: int,
         timeout: float,
+        headers: dict[str, str],
     ) -> requests.Response | None:
         """Send the System One request, retrying on a 400 response with
         the input reduced to the fractions in INPUT_REDUCE_FRACTIONS of
@@ -265,7 +274,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
                 payload["model"] = model
             try:
                 return self._post_with_transient_retries(
-                    endpoint, payload, timeout, retries
+                    endpoint, payload, timeout, retries, headers
                 )
             except _RequestRejected:
                 if fraction_index + 1 >= len(INPUT_REDUCE_FRACTIONS):
@@ -342,6 +351,15 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
 
         return dm_scores
 
+    def _auth_headers(self, params: dict[str, Any]) -> dict[str, str]:
+        """Build the request headers: an 'Authorization: Bearer' header
+        carrying the endpoint-api-key when it is set (and not only
+        whitespace), otherwise no headers at all."""
+        api_key = str(params["endpoint-api-key"]).strip()
+        if api_key:
+            return {"Authorization": f"Bearer {api_key}"}
+        return {}
+
     def _query_dm_rerank(
         self, doc: Document, suggestions: list[SubjectSuggestion], params
     ) -> dict[int, float]:
@@ -370,6 +388,7 @@ class DMRerankBackend(ensemble.BaseEnsembleBackend, hyperopt.AnnifHyperoptBacken
             params["model"],
             int(params["retries"]),
             float(params["timeout"]),
+            self._auth_headers(params),
         )
         if req is None:
             return {}

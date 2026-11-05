@@ -67,6 +67,73 @@ def test_dm_rerank_suggest_request_timeout(app_project):
         assert mock_request.call_args.kwargs["timeout"] == 5.0
 
 
+def test_dm_rerank_suggest_request_no_auth_header_by_default(app_project):
+    """Without an endpoint-api-key no Authorization header is sent."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            dm_rerank.suggest([Document(text="test document")])
+
+    headers = mock_request.call_args.kwargs["headers"]
+    assert headers == {}
+    assert "Authorization" not in headers
+
+
+def test_dm_rerank_suggest_request_auth_header(app_project):
+    """A set endpoint-api-key is sent as an Authorization: Bearer header."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project, **{"endpoint-api-key": "secret-key"})
+        with _mock_source(app_project, [(0, 0.9)]):
+            dm_rerank.suggest([Document(text="test document")])
+
+    headers = mock_request.call_args.kwargs["headers"]
+    assert headers == {"Authorization": "Bearer secret-key"}
+
+
+def test_dm_rerank_suggest_request_auth_header_whitespace_only(app_project):
+    """A whitespace-only endpoint-api-key is treated as unset: no
+    Authorization header is sent."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project, **{"endpoint-api-key": "   "})
+        with _mock_source(app_project, [(0, 0.9)]):
+            dm_rerank.suggest([Document(text="test document")])
+
+    headers = mock_request.call_args.kwargs["headers"]
+    assert headers == {}
+    assert "Authorization" not in headers
+
+
+def test_dm_rerank_suggest_request_auth_header_override(app_project):
+    """A per-call endpoint-api-key override is honored, like the other
+    per-call parameter overrides."""
+    with unittest.mock.patch("requests.post") as mock_request:
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"answers": {}}
+        mock_request.return_value = mock_response
+
+        dm_rerank = _make_backend(app_project)
+        with _mock_source(app_project, [(0, 0.9)]):
+            dm_rerank.suggest(
+                [Document(text="test document")],
+                {"endpoint-api-key": "override-key"},
+            )
+
+    headers = mock_request.call_args.kwargs["headers"]
+    assert headers == {"Authorization": "Bearer override-key"}
+
+
 def test_dm_rerank_suggest_request_shape(app_project):
     """The request payload sent to the reranking service has the expected
     shape."""
