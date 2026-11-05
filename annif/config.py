@@ -39,6 +39,12 @@ class InterpolatedMapping(collections.abc.Mapping):
     def __len__(self) -> int:
         return len(self._mapping)
 
+    def validate(self) -> None:
+        """Interpolate all option values, to raise an error if a
+        referenced environment variable is missing."""
+        for _ in self.values():
+            pass
+
     def raw_values(self) -> dict[str, Any]:
         """Return the option values without interpolating environment
         variable placeholders, as a plain dict."""

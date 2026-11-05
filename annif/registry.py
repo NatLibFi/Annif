@@ -59,8 +59,10 @@ class AnnifRegistry:
         # create AnnifProject objects from the configuration file
         projects = dict()
         for project_id in config.project_ids:
+            project_config = config[project_id]
+            project_config.validate()
             projects[project_id] = AnnifProject(
-                project_id, config[project_id], self._datadir, self
+                project_id, project_config, self._datadir, self
             )
         return projects
 
