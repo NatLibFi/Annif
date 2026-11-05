@@ -42,8 +42,8 @@ class InterpolatedMapping(collections.abc.Mapping):
     def validate(self) -> None:
         """Interpolate all option values, to raise an error if a
         referenced environment variable is missing."""
-        for _ in self.values():
-            pass
+        # consume all the values, discarding them
+        collections.deque(self.values(), maxlen=0)
 
     def raw_values(self) -> dict[str, Any]:
         """Return the option values without interpolating environment
