@@ -101,19 +101,19 @@ jobs:
         if [[ ${{ matrix.python-version }} == '3.12' ]]; then
           uv sync --extra fasttext --extra spacy --extra estnltk;
           # download the small English pretrained spaCy model needed by spacy analyzer
-          uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+          uv run python -m spacy download en_core_web_sm
         fi
         # For Python 3.13:
         if [[ ${{ matrix.python-version }} == '3.13' ]]; then
           uv sync --extra nn --extra torch-cpu --extra fasttext --extra yake --extra stwfsa --extra voikko --extra spacy;
           # download the small English pretrained spaCy model needed by spacy analyzer
-          uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+          uv run python -m spacy download en_core_web_sm
         fi
         # For Python 3.14:
         if [[ ${{ matrix.python-version }} == '3.14' ]]; then
           uv sync --extra fasttext --extra yake --extra voikko --extra spacy;
           # download the small English pretrained spaCy model needed by spacy analyzer
-          uv run python -m spacy download en_core_web_sm --upgrade-strategy only-if-needed
+          uv run python -m spacy download en_core_web_sm
         fi
         uv run python -m nltk.downloader punkt_tab
     - name: Test with pytest
