@@ -98,7 +98,7 @@ class HTTPBackend(backend.AnnifBackend):
         try:
             subject_suggestions = []
             for hit in results:
-                if hit["score"] <= 0.0:
+                if not (hit["score"] > 0.0):
                     continue
                 subject_id = self.project.subjects.by_uri(hit["uri"])
                 if subject_id is None:
