@@ -58,8 +58,7 @@ torch-cu126 = ["torch"]
 torch-cu130 = ["torch"]
 omikuji = ["omikuji==0.5.*"]
 spacy = [
-    "spacy~=3.8.4",
-    "pip>=25.3",
+    "spacy~=3.8.14",
 ]
 stwfsa = ["stwfsapy~=0.6.1"]
 voikko = ["voikko==0.5.*"]
