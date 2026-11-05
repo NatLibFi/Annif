@@ -248,11 +248,12 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
         sources: list[tuple[str, float]],
         params: dict[str, Any],
     ) -> SuggestionBatch:
+        batches = [
+            self._align_batch(batch_by_source[project_id], project_id)
+            for project_id, _ in sources
+        ]
         score_vectors = np.array(
-            [
-                [suggestions.as_vector() for suggestions in batch]
-                for project_id, batch in batch_by_source.items()
-            ],
+            [[suggestions.as_vector() for suggestions in batch] for batch in batches],
             dtype=np.float32,
         )
         score_vector_tensor = torch.log1p(
@@ -313,6 +314,12 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
             project = self.project.registry.get_project(project_id)
             project.initialize(parallel=True)
 
+        # precompute mappings from source subject IDs to ensemble subject IDs
+        score_maps = {
+            project_id: self._source_subject_map(project_id)
+            for project_id in sources.keys()
+        }
+
         psmap = annif.parallel.ProjectSuggestMap(
             self.project.registry,
             list(sources.keys()),
@@ -329,7 +336,12 @@ class NNEnsembleBackend(backend.AnnifLearningBackend, ensemble.BaseEnsembleBacke
                 psmap.suggest, corpus.documents
             ):
                 score_vector = np.array(
-                    [p_hits.as_vector() for project_id, p_hits in hits.items()],
+                    [
+                        self._align_source_vector(
+                            p_hits.as_vector(), score_maps[project_id], project_id
+                        )
+                        for project_id, p_hits in hits.items()
+                    ],
                     dtype=np.float32,
                 )
                 true_vector = subject_set.as_vector(len(self.project.subjects))
