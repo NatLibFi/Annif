@@ -47,6 +47,8 @@ dependencies = [
 
 [project.optional-dependencies]
 fasttext = ["fasttext-numpy2==0.10.4"]
+ebm-api= ["ebm4subjects~=0.9.0"]
+ebm-in-process = ["ebm4subjects[in-process]~=0.9.0"]
 estnltk = ["estnltk==1.7.5"]
 nn = [
     "torch~=2.14.0",
@@ -86,7 +88,7 @@ dev = [
     "isort",
     "schemathesis~=4.29.4",
 ]
-all = ["annif[fasttext,estnltk,nn,omikuji,spacy,stwfsa,voikko,yake]"]
+all = ["annif[ebm-in-process,estnltk,fasttext,nn,omikuji,spacy,stwfsa,voikko,yake]"]
 
 [tool.isort]
 profile = "black"
