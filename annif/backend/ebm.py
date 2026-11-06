@@ -50,7 +50,7 @@ class EbmBackend(backend.AnnifBackend):
         "max_chunk_length": 250,
         "chunking_jobs": 1,
         "max_sentence_count": 100,
-        "hnsw_index_params": {"M": 32, "ef_construction": 256, "ef_search": 256},
+        "hnsw_index_params": {"M": 48, "ef_construction": 512, "ef_search": 512},
         "candidates_per_chunk": 20,
         "candidates_per_doc": 100,
         "query_jobs": 1,
