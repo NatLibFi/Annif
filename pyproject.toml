@@ -3,7 +3,7 @@ name = "annif"
 version = "1.5.0-dev"
 description = "Automated subject indexing and classification tool"
 authors = [{ name = "National Library of Finland", email = "finto-posti@helsinki.fi" }]
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.11,<3.15"
 readme = "README.md"
 license = "Apache-2.0"
 maintainers = [
@@ -86,7 +86,7 @@ dev = [
     "bumpversion",
     "black==25.*",
     "isort",
-    "schemathesis~=4.27.2",
+    "schemathesis~=4.29.4",
 ]
 all = ["annif[ebm-in-process,estnltk,fasttext,nn,omikuji,spacy,stwfsa,voikko,yake]"]
 

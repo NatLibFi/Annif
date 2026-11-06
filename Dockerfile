@@ -1,5 +1,5 @@
-# Use a Python 3.12 + uv image (Debian bookworm-slim)
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+# Use a Python + uv image
+FROM ghcr.io/astral-sh/uv:python3.13-trixie-slim
 LABEL org.opencontainers.image.authors="grp-natlibfi-annif@helsinki.fi"
 SHELL ["/bin/bash", "-c"]
 
