@@ -101,6 +101,7 @@ addopts = "-m 'not slow'"
 
 [tool.uv]
 exclude-newer = "5 days"
+exclude-newer-package = { ebm4subjects = false }
 conflicts = [
   [
     { extra = "torch-cpu" },
