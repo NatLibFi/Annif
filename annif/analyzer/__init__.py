@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import annif
 from annif.util import parse_args
 
-from . import estnltk, simple, simplemma, snowball, spacy, voikko
+from . import estnltk, jieba, simple, simplemma, snowball, spacy, voikko
 
 if TYPE_CHECKING:
     from annif.analyzer.analyzer import Analyzer
@@ -43,3 +43,4 @@ register_analyzer(simplemma.SimplemmaAnalyzer)
 register_analyzer(voikko.VoikkoAnalyzer)
 register_analyzer(spacy.SpacyAnalyzer)
 register_analyzer(estnltk.EstNLTKAnalyzer)
+register_analyzer(jieba.JiebaAnalyzer)
