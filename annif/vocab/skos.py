@@ -72,7 +72,7 @@ class VocabFileSKOS(VocabSource):
                 self.graph.parse(self.path, format=rdflib.util.guess_format(self.path))
             except Exception as err:
                 raise OperationFailedException(
-                    f"Cannot parse vocabulary file {self.path}: {err}"
+                    f"Cannot parse vocabulary file '{self.path}': {err}"
                 ) from err
 
     @property
