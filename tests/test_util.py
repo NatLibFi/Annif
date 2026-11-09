@@ -5,6 +5,7 @@ import importlib.metadata
 import pytest
 
 import annif.util
+from annif.exception import ConfigurationException
 
 from .util import umask_context
 
@@ -61,3 +62,55 @@ def test_user_agent_header():
     # each call returns a fresh dict, so callers can add their own headers
     headers["Authorization"] = "Bearer test"
     assert annif.util.user_agent_header() == {"User-Agent": f"Annif/{version}"}
+
+
+def test_interpolate_env_vars_single(monkeypatch):
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
+    assert annif.util.interpolate_env_vars("${ANNIF_TEST_KEY}", "proj", "opt") == (
+        "secret123"
+    )
+
+
+def test_interpolate_env_vars_multiple(monkeypatch):
+    monkeypatch.setenv("ANNIF_TEST_KEY", "abc")
+    monkeypatch.setenv("ANNIF_TEST_KEY2", "def")
+    assert (
+        annif.util.interpolate_env_vars(
+            "${ANNIF_TEST_KEY}-${ANNIF_TEST_KEY2}", "proj", "opt"
+        )
+        == "abc-def"
+    )
+
+
+def test_interpolate_env_vars_embedded(monkeypatch):
+    monkeypatch.setenv("ANNIF_TEST_KEY", "abc")
+    assert (
+        annif.util.interpolate_env_vars("http://x/${ANNIF_TEST_KEY}/y", "proj", "opt")
+        == "http://x/abc/y"
+    )
+
+
+def test_interpolate_env_vars_empty_value(monkeypatch):
+    monkeypatch.setenv("ANNIF_TEST_KEY", "")
+    assert annif.util.interpolate_env_vars("${ANNIF_TEST_KEY}", "proj", "opt") == ""
+
+
+def test_interpolate_env_vars_missing_raises(monkeypatch):
+    monkeypatch.delenv("ANNIF_TEST_MISSING", raising=False)
+    with pytest.raises(ConfigurationException) as excinfo:
+        annif.util.interpolate_env_vars("${ANNIF_TEST_MISSING}", "proj", "opt")
+    assert "ANNIF_TEST_MISSING" in str(excinfo.value)
+    assert "proj" in excinfo.value.format_message()
+    assert "'opt'" in excinfo.value.format_message()
+
+
+def test_interpolate_env_vars_no_placeholder():
+    # a plain dollar sign and invalid variable names are left unchanged
+    assert annif.util.interpolate_env_vars("no change $here", "proj", "opt") == (
+        "no change $here"
+    )
+    assert (
+        annif.util.interpolate_env_vars("${not an env var}", "proj", "opt")
+        == "${not an env var}"
+    )
+    assert annif.util.interpolate_env_vars("$100", "proj", "opt") == "$100"

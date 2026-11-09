@@ -327,3 +327,47 @@ def test_project_directory():
         assert len(annif.registry.get_projects()) == 17 + 2
         assert annif.registry.get_project("dummy-fi").project_id == "dummy-fi"
         assert annif.registry.get_project("dummy-fi-toml").project_id == "dummy-fi-toml"
+
+
+def test_registry_validates_missing_env_var_at_startup(tmp_path, monkeypatch):
+    # a missing environment variable must be an error when the registry
+    # is created, even if the option is never accessed
+    monkeypatch.delenv("ANNIF_TEST_MISSING", raising=False)
+    conffile = tmp_path.joinpath("projects.cfg")
+    conffile.write_text(
+        "[testproj]\n"
+        "language=en\n"
+        "name=Test\n"
+        "backend=tfidf\n"
+        "limit=${ANNIF_TEST_MISSING}\n"
+    )
+    app = annif.create_flask_app("annif.default_config.TestingConfig")
+    app.config["PROJECTS_CONFIG_PATH"] = str(conffile)
+    with app.app_context():
+        with pytest.raises(ConfigurationException) as excinfo:
+            annif.registry.initialize_projects(app)
+    message = excinfo.value.format_message()
+    assert "ANNIF_TEST_MISSING" in message
+    assert "'testproj'" in message
+    assert "'limit'" in message
+
+
+def test_registry_validates_env_var_default_section(tmp_path, monkeypatch):
+    # environment variable placeholders in the DEFAULT section are also
+    # validated at startup
+    monkeypatch.delenv("ANNIF_TEST_MISSING", raising=False)
+    conffile = tmp_path.joinpath("projects.cfg")
+    conffile.write_text(
+        "[DEFAULT]\n"
+        "limit=${ANNIF_TEST_MISSING}\n"
+        "[testproj]\n"
+        "language=en\n"
+        "name=Test\n"
+        "backend=tfidf\n"
+    )
+    app = annif.create_flask_app("annif.default_config.TestingConfig")
+    app.config["PROJECTS_CONFIG_PATH"] = str(conffile)
+    with app.app_context():
+        with pytest.raises(ConfigurationException) as excinfo:
+            annif.registry.initialize_projects(app)
+    assert "ANNIF_TEST_MISSING" in excinfo.value.format_message()

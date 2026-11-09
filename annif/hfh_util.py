@@ -145,8 +145,11 @@ def _archive_dir(data_dir: str) -> io.BufferedRandom:
 
 def _get_project_config(project: AnnifProject) -> io.BytesIO:
     fp = tempfile.TemporaryFile(mode="w+t")
-    config = configparser.ConfigParser()
-    config[project.project_id] = project.config
+    # Export the configuration without expanding environment variable
+    # placeholders, so that secrets are not included in the exported
+    # configuration.
+    config = configparser.ConfigParser(interpolation=None)
+    config[project.project_id] = project.config.raw_values()
     config.write(fp)  # This needs tempfile in text mode
     fp.seek(0)
     # But for upload fobj needs to be in binary mode
@@ -276,10 +279,11 @@ def _compute_crc32(path: str) -> int:
 
 def get_vocab_id_from_config(config_path: str) -> str:
     """Get the vocabulary ID from a configuration file."""
-    config = configparser.ConfigParser()
-    config.read(config_path)
-    section = config.sections()[0]
-    return config[section]["vocab"]
+    # Read the configuration with Annif's config reader, so that
+    # environment variable placeholders are resolved.
+    config = AnnifConfigCFG(filename=config_path)
+    project_id = config.project_ids[0]
+    return config[project_id]["vocab"]
 
 
 def upsert_modelcard(repo_id, projects, token, revision):
@@ -368,9 +372,9 @@ def _create_projects_section(configs):
     table = [
         (
             proj_id,
-            configs[proj_id]["name"],
-            configs[proj_id]["vocab"],
-            configs[proj_id]["language"],
+            configs[proj_id].raw_values()["name"],
+            configs[proj_id].raw_values()["vocab"],
+            configs[proj_id].raw_values()["language"],
         )
         for proj_id in configs.project_ids
     ]
