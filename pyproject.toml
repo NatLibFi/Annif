@@ -78,7 +78,6 @@ dev = [
     "py",
     "pytest==9.*",
     "pytest-cov",
-    "pytest-watch",
     "pytest-flask",
     "flake8",
     "bumpversion",
@@ -106,6 +105,8 @@ conflicts = [
     { extra = "torch-cu130" },
   ],
 ]
+no-build = true
+no-binary-package = ["fasttext-numpy2"]
 
 [tool.uv.sources]
 torch = [
