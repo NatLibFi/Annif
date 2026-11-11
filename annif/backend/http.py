@@ -3,7 +3,6 @@ and returns the results"""
 
 from __future__ import annotations
 
-import importlib
 from typing import TYPE_CHECKING, Any
 
 import dateutil.parser
@@ -12,6 +11,7 @@ import requests.exceptions
 
 from annif.exception import OperationFailedException
 from annif.suggestion import SubjectSuggestion
+from annif.util import user_agent_header
 
 from . import backend
 
@@ -23,16 +23,10 @@ if TYPE_CHECKING:
 
 class HTTPBackend(backend.AnnifBackend):
     name = "http"
-    _headers = None
 
     @property
     def headers(self) -> dict[str, str]:
-        if self._headers is None:
-            version = importlib.metadata.version("annif")
-            self._headers = {
-                "User-Agent": f"Annif/{version}",
-            }
-        return self._headers
+        return user_agent_header()
 
     @property
     def is_trained(self) -> bool | None:
@@ -96,14 +90,17 @@ class HTTPBackend(backend.AnnifBackend):
             results = response
 
         try:
-            subject_suggestions = [
-                SubjectSuggestion(
-                    subject_id=self.project.subjects.by_uri(hit["uri"]),
-                    score=hit["score"],
+            subject_suggestions = []
+            for hit in results:
+                if not (hit["score"] > 0.0):
+                    continue
+                subject_id = self.project.subjects.by_uri(hit["uri"])
+                if subject_id is None:
+                    # subject is not in the local vocabulary, skip it
+                    continue
+                subject_suggestions.append(
+                    SubjectSuggestion(subject_id=subject_id, score=hit["score"])
                 )
-                for hit in results
-                if hit["score"] > 0.0
-            ]
         except (TypeError, ValueError) as err:
             self.warning("Problem interpreting JSON data: {}".format(err))
             return []

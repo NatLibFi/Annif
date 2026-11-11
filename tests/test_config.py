@@ -1,5 +1,6 @@
 """Unit tests for configuration handling in Annif"""
 
+import collections.abc
 import logging
 
 import pytest
@@ -98,3 +99,149 @@ def test_parse_config_directory_duplicated_project(tmpdir):
     with pytest.raises(ConfigurationException) as excinfo:
         annif.config.parse_config(str(tmpdir))
     assert 'project ID "duplicated" already exists' in str(excinfo.value)
+
+
+def test_interpolate_env_vars_cfg(tmpdir, monkeypatch):
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write(
+        "[testproj]\nkey=${ANNIF_TEST_KEY}\nurl=http://x/${ANNIF_TEST_KEY}/y\n"
+    )
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["key"] == "secret123"
+    assert cfg["testproj"]["url"] == "http://x/secret123/y"
+    # the raw configuration still contains the unexpanded placeholder
+    assert cfg["testproj"].raw_values()["key"] == "${ANNIF_TEST_KEY}"
+
+
+def test_raw_values_toml(tmpdir, monkeypatch):
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
+    conffile = tmpdir.join("projects.toml")
+    conffile.write('[testproj]\nkey = "${ANNIF_TEST_KEY}"\nnumber = 42\n')
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["key"] == "secret123"
+    # the raw configuration still contains the unexpanded placeholder
+    raw = cfg["testproj"].raw_values()
+    assert raw == {"key": "${ANNIF_TEST_KEY}", "number": 42}
+
+
+def test_interpolate_env_vars_cfg_default_section(tmpdir, monkeypatch):
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write("[DEFAULT]\ncommon=${ANNIF_TEST_KEY}\n" "[testproj]\nkey=value\n")
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["common"] == "secret123"
+
+
+def test_interpolate_env_vars_cfg_default_interpolation_template(tmpdir, monkeypatch):
+    # interpolation templates in the DEFAULT section are preserved and
+    # resolved in the context of each section
+    monkeypatch.setenv("ANNIF_TEST_KEY", "abc")
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write(
+        "[DEFAULT]\nname=%(language)s ${ANNIF_TEST_KEY}\n" "[testproj]\nlanguage=en\n"
+    )
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["name"] == "en abc"
+
+
+def test_interpolate_env_vars_cfg_default_env_value_with_percent(tmpdir, monkeypatch):
+    # a percent sign in the environment variable value in the DEFAULT
+    # section is preserved as-is
+    monkeypatch.setenv("ANNIF_TEST_KEY", "a%b")
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write("[DEFAULT]\nkey=${ANNIF_TEST_KEY}\n[testproj]\nlanguage=en\n")
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["key"] == "a%b"
+
+
+def test_interpolate_env_vars_cfg_escaped_percent_sign(tmpdir):
+    # an escaped percent sign in a CFG value is preserved as-is
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write("[testproj]\nname=100%% ready\n")
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["name"] == "100% ready"
+
+
+def test_interpolate_env_vars_cfg_env_value_with_percent(tmpdir, monkeypatch):
+    # a percent sign in the environment variable value is preserved as-is
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret%123")
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write("[testproj]\nkey=${ANNIF_TEST_KEY}\n")
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["key"] == "secret%123"
+
+
+def test_project_config_is_mapping(tmpdir):
+    # the project configuration behaves as a read-only mapping
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write("[testproj]\nkey=value\nother=stuff\n")
+    cfg = annif.config.parse_config(str(conffile))
+    project = cfg["testproj"]
+    assert isinstance(project, collections.abc.Mapping)
+    assert len(project) == 2
+    assert set(project) == {"key", "other"}
+    assert "key" in project
+    assert "missing" not in project
+    assert project.keys() == {"key", "other"}
+    assert project.get("key") == "value"
+    assert project.get("missing", "default") == "default"
+    assert dict(project) == {"key": "value", "other": "stuff"}
+
+
+def test_interpolate_env_vars_toml(tmpdir, monkeypatch):
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
+    conffile = tmpdir.join("projects.toml")
+    conffile.write(
+        "[testproj]\n"
+        'key = "${ANNIF_TEST_KEY}"\n'
+        'embedded = "http://x/${ANNIF_TEST_KEY}/y"\n'
+        "number = 42\n"
+        "flag = false\n"
+    )
+    cfg = annif.config.parse_config(str(conffile))
+    assert cfg["testproj"]["key"] == "secret123"
+    assert cfg["testproj"]["embedded"] == "http://x/secret123/y"
+    assert cfg["testproj"]["number"] == 42
+    assert cfg["testproj"]["flag"] is False
+
+
+def test_interpolate_env_vars_directory(tmpdir, monkeypatch):
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
+    conffile = tmpdir.join("projects-1.toml")
+    conffile.write('[proj-toml]\nkey = "${ANNIF_TEST_KEY}"\n')
+    conffile = tmpdir.join("projects-2.cfg")
+    conffile.write("[proj-cfg]\nkey=${ANNIF_TEST_KEY}\n")
+    cfg = annif.config.parse_config(str(tmpdir))
+    assert cfg["proj-toml"]["key"] == "secret123"
+    assert cfg["proj-cfg"]["key"] == "secret123"
+
+
+def test_interpolate_env_vars_missing_var_cfg(tmpdir, monkeypatch):
+    monkeypatch.delenv("ANNIF_TEST_MISSING", raising=False)
+    conffile = tmpdir.join("projects.cfg")
+    conffile.write("[testproj]\nkey=${ANNIF_TEST_MISSING}\n")
+    # reading the configuration does not raise; the error is raised when
+    # the value is accessed
+    cfg = annif.config.parse_config(str(conffile))
+    with pytest.raises(ConfigurationException) as excinfo:
+        _ = cfg["testproj"]["key"]
+    message = excinfo.value.format_message()
+    assert "ANNIF_TEST_MISSING" in message
+    assert "'testproj'" in message
+    assert "'key'" in message
+
+
+def test_interpolate_env_vars_missing_var_toml(tmpdir, monkeypatch):
+    monkeypatch.delenv("ANNIF_TEST_MISSING", raising=False)
+    conffile = tmpdir.join("projects.toml")
+    conffile.write('[testproj]\nkey = "${ANNIF_TEST_MISSING}"\n')
+    # reading the configuration does not raise; the error is raised when
+    # the value is accessed
+    cfg = annif.config.parse_config(str(conffile))
+    with pytest.raises(ConfigurationException) as excinfo:
+        _ = cfg["testproj"]["key"]
+    message = excinfo.value.format_message()
+    assert "ANNIF_TEST_MISSING" in message
+    assert "'testproj'" in message
+    assert "'key'" in message

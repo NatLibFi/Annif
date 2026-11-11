@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import glob
+import importlib.metadata
 import logging
 import os
 import os.path
+import re
 import tempfile
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
@@ -64,6 +67,18 @@ def cleanup_uri(uri: str) -> str:
     return uri
 
 
+@lru_cache
+def annif_version() -> str:
+    """Return the installed Annif version, looked up once and cached."""
+    return importlib.metadata.version("annif")
+
+
+def user_agent_header() -> dict[str, str]:
+    """Return a fresh HTTP headers dict identifying the Annif version,
+    e.g. {'User-Agent': 'Annif/1.5.0'}."""
+    return {"User-Agent": f"Annif/{annif_version()}"}
+
+
 def parse_sources(sourcedef: str) -> list[tuple[str, float]]:
     """parse a source definition such as 'src1:1.0,src2' into a sequence of
     tuples (src_id, weight)"""
@@ -111,6 +126,30 @@ def boolean(val: Any) -> bool:
 def identity(x: Any) -> Any:
     """Identity function: return the given argument unchanged"""
     return x
+
+
+_ENV_VAR_PATTERN = re.compile(r"\$\{([A-Za-z_]\w*)\}", re.ASCII)
+
+
+def interpolate_env_vars(value: str, project_id: str, option_name: str) -> str:
+    """Substitute ${VAR} placeholders in the given string with the value of
+    the corresponding environment variable. Other uses of the dollar sign are
+    left unchanged. If a referenced environment variable is not set, a
+    ConfigurationException is raised."""
+    from annif.exception import ConfigurationException
+
+    def _replace(match: re.Match) -> str:
+        varname = match.group(1)
+        try:
+            return os.environ[varname]
+        except KeyError:
+            raise ConfigurationException(
+                f"environment variable '{varname}' referenced in option "
+                f"'{option_name}' is not set",
+                project_id=project_id,
+            ) from None
+
+    return _ENV_VAR_PATTERN.sub(_replace, value)
 
 
 def metric_code(metric):

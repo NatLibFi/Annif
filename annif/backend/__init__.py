@@ -9,10 +9,25 @@ if TYPE_CHECKING:
 
 
 # define functions for lazily importing each backend (alphabetical order)
+def _dm_rerank() -> Type[AnnifBackend]:
+    from . import dm_rerank
+
+    return dm_rerank.DMRerankBackend
+
+
 def _dummy() -> Type[AnnifBackend]:
     from . import dummy
 
     return dummy.DummyBackend
+
+
+def _ebm() -> Type[AnnifBackend]:
+    try:
+        from . import ebm
+
+        return ebm.EbmBackend
+    except ImportError:
+        raise ValueError("EBM not available, cannot use ebm backend")
 
 
 def _ensemble() -> Type[AnnifBackend]:
@@ -98,6 +113,7 @@ def _yake() -> Type[AnnifBackend]:
 
 # registry of the above functions
 _backend_fns = {
+    "dm_rerank": _dm_rerank,
     "dummy": _dummy,
     "ensemble": _ensemble,
     "fasttext": _fasttext,
@@ -110,6 +126,7 @@ _backend_fns = {
     "svc": _svc,
     "tfidf": _tfidf,
     "yake": _yake,
+    "ebm": _ebm,
 }
 
 

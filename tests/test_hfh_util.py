@@ -13,7 +13,7 @@ from huggingface_hub.utils import EntryNotFoundError
 
 import annif.hfh_util
 from annif.config import AnnifConfigCFG
-from annif.exception import OperationFailedException
+from annif.exception import ConfigurationException, OperationFailedException
 
 
 @mock.patch("annif.hfh_util._is_repo_in_cache", return_value=False)
@@ -81,6 +81,82 @@ def test_get_project_config(app_project):
     assert isinstance(result, io.BytesIO)
     string_result = result.read().decode("UTF-8")
     assert "[dummy-en]" in string_result
+
+
+def _export_project_config(projects_content, suffix, monkeypatch, tmp_path):
+    """Write a temporary project configuration, load it into a registry
+    and return the exported configuration string of the single project."""
+    import annif
+    import annif.registry
+
+    monkeypatch.setenv("ANNIF_TEST_KEY", "secret123")
+    conffile = tmp_path.joinpath("projects" + suffix)
+    conffile.write_text(projects_content)
+    app = annif.create_flask_app("annif.default_config.TestingConfig")
+    app.config["PROJECTS_CONFIG_PATH"] = str(conffile)
+    with app.app_context():
+        annif.registry.initialize_projects(app)
+        project = annif.registry.get_project("testproj")
+        result = annif.hfh_util._get_project_config(project)
+        return result.read().decode("UTF-8")
+
+
+def test_get_project_config_preserves_env_var_placeholders_cfg(monkeypatch, tmp_path):
+    # environment variable placeholders must not be expanded in the
+    # exported configuration, so that secrets are not exported
+    exported = _export_project_config(
+        "[testproj]\n"
+        "language=en\n"
+        "name=Test\n"
+        "backend=tfidf\n"
+        "endpoint-api-key=${ANNIF_TEST_KEY}\n",
+        ".cfg",
+        monkeypatch,
+        tmp_path,
+    )
+    assert "endpoint-api-key = ${ANNIF_TEST_KEY}" in exported
+    assert "secret123" not in exported
+
+
+def test_get_project_config_preserves_env_var_placeholders_toml(monkeypatch, tmp_path):
+    # environment variable placeholders must not be expanded in the
+    # exported configuration, so that secrets are not exported
+    exported = _export_project_config(
+        "[testproj]\n"
+        'language = "en"\n'
+        'name = "Test"\n'
+        'backend = "tfidf"\n'
+        'endpoint-api-key = "${ANNIF_TEST_KEY}"\n',
+        ".toml",
+        monkeypatch,
+        tmp_path,
+    )
+    assert "endpoint-api-key = ${ANNIF_TEST_KEY}" in exported
+    assert "secret123" not in exported
+
+
+def test_get_vocab_id_from_config_plain(tmp_path):
+    conffile = tmp_path.joinpath("dummy-en.cfg")
+    conffile.write_text("[dummy-en]\nlanguage=en\nvocab=dummy\n")
+    assert annif.hfh_util.get_vocab_id_from_config(str(conffile)) == "dummy"
+
+
+def test_get_vocab_id_from_config_env_var(tmp_path, monkeypatch):
+    # environment variable placeholders in the vocabulary option are
+    # resolved so that the correct vocabulary archive is downloaded
+    monkeypatch.setenv("ANNIF_TEST_VOCAB", "dummy")
+    conffile = tmp_path.joinpath("dummy-en.cfg")
+    conffile.write_text("[dummy-en]\nlanguage=en\nvocab=${ANNIF_TEST_VOCAB}\n")
+    assert annif.hfh_util.get_vocab_id_from_config(str(conffile)) == "dummy"
+
+
+def test_get_vocab_id_from_config_env_var_missing(tmp_path, monkeypatch):
+    # a missing environment variable is an error
+    monkeypatch.delenv("ANNIF_TEST_MISSING", raising=False)
+    conffile = tmp_path.joinpath("dummy-en.cfg")
+    conffile.write_text("[dummy-en]\nlanguage=en\nvocab=${ANNIF_TEST_MISSING}\n")
+    with pytest.raises(ConfigurationException):
+        annif.hfh_util.get_vocab_id_from_config(str(conffile))
 
 
 def test_unzip_archive_initial(testdatadir):
@@ -276,3 +352,22 @@ dummy-fi    Dummy Finnish  dummy          fi      \n```
 """
 
     assert updated_text == text_head + expected_updated_projects + text_tail
+
+
+def test_update_modelcard_projects_section_env_var_placeholder(monkeypatch):
+    # environment variable placeholders in the published configuration are
+    # shown as-is in the model card, and a missing variable must not cause
+    # an error
+    monkeypatch.delenv("ANNIF_TEST_MISSING", raising=False)
+    cfg = AnnifConfigCFG(
+        projstr="""\
+        [dummy-fi]
+        name=Dummy Finnish
+        language=fi
+        vocab=${ANNIF_TEST_MISSING}"""
+    )
+
+    updated_text = annif.hfh_util._update_projects_section("", cfg)
+
+    assert "dummy-fi" in updated_text
+    assert "${ANNIF_TEST_MISSING}" in updated_text

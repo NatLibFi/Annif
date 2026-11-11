@@ -5,8 +5,9 @@ from __future__ import annotations
 import enum
 import os.path
 import re
+from collections.abc import Mapping
 from shutil import rmtree
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import annif
 import annif.analyzer
@@ -27,7 +28,6 @@ from annif.vocab import SubjectIndexFilter, kwargs_to_exclude_uris
 
 if TYPE_CHECKING:
     from collections import defaultdict
-    from configparser import SectionProxy
     from datetime import datetime
 
     from click.utils import LazyFile
@@ -71,7 +71,7 @@ class AnnifProject(DatadirMixin):
     def __init__(
         self,
         project_id: str,
-        config: dict[str, str] | SectionProxy,
+        config: Mapping[str, Any],
         datadir: str,
         registry: AnnifRegistry,
     ) -> None:

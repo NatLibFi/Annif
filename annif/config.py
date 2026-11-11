@@ -2,20 +2,59 @@
 
 from __future__ import annotations
 
+import collections.abc
 import configparser
 import os.path
+import tomllib
 from glob import glob
-
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib
+from typing import Any
 
 import annif
 import annif.util
 from annif.exception import ConfigurationException
+from annif.util import interpolate_env_vars
 
 logger = annif.logger
+
+
+class InterpolatedMapping(collections.abc.Mapping):
+    """A read-only view of a single project configuration that interpolates
+    ${ENV_VAR} environment variable placeholders in string values lazily,
+    i.e. when the values are read. The underlying mapping is left
+    unchanged."""
+
+    def __init__(self, mapping: Any, project_id: str) -> None:
+        self._mapping = mapping
+        self._project_id = project_id
+
+    def __getitem__(self, key: str) -> Any:
+        value = self._mapping[key]
+        if isinstance(value, str):
+            return interpolate_env_vars(value, self._project_id, key)
+        return value
+
+    def __iter__(self):
+        return iter(self._mapping)
+
+    def __len__(self) -> int:
+        return len(self._mapping)
+
+    def validate(self) -> None:
+        """Interpolate all option values, to raise an error if a
+        referenced environment variable is missing."""
+        # consume all the values, discarding them
+        collections.deque(self.values(), maxlen=0)
+
+    def raw_values(self) -> dict[str, Any]:
+        """Return the option values without interpolating environment
+        variable placeholders, as a plain dict."""
+        if isinstance(self._mapping, configparser.SectionProxy):
+            # use the raw values, without any interpolation, so that
+            # templates and escaped percent signs are preserved
+            return {
+                option: self._mapping.get(option, raw=True) for option in self._mapping
+            }
+        return dict(self._mapping)
 
 
 class AnnifConfigCFG:
@@ -45,8 +84,8 @@ class AnnifConfigCFG:
     def project_ids(self) -> list[str]:
         return self._config.sections()
 
-    def __getitem__(self, key: str) -> configparser.SectionProxy:
-        return self._config[key]
+    def __getitem__(self, key: str) -> InterpolatedMapping:
+        return InterpolatedMapping(self._config[key], key)
 
 
 class AnnifConfigTOML:
@@ -66,8 +105,8 @@ class AnnifConfigTOML:
     def project_ids(self):
         return self._config.keys()
 
-    def __getitem__(self, key: str) -> dict[str, str]:
-        return self._config[key]
+    def __getitem__(self, key: str) -> InterpolatedMapping:
+        return InterpolatedMapping(self._config[key], key)
 
 
 class AnnifConfigDirectory:
@@ -97,7 +136,7 @@ class AnnifConfigDirectory:
     def project_ids(self):
         return self._config.keys()
 
-    def __getitem__(self, key: str) -> dict[str, str] | configparser.SectionProxy:
+    def __getitem__(self, key: str) -> InterpolatedMapping:
         return self._config[key]
 
 

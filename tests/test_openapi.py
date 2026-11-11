@@ -2,41 +2,27 @@
 
 import pytest
 import schemathesis
-from hypothesis import settings
-from hypothesis import strategies as st
+from hypothesis import settings, strategies
+from simplemma.strategies.dictionaries.dictionary_factory import SUPPORTED_LANGUAGES
 
 import annif
+import annif.registry
+import annif.vocab
 
 cxapp = annif.create_app(config_name="annif.default_config.TestingConfig")
 schema = schemathesis.openapi.from_asgi("/v1/openapi.json", app=cxapp)
-schema.config.checks.positive_data_acceptance.enabled = False
-# Allow 413 as a valid rejection — oversized invalid payloads hit
+# Allow 413 as a valid outcome — oversized payloads (valid or invalid) hit
 # MAX_CONTENT_LENGTH before Connexion can validate the schema.
+schema.config.checks.positive_data_acceptance.expected_statuses.append("413")
 schema.config.checks.negative_data_rejection.expected_statuses.append("413")
-schema.config.generation.allow_extra_parameters = False
 
 
-INT32_MAX = 2147483647
-
-
-@schemathesis.hook("filter_case")
-def filter_case_limit(context, case):
-    # Exclude cases where limit exceeds int32 max, since Connexion does not
-    # enforce int32 range bounds from format: int32 alone.
-    limit = None
-    if case.query is not None and "limit" in case.query:
-        limit = case.query["limit"]
-    elif isinstance(case.body, dict) and "limit" in case.body:
-        limit = case.body["limit"]
-    if limit is not None:
-        try:
-            if int(limit) > INT32_MAX:
-                return False
-        except (TypeError, ValueError):
-            # If limit is not parseable as an integer, do not filter it here.
-            # Let downstream API/schema validation handle invalid values.
-            return True
-    return True
+bcp47_strategy = strategies.sampled_from(sorted(SUPPORTED_LANGUAGES))
+schemathesis.openapi.format("bcp47", bcp47_strategy)
+vocab_langs_strategy = strategies.sampled_from(
+    ["fi", "en"]
+)  # Langs supported by the dummy vocab
+schemathesis.openapi.format("vocab_languages", vocab_langs_strategy)
 
 
 @schemathesis.hook("filter_body")
@@ -62,22 +48,6 @@ def filter_path_parameters(context, path_parameters):
     return True
 
 
-# Whitelist of project IDs that are valid for OpenAPI fuzzy testing
-# Only projects that work without training (dummy backend) are included
-PROJECTS_TO_TEST = (
-    "dummy-fi",
-    "dummy-en",
-)
-
-
-@schemathesis.hook("before_generate_path_parameters")
-def before_generate_path_parameters(context, strategy):
-    """Replace the path parameter generation strategy with a whitelist."""
-    if context.operation and "project_id" in context.operation.path:
-        return st.fixed_dictionaries({"project_id": st.sampled_from(PROJECTS_TO_TEST)})
-    return strategy
-
-
 @schema.parametrize()
 @settings(max_examples=10)
 def test_openapi_fuzzy(case):
@@ -99,6 +69,12 @@ def test_openapi_cors(app_client):
         "http://localhost:8000/v1/projects",
     )
     assert req.headers["access-control-allow-origin"] == "*"
+
+
+def test_openapi_swagger_ui(app_client):
+    req = app_client.get("http://localhost:8000/v1/ui/")
+    assert req.status_code == 200
+    assert "swagger-ui" in req.text
 
 
 def test_openapi_list_projects(app_client):
@@ -200,9 +176,12 @@ def test_rest_detect_language_too_many_candidates(app_client):
     assert req.status_code == 400
 
 
-def test_rest_suggest_payload_exceeds_max_content_length(app_client):
-    # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
-    large_text = "A" * 3_000
+def test_rest_suggest_form_field_exceeds_max_form_memory_size(app_client):
+    # Create a form field that exceeds MAX_FORM_MEMORY_SIZE but is within
+    # the MAX_CONTENT_LENGTH limit: it must be rejected by the form data
+    # validator, not the body limit middleware (the test config keeps the
+    # form field limit below the body limit for this reason)
+    large_text = "A" * 3_000_000
     data = {"text": large_text}
     req = app_client.post(
         "http://localhost:8000/v1/projects/dummy-fi/suggest",
@@ -213,7 +192,7 @@ def test_rest_suggest_payload_exceeds_max_content_length(app_client):
 
 def test_rest_suggest_batch_payload_exceeds_max_content_length(app_client):
     # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
-    large_text = "A" * 3_000
+    large_text = "A" * 10_000_000
     data = {"documents": [{"text": large_text}]}
     req = app_client.post(
         "http://localhost:8000/v1/projects/dummy-fi/suggest-batch",
@@ -236,7 +215,7 @@ def test_rest_suggest_payload_within_max_content_length(app_client):
 
 def test_rest_detect_language_payload_exceeds_max_content_length(app_client):
     # Create a payload that exceeds the MAX_CONTENT_LENGTH limit
-    large_text = "A" * 3_000
+    large_text = "A" * 10_000_000
     data = {"text": large_text, "languages": ["en", "fi"]}
     req = app_client.post(
         "http://localhost:8000/v1/detect-language",
@@ -251,6 +230,19 @@ def test_rest_detect_language_payload_within_max_content_length(app_client):
     req = app_client.post(
         "http://localhost:8000/v1/detect-language",
         json=data,
+    )
+    assert req.status_code == 200
+    assert "results" in req.json()
+
+
+def test_rest_suggest_large_form_field_within_max_form_memory_size(app_client):
+    """A form field larger than Starlette's 1 MB default but within the
+    configured MAX_FORM_MEMORY_SIZE must succeed end-to-end (was a 500
+    error before Annif used custom form data validators)."""
+    large_text = "A" * 1_500_000
+    req = app_client.post(
+        "http://localhost:8000/v1/projects/dummy-fi/suggest",
+        data={"text": large_text},
     )
     assert req.status_code == 200
     assert "results" in req.json()

@@ -1,4 +1,10 @@
 # Example configuration for Annif
+#
+# Any option value may contain ${ENV_VAR} placeholders, which are
+# replaced with the value of the corresponding environment variable
+# when the configuration is read, e.g.:
+#
+#   endpoint-api-key=${OPENAI_API_KEY}
 
 [tfidf-fi]
 name=TF-IDF Finnish

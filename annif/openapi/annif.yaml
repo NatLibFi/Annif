@@ -90,6 +90,7 @@ paths:
                   format: int32
                   default: 10
                   minimum: 0
+                  maximum: 2147483647
                 threshold:
                   type: number
                   description: minimum score threshold, below which results will not
@@ -100,6 +101,7 @@ paths:
                 language:
                   type: string
                   description: language of subject labels
+                  format: vocab_languages
               additionalProperties:
                 type: string
                 description: Additional metadata properties, starting with 'metadata_'
@@ -138,6 +140,7 @@ paths:
           format: int32
           default: 10
           minimum: 0
+          maximum: 2147483647
         description: maximum number of results to return
       - in: query
         name: threshold
@@ -151,6 +154,7 @@ paths:
         name: language
         schema:
           type: string
+          format: vocab_languages
         description: language of subject labels
       requestBody:
         content:
@@ -243,6 +247,7 @@ paths:
                     maxLength: 3
                     minLength: 2
                     example: en
+                    format: bcp47
                   minItems: 1
                   maxItems: 5
         required: true
