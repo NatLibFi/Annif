@@ -206,31 +206,31 @@ def test_get_project_metadata_fields_transform_error(registry, monkeypatch):
     assert project.metadata_fields() == []
 
 
-def test_get_project_metadata_fields_malformed_sources(registry, monkeypatch):
-    # if the sources spec cannot be parsed, source-field gathering is skipped
-    # best-effort and only the ensemble's own select(description) field remains
-    project = registry.get_project("ensemble-meta")
-
-    def broken_parse_sources(sources_spec):
-        raise ValueError("malformed sources spec")
-
-    monkeypatch.setattr(annif.project, "parse_sources", broken_parse_sources)
-    assert project.metadata_fields() == ["description"]
-
-
-@pytest.mark.parametrize("sources", ["tfidf:0", "a:1,b:-1", "tfidf:x"])
-def test_get_project_metadata_fields_invalid_source_weights(
-    registry, tmp_path, sources
+@pytest.mark.parametrize(
+    "sources, expected",
+    [
+        # a weight that is not a number makes parse_sources() raise a
+        # ConfigurationException: only the project's own fields remain
+        ("select-meta:x", ["description"]),
+        ("select-meta:1,dummy-fi:x", ["description"]),
+        # a zero or negative weight is valid (it is replaced by a small positive
+        # one), so the source project's fields are gathered as usual
+        ("select-meta:0", ["description", "title"]),
+        ("select-meta:1,dummy-fi:-1", ["description", "title"]),
+    ],
+)
+def test_get_project_metadata_fields_source_weights(
+    registry, tmp_path, sources, expected
 ):
-    # real sources values that parse_sources() rejects: weights summing to zero
-    # raise ZeroDivisionError, a non-numeric weight raises ValueError. The
-    # project is built in isolation, so the shared fixture projects are
-    # unchanged. metadata_fields() still returns the project's own fields.
+    # real sources values, using source projects that exist in the fixtures
+    # (select-meta selects title, description and text; dummy-fi selects
+    # nothing). The project is built in isolation, so the shared fixture
+    # projects are unchanged.
     project = annif.project.AnnifProject(
-        "ensemble-invalid-weights",
+        "ensemble-source-weights",
         {
-            "name": "Ensemble with invalid source weights",
-            "language": "en",
+            "name": "Ensemble with different source weights",
+            "language": "fi",
             "backend": "ensemble",
             "sources": sources,
             "vocab": "dummy",
@@ -239,7 +239,7 @@ def test_get_project_metadata_fields_invalid_source_weights(
         str(tmp_path),
         registry,
     )
-    assert project.metadata_fields() == ["description"]
+    assert project.metadata_fields() == expected
 
 
 class SourceWeightsConfig(annif.default_config.TestingConfig):
