@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 import annif.backend.dummy
+import annif.default_config
 import annif.project
 from annif.corpus import Document
 from annif.exception import ConfigurationException, NotSupportedException
@@ -149,21 +150,29 @@ def test_get_project_metadata_fields_nested_ensemble(registry):
     assert project.dump()["metadata_fields"] == ["subtitle", "description", "title"]
 
 
-def test_get_project_metadata_fields_source_cycle(registry, monkeypatch):
-    # a cyclic sources configuration must not cause unbounded recursion;
-    # each project is visited at most once
-    project = registry.get_project("ensemble-meta")
-    source = project.registry.get_project("select-meta")
-    real_get = source.config.get
+class CyclicSourcesConfig(annif.default_config.TestingConfig):
+    PROJECTS_CONFIG_PATH = "tests/projects_cyclic_sources.cfg"
 
-    def cyclic_get(key, *args, **kwargs):
-        if key == "sources":
-            return "ensemble-meta"
-        return real_get(key, *args, **kwargs)
 
-    monkeypatch.setattr(source.config, "get", cyclic_get)
-    # terminates, and still yields each field once
-    assert project.metadata_fields() == ["description", "title"]
+@pytest.mark.parametrize(
+    "project_id, expected",
+    [
+        # cyc-a has sources=cyc-b and cyc-b has sources=cyc-a: each project is
+        # visited once, so the own fields come first, then those of the source
+        ("cyc-a", ["title", "subtitle"]),
+        ("cyc-b", ["subtitle", "title"]),
+        # a project that is its own source
+        ("cyc-self", ["description"]),
+    ],
+)
+def test_get_project_metadata_fields_source_cycle(project_id, expected):
+    # a cyclic sources configuration must not cause unbounded recursion. The
+    # projects live in a separate app, so the shared fixture projects (and their
+    # counts) are unchanged.
+    cxapp = annif.create_app(config_name="tests.test_project.CyclicSourcesConfig")
+    with cxapp.app.app_context():
+        project = annif.registry.get_project(project_id)
+        assert project.metadata_fields() == expected
 
 
 def test_get_project_metadata_fields_skips_unloadable_source(registry, monkeypatch):
