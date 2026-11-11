@@ -85,14 +85,14 @@ def test_get_project_fi_dump(registry):
         "vocab_language": "fi",
         "is_trained": True,
         "modification_time": None,
-        "metadata": [],
+        "metadata_fields": [],
     }
 
 
 def test_get_project_metadata_fields_select(registry):
     # a project with a select(...) transform exposes its fields, in order
     project = registry.get_project("select-meta")
-    assert project.dump()["metadata"] == ["title", "description", "text"]
+    assert project.dump()["metadata_fields"] == ["title", "description", "text"]
 
 
 def test_get_project_metadata_fields_none(registry):
@@ -106,7 +106,7 @@ def test_get_project_metadata_fields_ensemble_union(registry):
     # and order-preserving: own select(description) first, then the source
     # select-meta's (title, description, text); dummy-en has no select fields
     project = registry.get_project("ensemble-meta")
-    assert project.dump()["metadata"] == ["description", "title", "text"]
+    assert project.dump()["metadata_fields"] == ["description", "title", "text"]
 
 
 def test_get_project_metadata_fields_nested_ensemble(registry):
@@ -116,7 +116,12 @@ def test_get_project_metadata_fields_nested_ensemble(registry):
     # ensemble-meta's select(description), then select-meta's
     # (title, description, text); dummy-en contributes none.
     project = registry.get_project("ensemble-meta-nested")
-    assert project.dump()["metadata"] == ["subtitle", "description", "title", "text"]
+    assert project.dump()["metadata_fields"] == [
+        "subtitle",
+        "description",
+        "title",
+        "text",
+    ]
 
 
 def test_get_project_metadata_fields_source_cycle(registry, monkeypatch):

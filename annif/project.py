@@ -395,7 +395,7 @@ class AnnifProject(DatadirMixin):
             "vocab_language": vocab_lang,
             "is_trained": self.is_trained,
             "modification_time": self.modification_time,
-            "metadata": self.metadata_fields(),
+            "metadata_fields": self.metadata_fields(),
         }
 
     def remove_model_data(self) -> None:

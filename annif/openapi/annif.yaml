@@ -353,7 +353,7 @@ components:
           format: date-time
           example: 2020-05-19T16:42:42Z
           nullable: true
-        metadata:
+        metadata_fields:
           type: array
           items:
             type: string
