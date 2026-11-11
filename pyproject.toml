@@ -30,17 +30,17 @@ dependencies = [
     "click-log==0.4.*",
     "connexion[flask, uvicorn, swagger-ui]~=3.3.0",
     "gunicorn~=26.2.0",
-    "huggingface-hub~=1.32.0",
+    "huggingface-hub~=2.4.0",
     "joblib~=1.6.0",
     "jsonschema~=4.26.0",
     "nltk~=3.10.3",
     "numpy~=2.4.6",
     "optuna~=5.0.0",
-    "python-dateutil==2.9.*",
+    "python-dateutil~=4.0.0",
     "simplemma~=2.0.0",
     "scikit-learn~=1.9.1",
     "scipy~=1.17.1",
-    "starlette~=1.6.0",
+    "starlette~=1.10.0",
     "requests~=2.34.2",
     "rdflib~=7.6.0",
 ]
@@ -53,16 +53,13 @@ estnltk = ["estnltk==1.7.5"]
 nn = [
     "torch~=2.14.0",
     "tqdm~=4.70.1",
-    "lmdb~=2.3.0",
+    "lmdb~=3.0.0",
 ]
 torch-cpu = ["torch"]
 torch-cu126 = ["torch"]
 torch-cu130 = ["torch"]
 omikuji = ["omikuji==0.5.*"]
-spacy = [
-    "spacy~=3.8.4",
-    "pip>=25.3",
-]
+spacy = ["spacy~=3.8.14"]
 stwfsa = ["stwfsapy~=0.6.1"]
 voikko = ["voikko==0.5.*"]
 yake = ["yake~=0.7.3"]
@@ -86,7 +83,7 @@ dev = [
     "bumpversion",
     "black==25.*",
     "isort",
-    "schemathesis~=4.29.4",
+    "schemathesis~=4.33.0",
 ]
 all = ["annif[ebm-in-process,estnltk,fasttext,nn,omikuji,spacy,stwfsa,voikko,yake]"]
 
