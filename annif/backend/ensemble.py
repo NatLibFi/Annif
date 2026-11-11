@@ -277,8 +277,11 @@ class EnsembleOptimizer(hyperopt.HyperparameterOptimizer):
         return {source: hps[source] / total for source in hps}
 
     def _format_cfg_line(self, hps: dict[str, float]) -> str:
+        # The weights have a resolution of 0.0001. A smaller weight is written as
+        # 0.0001 rather than 0.0000, because parse_sources() would replace a zero
+        # weight by a much larger one (annif.util.MIN_SOURCE_WEIGHT).
         return "sources=" + ",".join(
-            [f"{src}:{weight:.4f}" for src, weight in hps.items()]
+            [f"{src}:{max(weight, 0.0001):.4f}" for src, weight in hps.items()]
         )
 
     def _postprocess(self, study: Study) -> HPRecommendation:
