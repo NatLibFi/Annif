@@ -5,6 +5,7 @@ from __future__ import annotations
 import glob
 import importlib.metadata
 import logging
+import math
 import os
 import os.path
 import re
@@ -79,10 +80,15 @@ def user_agent_header() -> dict[str, str]:
     return {"User-Agent": f"Annif/{annif_version()}"}
 
 
+# Weight used for a source whose configured weight is zero or negative
+MIN_SOURCE_WEIGHT = 0.01
+
+
 def parse_sources(sourcedef: str) -> list[tuple[str, float]]:
     """parse a source definition such as 'src1:1.0,src2' into a sequence of
-    tuples (src_id, weight). A ConfigurationException is raised if a weight
-    is not a number or if the weights sum to zero."""
+    tuples (src_id, weight). The weights are normalized to sum to 1. A weight
+    that is zero or negative is replaced by MIN_SOURCE_WEIGHT, with a warning.
+    A ConfigurationException is raised if a weight is not a finite number."""
     from annif.exception import ConfigurationException
 
     sources = []
@@ -97,14 +103,25 @@ def parse_sources(sourcedef: str) -> list[tuple[str, float]]:
                 raise ConfigurationException(
                     f"weight '{srcval[1]}' in sources '{sourcedef}' is not a number"
                 ) from None
+            if not math.isfinite(weight):
+                raise ConfigurationException(
+                    f"weight '{srcval[1]}' in sources '{sourcedef}' "
+                    "is not a finite number"
+                )
+            if weight <= 0:
+                logger.warning(
+                    "weight %s for source '%s' in sources '%s' is not positive, "
+                    "using %s instead",
+                    srcval[1],
+                    src_id,
+                    sourcedef,
+                    MIN_SOURCE_WEIGHT,
+                )
+                weight = MIN_SOURCE_WEIGHT
         else:
             weight = 1.0
         sources.append((src_id, weight))
         totalweight += weight
-    if totalweight == 0:
-        raise ConfigurationException(
-            f"weights in sources '{sourcedef}' must not sum to zero"
-        )
     return [(srcid, weight / totalweight) for srcid, weight in sources]
 
 

@@ -1,6 +1,7 @@
 """Unit tests for Annif utility functions"""
 
 import importlib.metadata
+import logging
 
 import pytest
 
@@ -122,12 +123,48 @@ def test_parse_sources():
     assert annif.util.parse_sources("a, b") == [("a", 0.5), ("b", 0.5)]
 
 
+def test_parse_sources_zero_weight(restore_duplicate_filters, caplog):
+    # a single source with weight 0 is equivalent to the same source without one
+    with caplog.at_level(logging.WARNING):
+        assert annif.util.parse_sources("tfidf:0") == [("tfidf", 1.0)]
+    assert "weight 0 for source 'tfidf' in sources 'tfidf:0'" in caplog.text
+    assert f"using {annif.util.MIN_SOURCE_WEIGHT} instead" in caplog.text
+
+
+def test_parse_sources_all_zero_weights(restore_duplicate_filters):
+    assert annif.util.parse_sources("a:0,b:0") == [("a", 0.5), ("b", 0.5)]
+
+
+@pytest.mark.parametrize(
+    "sourcedef, expected",
+    [
+        ("a:2,b:-1", [("a", 2.0), ("b", annif.util.MIN_SOURCE_WEIGHT)]),
+        ("a:1,b:-1", [("a", 1.0), ("b", annif.util.MIN_SOURCE_WEIGHT)]),
+        ("a:0,b:3", [("a", annif.util.MIN_SOURCE_WEIGHT), ("b", 3.0)]),
+    ],
+)
+def test_parse_sources_non_positive_weight(
+    sourcedef, expected, restore_duplicate_filters, caplog
+):
+    # a weight <= 0 is replaced by the minimum weight, and the weights are
+    # normalized as usual
+    total = sum(weight for _, weight in expected)
+    with caplog.at_level(logging.WARNING):
+        result = annif.util.parse_sources(sourcedef)
+    assert result == [(src, pytest.approx(weight / total)) for src, weight in expected]
+    assert sum(weight for _, weight in result) == pytest.approx(1.0)
+    assert "is not positive" in caplog.text
+
+
 @pytest.mark.parametrize(
     "sourcedef, message",
     [
-        ("tfidf:0", "must not sum to zero"),
-        ("a:1,b:-1", "must not sum to zero"),
         ("tfidf:x", "is not a number"),
+        ("a:nan", "is not a finite number"),
+        ("a:inf", "is not a finite number"),
+        ("a:-inf", "is not a finite number"),
+        ("a:1e400", "is not a finite number"),
+        ("a:1,b:nan", "is not a finite number"),
     ],
 )
 def test_parse_sources_invalid_raises(sourcedef, message):
