@@ -371,10 +371,13 @@ class AnnifProject(DatadirMixin):
         """return the metadata fields this project uses during suggest. For
         ensemble projects, the fields of the source projects are gathered
         recursively, in addition to the project's own fields. The result is a
-        flat, order-preserving, de-duplicated list."""
+        flat, order-preserving, de-duplicated list. The document text is not
+        metadata and every project supports it, so "text" is left out even if
+        a select(...) transform targets it."""
 
         # de-duplicate while preserving first-seen order
-        return list(dict.fromkeys(self._gather_metadata_fields(set())))
+        fields = dict.fromkeys(self._gather_metadata_fields(set()))
+        return [field for field in fields if field != "text"]
 
     def dump(self) -> dict[str, str | list | dict | bool | datetime | None]:
         """return this project as a dict"""

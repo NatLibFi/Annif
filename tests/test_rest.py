@@ -36,10 +36,11 @@ def test_rest_show_project_public(app):
 
 
 def test_rest_show_project_metadata_fields(app):
-    # the metadata fields used by a select(...) transform are exposed via REST
+    # the metadata fields used by a select(...) transform are exposed via REST,
+    # without "text"
     with app.app_context():
         result = annif.rest.show_project("select-meta")[0]
-        assert result["metadata_fields"] == ["title", "description", "text"]
+        assert result["metadata_fields"] == ["title", "description"]
 
 
 def test_rest_show_project_metadata_fields_empty(app):

@@ -90,9 +90,38 @@ def test_get_project_fi_dump(registry):
 
 
 def test_get_project_metadata_fields_select(registry):
-    # a project with a select(...) transform exposes its fields, in order
+    # a project with a select(...) transform exposes its fields, in order, but
+    # not "text", which is not metadata and which every project supports
     project = registry.get_project("select-meta")
-    assert project.dump()["metadata_fields"] == ["title", "description", "text"]
+    assert project.dump()["metadata_fields"] == ["title", "description"]
+
+
+@pytest.mark.parametrize(
+    "transform, expected",
+    [
+        ("select(text)", []),
+        ("select(text,title)", ["title"]),
+        ("select(title,text,description)", ["title", "description"]),
+    ],
+)
+def test_get_project_metadata_fields_leaves_out_text(
+    registry, tmp_path, transform, expected
+):
+    # "text" is not metadata and every project supports it, so it is never
+    # listed, even when a select(...) transform targets it
+    project = annif.project.AnnifProject(
+        "select-text",
+        {
+            "name": "Project selecting the text",
+            "language": "fi",
+            "backend": "dummy",
+            "vocab": "dummy",
+            "transform": transform,
+        },
+        str(tmp_path),
+        registry,
+    )
+    assert project.metadata_fields() == expected
 
 
 def test_get_project_metadata_fields_none(registry):
@@ -104,9 +133,10 @@ def test_get_project_metadata_fields_none(registry):
 def test_get_project_metadata_fields_ensemble_union(registry):
     # an ensemble gathers source fields in addition to its own, de-duplicated
     # and order-preserving: own select(description) first, then the source
-    # select-meta's (title, description, text); dummy-en has no select fields
+    # select-meta's (title, description, text without "text"); dummy-en has no
+    # select fields
     project = registry.get_project("ensemble-meta")
-    assert project.dump()["metadata_fields"] == ["description", "title", "text"]
+    assert project.dump()["metadata_fields"] == ["description", "title"]
 
 
 def test_get_project_metadata_fields_nested_ensemble(registry):
@@ -114,14 +144,9 @@ def test_get_project_metadata_fields_nested_ensemble(registry):
     # must also pick up the fields of that source's own sources, because
     # suggest() recurses the same way. Own select(subtitle), then
     # ensemble-meta's select(description), then select-meta's
-    # (title, description, text); dummy-en contributes none.
+    # (title, description, text without "text"); dummy-en contributes none.
     project = registry.get_project("ensemble-meta-nested")
-    assert project.dump()["metadata_fields"] == [
-        "subtitle",
-        "description",
-        "title",
-        "text",
-    ]
+    assert project.dump()["metadata_fields"] == ["subtitle", "description", "title"]
 
 
 def test_get_project_metadata_fields_source_cycle(registry, monkeypatch):
@@ -138,7 +163,7 @@ def test_get_project_metadata_fields_source_cycle(registry, monkeypatch):
 
     monkeypatch.setattr(source.config, "get", cyclic_get)
     # terminates, and still yields each field once
-    assert project.metadata_fields() == ["description", "title", "text"]
+    assert project.metadata_fields() == ["description", "title"]
 
 
 def test_get_project_metadata_fields_skips_unloadable_source(registry, monkeypatch):
