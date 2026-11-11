@@ -5,8 +5,10 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+import annif
 import annif.backend.dummy
 import annif.project
+import annif.util
 from annif.corpus import Document
 from annif.exception import ConfigurationException, NotSupportedException
 from annif.project import Access
@@ -86,6 +88,52 @@ def test_get_project_fi_dump(registry):
         "is_trained": True,
         "modification_time": None,
     }
+
+
+@pytest.fixture
+def restore_duplicate_filters():
+    """suggest() on a project with an unknown train state logs a warning that
+    the DuplicateFilter on the Annif logger shows only once per process. Restore
+    the filter state afterwards, so that tests which assert on that warning
+    don't depend on whether this test ran before them."""
+    saved = [
+        (f, set(f.logged))
+        for f in annif.logger.filters
+        if isinstance(f, annif.util.DuplicateFilter)
+    ]
+    yield
+    for dupfilter, logged in saved:
+        dupfilter.logged = logged
+
+
+@pytest.mark.parametrize("sources", ["tfidf:0", "a:1,b:-1", "tfidf:x"])
+def test_project_invalid_source_weights(
+    registry, tmp_path, sources, restore_duplicate_filters
+):
+    # a project whose sources value cannot be parsed is reported as misconfigured
+    # instead of raising: the train state is unknown (None), so dump() still
+    # works for it, but suggest() raises a ConfigurationException. The project
+    # is built in isolation, so the shared fixture projects are unchanged.
+    project = annif.project.AnnifProject(
+        "ensemble-invalid-weights",
+        {
+            "name": "Ensemble with invalid source weights",
+            "language": "fi",
+            "backend": "ensemble",
+            "sources": sources,
+            "vocab": "dummy",
+        },
+        str(tmp_path),
+        registry,
+    )
+    assert project.is_trained is None
+    assert project.modification_time is None
+    pdump = project.dump()
+    assert pdump["project_id"] == "ensemble-invalid-weights"
+    assert pdump["is_trained"] is None
+    assert pdump["modification_time"] is None
+    with pytest.raises(ConfigurationException, match="sources"):
+        project.suggest([Document(text="example")])
 
 
 def test_get_project_nonexistent(registry):

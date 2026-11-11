@@ -81,7 +81,9 @@ def user_agent_header() -> dict[str, str]:
 
 def parse_sources(sourcedef: str) -> list[tuple[str, float]]:
     """parse a source definition such as 'src1:1.0,src2' into a sequence of
-    tuples (src_id, weight)"""
+    tuples (src_id, weight). A ConfigurationException is raised if a weight
+    is not a number or if the weights sum to zero."""
+    from annif.exception import ConfigurationException
 
     sources = []
     totalweight = 0.0
@@ -89,11 +91,20 @@ def parse_sources(sourcedef: str) -> list[tuple[str, float]]:
         srcval = srcdef.strip().split(":")
         src_id = srcval[0]
         if len(srcval) > 1:
-            weight = float(srcval[1])
+            try:
+                weight = float(srcval[1])
+            except ValueError:
+                raise ConfigurationException(
+                    f"weight '{srcval[1]}' in sources '{sourcedef}' is not a number"
+                ) from None
         else:
             weight = 1.0
         sources.append((src_id, weight))
         totalweight += weight
+    if totalweight == 0:
+        raise ConfigurationException(
+            f"weights in sources '{sourcedef}' must not sum to zero"
+        )
     return [(srcid, weight / totalweight) for srcid, weight in sources]
 
 

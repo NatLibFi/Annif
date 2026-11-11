@@ -114,3 +114,24 @@ def test_interpolate_env_vars_no_placeholder():
         == "${not an env var}"
     )
     assert annif.util.interpolate_env_vars("$100", "proj", "opt") == "$100"
+
+
+def test_parse_sources():
+    assert annif.util.parse_sources("a:1,b:3") == [("a", 0.25), ("b", 0.75)]
+    # the weight defaults to 1.0
+    assert annif.util.parse_sources("a, b") == [("a", 0.5), ("b", 0.5)]
+
+
+@pytest.mark.parametrize(
+    "sourcedef, message",
+    [
+        ("tfidf:0", "must not sum to zero"),
+        ("a:1,b:-1", "must not sum to zero"),
+        ("tfidf:x", "is not a number"),
+    ],
+)
+def test_parse_sources_invalid_raises(sourcedef, message):
+    with pytest.raises(ConfigurationException) as excinfo:
+        annif.util.parse_sources(sourcedef)
+    assert message in str(excinfo.value)
+    assert sourcedef in str(excinfo.value)
