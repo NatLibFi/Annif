@@ -141,34 +141,39 @@ def test_parse_sources_all_zero_weights(restore_duplicate_filters):
         ("a:2,b:-1", [("a", 2.0), ("b", annif.util.MIN_SOURCE_WEIGHT)]),
         ("a:1,b:-1", [("a", 1.0), ("b", annif.util.MIN_SOURCE_WEIGHT)]),
         ("a:0,b:3", [("a", annif.util.MIN_SOURCE_WEIGHT), ("b", 3.0)]),
+        ("a:1,b:nan", [("a", 1.0), ("b", annif.util.MIN_SOURCE_WEIGHT)]),
+        ("a:1,b:inf", [("a", 1.0), ("b", annif.util.MIN_SOURCE_WEIGHT)]),
+        ("a:-inf,b:3", [("a", annif.util.MIN_SOURCE_WEIGHT), ("b", 3.0)]),
     ],
 )
-def test_parse_sources_non_positive_weight(
+def test_parse_sources_replaces_invalid_weight(
     sourcedef, expected, restore_duplicate_filters, caplog
 ):
-    # a weight <= 0 is replaced by the minimum weight, and the weights are
-    # normalized as usual
+    # a weight that is <= 0 or not finite is replaced by the minimum weight, and
+    # the weights are normalized as usual
     total = sum(weight for _, weight in expected)
     with caplog.at_level(logging.WARNING):
         result = annif.util.parse_sources(sourcedef)
     assert result == [(src, pytest.approx(weight / total)) for src, weight in expected]
     assert sum(weight for _, weight in result) == pytest.approx(1.0)
-    assert "is not positive" in caplog.text
+    assert "is not a positive finite number" in caplog.text
 
 
-@pytest.mark.parametrize(
-    "sourcedef, message",
-    [
-        ("tfidf:x", "is not a number"),
-        ("a:nan", "is not a finite number"),
-        ("a:inf", "is not a finite number"),
-        ("a:-inf", "is not a finite number"),
-        ("a:1e400", "is not a finite number"),
-        ("a:1,b:nan", "is not a finite number"),
-    ],
-)
-def test_parse_sources_invalid_raises(sourcedef, message):
+@pytest.mark.parametrize("sourcedef", ["a:nan", "a:inf", "a:-inf", "a:1e400"])
+def test_parse_sources_non_finite_weight(sourcedef, restore_duplicate_filters, caplog):
+    # a single source with a weight that is not finite gets the minimum weight,
+    # which normalizes to 1.0, as for a weight of 0
+    with caplog.at_level(logging.WARNING):
+        assert annif.util.parse_sources(sourcedef) == [("a", 1.0)]
+    weight = sourcedef.split(":")[1]
+    assert f"weight {weight} for source 'a' in sources '{sourcedef}'" in caplog.text
+    assert f"using {annif.util.MIN_SOURCE_WEIGHT} instead" in caplog.text
+    assert len(caplog.records) == 1
+
+
+@pytest.mark.parametrize("sourcedef", ["tfidf:x", "a:1,b:x"])
+def test_parse_sources_not_a_number_raises(sourcedef):
     with pytest.raises(ConfigurationException) as excinfo:
         annif.util.parse_sources(sourcedef)
-    assert message in str(excinfo.value)
+    assert "is not a number" in str(excinfo.value)
     assert sourcedef in str(excinfo.value)

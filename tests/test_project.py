@@ -102,16 +102,20 @@ def source_weights_cxapp(cxapp):
     return annif.create_app(config_name="tests.test_project.SourceWeightsConfig")
 
 
-def test_project_zero_source_weight_lists_like_default(
-    source_weights_cxapp, restore_duplicate_filters, caplog
+@pytest.mark.parametrize(
+    "project_id, weight",
+    [("weights-zero", "0"), ("weights-nan", "nan"), ("weights-inf", "inf")],
+)
+def test_project_replaced_source_weight_lists_like_default(
+    source_weights_cxapp, restore_duplicate_filters, caplog, project_id, weight
 ):
-    # a zero source weight is replaced by a small positive one, so the project
-    # behaves like one with the default weight
+    # a source weight that is zero or not finite is replaced by a small positive
+    # one, so the project behaves like one with the default weight
     with caplog.at_level(logging.WARNING):
         with source_weights_cxapp.test_client() as client:
             response = client.get("/v1/projects")
     assert response.status_code == 200
-    assert "weight 0 for source 'dummy-fi'" in caplog.text
+    assert f"weight {weight} for source 'dummy-fi'" in caplog.text
     projects = {proj["project_id"]: proj for proj in response.json()["projects"]}
     assert projects["weights-ref"]["is_trained"] is True
     for key in (
@@ -121,44 +125,37 @@ def test_project_zero_source_weight_lists_like_default(
         "is_trained",
         "modification_time",
     ):
-        assert projects["weights-zero"][key] == projects["weights-ref"][key]
+        assert projects[project_id][key] == projects["weights-ref"][key]
 
 
-def test_project_zero_source_weight_suggests_like_default(
-    source_weights_cxapp, restore_duplicate_filters
+@pytest.mark.parametrize("project_id", ["weights-zero", "weights-nan", "weights-inf"])
+def test_project_replaced_source_weight_suggests_like_default(
+    source_weights_cxapp, restore_duplicate_filters, project_id
 ):
     docs = [Document(text="example text")]
     with source_weights_cxapp.app.app_context():
         ref = annif.registry.get_project("weights-ref").suggest(docs)[0]
-        zero = annif.registry.get_project("weights-zero").suggest(docs)[0]
+        result = annif.registry.get_project(project_id).suggest(docs)[0]
     assert len(list(ref)) > 0
-    assert list(zero) == list(ref)
+    assert list(result) == list(ref)
 
 
-@pytest.mark.parametrize(
-    "project_id, message",
-    [
-        ("weights-invalid-x", "is not a number"),
-        ("weights-invalid-nan", "is not a finite number"),
-        ("weights-invalid-inf", "is not a finite number"),
-    ],
-)
-def test_project_invalid_source_weight(
-    source_weights_cxapp, restore_duplicate_filters, project_id, message
+def test_project_not_a_number_source_weight(
+    source_weights_cxapp, restore_duplicate_filters
 ):
-    # a source weight that is not a finite number makes the project misconfigured:
-    # it is still listed, with an unknown train state, but suggest() raises
+    # a source weight that is not a number makes the project misconfigured: it
+    # is still listed, with an unknown train state, but suggest() raises
     with source_weights_cxapp.test_client() as client:
         response = client.get("/v1/projects")
     assert response.status_code == 200
     projects = {proj["project_id"]: proj for proj in response.json()["projects"]}
-    assert projects[project_id]["is_trained"] is None
-    assert projects[project_id]["modification_time"] is None
+    assert projects["weights-invalid-x"]["is_trained"] is None
+    assert projects["weights-invalid-x"]["modification_time"] is None
 
     docs = [Document(text="example text")]
     with source_weights_cxapp.app.app_context():
-        project = annif.registry.get_project(project_id)
-        with pytest.raises(ConfigurationException, match=message):
+        project = annif.registry.get_project("weights-invalid-x")
+        with pytest.raises(ConfigurationException, match="is not a number"):
             project.suggest(docs)
 
 
