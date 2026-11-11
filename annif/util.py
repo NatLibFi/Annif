@@ -5,6 +5,7 @@ from __future__ import annotations
 import glob
 import importlib.metadata
 import logging
+import math
 import os
 import os.path
 import re
@@ -79,9 +80,17 @@ def user_agent_header() -> dict[str, str]:
     return {"User-Agent": f"Annif/{annif_version()}"}
 
 
+# Weight used for a source whose configured weight is zero, negative or not finite
+MIN_SOURCE_WEIGHT = 0.01
+
+
 def parse_sources(sourcedef: str) -> list[tuple[str, float]]:
     """parse a source definition such as 'src1:1.0,src2' into a sequence of
-    tuples (src_id, weight)"""
+    tuples (src_id, weight). The weights are normalized to sum to 1. A weight
+    that is zero, negative or not finite (nan or infinite) is replaced by
+    MIN_SOURCE_WEIGHT, with a warning. A ConfigurationException is raised if a
+    weight is not a number at all."""
+    from annif.exception import ConfigurationException
 
     sources = []
     totalweight = 0.0
@@ -89,7 +98,22 @@ def parse_sources(sourcedef: str) -> list[tuple[str, float]]:
         srcval = srcdef.strip().split(":")
         src_id = srcval[0]
         if len(srcval) > 1:
-            weight = float(srcval[1])
+            try:
+                weight = float(srcval[1])
+            except ValueError:
+                raise ConfigurationException(
+                    f"weight '{srcval[1]}' in sources '{sourcedef}' is not a number"
+                ) from None
+            if not math.isfinite(weight) or weight <= 0:
+                logger.warning(
+                    "weight %s for source '%s' in sources '%s' is not a positive "
+                    "finite number, using %s instead",
+                    srcval[1],
+                    src_id,
+                    sourcedef,
+                    MIN_SOURCE_WEIGHT,
+                )
+                weight = MIN_SOURCE_WEIGHT
         else:
             weight = 1.0
         sources.append((src_id, weight))

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+import annif
 import annif.backend.dummy
 import annif.default_config
 import annif.project
@@ -239,6 +240,75 @@ def test_get_project_metadata_fields_invalid_source_weights(
         registry,
     )
     assert project.metadata_fields() == ["description"]
+
+
+class SourceWeightsConfig(annif.default_config.TestingConfig):
+    PROJECTS_CONFIG_PATH = "tests/projects_source_weights.cfg"
+
+
+@pytest.fixture(scope="module")
+def source_weights_cxapp(cxapp):
+    # the cxapp fixture makes sure the dummy vocab is in place; the projects with
+    # different sources values live in a separate app, so that the shared
+    # fixture projects (and their counts) are unchanged
+    return annif.create_app(config_name="tests.test_project.SourceWeightsConfig")
+
+
+@pytest.mark.parametrize(
+    "project_id, weight",
+    [("weights-zero", "0"), ("weights-nan", "nan"), ("weights-inf", "inf")],
+)
+def test_project_replaced_source_weight_lists_like_default(
+    source_weights_cxapp, restore_duplicate_filters, caplog, project_id, weight
+):
+    # a source weight that is zero or not finite is replaced by a small positive
+    # one, so the project behaves like one with the default weight
+    with caplog.at_level(logging.WARNING):
+        with source_weights_cxapp.test_client() as client:
+            response = client.get("/v1/projects")
+    assert response.status_code == 200
+    assert f"weight {weight} for source 'dummy-fi'" in caplog.text
+    projects = {proj["project_id"]: proj for proj in response.json()["projects"]}
+    assert projects["weights-ref"]["is_trained"] is True
+    for key in (
+        "backend",
+        "vocab",
+        "vocab_language",
+        "is_trained",
+        "modification_time",
+    ):
+        assert projects[project_id][key] == projects["weights-ref"][key]
+
+
+@pytest.mark.parametrize("project_id", ["weights-zero", "weights-nan", "weights-inf"])
+def test_project_replaced_source_weight_suggests_like_default(
+    source_weights_cxapp, restore_duplicate_filters, project_id
+):
+    docs = [Document(text="example text")]
+    with source_weights_cxapp.app.app_context():
+        ref = annif.registry.get_project("weights-ref").suggest(docs)[0]
+        result = annif.registry.get_project(project_id).suggest(docs)[0]
+    assert len(list(ref)) > 0
+    assert list(result) == list(ref)
+
+
+def test_project_not_a_number_source_weight(
+    source_weights_cxapp, restore_duplicate_filters
+):
+    # a source weight that is not a number makes the project misconfigured: it
+    # is still listed, with an unknown train state, but suggest() raises
+    with source_weights_cxapp.test_client() as client:
+        response = client.get("/v1/projects")
+    assert response.status_code == 200
+    projects = {proj["project_id"]: proj for proj in response.json()["projects"]}
+    assert projects["weights-invalid-x"]["is_trained"] is None
+    assert projects["weights-invalid-x"]["modification_time"] is None
+
+    docs = [Document(text="example text")]
+    with source_weights_cxapp.app.app_context():
+        project = annif.registry.get_project("weights-invalid-x")
+        with pytest.raises(ConfigurationException, match="is not a number"):
+            project.suggest(docs)
 
 
 def test_get_project_nonexistent(registry):
