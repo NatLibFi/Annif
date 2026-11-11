@@ -132,8 +132,9 @@ def test_project_invalid_source_weights(
     assert pdump["project_id"] == "ensemble-invalid-weights"
     assert pdump["is_trained"] is None
     assert pdump["modification_time"] is None
+    docs = [Document(text="example")]
     with pytest.raises(ConfigurationException, match="sources"):
-        project.suggest([Document(text="example")])
+        project.suggest(docs)
 
 
 def test_get_project_nonexistent(registry):
