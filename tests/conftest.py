@@ -12,6 +12,7 @@ import annif.analyzer
 import annif.corpus
 import annif.project
 import annif.registry
+import annif.util
 import annif.vocab
 
 
@@ -159,3 +160,18 @@ def app_project(app):
 def empty_corpus(tmpdir, subject_index):
     empty_file = tmpdir.ensure("empty.tsv")
     return annif.corpus.DocumentFileTSV(str(empty_file), subject_index)
+
+
+@pytest.fixture
+def restore_duplicate_filters():
+    """Messages logged through the Annif logger pass the DuplicateFilter only
+    once per process. Restore the filter state after the test, so that tests
+    which assert on a logged warning don't depend on which tests ran before."""
+    saved = [
+        (f, set(f.logged))
+        for f in annif.logger.filters
+        if isinstance(f, annif.util.DuplicateFilter)
+    ]
+    yield
+    for dupfilter, logged in saved:
+        dupfilter.logged = logged

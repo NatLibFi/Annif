@@ -1,13 +1,16 @@
 """Unit tests for the ensemble backend in Annif"""
 
+import logging
 import unittest.mock
 
 import numpy as np
+import optuna
 import pytest
 from scipy.sparse import csr_array
 
 import annif.backend
 import annif.registry
+import annif.util
 from annif.backend.ensemble import EnsembleOptimizer
 from annif.corpus import Document, DocumentFileTSV
 from annif.exception import NotInitializedException, NotSupportedException
@@ -357,6 +360,45 @@ def test_ensemble_optimizer_prepare_keeps_full_source_batches():
     expected = np.zeros((1, 3), dtype=np.float32)
     expected[0, 0] = 0.8  # A survives alignment; X is dropped
     np.testing.assert_array_equal(batch.array.toarray(), expected)
+
+
+@pytest.mark.parametrize(
+    "best_params",
+    [
+        {"a": 0.99999, "b": 0.00001},
+        {"a": 1.0, "b": 0.0},
+        {"a": 0.3, "b": 0.5, "c": 0.2},
+    ],
+)
+def test_ensemble_optimizer_recommendation_round_trip(
+    best_params, restore_duplicate_filters, caplog
+):
+    # the recommended sources line must give the evaluated weights back when it is
+    # parsed: a weight that is tiny or zero must not be written as 0.0000, which
+    # parse_sources() would replace by the much larger minimum weight
+    subjects = make_subject_index([(URI_A, "A")])
+    backend = make_ensemble_backend(subjects, {src: subjects for src in best_params})
+    optimizer = EnsembleOptimizer(backend, unittest.mock.Mock(), "NDCG")
+    study = optuna.create_study(direction="maximize")
+    study.enqueue_trial(best_params)
+    study.optimize(
+        lambda trial: sum(trial.suggest_float(src, 0.0, 1.0) for src in best_params),
+        n_trials=1,
+    )
+
+    recommendation = optimizer._postprocess(study)
+
+    assert len(recommendation.lines) == 1
+    line = recommendation.lines[0]
+    assert line.startswith("sources=")
+    with caplog.at_level(logging.WARNING):
+        parsed = annif.util.parse_sources(line.removeprefix("sources="))
+    # no weight was replaced by the minimum weight
+    assert "is not a positive finite number" not in caplog.text
+    total = sum(best_params.values())
+    assert [src for src, _ in parsed] == list(best_params)
+    for src, weight in parsed:
+        assert weight == pytest.approx(best_params[src] / total, abs=0.0001)
 
 
 def test_source_subject_map_same_vocabulary_is_none():
