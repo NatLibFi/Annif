@@ -356,7 +356,7 @@ class AnnifProject(DatadirMixin):
         if sources_spec:
             try:
                 sources = parse_sources(sources_spec)
-            except (ValueError, ZeroDivisionError):
+            except (ValueError, ZeroDivisionError, ConfigurationException):
                 sources = []
             for source_id, _ in sources:
                 try:
