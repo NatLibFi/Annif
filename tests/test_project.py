@@ -178,6 +178,30 @@ def test_get_project_metadata_fields_malformed_sources(registry, monkeypatch):
     assert project.metadata_fields() == ["description"]
 
 
+@pytest.mark.parametrize("sources", ["tfidf:0", "a:1,b:-1", "tfidf:x"])
+def test_get_project_metadata_fields_invalid_source_weights(
+    registry, tmp_path, sources
+):
+    # real sources values that parse_sources() rejects: weights summing to zero
+    # raise ZeroDivisionError, a non-numeric weight raises ValueError. The
+    # project is built in isolation, so the shared fixture projects are
+    # unchanged. metadata_fields() still returns the project's own fields.
+    project = annif.project.AnnifProject(
+        "ensemble-invalid-weights",
+        {
+            "name": "Ensemble with invalid source weights",
+            "language": "en",
+            "backend": "ensemble",
+            "sources": sources,
+            "vocab": "dummy",
+            "transform": "select(description)",
+        },
+        str(tmp_path),
+        registry,
+    )
+    assert project.metadata_fields() == ["description"]
+
+
 def test_get_project_nonexistent(registry):
     with pytest.raises(ValueError):
         registry.get_project("nonexistent")
