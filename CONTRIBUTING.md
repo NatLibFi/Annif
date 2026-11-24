@@ -171,3 +171,6 @@ possible.
 Learning backends additionally implement:
 
 * `_learn`: method for continuing training the model on the given corpus
+
+>[!IMPORTANT]
+> Please indicate AI use in your contribution and disclose any tools that you have used. Our [pull request template](https://github.com/NatLibFi/Annif/blob/main/.github/PULL_REQUEST_TEMPLATE.md) has instructions for this. We use [TLP:AI](https://nlkw.de/en/blog/ai-tlp/) categories for AI use indication.
